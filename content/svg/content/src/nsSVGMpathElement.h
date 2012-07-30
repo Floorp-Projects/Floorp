@@ -62,7 +62,7 @@ public:
 
   // Public helper method: If our xlink:href attribute links to a <path>
   // element, this method returns a pointer to that element. Otherwise,
-  // this returns nsnull.
+  // this returns nullptr.
   nsSVGPathElement* GetReferencedPath();
 
   virtual nsXPCClassInfo* GetClassInfo();

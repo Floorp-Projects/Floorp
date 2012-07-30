@@ -103,6 +103,7 @@ public:
 
   //XXX: why do we take a reference to SurfaceFormat?
   bool Init(const IntSize &aSize, SurfaceFormat&);
+  bool Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
   bool Init(CGContextRef cgContext, const IntSize &aSize);
 
 
@@ -149,6 +150,14 @@ private:
   CGColorSpaceRef mColorSpace;
   CGContextRef mCg;
 
+  /**
+   * A pointer to the image buffer if the buffer is owned by this class (set to
+   * NULL otherwise).
+   * The data is not considered owned by DrawTargetCG if the DrawTarget was 
+   * created for a pre-existing buffer or if the buffer's lifetime is managed
+   * by CoreGraphics.
+   * Data owned by DrawTargetCG will be deallocated in the destructor. 
+   */
   void *mData;
 
   SurfaceFormat mFormat;

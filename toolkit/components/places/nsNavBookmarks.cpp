@@ -221,7 +221,7 @@ nsNavBookmarks::~nsNavBookmarks()
   NS_ASSERTION(gBookmarksService == this,
                "Deleting a non-singleton instance of the service");
   if (gBookmarksService == this)
-    gBookmarksService = nsnull;
+    gBookmarksService = nullptr;
 }
 
 
@@ -856,7 +856,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
 
   rv = InsertBookmarkInDB(-1, FOLDER, aParent, index,
                           title, dateAdded, 0, folderGuid, grandParentId,
-                          nsnull, aNewFolder, guid);
+                          nullptr, aNewFolder, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -865,7 +865,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewFolder, aParent, index, FOLDER,
-                               nsnull, title, dateAdded, guid, folderGuid));
+                               nullptr, title, dateAdded, guid, folderGuid));
 
   *aIndex = index;
   return NS_OK;
@@ -908,7 +908,7 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent,
   nsCAutoString guid;
   PRTime dateAdded = PR_Now();
   rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, voidString, dateAdded,
-                          0, folderGuid, grandParentId, nsnull,
+                          0, folderGuid, grandParentId, nullptr,
                           aNewItemId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -918,7 +918,7 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent,
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
-                               nsnull, voidString, dateAdded, guid, folderGuid));
+                               nullptr, voidString, dateAdded, guid, folderGuid));
 
   return NS_OK;
 }
@@ -2018,7 +2018,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
@@ -2297,7 +2297,7 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI* aURI, PRUint32* aCount,
   NS_ENSURE_ARG_POINTER(aBookmarks);
 
   *aCount = 0;
-  *aBookmarks = nsnull;
+  *aBookmarks = nullptr;
   nsTArray<PRInt64> bookmarks;
 
   // Get the information from the DB as a TArray
@@ -2423,7 +2423,7 @@ nsNavBookmarks::UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId)
       rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
-      rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(pendingStmt));
+      rv = stmt->ExecuteAsync(nullptr, getter_AddRefs(pendingStmt));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2591,7 +2591,7 @@ nsNavBookmarks::GetURIForKeyword(const nsAString& aUserCasedKeyword,
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_TRUE(!aUserCasedKeyword.IsEmpty(), NS_ERROR_INVALID_ARG);
-  *aURI = nsnull;
+  *aURI = nullptr;
 
   // Shortcuts are always lowercased internally.
   nsAutoString keyword(aUserCasedKeyword);

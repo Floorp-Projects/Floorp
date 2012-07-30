@@ -17,6 +17,7 @@
 #include "nsHttpAuthCache.h"
 #include "nsProxyInfo.h"
 #include "nsIDNSListener.h"
+#include "mozilla/Attributes.h"
 
 class nsIHttpAuthenticator;
 
@@ -34,7 +35,7 @@ public:
 
 private:
     const char *ProxyHost() const
-    { return mProxyInfo ? mProxyInfo->Host().get() : nsnull; }
+    { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
 
     PRInt32     ProxyPort() const
     { return mProxyInfo ? mProxyInfo->Port() : -1; }
@@ -151,7 +152,7 @@ private:
     PRUint32                          mResolvedHost             : 1;
 
     // define a separate threadsafe class for use with the DNS callback
-    class DNSCallback : public nsIDNSListener
+    class DNSCallback MOZ_FINAL : public nsIDNSListener
     {
         NS_DECL_ISUPPORTS
         NS_DECL_NSIDNSLISTENER

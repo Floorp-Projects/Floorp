@@ -35,7 +35,7 @@
 // nsFileStreamBase
 
 nsFileStreamBase::nsFileStreamBase()
-    : mFD(nsnull)
+    : mFD(nullptr)
     , mBehaviorFlags(0)
     , mDeferredOpen(false)
 {
@@ -54,7 +54,7 @@ nsFileStreamBase::Seek(PRInt32 whence, PRInt64 offset)
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFD == nsnull)
+    if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
     PRInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
@@ -70,7 +70,7 @@ nsFileStreamBase::Tell(PRInt64 *result)
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFD == nsnull)
+    if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
     PRInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
@@ -87,7 +87,7 @@ nsFileStreamBase::SetEOF()
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFD == nsnull)
+    if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
@@ -128,7 +128,7 @@ nsFileStreamBase::Close()
     if (mFD) {
         if (PR_Close(mFD) == PR_FAILURE)
             rv = NS_BASE_STREAM_OSERROR;
-        mFD = nsnull;
+        mFD = nullptr;
     }
     return rv;
 }
@@ -203,7 +203,7 @@ nsFileStreamBase::Flush(void)
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFD == nsnull)
+    if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
     PRInt32 cnt = PR_Sync(mFD);
@@ -219,7 +219,7 @@ nsFileStreamBase::Write(const char *buf, PRUint32 count, PRUint32 *result)
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFD == nsnull)
+    if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
     PRInt32 cnt = PR_Write(mFD, buf, count);
@@ -279,7 +279,7 @@ nsFileStreamBase::MaybeOpen(nsIFile* aFile, PRInt32 aIoFlags,
 void
 nsFileStreamBase::CleanUpOpen()
 {
-    mOpenParams.localFile = nsnull;
+    mOpenParams.localFile = nullptr;
     mDeferredOpen = false;
 }
 
@@ -337,7 +337,7 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     NS_ENSURE_NO_AGGREGATION(aOuter);
 
     nsFileInputStream* stream = new nsFileInputStream();
-    if (stream == nsnull)
+    if (stream == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(stream);
     nsresult rv = stream->QueryInterface(aIID, aResult);
@@ -410,7 +410,7 @@ nsFileInputStream::Close()
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
         // If we don't need to save the file for reopening, free it up
         if (!(mBehaviorFlags & REOPEN_ON_REWIND)) {
-          mFile = nsnull;
+          mFile = nullptr;
         }
     }
     return rv;
@@ -628,7 +628,7 @@ nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     NS_ENSURE_NO_AGGREGATION(aOuter);
 
     nsFileOutputStream* stream = new nsFileOutputStream();
-    if (stream == nsnull)
+    if (stream == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(stream);
     nsresult rv = stream->QueryInterface(aIID, aResult);
@@ -640,7 +640,7 @@ NS_IMETHODIMP
 nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
                          PRInt32 behaviorFlags)
 {
-    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+    NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
     NS_ENSURE_TRUE(!mDeferredOpen, NS_ERROR_ALREADY_INITIALIZED);
 
     mBehaviorFlags = behaviorFlags;
@@ -727,7 +727,7 @@ nsSafeFileOutputStream::Close()
     // so clean up by removing the temp file.
     if (mTempFile) {
         mTempFile->Remove(false);
-        mTempFile = nsnull;
+        mTempFile = nullptr;
     }
 
     return rv;
@@ -764,7 +764,7 @@ nsSafeFileOutputStream::Finish()
             rv = mTargetFile->GetLeafName(targetFilename);
             if (NS_SUCCEEDED(rv)) {
                 // This will replace target.
-                rv = mTempFile->MoveTo(nsnull, targetFilename);
+                rv = mTempFile->MoveTo(nullptr, targetFilename);
                 if (NS_FAILED(rv))
                     mTempFile->Remove(false);
             }
@@ -777,7 +777,7 @@ nsSafeFileOutputStream::Finish()
         if (NS_FAILED(mWriteResult))
             rv = mWriteResult;
     }
-    mTempFile = nsnull;
+    mTempFile = nullptr;
     return rv;
 }
 
@@ -811,7 +811,7 @@ NS_IMETHODIMP
 nsFileStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
                    PRInt32 behaviorFlags)
 {
-    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+    NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
     NS_ENSURE_TRUE(!mDeferredOpen, NS_ERROR_ALREADY_INITIALIZED);
 
     mBehaviorFlags = behaviorFlags;

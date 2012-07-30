@@ -36,12 +36,12 @@ GetNativeWindowPointerFromDOMWindow(nsIDOMWindow *a_window, NSWindow **a_nativeW
   nsCOMPtr<nsIWebNavigation> mruWebNav(do_GetInterface(a_window));
   if (mruWebNav) {
     nsCOMPtr<nsIDocShellTreeItem> mruTreeItem(do_QueryInterface(mruWebNav));
-    nsCOMPtr<nsIDocShellTreeOwner> mruTreeOwner = nsnull;
+    nsCOMPtr<nsIDocShellTreeOwner> mruTreeOwner = nullptr;
     mruTreeItem->GetTreeOwner(getter_AddRefs(mruTreeOwner));
     if(mruTreeOwner) {
       nsCOMPtr<nsIBaseWindow> mruBaseWindow(do_QueryInterface(mruTreeOwner));
       if (mruBaseWindow) {
-        nsCOMPtr<nsIWidget> mruWidget = nsnull;
+        nsCOMPtr<nsIWidget> mruWidget = nullptr;
         mruBaseWindow->GetMainWidget(getter_AddRefs(mruWidget));
         if (mruWidget) {
           *a_nativeWindow = (NSWindow*)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
@@ -123,11 +123,11 @@ nsNativeAppSupportCocoa::ReOpen()
   } 
   else {
     nsCOMPtr<nsISimpleEnumerator> windowList;
-    wm->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowList));
+    wm->GetXULWindowEnumerator(nullptr, getter_AddRefs(windowList));
     bool more;
     windowList->HasMoreElements(&more);
     while (more) {
-      nsCOMPtr<nsISupports> nextWindow = nsnull;
+      nsCOMPtr<nsISupports> nextWindow = nullptr;
       windowList->GetNext(getter_AddRefs(nextWindow));
       nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(nextWindow));
       if (!baseWindow) {
@@ -138,7 +138,7 @@ nsNativeAppSupportCocoa::ReOpen()
         haveOpenWindows = true;
       }
 
-      nsCOMPtr<nsIWidget> widget = nsnull;
+      nsCOMPtr<nsIWidget> widget = nullptr;
       baseWindow->GetMainWidget(getter_AddRefs(widget));
       if (!widget) {
         windowList->HasMoreElements(&more);
@@ -155,7 +155,7 @@ nsNativeAppSupportCocoa::ReOpen()
     if (!haveNonMiniaturized) {
       // Deminiaturize the most recenty used window
       nsCOMPtr<nsIDOMWindow> mru;
-      wm->GetMostRecentWindow(nsnull, getter_AddRefs(mru));
+      wm->GetMostRecentWindow(nullptr, getter_AddRefs(mru));
             
       if (mru) {        
         NSWindow *cocoaMru = nil;
@@ -169,7 +169,7 @@ nsNativeAppSupportCocoa::ReOpen()
     } // end if have non miniaturized
     
     if (!haveOpenWindows && !done) {
-      char* argv[] = { nsnull };
+      char* argv[] = { nullptr };
     
       // use an empty command line to make the right kind(s) of window open
       nsCOMPtr<nsICommandLineRunner> cmdLine
@@ -177,7 +177,7 @@ nsNativeAppSupportCocoa::ReOpen()
       NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
 
       nsresult rv;
-      rv = cmdLine->Init(0, argv, nsnull,
+      rv = cmdLine->Init(0, argv, nullptr,
                          nsICommandLine::STATE_REMOTE_EXPLICIT);
       NS_ENSURE_SUCCESS(rv, rv);
 

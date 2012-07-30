@@ -56,7 +56,7 @@ public:
   {
     if (aContent->IsHTML())
       return static_cast<nsGenericHTMLElement*>(aContent);
-    return nsnull;
+    return nullptr;
   }
 
   /**
@@ -165,14 +165,14 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              bool aNotify);
-  virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false)
+  virtual bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false)
   {
     bool isFocusable = false;
     IsHTMLFocusable(aWithMouse, &isFocusable, aTabIndex);
@@ -491,7 +491,7 @@ public:
    *        current form that they're not descendants of.
    * @note This method should not be called if the element has a form attribute.
    */
-  nsHTMLFormElement* FindAncestorForm(nsHTMLFormElement* aCurrentForm = nsnull);
+  nsHTMLFormElement* FindAncestorForm(nsHTMLFormElement* aCurrentForm = nullptr);
 
   virtual void RecompileScriptEventListeners();
 
@@ -769,7 +769,7 @@ protected:
   NS_HIDDEN_(ContentEditableTristate) GetContentEditableValue() const
   {
     static const nsIContent::AttrValuesArray values[] =
-      { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nsnull };
+      { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nullptr };
 
     if (!MayHaveContentEditableAttr())
       return eInherit;
@@ -902,7 +902,7 @@ protected:
    * with the id in @form. Otherwise, it *must* be null.
    *
    * @note Callers of UpdateFormOwner have to be sure the element is in a
-   * document (GetCurrentDoc() != nsnull).
+   * document (GetCurrentDoc() != nullptr).
    */
   void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
 
@@ -1086,7 +1086,7 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    return GetURIAttr(nsGkAtoms::_atom, nsnull, aValue);          \
+    return GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);          \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
@@ -1119,7 +1119,7 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
     if (aValue.IsEmpty()) {                                         \
       return NS_OK;                                                 \
     }                                                               \
-    return GetURIAttr(nsGkAtoms::_atom, nsnull, aValue);            \
+    return GetURIAttr(nsGkAtoms::_atom, nullptr, aValue);            \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
@@ -1215,7 +1215,7 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
       aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {             \
     foundInterface = _getter ();                             \
     if (!foundInterface) {                                   \
-      *aInstancePtr = nsnull;                                \
+      *aInstancePtr = nullptr;                                \
       return NS_ERROR_OUT_OF_MEMORY;                         \
     }                                                        \
   } else

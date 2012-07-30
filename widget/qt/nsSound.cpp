@@ -24,7 +24,7 @@
 
 /* used with esd_open_sound */
 static int esdref = -1;
-static PRLibrary *elib = nsnull;
+static PRLibrary *elib = nullptr;
 
 // the following from esd.h
 
@@ -73,7 +73,7 @@ nsSound::Shutdown()
 {
     if (elib) {
         PR_UnloadLibrary(elib);
-        elib = nsnull;
+        elib = nullptr;
     }
 }
 
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     int fd, mask = 0;
     PRUint32 samples_per_sec = 0, avg_bytes_per_sec = 0, chunk_len = 0;
     PRUint16 format, channels = 1, bits_per_sample = 0;
-    const PRUint8 *audio = nsnull;
+    const PRUint8 *audio = nullptr;
     size_t audio_len = 0;
 
     if (dataLen < 4) {

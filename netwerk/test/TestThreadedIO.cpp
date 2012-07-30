@@ -226,7 +226,7 @@ main( int argc, char* argv[] ) {
 
     // Initialize XPCOM.
     printf( "Initializing XPCOM...\n" );
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
     if ( NS_FAILED( rv ) ) {
         printf( "%s %d: NS_InitXPCOM failed, rv=0x%08X\n",
                 (char*)__FILE__, (int)__LINE__, (int)rv );

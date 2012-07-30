@@ -107,21 +107,21 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr,
 NS_IMETHODIMP
 nsDebugImpl::Warning(const char *aStr, const char *aFile, PRInt32 aLine)
 {
-  NS_DebugBreak(NS_DEBUG_WARNING, aStr, nsnull, aFile, aLine);
+  NS_DebugBreak(NS_DEBUG_WARNING, aStr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDebugImpl::Break(const char *aFile, PRInt32 aLine)
 {
-  NS_DebugBreak(NS_DEBUG_BREAK, nsnull, nsnull, aFile, aLine);
+  NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
 {
-  NS_DebugBreak(NS_DEBUG_ABORT, nsnull, nsnull, aFile, aLine);
+  NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, aFile, aLine);
   return NS_OK;
 }
 

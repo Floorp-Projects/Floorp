@@ -30,7 +30,7 @@ public:
   /* LayerD3D9 implementation */
   Layer* GetLayer();
   virtual bool IsEmpty();
-  virtual void RenderLayer() { RenderThebesLayer(nsnull); }
+  virtual void RenderLayer() { RenderThebesLayer(nullptr); }
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();
 

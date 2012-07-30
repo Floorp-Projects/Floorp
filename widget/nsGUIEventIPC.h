@@ -136,7 +136,7 @@ struct ParamTraits<nsMouseEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     bool rv;
-    PRUint8 reason, context, exit;
+    PRUint8 reason = 0, context = 0, exit = 0;
     rv = ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
          ReadParam(aMsg, aIter, &aResult->ignoreRootScrollFrame) &&
          ReadParam(aMsg, aIter, &reason) &&
@@ -297,7 +297,7 @@ struct ParamTraits<nsTextEvent>
       return false;
 
     if (!aResult->rangeCount) {
-      aResult->rangeArray = nsnull;
+      aResult->rangeArray = nullptr;
       return true;
     }
 

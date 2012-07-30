@@ -225,9 +225,9 @@ nsSecurityWarningDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor 
 {
   nsresult rv;
 
-  rv = ConfirmDialog(ctx, nsnull, // No preference for this one - it's too important
+  rv = ConfirmDialog(ctx, nullptr, // No preference for this one - it's too important
                      NS_LITERAL_STRING("PostToInsecureFromSecureMessage").get(),
-                     nsnull, 
+                     nullptr, 
                      _result);
 
   return rv;
@@ -245,7 +245,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   // prefName, showAgainName are null if there is no preference for this dialog
   bool prefValue = true;
   
-  if (prefName != nsnull) {
+  if (prefName != nullptr) {
     rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
     if (NS_FAILED(rv)) prefValue = true;
   }
@@ -277,7 +277,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  if (showAgainName != nsnull) {
+  if (showAgainName != nullptr) {
     mStringBundle->GetStringFromName(showAgainName,
                                      getter_Copies(alertMe));
   }
@@ -303,8 +303,8 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
                           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
                           (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
                           cont,
-                          nsnull,
-                          nsnull,
+                          nullptr,
+                          nullptr,
                           alertMe, 
                           &prefValue, 
                           &buttonPressed);
@@ -313,7 +313,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
 
   *_result = (buttonPressed != 1);
 
-  if (!prefValue && prefName != nsnull) {
+  if (!prefValue && prefName != nullptr) {
     mPrefBranch->SetBoolPref(prefName, false);
   } else if (prefValue && showOnce) {
     mPrefBranch->SetBoolPref(showOncePref.get(), false);

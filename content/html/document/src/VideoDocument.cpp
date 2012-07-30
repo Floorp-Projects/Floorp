@@ -24,7 +24,7 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nsnull);
+                                     nsIContentSink*     aSink = nullptr);
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
 protected:
@@ -70,9 +70,13 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   // anything that might require it....
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
-  if (aScriptGlobalObject && !nsContentUtils::IsChildOfSameType(this)) {
-    LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
-    LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelVideoDocument.css"));
+  if (aScriptGlobalObject) {
+    if (!nsContentUtils::IsChildOfSameType(this) &&
+        GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
+      LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
+      LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelVideoDocument.css"));
+    }
+    BecomeInteractive();
   }
 }
 
@@ -92,7 +96,7 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
 
   // make content
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);

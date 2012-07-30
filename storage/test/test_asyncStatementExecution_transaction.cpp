@@ -359,7 +359,7 @@ test_MultipleParamsAsyncReadStatement()
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
-  paramsArray = nsnull;
+  paramsArray = nullptr;
 
   mozIStorageBaseStatement *stmts[] = {
     stmt,
@@ -393,7 +393,7 @@ test_MultipleParamsReadStatement()
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
-  paramsArray = nsnull;
+  paramsArray = nullptr;
 
   mozIStorageBaseStatement *stmts[] = {
     stmt,
@@ -435,7 +435,7 @@ test_MultipleParamsAsyncWriteStatement()
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
-  paramsArray = nsnull;
+  paramsArray = nullptr;
 
   mozIStorageBaseStatement *stmts[] = {
     stmt,
@@ -477,7 +477,7 @@ test_MultipleParamsWriteStatement()
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
-  paramsArray = nsnull;
+  paramsArray = nullptr;
 
   mozIStorageBaseStatement *stmts[] = {
     stmt,

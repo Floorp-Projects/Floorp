@@ -101,7 +101,7 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
   if ( !aDataBuff )
     return;
 
-  *aDataBuff = nsnull;
+  *aDataBuff = nullptr;
 
   if ( strcmp(aFlavor,kTextMime) == 0 ) {
     nsCOMPtr<nsISupportsCString> plainText ( do_QueryInterface(aPrimitive) );

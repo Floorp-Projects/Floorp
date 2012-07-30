@@ -36,7 +36,7 @@ static const nscolor kColors[] = {
 #define eColorName_COUNT (ArrayLength(kColorNames))
 #define eColorName_UNKNOWN (-1)
 
-static nsStaticCaseInsensitiveNameTable* gColorTable = nsnull;
+static nsStaticCaseInsensitiveNameTable* gColorTable = nullptr;
 
 void nsColorNames::AddRefTable(void) 
 {
@@ -64,7 +64,7 @@ void nsColorNames::ReleaseTable(void)
 {
   if (gColorTable) {
     delete gColorTable;
-    gColorTable = nsnull;
+    gColorTable = nullptr;
   }
 }
 

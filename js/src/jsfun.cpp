@@ -622,7 +622,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         }
     }
     bool haveSource = fun->isInterpreted();
-    if (haveSource && !fun->script()->source && !fun->script()->loadSource(cx, &haveSource))
+    if (haveSource && !fun->script()->scriptSource() && !fun->script()->loadSource(cx, &haveSource))
             return NULL;
     if (haveSource) {
         RootedScript script(cx, fun->script());
@@ -636,7 +636,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
 
         // The source data for functions created by calling the Function
         // constructor is only the function's body.
-        bool funCon = script->sourceStart == 0 && script->source->argumentsNotIncluded();
+        bool funCon = script->sourceStart == 0 && script->scriptSource()->argumentsNotIncluded();
 
         // Functions created with the constructor should not be using the
         // expression body extension.

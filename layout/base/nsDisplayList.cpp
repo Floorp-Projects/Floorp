@@ -46,12 +46,12 @@ typedef FrameMetrics::ViewID ViewID;
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     Mode aMode, bool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
-      mIgnoreScrollFrame(nsnull),
-      mCurrentTableItem(nsnull),
-      mFinalTransparentRegion(nsnull),
+      mIgnoreScrollFrame(nullptr),
+      mCurrentTableItem(nullptr),
+      mFinalTransparentRegion(nullptr),
       mCachedOffsetFrame(aReferenceFrame),
       mCachedOffset(0, 0),
-      mGlassDisplayItem(nsnull),
+      mGlassDisplayItem(nullptr),
       mMode(aMode),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
@@ -191,7 +191,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 
-  nsIScrollableFrame* scrollableFrame = nsnull;
+  nsIScrollableFrame* scrollableFrame = nullptr;
   if (aScrollFrame)
     scrollableFrame = aScrollFrame->GetScrollTargetFrame();
 
@@ -255,7 +255,7 @@ static PRUint64 RegionArea(const nsRegion& aRegion)
   PRUint64 area = 0;
   nsRegionRectIterator iter(aRegion);
   const nsRect* r;
-  while ((r = iter.Next()) != nsnull) {
+  while ((r = iter.Next()) != nullptr) {
     area += PRUint64(r->width)*r->height;
   }
   return area;
@@ -293,7 +293,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   if (!state)
     return;
   state->mPresShell = aReferenceFrame->PresContext()->PresShell();
-  state->mCaretFrame = nsnull;
+  state->mCaretFrame = nullptr;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
 
   state->mPresShell->UpdateCanvasBackground();
@@ -328,7 +328,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
     if (caretRect.Intersects(aDirtyRect)) {
       // Okay, our rects intersect, let's mark the frame and all of its ancestors.
       mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
-      MarkFrameForDisplay(state->mCaretFrame, nsnull);
+      MarkFrameForDisplay(state->mCaretFrame, nullptr);
     }
   }
 }
@@ -405,7 +405,7 @@ void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
 void
 nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
-  while ((item = RemoveBottom()) != nsnull) {
+  while ((item = RemoveBottom()) != nullptr) {
     if (item->GetType() == nsDisplayItem::TYPE_WRAP_LIST) {
       item->GetList()->FlattenTo(aElements);
       item->~nsDisplayItem();
@@ -418,7 +418,7 @@ nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
 nsRect
 nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
   nsRect bounds;
-  for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
+  for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
     bool snap;
     bounds.UnionRect(bounds, i->GetBounds(aBuilder, &snap));
   }
@@ -496,7 +496,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 
   for (PRInt32 i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
-    nsDisplayItem* belowItem = i < 1 ? nsnull : elements[i - 1];
+    nsDisplayItem* belowItem = i < 1 ? nullptr : elements[i - 1];
 
     if (belowItem && item->TryMerge(aBuilder, belowItem)) {
       belowItem->~nsDisplayItem();
@@ -612,8 +612,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsDisplayItem::ContainerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
-                           containerParameters, nsnull);
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
+                           containerParameters, nullptr);
 
   if (!root) {
     layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
@@ -639,7 +639,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
-                     (usingDisplayport ? &displayport : nsnull), id,
+                     (usingDisplayport ? &displayport : nullptr), id,
                      containerParameters);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
@@ -675,19 +675,19 @@ PRUint32 nsDisplayList::Count() const {
 nsDisplayItem* nsDisplayList::RemoveBottom() {
   nsDisplayItem* item = mSentinel.mAbove;
   if (!item)
-    return nsnull;
+    return nullptr;
   mSentinel.mAbove = item->mAbove;
   if (item == mTop) {
     // must have been the only item
     mTop = &mSentinel;
   }
-  item->mAbove = nsnull;
+  item->mAbove = nullptr;
   return item;
 }
 
 void nsDisplayList::DeleteAll() {
   nsDisplayItem* item;
-  while ((item = RemoveBottom()) != nsnull) {
+  while ((item = RemoveBottom()) != nullptr) {
     item->~nsDisplayItem();
   }
 }
@@ -814,7 +814,7 @@ static void Sort(nsDisplayList* aList, PRInt32 aCount, nsDisplayList::SortLEQ aC
   int i;
   PRInt32 half = aCount/2;
   bool sorted = true;
-  nsDisplayItem* prev = nsnull;
+  nsDisplayItem* prev = nullptr;
   for (i = 0; i < aCount; ++i) {
     nsDisplayItem* item = aList->RemoveBottom();
     (i < half ? &list1 : &list2)->AppendToTop(item);
@@ -867,7 +867,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
   // See if there's anything to do
   bool anyAnonymousItems = false;
   nsDisplayItem* i;
-  for (i = GetBottom(); i != nsnull; i = i->GetAbove()) {
+  for (i = GetBottom(); i != nullptr; i = i->GetAbove()) {
     if (!i->GetUnderlyingFrame()) {
       anyAnonymousItems = true;
       break;
@@ -877,7 +877,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
     return;
 
   nsDisplayList tmp;
-  while ((i = RemoveBottom()) != nsnull) {
+  while ((i = RemoveBottom()) != nullptr) {
     if (i->GetUnderlyingFrame()) {
       tmp.AppendToTop(i);
     } else {
@@ -885,7 +885,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
       NS_ASSERTION(list, "leaf items can't be anonymous");
       list->ExplodeAnonymousChildLists(aBuilder);
       nsDisplayItem* j;
-      while ((j = list->RemoveBottom()) != nsnull) {
+      while ((j = list->RemoveBottom()) != nullptr) {
         tmp.AppendToTop(static_cast<nsDisplayWrapList*>(i)->
             WrapWithClone(aBuilder, j));
       }
@@ -1857,7 +1857,7 @@ bool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
     nsIFrame* f = i->GetUnderlyingFrame();
     if (f) {
       nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull);
+        nsLayoutUtils::GetActiveScrolledRootFor(f, nullptr);
       if (activeScrolledRoot != aActiveScrolledRoot)
         return false;
     }
@@ -1981,9 +1981,9 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                           aContainerParameters, nsnull);
+                           aContainerParameters, nullptr);
   if (!layer)
-    return nsnull;
+    return nullptr;
 
   layer->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
   return layer.forget();
@@ -2012,7 +2012,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nullptr);
   return !ChildrenCanBeInactive(aBuilder, aManager, aParameters, mList, activeScrolledRoot)
       ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
@@ -2067,7 +2067,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                           aContainerParameters, nsnull);
+                           aContainerParameters, nullptr);
   return layer.forget();
 }
 
@@ -2198,7 +2198,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  const ContainerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                           aContainerParameters, nsnull);
+                           aContainerParameters, nullptr);
 
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
@@ -2215,7 +2215,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
   }
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
-                     (usingDisplayport ? &displayport : nsnull), scrollId,
+                     (usingDisplayport ? &displayport : nullptr), scrollId,
                      aContainerParameters);
 
   return layer.forget();
@@ -2655,7 +2655,7 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
    * bounding rects.
    */
   for (const nsIFrame *currFrame = aFrame->GetFirstContinuation();
-       currFrame != nsnull;
+       currFrame != nullptr;
        currFrame = currFrame->GetNextContinuation())
     {
       /* Get the frame rect in local coordinates, then translate back to the
@@ -2869,7 +2869,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     result = result * gfx3DMatrix::From2D(transformFromSVGParent);
   }
 
-  const nsStyleDisplay* parentDisp = nsnull;
+  const nsStyleDisplay* parentDisp = nullptr;
   nsStyleContext* parentStyleContext = aFrame->GetStyleContext()->GetParent();
   if (parentStyleContext) {
     parentDisp = parentStyleContext->GetStyleDisplay();
@@ -2895,7 +2895,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
                    aFrame->GetParent()->Preserves3DChildren(),
                    "Preserve3D mismatch!");
       gfx3DMatrix parent = GetResultingTransformMatrix(aFrame->GetParent(), aOrigin - aFrame->GetPosition(),
-                                                       aAppUnitsPerPixel, nsnull, aOutAncestor);
+                                                       aAppUnitsPerPixel, nullptr, aOutAncestor);
       return nsLayoutUtils::ChangeMatrixBasis(newOrigin + toMozOrigin, result) * parent;
   }
 
@@ -2945,7 +2945,7 @@ nsDisplayTransform::GetTransform(float aAppUnitsPerPixel)
     mTransform =
       GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
                                   aAppUnitsPerPixel,
-                                  nsnull);
+                                  nullptr);
     mCachedAppUnitsPerPixel = aAppUnitsPerPixel;
   }
   return mTransform;
@@ -2959,7 +2959,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
 
   if (!IsFrameVisible(mFrame, newTransformMatrix)) {
-    return nsnull;
+    return nullptr;
   }
 
   nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
@@ -2986,7 +2986,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || mFrame->Preserves3D())
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nullptr);
   return !mStoredList.ChildrenCanBeInactive(aBuilder, 
                                             aManager, 
                                             aParameters,
@@ -3299,7 +3299,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
    * empty rect.
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
-  gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nsnull);
+  gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nullptr);
 
   return UntransformRectMatrix(aUntransformedBounds, matrix, factor, aOutRect);
 }
@@ -3366,16 +3366,16 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(mFrame);
     if (!svgChildFrame || !mFrame->GetContent()->IsSVG()) {
       NS_ASSERTION(false, "why?");
-      return nsnull;
+      return nullptr;
     }
     if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return nsnull; // The SVG spec says not to draw filters for this
+      return nullptr; // The SVG spec says not to draw filters for this
     }
   }
 
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
   if (opacity == 0.0f)
-    return nsnull;
+    return nullptr;
 
   nsIFrame* firstFrame =
     nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mFrame);
@@ -3388,12 +3388,12 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
   effectProperties.GetFilterFrame(&isOK);
 
   if (!isOK) {
-    return nsnull;
+    return nullptr;
   }
 
   nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                           aContainerParameters, nsnull);
+                           aContainerParameters, nullptr);
 
   return container.forget();
 }

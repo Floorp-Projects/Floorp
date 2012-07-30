@@ -73,7 +73,7 @@ AccEvent::GetDocAccessible()
   if (node)
     return GetAccService()->GetDocAccessible(node->OwnerDoc());
 
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<nsAccEvent>
@@ -114,7 +114,7 @@ AccEvent::GetAccessibleForNode() const
       return document->GetAccessible(mNode);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -326,7 +326,7 @@ AccSelChangeEvent::
                     SelChangeType aSelChangeType) :
     AccEvent(0, aItem, eAutoDetect, eCoalesceSelectionChange),
     mWidget(aWidget), mItem(aItem), mSelChangeType(aSelChangeType),
-    mPreceedingCount(0), mPackedEvent(nsnull)
+    mPreceedingCount(0), mPackedEvent(nullptr)
 {
   if (aSelChangeType == eSelectionAdd) {
     if (mWidget->GetSelectedItem(1))

@@ -274,7 +274,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   NS_ASSERTION(dirService, "Must have directory service");
 
 #ifdef MOZ_WIDGET_GONK
-  mFile = nsnull;
+  mFile = nullptr;
 
   nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   if (!vs) {
@@ -374,7 +374,7 @@ static jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
     return JSVAL_NULL;
   }
 
-  if (aFile == nsnull) {
+  if (aFile == nullptr) {
     return JSVAL_NULL;
   }
 
@@ -542,7 +542,7 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
     mRequest->FireError(mError);
-    mRequest = nsnull;
+    mRequest = nullptr;
     return NS_OK;
   }
 
@@ -583,7 +583,7 @@ ContinueCursorEvent::Run() {
   }
 
   mRequest->FireSuccess(val);
-  mRequest = nsnull;
+  mRequest = nullptr;
   return NS_OK;
 }
 
@@ -679,7 +679,7 @@ nsDOMDeviceStorageCursor::GetWindow(nsIDOMWindow * *aRequestingWindow)
 NS_IMETHODIMP
 nsDOMDeviceStorageCursor::GetElement(nsIDOMElement * *aRequestingElement)
 {
-  *aRequestingElement = nsnull;
+  *aRequestingElement = nullptr;
   return NS_OK;
 }
 
@@ -793,7 +793,7 @@ public:
     }
 
     mRequest->FireSuccess(result);
-    mRequest = nsnull;
+    mRequest = nullptr;
     return NS_OK;
   }
 
@@ -937,7 +937,7 @@ public:
                          nsIURI *aURI,
                          DeviceStorageFile *aFile,
                          DOMRequest* aRequest,
-                         nsIDOMBlob *aBlob = nsnull)
+                         nsIDOMBlob *aBlob = nullptr)
         : mRequestType(aRequestType)
         , mWindow(aWindow)
         , mURI(aURI)
@@ -1001,7 +1001,7 @@ public:
 
   NS_IMETHOD GetElement(nsIDOMElement * *aRequestingElement)
   {
-    *aRequestingElement = nsnull;
+    *aRequestingElement = nullptr;
     return NS_OK;
   }
 
@@ -1248,7 +1248,7 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
                              nsIDOMDOMRequest * *_retval)
 {
   // if the blob is null here, bail
-  if (aBlob == nsnull)
+  if (aBlob == nullptr)
     return NS_OK;
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mOwner);

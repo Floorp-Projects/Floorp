@@ -33,7 +33,7 @@ NS_IMETHODIMP
 nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     nsresult rv = NS_OK;
     PRUint32 count = 0;
-    char *buffer = nsnull;
+    char *buffer = nullptr;
 
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
 

@@ -360,7 +360,7 @@ nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex) const
   case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
     return mOuterFocusStyle;
   default:
-    return nsnull;
+    return nullptr;
   }
 }
 

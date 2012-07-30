@@ -301,7 +301,7 @@ AudioParent::AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat)
                               aRate,
                               (nsAudioStream::SampleFormat) aFormat))) {
       NS_WARNING("AudioStream initialization failed.");
-      mStream = nsnull;
+      mStream = nullptr;
       return;
   }
 
@@ -326,14 +326,14 @@ AudioParent::Shutdown()
 {
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
 
   if (mStream) {
       nsCOMPtr<nsIRunnable> event = new AudioStreamShutdownEvent(mStream);
       nsCOMPtr<nsIThread> thread = mStream->GetThread();
       thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
-      mStream = nsnull;
+      mStream = nullptr;
   }
 }
 

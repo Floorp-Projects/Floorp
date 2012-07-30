@@ -24,7 +24,7 @@ nsresult
 txNodeSetAdaptor::Init()
 {
     if (!mValue) {
-        mValue = new txNodeSet(nsnull);
+        mValue = new txNodeSet(nullptr);
     }
 
     return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -33,7 +33,7 @@ txNodeSetAdaptor::Init()
 NS_IMETHODIMP
 txNodeSetAdaptor::Item(PRUint32 aIndex, nsIDOMNode **aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (aIndex > (PRUint32)NodeSet()->size()) {
         return NS_ERROR_ILLEGAL_VALUE;

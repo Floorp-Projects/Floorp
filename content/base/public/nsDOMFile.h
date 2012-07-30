@@ -48,7 +48,7 @@ public:
               const nsAString& aContentType) = 0;
 
   virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
-  GetSubBlobs() const { return nsnull; }
+  GetSubBlobs() const { return nullptr; }
 
   NS_DECL_NSIDOMBLOB
   NS_DECL_NSIDOMFILE
@@ -392,7 +392,7 @@ public:
 
   void Disconnect()
   {
-    mParent = nsnull;
+    mParent = nullptr;
   }
 
   bool Append(nsIDOMFile *aFile) { return mFiles.AppendObject(aFile); }

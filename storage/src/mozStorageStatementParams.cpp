@@ -20,7 +20,7 @@ namespace storage {
 StatementParams::StatementParams(mozIStorageStatement *aStatement) :
     mStatement(aStatement)
 {
-  NS_ASSERTION(mStatement != nsnull, "mStatement is null");
+  NS_ASSERTION(mStatement != nullptr, "mStatement is null");
   (void)mStatement->GetParameterCount(&mParamCount);
 }
 
@@ -172,8 +172,8 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     if (idx >= mParamCount)
       return NS_ERROR_INVALID_ARG;
 
-    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nsnull,
-                            nsnull, JSPROP_ENUMERATE);
+    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nullptr,
+                            nullptr, JSPROP_ENUMERATE);
     resolved = true;
   }
   else if (JSID_IS_STRING(aId)) {
@@ -188,14 +188,14 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     PRUint32 idx;
     nsresult rv = mStatement->GetParameterIndex(name, &idx);
     if (NS_SUCCEEDED(rv)) {
-      ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nsnull,
-                                   nsnull, JSPROP_ENUMERATE);
+      ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nullptr,
+                                   nullptr, JSPROP_ENUMERATE);
       resolved = true;
     }
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? aScopeObj : nsnull;
+  *_objp = resolved && ok ? aScopeObj : nullptr;
   return NS_OK;
 }
 

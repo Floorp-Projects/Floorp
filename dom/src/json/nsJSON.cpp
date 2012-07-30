@@ -48,7 +48,7 @@ static nsresult
 WarnDeprecatedMethod(DeprecationWarning warning)
 {
   return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                         "DOM Core", nsnull,
+                                         "DOM Core", nullptr,
                                          nsContentUtils::eDOM_PROPERTIES,
                                          warning == EncodeWarning
                                          ? "nsIJSONEncodeDeprecatedWarning"
@@ -254,19 +254,19 @@ nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue, nsJSONWriter* wri
 }
 
 
-nsJSONWriter::nsJSONWriter() : mStream(nsnull),
-                               mBuffer(nsnull),
+nsJSONWriter::nsJSONWriter() : mStream(nullptr),
+                               mBuffer(nullptr),
                                mBufferCount(0),
                                mDidWrite(false),
-                               mEncoder(nsnull)
+                               mEncoder(nullptr)
 {
 }
 
 nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(aStream),
-                                                       mBuffer(nsnull),
+                                                       mBuffer(nullptr),
                                                        mBufferCount(0),
                                                        mDidWrite(false),
-                                                       mEncoder(nsnull)
+                                                       mEncoder(nullptr)
 {
 }
 
@@ -286,7 +286,7 @@ nsJSONWriter::SetCharset(const char* aCharset)
     rv = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(mEncoder));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Signal,
-                                          nsnull, '\0');
+                                          nullptr, '\0');
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -430,7 +430,7 @@ nsJSON::DecodeInternal(JSContext* cx,
     new nsJSONListener(cx, aRetval, aNeedsConverter, mode);
 
   //XXX this stream pattern should be consolidated in netwerk
-  rv = jsonListener->OnStartRequest(jsonChannel, nsnull);
+  rv = jsonListener->OnStartRequest(jsonChannel, nullptr);
   if (NS_FAILED(rv)) {
     jsonChannel->Cancel(rv);
     return rv;
@@ -453,7 +453,7 @@ nsJSON::DecodeInternal(JSContext* cx,
     if (!available)
       break; // blocking input stream has none available when done
 
-    rv = jsonListener->OnDataAvailable(jsonChannel, nsnull,
+    rv = jsonListener->OnDataAvailable(jsonChannel, nullptr,
                                        aStream, offset, available);
     if (NS_FAILED(rv)) {
       jsonChannel->Cancel(rv);
@@ -465,7 +465,7 @@ nsJSON::DecodeInternal(JSContext* cx,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = jsonListener->OnStopRequest(jsonChannel, nsnull, status);
+  rv = jsonListener->OnStopRequest(jsonChannel, nullptr, status);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -547,7 +547,7 @@ NS_IMETHODIMP
 nsJSONListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
   mSniffBuffer.Truncate();
-  mDecoder = nsnull;
+  mDecoder = nullptr;
 
   return NS_OK;
 }
@@ -561,7 +561,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
   // This can happen with short UTF-8 messages (<4 bytes)
   if (!mSniffBuffer.IsEmpty()) {
     // Just consume mSniffBuffer
-    rv = ProcessBytes(nsnull, 0);
+    rv = ProcessBytes(nullptr, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

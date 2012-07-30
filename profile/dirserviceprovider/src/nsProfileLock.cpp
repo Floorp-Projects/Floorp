@@ -46,7 +46,7 @@ nsProfileLock::nsProfileLock() :
 #elif defined (XP_OS2)
     ,mLockFileHandle(-1)
 #elif defined (XP_UNIX)
-    ,mPidLockFileName(nsnull)
+    ,mPidLockFileName(nullptr)
     ,mLockFileDesc(-1)
 #endif
 {
@@ -80,7 +80,7 @@ nsProfileLock& nsProfileLock::operator=(nsProfileLock& rhs)
     mLockFileDesc = rhs.mLockFileDesc;
     rhs.mLockFileDesc = -1;
     mPidLockFileName = rhs.mPidLockFileName;
-    rhs.mPidLockFileName = nsnull;
+    rhs.mPidLockFileName = nullptr;
     if (mPidLockFileName)
     {
         // rhs had a symlink lock, therefore it was on the list.
@@ -133,7 +133,7 @@ void nsProfileLock::FatalSignalHandler(int signo
     RemovePidLockFiles(true);
 
     // Chain to the old handler, which may exit.
-    struct sigaction *oldact = nsnull;
+    struct sigaction *oldact = nullptr;
 
     switch (signo) {
       case SIGHUP:
@@ -278,7 +278,7 @@ static bool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
                     return true;
                 }
                     
-                char *after = nsnull;
+                char *after = nullptr;
                 pid_t pid = strtol(colon, &after, 0);
                 if (pid != 0 && *after == '\0')
                 {
@@ -358,7 +358,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
     }
 
     PR_smprintf_free(signature);
-    signature = nsnull;
+    signature = nullptr;
 
     if (symlink_rv == 0)
     {
@@ -446,7 +446,7 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
 
     nsresult rv;
     if (aUnlocker)
-        *aUnlocker = nsnull;
+        *aUnlocker = nullptr;
 
     NS_ENSURE_STATE(!mHaveLock);
 
@@ -490,7 +490,7 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
             unsigned long launchDate;
         };
 
-        PRFileDesc *fd = nsnull;
+        PRFileDesc *fd = nullptr;
         PRInt32 ioBytes;
         ProcessInfoRec processInfo;
         LockProcessInfo lockProcessInfo;
@@ -577,10 +577,10 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
     mLockFileHandle = CreateFileW(filePath.get(),
                                   GENERIC_READ | GENERIC_WRITE,
                                   0, // no sharing - of course
-                                  nsnull,
+                                  nullptr,
                                   CREATE_ALWAYS,
                                   0,
-                                  nsnull);
+                                  nullptr);
     if (mLockFileHandle == INVALID_HANDLE_VALUE) {
         // XXXbsmedberg: provide a profile-unlocker here!
         return NS_ERROR_FILE_ACCESS_DENIED;
@@ -668,7 +668,7 @@ nsresult nsProfileLock::Unlock(bool aFatalSignal)
             // holding this lock, so we'll deadlock. See bug 522332.
             if (!aFatalSignal)
                 free(mPidLockFileName);
-            mPidLockFileName = nsnull;
+            mPidLockFileName = nullptr;
         }
         else if (mLockFileDesc != -1)
         {

@@ -176,7 +176,13 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
   var rect = aTarget.getBoundingClientRect();
   synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
-			 aEvent, aWindow);
+       aEvent, aWindow);
+}
+function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+{
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeTouchAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+       aEvent, aWindow);
 }
 
 /*
@@ -208,7 +214,27 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
     }
   }
 }
+function synthesizeTouchAtPoint(left, top, aEvent, aWindow)
+{
+  var utils = _getDOMWindowUtils(aWindow);
 
+  if (utils) {
+    var id = aEvent.id || 0;
+    var rx = aEvent.rx || 1;
+    var ry = aEvent.rx || 1;
+    var angle = aEvent.angle || 0;
+    var force = aEvent.force || 1;
+    var modifiers = _parseModifiers(aEvent);
+
+    if (("type" in aEvent) && aEvent.type) {
+      utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+    }
+    else {
+      utils.sendTouchEvent("touchstart", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+      utils.sendTouchEvent("touchend", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+    }
+  }
+}
 // Call synthesizeMouse with coordinates at the center of aTarget.
 function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
 {
@@ -216,7 +242,12 @@ function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
   synthesizeMouse(aTarget, rect.width / 2, rect.height / 2, aEvent,
                   aWindow);
 }
-
+function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
+{
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeTouch(aTarget, rect.width / 2, rect.height / 2, aEvent,
+                  aWindow);
+}
 /**
  * Synthesize a mouse scroll event on a target. The actual client point is determined
  * by taking the aTarget's client box and offseting it by aOffsetX and

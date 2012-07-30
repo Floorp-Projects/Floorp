@@ -76,7 +76,7 @@ JoinStyleToSkiaJoin(JoinStyle aJoin)
 static inline bool
 StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
 {
-  // Skia rendewrs 0 width strokes with a width of 1 (and in black),
+  // Skia renders 0 width strokes with a width of 1 (and in black),
   // so we should just skip the draw call entirely.
   if (!aOptions.mLineWidth) {
     return false;

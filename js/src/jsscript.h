@@ -443,11 +443,10 @@ struct JSScript : public js::gc::Cell
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
-    js::ScriptSource *source; /* source code */
-
   private:
+    js::ScriptSource *scriptSource_; /* source code */
 #ifdef JS_METHODJIT
-    JITScriptSet *jitInfo;
+    JITScriptSet *mJITInfo;
 #endif
     js::HeapPtrFunction function_;
     js::HeapPtrObject   enclosingScope_;
@@ -645,6 +644,14 @@ struct JSScript : public js::gc::Cell
 
     bool loadSource(JSContext *cx, bool *worked);
 
+    js::ScriptSource *scriptSource() {
+        return scriptSource_;
+    }
+
+    void setScriptSource(JSContext *cx, js::ScriptSource *ss);
+
+  public:
+
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval || isActiveEval; }
 
@@ -704,24 +711,24 @@ struct JSScript : public js::gc::Cell
     friend class js::mjit::CallCompiler;
 
   public:
-    bool hasJITInfo() {
-        return jitInfo != NULL;
+    bool hasMJITInfo() {
+        return mJITInfo != NULL;
     }
 
-    static size_t offsetOfJITInfo() { return offsetof(JSScript, jitInfo); }
+    static size_t offsetOfMJITInfo() { return offsetof(JSScript, mJITInfo); }
 
-    inline bool ensureHasJITInfo(JSContext *cx);
-    inline void destroyJITInfo(js::FreeOp *fop);
+    inline bool ensureHasMJITInfo(JSContext *cx);
+    inline void destroyMJITInfo(js::FreeOp *fop);
 
     JITScriptHandle *jitHandle(bool constructing, bool barriers) {
-        JS_ASSERT(jitInfo);
+        JS_ASSERT(mJITInfo);
         return constructing
-               ? (barriers ? &jitInfo->jitHandleCtorBarriered : &jitInfo->jitHandleCtor)
-               : (barriers ? &jitInfo->jitHandleNormalBarriered : &jitInfo->jitHandleNormal);
+               ? (barriers ? &mJITInfo->jitHandleCtorBarriered : &mJITInfo->jitHandleCtor)
+               : (barriers ? &mJITInfo->jitHandleNormalBarriered : &mJITInfo->jitHandleNormal);
     }
 
     js::mjit::JITScript *getJIT(bool constructing, bool barriers) {
-        if (!jitInfo)
+        if (!mJITInfo)
             return NULL;
         JITScriptHandle *jith = jitHandle(constructing, barriers);
         return jith->isValid() ? jith->getValid() : NULL;
@@ -1021,7 +1028,7 @@ struct ScriptSource
                                           SourceCompressionToken *tok = NULL,
                                           bool ownSource = false);
     void attachToRuntime(JSRuntime *rt);
-    void mark() { JS_ASSERT(ready_); JS_ASSERT(onRuntime_); marked = true; }
+    void mark() { marked = true; }
     void destroy(JSRuntime *rt);
     uint32_t length() const { return length_; }
     bool onRuntime() const { return onRuntime_; }

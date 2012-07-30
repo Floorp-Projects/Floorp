@@ -122,7 +122,7 @@ UTF8StringEnumerator::GetNext(nsACString& aResult)
 NS_IMETHODIMP
 nsGnomeVFSMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
 {
-  *aSchemes = nsnull;
+  *aSchemes = nullptr;
 
   nsRefPtr<UTF8StringEnumerator> array = new UTF8StringEnumerator();
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
@@ -171,7 +171,7 @@ NS_IMETHODIMP
 nsGnomeVFSService::GetAppForMimeType(const nsACString &aMimeType,
                                      nsIGnomeVFSMimeApp** aApp)
 {
-  *aApp = nsnull;
+  *aApp = nullptr;
   GnomeVFSMimeApplication *app =
    gnome_vfs_mime_get_default_application(PromiseFlatCString(aMimeType).get());
 

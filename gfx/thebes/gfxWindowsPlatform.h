@@ -108,11 +108,9 @@ public:
                                   gfxASurface::gfxContentType aContentType);
 
     virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
-    
-    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
 
     enum RenderMode {
         /* Use GDI and windows surfaces */
@@ -213,7 +211,7 @@ public:
         kWindows7 = 0x60001
     };
 
-    static PRInt32 WindowsOSVersion(PRInt32 *aBuildNum = nsnull);
+    static PRInt32 WindowsOSVersion(PRInt32 *aBuildNum = nullptr);
 
     static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
 
@@ -237,7 +235,7 @@ public:
 #endif
 #ifdef CAIRO_HAS_D2D_SURFACE
     cairo_device_t *GetD2DDevice() { return mD2DDevice; }
-    ID3D10Device1 *GetD3D10Device() { return mD2DDevice ? cairo_d2d_device_get_device(mD2DDevice) : nsnull; }
+    ID3D10Device1 *GetD3D10Device() { return mD2DDevice ? cairo_d2d_device_get_device(mD2DDevice) : nullptr; }
 #endif
 
     static bool IsOptimus();

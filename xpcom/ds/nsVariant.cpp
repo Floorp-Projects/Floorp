@@ -368,12 +368,12 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
                 nsID* idp = *(inp++);
                 if(idp)
                 {
-                    if(nsnull == (*(outp++) = (nsID*)
+                    if(nullptr == (*(outp++) = (nsID*)
                        nsMemory::Clone((char*)idp, sizeof(nsID))))
                         goto bad;
                 }
                 else
-                    *(outp++) = nsnull;
+                    *(outp++) = nullptr;
                 allocatedValueCount++;
             }
             break;
@@ -388,12 +388,12 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
                 char* str = *(inp++);
                 if(str)
                 {
-                    if(nsnull == (*(outp++) = (char*)
+                    if(nullptr == (*(outp++) = (char*)
                        nsMemory::Clone(str, (strlen(str)+1)*sizeof(char))))
                         goto bad;
                 }
                 else
-                    *(outp++) = nsnull;
+                    *(outp++) = nullptr;
                 allocatedValueCount++;
             }
             break;
@@ -408,13 +408,13 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
                 PRUnichar* str = *(inp++);
                 if(str)
                 {
-                    if(nsnull == (*(outp++) = (PRUnichar*)
+                    if(nullptr == (*(outp++) = (PRUnichar*)
                        nsMemory::Clone(str,
                         (NS_strlen(str) + 1) * sizeof(PRUnichar))))
                         goto bad;
                 }
                 else
-                    *(outp++) = nsnull;
+                    *(outp++) = nullptr;
                 allocatedValueCount++;
             }
             break;
@@ -448,7 +448,7 @@ bad:
             if(*p)
                 nsMemory::Free(*p);
         nsMemory::Free((char*)*outValue);
-        *outValue = nsnull;
+        *outValue = nullptr;
     }
     return rv;
 }
@@ -1158,7 +1158,7 @@ nsVariant::ConvertToISupports(const nsDiscriminatedUnion& data,
             return data.u.iface.mInterfaceValue->
                 QueryInterface(NS_GET_IID(nsISupports), (void**)_retval);
         } else {
-            *_retval = nsnull;
+            *_retval = nullptr;
             return NS_OK;
         }
     default:
@@ -1192,7 +1192,7 @@ nsVariant::ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid,
         return data.u.iface.mInterfaceValue->QueryInterface(*piid, iface);
     }
 
-    *iface = nsnull;
+    *iface = nullptr;
     return NS_OK;
 }
 

@@ -91,8 +91,8 @@ GetJSValFromKeyPathString(JSContext* aCx,
   KeyPathTokenizer tokenizer(aKeyPathString, '.');
 
   nsString targetObjectPropName;
-  JSObject* targetObject = nsnull;
-  JSObject* obj = JSVAL_IS_PRIMITIVE(aValue) ? nsnull : 
+  JSObject* targetObject = nullptr;
+  JSObject* obj = JSVAL_IS_PRIMITIVE(aValue) ? nullptr : 
                                                JSVAL_TO_OBJECT(aValue);
 
   while (tokenizer.hasMoreTokens()) {
@@ -158,7 +158,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
       if (tokenizer.hasMoreTokens()) {
         // If we're not at the end, we need to add a dummy object to the
         // chain.
-        JSObject* dummy = JS_NewObject(aCx, nsnull, nsnull, nsnull);
+        JSObject* dummy = JS_NewObject(aCx, nullptr, nullptr, nullptr);
         if (!dummy) {
           rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           break;
@@ -166,7 +166,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
 
         if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
                                  token.Length(),
-                                 OBJECT_TO_JSVAL(dummy), nsnull, nsnull,
+                                 OBJECT_TO_JSVAL(dummy), nullptr, nullptr,
                                  JSPROP_ENUMERATE)) {
           rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           break;
@@ -176,7 +176,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
       }
       else {
         JSObject* dummy = JS_NewObject(aCx, &IDBObjectStore::sDummyPropJSClass,
-                                       nsnull, nsnull);
+                                       nullptr, nullptr);
         if (!dummy) {
           rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           break;
@@ -184,7 +184,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
 
         if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
                                  token.Length(), OBJECT_TO_JSVAL(dummy),
-                                 nsnull, nsnull, JSPROP_ENUMERATE)) {
+                                 nullptr, nullptr, JSPROP_ENUMERATE)) {
           rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           break;
         }
@@ -319,8 +319,8 @@ KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey) const
 
   for (PRUint32 i = 0; i < len; ++i) {
     nsresult rv = GetJSValFromKeyPathString(aCx, aValue, mStrings[i], &value,
-                                            DoNotCreateProperties, nsnull,
-                                            nsnull);
+                                            DoNotCreateProperties, nullptr,
+                                            nullptr);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -344,11 +344,11 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
 
   if (IsString()) {
     return GetJSValFromKeyPathString(aCx, aValue, mStrings[0], aOutVal,
-                                     DoNotCreateProperties, nsnull, nsnull);
+                                     DoNotCreateProperties, nullptr, nullptr);
   }
  
   const PRUint32 len = mStrings.Length();
-  JS::RootedObject arrayObj(aCx, JS_NewArrayObject(aCx, len, nsnull));
+  JS::RootedObject arrayObj(aCx, JS_NewArrayObject(aCx, len, nullptr));
   if (!arrayObj) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -356,8 +356,8 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
   JS::Value value;
   for (PRUint32 i = 0; i < len; ++i) {
     nsresult rv = GetJSValFromKeyPathString(aCx, aValue, mStrings[i], &value,
-                                            DoNotCreateProperties, nsnull,
-                                            nsnull);
+                                            DoNotCreateProperties, nullptr,
+                                            nullptr);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -457,7 +457,7 @@ KeyPath::ToJSVal(JSContext* aCx, JS::Value* aValue) const
 {
   if (IsArray()) {
     PRUint32 len = mStrings.Length();
-    JSObject* array = JS_NewArrayObject(aCx, len, nsnull);
+    JSObject* array = JS_NewArrayObject(aCx, len, nullptr);
     if (!array) {
       NS_WARNING("Failed to make array!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

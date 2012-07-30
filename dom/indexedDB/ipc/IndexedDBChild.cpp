@@ -140,7 +140,7 @@ public:
  ******************************************************************************/
 
 IndexedDBChild::IndexedDBChild(const nsCString& aASCIIOrigin)
-: mFactory(nsnull), mASCIIOrigin(aASCIIOrigin)
+: mFactory(nullptr), mASCIIOrigin(aASCIIOrigin)
 {
   MOZ_COUNT_CTOR(IndexedDBChild);
 }

@@ -68,7 +68,7 @@ using namespace mozilla;
 
 nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
-, mRules(nsnull)
+, mRules(nullptr)
 , mWrapToWindow(false)
 , mWrapColumn(0)
 , mMaxTextLength(-1)
@@ -173,10 +173,10 @@ nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
   if (sNewlineHandlingPref == -1) {
     Preferences::RegisterCallback(EditorPrefsChangedCallback,
                                   "editor.singleLine.pasteNewlines");
-    EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nsnull);
+    EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nullptr);
     Preferences::RegisterCallback(EditorPrefsChangedCallback,
                                   "layout.selection.caret_style");
-    EditorPrefsChangedCallback("layout.selection.caret_style", nsnull);
+    EditorPrefsChangedCallback("layout.selection.caret_style", nullptr);
   }
 
   aNewlineHandling = sNewlineHandlingPref;
@@ -434,7 +434,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
                                 EDirection aSelect)
 {
   NS_ENSURE_TRUE(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nsnull;
+  *outBRNode = nullptr;
   nsresult res;
   
   // we need to insert a br.  unfortunately, we may have to split a text node to do it.
@@ -517,7 +517,7 @@ nsresult
 nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
 {
   NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nsnull;
+  *outBRNode = nullptr;
 
   // calling it text insertion to trigger moz br treatment by rules
   nsAutoRules beginRulesSniffing(this, kOpInsertText, nsIEditor::eNext);
@@ -697,7 +697,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   {
     opID = kOpInsertIMEText;
   }
-  nsAutoPlaceHolderBatch batch(this, nsnull); 
+  nsAutoPlaceHolderBatch batch(this, nullptr); 
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
@@ -1263,7 +1263,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
   nsAutoString str(aFormatType);
   ruleInfo.outputFormat = &str;
   bool cancel, handled;
-  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel, &handled);
+  nsresult rv = mRules->WillDoAction(nullptr, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) { return rv; }
   if (handled)
   { // this case will get triggered by password fields
@@ -1341,7 +1341,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
     // If it can't support a "text" output of the data the call will fail
     nsCOMPtr<nsISupports> genericDataObj;
     PRUint32 len;
-    char* flav = nsnull;
+    char* flav = nullptr;
     rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj),
                                    &len);
     if (NS_FAILED(rv) || !flav)

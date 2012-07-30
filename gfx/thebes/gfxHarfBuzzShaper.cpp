@@ -48,11 +48,11 @@ using namespace mozilla::unicode; // for Unicode property lookup
 
 gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
-      mHBFace(nsnull),
-      mKernTable(nsnull),
-      mHmtxTable(nsnull),
+      mHBFace(nullptr),
+      mKernTable(nullptr),
+      mHmtxTable(nullptr),
       mNumLongMetrics(0),
-      mCmapTable(nsnull),
+      mCmapTable(nullptr),
       mCmapFormat(-1),
       mSubtableOffset(0),
       mUVSTableOffset(0),
@@ -85,14 +85,14 @@ HBGetTable(hb_face_t *face, hb_tag_t aTag, void *aUserData)
     // Italic and BoldItalic faces of Times New Roman)
     if (aTag == TRUETYPE_TAG('G','D','E','F') &&
         font->GetFontEntry()->IgnoreGDEF()) {
-        return nsnull;
+        return nullptr;
     }
 
     // bug 721719 - ignore the GSUB table in buggy fonts (applies to Roboto,
     // at least on some Android ICS devices; set in gfxFT2FontList.cpp)
     if (aTag == TRUETYPE_TAG('G','S','U','B') &&
         font->GetFontEntry()->IgnoreGSUB()) {
-        return nsnull;
+        return nullptr;
     }
 
     return font->GetFontTable(aTag);
@@ -129,7 +129,7 @@ gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
     NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
                  "cmap data not correctly set up, expect disaster");
 
-    const PRUint8* data = (const PRUint8*)hb_blob_get_data(mCmapTable, nsnull);
+    const PRUint8* data = (const PRUint8*)hb_blob_get_data(mCmapTable, nullptr);
 
     hb_codepoint_t gid;
     switch (mCmapFormat) {
@@ -211,7 +211,7 @@ gfxHarfBuzzShaper::GetGlyphHAdvance(gfxContext *aContext,
     // font did not implement GetHintedGlyphWidth, so get an unhinted value
     // directly from the font tables
 
-    NS_ASSERTION((mNumLongMetrics > 0) && mHmtxTable != nsnull,
+    NS_ASSERTION((mNumLongMetrics > 0) && mHmtxTable != nullptr,
                  "font is lacking metrics, we shouldn't be here");
 
     if (glyph >= PRUint32(mNumLongMetrics)) {
@@ -222,7 +222,7 @@ gfxHarfBuzzShaper::GetGlyphHAdvance(gfxContext *aContext,
     // that mNumLongMetrics is > 0, and that the hmtx table is large enough
     // to contain mNumLongMetrics records
     const HMetrics* hmtx =
-        reinterpret_cast<const HMetrics*>(hb_blob_get_data(mHmtxTable, nsnull));
+        reinterpret_cast<const HMetrics*>(hb_blob_get_data(mHmtxTable, nullptr));
     return FloatToFixed(mFont->FUnitsToDevUnitsFactor() *
                         PRUint16(hmtx->metrics[glyph].advanceWidth));
 }
@@ -825,8 +825,8 @@ AddFeature(const PRUint32& aTag, PRUint32& aValue, void *aUserArg)
  * gfxFontShaper override to initialize the text run using HarfBuzz
  */
 
-static hb_font_funcs_t * sHBFontFuncs = nsnull;
-static hb_unicode_funcs_t * sHBUnicodeFuncs = nsnull;
+static hb_font_funcs_t * sHBFontFuncs = nullptr;
+static hb_unicode_funcs_t * sHBUnicodeFuncs = nullptr;
 
 bool
 gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
@@ -849,42 +849,42 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
             // harfbuzz shaper used
             sHBFontFuncs = hb_font_funcs_create();
             hb_font_funcs_set_glyph_func(sHBFontFuncs, HBGetGlyph,
-                                         nsnull, nsnull);
+                                         nullptr, nullptr);
             hb_font_funcs_set_glyph_h_advance_func(sHBFontFuncs,
                                                    HBGetGlyphHAdvance,
-                                                   nsnull, nsnull);
+                                                   nullptr, nullptr);
             hb_font_funcs_set_glyph_contour_point_func(sHBFontFuncs,
                                                        HBGetContourPoint,
-                                                       nsnull, nsnull);
+                                                       nullptr, nullptr);
             hb_font_funcs_set_glyph_h_kerning_func(sHBFontFuncs,
                                                    HBGetHKerning,
-                                                   nsnull, nsnull);
+                                                   nullptr, nullptr);
 
             sHBUnicodeFuncs =
                 hb_unicode_funcs_create(hb_unicode_funcs_get_empty());
             hb_unicode_funcs_set_mirroring_func(sHBUnicodeFuncs,
                                                 HBGetMirroring,
-                                                nsnull, nsnull);
+                                                nullptr, nullptr);
             hb_unicode_funcs_set_script_func(sHBUnicodeFuncs, HBGetScript,
-                                             nsnull, nsnull);
+                                             nullptr, nullptr);
             hb_unicode_funcs_set_general_category_func(sHBUnicodeFuncs,
                                                        HBGetGeneralCategory,
-                                                       nsnull, nsnull);
+                                                       nullptr, nullptr);
             hb_unicode_funcs_set_combining_class_func(sHBUnicodeFuncs,
                                                       HBGetCombiningClass,
-                                                      nsnull, nsnull);
+                                                      nullptr, nullptr);
             hb_unicode_funcs_set_eastasian_width_func(sHBUnicodeFuncs,
                                                       HBGetEastAsianWidth,
-                                                      nsnull, nsnull);
+                                                      nullptr, nullptr);
             hb_unicode_funcs_set_compose_func(sHBUnicodeFuncs,
                                               HBUnicodeCompose,
-                                              nsnull, nsnull);
+                                              nullptr, nullptr);
             hb_unicode_funcs_set_decompose_func(sHBUnicodeFuncs,
                                                 HBUnicodeDecompose,
-                                                nsnull, nsnull);
+                                                nullptr, nullptr);
         }
 
-        mHBFace = hb_face_create_for_tables(HBGetTable, this, nsnull);
+        mHBFace = hb_face_create_for_tables(HBGetTable, this, nullptr);
 
         if (!mUseFontGetGlyph) {
             // get the cmap table and find offset to our subtable
@@ -928,7 +928,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
                             // hmtx table is not large enough for the claimed
                             // number of entries: invalid, do not use.
                             hb_blob_destroy(mHmtxTable);
-                            mHmtxTable = nsnull;
+                            mHmtxTable = nullptr;
                         }
                     }
                 }
@@ -945,7 +945,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
 
     FontCallbackData fcd(this, aContext);
     hb_font_t *font = hb_font_create(mHBFace);
-    hb_font_set_funcs(font, sHBFontFuncs, &fcd, nsnull);
+    hb_font_set_funcs(font, sHBFontFuncs, &fcd, nullptr);
     hb_font_set_ppem(font, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
     PRUint32 scale = FloatToFixed(mFont->GetAdjustedSize()); // 16.16 fixed-point
     hb_font_set_scale(font, scale, scale);
@@ -1150,7 +1150,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     nscoord yPos = 0;
 
     const hb_glyph_position_t *posInfo =
-        hb_buffer_get_glyph_positions(aBuffer, nsnull);
+        hb_buffer_get_glyph_positions(aBuffer, nullptr);
 
     while (glyphStart < PRInt32(numGlyphs)) {
 
@@ -1334,7 +1334,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             gfxTextRun::CompressedGlyph g;
             g.SetComplex(aShapedWord->IsClusterStart(baseCharIndex),
                          false, 0);
-            aShapedWord->SetGlyphs(baseCharIndex, g, nsnull);
+            aShapedWord->SetGlyphs(baseCharIndex, g, nullptr);
         }
 
         glyphStart = glyphEnd;

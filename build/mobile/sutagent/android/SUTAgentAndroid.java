@@ -11,6 +11,9 @@ import org.apache.http.conn.util.InetAddressUtils;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.List;
@@ -96,6 +99,43 @@ public class SUTAgentAndroid extends Activity
     public static String getRegSvrIPAddr()
         {
         return(RegSvrIPAddr);
+        }
+
+    public void pruneCommandLog(String datestamp, String testroot)
+        {
+
+        String today = "";
+        String yesterday = "";
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSS");
+            Date dateObj = sdf.parse(datestamp);
+            SimpleDateFormat sdf_file = new SimpleDateFormat("yyyy-MM-dd");
+
+            today     = sdf_file.format(dateObj);
+            yesterday = sdf_file.format(new Date(dateObj.getTime() - 1000*60*60*24));
+        } catch (ParseException pe) {}
+
+        File dir = new File(testroot);
+
+        if (!dir.isDirectory())
+            return;
+
+        File [] files = dir.listFiles();
+        if (files == null)
+            return;
+
+        for (int iter = 0; iter < files.length; iter++) {
+            String fName = files[iter].getName();
+            if (fName.endsWith("sutcommands.txt")) {
+                if (fName.endsWith(today + "-sutcommands.txt") || fName.endsWith(yesterday + "-sutcommands.txt"))
+                    continue;
+
+                if (files[iter].delete())
+                    Log.i("SUTAgentAndroid", "Deleted old command logfile: " + files[iter]);
+                else
+                    Log.e("SUTAgentAndroid", "Unable to delete old command logfile: " + files[iter]);
+            }
+        }
         }
 
     /** Called when the activity is first created. */
@@ -248,6 +288,8 @@ public class SUTAgentAndroid extends Activity
 
         String sTemp = Uri.encode(sRegString,"=&");
         sRegString = "register " + sTemp;
+
+        pruneCommandLog(dc.GetSystemTime(), dc.GetTestRoot());
 
         if (!bNetworkingStarted)
             {

@@ -895,7 +895,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                     "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
         else:
             f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                    "&selfref.ptr, %s, nsnull, %s))\n" % (pthisval, unwrapFatalArg))
+                    "&selfref.ptr, %s, nullptr, %s))\n" % (pthisval, unwrapFatalArg))
         f.write("        return JS_FALSE;\n")
 
         if not unwrapThisFailureFatal:

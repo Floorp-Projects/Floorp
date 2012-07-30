@@ -16,7 +16,7 @@
 #include "nsGridLayout2.h"
 
 
-nsGridCell::nsGridCell():mBoxInColumn(nsnull),mBoxInRow(nsnull)
+nsGridCell::nsGridCell():mBoxInColumn(nullptr),mBoxInRow(nullptr)
 {
     MOZ_COUNT_CTOR(nsGridCell);
 }                                               

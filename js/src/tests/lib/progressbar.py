@@ -3,22 +3,18 @@
 import sys
 from datetime import datetime
 
-class NullProgressBar:
+if sys.platform.startswith('win'):
+    from lib.terminal_win import Terminal
+else:
+    from lib.terminal_unix import Terminal
+
+class NullProgressBar(object):
     def update(self, current, data): pass
     def poke(self): pass
     def finish(self, complete=True): pass
     def message(self, msg): sys.stdout.write(msg + '\n')
 
-class ProgressBar:
-    GREEN = '\x1b[32;1m'
-    RED   = '\x1b[31;1m'
-    BLUE  = '\x1b[34;1m'
-    GRAY  = '\x1b[37;2m'
-
-    RESET = '\x1b[0m'
-
-    CLEAR_RIGHT = '\x1b[K'
-
+class ProgressBar(object):
     def __init__(self, limit, fmt):
         assert not self.conservative_isatty()
         assert limit < 9999
@@ -36,29 +32,35 @@ class ProgressBar:
             self.counters_width += 1 # | (or ']' for the last one)
 
         self.barlen = 64 - self.counters_width
-        self.fmt = ('\r%-' + str(self.counters_width) + 's %3d%% %-' +
-                    str(self.barlen) + 's| %6.1fs' + self.CLEAR_RIGHT)
 
     def update(self, current, data):
         # Record prior for poke.
         self.prior = (current, data)
 
         # Build counters string.
-        counters = '['
+        sys.stdout.write('\r[')
         for layout in self.counters_fmt:
-            counters += layout['color'] + ('%4d' % data[layout['value']]) + self.RESET
-            counters += '|'
-        counters = counters[:-1] + ']'
+            Terminal.set_color(layout['color'])
+            sys.stdout.write('%4d' % data[layout['value']])
+            Terminal.reset_color()
+            if layout != self.counters_fmt[-1]:
+                sys.stdout.write('|')
+            else:
+                sys.stdout.write('] ')
 
         # Build the bar.
         pct = int(100.0 * current / self.limit)
+        sys.stdout.write('%3d%% ' % pct)
+
         barlen = int(1.0 * self.barlen * current / self.limit) - 1
-        bar = '='*barlen + '>'
+        bar = '=' * barlen + '>' + ' ' * (self.barlen - barlen - 1)
+        sys.stdout.write(bar + '|')
 
         # Update the bar.
         dt = datetime.now() - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
-        sys.stdout.write(self.fmt % (counters, pct, bar, dt))
+        sys.stdout.write('%6.1fs' % dt)
+        Terminal.clear_right()
 
         # Force redisplay, since we didn't write a \n.
         sys.stdout.flush()

@@ -349,7 +349,7 @@ nsContentSink::DoProcessLinkHeader()
 {
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
-  ProcessLinkHeader(nsnull, value);
+  ProcessLinkHeader(nullptr, value);
 }
 
 // check whether the Link header field applies to the context resource
@@ -379,7 +379,7 @@ nsContentSink::LinkContextIsOurDocument(const nsSubstring& aAnchor)
   // resolve anchor against context    
   nsCOMPtr<nsIURI> resolvedUri;
   rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor,
-      nsnull, contextUri);
+      nullptr, contextUri);
   
   if (NS_FAILED(rv)) {
     // resolving failed
@@ -730,7 +730,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   }
 
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull,
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nullptr,
                           mDocument->GetDocBaseURI());
   
   if (NS_FAILED(rv)) {
@@ -741,7 +741,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   // If this is a fragment parser, we don't want to observe.
   bool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 mRunsToCompletion ? nsnull : this, &isAlternate);
+                                 mRunsToCompletion ? nullptr : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (!isAlternate && !mRunsToCompletion) {
@@ -832,7 +832,7 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
     const nsACString &charset = mDocument->GetDocumentCharacterSet();
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
-              charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
+              charset.IsEmpty() ? nullptr : PromiseFlatCString(charset).get(),
               mDocument->GetDocBaseURI());
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
@@ -944,7 +944,7 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
                                            nsIURI **aManifestURI,
                                            CacheSelectionAction *aAction)
 {
-  *aManifestURI = nsnull;
+  *aManifestURI = nullptr;
   *aAction = CACHE_SELECTION_NONE;
 
   nsresult rv;
@@ -1255,7 +1255,7 @@ nsContentSink::Notify(nsITimer *timer)
     ScrollToRef();
   }
 
-  mNotificationTimer = nsnull;
+  mNotificationTimer = nullptr;
   return NS_OK;
 }
 
@@ -1331,7 +1331,7 @@ nsContentSink::WillInterruptImpl()
             mNotificationTimer->InitWithCallback(this, delay,
                                                  nsITimer::TYPE_ONE_SHOT);
           if (NS_FAILED(result)) {
-            mNotificationTimer = nsnull;
+            mNotificationTimer = nullptr;
           }
         }
       }
@@ -1455,7 +1455,7 @@ nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 void
 nsContentSink::DidBuildModelImpl(bool aTerminated)
 {
-  if (mDocument && !aTerminated) {
+  if (mDocument) {
     MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
                nsIDocument::READYSTATE_LOADING, "Bad readyState");
     mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);

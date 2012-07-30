@@ -285,7 +285,7 @@ nsWindowsShellService::ShortcutMaintenance()
     return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIPrefBranch> prefBranch;
-  prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  prefs->GetBranch(nullptr, getter_AddRefs(prefBranch));
   if (!prefBranch)
     return NS_ERROR_UNEXPECTED;
 
@@ -1026,7 +1026,7 @@ nsWindowsShellService::nsWindowsShellService() :
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs || 
-      NS_FAILED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch))) ||
+      NS_FAILED(prefs->GetBranch(nullptr, getter_AddRefs(prefBranch))) ||
       (NS_SUCCEEDED(prefBranch->GetCharPref(kPrefetchClearedPref, 
                                             getter_Copies(lastClearedVer))))) {
     // If the versions are the same, then bail out early.  We only want to clear
@@ -1042,7 +1042,7 @@ nsWindowsShellService::nsWindowsShellService() :
   if (mTimer) {
     mTimer->InitWithFuncCallback(
       nsWindowsShellService::LaunchPrefetchClearCommand, 
-      nsnull, CLEAR_PREFETCH_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT);
+      nullptr, CLEAR_PREFETCH_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT);
   }
 #endif
 }
@@ -1052,11 +1052,11 @@ nsWindowsShellService::~nsWindowsShellService()
 #if defined(MOZ_MAINTENANCE_SERVICE)
  if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
   if (sThread) {
     sThread->Shutdown();
-    sThread = nsnull;
+    sThread = nullptr;
   }
 #endif
 }
@@ -1103,7 +1103,7 @@ nsWindowsShellService::LaunchPrefetchClearCommand(nsITimer *aTimer, void*)
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    if (NS_SUCCEEDED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)))) {
+    if (NS_SUCCEEDED(prefs->GetBranch(nullptr, getter_AddRefs(prefBranch)))) {
       prefBranch->SetCharPref(kPrefetchClearedPref, MOZ_APP_VERSION);
     }
   }
@@ -1140,7 +1140,7 @@ nsWindowsShellService::OpenApplicationWithURI(nsIFile* aApplication,
 NS_IMETHODIMP
 nsWindowsShellService::GetDefaultFeedReader(nsIFile** _retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsresult rv;
   nsCOMPtr<nsIWindowsRegKey> regKey =

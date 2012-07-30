@@ -49,7 +49,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     }
     // don't need to free this as it's allocated in memory owned by
     // gPrefNameArena
-    pref->key = nsnull;
+    pref->key = nullptr;
     memset(entry, 0, table->entrySize);
 }
 
@@ -68,7 +68,7 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
-PLDHashTable        gHashTable = { nsnull };
+PLDHashTable        gHashTable = { nullptr };
 static PLArenaPool  gPrefNameArena;
 bool                gDirty = false;
 
@@ -87,7 +87,7 @@ static PLDHashTableOps     pref_HashTableOps = {
     PL_DHashMoveEntryStub,
     clearPrefEntry,
     PL_DHashFinalizeStub,
-    nsnull,
+    nullptr,
 };
 
 // PR_ALIGN_OF_WORD is only defined on some platforms.  ALIGN_OF_WORD has
@@ -130,7 +130,7 @@ static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType t
 struct CallbackNode {
     char*                   domain;
     // If someone attempts to remove the node from the callback list while
-    // pref_DoCallback is running, |func| is set to nsnull. Such nodes will
+    // pref_DoCallback is running, |func| is set to nullptr. Such nodes will
     // be removed at the end of pref_DoCallback.
     PrefChangedFunc         func;
     void*                   data;
@@ -151,10 +151,10 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, P
 nsresult PREF_Init()
 {
     if (!gHashTable.ops) {
-        if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps, nsnull,
+        if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps, nullptr,
                                sizeof(PrefHashEntry),
                                PREF_HASHTABLE_INITIAL_SIZE)) {
-            gHashTable.ops = nsnull;
+            gHashTable.ops = nullptr;
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -189,7 +189,7 @@ void PREF_CleanupPrefs()
 {
     if (gHashTable.ops) {
         PL_DHashTableFinish(&gHashTable);
-        gHashTable.ops = nsnull;
+        gHashTable.ops = nullptr;
         PL_FinishArenaPool(&gPrefNameArena);
     }
 }
@@ -588,7 +588,7 @@ PREF_ClearAllUserPrefs()
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
 
-    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nsnull);
+    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nullptr);
 
     gDirty = true;
     return NS_OK;
@@ -663,7 +663,7 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
         static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_FREE(result))
-        return nsnull;
+        return nullptr;
 
     return result;
 }
@@ -785,8 +785,8 @@ PREF_RegisterCallback(const char *pref_node,
                        PrefChangedFunc callback,
                        void * instance_data)
 {
-    NS_PRECONDITION(pref_node, "pref_node must not be nsnull");
-    NS_PRECONDITION(callback, "callback must not be nsnull");
+    NS_PRECONDITION(pref_node, "pref_node must not be nullptr");
+    NS_PRECONDITION(callback, "callback must not be nullptr");
 
     struct CallbackNode* node = (struct CallbackNode*) malloc(sizeof(struct CallbackNode));
     if (node)
@@ -842,7 +842,7 @@ PREF_UnregisterCallback(const char *pref_node,
             {
                 // postpone the node removal until after
                 // gCallbacks enumeration is finished.
-                node->func = nsnull;
+                node->func = nullptr;
                 gShouldCleanupDeadNodes = true;
                 prev_node = node;
                 node = node->next;

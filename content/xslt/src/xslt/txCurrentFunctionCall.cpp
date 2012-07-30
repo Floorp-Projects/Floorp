@@ -26,7 +26,7 @@ CurrentFunctionCall::CurrentFunctionCall()
 nsresult
 CurrentFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (!requireParams(0, 0, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;

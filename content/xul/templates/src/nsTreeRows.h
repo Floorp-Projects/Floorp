@@ -104,7 +104,7 @@ public:
               mCount(0),
               mCapacity(0),
               mSubtreeSize(0),
-              mRows(nsnull) {}
+              mRows(nullptr) {}
 
         ~Subtree();
 
@@ -292,7 +292,7 @@ public:
      */
     iterator operator[](PRInt32 aIndex);
 
-    nsTreeRows() : mRoot(nsnull) {}
+    nsTreeRows() : mRoot(nullptr) {}
     ~nsTreeRows() {}
 
     /**
@@ -319,7 +319,7 @@ public:
     Subtree*
     GetSubtreeFor(const Subtree* aParent,
                   PRInt32 aChildIndex,
-                  PRInt32* aSubtreeSize = nsnull);
+                  PRInt32* aSubtreeSize = nullptr);
 
     /**
      * Retrieve the size of the subtree within the specified parent.

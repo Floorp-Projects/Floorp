@@ -21,10 +21,10 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
     : nsRDFTestNode(aParent),
       mProcessor(aProcessor),
       mSourceVariable(aSourceVariable),
-      mSource(nsnull),
+      mSource(nullptr),
       mProperty(aProperty),
       mTargetVariable(aTargetVariable),
-      mTarget(nsnull)
+      mTarget(nullptr)
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
@@ -59,7 +59,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
       mSource(aSource),
       mProperty(aProperty),
       mTargetVariable(aTargetVariable),
-      mTarget(nsnull)
+      mTarget(nullptr)
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
@@ -91,7 +91,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
     : nsRDFTestNode(aParent),
       mProcessor(aProcessor),
       mSourceVariable(aSourceVariable),
-      mSource(nsnull),
+      mSource(nullptr),
       mProperty(aProperty),
       mTargetVariable(0),
       mTarget(aTarget)
@@ -240,7 +240,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     variable = mTargetVariable;
 
                     value = do_QueryInterface(isupports);
-                    NS_ASSERTION(value != nsnull, "target is not an nsIRDFNode");
+                    NS_ASSERTION(value != nullptr, "target is not an nsIRDFNode");
 
 #ifdef PR_LOGGING
                     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
@@ -261,7 +261,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     variable = mSourceVariable;
 
                     nsCOMPtr<nsIRDFResource> source = do_QueryInterface(isupports);
-                    NS_ASSERTION(source != nsnull, "source is not an nsIRDFResource");
+                    NS_ASSERTION(source != nullptr, "source is not an nsIRDFResource");
 
 #ifdef PR_LOGGING
                     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {

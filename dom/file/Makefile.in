@@ -31,6 +31,11 @@ CPPSRCS = \
   LockedFile.cpp \
   MemoryStreams.cpp \
   MetadataHelper.cpp \
+  ArchiveEvent.cpp \
+  ArchiveZipEvent.cpp \
+  ArchiveZipFile.cpp \
+  ArchiveReader.cpp \
+  ArchiveRequest.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -45,12 +50,19 @@ EXPORTS_mozilla/dom/file = \
   FileHelper.h \
   FileService.h \
   LockedFile.h \
+  ArchiveEvent.h \
+  ArchiveZipEvent.h \
+  ArchiveZipFile.h \
+  ArchiveReader.h \
+  ArchiveRequest.h \
   $(NULL)
 
 XPIDLSRCS = \
   nsIDOMFileHandle.idl \
   nsIDOMFileRequest.idl \
   nsIDOMLockedFile.idl \
+  nsIDOMArchiveReader.idl \
+  nsIDOMArchiveRequest.idl \
   $(NULL)
 
 TEST_DIRS += test

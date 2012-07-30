@@ -37,7 +37,7 @@ nsMemory::GetGlobalMemoryService()
 {
     nsIMemory* mem;
     nsresult rv = NS_GetMemoryManager(&mem);
-    if (NS_FAILED(rv)) return nsnull;
+    if (NS_FAILED(rv)) return nullptr;
    
     return mem;
 }

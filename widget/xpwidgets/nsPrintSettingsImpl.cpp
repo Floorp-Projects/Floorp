@@ -85,7 +85,7 @@ nsPrintSettings::~nsPrintSettings()
 NS_IMETHODIMP nsPrintSettings::GetPrintSession(nsIPrintSession **aPrintSession)
 {
   NS_ENSURE_ARG_POINTER(aPrintSession);
-  *aPrintSession = nsnull;
+  *aPrintSession = nullptr;
   
   nsCOMPtr<nsIPrintSession> session = do_QueryReferent(mSession);
   if (!session)
@@ -182,7 +182,7 @@ NS_IMETHODIMP nsPrintSettings::GetColorspace(PRUnichar * *aColorspace)
   if (!mColorspace.IsEmpty()) {
     *aColorspace = ToNewUnicode(mColorspace);
   } else {
-    *aColorspace = nsnull;
+    *aColorspace = nullptr;
   }
   return NS_OK;
 }
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsPrintSettings::GetResolutionName(PRUnichar * *aResolutionName)
   if (!mResolutionName.IsEmpty()) {
     *aResolutionName = ToNewUnicode(mResolutionName);
   } else {
-    *aResolutionName = nsnull;
+    *aResolutionName = nullptr;
   }
   return NS_OK;
 }
@@ -587,7 +587,7 @@ NS_IMETHODIMP nsPrintSettings::GetTitle(PRUnichar * *aTitle)
   if (!mTitle.IsEmpty()) {
     *aTitle = ToNewUnicode(mTitle);
   } else {
-    *aTitle = nsnull;
+    *aTitle = nullptr;
   }
   return NS_OK;
 }
@@ -608,7 +608,7 @@ NS_IMETHODIMP nsPrintSettings::GetDocURL(PRUnichar * *aDocURL)
   if (!mURL.IsEmpty()) {
     *aDocURL = ToNewUnicode(mURL);
   } else {
-    *aDocURL = nsnull;
+    *aDocURL = nullptr;
   }
   return NS_OK;
 }
@@ -667,7 +667,7 @@ nsPrintSettings::GetMarginStrs(PRUnichar * *aTitle,
                               PRInt16 aJust)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
-  *aTitle = nsnull;
+  *aTitle = nullptr;
   if (aType == eHeader) {
     switch (aJust) {
       case kJustLeft:   *aTitle = ToNewUnicode(mHeaderStrs[0]);break;
@@ -839,7 +839,7 @@ NS_IMETHODIMP nsPrintSettings::GetPaperName(PRUnichar * *aPaperName)
   if (!mPaperName.IsEmpty()) {
     *aPaperName = ToNewUnicode(mPaperName);
   } else {
-    *aPaperName = nsnull;
+    *aPaperName = nullptr;
   }
   return NS_OK;
 }
@@ -860,7 +860,7 @@ NS_IMETHODIMP nsPrintSettings::GetPlexName(PRUnichar * *aPlexName)
   if (!mPlexName.IsEmpty()) {
     *aPlexName = ToNewUnicode(mPlexName);
   } else {
-    *aPlexName = nsnull;
+    *aPlexName = nullptr;
   }
   return NS_OK;
 }

@@ -189,7 +189,7 @@ bool nsClipboard::GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor)
 // Set some data onto the clipboard
 void nsClipboard::SetClipboardData(const char *aFlavor)
 {
-  void *pMozData = nsnull;
+  void *pMozData = nullptr;
   PRUint32 NumOfBytes = 0;
 
   // Get the data from the transferable
@@ -215,9 +215,9 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
   {
     if (ulFormatID == CF_TEXT)     // CF_TEXT is one byte character set
     {
-      char* pByteMem = nsnull;
+      char* pByteMem = nullptr;
 
-      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pByteMem), nsnull, NumOfBytes + sizeof(char), 
+      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pByteMem), nullptr, NumOfBytes + sizeof(char), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR)
       {
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
@@ -234,10 +234,10 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
     }
     else                           // All other text/.. flavors are in unicode
     {
-      UniChar* pUnicodeMem = nsnull;
+      UniChar* pUnicodeMem = nullptr;
       PRUint32 NumOfChars = NumOfBytes / sizeof(UniChar);
    
-      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
+      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pUnicodeMem), nullptr, NumOfBytes + sizeof(UniChar), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
       {
         memcpy( pUnicodeMem, pMozData, NumOfBytes );    // Copy text string
@@ -251,9 +251,9 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
       if (!strcmp( aFlavor, kUnicodeMime ))
       {
-        char* pByteMem = nsnull;
+        char* pByteMem = nullptr;
 
-        if (DosAllocSharedMem(reinterpret_cast<PPVOID>(&pByteMem), nsnull,
+        if (DosAllocSharedMem(reinterpret_cast<PPVOID>(&pByteMem), nullptr,
                               NumOfBytes + 1, 
                               PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
@@ -292,9 +292,9 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
   }
   else                             // Assume rest of flavors are binary data
   {
-    PBYTE pBinaryMem = nsnull;
+    PBYTE pBinaryMem = nullptr;
 
-    if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
+    if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pBinaryMem), nullptr, NumOfBytes + sizeof(PRUint32), 
                            PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
     {
       *(reinterpret_cast<PRUint32*>(pBinaryMem)) = NumOfBytes;          // First DWORD contains data length

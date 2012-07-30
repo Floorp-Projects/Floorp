@@ -35,7 +35,7 @@
 
 using namespace mozilla;
 
-static nsINativeKeyBindings *sNativeEditorBindings = nsnull;
+static nsINativeKeyBindings *sNativeEditorBindings = nullptr;
 
 class nsXBLSpecialDocInfo
 {
@@ -79,9 +79,9 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
   if (!bindingURI) {
     return;
   }
-  xblService->LoadBindingDocumentInfo(nsnull, nsnull,
+  xblService->LoadBindingDocumentInfo(nullptr, nullptr,
                                       bindingURI,
-                                      nsnull,
+                                      nullptr,
                                       true, 
                                       getter_AddRefs(mHTMLBindings));
 
@@ -93,9 +93,9 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
       return;
     }
 
-    xblService->LoadBindingDocumentInfo(nsnull, nsnull,
+    xblService->LoadBindingDocumentInfo(nullptr, nullptr,
                                         bindingURI,
-                                        nsnull,
+                                        nullptr,
                                         true, 
                                         getter_AddRefs(mUserHTMLBindings));
   }
@@ -135,14 +135,14 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
 }
 
 // Init statics
-nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nsnull;
+nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nullptr;
 PRUint32 nsXBLWindowKeyHandler::sRefCnt = 0;
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
                                              nsIDOMEventTarget* aTarget)
   : mTarget(aTarget),
-    mHandler(nsnull),
-    mUserHandler(nsnull)
+    mHandler(nullptr),
+    mUserHandler(nullptr)
 {
   mWeakPtrForElement = do_GetWeakReference(aElement);
   ++sRefCnt;
@@ -157,7 +157,7 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
   --sRefCnt;
   if (!sRefCnt) {
     delete sXBLSpecialDocInfo;
-    sXBLSpecialDocInfo = nsnull;
+    sXBLSpecialDocInfo = nullptr;
   }
 }
 
@@ -167,7 +167,7 @@ NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler,
 static void
 BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   // Since we chain each handler onto the next handler,
   // we'll enumerate them here in reverse so that when we
@@ -536,7 +536,7 @@ already_AddRefed<nsIDOMElement>
 nsXBLWindowKeyHandler::GetElement()
 {
   nsCOMPtr<nsIDOMElement> element = do_QueryReferent(mWeakPtrForElement);
-  nsIDOMElement* el = nsnull;
+  nsIDOMElement* el = nullptr;
   element.swap(el);
   return el;
 }

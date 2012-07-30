@@ -283,12 +283,12 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 const mozilla::Module kXPCOMModule = { mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts };
 
 // gDebug will be freed during shutdown.
-static nsIDebug* gDebug = nsnull;
+static nsIDebug* gDebug = nullptr;
 
 EXPORT_XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug** result)
 {
-    return nsDebugImpl::Create(nsnull, 
+    return nsDebugImpl::Create(nullptr, 
                                NS_GET_IID(nsIDebug), 
                                (void**) result);
 }
@@ -296,7 +296,7 @@ NS_GetDebug(nsIDebug** result)
 EXPORT_XPCOM_API(nsresult)
 NS_GetTraceRefcnt(nsITraceRefcnt** result)
 {
-    return nsTraceRefcntImpl::Create(nsnull, 
+    return nsTraceRefcntImpl::Create(nullptr, 
                                      NS_GET_IID(nsITraceRefcnt), 
                                      (void**) result);
 }
@@ -305,7 +305,7 @@ EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
 {
-    return NS_InitXPCOM2(result, binDirectory, nsnull);
+    return NS_InitXPCOM2(result, binDirectory, nullptr);
 }
 
 EXPORT_XPCOM_API(nsresult)
@@ -432,7 +432,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
         NS_TIME_FUNCTION_MARK("Next: IPC command line init");
 
 #ifdef OS_WIN
-        CommandLine::Init(0, nsnull);
+        CommandLine::Init(0, nullptr);
 #else
         nsCOMPtr<nsIFile> binaryFile;
         nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
@@ -496,7 +496,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 
-                                  nsnull,
+                                  nullptr,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
 #ifdef XP_WIN
     ScheduleMediaCacheRemover();
@@ -569,8 +569,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         if (observerService)
         {
             (void) observerService->
-                NotifyObservers(nsnull, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
-                                nsnull);
+                NotifyObservers(nullptr, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
+                                nullptr);
 
             nsCOMPtr<nsIServiceManager> mgr;
             rv = NS_GetServiceManager(getter_AddRefs(mgr));
@@ -578,7 +578,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
             {
                 (void) observerService->
                     NotifyObservers(mgr, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                    nsnull);
+                                    nullptr);
             }
         }
 
@@ -586,8 +586,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         mozilla::scache::StartupCache::DeleteSingleton();
         if (observerService)
             (void) observerService->
-                NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
-                                nsnull);
+                NotifyObservers(nullptr, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
+                                nullptr);
 
         nsCycleCollector_shutdownThreads();
 
@@ -661,12 +661,12 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
             nsCOMPtr<nsIObserver> obs(do_QueryInterface(el));
             if (obs)
-                (void) obs->Observe(nsnull,
+                (void) obs->Observe(nullptr,
                                     NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
-                                    nsnull);
+                                    nullptr);
         }
 
-        moduleLoaders = nsnull;
+        moduleLoaders = nullptr;
     }
 
     // Shutdown nsLocalFile string conversion
@@ -696,7 +696,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
       NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
       NS_ASSERTION(cnt == 0, "Component Manager being held past XPCOM shutdown.");
     }
-    nsComponentManagerImpl::gComponentManager = nsnull;
+    nsComponentManagerImpl::gComponentManager = nullptr;
     nsCategoryManager::Destroy();
 
     NS_PurgeAtomTable();
@@ -705,11 +705,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
     if (sIOThread) {
         delete sIOThread;
-        sIOThread = nsnull;
+        sIOThread = nullptr;
     }
     if (sMessageLoop) {
         delete sMessageLoop;
-        sMessageLoop = nsnull;
+        sMessageLoop = nullptr;
     }
     if (sCommandLineWasInitialized) {
         CommandLine::Terminate();
@@ -717,7 +717,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     }
     if (sExitManager) {
         delete sExitManager;
-        sExitManager = nsnull;
+        sExitManager = nullptr;
     }
 
     Omnijar::CleanUp();

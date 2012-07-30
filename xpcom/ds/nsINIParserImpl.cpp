@@ -34,7 +34,7 @@ NS_IMETHODIMP
 nsINIParserFactory::CreateINIParser(nsIFile* aINIFile,
                                     nsIINIParser* *aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsINIParserImpl> p(new nsINIParserImpl());
   if (!p)

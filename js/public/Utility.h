@@ -856,20 +856,7 @@ class MoveRef {
     explicit MoveRef(T &t) : pointer(&t) { }
     T &operator*()  const { return *pointer; }
     T *operator->() const { return  pointer; }
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) && defined(__clang__)
-    /*
-     * If MoveRef is used in a rvalue position (which is expected), we can
-     * end up in a situation where, without this ifdef, we would try to pass
-     * a T& to a move constructor, which fails. It is not clear if the compiler
-     * should instead use the copy constructor, but for now this lets us build
-     * with clang. See bug 689066 and llvm.org/pr11003 for the details.
-     * Note: We can probably remove MoveRef completely once we are comfortable
-     * using c++11.
-     */
-    operator T&& ()  const { return static_cast<T&&>(*pointer); }
-#else
     operator T& ()   const { return *pointer; }
-#endif
   private:
     T *pointer;
 };

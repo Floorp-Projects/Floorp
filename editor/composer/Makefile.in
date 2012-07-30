@@ -3,16 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH           := ../..
+topsrcdir       := @top_srcdir@
+srcdir          := @srcdir@
+VPATH           := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+PARALLEL_DIRS   := public src
 
-TEST_DIRS += test
+TEST_DIRS       += test
 
 # Enable Editor API Logging!
 ENABLE_EDITOR_API_LOG=1

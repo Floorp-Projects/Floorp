@@ -48,7 +48,6 @@ PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
 
   // Save pointers to functions that get called through PluginLibrary itself.
   mNPP_New = pFuncs->newp;
-  mNPP_GetValue = pFuncs->getvalue;
   mNPP_ClearSiteData = pFuncs->clearsitedata;
   mNPP_GetSitesWithData = pFuncs->getsiteswithdata;
   return NS_OK;
@@ -301,7 +300,7 @@ PluginPRLibrary::BeginUpdateBackground(NPP instance,
   nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
   NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
   NS_ERROR("Unexpected use of async APIs for in-process plugin.");
-  *aCtx = nsnull;
+  *aCtx = nullptr;
   return NS_OK;
 }
 

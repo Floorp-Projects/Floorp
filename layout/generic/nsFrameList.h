@@ -48,7 +48,7 @@ namespace layout {
 class nsFrameList {
 public:
   nsFrameList() :
-    mFirstChild(nsnull), mLastChild(nsnull)
+    mFirstChild(nullptr), mLastChild(nullptr)
   {
     MOZ_COUNT_CTOR(nsFrameList);
   }
@@ -97,7 +97,7 @@ public:
    */
   void DestroyFrom(nsIFrame* aDestructRoot);
 
-  void Clear() { mFirstChild = mLastChild = nsnull; }
+  void Clear() { mFirstChild = mLastChild = nullptr; }
 
   void SetFrames(nsIFrame* aFrameList);
 
@@ -155,7 +155,7 @@ public:
 
   /**
    * Take the first frame (if any) out of the frame list.
-   * @return the first child, or nsnull if the list is empty
+   * @return the first child, or nullptr if the list is empty
    */
   nsIFrame* RemoveFirstChild();
 
@@ -222,11 +222,11 @@ public:
   PRInt32 IndexOf(nsIFrame* aFrame) const;
 
   bool IsEmpty() const {
-    return nsnull == mFirstChild;
+    return nullptr == mFirstChild;
   }
 
   bool NotEmpty() const {
-    return nsnull != mFirstChild;
+    return nullptr != mFirstChild;
   }
 
   bool ContainsFrame(const nsIFrame* aFrame) const;
@@ -241,7 +241,7 @@ public:
     if (FirstChild() == LastChild()) {
       return FirstChild();
     }
-    return nsnull;
+    return nullptr;
   }
 
   /**
@@ -296,7 +296,7 @@ public:
       mList(aList),
 #endif
       mStart(aList.FirstChild()),
-      mEnd(nsnull)
+      mEnd(nullptr)
     {}
 
     Slice(const nsFrameList& aList, nsIFrame* aStart, nsIFrame* aEnd) :
@@ -368,7 +368,7 @@ public:
      * the part of the list it will traverse.
      */
     Enumerator GetUnlimitedEnumerator() const {
-      return Enumerator(*this, nsnull);
+      return Enumerator(*this, nullptr);
     }
 
 #ifdef DEBUG
@@ -409,7 +409,7 @@ public:
 
     FrameLinkEnumerator(const nsFrameList& aList) :
       Enumerator(aList),
-      mPrev(nsnull)
+      mPrev(nullptr)
     {}
 
     FrameLinkEnumerator(const FrameLinkEnumerator& aOther) :

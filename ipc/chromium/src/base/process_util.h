@@ -160,11 +160,22 @@ bool LaunchApp(const std::vector<std::string>& argv,
                bool wait, ProcessHandle* process_handle);
 
 typedef std::map<std::string, std::string> environment_map;
+enum ChildPrivileges {
+  UNPRIVILEGED,
+  SAME_PRIVILEGES_AS_PARENT
+};
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+               const environment_map& env_vars_to_set,
+               ChildPrivileges privs,
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch=GetCurrentProcessArchitecture());
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch=GetCurrentProcessArchitecture());
+
 #endif
 
 // Executes the application specified by cl. This function delegates to one

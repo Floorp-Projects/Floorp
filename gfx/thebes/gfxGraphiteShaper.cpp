@@ -42,8 +42,8 @@ using namespace mozilla; // for AutoSwap_* types
 
 gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
-      mGrFace(nsnull),
-      mGrFont(nsnull),
+      mGrFace(nullptr),
+      mGrFont(nullptr),
       mUseFontGlyphWidths(false)
 {
     mTables.Init();
@@ -68,7 +68,7 @@ gfxGraphiteShaper::~gfxGraphiteShaper()
     if (mGrFace) {
         gr_face_destroy(mGrFace);
     }
-    mTables.Enumerate(ReleaseTableFunc, nsnull);
+    mTables.Enumerate(ReleaseTableFunc, nullptr);
 }
 
 static const void*
@@ -93,7 +93,7 @@ gfxGraphiteShaper::GetTable(PRUint32 aTag, size_t *aLength)
             tableRec.mData = hb_blob_get_data(blob, &tableRec.mLength);
             mTables.Put(aTag, tableRec);
         } else {
-            return nsnull;
+            return nullptr;
         }
     }
 
@@ -163,7 +163,7 @@ gfxGraphiteShaper::ShapeWord(gfxContext      *aContext,
             gr_make_font(mFont->GetAdjustedSize(), mGrFace);
         if (!mGrFont) {
             gr_face_destroy(mGrFace);
-            mGrFace = nsnull;
+            mGrFace = nullptr;
             return false;
         }
     }
@@ -247,7 +247,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedWord *aShapedWord,
     PRUint32 gIndex = 0; // glyph slot index
     PRUint32 cIndex = 0; // current cluster index
     for (const gr_slot *slot = gr_seg_first_slot(aSegment);
-         slot != nsnull;
+         slot != nullptr;
          slot = gr_slot_next_in_segment(slot), gIndex++)
     {
         PRUint32 before = gr_slot_before(slot);
@@ -358,7 +358,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedWord *aShapedWord,
                          "unexpected offset");
             gfxShapedWord::CompressedGlyph g;
             g.SetComplex(aShapedWord->IsClusterStart(offs), false, 0);
-            aShapedWord->SetGlyphs(offs, g, nsnull);
+            aShapedWord->SetGlyphs(offs, g, nullptr);
         }
     }
 

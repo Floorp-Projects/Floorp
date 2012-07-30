@@ -24,9 +24,9 @@
 /***************************************************************************/
 
 
-PRLock*           DHWImportHooker::gLock  = nsnull;
-DHWImportHooker*  DHWImportHooker::gHooks = nsnull;
-GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nsnull;
+PRLock*           DHWImportHooker::gLock  = nullptr;
+DHWImportHooker*  DHWImportHooker::gHooks = nullptr;
+GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nullptr;
 
 
 static bool
@@ -113,19 +113,19 @@ static HMODULE ThisModule()
 {
     MEMORY_BASIC_INFORMATION info;
     return VirtualQuery(ThisModule, &info, sizeof(info)) ? 
-                            (HMODULE) info.AllocationBase : nsnull;
+                            (HMODULE) info.AllocationBase : nullptr;
 }
 
 DHWImportHooker::DHWImportHooker(const char* aModuleName,
                                  const char* aFunctionName,
                                  PROC aHook,
                                  bool aExcludeOurModule /* = false */)
-    :   mNext(nsnull),
+    :   mNext(nullptr),
         mModuleName(aModuleName),
         mFunctionName(aFunctionName),
-        mOriginal(nsnull),
+        mOriginal(nullptr),
         mHook(aHook),
-        mIgnoreModule(aExcludeOurModule ? ThisModule() : nsnull),
+        mIgnoreModule(aExcludeOurModule ? ThisModule() : nullptr),
         mHooking(true)
 {
     //printf("DHWImportHooker hooking %s, function %s\n",aModuleName, aFunctionName);
@@ -171,7 +171,7 @@ DHWImportHooker::~DHWImportHooker()
     if(!gHooks)
     {
         PRLock* theLock = gLock;
-        gLock = nsnull;
+        gLock = nullptr;
         PR_Unlock(theLock);
         PR_DestroyLock(theLock);
     }
@@ -273,7 +273,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
             DWORD dwDummy;
             VirtualProtect(ppfn, sizeof(ppfn), PAGE_EXECUTE_READWRITE, &dwDummy);
             BOOL result = WriteProcessMemory(GetCurrentProcess(), 
-                               ppfn, &replacement, sizeof(replacement), nsnull);
+                               ppfn, &replacement, sizeof(replacement), nullptr);
             if (!result) //failure
             {
               printf("failure name %s  func %x\n",name,*ppfn);

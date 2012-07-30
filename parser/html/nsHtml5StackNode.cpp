@@ -105,7 +105,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
     popName(elementName->name),
     ns(kNameSpaceID_XHTML),
     node(node),
-    attributes(nsnull),
+    attributes(nullptr),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -133,7 +133,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
     popName(popName),
     ns(kNameSpaceID_XHTML),
     node(node),
-    attributes(nsnull),
+    attributes(nullptr),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -146,7 +146,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* pop
     popName(popName),
     ns(kNameSpaceID_SVG),
     node(node),
-    attributes(nsnull),
+    attributes(nullptr),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -159,7 +159,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
     popName(popName),
     ns(kNameSpaceID_MathML),
     node(node),
-    attributes(nsnull),
+    attributes(nullptr),
     refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
@@ -198,7 +198,7 @@ nsHtml5StackNode::~nsHtml5StackNode()
 void 
 nsHtml5StackNode::dropAttributes()
 {
-  attributes = nsnull;
+  attributes = nullptr;
 }
 
 void 

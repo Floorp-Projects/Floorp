@@ -34,13 +34,13 @@ public:
         if (map && map->mTable.init(size))
             return map;
         delete map;
-        return nsnull;
+        return nullptr;
     }
 
     inline nsXPCWrappedJS* Find(JSObject* Obj) {
         NS_PRECONDITION(Obj,"bad param");
         Map::Ptr p = mTable.lookup(Obj);
-        return p ? p->value : nsnull;
+        return p ? p->value : nullptr;
     }
 
     inline nsXPCWrappedJS* Add(nsXPCWrappedJS* wrapper) {
@@ -49,7 +49,7 @@ public:
         Map::AddPtr p = mTable.lookupForAdd(obj);
         if (p)
             return p->value;
-        return mTable.add(p, obj, wrapper) ? wrapper : nsnull;
+        return mTable.add(p, obj, wrapper) ? wrapper : nullptr;
     }
 
     inline void Remove(nsXPCWrappedJS* wrapper) {
@@ -100,7 +100,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, Obj, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -111,7 +111,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return entry->value;
         entry->key = obj;
@@ -169,7 +169,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -180,7 +180,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, iid, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return entry->value;
         entry->key = iid;
@@ -226,7 +226,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -237,7 +237,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, iid, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return entry->value;
         entry->key = iid;
@@ -286,7 +286,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -296,7 +296,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return entry->value;
         entry->key = info;
@@ -346,7 +346,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -356,7 +356,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return entry->value;
         entry->key = info;
@@ -411,7 +411,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->key_value;
     }
 
@@ -422,7 +422,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key_value)
             return entry->key_value;
         entry->key_value = set;
@@ -431,7 +431,7 @@ public:
 
     inline XPCNativeSet* Add(XPCNativeSet* set)
     {
-        XPCNativeSetKey key(set, nsnull, 0);
+        XPCNativeSetKey key(set, nullptr, 0);
         return Add(&key, set);
     }
 
@@ -439,7 +439,7 @@ public:
     {
         NS_PRECONDITION(set,"bad param");
 
-        XPCNativeSetKey key(set, nsnull, 0);
+        XPCNativeSetKey key(set, nullptr, 0);
         JS_DHashTableOperate(mTable, &key, JS_DHASH_REMOVE);
     }
 
@@ -488,7 +488,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
+            return nullptr;
         return entry->value;
     }
 
@@ -499,7 +499,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         NS_IF_ADDREF(obj);
         NS_IF_RELEASE(entry->value);
         entry->value = obj;
@@ -574,7 +574,7 @@ public:
         JSDHashEntryStub* entry = (JSDHashEntryStub*)
             JS_DHashTableOperate(mTable, proto, JS_DHASH_ADD);
         if (!entry)
-            return nsnull;
+            return nullptr;
         if (entry->key)
             return (XPCWrappedNativeProto*) entry->key;
         entry->key = proto;
@@ -612,14 +612,14 @@ public:
         if (map && map->mTable.init(size))
             return map;
         delete map;
-        return nsnull;
+        return nullptr;
     }
 
     inline JSObject* Find(JSObject* key) {
         NS_PRECONDITION(key, "bad param");
         if (Map::Ptr p = mTable.lookup(key))
             return p->value;
-        return nsnull;
+        return nullptr;
     }
 
     /* Note: If the entry already exists, return the old value. */
@@ -629,7 +629,7 @@ public:
         if (p)
             return p->value;
         if (!mTable.add(p, key, value))
-            return nsnull;
+            return nullptr;
         return value;
     }
 

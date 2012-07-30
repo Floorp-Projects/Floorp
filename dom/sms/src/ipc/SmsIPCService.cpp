@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
-PSmsChild* SmsIPCService::sSmsChild = nsnull;
+PSmsChild* SmsIPCService::sSmsChild = nullptr;
 
 NS_IMPL_ISUPPORTS2(SmsIPCService, nsISmsService, nsISmsDatabaseService)
 

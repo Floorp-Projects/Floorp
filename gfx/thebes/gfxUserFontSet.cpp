@@ -45,7 +45,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
       mLoadingState(NOT_LOADING),
       mUnsupportedFormat(false),
-      mLoader(nsnull)
+      mLoader(nullptr)
 {
     mIsProxy = true;
     mSrcList = aFontFaceSrcList;
@@ -66,7 +66,7 @@ gfxFont*
 gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
 {
     // cannot create an actual font for a proxy entry
-    return nsnull;
+    return nullptr;
 }
 
 gfxUserFontSet::gfxUserFontSet()
@@ -89,7 +89,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
-    gfxProxyFontEntry *proxyEntry = nsnull;
+    gfxProxyFontEntry *proxyEntry = nullptr;
 
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
@@ -161,7 +161,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
     // no user font defined for this name
     if (!family) {
         aFoundFamily = false;
-        return nsnull;
+        return nullptr;
     }
 
     aFoundFamily = true;
@@ -178,7 +178,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
     if (proxyEntry->mLoadingState > gfxProxyFontEntry::NOT_LOADING) {
         aWaitForUserFont =
             (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
-        return nsnull;
+        return nullptr;
     }
 
     // hasn't been loaded yet, start the load process
@@ -200,7 +200,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
         (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
 
     // if either loading or an error occurred, return null
-    return nsnull;
+    return nullptr;
 }
 
 // Given a buffer of downloaded font data, do any necessary preparation
@@ -252,7 +252,7 @@ PrepareOpenTypeData(const PRUint8* aData, PRUint32* aLength)
     // discard downloaded data that couldn't be used
     NS_Free((void*)aData);
 
-    return nsnull;
+    return nullptr;
 }
 
 // Based on ots::ExpandingMemoryStream from ots-memory-stream.h,
@@ -274,7 +274,7 @@ public:
     // when finished with it
     void* forget() {
         void* p = mPtr;
-        mPtr = nsnull;
+        mPtr = nullptr;
         return p;
     }
 
@@ -380,7 +380,7 @@ gfxUserFontSet::SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
         return static_cast<PRUint8*>(output.forget());
     } else {
         aSaneLength = 0;
-        return nsnull;
+        return nullptr;
     }
 }
 
@@ -465,12 +465,12 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
 {
     // forget about the loader, as we no longer potentially need to cancel it
     // if the entry is obsoleted
-    aProxy->mLoader = nsnull;
+    aProxy->mLoader = nullptr;
 
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
         gfxFontEntry *fe = LoadFont(aProxy, aFontData, aLength);
-        aFontData = nsnull;
+        aFontData = nullptr;
 
         if (fe) {
             IncrementGeneration();
@@ -536,7 +536,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      PRUint32(mGeneration)));
                 fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
-                StoreUserFontData(fe, aProxyEntry, nsString(), nsnull, 0);
+                StoreUserFontData(fe, aProxyEntry, nsString(), nullptr, 0);
                 ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
@@ -559,7 +559,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                        &loadDoesntSpin);
 
                 if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
-                    PRUint8 *buffer = nsnull;
+                    PRUint8 *buffer = nullptr;
                     PRUint32 bufferLength = 0;
 
                     // sync load font immediately
@@ -638,10 +638,10 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
     // the load was completing?)
     if (!aProxy->Family()) {
         NS_Free(const_cast<PRUint8*>(aFontData));
-        return nsnull;
+        return nullptr;
     }
 
-    gfxFontEntry *fe = nsnull;
+    gfxFontEntry *fe = nullptr;
 
     gfxUserFontType fontType =
         gfxFontUtils::DetermineFontDataType(aFontData, aLength);
@@ -712,7 +712,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
                 if (!fe) {
                     LogMessage(aProxy, "not usable by platform");
                 }
-                aFontData = nsnull; // we must NOT free this!
+                aFontData = nullptr; // we must NOT free this!
             } else {
                 // the data was unusable, so just discard it
                 // (error will be reported below, if logging is enabled)
@@ -723,7 +723,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
 
     if (aFontData) {
         NS_Free((void*)aFontData);
-        aFontData = nsnull;
+        aFontData = nullptr;
     }
 
     if (fe) {

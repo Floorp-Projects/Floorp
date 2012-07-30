@@ -45,7 +45,7 @@ class NS_STACK_CLASS nsAutoPlaceHolderBatch
 class nsAutoEditBatch : public nsAutoPlaceHolderBatch
 {
   public:
-    nsAutoEditBatch( nsIEditor *aEd) : nsAutoPlaceHolderBatch(aEd,nsnull)  {}
+    nsAutoEditBatch( nsIEditor *aEd) : nsAutoPlaceHolderBatch(aEd,nullptr)  {}
     ~nsAutoEditBatch() {}
 };
 

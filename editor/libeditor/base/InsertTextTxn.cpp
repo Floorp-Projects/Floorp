@@ -130,7 +130,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge
   {
     // if aTransaction is a InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
-    InsertTextTxn *otherInsTxn = nsnull;
+    InsertTextTxn *otherInsTxn = nullptr;
     aTransaction->QueryInterface(InsertTextTxn::GetCID(), (void **)&otherInsTxn);
     if (otherInsTxn)
     {

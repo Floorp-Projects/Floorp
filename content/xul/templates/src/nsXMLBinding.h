@@ -28,7 +28,7 @@ struct nsXMLBinding {
   nsAutoPtr<nsXMLBinding> mNext;
 
   nsXMLBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
-    : mVar(aVar), mExpr(aExpr), mNext(nsnull)
+    : mVar(aVar), mExpr(aExpr), mNext(nullptr)
   {
     MOZ_COUNT_CTOR(nsXMLBinding);
   }

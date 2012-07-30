@@ -20,7 +20,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateResultRDF)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTemplateResultRDF)
 
 nsXULTemplateResultRDF::nsXULTemplateResultRDF(nsIRDFResource* aNode)
-    : mQuery(nsnull),
+    : mQuery(nullptr),
       mNode(aNode)
 {
 }
@@ -169,7 +169,7 @@ void
 nsXULTemplateResultRDF::GetAssignment(nsIAtom* aVar, nsIRDFNode** aValue)
 {
     // look up a variable in the assignments map
-    *aValue = nsnull;
+    *aValue = nullptr;
     mInst.mAssignments.GetAssignmentFor(aVar, aValue);
 
     // if not found, look up the variable in the bindings
@@ -187,7 +187,7 @@ nsXULTemplateResultRDF::SyncAssignments(nsIRDFResource* aSubject,
     RDFBindingSet* bindingset = mBindingValues.GetBindingSet();
     if (bindingset) {
         return bindingset->SyncAssignments(aSubject, aPredicate, aTarget,
-            (aSubject == mNode) ? mQuery->GetMemberVariable() : nsnull,
+            (aSubject == mNode) ? mQuery->GetMemberVariable() : nullptr,
             this, mBindingValues);
     }
 

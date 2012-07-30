@@ -75,16 +75,17 @@ let AlarmService = {
   receiveMessage: function receiveMessage(aMessage) {
     debug("receiveMessage(): " + aMessage.name);
 
+    let mm = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
     let json = aMessage.json;
     switch (aMessage.name) {
       case "AlarmsManager:GetAll":
         this._db.getAll(
           function getAllSuccessCb(aAlarms) {
             debug("Callback after getting alarms from database: " + JSON.stringify(aAlarms));
-            this._sendAsyncMessage("GetAll:Return:OK", json.requestId, aAlarms);
+            this._sendAsyncMessage(mm, "GetAll", true, json.requestId, aAlarms);
           }.bind(this),
           function getAllErrorCb(aErrorMsg) {
-            this._sendAsyncMessage("GetAll:Return:KO", json.requestId, aErrorMsg);
+            this._sendAsyncMessage(mm, "GetAll", false, json.requestId, aErrorMsg);
           }.bind(this)
         );
         break;
@@ -110,7 +111,7 @@ let AlarmService = {
             if (newAlarmTime <= Date.now()) {
               debug("Adding a alarm that has past time. Don't set it in system.");
               this._debugCurrentAlarm();
-              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
+              this._sendAsyncMessage(mm, "Add", true, json.requestId, aNewId);
               return;
             }
 
@@ -118,7 +119,7 @@ let AlarmService = {
             if (this._currentAlarm == null) {
               this._currentAlarm = newAlarm;
               this._debugCurrentAlarm();
-              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
+              this._sendAsyncMessage(mm, "Add", true, json.requestId, aNewId);
               return;
             }
 
@@ -130,7 +131,7 @@ let AlarmService = {
               alarmQueue.unshift(this._currentAlarm);
               this._currentAlarm = newAlarm;
               this._debugCurrentAlarm();
-              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
+              this._sendAsyncMessage(mm, "Add", true, json.requestId, aNewId);
               return;
             }
 
@@ -138,10 +139,10 @@ let AlarmService = {
             alarmQueue.push(newAlarm);
             alarmQueue.sort(this._sortAlarmByTimeStamps.bind(this));
             this._debugCurrentAlarm();
-            this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
+            this._sendAsyncMessage(mm, "Add", true, json.requestId, aNewId);
           }.bind(this),
           function addErrorCb(aErrorMsg) {
-            this._sendAsyncMessage("Add:Return:KO", json.requestId, aErrorMsg);
+            this._sendAsyncMessage(mm, "Add", false, json.requestId, aErrorMsg);
           }.bind(this)
         );
         break;
@@ -195,23 +196,27 @@ let AlarmService = {
     }
   },
 
-  _sendAsyncMessage: function _sendAsyncMessage(aMessageName, aRequestId, aData) {
+  _sendAsyncMessage: function _sendAsyncMessage(aMessageManager, aMessageName, aSuccess, aRequestId, aData) {
     debug("_sendAsyncMessage()");
+
+    if (!aMessageManager) {
+      debug("Invalid message manager: null");
+      throw Components.results.NS_ERROR_FAILURE;
+    }
 
     let json = null;
     switch (aMessageName)
     {
-      case "Add:Return:OK":
-        json = { requestId: aRequestId, id: aData };
+      case "Add":
+          json = aSuccess ? 
+            { requestId: aRequestId, id: aData } : 
+            { requestId: aRequestId, errorMsg: aData };
         break;
 
-      case "GetAll:Return:OK":
-        json = { requestId: aRequestId, alarms: aData };
-        break;
-
-      case "Add:Return:KO":
-      case "GetAll:Return:KO":
-        json = { requestId: aRequestId, errorMsg: aData };
+      case "GetAll":
+          json = aSuccess ? 
+            { requestId: aRequestId, alarms: aData } : 
+            { requestId: aRequestId, errorMsg: aData };
         break;
 
       default:
@@ -219,8 +224,7 @@ let AlarmService = {
         break;
     }
 
-    if (aMessageName && json)
-      ppmm.sendAsyncMessage("AlarmsManager:" + aMessageName, json);
+    aMessageManager.sendAsyncMessage("AlarmsManager:" + aMessageName + ":Return:" + (aSuccess ? "OK" : "KO"), json);
   },
 
   _onAlarmFired: function _onAlarmFired() {

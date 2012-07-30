@@ -45,7 +45,7 @@ nsDownloadHistory::AddDownload(nsIURI *aSource,
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     if (os)
-      os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+      os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
   }
 
   return NS_OK;

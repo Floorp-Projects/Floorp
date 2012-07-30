@@ -51,7 +51,7 @@ nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
                           getter_AddRefs(frame));
 
     if (!frame)
-      return nsnull;
+      return nullptr;
 
     return ImgSurfaceToPixbuf(frame, frame->Width(), frame->Height());
 }
@@ -62,7 +62,7 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth
     GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
                                        aWidth, aHeight);
     if (!pixbuf)
-        return nsnull;
+        return nullptr;
 
     PRUint32 rowstride = gdk_pixbuf_get_rowstride (pixbuf);
     guchar* pixels = gdk_pixbuf_get_pixels (pixbuf);
@@ -112,7 +112,7 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 
 {
     if (aSurface->CairoStatus()) {
         NS_ERROR("invalid surface");
-        return nsnull;
+        return nullptr;
     }
 
     nsRefPtr<gfxImageSurface> imgSurface;
@@ -124,11 +124,11 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 
 					 gfxImageSurface::ImageFormatARGB32);
                                        
         if (!imgSurface)
-            return nsnull;
+            return nullptr;
 
         nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
         if (!context)
-            return nsnull;
+            return nullptr;
 
         context->SetOperator(gfxContext::OPERATOR_SOURCE);
         context->SetSource(aSurface);

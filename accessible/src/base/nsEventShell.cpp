@@ -28,7 +28,7 @@ nsEventShell::FireEvent(AccEvent* aEvent)
 
   accessible->HandleAccEvent(aEvent);
 
-  sEventTargetNode = nsnull;
+  sEventTargetNode = nullptr;
 }
 
 void

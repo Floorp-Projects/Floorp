@@ -85,7 +85,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -180,7 +180,7 @@ public:
   ImageContainer* GetImageContainer()
   {
     VideoFrameContainer* container = GetVideoFrameContainer();
-    return container ? container->GetImageContainer() : nsnull;
+    return container ? container->GetImageContainer() : nullptr;
   }
 
   // Called by the video frame to get the print surface, if this is
@@ -384,7 +384,7 @@ protected:
    * of parameters in aParams.
    */
   void ReportLoadError(const char* aMsg,
-                       const PRUnichar** aParams = nsnull,
+                       const PRUnichar** aParams = nullptr,
                        PRUint32 aParamCount = 0);
 
   /**

@@ -192,7 +192,7 @@ public:
         if (nsCacheService::gService) {
             nsCacheServiceAutoLock autoLock(LOCK_TELEM(NSSETDISKSMARTSIZECALLBACK_NOTIFY));
             nsCacheService::gService->SetDiskSmartSize_Locked();
-            nsCacheService::gService->mSmartSizeTimer = nsnull;
+            nsCacheService::gService->mSmartSizeTimer = nullptr;
         }
         return NS_OK;
     }
@@ -946,7 +946,7 @@ public:
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSPROCESSREQUESTEVENT_RUN));
         rv = nsCacheService::gService->ProcessRequest(mRequest,
                                                       false,
-                                                      nsnull);
+                                                      nullptr);
 
         // Don't delete the request if it was queued
         if (!(mRequest->IsBlocking() &&
@@ -1035,7 +1035,7 @@ public:
             mThread->Dispatch(new nsNotifyDoomListener(mListener, status),
                               NS_DISPATCH_NORMAL);
             // posted event will release the reference on the correct thread
-            mListener = nsnull;
+            mListener = nullptr;
         }
 
         return NS_OK;
@@ -1051,9 +1051,9 @@ private:
 /******************************************************************************
  * nsCacheService
  *****************************************************************************/
-nsCacheService *   nsCacheService::gService = nsnull;
+nsCacheService *   nsCacheService::gService = nullptr;
 
-static nsCOMPtr<nsIMemoryReporter> MemoryCacheReporter = nsnull;
+static nsCOMPtr<nsIMemoryReporter> MemoryCacheReporter = nullptr;
 
 NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkMemoryCache,
     "explicit/network-memory-cache",
@@ -1071,9 +1071,9 @@ nsCacheService::nsCacheService()
       mClearingEntries(false),
       mEnableMemoryDevice(true),
       mEnableDiskDevice(true),
-      mMemoryDevice(nsnull),
-      mDiskDevice(nsnull),
-      mOfflineDevice(nsnull),
+      mMemoryDevice(nullptr),
+      mDiskDevice(nullptr),
+      mOfflineDevice(nullptr),
       mTotalEntries(0),
       mCacheHits(0),
       mCacheMisses(0),
@@ -1083,7 +1083,7 @@ nsCacheService::nsCacheService()
       mDeactivateFailures(0),
       mDeactivatedUnboundEntries(0)
 {
-    NS_ASSERTION(gService==nsnull, "multiple nsCacheService instances!");
+    NS_ASSERTION(gService==nullptr, "multiple nsCacheService instances!");
     gService = this;
 
     // create list of cache devices
@@ -1096,7 +1096,7 @@ nsCacheService::~nsCacheService()
     if (mInitialized) // Shutdown hasn't been called yet.
         (void) Shutdown();
 
-    gService = nsnull;
+    gService = nullptr;
 }
 
 
@@ -1191,7 +1191,7 @@ nsCacheService::Shutdown()
 
         if (mSmartSizeTimer) {
             mSmartSizeTimer->Cancel();
-            mSmartSizeTimer = nsnull;
+            mSmartSizeTimer = nullptr;
         }
 
         // Make sure to wait for any pending cache-operations before
@@ -1207,21 +1207,21 @@ nsCacheService::Shutdown()
         // unregister memory reporter, before deleting the memory device, just
         // to be safe
         NS_UnregisterMemoryReporter(MemoryCacheReporter);
-        MemoryCacheReporter = nsnull;
+        MemoryCacheReporter = nullptr;
 
         // deallocate memory and disk caches
         delete mMemoryDevice;
-        mMemoryDevice = nsnull;
+        mMemoryDevice = nullptr;
 
         delete mDiskDevice;
-        mDiskDevice = nsnull;
+        mDiskDevice = nullptr;
 
         if (mOfflineDevice)
             mOfflineDevice->Shutdown();
 
         NS_IF_RELEASE(mOfflineDevice);
 
-        mCustomOfflineDevices.Enumerate(&nsCacheService::ShutdownCustomCacheDeviceEnum, nsnull);
+        mCustomOfflineDevices.Enumerate(&nsCacheService::ShutdownCustomCacheDeviceEnum, nullptr);
 
 #ifdef PR_LOGGING
         LogCacheStatistics();
@@ -1255,11 +1255,11 @@ nsCacheService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
     nsresult  rv;
 
-    if (aOuter != nsnull)
+    if (aOuter != nullptr)
         return NS_ERROR_NO_AGGREGATION;
 
     nsCacheService * cacheService = new nsCacheService();
-    if (cacheService == nsnull)
+    if (cacheService == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(cacheService);
@@ -1278,9 +1278,9 @@ nsCacheService::CreateSession(const char *          clientID,
                               bool                  streamBased,
                               nsICacheSession     **result)
 {
-    *result = nsnull;
+    *result = nullptr;
 
-    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
+    if (this == nullptr)  return NS_ERROR_NOT_AVAILABLE;
 
     nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
     if (!session)  return NS_ERROR_OUT_OF_MEMORY;
@@ -1322,7 +1322,7 @@ EvictionNotifierRunnable::Run()
     if (obsSvc) {
         obsSvc->NotifyObservers(mSubject,
                                 NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
-                                nsnull);
+                                nullptr);
     }
     return NS_OK;
 }
@@ -1384,7 +1384,7 @@ nsresult
 nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
                                           bool *              result)
 {
-    if (gService == nsnull) return NS_ERROR_NOT_AVAILABLE;
+    if (gService == nullptr) return NS_ERROR_NOT_AVAILABLE;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY));
 
     *result = gService->IsStorageEnabledForPolicy_Locked(storagePolicy);
@@ -1476,7 +1476,7 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 {
-    return  EvictEntriesForClient(nsnull, storagePolicy);
+    return  EvictEntriesForClient(nullptr, storagePolicy);
 }
 
 NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
@@ -1495,7 +1495,7 @@ NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
         NS_ADDREF(*aCacheIOTarget = mCacheIOThread);
         rv = NS_OK;
     } else {
-        *aCacheIOTarget = nsnull;
+        *aCacheIOTarget = nullptr;
         rv = NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -1534,7 +1534,7 @@ nsCacheService::CreateDiskDevice()
 #endif        
         mEnableDiskDevice = false;
         delete mDiskDevice;
-        mDiskDevice = nsnull;
+        mDiskDevice = nullptr;
         return rv;
     }
 
@@ -1550,7 +1550,7 @@ nsCacheService::CreateDiskDevice()
                                                nsITimer::TYPE_ONE_SHOT);
         if (NS_FAILED(rv)) {
             NS_WARNING("Failed to post smart size timer");
-            mSmartSizeTimer = nsnull;
+            mSmartSizeTimer = nullptr;
         }
     } else {
         NS_WARNING("Can't create smart size timer");
@@ -1667,7 +1667,7 @@ nsCacheService::CreateMemoryDevice()
     if (NS_FAILED(rv)) {
         NS_WARNING("Initialization of Memory Cache failed.");
         delete mMemoryDevice;
-        mMemoryDevice = nsnull;
+        mMemoryDevice = nullptr;
     }
 
     MemoryCacheReporter =
@@ -1770,7 +1770,7 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
 
     // Swap ownership, and release listener on target thread...
     nsICacheListener *listener = request->mListener;
-    request->mListener = nsnull;
+    request->mListener = nullptr;
 
     nsCOMPtr<nsIRunnable> ev =
             new nsCacheListenerEvent(listener, descriptor,
@@ -1793,10 +1793,10 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
 {
     // !!! must be called with mLock held !!!
     nsresult           rv;
-    nsCacheEntry *     entry = nsnull;
-    nsCacheEntry *     doomedEntry = nsnull;
+    nsCacheEntry *     entry = nullptr;
+    nsCacheEntry *     doomedEntry = nullptr;
     nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
-    if (result) *result = nsnull;
+    if (result) *result = nullptr;
 
     while(1) {  // Activate entry loop
         rv = ActivateEntry(request, &entry, &doomedEntry);  // get the entry for this request
@@ -1847,7 +1847,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
         }
     }
 
-    nsICacheEntryDescriptor *descriptor = nsnull;
+    nsICacheEntryDescriptor *descriptor = nullptr;
     
     if (NS_SUCCEEDED(rv))
         rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
@@ -1867,7 +1867,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
         (void) ProcessPendingRequests(doomedEntry);
         if (doomedEntry->IsNotInUse())
             DeactivateEntry(doomedEntry);
-        doomedEntry = nsnull;
+        doomedEntry = nullptr;
     }
 
     if (request->mListener) {  // Asynchronous
@@ -1900,12 +1900,12 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                      blockingMode));
     NS_ASSERTION(gService, "nsCacheService::gService is null.");
     if (result)
-        *result = nsnull;
+        *result = nullptr;
 
     if (!gService->mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsCacheRequest * request = nsnull;
+    nsCacheRequest * request = nullptr;
 
     nsresult rv = gService->CreateRequest(session,
                                           key,
@@ -1954,9 +1954,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     nsresult        rv = NS_OK;
 
-    NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
-    if (result) *result = nsnull;
-    if (doomedEntry) *doomedEntry = nsnull;
+    NS_ASSERTION(request != nullptr, "ActivateEntry called with no request");
+    if (result) *result = nullptr;
+    if (doomedEntry) *doomedEntry = nullptr;
     if ((!request) || (!result) || (!doomedEntry))
         return NS_ERROR_NULL_POINTER;
 
@@ -2006,7 +2006,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (NS_FAILED(rv)) {
             // XXX what to do?  Increment FailedDooms counter?
         }
-        entry = nsnull;
+        entry = nullptr;
     }
 
     if (!entry) {
@@ -2041,7 +2041,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     return NS_OK;
     
  error:
-    *result = nsnull;
+    *result = nullptr;
     delete entry;
     return rv;
 }
@@ -2051,7 +2051,7 @@ nsCacheEntry *
 nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy, bool *collision)
 {
     Telemetry::AutoTimer<Telemetry::CACHE_DEVICE_SEARCH> timer;
-    nsCacheEntry * entry = nsnull;
+    nsCacheEntry * entry = nullptr;
 
     CACHE_LOG_DEBUG(("mMemoryDevice: 0x%p\n", mMemoryDevice));
 
@@ -2072,7 +2072,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy,
             if (!mDiskDevice) {
                 nsresult rv = CreateDiskDevice();
                 if (NS_FAILED(rv))
-                    return nsnull;
+                    return nullptr;
             }
             
             entry = mDiskDevice->FindEntry(key, collision);
@@ -2087,7 +2087,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy,
             if (!mOfflineDevice) {
                 nsresult rv = CreateOfflineDevice();
                 if (NS_FAILED(rv))
-                    return nsnull;
+                    return nullptr;
             }
 
             entry = mOfflineDevice->FindEntry(key, collision);
@@ -2120,7 +2120,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
                 mDiskDevice->EntryIsTooBig(predictedDataSize)) {
                 DebugOnly<nsresult> rv = nsCacheService::DoomEntry(entry);
                 NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
-                return nsnull;
+                return nullptr;
             }
 
             entry->MarkBinding();  // enter state of binding
@@ -2142,7 +2142,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
                 mMemoryDevice->EntryIsTooBig(predictedDataSize)) {
                 DebugOnly<nsresult> rv = nsCacheService::DoomEntry(entry);
                 NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
-                return nsnull;
+                return nullptr;
             }
 
             entry->MarkBinding();  // enter state of binding
@@ -2168,7 +2168,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
             nsresult rv = device->BindEntry(entry);
             entry->ClearBinding();
             if (NS_FAILED(rv))
-                device = nsnull;
+                device = nullptr;
         }
     }
 
@@ -2242,7 +2242,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ONPROFILESHUTDOWN));
     gService->mClearingEntries = true;
 
-    gService->DoomActiveEntries(nsnull);
+    gService->DoomActiveEntries(nullptr);
     gService->ClearDoomList();
 
     // Make sure to wait for any pending cache-operations before
@@ -2251,7 +2251,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
 
     if (gService->mDiskDevice && gService->mEnableDiskDevice) {
         if (cleanse)
-            gService->mDiskDevice->EvictEntries(nsnull);
+            gService->mDiskDevice->EvictEntries(nullptr);
 
         gService->mDiskDevice->Shutdown();
     }
@@ -2259,18 +2259,18 @@ nsCacheService::OnProfileShutdown(bool cleanse)
 
     if (gService->mOfflineDevice && gService->mEnableOfflineDevice) {
         if (cleanse)
-            gService->mOfflineDevice->EvictEntries(nsnull);
+            gService->mOfflineDevice->EvictEntries(nullptr);
 
         gService->mOfflineDevice->Shutdown();
     }
     gService->mCustomOfflineDevices.Enumerate(
-        &nsCacheService::ShutdownCustomCacheDeviceEnum, nsnull);
+        &nsCacheService::ShutdownCustomCacheDeviceEnum, nullptr);
 
     gService->mEnableOfflineDevice = false;
 
     if (gService->mMemoryDevice) {
         // clear memory cache
-        gService->mMemoryDevice->EvictEntries(nsnull);
+        gService->mMemoryDevice->EvictEntries(nullptr);
     }
 
     gService->mClearingEntries = false;
@@ -2592,7 +2592,7 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
     CACHE_LOG_DEBUG(("Deactivating entry %p\n", entry));
     nsresult  rv = NS_OK;
     NS_ASSERTION(entry->IsNotInUse(), "### deactivating an entry while in use!");
-    nsCacheDevice * device = nsnull;
+    nsCacheDevice * device = nullptr;
 
     if (mMaxDataSize < entry->DataSize() )     mMaxDataSize = entry->DataSize();
     if (mMaxMetaSize < entry->MetaDataSize() ) mMaxMetaSize = entry->MetaDataSize();
@@ -2698,7 +2698,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
             PR_REMOVE_AND_INIT_LINK(request);
 
             if (entry->IsDoomed()) {
-                rv = ProcessRequest(request, false, nsnull);
+                rv = ProcessRequest(request, false, nullptr);
                 if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
                     rv = NS_OK;
                 else
@@ -2714,7 +2714,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                 // XXX if (newWriter)  NS_ASSERTION( accessGranted == request->AccessRequested(), "why not?");
 
                 // entry->CreateDescriptor dequeues request, and queues descriptor
-                nsICacheEntryDescriptor *descriptor = nsnull;
+                nsICacheEntryDescriptor *descriptor = nullptr;
                 rv = entry->CreateDescriptor(request,
                                              accessGranted,
                                              &descriptor);
@@ -2784,7 +2784,7 @@ nsCacheService::ClearDoomList()
 void
 nsCacheService::ClearActiveEntries()
 {
-    mActiveEntries.VisitEntries(DeactivateAndClearEntry, nsnull);
+    mActiveEntries.VisitEntries(DeactivateAndClearEntry, nullptr);
     mActiveEntries.Shutdown();
 }
 
@@ -2796,7 +2796,7 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
                                         void *            arg)
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
-    NS_ASSERTION(entry, "### active entry = nsnull!");
+    NS_ASSERTION(entry, "### active entry = nullptr!");
     // only called from Shutdown() so we don't worry about pending requests
     gService->ClearPendingRequests(entry);
     entry->DetachDescriptors();
@@ -2833,13 +2833,13 @@ nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
                                   void *            arg)
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
-    NS_ASSERTION(entry, "### active entry = nsnull!");
+    NS_ASSERTION(entry, "### active entry = nullptr!");
 
     ActiveEntryArgs* args = static_cast<ActiveEntryArgs*>(arg);
     if (args->mCheckFn && !args->mCheckFn(entry))
         return PL_DHASH_NEXT;
 
-    NS_ASSERTION(args->mActiveArray, "### array = nsnull!");
+    NS_ASSERTION(args->mActiveArray, "### array = nullptr!");
     args->mActiveArray->AppendElement(entry);
 
     // entry is being removed from the active entry list

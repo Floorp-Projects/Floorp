@@ -88,7 +88,7 @@ public:
                                   void* aClosure)
   {
     NS_ASSERTION(aDatabase, "Need a DB here!");
-    return AcquireExclusiveAccess(aOrigin, aDatabase, aHelper, nsnull,
+    return AcquireExclusiveAccess(aOrigin, aDatabase, aHelper, nullptr,
                                   aCallback, aClosure);
   }
 
@@ -97,7 +97,7 @@ public:
                                   WaitingOnDatabasesCallback aCallback,
                                   void* aClosure)
   {
-    return AcquireExclusiveAccess(aOrigin, nsnull, nsnull, aRunnable, aCallback,
+    return AcquireExclusiveAccess(aOrigin, nullptr, nullptr, aRunnable, aCallback,
                                   aClosure);
   }
 
@@ -451,12 +451,12 @@ private:
         return currentOp;
       }
     }
-    return nsnull;
+    return nullptr;
   }
 
   bool IsClearOriginPending(const nsACString& aOrigin)
   {
-    return !!FindSynchronizedOp(aOrigin, nsnull);
+    return !!FindSynchronizedOp(aOrigin, nullptr);
   }
 
   // Maintains a list of live databases per origin.
@@ -514,7 +514,7 @@ public:
 
   ~AutoEnterWindow()
   {
-    IndexedDatabaseManager::SetCurrentWindow(nsnull);
+    IndexedDatabaseManager::SetCurrentWindow(nullptr);
   }
 };
 

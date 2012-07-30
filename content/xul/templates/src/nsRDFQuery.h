@@ -44,8 +44,8 @@ public:
     nsRDFQuery(nsXULTemplateQueryProcessorRDF* aProcessor)
       : mProcessor(aProcessor),
         mSimple(false),
-        mRoot(nsnull),
-        mCachedResults(nsnull)
+        mRoot(nullptr),
+        mCachedResults(nullptr)
     { }
 
     ~nsRDFQuery() { Finish(); }
@@ -88,7 +88,7 @@ public:
     // clear the cached results
     void ClearCachedResults()
     {
-        mCachedResults = nsnull;
+        mCachedResults = nullptr;
     }
 
     nsXULTemplateQueryProcessorRDF* Processor() { return mProcessor; }

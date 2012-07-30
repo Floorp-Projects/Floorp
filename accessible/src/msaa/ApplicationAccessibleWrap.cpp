@@ -25,7 +25,7 @@ NS_IMETHODIMP
 ApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nsnull;
+  *aAttributes = nullptr;
 
   nsCOMPtr<nsIPersistentProperties> attributes =
     do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);

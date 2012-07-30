@@ -28,7 +28,7 @@ public:
         : mSink(sink)
         , mTarget(target)
         , mLock("nsTransportEventSinkProxy.mLock")
-        , mLastEvent(nsnull)
+        , mLastEvent(nullptr)
         , mCoalesceAll(coalesceAll)
     {
         NS_ADDREF(mSink);
@@ -72,7 +72,7 @@ public:
         {
             MutexAutoLock lock(mProxy->mLock);
             if (mProxy->mLastEvent == this)
-                mProxy->mLastEvent = nsnull;
+                mProxy->mLastEvent = nullptr;
         }
 
         mProxy->mSink->OnTransportStatus(mTransport, mStatus, mProgress,
@@ -122,7 +122,7 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
             NS_WARNING("unable to post transport status event");
 
             MutexAutoLock lock(mLock); // cleanup.. don't reference anymore!
-            mLastEvent = nsnull;
+            mLastEvent = nullptr;
         }
     }
     return rv;

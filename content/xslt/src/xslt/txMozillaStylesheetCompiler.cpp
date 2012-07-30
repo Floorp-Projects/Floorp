@@ -86,7 +86,7 @@ public:
     NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
     virtual void FlushPendingNotifications(mozFlushType aType) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
-    virtual nsISupports *GetTarget() { return nsnull; }
+    virtual nsISupports *GetTarget() { return nullptr; }
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;
@@ -235,7 +235,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                 nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
                 nsAutoString spec;
                 getSpec(channel, spec);
-                mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nsnull,
+                mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nullptr,
                                   spec.get());
 
                 return NS_ERROR_XSLT_WRONG_MIME_TYPE;
@@ -330,11 +330,11 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
         nsAutoString spec;
         getSpec(channel, spec);
-        mCompiler->cancel(result, nsnull, spec.get());
+        mCompiler->cancel(result, nullptr, spec.get());
     }
 
     nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
-    mListener = nsnull;
+    mListener = nullptr;
     return rv;
 }
 
@@ -343,7 +343,7 @@ txStylesheetSink::GetInterface(const nsIID& aIID, void** aResult)
 {
     if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
         NS_ENSURE_ARG(aResult);
-        *aResult = nsnull;
+        *aResult = nullptr;
 
         nsresult rv;
         nsCOMPtr<nsIWindowWatcher> wwatcher =
@@ -351,10 +351,10 @@ txStylesheetSink::GetInterface(const nsIID& aIID, void** aResult)
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIAuthPrompt> prompt;
-        rv = wwatcher->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
+        rv = wwatcher->GetNewAuthPrompter(nullptr, getter_AddRefs(prompt));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsIAuthPrompt* rawPtr = nsnull;
+        nsIAuthPrompt* rawPtr = nullptr;
         prompt.swap(rawPtr);
         *aResult = rawPtr;
 
@@ -421,9 +421,9 @@ txCompileObserver::loadURI(const nsAString& aUri,
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    uri,
                                    referrerPrincipal,
-                                   nsnull,
+                                   nullptr,
                                    NS_LITERAL_CSTRING("application/xml"),
-                                   nsnull,
+                                   nullptr,
                                    &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
     if (NS_CP_REJECTED(shouldLoad)) {
@@ -510,7 +510,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
                                   aCallerPrincipal,
                                   aProcessor->GetSourceContentModel(),
                                   NS_LITERAL_CSTRING("application/xml"),
-                                  nsnull,
+                                  nullptr,
                                   &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
     if (NS_CP_REJECTED(shouldLoad)) {
@@ -566,7 +566,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         NS_ENSURE_SUCCESS(rv, rv);
 
         // explicitly destroy the attrs here since we no longer need it
-        atts = nsnull;
+        atts = nullptr;
 
         for (nsIContent* child = element->GetFirstChild();
              child;
@@ -643,9 +643,9 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    uri,
                                    referrerPrincipal,
-                                   nsnull,
+                                   nullptr,
                                    NS_LITERAL_CSTRING("application/xml"),
-                                   nsnull,
+                                   nullptr,
                                    &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
     if (NS_CP_REJECTED(shouldLoad)) {
@@ -659,9 +659,9 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
       source =
         do_QueryInterface(mProcessor->GetSourceContentModel());
     }
-    nsAutoSyncOperation sync(source ? source->OwnerDoc() : nsnull);
+    nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
     nsCOMPtr<nsIDOMDocument> document;
-    rv = nsSyncLoadService::LoadDocument(uri, referrerPrincipal, nsnull,
+    rv = nsSyncLoadService::LoadDocument(uri, referrerPrincipal, nullptr,
                                          false, getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -670,7 +670,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     if (NS_FAILED(rv)) {
         nsCAutoString spec;
         uri->GetSpec(spec);
-        aCompiler->cancel(rv, nsnull, NS_ConvertUTF8toUTF16(spec).get());
+        aCompiler->cancel(rv, nullptr, NS_ConvertUTF8toUTF16(spec).get());
         return rv;
     }
 

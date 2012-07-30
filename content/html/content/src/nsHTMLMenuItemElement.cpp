@@ -186,7 +186,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMenuItemElement)
 nsresult
 nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsRefPtr<nsHTMLMenuItemElement> it =
     new nsHTMLMenuItemElement(ni.forget(), NOT_FROM_PARSER);
@@ -453,7 +453,7 @@ nsHTMLMenuItemElement::WalkRadioGroup(Visitor* aVisitor)
 nsHTMLMenuItemElement*
 nsHTMLMenuItemElement::GetSelectedRadio()
 {
-  nsHTMLMenuItemElement* result = nsnull;
+  nsHTMLMenuItemElement* result = nullptr;
 
   GetCheckedVisitor visitor(&result);
   WalkRadioGroup(&visitor);

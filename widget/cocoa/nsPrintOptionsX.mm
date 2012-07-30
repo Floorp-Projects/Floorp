@@ -35,7 +35,7 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
 nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv;
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsPrintSettingsX* printSettings = new nsPrintSettingsX; // does not initially ref count
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);

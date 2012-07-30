@@ -150,7 +150,7 @@ static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
 static const XP_CHAR extraFileExtension[] = {'.', 'e', 'x', 't',
                                              'r', 'a', '\0'}; // .extra
 
-static google_breakpad::ExceptionHandler* gExceptionHandler = nsnull;
+static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 
 static XP_CHAR* pendingDirectory;
 static XP_CHAR* crashReporterPath;
@@ -176,7 +176,7 @@ static XP_CHAR crashMarkerFilename[XP_PATH_MAX] = {0};
 // Whether we've already looked for the marker file.
 static bool lastRunCrashID_checked = false;
 // The minidump ID contained in the marker file.
-static nsString* lastRunCrashID = nsnull;
+static nsString* lastRunCrashID = nullptr;
 
 // these are just here for readability
 static const char kCrashTimeParameter[] = "CrashTime=";
@@ -213,8 +213,8 @@ static const int kAvailablePhysicalMemoryParameterLen =
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
 static AnnotationTable* crashReporterAPIData_Hash;
-static nsCString* crashReporterAPIData = nsnull;
-static nsCString* notesField = nsnull;
+static nsCString* crashReporterAPIData = nullptr;
+static nsCString* notesField = nullptr;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
@@ -733,6 +733,13 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #if defined(MOZ_WIDGET_GONK)
   doReport = false;
   headlessClient = true;
+#elif defined(XP_WIN)
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+    doReport = ShouldReport();
+  } else {
+    doReport = false;
+    headlessClient = true;
+  }
 #else
   // this environment variable prevents us from launching
   // the crash reporter client
@@ -883,7 +890,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                      Filter,
 #endif
                      MinidumpCallback,
-                     nsnull,
+                     nullptr,
 #if defined(XP_WIN32)
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      minidump_type,
@@ -953,7 +960,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
 bool GetEnabled()
 {
-  return gExceptionHandler != nsnull;
+  return gExceptionHandler != nullptr;
 }
 
 bool GetMinidumpPath(nsAString& aPath)
@@ -1204,31 +1211,31 @@ nsresult UnsetExceptionHandler()
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
   delete crashReporterAPIData_Hash;
-  crashReporterAPIData_Hash = nsnull;
+  crashReporterAPIData_Hash = nullptr;
 
   delete crashReporterAPILock;
-  crashReporterAPILock = nsnull;
+  crashReporterAPILock = nullptr;
 
   delete notesFieldLock;
-  notesFieldLock = nsnull;
+  notesFieldLock = nullptr;
 
   delete crashReporterAPIData;
-  crashReporterAPIData = nsnull;
+  crashReporterAPIData = nullptr;
 
   delete notesField;
-  notesField = nsnull;
+  notesField = nullptr;
 
   delete lastRunCrashID;
-  lastRunCrashID = nsnull;
+  lastRunCrashID = nullptr;
 
   if (pendingDirectory) {
     NS_Free(pendingDirectory);
-    pendingDirectory = nsnull;
+    pendingDirectory = nullptr;
   }
 
   if (crashReporterPath) {
     NS_Free(crashReporterPath);
-    crashReporterPath = nsnull;
+    crashReporterPath = nullptr;
   }
 
 #ifdef XP_MACOSX
@@ -1238,7 +1245,7 @@ nsresult UnsetExceptionHandler()
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
 
-  gExceptionHandler = nsnull;
+  gExceptionHandler = nullptr;
 
   OOPDeinit();
 
@@ -1759,7 +1766,7 @@ nsresult SetSubmitReports(bool aSubmitReports)
       return rv;
     }
 
-    obsServ->NotifyObservers(nsnull, "submit-reports-pref-changed", nsnull);
+    obsServ->NotifyObservers(nullptr, "submit-reports-pref-changed", nullptr);
     return NS_OK;
 }
 

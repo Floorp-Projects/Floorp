@@ -74,6 +74,8 @@
 
 #include "mozilla/Util.h" // for DebugOnly
 
+#include "sampler.h"
+
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 #include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
@@ -115,7 +117,7 @@ XRE_LockProfileDirectory(nsIFile* aDirectory,
 {
   nsCOMPtr<nsIProfileLock> lock;
 
-  nsresult rv = NS_LockProfilePath(aDirectory, nsnull, nsnull,
+  nsresult rv = NS_LockProfilePath(aDirectory, nullptr, nullptr,
                                    getter_AddRefs(lock));
   if (NS_SUCCEEDED(rv))
     NS_ADDREF(*aLockObject = lock);
@@ -131,7 +133,7 @@ XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
 		   nsIDirectoryServiceProvider *aAppDirProvider)
 {
   // Initialize some globals to make nsXREDirProvider happy
-  static char* kNullCommandLine[] = { nsnull };
+  static char* kNullCommandLine[] = { nullptr };
   gArgv = kNullCommandLine;
   gArgc = 0;
 
@@ -154,7 +156,7 @@ XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = NS_InitXPCOM2(nsnull, aAppDirectory, gDirServiceProvider);
+  rv = NS_InitXPCOM2(nullptr, aAppDirectory, gDirServiceProvider);
   if (NS_FAILED(rv))
     return rv;
 
@@ -169,7 +171,7 @@ XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
   if (!startupNotifier)
     return NS_ERROR_FAILURE;
 
-  startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+  startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
 
   return NS_OK;
 }
@@ -191,7 +193,7 @@ XRE_TermEmbedding()
                "XRE_TermEmbedding without XRE_InitEmbedding");
 
   gDirServiceProvider->DoShutdown();
-  NS_ShutdownXPCOM(nsnull);
+  NS_ShutdownXPCOM(nullptr);
   delete gDirServiceProvider;
 }
 
@@ -199,7 +201,7 @@ const char*
 XRE_ChildProcessTypeToString(GeckoProcessType aProcessType)
 {
   return (aProcessType < GeckoProcessType_End) ?
-    kGeckoProcessTypeString[aProcessType] : nsnull;
+    kGeckoProcessTypeString[aProcessType] : nullptr;
 }
 
 GeckoProcessType
@@ -251,7 +253,7 @@ SetTaskbarGroupId(const nsString& aId)
 {
     typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
 
-    SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
+    SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nullptr;
 
     HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
 
@@ -280,6 +282,8 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
+  SAMPLER_INIT();
+  SAMPLE_LABEL("Startup", "XRE_InitChildProcess");
 
   sChildProcessType = aProcess;
 
@@ -683,7 +687,7 @@ TestShellParent* GetOrCreateTestShellParent()
     if (!gContentParent) {
         NS_ADDREF(gContentParent = ContentParent::GetNewOrUsed());
     } else if (!gContentParent->IsAlive()) {
-        return nsnull;
+        return nullptr;
     }
     TestShellParent* tsp = gContentParent->GetTestShellSingleton();
     if (!tsp) {

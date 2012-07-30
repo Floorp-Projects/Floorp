@@ -177,11 +177,12 @@ FENNEC_PP_XML_FILES = \
   res/layout-xlarge-v11/gecko_app.xml \
   res/layout/text_selection_handles.xml \
   res/xml/preferences.xml \
-  res/menu/gecko_menu.xml \
-  res/menu-v11/gecko_menu.xml \
+  res/menu/browser_app_menu.xml \
+  res/menu-v11/browser_app_menu.xml \
+  res/menu-v11/gecko_app_menu.xml \
   res/menu-v11/titlebar_contextmenu.xml \
-  res/menu-large-v11/gecko_menu.xml \
-  res/menu-xlarge-v11/gecko_menu.xml \
+  res/menu-large-v11/browser_app_menu.xml \
+  res/menu-xlarge-v11/browser_app_menu.xml \
   $(NULL)
 
 
@@ -390,7 +391,6 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
-  res/drawable-nodpi/background.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
   $(NULL)
@@ -905,6 +905,7 @@ RES_COLOR = \
 
 RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
+  res/menu/gecko_app_menu.xml \
   res/menu/titlebar_contextmenu.xml \
   $(NULL)
 

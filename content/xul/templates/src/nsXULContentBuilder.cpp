@@ -341,7 +341,7 @@ protected:
 nsresult
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+    NS_PRECONDITION(aOuter == nullptr, "no aggregation");
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
@@ -695,8 +695,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 //  </vbox>
                 rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, false,
                                               false, aChild, false, aMatch,
-                                              nsnull /* don't care */,
-                                              nsnull /* don't care */);
+                                              nullptr /* don't care */,
+                                              nullptr /* don't care */);
                 if (NS_FAILED(rv)) return rv;
 
                 if (isGenerationElement) {
@@ -844,7 +844,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
             continue;
 
         nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(target);
-        NS_ASSERTION(value != nsnull, "unable to stomach that sort of node");
+        NS_ASSERTION(value != nullptr, "unable to stomach that sort of node");
         if (! value)
             continue;
 
@@ -969,7 +969,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
         // The content map will contain the generation elements (the ones that
         // are given ids) and only those elements, so get the reference point
         // from the corresponding match.
-        nsTemplateMatch *match = nsnull;
+        nsTemplateMatch *match = nullptr;
         if (mContentSupportMap.Get(aElement, &match))
             CreateContainerContents(aElement, match->mResult, aForceCreation,
                                     false, true);
@@ -1037,7 +1037,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     }
 
     PRInt32 newIndexInContainer = -1;
-    nsIContent* container = nsnull;
+    nsIContent* container = nullptr;
 
     PRInt32 querySetCount = mQuerySets.Length();
 
@@ -1127,9 +1127,9 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
 
         bool generateContent = true;
 
-        nsTemplateMatch* prevmatch = nsnull;
-        nsTemplateMatch* existingmatch = nsnull;
-        nsTemplateMatch* removematch = nsnull;
+        nsTemplateMatch* prevmatch = nullptr;
+        nsTemplateMatch* existingmatch = nullptr;
+        nsTemplateMatch* removematch = nullptr;
         if (mMatchMap.Get(resultid, &existingmatch)){
             // check if there is an existing match that matched a rule
             while (existingmatch) {
@@ -1160,7 +1160,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
 
         if (removematch) {
             // remove the generated content for the existing match
-            rv = ReplaceMatch(removematch->mResult, nsnull, nsnull, aElement);
+            rv = ReplaceMatch(removematch->mResult, nullptr, nullptr, aElement);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -1173,7 +1173,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
             // need to be generated
 
             PRInt16 ruleindex;
-            nsTemplateRule* matchedrule = nsnull;
+            nsTemplateRule* matchedrule = nullptr;
             rv = DetermineMatchedRule(aElement, nextresult, aQuerySet,
                                       &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
@@ -1280,7 +1280,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
     // Keep a queue of "ungenerated" elements that we have to probe
     // for generated content.
     nsAutoTArray<nsIContent*, 8> ungenerated;
-    if (ungenerated.AppendElement(aElement) == nsnull)
+    if (ungenerated.AppendElement(aElement) == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 count;
@@ -1313,7 +1313,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             if (! tmpl) {
                 // No 'template' attribute, so this must not have been
                 // generated. We'll need to examine its kids.
-                if (ungenerated.AppendElement(child) == nsnull)
+                if (ungenerated.AppendElement(child) == nullptr)
                     return NS_ERROR_OUT_OF_MEMORY;
                 continue;
             }
@@ -1356,13 +1356,13 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
                                    nsIContent** aResult)
 {
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-    NS_ASSERTION(doc != nsnull, "not initialized");
+    NS_ASSERTION(doc != nullptr, "not initialized");
     if (! doc)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsIContent> result;
     nsCOMPtr<nsINodeInfo> nodeInfo =
-        doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID,
+        doc->NodeInfoManager()->GetNodeInfo(aTag, nullptr, aNameSpaceID,
                                             nsIDOMNode::ELEMENT_NODE);
 
     nsresult rv = NS_NewElement(getter_AddRefs(result), nodeInfo.forget(),
@@ -1380,7 +1380,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
                                        bool aIgnoreNonContainers,
                                        bool aNotify)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
@@ -1422,7 +1422,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
 NS_IMETHODIMP
 nsXULContentBuilder::CreateContents(nsIContent* aElement, bool aForceCreation)
 {
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    NS_PRECONDITION(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
@@ -1502,11 +1502,11 @@ nsXULContentBuilder::GetResultForContent(nsIDOMElement* aElement,
         *aResult = mRootResult;
     }
     else {
-        nsTemplateMatch *match = nsnull;
+        nsTemplateMatch *match = nullptr;
         if (mContentSupportMap.Get(content, &match))
             *aResult = match->mResult;
         else
-            *aResult = nsnull;
+            *aResult = nullptr;
     }
 
     NS_IF_ADDREF(*aResult);
@@ -1572,7 +1572,7 @@ bool
 nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
                                            nsCOMArray<nsIContent>** aLocations)
 {
-    *aLocations = nsnull;
+    *aLocations = nullptr;
 
     nsAutoString ref;
     nsresult rv = aResult->GetBindingFor(mRefVariable, ref);
@@ -1609,7 +1609,7 @@ nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
         }
 
         // clear the item in the list since we don't want to insert there
-        (*aLocations)->ReplaceObjectAt(nsnull, t);
+        (*aLocations)->ReplaceObjectAt(nullptr, t);
     }
 
     return found;
@@ -1670,7 +1670,7 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
         return BuildContentFromTemplate(action, content, content, true,
                                         mRefVariable == aNewMatchRule->GetMemberVariable(),
                                         aNewMatch->mResult, true, aNewMatch,
-                                        nsnull, nsnull);
+                                        nullptr, nullptr);
     }
 
     return NS_OK;
@@ -1795,7 +1795,7 @@ nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
   
     *aSortOrder = 0;
 
-    nsTemplateMatch *match = nsnull;
+    nsTemplateMatch *match = nullptr;
     if (!mContentSupportMap.Get(aContent, &match)) {
         *aSortOrder = mSortState.sortStaticsLast ? -1 : 1;
         return NS_OK;
@@ -1807,7 +1807,7 @@ nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
     if (mSortState.direction == nsSortState_natural) {
         // sort in natural order
         nsresult rv = mQueryProcessor->CompareResults(aResult, match->mResult,
-                                                      nsnull, mSortState.sortHints,
+                                                      nullptr, mSortState.sortHints,
                                                       aSortOrder);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1879,7 +1879,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
     {
         // because numChildren gets modified
         PRInt32 realNumChildren = numChildren;
-        nsIContent *child = nsnull;
+        nsIContent *child = nullptr;
 
         // rjc says: determine where static XUL ends and generated XUL/RDF begins
         PRInt32 staticCount = 0;

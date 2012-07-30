@@ -108,7 +108,7 @@ Parser::Parser(JSContext *cx, const CompileOptions &options,
                const jschar *chars, size_t length, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    strictModeGetter(this),
+    strictModeGetter(thisForCtor()),
     tokenStream(cx, options, chars, length, &strictModeGetter),
     tempPoolMark(NULL),
     allocator(cx),
@@ -782,7 +782,7 @@ Define(ParseNode *pn, JSAtom *atom, TreeContext *tc, bool let = false)
             pnup = &pnu->pn_link;
         }
 
-        if (pnu != dn->dn_uses) {
+        if (!pnu || pnu != dn->dn_uses) {
             *pnup = pn->dn_uses;
             pn->dn_uses = dn->dn_uses;
             dn->dn_uses = pnu;

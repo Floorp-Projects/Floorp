@@ -57,12 +57,12 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
 
     nsCSSParser parser;
     nsCSSValue bgColorValue;
-    if (!parser.ParseColorString(aBGColor, nsnull, 0, bgColorValue)) {
+    if (!parser.ParseColorString(aBGColor, nullptr, 0, bgColorValue)) {
         return false;
     }
 
     nscolor bgColor;
-    if (!nsRuleNode::ComputeColor(bgColorValue, presContext, nsnull, bgColor)) {
+    if (!nsRuleNode::ComputeColor(bgColorValue, presContext, nullptr, bgColor)) {
         return false;
     }
 

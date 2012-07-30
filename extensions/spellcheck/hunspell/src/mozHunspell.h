@@ -91,7 +91,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozHunspell, mozISpellCheckingEngine)
 
-  mozHunspell() : mHunspell(nsnull), mHunspellReporter(nsnull) { }
+  mozHunspell() : mHunspell(nullptr), mHunspellReporter(nullptr) { }
   virtual ~mozHunspell();
 
   nsresult Init();

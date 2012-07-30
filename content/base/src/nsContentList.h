@@ -253,7 +253,7 @@ public:
                 nsContentListDestroyFunc aDestroyFunc,
                 void* aData,
                 bool aDeep = true,
-                nsIAtom* aMatchAtom = nsnull,
+                nsIAtom* aMatchAtom = nullptr,
                 PRInt32 aMatchNameSpaceId = kNameSpaceID_None,
                 bool aFuncMayDependOnAttr = true);
   virtual ~nsContentList();
@@ -482,7 +482,7 @@ public:
                                    nsContentListDestroyFunc aDestroyFunc,
                                    nsFuncStringContentListDataAllocator aDataAllocator,
                                    const nsAString& aString) :
-    nsContentList(aRootNode, aFunc, aDestroyFunc, nsnull),
+    nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr),
     mString(aString)
   {
     mData = (*aDataAllocator)(aRootNode, &mString);
