@@ -512,9 +512,6 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
     if (!sc->needStrictChecks() || sc->bindings.numArgs() == 0)
         return true;
 
-    JSAtom *argumentsAtom = cx->runtime->atomState.argumentsAtom;
-    JSAtom *evalAtom = cx->runtime->atomState.evalAtom;
-
     /* name => whether we've warned about the name already */
     HashMap<JSAtom *, bool> parameters(cx);
     if (!parameters.init(sc->bindings.numArgs()))
@@ -525,20 +522,6 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
         PropertyName *name = bi->maybeName;
         if (!name)
             continue;
-
-        if (name == argumentsAtom || name == evalAtom) {
-            if (!ReportBadParameter(cx, parser, name, JSMSG_BAD_BINDING))
-                return false;
-        }
-
-        if (FindKeyword(name->charsZ(), name->length())) {
-            /*
-             * JSOPTION_STRICT is supposed to warn about future keywords, too,
-             * but we took care of that in the scanner.
-             */
-            if (!ReportBadParameter(cx, parser, name, JSMSG_RESERVED_ID))
-                return false;
-        }
 
         /*
          * Check for a duplicate parameter: warn or report an error exactly
@@ -1206,20 +1189,23 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
  * and the formals specified by the Function constructor.
  */
 bool
-frontend::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
+frontend::DefineArg(ParseNode *pn, PropertyName *name, unsigned i, Parser *parser)
 {
     /*
      * Make an argument definition node, distinguished by being in
      * parser->tc->decls but having PNK_NAME kind and JSOP_NOP op. Insert it in
      * a PNK_ARGSBODY list node returned via pn->pn_body.
      */
-    ParseNode *argpn = NameNode::create(PNK_NAME, atom, parser, parser->tc);
+    ParseNode *argpn = NameNode::create(PNK_NAME, name, parser, parser->tc);
     if (!argpn)
         return false;
     JS_ASSERT(argpn->isKind(PNK_NAME) && argpn->isOp(JSOP_NOP));
 
+    if (!CheckStrictBinding(parser->context, parser, name, argpn))
+        return false;
+
     /* Arguments are initialized by definition. */
-    if (!Define(argpn, atom, parser->tc))
+    if (!Define(argpn, name, parser->tc))
         return false;
 
     ParseNode *argsbody = pn->pn_body;
@@ -1250,6 +1236,8 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser
     }
 
     ParseNode *pn = data->pn;
+    if (!CheckStrictBinding(cx, parser, atom->asPropertyName(), pn))
+        return false;
 
     /*
      * Distinguish destructured-to binding nodes as vars, not args, by setting
