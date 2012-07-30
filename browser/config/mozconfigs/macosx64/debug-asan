@@ -1,0 +1,14 @@
+. $topsrcdir/build/unix/mozconfig.asan
+
+ac_add_options --enable-application=browser
+ac_add_options --enable-debug
+ac_add_options --enable-optimize="-O1"
+ac_add_options --enable-accessibility
+
+# Enable parallel compiling
+mk_add_options MOZ_MAKE_FLAGS="-j12"
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+ac_add_options --with-macbundlename-prefix=Firefox
