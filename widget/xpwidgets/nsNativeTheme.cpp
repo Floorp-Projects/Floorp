@@ -34,12 +34,12 @@ nsIPresShell *
 nsNativeTheme::GetPresShell(nsIFrame* aFrame)
 {
   if (!aFrame)
-    return nsnull;
+    return nullptr;
 
   // this is a workaround for the egcs 1.1.2 not inliningg
   // aFrame->GetPresContext(), which causes an undefined symbol
   nsPresContext *context = aFrame->GetStyleContext()->GetRuleNode()->GetPresContext();
-  return context ? context->GetPresShell() : nsnull;
+  return context ? context->GetPresShell() : nullptr;
 }
 
 nsEventStates
@@ -311,7 +311,7 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::scrollbarDownBottom, &nsGkAtoms::scrollbarDownTop,
      &nsGkAtoms::scrollbarUpBottom, &nsGkAtoms::scrollbarUpTop,
-     nsnull};
+     nullptr};
 
   switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::sbattr,
@@ -333,7 +333,7 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
     return eTreeSortDirection_Natural;
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::descending, &nsGkAtoms::ascending, nsnull};
+    {&nsGkAtoms::descending, &nsGkAtoms::ascending, nullptr};
   switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::sortDirection,
                                                 strings, eCaseMatters)) {
@@ -579,7 +579,7 @@ nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
                                                          bool aNextSibling)
 {
   if (!aFrame)
-    return nsnull;
+    return nullptr;
 
   // Find the next visible sibling.
   nsIFrame* sibling = aFrame;
@@ -592,6 +592,6 @@ nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
       sibling->GetStyleDisplay()->mAppearance != aFrame->GetStyleDisplay()->mAppearance ||
       (sibling->GetRect().XMost() != aFrame->GetRect().x &&
        aFrame->GetRect().XMost() != sibling->GetRect().x))
-    return nsnull;
+    return nullptr;
   return sibling;
 }

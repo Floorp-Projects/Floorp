@@ -254,7 +254,7 @@ BRFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (!accService) {
-    return nsnull;
+    return nullptr;
   }
   nsIContent *parent = mContent->GetParent();
   if (parent &&
@@ -262,7 +262,7 @@ BRFrame::CreateAccessible()
       parent->GetChildCount() == 1) {
     // This <br> is the only node in a text control, therefore it is the hacky
     // "bogus node" used when there is no text in the control
-    return nsnull;
+    return nullptr;
   }
   return accService->CreateHTMLBRAccessible(mContent,
                                             PresContext()->PresShell());

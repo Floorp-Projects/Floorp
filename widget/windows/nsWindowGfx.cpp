@@ -185,11 +185,11 @@ EnsureSharedSurfaceSize(gfxIntSize size)
 
   if (!sSharedSurfaceData || (WORDSSIZE(size) > WORDSSIZE(sSharedSurfaceSize))) {
     sSharedSurfaceSize = size;
-    sSharedSurfaceData = nsnull;
+    sSharedSurfaceData = nullptr;
     sSharedSurfaceData = (PRUint8 *)malloc(WORDSSIZE(sSharedSurfaceSize) * 4);
   }
 
-  return (sSharedSurfaceData != nsnull);
+  return (sSharedSurfaceData != nullptr);
 }
 
 bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
@@ -313,7 +313,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           if ((IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) &&
               eTransparencyTransparent == mTransparencyMode) {
-            if (mTransparentSurface == nsnull)
+            if (mTransparentSurface == nullptr)
               SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
             targetSurface = mTransparentSurface;
           }
@@ -335,7 +335,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             if (!mD2DWindowSurface->CairoStatus()) {
               targetSurface = mD2DWindowSurface;
             } else {
-              mD2DWindowSurface = nsnull;
+              mD2DWindowSurface = nullptr;
             }
           }
 #endif
@@ -386,7 +386,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
             const nsIntRect* r;
             for (nsIntRegionRectIterator iter(event.region);
-                 (r = iter.Next()) != nsnull;) {
+                 (r = iter.Next()) != nullptr;) {
               thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), true);
             }
             thebesContext->Clip();
@@ -549,7 +549,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           result = DispatchWindowEvent(&event, eventStatus);
           if (layerManagerD3D9->DeviceWasRemoved()) {
             mLayerManager->Destroy();
-            mLayerManager = nsnull;
+            mLayerManager = nullptr;
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
             gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
@@ -581,7 +581,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     ::EndPaint(mWnd, &ps);
   }
 
-  mPaintDC = nsnull;
+  mPaintDC = nullptr;
   mLastPaintEndTime = TimeStamp::Now();
 
 #if defined(WIDGET_DEBUG_OUTPUT)

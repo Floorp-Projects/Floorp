@@ -172,7 +172,7 @@ class nsHtml5TreeOperation {
       NS_PRECONDITION(aNode, "Initialized tree op with null node.");
       mOpCode = eTreeOpRunScript;
       mOne.node = aNode;
-      mTwo.state = nsnull;
+      mTwo.state = nullptr;
     }
     
     inline void Init(PRInt32 aNamespace, 
@@ -191,7 +191,7 @@ class nsHtml5TreeOperation {
       mOne.node = aTarget;
       mTwo.atom = aName;
       if (aAttributes == nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
-        mThree.attributes = nsnull;
+        mThree.attributes = nullptr;
       } else {
         mThree.attributes = aAttributes;
       }
@@ -272,12 +272,12 @@ class nsHtml5TreeOperation {
     inline void Init(nsIContent** aElement,
                      const char* aMsgId,
                      nsIAtom* aAtom) {
-      Init(aElement, aMsgId, aAtom, nsnull);
+      Init(aElement, aMsgId, aAtom, nullptr);
     }
 
     inline void Init(nsIContent** aElement,
                      const char* aMsgId) {
-      Init(aElement, aMsgId, nsnull, nsnull);
+      Init(aElement, aMsgId, nullptr, nullptr);
     }
 
     inline void Init(const char* aMsgId,

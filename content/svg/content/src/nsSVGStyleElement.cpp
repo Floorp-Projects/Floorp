@@ -41,7 +41,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -157,7 +157,7 @@ nsSVGStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsSVGStyleElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                                aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nsnull,
+    UpdateStyleSheetInternal(nullptr,
                              aNameSpaceID == kNameSpaceID_None &&
                              (aName == nsGkAtoms::title ||
                               aName == nsGkAtoms::media ||
@@ -174,7 +174,7 @@ nsSVGStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   nsresult rv = nsSVGStyleElementBase::UnsetAttr(aNameSpaceID, aAttribute,
                                                  aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nsnull,
+    UpdateStyleSheetInternal(nullptr,
                              aNameSpaceID == kNameSpaceID_None &&
                              (aAttribute == nsGkAtoms::title ||
                               aAttribute == nsGkAtoms::media ||
@@ -227,7 +227,7 @@ void
 nsSVGStyleElement::ContentChanged(nsIContent* aContent)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
-    UpdateStyleSheetInternal(nsnull);
+    UpdateStyleSheetInternal(nullptr);
   }
 }
 
@@ -289,7 +289,7 @@ already_AddRefed<nsIURI>
 nsSVGStyleElement::GetStyleSheetURL(bool* aIsInline)
 {
   *aIsInline = true;
-  return nsnull;
+  return nullptr;
 }
 
 void

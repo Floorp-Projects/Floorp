@@ -120,7 +120,7 @@ NS_IMETHODIMP nsXMLContentBuilder::BeginElement(const nsAString & tagname)
   nsCOMPtr<nsIContent> node;
   {
     EnsureDoc();
-    mDocument->CreateElem(tagname, nsnull, mNamespaceId, getter_AddRefs(node));
+    mDocument->CreateElem(tagname, nullptr, mNamespaceId, getter_AddRefs(node));
   }
   if (!node) {
     NS_ERROR("could not create node");
@@ -182,7 +182,7 @@ NS_IMETHODIMP nsXMLContentBuilder::TextNode(const nsAString & text)
 NS_IMETHODIMP nsXMLContentBuilder::GetRoot(nsIDOMElement * *aRoot)
 {
   if (!mTop) {
-    *aRoot = nsnull;
+    *aRoot = nullptr;
     return NS_OK;
   }
   return CallQueryInterface(mTop, aRoot);
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsXMLContentBuilder::GetRoot(nsIDOMElement * *aRoot)
 NS_IMETHODIMP nsXMLContentBuilder::GetCurrent(nsIDOMElement * *aCurrent)
 {
   if (!mCurrent) {
-    *aCurrent = nsnull;
+    *aCurrent = nullptr;
     return NS_OK;
   }  
   return CallQueryInterface(mCurrent, aCurrent);

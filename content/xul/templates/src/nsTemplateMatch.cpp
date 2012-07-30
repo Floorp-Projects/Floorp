@@ -20,7 +20,7 @@ nsTemplateMatch::Destroy(nsFixedSizeAllocator& aPool,
         aMatch->mResult->HasBeenRemoved();
     aMatch->~nsTemplateMatch();
     aPool.Free(aMatch, sizeof(*aMatch));
-    aMatch = nsnull;
+    aMatch = nullptr;
 }
 
 nsresult

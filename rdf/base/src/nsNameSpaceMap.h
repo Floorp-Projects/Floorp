@@ -17,7 +17,7 @@ public:
     class Entry {
     public:
         Entry(const nsCSubstring& aURI, nsIAtom* aPrefix)
-            : mURI(aURI), mPrefix(aPrefix), mNext(nsnull) {
+            : mURI(aURI), mPrefix(aPrefix), mNext(nullptr) {
             MOZ_COUNT_CTOR(nsNameSpaceMap::Entry); }
 
         ~Entry() { MOZ_COUNT_DTOR(nsNameSpaceMap::Entry); }
@@ -48,7 +48,7 @@ public:
 
     public:
         const_iterator()
-            : mCurrent(nsnull) {}
+            : mCurrent(nullptr) {}
 
         const_iterator(const const_iterator& iter)
             : mCurrent(iter.mCurrent) {}
@@ -86,7 +86,7 @@ public:
         return const_iterator(mEntries); }
 
     const_iterator last() const {
-        return const_iterator(nsnull); }
+        return const_iterator(nullptr); }
 
     const_iterator GetNameSpaceOf(const nsCSubstring& aURI) const;
 

@@ -503,8 +503,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   //
   rv = NS_NewChannel(aResult,
                      aURI,        // URI 
-                     nsnull,      // Cached IOService
-                     nsnull,      // LoadGroup
+                     nullptr,      // Cached IOService
+                     nullptr,      // LoadGroup
                      callbacks,   // Notification Callbacks
                      aLoadFlags,
                      aPolicy);
@@ -645,7 +645,7 @@ void imgCacheQueue::Push(imgCacheEntry *entry)
 already_AddRefed<imgCacheEntry> imgCacheQueue::Pop()
 {
   if (mQueue.empty())
-    return nsnull;
+    return nullptr;
   if (IsDirty())
     Refresh();
 
@@ -977,7 +977,7 @@ NS_IMETHODIMP imgLoader::FindEntryProperties(nsIURI *uri, nsIProperties **_retva
   imgCacheTable &cache = GetCache(uri);
 
   uri->GetSpec(spec);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
     if (gCacheTracker && entry->HasNoProxies())
@@ -999,7 +999,7 @@ void imgLoader::Shutdown()
   ClearImageCache();
   NS_IF_RELEASE(gCacheObserver);
   delete gCacheTracker;
-  gCacheTracker = nsnull;
+  gCacheTracker = nullptr;
 }
 
 nsresult imgLoader::ClearChromeImageCache()
@@ -1033,18 +1033,18 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
   nsRefPtr<imgCacheEntry> tmpCacheEntry;
   if (cache.Get(spec, getter_AddRefs(tmpCacheEntry)) && tmpCacheEntry) {
     PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache", nsnull));
+           ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache", nullptr));
     nsRefPtr<imgRequest> tmpRequest = getter_AddRefs(tmpCacheEntry->GetRequest());
 
     // If it already exists, and we're putting the same key into the cache, we
     // should remove the old version.
     PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::PutIntoCache -- Replacing cached element", nsnull));
+           ("[this=%p] imgLoader::PutIntoCache -- Replacing cached element", nullptr));
 
     RemoveFromCache(key);
   } else {
     PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::PutIntoCache -- Element NOT already in the cache", nsnull));
+           ("[this=%p] imgLoader::PutIntoCache -- Element NOT already in the cache", nullptr));
   }
 
   cache.Put(spec, entry);
@@ -1279,7 +1279,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     // Add the proxy without notifying
     hvc->AddProxy(proxy);
 
-    rv = newChannel->AsyncOpen(listener, nsnull);
+    rv = newChannel->AsyncOpen(listener, nullptr);
     if (NS_SUCCEEDED(rv))
       NS_ADDREF(*aProxyRequest = req.get());
 
@@ -1346,7 +1346,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   // If the request's loadId is the same as the aCX, then it is ok to use
   // this one because it has already been validated for this context.
   //
-  // XXX: nsnull seems to be a 'special' key value that indicates that NO
+  // XXX: nullptr seems to be a 'special' key value that indicates that NO
   //      validation is required.
   //
   void *key = (void *)aCX;
@@ -1555,7 +1555,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   aURI->GetSpec(spec);
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
 
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsRefPtr<imgRequest> request;
 
@@ -1628,7 +1628,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     else {
       // We can't use this entry. We'll try to load it off the network, and if
       // successful, overwrite the old entry in the cache with a new one.
-      entry = nsnull;
+      entry = nullptr;
     }
   }
 
@@ -1703,7 +1703,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
-    nsresult openRes = newChannel->AsyncOpen(listener, nsnull);
+    nsresult openRes = newChannel->AsyncOpen(listener, nullptr);
 
     if (NS_FAILED(openRes)) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -1809,9 +1809,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
       //
       // XXX -- should this be changed? it's pretty much verbatim from the old
       // code, but seems nonsensical.
-      if (ValidateEntry(entry, uri, nsnull, nsnull, nsnull, aObserver, aCX,
-                        requestFlags, false, nsnull, nsnull, nsnull,
-                        nsnull, imgIRequest::CORS_NONE)) {
+      if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver, aCX,
+                        requestFlags, false, nullptr, nullptr, nullptr,
+                        nullptr, imgIRequest::CORS_NONE)) {
         request = getter_AddRefs(entry->GetRequest());
       } else {
         nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
@@ -1823,7 +1823,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
           bUseCacheCopy = false;
 
         if (!bUseCacheCopy)
-          entry = nsnull;
+          entry = nullptr;
         else {
           request = getter_AddRefs(entry->GetRequest());
         }
@@ -1855,10 +1855,10 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     channel->Cancel(NS_ERROR_PARSED_DATA_CACHED); // this should fire an OnStopRequest
 
-    *listener = nsnull; // give them back a null nsIStreamListener
+    *listener = nullptr; // give them back a null nsIStreamListener
 
     rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
-                                  requestFlags, nsnull, _retval);
+                                  requestFlags, nullptr, _retval);
     static_cast<imgRequestProxy*>(*_retval)->NotifyListener();
   } else {
     // Default to doing a principal check because we don't know who
@@ -1872,7 +1872,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     // No principal specified here, because we're not passed one.
     request->Init(originalURI, uri, channel, channel, entry,
-                  aCX, nsnull, imgIRequest::CORS_NONE);
+                  aCX, nullptr, imgIRequest::CORS_NONE);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     NS_ADDREF(pl);
@@ -1886,7 +1886,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     PutIntoCache(originalURI, entry);
 
     rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
-                                  requestFlags, nsnull, _retval);
+                                  requestFlags, nullptr, _retval);
 
     // Explicitly don't notify our proxy, because we're loading off the
     // network, and necko (or things called from necko, such as
@@ -2036,7 +2036,7 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
           rv = convServ->AsyncConvertData("multipart/x-mixed-replace",
                                           "*/*",
                                           toListener,
-                                          nsnull,
+                                          nullptr,
                                           getter_AddRefs(fromListener));
           if (NS_SUCCEEDED(rv))
             mDestListener = fromListener;
@@ -2092,7 +2092,7 @@ imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
 imgCacheValidator::~imgCacheValidator()
 {
   if (mRequest) {
-    mRequest->mValidator = nsnull;
+    mRequest->mValidator = nullptr;
   }
 }
 
@@ -2146,12 +2146,12 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
       aRequest->Cancel(NS_BINDING_ABORTED);
 
       mRequest->SetLoadId(mContext);
-      mRequest->mValidator = nsnull;
+      mRequest->mValidator = nullptr;
 
-      mRequest = nsnull;
+      mRequest = nullptr;
 
-      mNewRequest = nsnull;
-      mNewEntry = nsnull;
+      mNewRequest = nullptr;
+      mNewEntry = nullptr;
 
       return NS_OK;
     }
@@ -2174,8 +2174,8 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // Doom the old request's cache entry
   mRequest->RemoveFromCache();
 
-  mRequest->mValidator = nsnull;
-  mRequest = nsnull;
+  mRequest->mValidator = nullptr;
+  mRequest = nullptr;
 
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.
   nsCOMPtr<nsIURI> originalURI;
@@ -2208,8 +2208,8 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
     proxy->SyncNotifyListener();
   }
 
-  mNewRequest = nsnull;
-  mNewEntry = nsnull;
+  mNewRequest = nullptr;
+  mNewEntry = nullptr;
 
   return mDestListener->OnStartRequest(aRequest, ctxt);
 }
@@ -2232,7 +2232,7 @@ NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISuppor
   if (!mDestListener) {
     // XXX see bug 113959
     PRUint32 _retval;
-    inStr->ReadSegments(NS_DiscardSegment, nsnull, count, &_retval);
+    inStr->ReadSegments(NS_DiscardSegment, nullptr, count, &_retval);
     return NS_OK;
   }
 
@@ -2273,8 +2273,8 @@ NS_IMETHODIMP imgCacheValidator::OnRedirectVerifyCallback(nsresult aResult)
   // If we've already been told to abort, just do so.
   if (NS_FAILED(aResult)) {
       mRedirectCallback->OnRedirectVerifyCallback(aResult);
-      mRedirectCallback = nsnull;
-      mRedirectChannel = nsnull;
+      mRedirectCallback = nullptr;
+      mRedirectChannel = nullptr;
       return NS_OK;
   }
 
@@ -2293,7 +2293,7 @@ NS_IMETHODIMP imgCacheValidator::OnRedirectVerifyCallback(nsresult aResult)
   }
 
   mRedirectCallback->OnRedirectVerifyCallback(result);
-  mRedirectCallback = nsnull;
-  mRedirectChannel = nsnull;
+  mRedirectCallback = nullptr;
+  mRedirectChannel = nullptr;
   return NS_OK;
 }

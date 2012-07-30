@@ -28,7 +28,7 @@ const int DISPLAY_DIM_TIMEOUT = 10620; /*3 * 59 * 60 seconds*/
 nsScreenQt::nsScreenQt(int aScreen)
     : mScreen(aScreen)
 #ifdef MOZ_ENABLE_QMSYSTEM2
-    , mDisplayState(nsnull)
+    , mDisplayState(nullptr)
 #endif
 {
     // nothing else to do. I guess we could cache a bunch of information
@@ -40,7 +40,7 @@ nsScreenQt::~nsScreenQt()
 {
 #ifdef MOZ_ENABLE_QMSYSTEM2
     delete mDisplayState;
-    mDisplayState = nsnull;
+    mDisplayState = nullptr;
 #endif
 }
 
@@ -105,7 +105,7 @@ nsScreenQt::ApplyMinimumBrightness(PRUint32 aType)
     // 2) user might have changed system settings while fennec is running
     //    there is no notification about that.
     delete mDisplayState;
-    mDisplayState = nsnull;
+    mDisplayState = nullptr;
 
     if( aType == BRIGHTNESS_FULL) {
         mDisplayState = new MeeGo::QmDisplayState();

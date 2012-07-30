@@ -56,13 +56,13 @@ nsXULContextMenuBuilder::OpenContainer(const nsAString& aLabel)
     mCurrentNode = mFragment;
   } else {
     nsCOMPtr<nsIContent> menu;
-    nsresult rv = CreateElement(nsGkAtoms::menu, nsnull, getter_AddRefs(menu));
+    nsresult rv = CreateElement(nsGkAtoms::menu, nullptr, getter_AddRefs(menu));
     NS_ENSURE_SUCCESS(rv, rv);
 
     menu->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel, false);
 
     nsCOMPtr<nsIContent> menuPopup;
-    rv = CreateElement(nsGkAtoms::menupopup, nsnull,
+    rv = CreateElement(nsGkAtoms::menupopup, nullptr,
                        getter_AddRefs(menuPopup));
     NS_ENSURE_SUCCESS(rv, rv);
         
@@ -138,7 +138,7 @@ nsXULContextMenuBuilder::AddSeparator()
   }
 
   nsCOMPtr<nsIContent> menuseparator;
-  nsresult rv = CreateElement(nsGkAtoms::menuseparator, nsnull,
+  nsresult rv = CreateElement(nsGkAtoms::menuseparator, nullptr,
                               getter_AddRefs(menuseparator));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -170,7 +170,7 @@ nsXULContextMenuBuilder::CloseContainer()
   }
 
   if (mCurrentNode == mFragment) {
-    mCurrentNode = nsnull;
+    mCurrentNode = nullptr;
   } else {
     nsIContent* parent = mCurrentNode->GetParent();
     mCurrentNode = parent->GetParent();
@@ -213,10 +213,10 @@ nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag,
                                        nsIDOMHTMLElement* aHTMLElement,
                                        nsIContent** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsINodeInfo> nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(
-    aTag, nsnull, kNameSpaceID_XUL, nsIDOMNode::ELEMENT_NODE);
+    aTag, nullptr, kNameSpaceID_XUL, nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = NS_NewElement(aResult, nodeInfo.forget(), NOT_FROM_PARSER);

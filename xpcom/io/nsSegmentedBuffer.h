@@ -14,7 +14,7 @@ class nsSegmentedBuffer
 public:
     nsSegmentedBuffer()
         : mSegmentSize(0), mMaxSize(0), 
-          mSegAllocator(nsnull), mSegmentArray(nsnull),
+          mSegAllocator(nullptr), mSegmentArray(nullptr),
           mSegmentArrayCount(0),
           mFirstSegmentIndex(0), mLastSegmentIndex(0) {}
 
@@ -25,7 +25,7 @@ public:
 
 
     nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
-                  nsIMemory* allocator = nsnull);
+                  nsIMemory* allocator = nullptr);
 
     char* AppendNewSegment();   // pushes at end
 

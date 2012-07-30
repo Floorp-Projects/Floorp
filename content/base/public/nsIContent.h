@@ -239,7 +239,7 @@ public:
   {
     NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent() || !GetParent(),
                  "must have binding parent when in native anonymous subtree with a parent node");
-    return IsInNativeAnonymousSubtree() || GetBindingParent() != nsnull;
+    return IsInNativeAnonymousSubtree() || GetBindingParent() != nullptr;
   }
 
   /**
@@ -324,7 +324,7 @@ public:
    * null otherwise.
    *
    * @param aStr the unparsed attribute string
-   * @return the node info. May be nsnull.
+   * @return the node info. May be nullptr.
    */
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const = 0;
 
@@ -344,7 +344,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
 
   /**
@@ -558,7 +558,7 @@ public:
    *         > 0 can be tabbed to in the order specified by this value
    * @return whether the content is focusable via mouse, kbd or script.
    */
-  virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false)
+  virtual bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false)
   {
     if (aTabIndex) 
       *aTabIndex = -1; // Default, not tabbable
@@ -650,7 +650,7 @@ public:
     */
   virtual already_AddRefed<nsIURI> GetHrefURI() const
   {
-    return nsnull;
+    return nullptr;
   }
 
   /**
@@ -740,7 +740,7 @@ public:
     if (HasID()) {
       return DoGetID();
     }
-    return nsnull;
+    return nullptr;
   }
 
   /**
@@ -753,7 +753,7 @@ public:
     if (HasFlag(NODE_MAY_HAVE_CLASS)) {
       return DoGetClasses();
     }
-    return nsnull;
+    return nullptr;
   }
 
   /**
@@ -819,7 +819,7 @@ public:
    */
   nsIFrame* GetPrimaryFrame() const
   {
-    return IsInDoc() ? mPrimaryFrame : nsnull;
+    return IsInDoc() ? mPrimaryFrame : nullptr;
   }
   void SetPrimaryFrame(nsIFrame* aFrame) {
     NS_ASSERTION(IsInDoc(), "This will end badly!");

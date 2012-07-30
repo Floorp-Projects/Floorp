@@ -65,7 +65,7 @@ public:
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
                                      bool aReset = true,
-                                     nsIContentSink* aSink = nsnull);
+                                     nsIContentSink* aSink = nullptr);
   virtual void StopDocumentLoad();
 
   virtual void BeginLoad();
@@ -105,7 +105,7 @@ public:
   Element *GetHead() { return GetHeadElement(); }
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {
-    return NS_GetFuncStringContentList(this, MatchNameAttribute, nsnull,
+    return NS_GetFuncStringContentList(this, MatchNameAttribute, nullptr,
                                        UseExistingNameString, aName);
   }
 

@@ -152,7 +152,7 @@ XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
 
   return SendCommandInternal(aProgram, aUsername, aProfile,
-                             aCommand, 0, nsnull,
+                             aCommand, 0, nullptr,
                              aDesktopStartupID,
                              aResponse, aWindowFound);
 }
@@ -167,7 +167,7 @@ XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommandLine"));
 
   return SendCommandInternal(aProgram, aUsername, aProfile,
-                             nsnull, argc, argv,
+                             nullptr, argc, argv,
                              aDesktopStartupID,
                              aResponse, aWindowFound);
 }
@@ -490,7 +490,7 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     if (!data_return)
       continue;
 
-    PRFloat64 version = PR_strtod((char*) data_return, nsnull);
+    PRFloat64 version = PR_strtod((char*) data_return, nullptr);
     XFree(data_return);
 
     if (aSupportsCommandLine && !(version >= 5.1 && version < 6))

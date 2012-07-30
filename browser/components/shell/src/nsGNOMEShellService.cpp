@@ -98,7 +98,7 @@ nsGNOMEShellService::Init()
 
   // Check G_BROKEN_FILENAMES.  If it's set, then filenames in glib use
   // the locale encoding.  If it's not set, they use UTF-8.
-  mUseLocaleFilenames = PR_GetEnv("G_BROKEN_FILENAMES") != nsnull;
+  mUseLocaleFilenames = PR_GetEnv("G_BROKEN_FILENAMES") != nullptr;
 
   if (GetAppPathFromLauncher())
     return NS_OK;
@@ -629,7 +629,7 @@ nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
       newArgv[newArgc++] = argv[i];
   }
 
-  newArgv[newArgc] = nsnull;
+  newArgv[newArgc] = nullptr;
 
   gboolean err = g_spawn_async(NULL, newArgv, NULL, G_SPAWN_SEARCH_PATH,
                                NULL, NULL, NULL, NULL);

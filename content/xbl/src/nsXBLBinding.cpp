@@ -397,7 +397,7 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   : mIsStyleBinding(true),
     mMarkedForDeath(false),
     mPrototypeBinding(aBinding),
-    mInsertionPointTable(nsnull)
+    mInsertionPointTable(nullptr)
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
   // Grab a ref to the document info so the prototype binding won't die
@@ -441,7 +441,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNextBinding)
   delete tmp->mInsertionPointTable;
-  tmp->mInsertionPointTable = nsnull;
+  tmp->mInsertionPointTable = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
@@ -612,7 +612,7 @@ BuildContentLists(nsISupports* aKey,
     node->GetChildNodes(getter_AddRefs(nodeList));
   }
 
-  nsXBLInsertionPoint* pseudoPoint = nsnull;
+  nsXBLInsertionPoint* pseudoPoint = nullptr;
   PRUint32 childCount;
   nodeList->GetLength(&childCount);
   PRInt32 j = 0;
@@ -633,11 +633,11 @@ BuildContentLists(nsISupports* aKey,
       }
 
       // Null out our current pseudo-point.
-      pseudoPoint = nsnull;
+      pseudoPoint = nullptr;
     }
     
     if (!pseudoPoint) {
-      pseudoPoint = new nsXBLInsertionPoint(parent, (PRUint32) -1, nsnull);
+      pseudoPoint = new nsXBLInsertionPoint(parent, (PRUint32) -1, nullptr);
       if (pseudoPoint) {
         contentList->AppendElement(pseudoPoint);
       }
@@ -852,15 +852,15 @@ nsXBLBinding::GenerateAnonymousContent()
               bindingManager->SetInsertionParent(childContent, point);
 
               // Find the correct nsIXBLInsertion point in our table.
-              nsInsertionPointList* arr = nsnull;
+              nsInsertionPointList* arr = nullptr;
               GetInsertionPointsFor(point, &arr);
-              nsXBLInsertionPoint* insertionPoint = nsnull;
+              nsXBLInsertionPoint* insertionPoint = nullptr;
               PRInt32 arrCount = arr->Length();
               for (PRInt32 j = 0; j < arrCount; j++) {
                 insertionPoint = arr->ElementAt(j);
                 if (insertionPoint->Matches(point, index))
                   break;
-                insertionPoint = nsnull;
+                insertionPoint = nullptr;
               }
 
               if (insertionPoint) 
@@ -878,9 +878,9 @@ nsXBLBinding::GenerateAnonymousContent()
                   UninstallAnonymousContent(doc, mContent);
 
                   // Kill all anonymous content.
-                  mContent = nsnull;
-                  bindingManager->SetContentListFor(mBoundElement, nsnull);
-                  bindingManager->SetAnonymousNodesFor(mBoundElement, nsnull);
+                  mContent = nullptr;
+                  bindingManager->SetContentListFor(mBoundElement, nullptr);
+                  bindingManager->SetAnonymousNodesFor(mBoundElement, nullptr);
                   return;
                 }
               }
@@ -888,7 +888,7 @@ nsXBLBinding::GenerateAnonymousContent()
           }
           else {
             // All of our children are shunted to this single insertion point.
-            nsInsertionPointList* arr = nsnull;
+            nsInsertionPointList* arr = nullptr;
             GetInsertionPointsFor(singlePoint, &arr);
             nsXBLInsertionPoint* insertionPoint = arr->ElementAt(0);
         
@@ -1204,7 +1204,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             if (wrapper)
                 wrapper->GetJSObject(&scriptObject);
             else
-                scriptObject = nsnull;
+                scriptObject = nullptr;
 
             if (scriptObject) {
               // XXX Stay in sync! What if a layered binding has an
@@ -1290,7 +1290,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
         // Also kill the default content within all our insertion points.
         if (mInsertionPointTable)
           mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent,
-                                          nsnull);
+                                          nullptr);
 
         nsXBLBinding::UninstallAnonymousContent(aOldDocument, anonymous);
       }
@@ -1301,7 +1301,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       for (nsIContent* child = mBoundElement->GetLastChild();
            child;
            child = child->GetPreviousSibling()) {
-        bindingManager->SetInsertionParent(child, nsnull);
+        bindingManager->SetInsertionParent(child, nullptr);
       }
     }
   }
@@ -1345,7 +1345,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 {
   // First ensure our JS class is initialized.
   nsCAutoString className(aClassName);
-  JSObject* parent_proto = nsnull;  // If we have an "obj" we can set this
+  JSObject* parent_proto = nullptr;  // If we have an "obj" we can set this
   JSAutoRequest ar(cx);
 
   JSAutoEnterCompartment ac;
@@ -1432,12 +1432,12 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                            global,              // global object
                            parent_proto,        // parent proto 
                            c,                   // JSClass
-                           nsnull,              // JSNative ctor
+                           nullptr,              // JSNative ctor
                            0,                   // ctor args
-                           nsnull,              // proto props
-                           nsnull,              // proto funcs
-                           nsnull,              // ctor props (static)
-                           nsnull);             // ctor funcs (static)
+                           nullptr,              // proto props
+                           nullptr,              // proto funcs
+                           nullptr,              // ctor props (static)
+                           nullptr);             // ctor funcs (static)
     if (!proto) {
       // This will happen if we're OOM or if the security manager
       // denies defining the new class...
@@ -1491,7 +1491,7 @@ nsXBLBinding::AllowScripts()
     return false;
   }
 
-  nsIDocument* doc = mBoundElement ? mBoundElement->OwnerDoc() : nsnull;
+  nsIDocument* doc = mBoundElement ? mBoundElement->OwnerDoc() : nullptr;
   if (!doc) {
     return false;
   }
@@ -1537,7 +1537,7 @@ nsXBLBinding::RemoveInsertionParent(nsIContent* aParent)
     mNextBinding->RemoveInsertionParent(aParent);
   }
   if (mInsertionPointTable) {
-    nsInsertionPointList* list = nsnull;
+    nsInsertionPointList* list = nullptr;
     mInsertionPointTable->Get(aParent, &list);
     if (list) {
       PRInt32 count = list->Length();
@@ -1559,7 +1559,7 @@ bool
 nsXBLBinding::HasInsertionParent(nsIContent* aParent)
 {
   if (mInsertionPointTable) {
-    nsInsertionPointList* list = nsnull;
+    nsInsertionPointList* list = nullptr;
     mInsertionPointTable->Get(aParent, &list);
     if (list) {
       return true;
@@ -1593,10 +1593,10 @@ nsInsertionPointList*
 nsXBLBinding::GetExistingInsertionPointsFor(nsIContent* aParent)
 {
   if (!mInsertionPointTable) {
-    return nsnull;
+    return nullptr;
   }
 
-  nsInsertionPointList* result = nsnull;
+  nsInsertionPointList* result = nullptr;
   mInsertionPointTable->Get(aParent, &result);
   return result;
 }
@@ -1612,7 +1612,7 @@ nsXBLBinding::GetInsertionPoint(const nsIContent* aChild, PRUint32* aIndex)
   if (mNextBinding)
     return mNextBinding->GetInsertionPoint(aChild, aIndex);
 
-  return nsnull;
+  return nullptr;
 }
 
 nsIContent*
@@ -1630,7 +1630,7 @@ nsXBLBinding::GetSingleInsertionPoint(PRUint32* aIndex,
     return mNextBinding->GetSingleInsertionPoint(aIndex,
                                                  aMultipleInsertionPoints);
 
-  return nsnull;
+  return nullptr;
 }
 
 nsXBLBinding*
@@ -1648,7 +1648,7 @@ nsXBLBinding::GetFirstStyleBinding()
   if (mIsStyleBinding)
     return this;
 
-  return mNextBinding ? mNextBinding->GetFirstStyleBinding() : nsnull;
+  return mNextBinding ? mNextBinding->GetFirstStyleBinding() : nullptr;
 }
 
 bool
@@ -1689,5 +1689,5 @@ nsXBLBinding::GetAnonymousNodes()
   if (mNextBinding)
     return mNextBinding->GetAnonymousNodes();
 
-  return nsnull;
+  return nullptr;
 }

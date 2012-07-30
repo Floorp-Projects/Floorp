@@ -122,68 +122,68 @@ NS_IMPL_RELEASE(Navigator)
 void
 Navigator::Invalidate()
 {
-  mWindow = nsnull;
+  mWindow = nullptr;
 
   if (mPlugins) {
     mPlugins->Invalidate();
-    mPlugins = nsnull;
+    mPlugins = nullptr;
   }
 
   // If there is a page transition, make sure delete the geolocation object.
   if (mGeolocation) {
     mGeolocation->Shutdown();
-    mGeolocation = nsnull;
+    mGeolocation = nullptr;
   }
 
   if (mNotification) {
     mNotification->Shutdown();
-    mNotification = nsnull;
+    mNotification = nullptr;
   }
 
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
-    mBatteryManager = nsnull;
+    mBatteryManager = nullptr;
   }
 
   if (mPowerManager) {
     mPowerManager->Shutdown();
-    mPowerManager = nsnull;
+    mPowerManager = nullptr;
   }
 
   if (mSmsManager) {
     mSmsManager->Shutdown();
-    mSmsManager = nsnull;
+    mSmsManager = nullptr;
   }
 
 #ifdef MOZ_B2G_RIL
   if (mTelephony) {
-    mTelephony = nsnull;
+    mTelephony = nullptr;
   }
 
   if (mVoicemail) {
-    mVoicemail = nsnull;
+    mVoicemail = nullptr;
   }
 #endif
 
   if (mConnection) {
     mConnection->Shutdown();
-    mConnection = nsnull;
+    mConnection = nullptr;
   }
 
   if (mMobileConnection) {
     mMobileConnection->Shutdown();
-    mMobileConnection = nsnull;
+    mMobileConnection = nullptr;
   }
 
 #ifdef MOZ_B2G_BT
   if (mBluetooth) {
-    mBluetooth = nsnull;
+    mBluetooth = nullptr;
   }
 #endif
 
 #ifdef MOZ_SYS_MSG
   if (mMessagesManager) {
-    mMessagesManager = nsnull;
+    mMessagesManager = nullptr;
   }
 #endif
 
@@ -371,7 +371,7 @@ Navigator::GetPlugins(nsIDOMPluginArray** aPlugins)
   if (!mPlugins) {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
 
-    mPlugins = new nsPluginArray(this, win ? win->GetDocShell() : nsnull);
+    mPlugins = new nsPluginArray(this, win ? win->GetDocShell() : nullptr);
   }
 
   NS_ADDREF(*aPlugins = mPlugins);
@@ -419,7 +419,7 @@ Navigator::GetCookieEnabled(bool* aCookieEnabled)
 
   // Pass null for the channel, just like the cookie service does.
   nsCookieAccess access;
-  nsresult rv = permMgr->CanAccess(codebaseURI, nsnull, &access);
+  nsresult rv = permMgr->CanAccess(codebaseURI, nullptr, &access);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
@@ -818,7 +818,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
   nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
 
-  JSContext* cx = nsnull;
+  JSContext* cx = nullptr;
   rv = stack->Peek(&cx);
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
@@ -842,7 +842,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                     nsnull, nsnull, nsnull, loadFlags);
+                     nullptr, nullptr, nullptr, loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -891,7 +891,7 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _
 NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   if (!Preferences::GetBool("geo.enabled", true)) {
     return NS_OK;
@@ -914,7 +914,7 @@ NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
   }
 
   if (NS_FAILED(mGeolocation->Init(win->GetOuterWindow()))) {
-    mGeolocation = nsnull;
+    mGeolocation = nullptr;
     return NS_ERROR_FAILURE;
   }
 
@@ -954,7 +954,7 @@ Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
 NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
-  *aRetVal = nsnull;
+  *aRetVal = nullptr;
 
   if (mNotification) {
     NS_ADDREF(*aRetVal = mNotification);
@@ -978,7 +978,7 @@ NS_IMETHODIMP
 Navigator::GetBattery(nsIDOMBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
-    *aBattery = nsnull;
+    *aBattery = nullptr;
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
     NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
@@ -995,7 +995,7 @@ Navigator::GetBattery(nsIDOMBatteryManager** aBattery)
 NS_IMETHODIMP
 Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
 {
-  *aPower = nsnull;
+  *aPower = nullptr;
 
   if (!mPowerManager) {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
@@ -1014,7 +1014,7 @@ Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
 NS_IMETHODIMP
 Navigator::RequestWakeLock(const nsAString &aTopic, nsIDOMMozWakeLock **aWakeLock)
 {
-  *aWakeLock = nsnull;
+  *aWakeLock = nullptr;
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_OK);
@@ -1104,7 +1104,7 @@ Navigator::IsSmsSupported() const
 NS_IMETHODIMP
 Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 {
-  *aSmsManager = nsnull;
+  *aSmsManager = nullptr;
 
   if (!mSmsManager) {
     if (!IsSmsSupported() || !IsSmsAllowed()) {
@@ -1152,7 +1152,7 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 NS_IMETHODIMP
 Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
 {
-  *aVoicemail = nsnull;
+  *aVoicemail = nullptr;
 
   if (!mVoicemail) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
@@ -1189,7 +1189,7 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
 NS_IMETHODIMP
 Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
 {
-  *aConnection = nsnull;
+  *aConnection = nullptr;
 
   if (!mConnection) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
@@ -1206,7 +1206,7 @@ Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
 NS_IMETHODIMP
 Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
 {
-  *aMobileConnection = nsnull;
+  *aMobileConnection = nullptr;
 
   if (!mMobileConnection) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);

@@ -211,7 +211,7 @@ protected:
 
   /**
    * Get the popup frame list from the frame property.
-   * @return the property value if it exists, nsnull otherwise.
+   * @return the property value if it exists, nullptr otherwise.
    */
   nsFrameList* GetPopupList() const;
 

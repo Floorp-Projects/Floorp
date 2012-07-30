@@ -57,7 +57,7 @@ bool      nsLookAndFeel::sMenuSupportsDrag = false;
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
-      mStyle(nsnull),
+      mStyle(nullptr),
       mDefaultFontCached(false), mButtonFontCached(false),
       mFieldFontCached(false), mMenuFontCached(false)
 {
@@ -1005,7 +1005,7 @@ nsLookAndFeel::RefreshImpl()
     mMenuFontCached = false;
 
     g_object_unref(mStyle);
-    mStyle = nsnull;
+    mStyle = nullptr;
 
     InitWidget();
     InitLookAndFeel();

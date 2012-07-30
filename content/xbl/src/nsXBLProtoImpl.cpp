@@ -62,7 +62,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  JSObject* targetClassObject = nsnull;
+  JSObject* targetClassObject = nullptr;
   nsresult rv = InitTargetObjects(aBinding, context, aBoundElement,
                                   getter_AddRefs(holder), &targetClassObject);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
@@ -92,7 +92,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   JSObject** aTargetClassObject)
 {
   nsresult rv = NS_OK;
-  *aScriptObjectHolder = nsnull;
+  *aScriptObjectHolder = nullptr;
   
   if (!mClassObject) {
     rv = CompilePrototypeMembers(aBinding); // This is the first time we've ever installed this binding on an element.
@@ -217,7 +217,7 @@ nsXBLProtoImpl::FindField(const nsString& aFieldName) const
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -263,9 +263,9 @@ nsXBLProtoImpl::DestroyMembers()
   NS_ASSERTION(mClassObject, "This should never be called when there is no class object");
 
   delete mMembers;
-  mMembers = nsnull;
-  mConstructor = nsnull;
-  mDestructor = nsnull;
+  mMembers = nullptr;
+  mConstructor = nullptr;
+  mDestructor = nullptr;
 }
 
 nsresult
@@ -285,8 +285,8 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
 
   mClassObject = classObject;
 
-  nsXBLProtoImplField* previousField = nsnull;
-  nsXBLProtoImplMember* previousMember = nsnull;
+  nsXBLProtoImplField* previousField = nullptr;
+  nsXBLProtoImplMember* previousMember = nullptr;
 
   do {
     XBLBindingSerializeDetails type;
@@ -357,7 +357,7 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
         rv = mConstructor->Read(aContext, aStream);
         if (NS_FAILED(rv)) {
           delete mConstructor;
-          mConstructor = nsnull;
+          mConstructor = nullptr;
           return rv;
         }
 
@@ -370,7 +370,7 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
         rv = mDestructor->Read(aContext, aStream);
         if (NS_FAILED(rv)) {
           delete mDestructor;
-          mDestructor = nsnull;
+          mDestructor = nullptr;
           return rv;
         }
 

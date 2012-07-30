@@ -551,7 +551,7 @@ public:
   // containing block frame.
   static PRInt32 GetLineNumber(nsIFrame *aFrame,
                                bool aLockScroll,
-                               nsIFrame** aContainingBlock = nsnull);
+                               nsIFrame** aContainingBlock = nullptr);
 
   /**
    * Returns true if aFrame should apply overflow clipping.
@@ -619,7 +619,7 @@ protected:
   nsBoxLayoutMetrics* BoxMetrics() const;
 
   // Fire DOM event. If no aContent argument use frame's mContent.
-  void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nsnull);
+  void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nullptr);
 
 private:
   nsresult BoxReflow(nsBoxLayoutState& aState,

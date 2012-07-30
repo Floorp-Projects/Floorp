@@ -31,7 +31,7 @@ static const PRUint16 g_utGBKUnique2Bytes[] = {
 #include "gbkuniq2b.ut"
 };
 nsGBKUnique2BytesToUnicode::nsGBKUnique2BytesToUnicode() 
-  : nsTableDecoderSupport(u2BytesCharset, nsnull,
+  : nsTableDecoderSupport(u2BytesCharset, nullptr,
         (uMappingTable*) &g_utGBKUnique2Bytes, 1) 
 {
 }
@@ -52,7 +52,7 @@ static const PRUint16 g_utGB18030Unique2Bytes[] = {
 #include "gb18030uniq2b.ut"
 };
 nsGB18030Unique2BytesToUnicode::nsGB18030Unique2BytesToUnicode() 
-  : nsTableDecoderSupport(u2BytesCharset, nsnull,
+  : nsTableDecoderSupport(u2BytesCharset, nullptr,
         (uMappingTable*) &g_utGB18030Unique2Bytes, 1) 
 {
 }
@@ -73,7 +73,7 @@ static const PRUint16 g_utGB18030Unique4Bytes[] = {
 #include "gb180304bytes.ut"
 };
 nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode() 
-  : nsTableDecoderSupport(u4BytesGB18030Charset, nsnull,
+  : nsTableDecoderSupport(u4BytesGB18030Charset, nullptr,
         (uMappingTable*) &g_utGB18030Unique4Bytes, 1) 
 {
 }
@@ -237,7 +237,7 @@ void nsGBKToUnicode::CreateExtensionDecoder()
 }
 void nsGBKToUnicode::Create4BytesDecoder()
 {
-  m4BytesDecoder =  nsnull;
+  m4BytesDecoder =  nullptr;
 }
 void nsGB18030ToUnicode::CreateExtensionDecoder()
 {

@@ -64,7 +64,7 @@ int main()
 
     nsISupports *mySupportsPtr = reinterpret_cast<nsISupports*>(0x1000);
 
-    nsITestService *myITestService = nsnull;
+    nsITestService *myITestService = nullptr;
     CallQueryInterface(mySupportsPtr, &myITestService);
 
     nsTestService *myTestService =

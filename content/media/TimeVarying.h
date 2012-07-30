@@ -83,7 +83,7 @@ public:
    * sets aTime to the time at which the function changes to that final value.
    * If there are no changes after the current time, returns PR_INT64_MIN in aTime.
    */
-  const T& GetLast(Time* aTime = nsnull) const
+  const T& GetLast(Time* aTime = nullptr) const
   {
     if (mChanges.IsEmpty()) {
       if (aTime) {
@@ -127,7 +127,7 @@ public:
    *
    * Currently uses a linear search, but could use a binary search.
    */
-  const T& GetAt(Time aTime, Time* aEnd = nsnull, Time* aStart = nsnull) const
+  const T& GetAt(Time aTime, Time* aEnd = nullptr, Time* aStart = nullptr) const
   {
     if (mChanges.IsEmpty() || aTime < mChanges[0].mTime) {
       if (aStart) {

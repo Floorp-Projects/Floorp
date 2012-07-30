@@ -215,7 +215,7 @@ namespace aria {
  * ARIA role if the role attribute provides a space delimited list of roles.
  *
  * @param aNode  [in] the DOM node to get the role map entry for
- * @return        a pointer to the role map entry for the ARIA role, or nsnull
+ * @return        a pointer to the role map entry for the ARIA role, or nullptr
  *                if none
  */
 nsRoleMapEntry* GetRoleMap(nsINode* aNode);

@@ -25,7 +25,7 @@ public:
       return static_cast<nsHTMLLabelElement*>(aPossibleLabel);
     }
 
-    return nsnull;
+    return nullptr;
   }
 
   // nsISupports
@@ -81,7 +81,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,

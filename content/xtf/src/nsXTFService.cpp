@@ -47,7 +47,7 @@ nsXTFService::nsXTFService()
 nsresult
 NS_NewXTFService(nsIXTFService** aResult)
 {
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  NS_PRECONDITION(aResult != nullptr, "null ptr");
   if (! aResult)
     return NS_ERROR_NULL_POINTER;
 

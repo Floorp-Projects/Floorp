@@ -606,7 +606,7 @@ public:
   {
     nsCAutoString spec;
     if (NS_FAILED(aURI->GetSpec(spec)))
-      return nsnull;
+      return nullptr;
     return FindChildURI(spec, aNodeIndex);
   }
   nsNavHistoryResultNode* FindChildURI(const nsACString& aSpec,

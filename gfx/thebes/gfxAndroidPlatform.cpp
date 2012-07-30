@@ -111,7 +111,7 @@ gfxAndroidPlatform::CreatePlatformFontList()
         return list;
     }
     gfxPlatformFontList::Shutdown();
-    return nsnull;
+    return nullptr;
 }
 
 bool

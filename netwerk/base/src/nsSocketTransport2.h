@@ -147,7 +147,7 @@ private:
         MSG_OUTPUT_CLOSED,
         MSG_OUTPUT_PENDING
     };
-    nsresult PostEvent(PRUint32 type, nsresult status = NS_OK, nsISupports *param = nsnull);
+    nsresult PostEvent(PRUint32 type, nsresult status = NS_OK, nsISupports *param = nullptr);
 
     enum {
         STATE_CLOSED,

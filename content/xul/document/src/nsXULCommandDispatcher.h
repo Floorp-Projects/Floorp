@@ -54,7 +54,7 @@ protected:
           : mElement(aElement),
             mEvents(aEvents),
             mTargets(aTargets),
-            mNext(nsnull)
+            mNext(nullptr)
       {}
 
       nsCOMPtr<nsIDOMElement> mElement;

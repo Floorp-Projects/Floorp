@@ -52,15 +52,15 @@ OuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 {
   PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
   nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight)
-    return nsnull;
+    return nullptr;
 
   // Always return the inner doc as direct child accessible unless bounds
   // outside of it.
   Accessible* child = GetChildAt(0);
-  NS_ENSURE_TRUE(child, nsnull);
+  NS_ENSURE_TRUE(child, nullptr);
 
   if (aWhichChild == eDeepestChild)
     return child->ChildAtPoint(aX, aY, eDeepestChild);
@@ -128,7 +128,7 @@ OuterDocAccessible::Shutdown()
     logging::OuterDocDestroy(this);
 #endif
 
-  Accessible* childAcc = mChildren.SafeElementAt(0, nsnull);
+  Accessible* childAcc = mChildren.SafeElementAt(0, nullptr);
   if (childAcc) {
 #ifdef DEBUG
     if (logging::IsEnabled(logging::eDocDestroy)) {
@@ -188,7 +188,7 @@ OuterDocAccessible::AppendChild(Accessible* aAccessible)
 bool
 OuterDocAccessible::RemoveChild(Accessible* aAccessible)
 {
-  Accessible* child = mChildren.SafeElementAt(0, nsnull);
+  Accessible* child = mChildren.SafeElementAt(0, nullptr);
   if (child != aAccessible) {
     NS_ERROR("Wrong child to remove!");
     return false;

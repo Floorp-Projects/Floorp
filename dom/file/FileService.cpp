@@ -20,7 +20,7 @@ USING_FILE_NAMESPACE
 
 namespace {
 
-FileService* gInstance = nsnull;
+FileService* gInstance = nullptr;
 bool gShutdown = false;
 
 } // anonymous namespace
@@ -98,21 +98,21 @@ FileService::GetOrCreate()
 
   if (gShutdown) {
     NS_WARNING("Calling GetOrCreate() after shutdown!");
-    return nsnull;
+    return nullptr;
   }
 
   if (!gInstance) {
     nsRefPtr<FileService> service(new FileService);
 
     nsresult rv = service->Init();
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     nsCOMPtr<nsIObserverService> obs =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     rv = obs->AddObserver(service, "profile-before-change", false);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     // The observer service now owns us.
     gInstance = service;
@@ -141,7 +141,7 @@ FileService::Shutdown()
     if (NS_FAILED(gInstance->Cleanup())) {
       NS_WARNING("Failed to shutdown file service!");
     }
-    gInstance = nsnull;
+    gInstance = nullptr;
   }
 }
 
@@ -248,7 +248,7 @@ FileService::NotifyLockedFileCompleted(LockedFile* aLockedFile)
     mFileStorageInfos.Remove(storageId);
 
 #ifdef DEBUG
-    storageId = nsnull;
+    storageId = nullptr;
 #endif
 
      // See if we need to fire any complete callbacks.
@@ -339,7 +339,7 @@ FileService::MaybeFireCallback(StoragesCompleteCallback& aCallback)
 
   for (PRUint32 index = 0; index < aCallback.mStorages.Length(); index++) {
     if (mFileStorageInfos.Get(aCallback.mStorages[index]->StorageId(),
-                              nsnull)) {
+                              nullptr)) {
       return false;
     }
   }
@@ -386,7 +386,7 @@ FileService::LockedFileQueue::OnFileHelperComplete(FileHelper* aFileHelper)
   else {
     NS_ASSERTION(mCurrentHelper == aFileHelper, "How can this happen?!");
 
-    mCurrentHelper = nsnull;
+    mCurrentHelper = nullptr;
 
     nsresult rv = ProcessQueue();
     NS_ENSURE_SUCCESS(rv,);
@@ -428,7 +428,7 @@ FileService::FileStorageInfo::GetLockedFileQueue(LockedFile* aLockedFile)
       return lockedFileQueue;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 void

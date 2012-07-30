@@ -175,7 +175,7 @@ nsDownloadScanner::Init()
   if (mWatchdog) {
     rv = mWatchdog->Init();
     if (FAILED(rv))
-      mWatchdog = nsnull;
+      mWatchdog = nullptr;
   } else {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -417,7 +417,7 @@ nsDownloadScanner::Scan::Run()
 
   // Clean up some other variables
   // In the event of a timeout, our destructor won't be called
-  mDownload = nsnull;
+  mDownload = nullptr;
 
   NS_RELEASE_THIS();
   return NS_OK;

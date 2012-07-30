@@ -136,7 +136,7 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
     document = doc;
   }
   else {
-    container = nsnull;
+    container = nullptr;
     document = static_cast<nsIDocument*>(aContainer);
   }
 
@@ -161,7 +161,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
     document = doc;
   }
   else {
-    container = nsnull;
+    container = nullptr;
     document = static_cast<nsIDocument*>(aContainer);
   }
 
@@ -182,7 +182,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     }
 
     delete slots;
-    aNode->mSlots = nsnull;
+    aNode->mSlots = nullptr;
   }
 
   // Kill properties first since that may run external code, so we want to
@@ -352,11 +352,11 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
                            bool aCallUserDataHandlers,
                            nsIDOMNode **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsIDOMNode> newNode;
   nsCOMArray<nsINode> nodesWithProperties;
-  nsresult rv = Clone(aNode, aDeep, nsnull, nodesWithProperties,
+  nsresult rv = Clone(aNode, aDeep, nullptr, nodesWithProperties,
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -386,7 +386,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   NS_PRECONDITION(!aParent || aNode->IsNodeOfType(nsINode::eCONTENT),
                   "Can't insert document or attribute nodes into a parent");
 
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   // First deal with aNode and walk its attributes (and their children). Then,
   // if aDeep is true, deal with aNode's children (and recurse into their
@@ -431,7 +431,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   nsGenericElement *elem = aNode->IsElement() ?
                            static_cast<nsGenericElement*>(aNode) :
-                           nsnull;
+                           nullptr;
 
   nsCOMPtr<nsINode> clone;
   if (aClone) {

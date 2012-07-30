@@ -47,7 +47,7 @@ nsXULControllers::DeleteControllers()
 nsresult
 NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+  NS_PRECONDITION(aOuter == nullptr, "no aggregation");
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
 
@@ -94,7 +94,7 @@ NS_IMETHODIMP
 nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   PRUint32 count = mControllers.Length();
   for (PRUint32 i=0; i < count; i++)
@@ -129,7 +129,7 @@ nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
   nsXULControllerData** inserted =
 #endif
   mControllers.InsertElementAt(aIndex, controllerData);
-  NS_ASSERTION(inserted != nsnull, "Insertion of controller failed");
+  NS_ASSERTION(inserted != nullptr, "Insertion of controller failed");
   return NS_OK;
 }
 
@@ -137,7 +137,7 @@ NS_IMETHODIMP
 nsXULControllers::RemoveControllerAt(PRUint32 aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsXULControllerData* controllerData = mControllers.SafeElementAt(aIndex);
   if (!controllerData) return NS_ERROR_FAILURE;
@@ -155,7 +155,7 @@ NS_IMETHODIMP
 nsXULControllers::GetControllerAt(PRUint32 aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsXULControllerData* controllerData = mControllers.SafeElementAt(aIndex);
   if (!controllerData) return NS_ERROR_FAILURE;
@@ -174,7 +174,7 @@ nsXULControllers::AppendController(nsIController *controller)
   nsXULControllerData** appended =
 #endif
   mControllers.AppendElement(controllerData);
-  NS_ASSERTION(appended != nsnull, "Appending controller failed");
+  NS_ASSERTION(appended != nullptr, "Appending controller failed");
   return NS_OK;
 }
 

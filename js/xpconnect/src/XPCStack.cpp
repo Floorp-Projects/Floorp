@@ -76,8 +76,8 @@ XPCJSStack::CreateStackFrameLocation(PRUint32 aLanguage,
 /**********************************************/
 
 XPCJSStackFrame::XPCJSStackFrame()
-    :   mFilename(nsnull),
-        mFunname(nsnull),
+    :   mFilename(nullptr),
+        mFunname(nullptr),
         mLineno(0),
         mLanguage(nsIProgrammingLanguage::UNKNOWN)
 {
@@ -196,7 +196,7 @@ XPCJSStackFrame::CreateStackFrameLocation(PRUint32 aLanguage,
     }
 
     if (failed && self) {
-        NS_RELEASE(self);   // sets self to nsnull
+        NS_RELEASE(self);   // sets self to nullptr
     }
 
     *stack = self;
@@ -247,7 +247,7 @@ NS_IMETHODIMP XPCJSStackFrame::GetLineNumber(PRInt32 *aLineNumber)
 /* readonly attribute string sourceLine; */
 NS_IMETHODIMP XPCJSStackFrame::GetSourceLine(char * *aSourceLine)
 {
-    *aSourceLine = nsnull;
+    *aSourceLine = nullptr;
     return NS_OK;
 }
 

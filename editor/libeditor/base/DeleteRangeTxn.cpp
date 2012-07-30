@@ -27,8 +27,8 @@ using namespace mozilla;
 DeleteRangeTxn::DeleteRangeTxn()
   : EditAggregateTxn(),
     mRange(),
-    mEditor(nsnull),
-    mRangeUpdater(nsnull)
+    mEditor(nullptr),
+    mRangeUpdater(nullptr)
 {
 }
 

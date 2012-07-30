@@ -210,7 +210,7 @@ already_AddRefed<nsIURI>
 XULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   if (aAnchorIndex != 0)
-    return nsnull;
+    return nullptr;
 
   nsAutoString href;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
@@ -218,7 +218,7 @@ XULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsIDocument* document = mContent->OwnerDoc();
 
-  nsIURI* anchorURI = nsnull;
+  nsIURI* anchorURI = nullptr;
   NS_NewURI(&anchorURI, href,
             document->GetDocumentCharacterSet().get(),
             baseURI);

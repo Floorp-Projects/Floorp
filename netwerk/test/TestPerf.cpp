@@ -8,7 +8,7 @@
 
 namespace TestPerf {
 
-static nsIIOService *gIOService = nsnull;
+static nsIIOService *gIOService = nullptr;
 
 //-----------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ load_sync_1(nsISupports *element, void *data)
 static nsresult
 load_sync(nsISupportsArray *urls)
 {
-    urls->EnumerateForwards(load_sync_1, nsnull);
+    urls->EnumerateForwards(load_sync_1, nullptr);
     return NS_OK;
 }
 
@@ -120,7 +120,7 @@ load_async_1(nsISupports *element, void *data)
     if (!listener)
         return true;
     NS_ADDREF(listener);
-    nsresult rv = NS_OpenURI(listener, nsnull, uri, gIOService);
+    nsresult rv = NS_OpenURI(listener, nullptr, uri, gIOService);
     NS_RELEASE(listener);
     if (NS_SUCCEEDED(rv))
         gRequestCount++;
@@ -132,7 +132,7 @@ load_async_1(nsISupports *element, void *data)
 static nsresult
 load_async(nsISupportsArray *urls)
 {
-    urls->EnumerateForwards(load_async_1, nsnull);
+    urls->EnumerateForwards(load_async_1, nullptr);
 
     PumpEvents();
     return NS_OK;
@@ -155,7 +155,7 @@ read_file(const char *fname, nsISupportsArray *urls)
     while (fgets(buf, sizeof(buf), fp)) {
         // remove trailing newline
         buf[strlen(buf) - 1] = 0;
-        rv = NS_NewURI(getter_AddRefs(uri), buf, nsnull, gIOService); 
+        rv = NS_NewURI(getter_AddRefs(uri), buf, nullptr, gIOService); 
         if (NS_FAILED(rv))
             printf("*** ignoring malformed uri: %s\n", buf);
         else {
@@ -206,10 +206,10 @@ main(int argc, char **argv)
     }
 
     nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+    registrar->AutoRegister(nullptr);
 
     // cache the io service
     {

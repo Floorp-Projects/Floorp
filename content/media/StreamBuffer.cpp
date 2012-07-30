@@ -24,14 +24,14 @@ StreamBuffer::Track*
 StreamBuffer::FindTrack(TrackID aID)
 {
   if (aID == TRACK_NONE)
-    return nsnull;
+    return nullptr;
   for (PRUint32 i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (track->GetID() == aID) {
       return track;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 void

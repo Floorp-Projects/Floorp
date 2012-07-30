@@ -375,7 +375,7 @@ GetURIAsUtf16StringBuffer(nsIURI* aUri)
 {
   nsCAutoString utf8String;
   nsresult rv = aUri->GetSpec(utf8String);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return nsCSSValue::BufferFromString(NS_ConvertUTF8toUTF16(utf8String));
 }
@@ -2159,10 +2159,10 @@ BuildStyleRule(nsCSSProperty aProperty,
       // check whether property parsed without CSS parsing errors
       !declaration->HasNonImportantValueFor(propertyToCheck)) {
     NS_WARNING("failure in BuildStyleRule");
-    return nsnull;
+    return nullptr;
   }
 
-  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nsnull, declaration.forget());
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, declaration.forget());
   return rule.forget();
 }
 
@@ -2173,9 +2173,9 @@ LookupStyleContext(dom::Element* aElement)
   nsIDocument* doc = aElement->GetCurrentDoc();
   nsIPresShell* shell = doc->GetShell();
   if (!shell) {
-    return nsnull;
+    return nullptr;
   }
-  return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
+  return nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr, shell);
 }
 
 bool
@@ -2684,7 +2684,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
-          NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
+          NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nullptr) ==
                             (svg->mStrokeDasharrayLength != 0),
                             "pointer/length mismatch");
           nsAutoPtr<nsCSSValueList> result;
@@ -3070,7 +3070,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         *static_cast<const nsRefPtr<nsCSSShadowArray>*>(
           StyleDataAtOffset(styleStruct, ssOffset));
       if (!shadowArray) {
-        aComputedValue.SetAndAdoptCSSValueListValue(nsnull, eUnit_Shadow);
+        aComputedValue.SetAndAdoptCSSValueListValue(nullptr, eUnit_Shadow);
         return true;
       }
       nsAutoPtr<nsCSSValueList> result;
@@ -3212,7 +3212,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
           mUnit = eUnit_Null;
         }
       } else {
-        mValue.mCSSValueList = nsnull;
+        mValue.mCSSValueList = nullptr;
       }
       break;
     case eUnit_CSSValuePairList:
@@ -3314,7 +3314,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueValue(nsCSSValue *aValue,
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aValue != nsnull, "values may not be null");
+  NS_ABORT_IF_FALSE(aValue != nullptr, "values may not be null");
   mUnit = aUnit;
   mValue.mCSSValue = aValue; // take ownership
 }
@@ -3325,7 +3325,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValuePairUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aValuePair != nsnull, "value pairs may not be null");
+  NS_ABORT_IF_FALSE(aValuePair != nullptr, "value pairs may not be null");
   mUnit = aUnit;
   mValue.mCSSValuePair = aValuePair; // take ownership
 }
@@ -3336,7 +3336,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueTripletValue(
 {
     FreeValue();
     NS_ABORT_IF_FALSE(IsCSSValueTripletUnit(aUnit), "bad unit");
-    NS_ABORT_IF_FALSE(aValueTriplet != nsnull, "value pairs may not be null");
+    NS_ABORT_IF_FALSE(aValueTriplet != nullptr, "value pairs may not be null");
     mUnit = aUnit;
     mValue.mCSSValueTriplet = aValueTriplet; // take ownership
 }
@@ -3346,7 +3346,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSRectUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aRect != nsnull, "value pairs may not be null");
+  NS_ABORT_IF_FALSE(aRect != nullptr, "value pairs may not be null");
   mUnit = aUnit;
   mValue.mCSSRect = aRect; // take ownership
 }
@@ -3357,7 +3357,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueListUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aValueList != nsnull,
+  NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aValueList != nullptr,
                     "dasharrays may not be null");
   mUnit = aUnit;
   mValue.mCSSValueList = aValueList; // take ownership

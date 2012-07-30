@@ -141,8 +141,8 @@ public:
 
   nsTableCellFrame* GetCellInfoAt(PRInt32  aRowX,
                                   PRInt32  aColX,
-                                  bool*  aOriginates = nsnull,
-                                  PRInt32* aColSpan = nsnull) const;
+                                  bool*  aOriginates = nullptr,
+                                  PRInt32* aColSpan = nullptr) const;
 
   /**
    * Returns the index at the given row and column coordinates.
@@ -225,7 +225,7 @@ public:
 
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef DEBUG
-  void Dump(char* aString = nsnull) const;
+  void Dump(char* aString = nullptr) const;
 #endif
 
 protected:
@@ -348,7 +348,7 @@ public:
                        bool              aRebuildIfNecessary,
                        PRInt32           aRgFirstRowIndex,
                        nsIntRect&        aDamageArea,
-                       PRInt32*          aBeginSearchAtCol = nsnull);
+                       PRInt32*          aBeginSearchAtCol = nullptr);
 
   /** Function to be called when a cell is added at a location which is spanned
     * to by a zero colspan.  We handle this situation by collapsing the zero
@@ -402,8 +402,8 @@ public:
   nsTableCellFrame* GetCellInfoAt(const nsTableCellMap& aMap,
                                   PRInt32          aRowX,
                                   PRInt32          aColX,
-                                  bool*          aOriginates = nsnull,
-                                  PRInt32*         aColSpan = nsnull) const;
+                                  bool*          aOriginates = nullptr,
+                                  PRInt32*         aColSpan = nullptr) const;
 
   bool RowIsSpannedInto(PRInt32 aRowIndex,
                           PRInt32 aNumEffCols) const;

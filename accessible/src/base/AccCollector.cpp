@@ -23,14 +23,14 @@ AccCollector::~AccCollector()
 PRUint32
 AccCollector::Count()
 {
-  EnsureNGetIndex(nsnull);
+  EnsureNGetIndex(nullptr);
   return mObjects.Length();
 }
 
 Accessible*
 AccCollector::GetAccessibleAt(PRUint32 aIndex)
 {
-  Accessible* accessible = mObjects.SafeElementAt(aIndex, nsnull);
+  Accessible* accessible = mObjects.SafeElementAt(aIndex, nullptr);
   if (accessible)
     return accessible;
 
@@ -64,7 +64,7 @@ AccCollector::EnsureNGetObject(PRUint32 aIndex)
       return mObjects[aIndex];
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 PRInt32

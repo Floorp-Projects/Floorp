@@ -89,7 +89,7 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     ScrollEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
-    void Revoke() { mInner = nsnull; }
+    void Revoke() { mInner = nullptr; }
   private:
     nsGfxScrollFrameInner *mInner;
   };
@@ -98,7 +98,7 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     AsyncScrollPortEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
-    void Revoke() { mInner = nsnull; }
+    void Revoke() { mInner = nullptr; }
   private:
     nsGfxScrollFrameInner *mInner;
   };
@@ -107,7 +107,7 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     ScrolledAreaEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
-    void Revoke() { mInner = nsnull; }
+    void Revoke() { mInner = nullptr; }
   private:
     nsGfxScrollFrameInner *mInner;
   };
@@ -159,14 +159,14 @@ public:
    * This is a closed-ended range --- aRange.XMost()/aRange.YMost() are allowed.
    */
   void ScrollTo(nsPoint aScrollPosition, nsIScrollableFrame::ScrollMode aMode,
-                const nsRect* aRange = nsnull) {
+                const nsRect* aRange = nullptr) {
     ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other, aRange);
   }
   void ScrollToCSSPixels(nsIntPoint aScrollPosition);
   void ScrollToImpl(nsPoint aScrollPosition, const nsRect& aRange);
   void ScrollVisual(nsPoint aOldScrolledFramePosition);
   void ScrollBy(nsIntPoint aDelta, nsIScrollableFrame::ScrollUnit aUnit,
-                nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow, nsIAtom *aOrigin = nsnull);
+                nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow, nsIAtom *aOrigin = nullptr);
   void ScrollToRestoredPosition();
   nsSize GetLineScrollAmount() const;
   nsSize GetPageScrollAmount() const;
@@ -326,7 +326,7 @@ public:
 protected:
   void ScrollToWithOrigin(nsPoint aScrollPosition,
                           nsIScrollableFrame::ScrollMode aMode,
-                          nsIAtom *aOrigin, // nsnull indicates "other" origin
+                          nsIAtom *aOrigin, // nullptr indicates "other" origin
                           const nsRect* aRange);
 };
 
@@ -470,14 +470,14 @@ public:
     return mInner.GetPageScrollAmount();
   }
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
-                        const nsRect* aRange = nsnull) {
+                        const nsRect* aRange = nullptr) {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
   virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow, nsIAtom *aOrigin = nsnull) {
+                        nsIntPoint* aOverflow, nsIAtom *aOrigin = nullptr) {
     mInner.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin);
   }
   virtual void ScrollToRestoredPosition() {
@@ -715,14 +715,14 @@ public:
     return mInner.GetPageScrollAmount();
   }
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
-                        const nsRect* aRange = nsnull) {
+                        const nsRect* aRange = nullptr) {
     mInner.ScrollTo(aScrollPosition, aMode, aRange);
   }
   virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) {
     mInner.ScrollToCSSPixels(aScrollPosition);
   }
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow, nsIAtom *aOrigin = nsnull) {
+                        nsIntPoint* aOverflow, nsIAtom *aOrigin = nullptr) {
     mInner.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin);
   }
   virtual void ScrollToRestoredPosition() {

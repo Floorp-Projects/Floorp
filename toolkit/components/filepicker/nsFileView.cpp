@@ -539,7 +539,7 @@ nsFileView::SetFilter(const nsAString& aFilterString)
 NS_IMETHODIMP
 nsFileView::GetSelectedFiles(nsIArray** aFiles)
 {
-  *aFiles = nsnull;
+  *aFiles = nullptr;
   if (!mSelection)
     return NS_OK;
 
@@ -754,7 +754,7 @@ nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
     nsAutoString temp;
-    mDateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatSeconds,
+    mDateFormatter->FormatPRTime(nullptr, kDateFormatShort, kTimeFormatSeconds,
                                  lastModTime * 1000, temp);
     aCellText = temp;
   } else {
@@ -988,7 +988,7 @@ nsFileView::SortArray(nsISupportsArray* aArray)
   for (i = 0; i < count; ++i)
     aArray->QueryElementAt(i, NS_GET_IID(nsIFile), (void**)&(array[i]));
 
-  NS_QuickSort(array, count, sizeof(nsIFile*), compareFunc, nsnull);
+  NS_QuickSort(array, count, sizeof(nsIFile*), compareFunc, nullptr);
 
   for (i = 0; i < count; ++i) {
     aArray->ReplaceElementAt(array[i], i);

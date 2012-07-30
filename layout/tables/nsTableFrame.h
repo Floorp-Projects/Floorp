@@ -57,7 +57,7 @@ private:
 class nsAutoPushCurrentTableItem
 {
 public:
-  nsAutoPushCurrentTableItem() : mBuilder(nsnull) {}
+  nsAutoPushCurrentTableItem() : mBuilder(nullptr) {}
   
   void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem)
   {
@@ -355,7 +355,7 @@ public:
   virtual PRInt32  GetEffectiveRowSpan(PRInt32                 aStartRowIndex,
                                        const nsTableCellFrame& aCell) const;
   virtual PRInt32  GetEffectiveRowSpan(const nsTableCellFrame& aCell,
-                                       nsCellMap*              aCellMap = nsnull);
+                                       nsCellMap*              aCellMap = nullptr);
 
   /** return the col span of a cell, taking into account col span magic at the edge
     * of a table.
@@ -366,7 +366,7 @@ public:
     *          of the table.
     */
   virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell,
-                                       nsCellMap*              aCellMap = nsnull) const;
+                                       nsCellMap*              aCellMap = nullptr) const;
 
   /** indicate whether the row has more than one cell that either originates
     * or is spanned from the rows above
@@ -374,7 +374,7 @@ public:
   bool HasMoreThanOneCell(PRInt32 aRowIndex) const;
 
   /** return the column frame associated with aColIndex
-    * returns nsnull if the col frame has not yet been allocated, or if
+    * returns nullptr if the col frame has not yet been allocated, or if
     * aColIndex is out of range
     */
   nsTableColFrame* GetColFrame(PRInt32 aColIndex) const;
@@ -591,8 +591,8 @@ public:
   // the first one are treated as tbodies instead.
 
   void OrderRowGroups(RowGroupArray& aChildren,
-                      nsTableRowGroupFrame** aHead = nsnull,
-                      nsTableRowGroupFrame** aFoot = nsnull) const;
+                      nsTableRowGroupFrame** aHead = nullptr,
+                      nsTableRowGroupFrame** aFoot = nullptr) const;
 
   // Return the thead, if any
   nsTableRowGroupFrame* GetTHead() const;

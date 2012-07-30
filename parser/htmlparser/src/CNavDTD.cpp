@@ -137,7 +137,7 @@ CNavDTD::BuildModel(nsITokenizer* aTokenizer,
                     bool aCountLines,
                     const nsCString*)
 {
-  NS_PRECONDITION(mBodyContext != nsnull,
+  NS_PRECONDITION(mBodyContext != nullptr,
                   "Create a context before calling build model");
 
   nsresult result = NS_OK;
@@ -780,7 +780,7 @@ nsresult
 CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
                                  nsCParserNode *aNode)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
 
   nsresult  result = NS_OK;
   bool    theChildIsContainer = nsHTMLElement::IsContainer(aChildTag);
@@ -1011,7 +1011,7 @@ void
 CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
                           eHTMLTags aParent, nsIParserNode* aNode)
 {
-  NS_PRECONDITION(mBodyContext != nsnull, "need a context to work with");
+  NS_PRECONDITION(mBodyContext != nullptr, "need a context to work with");
 
   // The trick here is to see if the parent can contain the child, but prefers
   // not to. Only if the parent CANNOT contain the child should we look to see
@@ -1089,7 +1089,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   nsTArray<nsString> theContent;
   nsAutoString theAttribute;
   nsAutoString theFormType;
-  CToken*      theToken = nsnull;
+  CToken*      theToken = nullptr;
 
   theFormType.AssignLiteral("select");
 
@@ -1172,7 +1172,7 @@ CNavDTD::IsAlternateTag(eHTMLTags aTag)
 nsresult
 CNavDTD::HandleStartToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
 
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
   NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
@@ -1443,7 +1443,7 @@ StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
         break;
 
       default:
-        theToken = nsnull;
+        theToken = nullptr;
         break;
     }
   }
@@ -1468,13 +1468,13 @@ StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
 nsresult
 CNavDTD::HandleEndToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
 
   nsresult    result = NS_OK;
   eHTMLTags   theChildTag = (eHTMLTags)aToken->GetTypeID();
 
   // Begin by dumping any attributes (bug 143512)
-  CollectAttributes(nsnull, theChildTag, aToken->GetAttributeCount());
+  CollectAttributes(nullptr, theChildTag, aToken->GetAttributeCount());
 
   switch (theChildTag) {
     case eHTMLTag_link:
@@ -1483,7 +1483,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
-                          !mCountLines ? nsnull : &mLineNumber);
+                          !mCountLines ? nullptr : &mLineNumber);
       if (mBodyContext->LastOf(eHTMLTag_head) != kNotFound) {
         result = CloseContainersTo(eHTMLTag_head, false);
       }
@@ -1511,7 +1511,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
     case eHTMLTag_body:
     case eHTMLTag_html:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
-                          !mCountLines ? nsnull : &mLineNumber);
+                          !mCountLines ? nullptr : &mLineNumber);
       break;
 
     case eHTMLTag_script:
@@ -1637,7 +1637,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
 nsresult
 CNavDTD::HandleSavedTokens(PRInt32 anIndex)
 {
-  NS_PRECONDITION(mBodyContext != nsnull && mBodyContext->GetCount() > 0, "invalid context");
+  NS_PRECONDITION(mBodyContext != nullptr && mBodyContext->GetCount() > 0, "invalid context");
 
   nsresult  result = NS_OK;
 
@@ -1746,7 +1746,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
 nsresult
 CNavDTD::HandleEntityToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
 
   nsresult  result = NS_OK;
 
@@ -1797,7 +1797,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
 nsresult
 CNavDTD::HandleCommentToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
   return NS_OK;
 }
 
@@ -1830,7 +1830,7 @@ CNavDTD::HandleAttributeToken(CToken* aToken)
 nsresult
 CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
   return NS_OK;
 }
 
@@ -1845,7 +1845,7 @@ CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
 nsresult
 CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
 {
-  NS_PRECONDITION(nsnull != aToken, kNullToken);
+  NS_PRECONDITION(nullptr != aToken, kNullToken);
 
   CDoctypeDeclToken* theToken = static_cast<CDoctypeDeclToken*>(aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
@@ -2864,7 +2864,7 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
       // Note: The head context is already opened.
       result = mSink->OpenContainer(*aNode);
 
-      mBodyContext->Push(static_cast<nsCParserNode*>(aNode), nsnull,
+      mBodyContext->Push(static_cast<nsCParserNode*>(aNode), nullptr,
                          false);
     }
   }

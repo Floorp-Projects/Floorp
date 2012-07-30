@@ -95,7 +95,7 @@ nsAuthSSPI::nsAuthSSPI(pType package)
     : mServiceFlags(REQ_DEFAULT)
     , mMaxTokenLen(0)
     , mPackage(package)
-    , mCertDERData(nsnull)
+    , mCertDERData(nullptr)
     , mCertDERLength(0)
 {
     memset(&mCred, 0, sizeof(mCred));
@@ -123,7 +123,7 @@ nsAuthSSPI::Reset()
 
     if (mCertDERData){
         nsMemory::Free(mCertDERData);
-        mCertDERData = nsnull;
+        mCertDERData = nullptr;
         mCertDERLength = 0;   
     }
 
@@ -146,7 +146,7 @@ nsAuthSSPI::Init(const char *serviceName,
 
     mIsFirst = true;
     mCertDERLength = 0;
-    mCertDERData = nsnull;
+    mCertDERData = nullptr;
 
     // The caller must supply a service name to be used. (For why we now require
     // a service name for NTLM, see bug 487872.)
@@ -188,7 +188,7 @@ nsAuthSSPI::Init(const char *serviceName,
     TimeStamp useBefore;
 
     SEC_WINNT_AUTH_IDENTITY_W ai;
-    SEC_WINNT_AUTH_IDENTITY_W *pai = nsnull;
+    SEC_WINNT_AUTH_IDENTITY_W *pai = nullptr;
     
     // domain, username, and password will be null if nsHttpNTLMAuth's ChallengeReceived
     // returns false for identityInvalid. Use default credentials in this case by passing
@@ -247,7 +247,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     // Optional second input buffer for the CBT (Channel Binding Token)
     SecBuffer ib[2], ob;
     // Pointer to the block of memory that stores the CBT
-    char* sspi_cbt = nsnull;
+    char* sspi_cbt = nullptr;
     SEC_CHANNEL_BINDINGS pendpoint_binding;
 
     LOG(("entering nsAuthSSPI::GetNextToken()\n"));
@@ -282,10 +282,10 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 LOG(("Cannot restart authentication sequence!"));
                 return NS_ERROR_UNEXPECTED;
             }
-            ctxIn = nsnull;
+            ctxIn = nullptr;
             // The certificate needs to be erased before being passed 
             // to InitializeSecurityContextW().
-            inToken = nsnull;
+            inToken = nullptr;
             inTokenLen = 0;
         } else {
             ibd.ulVersion = SECBUFFER_VERSION;
@@ -345,7 +345,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                     rv = crypto->Finish(false, hashString);
                 if (NS_FAILED(rv)) {
                     nsMemory::Free(mCertDERData);
-                    mCertDERData = nsnull;
+                    mCertDERData = nullptr;
                     mCertDERLength = 0;
                     nsMemory::Free(sspi_cbt);
                     return rv;
@@ -358,7 +358,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
           
                 // Free memory used to store the server certificate
                 nsMemory::Free(mCertDERData);
-                mCertDERData = nsnull;
+                mCertDERData = nullptr;
                 mCertDERLength = 0;
             } // End of CBT computation.
 

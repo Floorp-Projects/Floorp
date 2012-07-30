@@ -99,7 +99,7 @@ nsAppShellService::CreateHiddenWindow()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsWebShellWindow> newWindow;
-  rv = JustCreateTopWindow(nsnull, url,
+  rv = JustCreateTopWindow(nullptr, url,
                            chromeMask, initialWidth, initialHeight,
                            true, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -117,7 +117,7 @@ nsAppShellService::DestroyHiddenWindow()
   if (mHiddenWindow) {
     mHiddenWindow->Destroy();
 
-    mHiddenWindow = nsnull;
+    mHiddenWindow = nullptr;
   }
 
   return NS_OK;
@@ -139,7 +139,7 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
-  nsWebShellWindow *newWindow = nsnull;
+  nsWebShellWindow *newWindow = nullptr;
   rv = JustCreateTopWindow(aParent, aUrl,
                            aChromeMask, aInitialWidth, aInitialHeight,
                            false, &newWindow);  // addrefs
@@ -206,7 +206,7 @@ CheckForFullscreenWindow()
     return false;
 
   nsCOMPtr<nsISimpleEnumerator> windowList;
-  wm->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowList));
+  wm->GetXULWindowEnumerator(nullptr, getter_AddRefs(windowList));
   if (!windowList)
     return false;
 
@@ -245,7 +245,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                        bool aIsHiddenWindow,
                                        nsWebShellWindow **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);
 
   nsCOMPtr<nsIXULWindow> parent;
@@ -345,7 +345,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     widgetInitData.mRTL = isRTL;
   }
 
-  nsresult rv = window->Initialize(parent, center ? aParent : nsnull,
+  nsresult rv = window->Initialize(parent, center ? aParent : nullptr,
                                    aUrl, aInitialWidth, aInitialHeight,
                                    aIsHiddenWindow, widgetInitData);
       
@@ -395,8 +395,8 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
 {
     nsresult rv = NS_OK;
     if ( aWindow && aJSContext ) {
-        *aWindow    = nsnull;
-        *aJSContext = nsnull;
+        *aWindow    = nullptr;
+        *aJSContext = nullptr;
 
         if ( mHiddenWindow ) {
             // Convert hidden window to nsIDOMWindow and extract its JSContext.
@@ -479,7 +479,7 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
   NS_ASSERTION(obssvc, "Couldn't get observer service.");
 
   if (obssvc)
-    obssvc->NotifyObservers(aWindow, "xul-window-registered", nsnull);
+    obssvc->NotifyObservers(aWindow, "xul-window-registered", nullptr);
 
   return NS_OK;
 }

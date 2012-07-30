@@ -33,7 +33,7 @@ using namespace mozilla;
 
 #define MAX_PREVIEW_SIZE 180
 
-nsIFile *nsFilePicker::mPrevDisplayDirectory = nsnull;
+nsIFile *nsFilePicker::mPrevDisplayDirectory = nullptr;
 
 // XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
 // and needs to be unified in some generic utility class.
@@ -322,7 +322,7 @@ nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
-  *aFile = nsnull;
+  *aFile = nullptr;
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetFileURL(getter_AddRefs(uri));
   if (!uri)
@@ -341,7 +341,7 @@ nsFilePicker::GetFile(nsIFile **aFile)
 NS_IMETHODIMP
 nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
-  *aFileURL = nsnull;
+  *aFileURL = nullptr;
   return NS_NewURI(aFileURL, mFileURL);
 }
 

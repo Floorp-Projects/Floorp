@@ -174,7 +174,7 @@ GetURIFromJSObject(JSContext* aCtx,
 {
   jsval uriVal;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
-  NS_ENSURE_TRUE(rc, nsnull);
+  NS_ENSURE_TRUE(rc, nullptr);
 
   if (!JSVAL_IS_PRIMITIVE(uriVal)) {
     nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
@@ -182,11 +182,11 @@ GetURIFromJSObject(JSContext* aCtx,
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
     nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, JSVAL_TO_OBJECT(uriVal),
                                                   getter_AddRefs(wrappedObj));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
     nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
     return uri.forget();
   }
-  return nsnull;
+  return nullptr;
 }
 
 /**
@@ -301,7 +301,7 @@ class VisitedQuery : public AsyncStatementCallback
 {
 public:
   static nsresult Start(nsIURI* aURI,
-                        mozIVisitedStatusCallback* aCallback=nsnull)
+                        mozIVisitedStatusCallback* aCallback=nullptr)
   {
     NS_PRECONDITION(aURI, "Null URI");
 
@@ -404,7 +404,7 @@ public:
 
 private:
   VisitedQuery(nsIURI* aURI,
-               mozIVisitedStatusCallback *aCallback=nsnull,
+               mozIVisitedStatusCallback *aCallback=nullptr,
                bool aIsVisited=false)
   : mURI(aURI)
   , mCallback(aCallback)
@@ -464,7 +464,7 @@ public:
       mozilla::services::GetObserverService();
     if (obsService) {
       DebugOnly<nsresult> rv =
-        obsService->NotifyObservers(uri, URI_VISIT_SAVED, nsnull);
+        obsService->NotifyObservers(uri, URI_VISIT_SAVED, nullptr);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
@@ -1505,10 +1505,10 @@ History::GetIsVisitedStatement()
   // If we don't yet have a database connection, go ahead and clone it now.
   if (!mReadOnlyDBConn) {
     mozIStorageConnection* dbConn = GetDBConn();
-    NS_ENSURE_TRUE(dbConn, nsnull);
+    NS_ENSURE_TRUE(dbConn, nullptr);
 
     (void)dbConn->Clone(true, getter_AddRefs(mReadOnlyDBConn));
-    NS_ENSURE_TRUE(mReadOnlyDBConn, nsnull);
+    NS_ENSURE_TRUE(mReadOnlyDBConn, nullptr);
   }
 
   // Now we can create our cached statement.
@@ -1518,7 +1518,7 @@ History::GetIsVisitedStatement()
     "WHERE url = ?1 "
       "AND last_visit_date NOTNULL "
   ),  getter_AddRefs(mIsVisitedStatement));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return mIsVisitedStatement;
 }
 
@@ -1718,7 +1718,7 @@ History::GetSingleton()
 {
   if (!gService) {
     gService = new History();
-    NS_ENSURE_TRUE(gService, nsnull);
+    NS_ENSURE_TRUE(gService, nullptr);
   }
 
   NS_ADDREF(gService);
@@ -1730,7 +1730,7 @@ History::GetDBConn()
 {
   if (!mDB) {
     mDB = Database::GetDatabase();
-    NS_ENSURE_TRUE(mDB, nsnull);
+    NS_ENSURE_TRUE(mDB, nullptr);
   }
   return mDB->MainConn();
 }
@@ -1751,7 +1751,7 @@ History::Shutdown()
     if (mIsVisitedStatement) {
       (void)mIsVisitedStatement->Finalize();
     }
-    (void)mReadOnlyDBConn->AsyncClose(nsnull);
+    (void)mReadOnlyDBConn->AsyncClose(nullptr);
   }
 }
 
@@ -1888,7 +1888,7 @@ History::VisitURI(nsIURI* aURI,
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
   if (obsService) {
-    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
   }
 
   return NS_OK;
@@ -2081,7 +2081,7 @@ History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
 
   nsCOMPtr<mozIVisitInfoCallback> callback = aDestination
                                   ? new SetDownloadAnnotations(aDestination)
-                                  : nsnull;
+                                  : nullptr;
 
   rv = InsertVisitedURIs::Start(dbConn, placeArray, callback);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2090,7 +2090,7 @@ History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
   if (obsService) {
-    obsService->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+    obsService->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
   }
 
   return NS_OK;

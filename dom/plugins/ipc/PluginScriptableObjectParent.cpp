@@ -37,7 +37,7 @@ PluginScriptableObjectParent::ScriptableAllocate(NPP aInstance,
 {
   if (aClass != GetClass()) {
     NS_ERROR("Huh?! Wrong class!");
-    return nsnull;
+    return nullptr;
   }
 
   return new ParentNPObject();
@@ -399,7 +399,7 @@ PluginScriptableObjectParent::ScriptableEnumerate(NPObject* aObject,
 
   *aCount = identifiers.Length();
   if (!*aCount) {
-    *aIdentifiers = nsnull;
+    *aIdentifiers = nullptr;
     return true;
   }
 
@@ -484,8 +484,8 @@ const NPClass PluginScriptableObjectParent::sNPClass = {
 
 PluginScriptableObjectParent::PluginScriptableObjectParent(
                                                      ScriptableObjectType aType)
-: mInstance(nsnull),
-  mObject(nsnull),
+: mInstance(nullptr),
+  mObject(nullptr),
   mProtectCount(0),
   mType(aType)
 {
@@ -496,7 +496,7 @@ PluginScriptableObjectParent::~PluginScriptableObjectParent()
   if (mObject) {
     if (mObject->_class == GetClass()) {
       NS_ASSERTION(mType == Proxy, "Wrong type!");
-      static_cast<ParentNPObject*>(mObject)->parent = nsnull;
+      static_cast<ParentNPObject*>(mObject)->parent = nullptr;
     }
     else {
       NS_ASSERTION(mType == LocalObject, "Wrong type!");
@@ -596,7 +596,7 @@ PluginScriptableObjectParent::GetObject(bool aCanResurrect)
 {
   if (!mObject && aCanResurrect && !ResurrectProxyObject()) {
     NS_ERROR("Null object!");
-    return nsnull;
+    return nullptr;
   }
   return mObject;
 }
@@ -638,7 +638,7 @@ PluginScriptableObjectParent::DropNPObject()
   NS_ASSERTION(instance, "Must have an instance!");
 
   instance->UnregisterNPObject(mObject);
-  mObject = nsnull;
+  mObject = nullptr;
 
   unused << SendUnprotect();
 }

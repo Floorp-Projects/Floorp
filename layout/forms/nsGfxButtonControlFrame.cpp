@@ -111,7 +111,7 @@ nsGfxButtonControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 nsIFrame*
 nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
 {
-  nsIFrame * newFrame = nsnull;
+  nsIFrame * newFrame = nullptr;
 
   if (aContent == mTextContent) {
     nsIFrame * parentFrame = mFrames.FirstChild();
@@ -125,7 +125,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
       newFrame = NS_NewTextFrame(presContext->PresShell(), textStyleContext);
       if (newFrame) {
         // initialize the text frame
-        newFrame->Init(mTextContent, parentFrame, nsnull);
+        newFrame->Init(mTextContent, parentFrame, nullptr);
         mTextContent->SetPrimaryFrame(newFrame);
       }
     }

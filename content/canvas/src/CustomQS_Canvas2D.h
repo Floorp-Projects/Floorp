@@ -25,7 +25,7 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
     JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nullptr))
         return JS_FALSE;
 
     nsresult rv = NS_OK;
@@ -36,7 +36,7 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         if (!arg0.IsValid())
             return JS_FALSE;
 
-        rv = (self->*setfunc)(arg0, nsnull);
+        rv = (self->*setfunc)(arg0, nullptr);
     } else {
         nsISupports *arg0;
         xpc_qsSelfRef arg0ref;
@@ -212,7 +212,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, unsigned argc, jsval 
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
     JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nullptr))
         return JS_FALSE;
 
     if (argc < 3)

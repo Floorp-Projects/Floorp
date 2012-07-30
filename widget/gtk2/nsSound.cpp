@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 #include <gtk/gtk.h>
-static PRLibrary *libcanberra = nsnull;
+static PRLibrary *libcanberra = nullptr;
 
 /* used to play sounds with libcanberra. */
 typedef struct _ca_context ca_context;
@@ -101,7 +101,7 @@ ca_context_get_default()
 
     ca_context_create(&ctx);
     if (!ctx) {
-        return nsnull;
+        return nullptr;
     }
 
     g_static_private_set(&ctx_static_private, ctx, (GDestroyNotify) ca_context_destroy);
@@ -109,7 +109,7 @@ ca_context_get_default()
     GtkSettings* settings = gtk_settings_get_default();
     if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
                                      "gtk-sound-theme-name")) {
-        gchar* sound_theme_name = nsnull;
+        gchar* sound_theme_name = nullptr;
         g_object_get(settings, "gtk-sound-theme-name", &sound_theme_name, NULL);
 
         if (sound_theme_name) {
@@ -188,7 +188,7 @@ nsSound::Init()
             ca_context_create = (ca_context_create_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_create");
             if (!ca_context_create) {
                 PR_UnloadLibrary(libcanberra);
-                libcanberra = nsnull;
+                libcanberra = nullptr;
             } else {
                 // at this point we know we have a good libcanberra library
                 ca_context_destroy = (ca_context_destroy_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_destroy");
@@ -210,7 +210,7 @@ nsSound::Shutdown()
 {
     if (libcanberra) {
         PR_UnloadLibrary(libcanberra);
-        libcanberra = nsnull;
+        libcanberra = nullptr;
     }
 }
 

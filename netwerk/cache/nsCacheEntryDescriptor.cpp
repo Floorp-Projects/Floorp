@@ -24,7 +24,7 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
     : mCacheEntry(entry),
       mAccessGranted(accessGranted),
-      mOutput(nsnull)
+      mOutput(nullptr)
 {
     PR_INIT_CLIST(this);
     NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
@@ -67,7 +67,7 @@ nsCacheEntryDescriptor::GetDeviceID(char ** aDeviceID)
 
     const char* deviceID = mCacheEntry->GetDeviceID();
     if (!deviceID) {
-        *aDeviceID = nsnull;
+        *aDeviceID = nullptr;
         return NS_OK;
     }
 
@@ -263,7 +263,7 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32 offset, nsIInputStream ** resul
             return NS_ERROR_CACHE_READ_ACCESS_DENIED;
     }
 
-    nsInputStreamWrapper* cacheInput = nsnull;
+    nsInputStreamWrapper* cacheInput = nullptr;
     const char *val;
     val = mCacheEntry->GetMetaDataElement("uncompressed-len");
     if (val) {
@@ -292,7 +292,7 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
             return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
     }
 
-    nsOutputStreamWrapper* cacheOutput = nsnull;
+    nsOutputStreamWrapper* cacheOutput = nullptr;
     PRInt32 compressionLevel = nsCacheService::CacheCompressionLevel();
     const char *val;
     val = mCacheEntry->GetMetaDataElement("uncompressed-len");
@@ -301,7 +301,7 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
     } else {
         // clear compression flag when compression disabled - see bug #715198
         if (val) {
-            mCacheEntry->SetMetaDataElement("uncompressed-len", nsnull);
+            mCacheEntry->SetMetaDataElement("uncompressed-len", nullptr);
         }
         cacheOutput = new nsOutputStreamWrapper(this, offset);
     }
@@ -460,7 +460,7 @@ nsCacheEntryDescriptor::Close()
 
     // tell nsCacheService we're going away
     nsCacheService::CloseDescriptor(this);
-    NS_ASSERTION(mCacheEntry == nsnull, "mCacheEntry not null");
+    NS_ASSERTION(mCacheEntry == nullptr, "mCacheEntry not null");
 
     return NS_OK;
 }
@@ -470,7 +470,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 {
     NS_ENSURE_ARG_POINTER(key);
-    *result = nsnull;
+    *result = nullptr;
 
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETMETADATAELEMENT));
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
@@ -751,7 +751,7 @@ nsOutputStreamWrapper::LazyInit()
     nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
     if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
-    NS_ASSERTION(mOutput == nsnull, "mOutput set in LazyInit");
+    NS_ASSERTION(mOutput == nullptr, "mOutput set in LazyInit");
 
     nsCOMPtr<nsIOutputStream> stream;
     rv = nsCacheService::OpenOutputStreamForEntry(cacheEntry, mode, mStartOffset,

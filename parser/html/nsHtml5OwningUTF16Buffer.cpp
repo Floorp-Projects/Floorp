@@ -6,15 +6,15 @@
 
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(PRUnichar* aBuffer)
   : nsHtml5UTF16Buffer(aBuffer, 0),
-    next(nsnull),
-    key(nsnull)
+    next(nullptr),
+    key(nullptr)
 {
   MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
 }
 
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(void* aKey)
-  : nsHtml5UTF16Buffer(nsnull, 0),
-    next(nsnull),
+  : nsHtml5UTF16Buffer(nullptr, 0),
+    next(nullptr),
     key(aKey)
 {
   MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
@@ -42,13 +42,13 @@ nsHtml5OwningUTF16Buffer::FalliblyCreate(PRInt32 aLength)
   const mozilla::fallible_t fallible = mozilla::fallible_t();
   PRUnichar* newBuf = new (fallible) PRUnichar[aLength];
   if (!newBuf) {
-    return nsnull;
+    return nullptr;
   }
   nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
     new (fallible) nsHtml5OwningUTF16Buffer(newBuf);
   if (!newObj) {
     delete[] newBuf;
-    return nsnull;
+    return nullptr;
   }
   return newObj.forget();
 }

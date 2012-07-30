@@ -282,7 +282,7 @@ class nsScannerSharedSubstring
   {
     public:
       nsScannerSharedSubstring()
-        : mBuffer(nsnull), mBufferList(nsnull) { }
+        : mBuffer(nullptr), mBufferList(nullptr) { }
 
       ~nsScannerSharedSubstring()
         {

@@ -116,7 +116,7 @@ buildASN1ObjectFromDER(unsigned char *data,
   PRUint32 type;
 
   rv = parent->GetASN1Objects(getter_AddRefs(parentObjects));
-  if (NS_FAILED(rv) || parentObjects == nsnull)
+  if (NS_FAILED(rv) || parentObjects == nullptr)
     return NS_ERROR_FAILURE;
   while (data < end) {
     code = *data;
@@ -181,7 +181,7 @@ CreateFromDER(unsigned char *data,
               nsIASN1Object **retval)
 {
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence;
-  *retval = nsnull;
+  *retval = nullptr;
   
   nsresult rv =  buildASN1ObjectFromDER(data, data+len, sequence);
 
@@ -193,7 +193,7 @@ CreateFromDER(unsigned char *data,
     sequence->GetASN1Objects(getter_AddRefs(elements));
     nsCOMPtr<nsIASN1Object> asn1Obj = do_QueryElementAt(elements, 0);
     *retval = asn1Obj;
-    if (*retval == nsnull)
+    if (*retval == nullptr)
       return NS_ERROR_FAILURE;
 
     NS_ADDREF(*retval);
@@ -218,7 +218,7 @@ nsNSSASN1Sequence::~nsNSSASN1Sequence()
 NS_IMETHODIMP 
 nsNSSASN1Sequence::GetASN1Objects(nsIMutableArray * *aASN1Objects)
 {
-  if (mASN1Objects == nsnull) {
+  if (mASN1Objects == nullptr) {
     mASN1Objects = do_CreateInstance(NS_ARRAY_CONTRACTID);
   }
   *aASN1Objects = mASN1Objects;
@@ -323,7 +323,7 @@ nsNSSASN1Sequence::SetIsExpanded(bool aIsExpanded)
 
 nsNSSASN1PrintableItem::nsNSSASN1PrintableItem() : mType(0),
                                                    mTag(0),
-                                                   mData(nsnull),
+                                                   mData(nullptr),
                                                    mLen(0)
 {
   /* member initializers and constructor code */
@@ -395,7 +395,7 @@ nsNSSASN1PrintableItem::SetData(char *data, PRUint32 len)
   } else if (len == 0) {
     if (mData) {
       nsMemory::Free(mData);
-      mData = nsnull;
+      mData = nullptr;
     }
   }
   mLen = len;

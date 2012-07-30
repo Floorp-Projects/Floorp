@@ -110,7 +110,7 @@ mozTXTToHTMLConv::EscapeStr(nsString& aInString, bool inAttribute)
 void 
 mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PRInt32 aLength, nsString& aOutString)
 {
-  const PRUnichar * subString = nsnull;
+  const PRUnichar * subString = nullptr;
   for (PRUint32 i = aStartPos; PRInt32(i) - aStartPos < aLength;)
   {
     PRInt32 remainingChars = i - aStartPos;
@@ -441,7 +441,7 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
 
   // it would be faster if we could just check to see if there is a protocol
   // handler for the url and return instead of actually trying to create a url...
-  rv = mIOService->NewURI(utf8URL, nsnull, nsnull, getter_AddRefs(uri));
+  rv = mIOService->NewURI(utf8URL, nullptr, nullptr, getter_AddRefs(uri));
 
   // Real work
   if (NS_SUCCEEDED(rv) && uri)
@@ -1377,7 +1377,7 @@ mozTXTToHTMLConv::ScanHTML(const PRUnichar *text, PRUint32 whattodo,
 nsresult
 MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** aConv)
 {
-    NS_PRECONDITION(aConv != nsnull, "null ptr");
+    NS_PRECONDITION(aConv != nullptr, "null ptr");
     if (!aConv)
       return NS_ERROR_NULL_POINTER;
 

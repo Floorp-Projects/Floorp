@@ -28,7 +28,7 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
   // pointer value
   wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
   // Use MODE_SERVER to force creation of the socketpair
-  Transport t(id, Transport::MODE_SERVER, nsnull);
+  Transport t(id, Transport::MODE_SERVER, nullptr);
   int fd1 = t.GetServerFileDescriptor();
   int fd2, dontcare;
   t.GetClientFileDescriptorMapping(&fd2, &dontcare);
@@ -52,7 +52,7 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
 Transport*
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
-  return new Transport(aTd.mFd.fd, aMode, nsnull);
+  return new Transport(aTd.mFd.fd, aMode, nullptr);
 }
 
 void

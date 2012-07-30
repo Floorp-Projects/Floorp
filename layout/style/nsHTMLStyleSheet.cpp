@@ -147,9 +147,9 @@ static PLDHashTableOps MappedAttrTable_Ops = {
 // -----------------------------------------------------------
 
 nsHTMLStyleSheet::nsHTMLStyleSheet(void)
-  : mDocument(nsnull)
+  : mDocument(nullptr)
 {
-  mMappedAttrTable.ops = nsnull;
+  mMappedAttrTable.ops = nullptr;
 }
 
 nsresult
@@ -365,7 +365,7 @@ nsHTMLStyleSheet::SetComplete()
 /* virtual */ nsIStyleSheet*
 nsHTMLStyleSheet::GetParentSheet() const
 {
-  return nsnull;
+  return nullptr;
 }
 
 /* virtual */ nsIDocument*
@@ -400,13 +400,13 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
 {
   mURL = aURL;
 
-  mLinkRule          = nsnull;
-  mVisitedRule       = nsnull;
-  mActiveRule        = nsnull;
+  mLinkRule          = nullptr;
+  mVisitedRule       = nullptr;
+  mActiveRule        = nullptr;
 
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
-    mMappedAttrTable.ops = nsnull;
+    mMappedAttrTable.ops = nullptr;
   }
 }
 
@@ -458,16 +458,16 @@ nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
 {
   if (!mMappedAttrTable.ops) {
     bool res = PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
-                                   nsnull, sizeof(MappedAttrTableEntry), 16);
+                                   nullptr, sizeof(MappedAttrTableEntry), 16);
     if (!res) {
-      mMappedAttrTable.ops = nsnull;
-      return nsnull;
+      mMappedAttrTable.ops = nullptr;
+      return nullptr;
     }
   }
   MappedAttrTableEntry *entry = static_cast<MappedAttrTableEntry*>
                                            (PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
   if (!entry)
-    return nsnull;
+    return nullptr;
   if (!entry->mAttributes) {
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
@@ -573,7 +573,7 @@ NS_NewHTMLStyleSheet(nsHTMLStyleSheet** aInstancePtrResult)
 
   nsHTMLStyleSheet *it = new nsHTMLStyleSheet();
   if (!it) {
-    *aInstancePtrResult = nsnull;
+    *aInstancePtrResult = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

@@ -200,7 +200,7 @@ ImageAccessible::GetLongDescURI() const
       nsGenericHTMLElement::FromContent(mContent);
     if (element) {
       nsCOMPtr<nsIURI> uri;
-      element->GetURIAttr(nsGkAtoms::longdesc, nsnull, getter_AddRefs(uri));
+      element->GetURIAttr(nsGkAtoms::longdesc, nullptr, getter_AddRefs(uri));
       return uri.forget();
     }
   }
@@ -215,13 +215,13 @@ ImageAccessible::GetLongDescURI() const
           nsGenericHTMLElement::FromContent(target);
 
         nsCOMPtr<nsIURI> uri;
-        element->GetURIAttr(nsGkAtoms::href, nsnull, getter_AddRefs(uri));
+        element->GetURIAttr(nsGkAtoms::href, nullptr, getter_AddRefs(uri));
         return uri.forget();
       }
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool

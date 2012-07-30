@@ -22,7 +22,7 @@
 nsresult
 BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     bool lval;
     nsresult rv = leftExpr->evaluateToBool(aContext, lval);

@@ -130,11 +130,11 @@ nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
                                 bool* aIsTrusted)
 {
   // The null principal should never be written to preferences.
-  *aPrefName = nsnull;
-  *aID = nsnull;
-  *aSubjectName = nsnull;
-  *aGrantedList = nsnull;
-  *aDeniedList = nsnull;
+  *aPrefName = nullptr;
+  *aID = nullptr;
+  *aSubjectName = nullptr;
+  *aGrantedList = nullptr;
+  *aDeniedList = nullptr;
   *aIsTrusted = false;
 
   return NS_ERROR_FAILURE; 
@@ -167,7 +167,7 @@ nsNullPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 {
   // We don't actually do security policy caching.  And it's not like anyone
   // can set a security policy for us anyway.
-  *aSecurityPolicy = nsnull;
+  *aSecurityPolicy = nullptr;
   return NS_OK;
 }
 
@@ -202,7 +202,7 @@ NS_IMETHODIMP
 nsNullPrincipal::EnableCapability(const char *aCapability, void **aAnnotation)
 {
   NS_NOTREACHED("Didn't I say it?  NO CAPABILITIES!");
-  *aAnnotation = nsnull;
+  *aAnnotation = nullptr;
   return NS_OK;
 }
 
@@ -216,7 +216,7 @@ NS_IMETHODIMP
 nsNullPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
   // CSP on a null principal makes no sense
-  *aCsp = nsnull;
+  *aCsp = nullptr;
   return NS_OK;
 }
 
@@ -244,7 +244,7 @@ nsNullPrincipal::SetDomain(nsIURI* aDomain)
 NS_IMETHODIMP 
 nsNullPrincipal::GetOrigin(char** aOrigin)
 {
-  *aOrigin = nsnull;
+  *aOrigin = nullptr;
   
   nsCAutoString str;
   nsresult rv = mURI->GetSpec(str);
@@ -296,7 +296,7 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
 {
   if (aReport) {
     nsScriptSecurityManager::ReportError(
-      nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mURI, aURI);
+      nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mURI, aURI);
   }
 
   return NS_ERROR_DOM_BAD_URI;
@@ -311,7 +311,7 @@ nsNullPrincipal::GetSubjectName(nsACString& aName)
 NS_IMETHODIMP
 nsNullPrincipal::GetCertificate(nsISupports** aCertificate)
 {
-    *aCertificate = nsnull;
+    *aCertificate = nullptr;
     return NS_OK;
 }
 

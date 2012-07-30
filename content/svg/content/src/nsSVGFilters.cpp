@@ -156,8 +156,8 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
                                        gfxASurface::ImageFormatARGB32);
   if (!result.mSource || result.mSource->CairoStatus() ||
       !result.mTarget || result.mTarget->CairoStatus()) {
-    result.mSource = nsnull;
-    result.mTarget = nsnull;
+    result.mSource = nullptr;
+    result.mTarget = nullptr;
     return result;
   }
 
@@ -856,7 +856,7 @@ nsSVGEnumMapping nsSVGFEBlendElement::sModeMap[] = {
   {&nsGkAtoms::screen, nsSVGFEBlendElement::SVG_MODE_SCREEN},
   {&nsGkAtoms::darken, nsSVGFEBlendElement::SVG_MODE_DARKEN},
   {&nsGkAtoms::lighten, nsSVGFEBlendElement::SVG_MODE_LIGHTEN},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFEBlendElement::sEnumInfo[1] =
@@ -1078,7 +1078,7 @@ nsSVGEnumMapping nsSVGFEColorMatrixElement::sTypeMap[] = {
   {&nsGkAtoms::saturate, nsSVGFEColorMatrixElement::SVG_FECOLORMATRIX_TYPE_SATURATE},
   {&nsGkAtoms::hueRotate, nsSVGFEColorMatrixElement::SVG_FECOLORMATRIX_TYPE_HUE_ROTATE},
   {&nsGkAtoms::luminanceToAlpha, nsSVGFEColorMatrixElement::SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFEColorMatrixElement::sEnumInfo[1] =
@@ -1406,7 +1406,7 @@ nsSVGEnumMapping nsSVGFECompositeElement::sOperatorMap[] = {
   {&nsGkAtoms::atop, nsSVGFECompositeElement::SVG_OPERATOR_ATOP},
   {&nsGkAtoms::xor_, nsSVGFECompositeElement::SVG_OPERATOR_XOR},
   {&nsGkAtoms::arithmetic, nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFECompositeElement::sEnumInfo[1] =
@@ -1515,7 +1515,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
   // Cairo does not support arithmetic operator
   if (op == nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC) {
     float k1, k2, k3, k4;
-    GetAnimatedNumberValues(&k1, &k2, &k3, &k4, nsnull);
+    GetAnimatedNumberValues(&k1, &k2, &k3, &k4, nullptr);
 
     // Copy the first source image
     CopyRect(aTarget, aSources[0], rect);
@@ -1874,7 +1874,7 @@ nsSVGEnumMapping nsSVGComponentTransferFunctionElement::sTypeMap[] = {
    nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
   {&nsGkAtoms::gamma,
    nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGComponentTransferFunctionElement::sEnumInfo[1] =
@@ -1973,7 +1973,7 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 
   float slope, intercept, amplitude, exponent, offset;
   GetAnimatedNumberValues(&slope, &intercept, &amplitude, 
-                          &exponent, &offset, nsnull);
+                          &exponent, &offset, nullptr);
 
   const SVGNumberList &tableValues =
     mNumberListAttributes[TABLEVALUES].GetAnimValue();
@@ -3192,7 +3192,7 @@ nsSVGEnumMapping nsSVGFETurbulenceElement::sTypeMap[] = {
    nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_FRACTALNOISE},
   {&nsGkAtoms::turbulence,
    nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGEnumMapping nsSVGFETurbulenceElement::sStitchTilesMap[] = {
@@ -3200,7 +3200,7 @@ nsSVGEnumMapping nsSVGFETurbulenceElement::sStitchTilesMap[] = {
    nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH},
   {&nsGkAtoms::noStitch,
    nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_NOSTITCH},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFETurbulenceElement::sEnumInfo[2] =
@@ -3660,7 +3660,7 @@ nsSVGElement::NumberPairInfo nsSVGFEMorphologyElement::sNumberPairInfo[1] =
 nsSVGEnumMapping nsSVGFEMorphologyElement::sOperatorMap[] = {
   {&nsGkAtoms::erode, nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE},
   {&nsGkAtoms::dilate, nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFEMorphologyElement::sEnumInfo[1] =
@@ -4017,7 +4017,7 @@ nsSVGEnumMapping nsSVGFEConvolveMatrixElement::sEdgeModeMap[] = {
   {&nsGkAtoms::duplicate, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE},
   {&nsGkAtoms::wrap, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_WRAP},
   {&nsGkAtoms::none, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_NONE},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFEConvolveMatrixElement::sEnumInfo[1] =
@@ -4258,7 +4258,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
   }
 
   PRInt32 targetX, targetY;
-  GetAnimatedIntegerValues(&targetX, &targetY, nsnull);
+  GetAnimatedIntegerValues(&targetX, &targetY, nullptr);
 
   if (mIntegerAttributes[TARGET_X].IsExplicitlySet()) {
     if (targetX < 0 || targetX >= orderX)
@@ -5039,7 +5039,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     static_cast<nsSVGFEDistantLightElement*>
       (distantLight.get())->GetAnimatedNumberValues(&azimuth,
                                                     &elevation,
-                                                    nsnull);
+                                                    nullptr);
     L[0] = cos(azimuth * radPerDeg) * cos(elevation * radPerDeg);
     L[1] = sin(azimuth * radPerDeg) * cos(elevation * radPerDeg);
     L[2] = sin(elevation * radPerDeg);
@@ -5051,7 +5051,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
       (pointLight.get())->GetAnimatedNumberValues(lightPos,
                                                   lightPos + 1,
                                                   lightPos + 2,
-                                                  nsnull);
+                                                  nullptr);
     instance->ConvertLocation(lightPos);
   }
   if (spotLight) {
@@ -5066,7 +5066,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
                                   pointsAt + 2,
                                   &specularExponent,
                                   &limitingConeAngle,
-                                  nsnull);
+                                  nullptr);
     instance->ConvertLocation(lightPos);
     instance->ConvertLocation(pointsAt);
 
@@ -5880,7 +5880,7 @@ nsSVGEnumMapping nsSVGFEDisplacementMapElement::sChannelMap[] = {
   {&nsGkAtoms::G, nsSVGFEDisplacementMapElement::SVG_CHANNEL_G},
   {&nsGkAtoms::B, nsSVGFEDisplacementMapElement::SVG_CHANNEL_B},
   {&nsGkAtoms::A, nsSVGFEDisplacementMapElement::SVG_CHANNEL_A},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGFEDisplacementMapElement::sEnumInfo[2] =

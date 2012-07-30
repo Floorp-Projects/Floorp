@@ -411,10 +411,10 @@ public:
   template<class Destination>
   operator Destination*() {
     if (!mRawPtr)
-      return nsnull;
+      return nullptr;
 
     return mRawPtr->GetEventGroups() & (1U << Destination::kEventGroup) ?
-      static_cast<Destination*>(mRawPtr) : nsnull;
+      static_cast<Destination*>(mRawPtr) : nullptr;
   }
 
 private:

@@ -65,8 +65,8 @@ clearHashEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
 
     // leave it up to the nsHashKey destructor to free the "value"
     delete hashEntry->key;
-    hashEntry->key = nsnull;
-    hashEntry->value = nsnull;  // probably not necessary, but for
+    hashEntry->key = nullptr;
+    hashEntry->value = nullptr;  // probably not necessary, but for
                                 // sanity's sake
 }
 
@@ -79,7 +79,7 @@ static const PLDHashTableOps hashtableOps = {
     PL_DHashMoveEntryStub,
     clearHashEntry,
     PL_DHashFinalizeStub,
-    nsnull,
+    nullptr,
 };
 
 
@@ -124,14 +124,14 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, bool threadSafe)
 {
     MOZ_COUNT_CTOR(nsHashtable);
 
-    bool result = PL_DHashTableInit(&mHashtable, &hashtableOps, nsnull,
+    bool result = PL_DHashTableInit(&mHashtable, &hashtableOps, nullptr,
                                       sizeof(HTEntry), aInitSize);
     
     NS_ASSERTION(result, "Hashtable failed to initialize");
 
     // make sure we detect this later
     if (!result)
-        mHashtable.ops = nsnull;
+        mHashtable.ops = nullptr;
     
     if (threadSafe) {
         mLock = PR_NewLock();
@@ -174,7 +174,7 @@ void *nsHashtable::Put(nsHashKey *aKey, void *aData)
 {
     void *res =  NULL;
 
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
     if (mLock) PR_Lock(mLock);
 
@@ -204,14 +204,14 @@ void *nsHashtable::Put(nsHashKey *aKey, void *aData)
 
 void *nsHashtable::Get(nsHashKey *aKey)
 {
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
     if (mLock) PR_Lock(mLock);
 
     HTEntry* entry =
         static_cast<HTEntry*>
                    (PL_DHashTableOperate(&mHashtable, aKey, PL_DHASH_LOOKUP));
-    void *ret = PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->value : nsnull;
+    void *ret = PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->value : nullptr;
     
     if (mLock) PR_Unlock(mLock);
 
@@ -220,7 +220,7 @@ void *nsHashtable::Get(nsHashKey *aKey)
 
 void *nsHashtable::Remove(nsHashKey *aKey)
 {
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
     if (mLock) PR_Lock(mLock);
 
@@ -237,7 +237,7 @@ void *nsHashtable::Remove(nsHashKey *aKey)
     
     if (PL_DHASH_ENTRY_IS_FREE(entry)) {
         // value wasn't in the table anyway
-        res = nsnull;
+        res = nullptr;
     } else {
         res = entry->value;
         PL_DHashTableRawRemove(&mHashtable, entry);
@@ -264,9 +264,9 @@ hashEnumerateShare(PLDHashTable *table, PLDHashEntryHdr *hdr,
 
 nsHashtable * nsHashtable::Clone()
 {
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
-    bool threadSafe = (mLock != nsnull);
+    bool threadSafe = (mLock != nullptr);
     nsHashtable *newHashTable = new nsHashtable(mHashtable.entryCount, threadSafe);
 
     PL_DHashTableEnumerate(&mHashtable, hashEnumerateShare, newHashTable);
@@ -309,7 +309,7 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* aClosure)
     
     _HashEnumerateArgs thunk, *thunkp;
     if (!destroyFunc) {
-        thunkp = nsnull;
+        thunkp = nullptr;
     } else {
         thunkp = &thunk;
         thunk.fn = destroyFunc;
@@ -324,7 +324,7 @@ nsHashtable::nsHashtable(nsIObjectInputStream* aStream,
                          nsHashtableReadEntryFunc aReadEntryFunc,
                          nsHashtableFreeEntryFunc aFreeEntryFunc,
                          nsresult *aRetVal)
-  : mLock(nsnull),
+  : mLock(nullptr),
     mEnumerating(false)
 {
     MOZ_COUNT_CTOR(nsHashtable);
@@ -345,9 +345,9 @@ nsHashtable::nsHashtable(nsIObjectInputStream* aStream,
             if (NS_SUCCEEDED(rv)) {
                 bool status =
                     PL_DHashTableInit(&mHashtable, &hashtableOps,
-                                      nsnull, sizeof(HTEntry), count);
+                                      nullptr, sizeof(HTEntry), count);
                 if (!status) {
-                    mHashtable.ops = nsnull;
+                    mHashtable.ops = nullptr;
                     rv = NS_ERROR_OUT_OF_MEMORY;
                 } else {
                     for (PRUint32 i = 0; i < count; i++) {
@@ -359,7 +359,7 @@ nsHashtable::nsHashtable(nsIObjectInputStream* aStream,
                             Put(key, data);
 
                             // XXXbe must we clone key? can't we hand off
-                            aFreeEntryFunc(aStream, key, nsnull);
+                            aFreeEntryFunc(aStream, key, nullptr);
                         }
                     }
                 }
@@ -395,7 +395,7 @@ nsHashtable::Write(nsIObjectOutputStream* aStream,
 {
     if (!mHashtable.ops)
         return NS_ERROR_OUT_OF_MEMORY;
-    bool threadSafe = (mLock != nsnull);
+    bool threadSafe = (mLock != nullptr);
     nsresult rv = aStream->WriteBoolean(threadSafe);
     if (NS_FAILED(rv)) return rv;
 
@@ -413,7 +413,7 @@ nsHashtable::Write(nsIObjectOutputStream* aStream,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsISupportsKey::nsISupportsKey(nsIObjectInputStream* aStream, nsresult *aResult)
-    : mKey(nsnull)
+    : mKey(nullptr)
 {
     bool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
@@ -425,7 +425,7 @@ nsISupportsKey::nsISupportsKey(nsIObjectInputStream* aStream, nsresult *aResult)
 nsresult
 nsISupportsKey::Write(nsIObjectOutputStream* aStream) const
 {
-    bool nonnull = (mKey != nsnull);
+    bool nonnull = (mKey != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteObject(mKey, true);
@@ -540,7 +540,7 @@ nsCStringKey::Clone() const
 }
 
 nsCStringKey::nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
-    : mStr(nsnull), mStrLen(0), mOwnership(OWN)
+    : mStr(nullptr), mStrLen(0), mOwnership(OWN)
 {
     nsCAutoString str;
     nsresult rv = aStream->ReadCString(str);
@@ -662,7 +662,7 @@ nsStringKey::Clone() const
 }
 
 nsStringKey::nsStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
-    : mStr(nsnull), mStrLen(0), mOwnership(OWN)
+    : mStr(nullptr), mStrLen(0), mOwnership(OWN)
 {
     nsAutoString str;
     nsresult rv = aStream->ReadString(str);
@@ -713,7 +713,7 @@ nsObjectHashtable::CopyElement(PLDHashTable* table,
     void* newElement =
         newHashtable->mCloneElementFun(entry->key, entry->value,
                                        newHashtable->mCloneElementClosure);
-    if (newElement == nsnull)
+    if (newElement == nullptr)
         return PL_DHASH_STOP;
     newHashtable->Put(entry->key, newElement);
     return PL_DHASH_NEXT;
@@ -722,7 +722,7 @@ nsObjectHashtable::CopyElement(PLDHashTable* table,
 nsHashtable*
 nsObjectHashtable::Clone()
 {
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
     bool threadSafe = false;
     if (mLock)
@@ -764,7 +764,7 @@ nsSupportsHashtable::ReleaseElement(nsHashKey *aKey, void *aData, void* aClosure
 
 nsSupportsHashtable::~nsSupportsHashtable()
 {
-    Enumerate(ReleaseElement, nsnull);
+    Enumerate(ReleaseElement, nullptr);
 }
 
 // Return true if we overwrote something
@@ -779,7 +779,7 @@ nsSupportsHashtable::Put(nsHashKey *aKey, nsISupports* aData, nsISupports **valu
         *value = old;
     else        // the caller doesn't care, we do
         NS_IF_RELEASE(old);
-    return prev != nsnull;
+    return prev != nullptr;
 }
 
 nsISupports *
@@ -787,7 +787,7 @@ nsSupportsHashtable::Get(nsHashKey *aKey)
 {
     void* data = nsHashtable::Get(aKey);
     if (!data)
-        return nsnull;
+        return nullptr;
     nsISupports* element = reinterpret_cast<nsISupports*>(data);
     NS_IF_ADDREF(element);
     return element;
@@ -804,7 +804,7 @@ nsSupportsHashtable::Remove(nsHashKey *aKey, nsISupports **value)
         *value = element;
     else                  // caller doesn't care, we do
         NS_IF_RELEASE(element);
-    return data != nsnull;
+    return data != nullptr;
 }
 
 PLDHashOperator
@@ -824,9 +824,9 @@ nsSupportsHashtable::EnumerateCopy(PLDHashTable*,
 nsHashtable*
 nsSupportsHashtable::Clone()
 {
-    if (!mHashtable.ops) return nsnull;
+    if (!mHashtable.ops) return nullptr;
     
-    bool threadSafe = (mLock != nsnull);
+    bool threadSafe = (mLock != nullptr);
     nsSupportsHashtable* newHashTable =
         new nsSupportsHashtable(mHashtable.entryCount, threadSafe);
 
@@ -837,7 +837,7 @@ nsSupportsHashtable::Clone()
 void
 nsSupportsHashtable::Reset()
 {
-    Enumerate(ReleaseElement, nsnull);
+    Enumerate(ReleaseElement, nullptr);
     nsHashtable::Reset();
 }
 

@@ -31,7 +31,7 @@
 
 nsProfileDirServiceProvider::nsProfileDirServiceProvider(bool aNotifyObservers) :
 #ifdef MOZ_PROFILELOCKING
-  mProfileDirLock(nsnull),
+  mProfileDirLock(nullptr),
 #endif
   mNotifyObservers(aNotifyObservers),
   mSharingEnabled(false)
@@ -86,7 +86,7 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir,
     dirToLock = mNonSharedProfileDir;
   else
     dirToLock = mProfileDir;
-  rv = mProfileDirLock->Lock(dirToLock, nsnull);
+  rv = mProfileDirLock->Lock(dirToLock, nullptr);
   if (NS_FAILED(rv))
     return rv;
 #endif
@@ -99,9 +99,9 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir,
 
     NS_NAMED_LITERAL_STRING(context, "startup");
     // Notify observers that the profile has changed - Here they respond to new profile
-    observerService->NotifyObservers(nsnull, "profile-do-change", context.get());
+    observerService->NotifyObservers(nullptr, "profile-do-change", context.get());
     // Now observers can respond to something another observer did on "profile-do-change"
-    observerService->NotifyObservers(nsnull, "profile-after-change", context.get());
+    observerService->NotifyObservers(nullptr, "profile-after-change", context.get());
   }
 
   return NS_OK;
@@ -129,7 +129,7 @@ nsProfileDirServiceProvider::Shutdown()
     return NS_ERROR_FAILURE;
 
   NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
-  observerService->NotifyObservers(nsnull, "profile-before-change", context.get());
+  observerService->NotifyObservers(nullptr, "profile-before-change", context.get());
   return NS_OK;
 }
 
@@ -413,7 +413,7 @@ nsresult NS_NewProfileDirServiceProvider(bool aNotifyObservers,
                                          nsProfileDirServiceProvider** aProvider)
 {
   NS_ENSURE_ARG_POINTER(aProvider);
-  *aProvider = nsnull;
+  *aProvider = nullptr;
 
   nsProfileDirServiceProvider *prov = new nsProfileDirServiceProvider(aNotifyObservers);
   if (!prov)

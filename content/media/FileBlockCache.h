@@ -108,7 +108,7 @@ public:
     }
     bool IsWrite() const {
       return mSourceBlockIndex == -1 &&
-             mData.get() != nsnull;
+             mData.get() != nullptr;
     }
   };
 
@@ -177,9 +177,9 @@ private:
   // has been dispatched to preform the IO.
   // mDataMonitor must be owned while calling this.
   void EnsureWriteScheduled();
-  // Array of block changes to made. If mBlockChanges[offset/BLOCK_SIZE] == nsnull,
+  // Array of block changes to made. If mBlockChanges[offset/BLOCK_SIZE] == nullptr,
   // then the block has no pending changes to be written, but if
-  // mBlockChanges[offset/BLOCK_SIZE] != nsnull, then either there's a block
+  // mBlockChanges[offset/BLOCK_SIZE] != nullptr, then either there's a block
   // cached in memory waiting to be written, or this block is the target of a
   // block move.
   nsTArray< nsRefPtr<BlockChange> > mBlockChanges;

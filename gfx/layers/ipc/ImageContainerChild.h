@@ -120,7 +120,7 @@ protected:
   AllocPGrallocBuffer(const gfxIntSize&, const gfxContentType&,
                       MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE
 
-  { return nsnull; }
+  { return nullptr; }
 
   virtual bool
   DeallocPGrallocBuffer(PGrallocBufferChild* actor) MOZ_OVERRIDE
@@ -158,7 +158,7 @@ protected:
 
   /**
    * Removes a shared image from the pool and returns it.
-   * Returns nsnull if the pool is empty.
+   * Returns nullptr if the pool is empty.
    */
   SharedImage* PopSharedImageFromPool();
   /**

@@ -40,7 +40,7 @@ class OggPacketDeallocator : public nsDequeFunctor {
     ogg_packet* p = static_cast<ogg_packet*>(aPacket);
     delete [] p->packet;
     delete p;
-    return nsnull;
+    return nullptr;
   }
 };
 
@@ -127,7 +127,7 @@ public:
   // decoding.
   virtual bool IsHeader(ogg_packet* aPacket) { return false; }
 
-  // Returns the next packet in the stream, or nsnull if there are no more
+  // Returns the next packet in the stream, or nullptr if there are no more
   // packets buffered in the packet queue. More packets can be buffered by
   // inserting one or more pages into the stream by calling PageIn(). The
   // caller is responsible for deleting returned packet's using

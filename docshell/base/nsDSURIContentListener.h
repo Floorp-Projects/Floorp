@@ -32,7 +32,7 @@ protected:
     virtual ~nsDSURIContentListener();
 
     void DropDocShellreference() {
-        mDocShell = nsnull;
+        mDocShell = nullptr;
     }
 
     // Determine if X-Frame-Options allows content to be framed

@@ -154,7 +154,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
     JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nullptr))
         return JS_FALSE;
 
     if (argc < 6 || argc == 7 || argc == 8)
@@ -189,10 +189,10 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
         JSObject* argv8 = argv[8].toObjectOrNull();
 
         // then try to grab either a js::TypedArray, or null
-        if (argv8 == nsnull) {
+        if (argv8 == nullptr) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
-                                        nsnull, cx);
+                                        nullptr, cx);
         } else if (JS_IsTypedArrayObject(argv8, cx)) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
@@ -231,7 +231,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, unsigned argc, jsval *v
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
     JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nullptr))
         return JS_FALSE;
 
     if (argc < 7 || argc == 8)

@@ -52,7 +52,7 @@ nsBlobProtocolHandler::RemoveFileDataEntry(nsACString& aUri)
     gFileDataTable->Remove(aUri);
     if (gFileDataTable->Count() == 0) {
       delete gFileDataTable;
-      gFileDataTable = nsnull;
+      gFileDataTable = nullptr;
     }
   }
 }
@@ -61,13 +61,13 @@ nsIPrincipal*
 nsBlobProtocolHandler::GetFileDataEntryPrincipal(nsACString& aUri)
 {
   if (!gFileDataTable) {
-    return nsnull;
+    return nullptr;
   }
   
   FileDataInfo* res;
   gFileDataTable->Get(aUri, &res);
   if (!res) {
-    return nsnull;
+    return nullptr;
   }
 
   return res->mPrincipal;
@@ -81,7 +81,7 @@ GetFileDataInfo(const nsACString& aUri)
                "Bad URI");
   
   if (!gFileDataTable) {
-    return nsnull;
+    return nullptr;
   }
   
   FileDataInfo* res;
@@ -143,7 +143,7 @@ NS_INTERFACE_MAP_BEGIN(nsBlobURI)
     // Need to return explicitly here, because if we just set foundInterface
     // to null the NS_INTERFACE_MAP_END_INHERITING will end up calling into
     // nsSimplURI::QueryInterface and finding something for this CID.
-    *aInstancePtr = nsnull;
+    *aInstancePtr = nullptr;
     return NS_NOINTERFACE;
   }
   else
@@ -166,7 +166,7 @@ nsBlobURI::GetPrincipalUri(nsIURI** aUri)
     mPrincipal->GetURI(aUri);
   }
   else {
-    *aUri = nsnull;
+    *aUri = nullptr;
   }
 
   return NS_OK;
@@ -257,14 +257,14 @@ NS_IMETHODIMP
 nsBlobURI::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
-  *array = nsnull;
+  *array = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsBlobURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
@@ -273,14 +273,14 @@ nsBlobURI::GetContractID(char * *aContractID)
 {
   // Make sure to modify any subclasses as needed if this ever
   // changes.
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsBlobURI::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 
@@ -349,14 +349,14 @@ nsBlobProtocolHandler::NewURI(const nsACString& aSpec,
                                   nsIURI *aBaseURI,
                                   nsIURI **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsresult rv;
 
   FileDataInfo* info =
     GetFileDataInfo(aSpec);
 
   nsRefPtr<nsBlobURI> uri =
-    new nsBlobURI(info ? info->mPrincipal.get() : nsnull);
+    new nsBlobURI(info ? info->mPrincipal.get() : nullptr);
 
   rv = uri->SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -370,7 +370,7 @@ nsBlobProtocolHandler::NewURI(const nsACString& aSpec,
 NS_IMETHODIMP
 nsBlobProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
-  *result = nsnull;
+  *result = nullptr;
 
   nsCString spec;
   uri->GetSpec(spec);

@@ -137,7 +137,7 @@ HTMLLinkAccessible::IsLink()
 already_AddRefed<nsIURI>
 HTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
-  return aAnchorIndex == 0 ? mContent->GetHrefURI() : nsnull;
+  return aAnchorIndex == 0 ? mContent->GetHrefURI() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

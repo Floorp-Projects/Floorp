@@ -65,15 +65,15 @@ public:
   bool      GetWidthOrHeight(Dimension aDimension, PRInt32& aResult);
 
   /**
-   * Returns the root <svg> element for the wrapped document, or nsnull on
+   * Returns the root <svg> element for the wrapped document, or nullptr on
    * failure.
    */
   nsSVGSVGElement* GetRootSVGElem();
 
   /**
-   * Returns the root nsIFrame* for the wrapped document, or nsnull on failure.
+   * Returns the root nsIFrame* for the wrapped document, or nullptr on failure.
    *
-   * @return the root nsIFrame* for the wrapped document, or nsnull on failure.
+   * @return the root nsIFrame* for the wrapped document, or nullptr on failure.
    */
   nsIFrame* GetRootLayoutFrame();
 

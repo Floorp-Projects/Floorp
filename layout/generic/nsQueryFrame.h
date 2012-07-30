@@ -33,7 +33,7 @@
 #define NS_QUERYFRAME_TAIL_INHERITANCE_ROOT                     \
   default: break;                                               \
   }                                                             \
-  return nsnull;                                                \
+  return nullptr;                                                \
 }
 
 class nsQueryFrame
@@ -64,7 +64,7 @@ public:
   template<class Dest>
   operator Dest*() {
     if (!mRawPtr)
-      return nsnull;
+      return nullptr;
 
     return reinterpret_cast<Dest*>(mRawPtr->QueryFrame(Dest::kFrameIID));
   }

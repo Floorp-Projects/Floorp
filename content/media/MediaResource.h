@@ -404,7 +404,7 @@ public:
     NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
-    void Revoke() { mResource = nsnull; }
+    void Revoke() { mResource = nullptr; }
 
   private:
     ChannelMediaResource* mResource;

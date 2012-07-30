@@ -115,7 +115,7 @@ nsSMILCSSProperty::GetBaseValue() const
     // the cached (computed) value and detect changes for us.
     nsSMILCSSValueType::ValueFromString(mPropID, mElement,
                                         computedStyleVal, baseValue,
-                                        nsnull);
+                                        nullptr);
   }
   return baseValue;
 }

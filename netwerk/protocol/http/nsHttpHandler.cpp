@@ -124,10 +124,10 @@ NewURI(const nsACString &aSpec,
 // nsHttpHandler <public>
 //-----------------------------------------------------------------------------
 
-nsHttpHandler *gHttpHandler = nsnull;
+nsHttpHandler *gHttpHandler = nullptr;
 
 nsHttpHandler::nsHttpHandler()
-    : mConnMgr(nsnull)
+    : mConnMgr(nullptr)
     , mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
@@ -202,7 +202,7 @@ nsHttpHandler::~nsHttpHandler()
 
     nsHttp::DestroyAtomTable();
 
-    gHttpHandler = nsnull;
+    gHttpHandler = nullptr;
 }
 
 nsresult
@@ -240,7 +240,7 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
         prefBranch->AddObserver(TELEMETRY_ENABLED, this, true);
 
-        PrefsChanged(prefBranch, nsnull);
+        PrefsChanged(prefBranch, nullptr);
     }
 
     mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
@@ -403,7 +403,7 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc)
     if (!PL_strncasecmp(enc, "x-", 2))
         enc += 2;
 
-    return nsHttp::FindToken(mAcceptEncodings.get(), enc, HTTP_LWS ",") != nsnull;
+    return nsHttp::FindToken(mAcceptEncodings.get(), enc, HTTP_LWS ",") != nullptr;
 }
 
 nsresult
@@ -469,7 +469,7 @@ nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 {
     LOG(("nsHttpHandler::NotifyObservers [chan=%x event=\"%s\"]\n", chan, event));
     if (mObserverService)
-        mObserverService->NotifyObservers(chan, event, nsnull);
+        mObserverService->NotifyObservers(chan, event, nullptr);
 }
 
 nsresult
@@ -737,9 +737,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     LOG(("nsHttpHandler::PrefsChanged [pref=%s]\n", pref));
 
-#define PREF_CHANGED(p) ((pref == nsnull) || !PL_strcmp(pref, p))
+#define PREF_CHANGED(p) ((pref == nullptr) || !PL_strcmp(pref, p))
 #define MULTI_PREF_CHANGED(p) \
-  ((pref == nsnull) || !PL_strncmp(pref, p, sizeof(p) - 1))
+  ((pref == nullptr) || !PL_strncmp(pref, p, sizeof(p) - 1))
 
     //
     // UA components
@@ -1158,7 +1158,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             NS_ASSERTION(mIDNConverter, "idnSDK not installed");
         }
         else if (!enableIDN && mIDNConverter)
-            mIDNConverter = nsnull;
+            mIDNConverter = nullptr;
     }
 
     //
@@ -1369,7 +1369,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         }
     }
 
-    return NewProxiedChannel(uri, nsnull, result);
+    return NewProxiedChannel(uri, nullptr, result);
 }
 
 NS_IMETHODIMP
@@ -1589,7 +1589,7 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
         return rv;
 
     nsHttpConnectionInfo *ci =
-        new nsHttpConnectionInfo(host, port, nsnull, usingSSL);
+        new nsHttpConnectionInfo(host, port, nullptr, usingSSL);
 
     return SpeculativeConnect(ci, aCallbacks, aTarget);
 }
@@ -1610,7 +1610,7 @@ nsHttpsHandler::Init()
 {
     nsCOMPtr<nsIProtocolHandler> httpHandler(
             do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http"));
-    NS_ASSERTION(httpHandler.get() != nsnull, "no http handler?");
+    NS_ASSERTION(httpHandler.get() != nullptr, "no http handler?");
     return NS_OK;
 }
 

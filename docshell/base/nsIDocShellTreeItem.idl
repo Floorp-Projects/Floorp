@@ -54,7 +54,7 @@ interface nsIDocShellTreeItem : nsIDocShellTreeNode
 
 	/*
 	This is call returns the same thing parent does however if the parent is
-	of a different itemType, it will instead return nsnull.  This call is a
+	of a different itemType, it will instead return nullptr.  This call is a
 	convience function for those wishing to not cross the boundaries at which
 	item types change.
 	*/
@@ -115,7 +115,7 @@ interface nsIDocShellTreeItem : nsIDocShellTreeNode
 	
 	Note implementers of this interface should NOT effect the lifetime of the 
 	parent DocShell by holding this reference as it creates a cycle.  Owners
-	when releasing this interface should set the treeOwner to nsnull.
+	when releasing this interface should set the treeOwner to nullptr.
 	Implementers of this interface are guaranteed that when treeOwner is
 	set that the poitner is valid without having to addref.
 	

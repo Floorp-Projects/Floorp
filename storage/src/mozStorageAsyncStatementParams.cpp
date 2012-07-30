@@ -22,7 +22,7 @@ namespace storage {
 AsyncStatementParams::AsyncStatementParams(AsyncStatement *aStatement)
 : mStatement(aStatement)
 {
-  NS_ASSERTION(mStatement != nsnull, "mStatement is null");
+  NS_ASSERTION(mStatement != nullptr, "mStatement is null");
 }
 
 NS_IMPL_ISUPPORTS2(
@@ -101,21 +101,21 @@ AsyncStatementParams::NewResolve(
     PRUint32 idx = JSID_TO_INT(aId);
     // All indexes are good because we don't know how many parameters there
     // really are.
-    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nsnull,
-                            nsnull, 0);
+    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nullptr,
+                            nullptr, 0);
     resolved = true;
   }
   else if (JSID_IS_STRING(aId)) {
     // We are unable to tell if there's a parameter with this name and so
     // we must assume that there is.  This screws the rest of the prototype
     // chain, but people really shouldn't be depending on this anyways.
-    ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nsnull,
-                                 nsnull, 0);
+    ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nullptr,
+                                 nullptr, 0);
     resolved = true;
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? aScopeObj : nsnull;
+  *_objp = resolved && ok ? aScopeObj : nullptr;
   return NS_OK;
 }
 

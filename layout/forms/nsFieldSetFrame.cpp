@@ -113,8 +113,8 @@ NS_IMPL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
 {
-  mContentFrame = nsnull;
-  mLegendFrame  = nsnull;
+  mContentFrame = nullptr;
+  mLegendFrame  = nullptr;
   mLegendSpace  = 0;
 }
 
@@ -142,7 +142,7 @@ nsFieldSetFrame::SetInitialChildList(ChildListID    aListID,
     mLegendFrame  = aChildList.FirstChild();
   } else {
     mContentFrame = aChildList.FirstChild();
-    mLegendFrame  = nsnull;
+    mLegendFrame  = nullptr;
   }
 
   // Queue up the frames for the content frame
@@ -408,8 +408,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   bool reflowLegend;
 
   if (aReflowState.ShouldReflowAllKids()) {
-    reflowContent = mContentFrame != nsnull;
-    reflowLegend = mLegendFrame != nsnull;
+    reflowContent = mContentFrame != nullptr;
+    reflowLegend = mLegendFrame != nullptr;
   } else {
     reflowContent = mContentFrame && NS_SUBTREE_DIRTY(mContentFrame);
     reflowLegend = mLegendFrame && NS_SUBTREE_DIRTY(mLegendFrame);
@@ -617,7 +617,7 @@ nsFieldSetFrame::InsertFrames(ChildListID    aListID,
   // aFrameList is not allowed to contain "the legend" for this fieldset
   ReparentFrameList(aFrameList);
   if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
-    aPrevFrame = nsnull;
+    aPrevFrame = nullptr;
   }
   return mContentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);
 }
@@ -641,7 +641,7 @@ nsFieldSetFrame::CreateAccessible()
                                                     PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 

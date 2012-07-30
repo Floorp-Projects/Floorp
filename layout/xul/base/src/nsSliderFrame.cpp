@@ -612,7 +612,7 @@ nsSliderFrame::GetScrollbar()
    nsIFrame* scrollbar;
    nsScrollbarButtonFrame::GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
-   if (scrollbar == nsnull)
+   if (scrollbar == nullptr)
        return this;
 
    return scrollbar->IsBoxFrame() ? scrollbar : this;
@@ -940,7 +940,7 @@ nsSliderFrame::DragThumb(bool aGrabMouseEvents)
     }
   }
 
-  nsIPresShell::SetCapturingContent(aGrabMouseEvents ? GetContent() : nsnull,
+  nsIPresShell::SetCapturingContent(aGrabMouseEvents ? GetContent() : nullptr,
                                     aGrabMouseEvents ? CAPTURE_IGNOREALLOWED : 0);
 }
 
@@ -1045,8 +1045,8 @@ nsSliderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // tell our mediator if we have one we are gone.
   if (mMediator) {
-    mMediator->SetSlider(nsnull);
-    mMediator = nsnull;
+    mMediator->SetSlider(nullptr);
+    mMediator = nullptr;
   }
   StopRepeat();
 

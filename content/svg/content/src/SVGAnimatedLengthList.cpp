@@ -112,7 +112,7 @@ SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
     //
     domWrapper->InternalAnimValListWillChangeTo(mBaseVal);
   }
-  mAnimVal = nsnull;
+  mAnimVal = nullptr;
   aElement->DidAnimateLengthList(aAttrEnum);
 }
 

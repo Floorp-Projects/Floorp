@@ -174,7 +174,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
     if (pseudoType != nsCSSPseudoElements::ePseudo_before &&
         pseudoType != nsCSSPseudoElements::ePseudo_after) {
-      return nsnull;
+      return nullptr;
     }
 
     NS_ASSERTION((pseudoType == nsCSSPseudoElements::ePseudo_before &&
@@ -194,11 +194,11 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetDelay() == 0.0f &&
       disp->mTransitions[0].GetDuration() == 0.0f) {
-    return nsnull;
+    return nullptr;
   }
 
   if (aNewStyleContext->PresContext()->IsProcessingAnimationStyleChange()) {
-    return nsnull;
+    return nullptr;
   }
 
   if (aNewStyleContext->GetParent() &&
@@ -206,7 +206,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // Ignore transitions on things that inherit properties from
     // pseudo-elements.
     // FIXME (Bug 522599): Add tests for this.
-    return nsnull;
+    return nullptr;
   }
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
@@ -306,12 +306,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
     if (pts.IsEmpty()) {
       et->Destroy();
-      et = nsnull;
+      et = nullptr;
     }
   }
 
   if (!startedAny) {
-    return nsnull;
+    return nullptr;
   }
 
   NS_ABORT_IF_FALSE(et, "must have element transitions if we started "
@@ -429,7 +429,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       if (pts.IsEmpty()) {
         aElementTransitions->Destroy();
         // |aElementTransitions| is now a dangling pointer!
-        aElementTransitions = nsnull;
+        aElementTransitions = nullptr;
       }
       // WalkTransitionRule already called RestyleForAnimation.
     }
@@ -549,7 +549,7 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
 {
   if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementData)) {
     // Early return for the most common case.
-    return nsnull;
+    return nullptr;
   }
 
   nsIAtom *propName;
@@ -563,7 +563,7 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
     NS_ASSERTION(!aCreateIfNeeded,
                  "should never try to create transitions for pseudo "
                  "other than :before or :after");
-    return nsnull;
+    return nullptr;
   }
   ElementTransitions *et = static_cast<ElementTransitions*>(
                              aElement->GetProperty(propName));
@@ -571,11 +571,11 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
     // FIXME: Consider arena-allocating?
     et = new ElementTransitions(aElement, propName, this);
     nsresult rv = aElement->SetProperty(propName, et,
-                                        ElementTransitionsPropertyDtor, nsnull);
+                                        ElementTransitionsPropertyDtor, nullptr);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete et;
-      return nsnull;
+      return nullptr;
     }
     if (propName == nsGkAtoms::transitionsProperty) {
       aElement->SetMayHaveAnimations();
@@ -773,7 +773,7 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
       if (et->mPropertyTransitions.IsEmpty()) {
         et->Destroy();
         // |et| is now a dangling pointer!
-        et = nsnull;
+        et = nullptr;
       }
     }
   }

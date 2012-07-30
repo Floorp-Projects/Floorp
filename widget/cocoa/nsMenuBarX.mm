@@ -29,7 +29,7 @@
 #include "nsIDOMElement.h"
 
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
-nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
+nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
 NSMenu* sApplicationMenu = nil;
 BOOL gSomeMenuBarPainted = NO;
 
@@ -37,10 +37,10 @@ BOOL gSomeMenuBarPainted = NO;
 // will be from the hidden window. We use these when the document for the current
 // window does not have a quit or pref item. We don't need strong refs here because
 // these items are always strong ref'd by their owning menu bar (instance variable).
-static nsIContent* sAboutItemContent  = nsnull;
-static nsIContent* sUpdateItemContent = nsnull;
-static nsIContent* sPrefItemContent   = nsnull;
-static nsIContent* sQuitItemContent   = nsnull;
+static nsIContent* sAboutItemContent  = nullptr;
+static nsIContent* sUpdateItemContent = nullptr;
+static nsIContent* sPrefItemContent   = nullptr;
+static nsIContent* sQuitItemContent   = nullptr;
 
 NS_IMPL_ISUPPORTS1(nsNativeMenuServiceX, nsINativeMenuService)
 
@@ -56,7 +56,7 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
 }
 
 nsMenuBarX::nsMenuBarX()
-: nsMenuGroupOwnerX(), mParentWindow(nsnull)
+: nsMenuGroupOwnerX(), mParentWindow(nullptr)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -70,18 +70,18 @@ nsMenuBarX::~nsMenuBarX()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (nsMenuBarX::sLastGeckoMenuBarPainted == this)
-    nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
+    nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
 
   // the quit/pref items of a random window might have been used if there was no
   // hidden window, thus we need to invalidate the weak references.
   if (sAboutItemContent == mAboutItemContent)
-    sAboutItemContent = nsnull;
+    sAboutItemContent = nullptr;
   if (sUpdateItemContent == mUpdateItemContent)
-    sUpdateItemContent = nsnull;
+    sUpdateItemContent = nullptr;
   if (sQuitItemContent == mQuitItemContent)
-    sQuitItemContent = nsnull;
+    sQuitItemContent = nullptr;
   if (sPrefItemContent == mPrefItemContent)
-    sPrefItemContent = nsnull;
+    sPrefItemContent = nullptr;
 
   // make sure we unregister ourselves as a content observer
   UnregisterForContentChanges(mContent);
@@ -433,36 +433,36 @@ void nsMenuBarX::AquifyMenuBar()
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetDocument()));
   if (domDoc) {
     // remove the "About..." item and its separator
-    HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("aboutName"), getter_AddRefs(mAboutItemContent));
     if (!sAboutItemContent)
       sAboutItemContent = mAboutItemContent;
 
     // Hide the software update menu item, since it belongs in the application
     // menu on Mac OS X.
-    HideItem(domDoc, NS_LITERAL_STRING("updateSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("updateSeparator"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("checkForUpdates"), getter_AddRefs(mUpdateItemContent));
     if (!sUpdateItemContent)
       sUpdateItemContent = mUpdateItemContent;
 
     // remove quit item and its separator
-    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
     if (!sQuitItemContent)
       sQuitItemContent = mQuitItemContent;
     
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
-    HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
     if (!sPrefItemContent)
       sPrefItemContent = mPrefItemContent;
 
     // hide items that we use for the Application menu
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nsnull);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nsnull);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nsnull);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nullptr);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nullptr);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nullptr);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nullptr);
   }
 }
 
@@ -836,7 +836,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
   if (!menuGroupOwner)
     return;
 
-  nsMenuBarX* menuBar = nsnull;
+  nsMenuBarX* menuBar = nullptr;
   if (menuGroupOwner->MenuObjectType() == eMenuBarObjectType)
     menuBar = static_cast<nsMenuBarX*>(menuGroupOwner);
 

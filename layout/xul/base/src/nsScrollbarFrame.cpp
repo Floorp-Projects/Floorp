@@ -140,7 +140,7 @@ nsIScrollbarMediator*
 nsScrollbarFrame::GetScrollbarMediator()
 {
   if (!mScrollbarMediator)
-    return nsnull;
+    return nullptr;
   nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
 
   // check if the frame is a scroll frame. If so, get the scrollable frame

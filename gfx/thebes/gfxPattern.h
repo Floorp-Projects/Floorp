@@ -47,7 +47,7 @@ public:
      * to the current transform.
      */
     mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget,
-                                      mozilla::gfx::Matrix *aPatternTransform = nsnull);
+                                      mozilla::gfx::Matrix *aPatternTransform = nullptr);
     bool IsOpaque();
 
     enum GraphicsExtend {

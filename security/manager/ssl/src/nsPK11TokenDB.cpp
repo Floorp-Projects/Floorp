@@ -102,7 +102,7 @@ void nsPK11Token::destructorSafeDestroyNSSReference()
 
   if (mSlot) {
     PK11_FreeSlot(mSlot);
-    mSlot = nsnull;
+    mSlot = nullptr;
   }
 }
 
@@ -486,7 +486,7 @@ NS_IMETHODIMP nsPK11TokenDB::ListTokens(nsIEnumerator* *_retval)
   PK11SlotList *list = 0;
   PK11SlotListElement *le;
 
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
   if (NS_FAILED(rv)) { goto done; }
 

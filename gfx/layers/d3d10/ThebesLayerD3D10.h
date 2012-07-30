@@ -26,7 +26,7 @@ public:
   /* LayerD3D10 implementation */
   virtual Layer* GetLayer();
   virtual void RenderLayer();
-  virtual void Validate() { Validate(nsnull); }
+  virtual void Validate() { Validate(nullptr); }
   virtual void LayerManagerDestroyed();
 
 private:
