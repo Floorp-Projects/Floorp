@@ -937,33 +937,6 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
     return true;
 }
 
-bool
-frontend::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
-{
-    /*
-     * Make an argument definition node, distinguished by being in
-     * parser->tc->decls but having PNK_NAME kind and JSOP_NOP op. Insert it in
-     * a PNK_ARGSBODY list node returned via pn->pn_body.
-     */
-    ParseNode *argpn = NameNode::create(PNK_NAME, atom, parser, parser->tc);
-    if (!argpn)
-        return false;
-    JS_ASSERT(argpn->isKind(PNK_NAME) && argpn->isOp(JSOP_NOP));
-
-    /* Arguments are initialized by definition. */
-    if (!Define(argpn, atom, parser->tc))
-        return false;
-
-    ParseNode *argsbody = pn->pn_body;
-    argsbody->append(argpn);
-
-    argpn->setOp(JSOP_GETARG);
-    if (!argpn->pn_cookie.set(parser->context, parser->tc->staticLevel, i))
-        return false;
-    argpn->pn_dflags |= PND_BOUND;
-    return true;
-}
-
 /*
  * Parameter block types for the several Binder functions.  We use a common
  * helper function signature in order to share code among destructuring and
@@ -1009,51 +982,6 @@ struct frontend::BindData {
         this->binder = BindVarOrConst;
     }
 };
-
-#if JS_HAS_DESTRUCTURING
-static bool
-BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
-{
-    TreeContext *tc = parser->tc;
-    JS_ASSERT(tc->sc->inFunction());
-
-    /*
-     * NB: Check tc->decls rather than tc->sc->bindings, because destructuring
-     *     bindings aren't added to tc->sc->bindings until after all arguments have
-     *     been parsed.
-     */
-    if (tc->decls.lookupFirst(atom)) {
-        parser->reportError(NULL, JSMSG_DESTRUCT_DUP_ARG);
-        return false;
-    }
-
-    ParseNode *pn = data->pn;
-
-    /*
-     * Distinguish destructured-to binding nodes as vars, not args, by setting
-     * pn_op to JSOP_SETLOCAL. Parser::functionDef checks for this pn_op value
-     * when processing the destructuring-assignment AST prelude induced by such
-     * destructuring args in Parser::functionArguments.
-     *
-     * We must set the PND_BOUND flag too to prevent pn_op from being reset to
-     * JSOP_SETNAME by BindDestructuringVar. The only field not initialized is
-     * pn_cookie; it gets set in functionDef in the first "if (prelude)" block.
-     * We have to wait to set the cookie until we can call JSFunction::addLocal
-     * with kind = JSLOCAL_VAR, after all JSLOCAL_ARG locals have been added.
-     *
-     * Thus a destructuring formal parameter binds an ARG (as in arguments[i]
-     * element) with a null atom name for the object or array passed in to be
-     * destructured, and zero or more VARs (as in named local variables) for
-     * the destructured-to identifiers in the property value positions within
-     * the object or array destructuring pattern, and all ARGs for the formal
-     * parameter list bound as locals before any VAR for a destructured name.
-     */
-    pn->setOp(JSOP_SETLOCAL);
-    pn->pn_dflags |= PND_BOUND;
-
-    return Define(pn, atom, tc);
-}
-#endif /* JS_HAS_DESTRUCTURING */
 
 JSFunction *
 Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
@@ -1272,6 +1200,82 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
     return true;
 }
+
+/*
+ * DefineArg is called for both the formals of a regular function definition
+ * and the formals specified by the Function constructor.
+ */
+bool
+frontend::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
+{
+    /*
+     * Make an argument definition node, distinguished by being in
+     * parser->tc->decls but having PNK_NAME kind and JSOP_NOP op. Insert it in
+     * a PNK_ARGSBODY list node returned via pn->pn_body.
+     */
+    ParseNode *argpn = NameNode::create(PNK_NAME, atom, parser, parser->tc);
+    if (!argpn)
+        return false;
+    JS_ASSERT(argpn->isKind(PNK_NAME) && argpn->isOp(JSOP_NOP));
+
+    /* Arguments are initialized by definition. */
+    if (!Define(argpn, atom, parser->tc))
+        return false;
+
+    ParseNode *argsbody = pn->pn_body;
+    argsbody->append(argpn);
+
+    argpn->setOp(JSOP_GETARG);
+    if (!argpn->pn_cookie.set(parser->context, parser->tc->staticLevel, i))
+        return false;
+    argpn->pn_dflags |= PND_BOUND;
+    return true;
+}
+
+#if JS_HAS_DESTRUCTURING
+static bool
+BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
+{
+    TreeContext *tc = parser->tc;
+    JS_ASSERT(tc->sc->inFunction());
+
+    /*
+     * NB: Check tc->decls rather than tc->sc->bindings, because destructuring
+     *     bindings aren't added to tc->sc->bindings until after all arguments have
+     *     been parsed.
+     */
+    if (tc->decls.lookupFirst(atom)) {
+        parser->reportError(NULL, JSMSG_DESTRUCT_DUP_ARG);
+        return false;
+    }
+
+    ParseNode *pn = data->pn;
+
+    /*
+     * Distinguish destructured-to binding nodes as vars, not args, by setting
+     * pn_op to JSOP_SETLOCAL. Parser::functionDef checks for this pn_op value
+     * when processing the destructuring-assignment AST prelude induced by such
+     * destructuring args in Parser::functionArguments.
+     *
+     * We must set the PND_BOUND flag too to prevent pn_op from being reset to
+     * JSOP_SETNAME by BindDestructuringVar. The only field not initialized is
+     * pn_cookie; it gets set in functionDef in the first "if (prelude)" block.
+     * We have to wait to set the cookie until we can call JSFunction::addLocal
+     * with kind = JSLOCAL_VAR, after all JSLOCAL_ARG locals have been added.
+     *
+     * Thus a destructuring formal parameter binds an ARG (as in arguments[i]
+     * element) with a null atom name for the object or array passed in to be
+     * destructured, and zero or more VARs (as in named local variables) for
+     * the destructured-to identifiers in the property value positions within
+     * the object or array destructuring pattern, and all ARGs for the formal
+     * parameter list bound as locals before any VAR for a destructured name.
+     */
+    pn->setOp(JSOP_SETLOCAL);
+    pn->pn_dflags |= PND_BOUND;
+
+    return Define(pn, atom, tc);
+}
+#endif /* JS_HAS_DESTRUCTURING */
 
 bool
 Parser::functionArguments(ParseNode **listp, bool &hasRest)
