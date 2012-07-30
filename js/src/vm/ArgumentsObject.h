@@ -181,7 +181,7 @@ class ArgumentsObject : public JSObject
      *
      * NB: Returning false does not indicate error!
      */
-    inline bool maybeGetElement(uint32_t i, Value *vp);
+    inline bool maybeGetElement(uint32_t i, MutableHandleValue vp);
     inline bool maybeGetElements(uint32_t start, uint32_t count, js::Value *vp);
 
     /*
