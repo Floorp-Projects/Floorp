@@ -147,7 +147,7 @@ private:
     static js::Shape *getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, js::Shape *shape);
 
-    static JSBool length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+    static JSBool length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
     static inline bool getItemAt(ListType *list, uint32_t i, IndexGetterType &item);
     static inline bool setItemAt(JSContext *cx, ListType *list, uint32_t i, IndexSetterType item);

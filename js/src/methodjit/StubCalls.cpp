@@ -108,9 +108,9 @@ stubs::GetElem(VMFrame &f)
 {
     Value &lref = f.regs.sp[-2];
     Value &rref = f.regs.sp[-1];
-    Value &rval = f.regs.sp[-2];
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
-    if (!GetElementOperation(f.cx, JSOp(*f.pc()), lref, rref, &rval))
+    if (!GetElementOperation(f.cx, JSOp(*f.pc()), lref, rref, res))
         THROW();
 }
 
@@ -131,8 +131,11 @@ stubs::SetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id.address(),
+                        MutableHandleValue::fromMarkedLocation(&regs.sp[-2])))
+    {
         THROW();
+    }
 
     TypeScript::MonitorAssign(cx, obj, id);
 
@@ -155,7 +158,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setGeneric(cx, obj, id, rval.address(), strict))
+    if (!obj->setGeneric(cx, obj, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -172,14 +175,14 @@ void JS_FASTCALL
 stubs::ToId(VMFrame &f)
 {
     Value &objval = f.regs.sp[-2];
-    Value &idval  = f.regs.sp[-1];
+    MutableHandleValue idval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
     JSObject *obj = ValueToObject(f.cx, objval);
     if (!obj)
         THROW();
 
     RootedId id(f.cx);
-    if (!FetchElementId(f.cx, obj, idval, id.address(), &idval))
+    if (!FetchElementId(f.cx, obj, idval, id.address(), idval))
         THROW();
 
     if (!idval.isInt32())
@@ -386,7 +389,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, rval.address(), strict))
+        if (!parent->setProperty(cx, parent, name, &rval, strict))
             THROW();
     } while (false);
 }
@@ -916,7 +919,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
 
     /* Pop the element's value into rval. */
     JS_ASSERT(regs.stackDepth() >= 3);
-    const Value &rref = regs.sp[-1];
+    HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
@@ -925,8 +928,8 @@ stubs::InitElem(VMFrame &f, uint32_t last)
 
     /* Fetch id now that we have obj. */
     RootedId id(cx);
-    const Value &idval = regs.sp[-2];
-    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
+    MutableHandleValue idval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    if (!FetchElementId(f.cx, obj, idval, id.address(), idval))
         THROW();
 
     /*
@@ -1001,7 +1004,7 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 
     JSObject *obj = &lval.toObject();
 
-    Value rval;
+    RootedValue rval(cx);
     if (!obj->getProperty(cx, name, &rval))
         THROW();
 
@@ -1011,7 +1014,7 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32_t flags)
 {
-    if (!ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
+    if (!ValueToIterator(f.cx, flags, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))
         THROW();
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
@@ -1034,7 +1037,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     RootedId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, rval.address(), false)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();
@@ -1056,7 +1059,7 @@ stubs::IterNext(VMFrame &f, int32_t offset)
     JSObject *iterobj = &f.regs.sp[-offset].toObject();
     f.regs.sp[0].setNull();
     f.regs.sp++;
-    if (!js_IteratorNext(f.cx, iterobj, &f.regs.sp[-1]))
+    if (!js_IteratorNext(f.cx, iterobj, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))
         THROW();
 }
 
@@ -1066,7 +1069,7 @@ stubs::IterMore(VMFrame &f)
     JS_ASSERT(f.regs.stackDepth() >= 1);
     JS_ASSERT(f.regs.sp[-1].isObject());
 
-    Value v;
+    RootedValue v(f.cx);
     Rooted<JSObject*> iterobj(f.cx, &f.regs.sp[-1].toObject());
     if (!js_IteratorMore(f.cx, iterobj, &v))
         THROWV(JS_FALSE);
@@ -1350,7 +1353,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!obj->deleteProperty(f.cx, name, &f.regs.sp[-1], false))
+        if (!obj->deleteProperty(f.cx, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
             THROW();
     }
 }
@@ -1366,7 +1369,7 @@ stubs::DelProp(VMFrame &f, PropertyName *name_)
     if (!obj)
         THROW();
 
-    Value rval;
+    RootedValue rval(cx);
     if (!obj->deleteProperty(cx, name, &rval, strict))
         THROW();
 
@@ -1387,9 +1390,9 @@ stubs::DelElem(VMFrame &f)
         THROW();
 
     const Value &propval = f.regs.sp[-1];
-    Value &rval = f.regs.sp[-2];
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
-    if (!obj->deleteByValue(cx, propval, &rval, strict))
+    if (!obj->deleteByValue(cx, propval, rval, strict))
         THROW();
 }
 
@@ -1415,7 +1418,7 @@ stubs::SetConst(VMFrame &f, PropertyName *name)
     JSContext *cx = f.cx;
 
     JSObject *obj = &f.fp()->varObj();
-    const Value &ref = f.regs.sp[-1];
+    HandleValue ref = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
     if (!obj->defineProperty(cx, name, ref, JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY))
@@ -1437,8 +1440,11 @@ stubs::In(VMFrame &f)
 
     RootedObject obj(cx, &rref.toObject());
     RootedId id(cx);
-    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(), &f.regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(),
+                        MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2])))
+    {
         THROWV(JS_FALSE);
+    }
 
     RootedObject obj2(cx);
     RootedShape prop(cx);

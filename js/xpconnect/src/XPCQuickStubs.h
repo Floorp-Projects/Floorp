@@ -115,7 +115,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 /* Functions for converting values between COM and JS. */
 
@@ -585,11 +585,11 @@ xpc_qsSameResult(PRInt32 result1, PRInt32 result2)
 
 // Apply |op| to |obj|, |id|, and |vp|. If |op| is a setter, treat the assignment as lenient.
 template<typename Op>
-static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSHandleObject obj, JSHandleId id, jsval *vp);
+static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
 template<>
 inline JSBool
-ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSHandleObject obj, JSHandleId id, jsval *vp)
+ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
     return op(cx, obj, id, vp);
 }
@@ -597,7 +597,7 @@ ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSHandleObject obj
 template<>
 inline JSBool
 ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSHandleObject obj,
-                                    JSHandleId id, jsval *vp)
+                                    JSHandleId id, JSMutableHandleValue vp)
 {
     return op(cx, obj, id, true, vp);
 }
@@ -611,7 +611,9 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     //   property op to call = callee reserved slot 0
     //   name of the property = callee reserved slot 1
 
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+    JSObject *callee = &args.callee();
     JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
@@ -623,12 +625,12 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 
     v = js::GetFunctionNativeReserved(callee, 1);
 
-    jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    jsval argval = (argc > 0) ? args[0] : JSVAL_VOID;
     JS::RootedId id(cx);
     if (!JS_ValueToId(cx, v, id.address()))
         return false;
-    JS_SET_RVAL(cx, vp, argval);
-    return ApplyPropertyOp<Op>(cx, *popp, obj, id, vp);
+    args.rval().set(argval);
+    return ApplyPropertyOp<Op>(cx, *popp, obj, id, args.rval());
 }
 
 extern JSClass PointerHolderClass;

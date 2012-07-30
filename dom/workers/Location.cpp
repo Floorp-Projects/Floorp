@@ -128,7 +128,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr != &sClass) {
@@ -141,7 +141,7 @@ private:
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < SLOT_COUNT);
 
-    *aVp = JS_GetReservedSlot(aObj, JSID_TO_INT(aIdval));
+    aVp.set(JS_GetReservedSlot(aObj, JSID_TO_INT(aIdval)));
     return true;
   }
 };

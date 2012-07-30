@@ -160,18 +160,18 @@ Class js_NoSuchMethodClass = {
  * parameters.
  */
 bool
-js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
+js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandleValue vp)
 {
     RootedValue idval(cx, idval_);
 
     RootedId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
     RootedValue value(cx);
-    if (!GetMethod(cx, obj, id, 0, value.address()))
+    if (!GetMethod(cx, obj, id, 0, &value))
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
     if (value.get().isPrimitive()) {
-        *vp = value;
+        vp.set(value);
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
@@ -188,7 +188,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
 
         obj->setSlot(JSSLOT_FOUND_FUNCTION, value);
         obj->setSlot(JSSLOT_SAVED_ID, idval);
-        vp->setObject(*obj);
+        vp.setObject(*obj);
     }
     return true;
 }
@@ -356,7 +356,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     JSBool ok = RunScript(cx, fun->script(), ifg.fp());
 
     /* Propagate the return value out. */
-    args.rval() = ifg.fp()->returnValue();
+    args.rval().set(ifg.fp()->returnValue());
     JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
 }
@@ -992,7 +992,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
  * all cases, but we inline the most frequently taken paths here.
  */
 static inline bool
-IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
+IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval)
 {
     if (iterobj->isPropertyIterator()) {
         NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
@@ -1004,18 +1004,18 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
     Rooted<JSObject*> iobj(cx, iterobj);
     if (!js_IteratorMore(cx, iobj, rval))
         return false;
-    *cond = rval->isTrue();
+    *cond = rval.isTrue();
     return true;
 }
 
 static inline bool
-IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
+IteratorNext(JSContext *cx, JSObject *iterobj, MutableHandleValue rval)
 {
     if (iterobj->isPropertyIterator()) {
         NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
-            rval->setString(*ni->current());
+            rval.setString(*ni->current());
             ni->incCursor();
             return true;
         }
@@ -1703,9 +1703,10 @@ BEGIN_CASE(JSOP_ITER)
 {
     JS_ASSERT(regs.stackDepth() >= 1);
     uint8_t flags = GET_UINT8(regs.pc);
-    if (!ValueToIterator(cx, flags, &regs.sp[-1]))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!ValueToIterator(cx, flags, res))
         goto error;
-    JS_ASSERT(!regs.sp[-1].isPrimitive());
+    JS_ASSERT(!res.isPrimitive());
 }
 END_CASE(JSOP_ITER)
 
@@ -1715,7 +1716,8 @@ BEGIN_CASE(JSOP_MOREITER)
     JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
     bool cond;
-    if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, &regs.sp[-1]))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, res))
         goto error;
     regs.sp[-1].setBoolean(cond);
 }
@@ -1727,7 +1729,8 @@ BEGIN_CASE(JSOP_ITERNEXT)
     Value *itervp = regs.sp - GET_INT8(regs.pc);
     JS_ASSERT(itervp->isObject());
     PUSH_NULL();
-    if (!IteratorNext(cx, &itervp->toObject(), &regs.sp[-1]))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!IteratorNext(cx, &itervp->toObject(), res))
         goto error;
 }
 END_CASE(JSOP_ITERNEXT)
@@ -1784,9 +1787,11 @@ BEGIN_CASE(JSOP_SETCONST)
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
 
+    RootedValue &rval = rootValue0;
+    rval = regs.sp[-1];
+
     JSObject &obj = regs.fp()->varObj();
-    const Value &ref = regs.sp[-1];
-    if (!obj.defineProperty(cx, name, ref,
+    if (!obj.defineProperty(cx, name, rval,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
@@ -1797,12 +1802,14 @@ END_CASE(JSOP_SETCONST);
 #if JS_HAS_DESTRUCTURING
 BEGIN_CASE(JSOP_ENUMCONSTELEM)
 {
-    const Value &ref = regs.sp[-3];
+    RootedValue &rval = rootValue0;
+    rval = regs.sp[-3];
+
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
-    if (!obj->defineGeneric(cx, id, ref,
+    if (!obj->defineGeneric(cx, id, rval,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
@@ -2157,7 +2164,8 @@ BEGIN_CASE(JSOP_DELNAME)
     /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
     if (prop) {
-        if (!obj->deleteProperty(cx, name, &regs.sp[-1], false))
+        MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+        if (!obj->deleteProperty(cx, name, res, false))
             goto error;
     }
 }
@@ -2171,11 +2179,9 @@ BEGIN_CASE(JSOP_DELPROP)
     JSObject *obj;
     FETCH_OBJECT(cx, -1, obj);
 
-    RootedValue &rval = rootValue0;
-    if (!obj->deleteProperty(cx, name, rval.address(), script->strictModeCode))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!obj->deleteProperty(cx, name, res, script->strictModeCode))
         goto error;
-
-    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_DELPROP)
 
@@ -2187,9 +2193,9 @@ BEGIN_CASE(JSOP_DELELEM)
 
     RootedValue &propval = rootValue0;
     propval = regs.sp[-1];
-    Value &rval = regs.sp[-2];
 
-    if (!obj->deleteByValue(cx, propval, &rval, script->strictModeCode))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    if (!obj->deleteByValue(cx, propval, res, script->strictModeCode))
         goto error;
 
     regs.sp--;
@@ -2206,7 +2212,9 @@ BEGIN_CASE(JSOP_TOID)
      */
     Value objval = regs.sp[-2];
     Value idval = regs.sp[-1];
-    if (!ToIdOperation(cx, objval, idval, &regs.sp[-1]))
+
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!ToIdOperation(cx, objval, idval, res))
         goto error;
 }
 END_CASE(JSOP_TOID)
@@ -2329,9 +2337,10 @@ BEGIN_CASE(JSOP_CALLELEM)
 {
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
-    if (!GetElementOperation(cx, op, lref, rref, &regs.sp[-2]))
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    if (!GetElementOperation(cx, op, lref, rref, res))
         goto error;
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
+    TypeScript::Monitor(cx, script, regs.pc, res);
     regs.sp--;
 }
 END_CASE(JSOP_GETELEM)
@@ -2360,7 +2369,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
-    if (!obj->setGeneric(cx, obj, id, rval.address(), script->strictModeCode))
+    if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -2900,7 +2909,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, rval.address(), script->strictModeCode))
+        if (!parent->setProperty(cx, parent, name, &rval, script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -2931,8 +2940,8 @@ BEGIN_CASE(JSOP_SETTER)
 {
     JSOp op2 = JSOp(*++regs.pc);
     RootedId &id = rootId0;
-    RootedValue &rval_ = rootValue0;
-    Value &rval = rval_.get();
+    RootedValue &rval = rootValue0;
+    RootedValue &scratch = rootValue1;
     int i;
 
     RootedObject &obj = rootObject0;
@@ -3004,7 +3013,8 @@ BEGIN_CASE(JSOP_SETTER)
     }
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
 
-    if (!obj->defineGeneric(cx, id, UndefinedValue(), getter, setter, attrs))
+    scratch.setUndefined();
+    if (!obj->defineGeneric(cx, id, scratch, getter, setter, attrs))
         goto error;
 
     regs.sp += i;
@@ -3095,7 +3105,7 @@ BEGIN_CASE(JSOP_INITPROP)
     id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, rval.address(), script->strictModeCode)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3110,7 +3120,7 @@ BEGIN_CASE(JSOP_INITELEM)
 {
     /* Pop the element's value into rval. */
     JS_ASSERT(regs.stackDepth() >= 3);
-    const Value &rref = regs.sp[-1];
+    HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
     RootedObject &obj = rootObject0;
 
@@ -3161,13 +3171,15 @@ BEGIN_CASE(JSOP_SPREAD)
     RootedObject arr(cx, &regs.sp[-3].toObject());
     const Value iterable = regs.sp[-1];
     ForOfIterator iter(cx, iterable);
+    RootedValue &iterVal = rootValue0;
     while (iter.next()) {
         if (count == INT32_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_SPREAD_TOO_LARGE);
             goto error;
         }
-        if (!arr->defineElement(cx, count++, iter.value(), NULL, NULL, JSPROP_ENUMERATE))
+        iterVal = iter.value();
+        if (!arr->defineElement(cx, count++, iterVal, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
     if (!iter.close())
@@ -3406,7 +3418,8 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     JS_ASSERT(!script->strictModeCode);
 
     Rooted<JSObject*> obj(cx, &regs.sp[-3].toObject());
-    Value rval = regs.sp[-1];
+    RootedValue &rval = rootValue0;
+    rval = regs.sp[-1];
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
@@ -3427,7 +3440,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     RootedId &id = rootId0;
     if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;
-    Value rval;
+    RootedValue &rval = rootValue0;
     if (!obj->getGeneric(cx, id, &rval))
         goto error;
     regs.sp[-1] = rval;

@@ -9,9 +9,9 @@
 #include "tests.h"
 
 static JSBool
-nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp)
+nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
-    *vp = INT_TO_JSVAL(17);
+    vp.set(INT_TO_JSVAL(17));
     return JS_TRUE;
 }
 

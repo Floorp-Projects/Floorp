@@ -534,7 +534,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
      * NewNativeClassInstance to find the class prototype, we must get the
      * class prototype ourselves.
      */
-    Value protov;
+    RootedValue protov(cx);
     if (!args.callee().getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
         return false;
 
@@ -617,7 +617,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, &args.thisv().toObject());
 
     /* Step 3. */
-    Value nameVal;
+    RootedValue nameVal(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal))
         return false;
 
@@ -632,7 +632,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 5. */
-    Value msgVal;
+    RootedValue msgVal(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.messageAtom, &msgVal))
         return false;
 
@@ -690,7 +690,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    Value nameVal;
+    RootedValue nameVal(cx);
     RootedString name(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal) ||
         !(name = ToString(cx, nameVal)))
@@ -698,7 +698,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Value messageVal;
+    RootedValue messageVal(cx);
     RootedString message(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.messageAtom, &messageVal) ||
         !(message = js_ValueToSource(cx, messageVal)))
@@ -706,7 +706,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Value filenameVal;
+    RootedValue filenameVal(cx);
     RootedString filename(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.fileNameAtom, &filenameVal) ||
         !(filename = js_ValueToSource(cx, filenameVal)))
@@ -714,7 +714,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Value linenoVal;
+    RootedValue linenoVal(cx);
     uint32_t lineno;
     if (!obj->getProperty(cx, cx->runtime->atomState.lineNumberAtom, &linenoVal) ||
         !ToUint32(cx, linenoVal, &lineno))
@@ -783,18 +783,20 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
     if (!errorProto)
         return NULL;
 
+    RootedValue nameValue(cx, StringValue(name));
+    RootedValue zeroValue(cx, Int32Value(0));
     RootedValue empty(cx, StringValue(cx->runtime->emptyString));
     RootedId nameId(cx, NameToId(cx->runtime->atomState.nameAtom));
     RootedId messageId(cx, NameToId(cx->runtime->atomState.messageAtom));
     RootedId fileNameId(cx, NameToId(cx->runtime->atomState.fileNameAtom));
     RootedId lineNumberId(cx, NameToId(cx->runtime->atomState.lineNumberAtom));
-    if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
+    if (!DefineNativeProperty(cx, errorProto, nameId, nameValue,
                               JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, messageId, empty,
                               JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, fileNameId, empty,
                               JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
-        !DefineNativeProperty(cx, errorProto, lineNumberId, Int32Value(0),
+        !DefineNativeProperty(cx, errorProto, lineNumberId, zeroValue,
                               JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
     {
         return NULL;

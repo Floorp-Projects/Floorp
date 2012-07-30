@@ -167,7 +167,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
         return true;
     }
     if (!args[0].isString()) {
-        args.rval() = args[0];
+        args.rval().set(args[0]);
         return true;
     }
     JSString *str = args[0].toString();
@@ -235,12 +235,12 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                 bool isArray = (chars[0] == '[');
                 JSONParser parser(cx, isArray ? chars : chars + 1, isArray ? length : length - 2,
                                   JSONParser::StrictJSON, JSONParser::NoError);
-                Value tmp;
+                RootedValue tmp(cx);
                 if (!parser.parse(&tmp))
                     return false;
                 if (tmp.isUndefined())
                     break;
-                args.rval() = tmp;
+                args.rval().set(tmp);
                 return true;
             }
         }
@@ -277,7 +277,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     }
 
     return ExecuteKernel(cx, esg.script(), *scopeobj, thisv, ExecuteType(evalType),
-                         NULL /* evalInFrame */, &args.rval());
+                         NULL /* evalInFrame */, args.rval().address());
 }
 
 // We once supported a second argument to eval to use as the scope chain

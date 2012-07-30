@@ -595,7 +595,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('JSHandleId', 'id'), Argument('jsval*', 'vp')]
+                Argument('JSHandleId', 'id'), Argument('JSMutableHandleValue', 'vp')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'JSBool', args)
 

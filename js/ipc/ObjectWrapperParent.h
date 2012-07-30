@@ -60,16 +60,16 @@ private:
     mutable JSObject* mObj;
 
     static JSBool
-    CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+    CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
     static JSBool
-    CPOW_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+    CPOW_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
     static JSBool
-    CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+    CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
     
     static JSBool
-    CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+    CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
     JSBool NewEnumerateInit(JSContext* cx, jsval* statep, jsid* idp);
     JSBool NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp);
@@ -83,7 +83,7 @@ private:
                     JSMutableHandleObject objp);
 
     static JSBool
-    CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
+    CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
 
     static void
     CPOW_Finalize(js::FreeOp* fop, JSObject* obj);

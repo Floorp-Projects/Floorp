@@ -5282,7 +5282,7 @@ static JSClass sGlobalScopePolluterClass = {
 // static
 JSBool
 nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                           JSHandleId id, jsval *vp)
+                                           JSHandleId id, JSMutableHandleValue vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -5305,7 +5305,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
 // static
 JSBool
 nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                      jsval *vp)
+                                      JSMutableHandleValue vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -5323,7 +5323,7 @@ nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandl
 // static
 JSBool
 nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
-                                   jsval *vp)
+                                   JSMutableHandleValue vp)
 {
   return SecurityCheckOnAddDelProp(cx, obj, id, vp);
 }
@@ -5869,7 +5869,7 @@ static const IDBConstant sIDBConstants[] = {
 };
 
 static JSBool
-IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval* vp)
+IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
   JSString *idstr = JSID_TO_STRING(id);
   unsigned index;
@@ -5943,7 +5943,7 @@ IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval* vp)
   }
 
   // Return value
-  *vp = value;
+  vp.set(value);
   return JS_TRUE;
 }
 
@@ -7004,9 +7004,9 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 template<class Interface>
 static JSBool
 LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
-               jsval *vp)
+               JSMutableHandleValue vp)
 {
-  nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp);
+  nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp.address());
   if (NS_FAILED(rv)) {
     xpc::Throw(cx, rv);
     return JS_FALSE;
@@ -7017,7 +7017,7 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 
 static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
-                        jsval *vp)
+                        JSMutableHandleValue vp)
 {
   JS::RootedObject obj(cx, obj_);
 
@@ -7679,9 +7679,9 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 template<nsresult (*func)(JSContext *cx, JSObject *obj, jsval *vp)>
 static JSBool
-GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, jsval *vp)
+GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, JSMutableHandleValue vp)
 {
-  nsresult rv = (*func)(cx, obj, vp);
+  nsresult rv = (*func)(cx, obj, vp.address());
   if (NS_FAILED(rv)) {
     xpc::Throw(cx, rv);
     return JS_FALSE;
@@ -8824,7 +8824,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
-                                         JSHandleId id, jsval *vp)
+                                         JSHandleId id, JSMutableHandleValue vp)
 {
   JSObject *obj = obj_;
 
@@ -8871,7 +8871,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
         return JS_FALSE;
       }
 
-      *vp = INT_TO_JSVAL(length);
+      vp.set(INT_TO_JSVAL(length));
 
       return JS_TRUE;
     } else if (sTags_id != id) {
@@ -8908,14 +8908,14 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   }
 
   if (result) {
-    rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), result, cache, true, vp);
+    rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), result, cache, true, vp.address());
     if (NS_FAILED(rv)) {
       xpc::Throw(cx, rv);
 
       return JS_FALSE;
     }
   } else {
-    *vp = JSVAL_VOID;
+    vp.setUndefined();
   }
 
   return JS_TRUE;
@@ -8931,7 +8931,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
     return JS_TRUE;
   }
 
-  jsval v = JSVAL_VOID;
+  JS::RootedValue v(cx);
 
   if (sItem_id == id || sNamedItem_id == id) {
     // Define the item() or namedItem() method.
@@ -8973,7 +8973,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 
   JSBool ok = JS_TRUE;
 
-  if (v != JSVAL_VOID) {
+  if (v.get() != JSVAL_VOID) {
     ok = ::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0);
     objp.set(obj);
   }
@@ -9062,7 +9062,7 @@ PrivateToFlags(void *priv)
 
 JSBool
 nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, JS::Value *vp)
+                                               JSHandleId id, JSMutableHandleValue vp)
 {
   if (nsDOMClassInfo::sAll_id != id) {
     return JS_TRUE;
@@ -9085,12 +9085,12 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
     // or it was not being resolved with a qualified name. Claim that
     // document.all is undefined.
 
-    vp->setUndefined();
+    vp.setUndefined();
   } else {
     // document.all is not being detected, and it resolved with a
     // qualified name. Expose the document.all collection.
 
-    if (!vp->isObjectOrNull()) { 
+    if (!vp.isObjectOrNull()) { 
       // First time through, create the collection, and set the
       // document as its private nsISupports data.
       nsresult rv;
@@ -9112,7 +9112,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
 
       doc.forget();
 
-      vp->setObject(*all);
+      vp.setObject(*all);
     }
   }
 

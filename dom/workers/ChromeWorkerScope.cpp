@@ -46,7 +46,7 @@ JSCTypesCallbacks gCTypesCallbacks = {
 };
 
 JSBool
-CTypesLazyGetter(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, jsval* aVp)
+CTypesLazyGetter(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, JSMutableHandleValue aVp)
 {
   NS_ASSERTION(JS_GetGlobalObject(aCx) == aObj, "Not a global object!");
   NS_ASSERTION(JSID_IS_STRING(aId), "Bad id!");
@@ -67,7 +67,7 @@ CTypesLazyGetter(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, jsval* aVp
     return false;
   }
   JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &gCTypesCallbacks);
-  return JS_GetPropertyById(aCx, aObj, aId, aVp);
+  return JS_GetPropertyById(aCx, aObj, aId, aVp.address());
 }
 #endif
 
