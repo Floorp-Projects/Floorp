@@ -52,6 +52,7 @@ TreeContext::define(JSContext *cx, PropertyName *name, ParseNode *pn, Definition
         unsigned start = (kind == Definition::LET) ? pn->pn_blockid : bodyid;
 
         while ((pnu = *pnup) != NULL && pnu->pn_blockid >= start) {
+            JS_ASSERT(pnu->pn_blockid >= bodyid);
             JS_ASSERT(pnu->isUsed());
             pnu->pn_lexdef = (Definition *) pn;
             pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
@@ -63,7 +64,7 @@ TreeContext::define(JSContext *cx, PropertyName *name, ParseNode *pn, Definition
             pn->dn_uses = prevDef->dn_uses;
             prevDef->dn_uses = pnu;
 
-            if ((!pnu || pnu->pn_blockid < bodyid) && prevDef->isPlaceholder())
+            if (!pnu && prevDef->isPlaceholder())
                 lexdeps->remove(name);
         }
 
