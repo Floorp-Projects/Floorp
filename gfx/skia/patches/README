@@ -18,3 +18,4 @@ See the relevant bugs in bugzilla for information on these patches:
 0013-Bug-761890-fonts.patch
 0014-Bug-765038-Fix-clang-build.patch
 0015-Bug-766017-warnings.patch
+0016-Bug-718849-Radial-Gradients.patch
