@@ -16,6 +16,10 @@ DIST_FILES = package-name.txt
 
 include $(topsrcdir)/mobile/android/base/android-sync-files.mk
 
+MOZGLUE_JAVA_FILES := \
+  mozglue/DirectBufferAllocator.java \
+  $(NULL)
+
 UTIL_JAVA_FILES := \
   util/ConfigurationUtils.java \
   util/FloatUtils.java \
@@ -152,6 +156,7 @@ FENNEC_JAVA_FILES = \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
+  $(MOZGLUE_JAVA_FILES) \
   $(UTIL_JAVA_FILES) \
   $(NULL)
 

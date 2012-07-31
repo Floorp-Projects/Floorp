@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -142,9 +143,9 @@ public final class Tab {
         int capacity = getThumbnailWidth() * getThumbnailHeight() * 2 /* 16 bpp */;
         if (mThumbnailBuffer != null && mThumbnailBuffer.capacity() == capacity)
             return mThumbnailBuffer;
-        if (mThumbnailBuffer != null)
-            GeckoAppShell.freeDirectBuffer(mThumbnailBuffer); // not calling freeBuffer() because it would deadlock
-        return mThumbnailBuffer = GeckoAppShell.allocateDirectBuffer(capacity);
+        freeBuffer();
+        mThumbnailBuffer = DirectBufferAllocator.allocate(capacity);
+        return mThumbnailBuffer;
     }
 
     public Bitmap getThumbnailBitmap() {
@@ -158,8 +159,7 @@ public final class Tab {
     }
 
     synchronized void freeBuffer() {
-        if (mThumbnailBuffer != null)
-            GeckoAppShell.freeDirectBuffer(mThumbnailBuffer);
+        DirectBufferAllocator.free(mThumbnailBuffer);
         mThumbnailBuffer = null;
     }
 
