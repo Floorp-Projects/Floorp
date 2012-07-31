@@ -254,16 +254,11 @@ public:
     , mGraphUpdateIndices(0)
     , mFinished(false)
     , mNotifiedFinished(false)
-    , mAudioPlaybackStartTime(0)
-    , mBlockedAudioTime(0)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
     , mMainThreadDestroyed(false)
   {
-    for (PRUint32 i = 0; i < ArrayLength(mFirstActiveTracks); ++i) {
-      mFirstActiveTracks[i] = TRACK_NONE;
-    }
   }
   virtual ~MediaStream() {}
 
@@ -431,6 +426,20 @@ protected:
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
 
+  // Where audio output is going. There is one AudioOutputStream per
+  // audio track.
+  struct AudioOutputStream {
+    // When we started audio playback for this track.
+    // Add mStream->GetPosition() to find the current audio playback position.
+    GraphTime mAudioPlaybackStartTime;
+    // Amount of time that we've wanted to play silence because of the stream
+    // blocking.
+    MediaTime mBlockedAudioTime;
+    nsRefPtr<nsAudioStream> mStream;
+    TrackID mTrackID;
+  };
+  nsTArray<AudioOutputStream> mAudioOutputStreams;
+
   /**
    * When true, this means the stream will be finished once all
    * buffered data has been consumed.
@@ -441,20 +450,6 @@ protected:
    * and fired NotifyFinished notifications.
    */
   bool mNotifiedFinished;
-
-  // Where audio output is going
-  nsRefPtr<nsAudioStream> mAudioOutput;
-  // When we started audio playback for this stream.
-  // Add mAudioOutput->GetPosition() to find the current audio playback position.
-  GraphTime mAudioPlaybackStartTime;
-  // Amount of time that we've wanted to play silence because of the stream
-  // blocking.
-  MediaTime mBlockedAudioTime;
-
-  // For each track type, this is the first active track found for that type.
-  // The first active track is the track that started earliest; if multiple
-  // tracks start at the same time, the one with the lowest ID.
-  TrackID mFirstActiveTracks[MediaSegment::TYPE_COUNT];
 
   // Temporary data for ordering streams by dependency graph
   bool mHasBeenOrdered;
