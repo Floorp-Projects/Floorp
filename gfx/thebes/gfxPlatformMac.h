@@ -72,8 +72,10 @@ public:
                                         nsTArray<const char*>& aFontList);
 
     // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
-    // Ex: Mac OS X 10.4.x ==> 0x104x 
+    // Ex: Mac OS X 10.4.x ==> 0x104x
     PRInt32 OSXVersion();
+
+    bool UseAcceleratedCanvas();
 
     // lower threshold on font anti-aliasing
     PRUint32 GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }

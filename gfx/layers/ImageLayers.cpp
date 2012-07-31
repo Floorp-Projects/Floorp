@@ -14,7 +14,7 @@
 #include "mozilla/layers/ImageContainerChild.h"
 
 #ifdef XP_MACOSX
-#include "nsCoreAnimationSupport.h"
+#include "mozilla/gfx/QuartzSupport.h"
 #endif
 
 #ifdef XP_WIN
@@ -26,6 +26,8 @@
 #endif
 
 using namespace mozilla::ipc;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::SourceSurface;
 
 namespace mozilla {
 namespace layers {
@@ -494,14 +496,31 @@ PlanarYCbCrImage::GetAsSurface()
 void
 MacIOSurfaceImage::SetData(const Data& aData)
 {
-  mIOSurface = nsIOSurface::LookupSurface(aData.mIOSurface->GetIOSurfaceID());
+  mIOSurface = MacIOSurface::LookupSurface(aData.mIOSurface->GetIOSurfaceID());
   mSize = gfxIntSize(mIOSurface->GetWidth(), mIOSurface->GetHeight());
 }
 
 already_AddRefed<gfxASurface>
 MacIOSurfaceImage::GetAsSurface()
 {
-  return mIOSurface->GetAsSurface();
+  mIOSurface->Lock();
+  size_t bytesPerRow = mIOSurface->GetBytesPerRow();
+  size_t ioWidth = mIOSurface->GetWidth();
+  size_t ioHeight = mIOSurface->GetHeight();
+
+  unsigned char* ioData = (unsigned char*)mIOSurface->GetBaseAddress();
+
+  nsRefPtr<gfxImageSurface> imgSurface =
+    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxASurface::ImageFormatARGB32);
+
+  for (int i = 0; i < ioHeight; i++) {
+    memcpy(imgSurface->Data() + i * imgSurface->Stride(),
+           ioData + i * bytesPerRow, ioWidth * 4);
+  }
+
+  mIOSurface->Unlock();
+
+  return imgSurface.forget();
 }
 
 void
