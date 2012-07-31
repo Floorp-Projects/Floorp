@@ -1678,18 +1678,20 @@ public:
     XPCContext *GetContext() { return mContext; }
     void ClearContext() { mContext = nullptr; }
 
-    typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
+    typedef js::HashSet<JSObject *,
+                        js::PointerHasher<JSObject *, 3>,
+                        js::SystemAllocPolicy> DOMExpandoSet;
 
     bool RegisterDOMExpandoObject(JSObject *expando) {
-        if (!mDOMExpandoMap) {
-            mDOMExpandoMap = new DOMExpandoMap();
-            mDOMExpandoMap->Init(8);
+        if (!mDOMExpandoSet) {
+            mDOMExpandoSet = new DOMExpandoSet();
+            mDOMExpandoSet->init(8);
         }
-        return mDOMExpandoMap->PutEntry(expando, mozilla::fallible_t());
+        return mDOMExpandoSet->put(expando);
     }
     void RemoveDOMExpandoObject(JSObject *expando) {
-        if (mDOMExpandoMap)
-            mDOMExpandoMap->RemoveEntry(expando);
+        if (mDOMExpandoSet)
+            mDOMExpandoSet->remove(expando);
     }
 
     // Gets the appropriate scope object for XBL in this scope. The context
@@ -1737,7 +1739,7 @@ private:
 
     XPCContext*                      mContext;
 
-    nsAutoPtr<DOMExpandoMap> mDOMExpandoMap;
+    nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 
     bool mIsXBLScope;
 
