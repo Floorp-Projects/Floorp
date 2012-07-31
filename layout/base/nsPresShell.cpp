@@ -7488,7 +7488,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
                                              target->GetView(),
                                              boundsRelativeToTarget);
   nsContainerFrame::SyncWindowProperties(mPresContext, target,
-                                         target->GetView());
+                                         target->GetView(), rcx);
 
   target->DidReflow(mPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
   if (target == rootFrame && size.height == NS_UNCONSTRAINEDSIZE) {

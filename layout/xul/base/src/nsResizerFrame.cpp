@@ -29,6 +29,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsContentErrors.h"
 
+using namespace mozilla;
 
 //
 // NS_NewResizerFrame
@@ -186,8 +187,19 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       }
 
       nsIntRect rect = mMouseDownRect;
-      AdjustDimensions(&rect.x, &rect.width, mouseMove.x, direction.mHorizontal);
-      AdjustDimensions(&rect.y, &rect.height, mouseMove.y, direction.mVertical);
+
+      // Check if there are any size constraints on this window.
+      widget::SizeConstraints sizeConstraints;
+      if (window) {
+        nsCOMPtr<nsIWidget> widget;
+        window->GetMainWidget(getter_AddRefs(widget));
+        sizeConstraints = widget->GetSizeConstraints();
+      }
+
+      AdjustDimensions(&rect.x, &rect.width, sizeConstraints.mMinSize.width,
+                       sizeConstraints.mMaxSize.width, mouseMove.x, direction.mHorizontal);
+      AdjustDimensions(&rect.y, &rect.height, sizeConstraints.mMinSize.height,
+                       sizeConstraints.mMaxSize.height, mouseMove.y, direction.mVertical);
 
       // Don't allow resizing a window or a popup past the edge of the screen,
       // so adjust the rectangle to fit within the available screen area.
@@ -249,6 +261,10 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         ResizeContent(contentToResize, direction, sizeInfo, &originalSizeInfo);
         MaybePersistOriginalSize(contentToResize, originalSizeInfo);
 
+        // Move the popup to the new location unless it is anchored, since
+        // the position shouldn't change. nsMenuPopupFrame::SetPopupPosition
+        // will instead ensure that the popup's position is anchored at the
+        // right place.
         if (weakFrame.IsAlive() &&
             (oldRect.x != rect.x || oldRect.y != rect.y) &&
             (!menuPopupFrame->IsAnchored() ||
@@ -365,25 +381,25 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
   return aPresShell->GetDocument()->GetElementById(elementid);
 }
 
-/* adjust the window position and size according to the mouse movement and
- * the resizer direction
- */
 void
 nsResizerFrame::AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
+                                 PRInt32 aMinSize, PRInt32 aMaxSize,
                                  PRInt32 aMovement, PRInt8 aResizerDirection)
 {
-  switch(aResizerDirection)
-  {
-    case -1:
-      // only move the window when the direction is top and/or left
-      *aPos+= aMovement;
-      // falling through: the window is resized in both cases
-    case 1:
-      *aSize+= aResizerDirection*aMovement;
-      // use one as a minimum size or the element could disappear
-      if (*aSize < 1)
-        *aSize = 1;
-  }
+  PRInt32 oldSize = *aSize;
+
+  *aSize += aResizerDirection * aMovement;
+  // use one as a minimum size or the element could disappear
+  if (*aSize < 1)
+    *aSize = 1;
+
+  // Constrain the size within the minimum and maximum size.
+  *aSize = NS_MAX(aMinSize, NS_MIN(aMaxSize, *aSize));
+
+  // For left and top resizers, the window must be moved left by the same
+  // amount that the window was resized.
+  if (aResizerDirection == -1)
+    *aPos += oldSize - *aSize;
 }
 
 /* static */ void

@@ -94,6 +94,7 @@ public:
   NS_IMETHOD              Show(bool bState);
   virtual bool            IsVisible() const;
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
+  virtual void            SetSizeConstraints(const SizeConstraints& aConstraints);
   NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD              Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
   NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
