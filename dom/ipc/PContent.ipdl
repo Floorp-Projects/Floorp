@@ -71,6 +71,11 @@ struct FontListEntry {
     PRUint8   index;
 };
 
+struct DeviceStorageStatParams
+{
+  nsString fullpath;
+};
+
 struct DeviceStorageAddParams
 {
   PBlob blob;
@@ -101,6 +106,7 @@ union DeviceStorageParams
   DeviceStorageGetParams;
   DeviceStorageDeleteParams;
   DeviceStorageEnumerationParams;
+  DeviceStorageStatParams;
 };
 
 struct SlicedBlobConstructorParams

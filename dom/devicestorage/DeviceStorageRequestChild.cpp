@@ -55,7 +55,17 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
       nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
 
-      jsval result = BlobToJsval(mRequest->GetOwner(), blob);
+      jsval result = InterfaceToJsval(mRequest->GetOwner(), blob, &NS_GET_IID(nsIDOMBlob));
+      mRequest->FireSuccess(result);
+      break;
+    }
+
+    case DeviceStorageResponseValue::TStatStorageResponse:
+    {
+      StatStorageResponse r = aValue;
+
+      nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(r.freeBytes(), r.totalBytes());
+      jsval result = InterfaceToJsval(mRequest->GetOwner(), domstat, &NS_GET_IID(nsIDOMDeviceStorageStat));
       mRequest->FireSuccess(result);
       break;
     }
@@ -68,7 +78,10 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       PRUint32 count = r.paths().Length();
       for (PRUint32 i = 0; i < count; i++) {
         nsCOMPtr<nsIFile> f;
-        NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
+        nsresult rv = NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
+        if (NS_FAILED(rv)) {
+          continue;
+        }
 
         nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(f);
         dsf->SetPath(r.paths()[i].name());
