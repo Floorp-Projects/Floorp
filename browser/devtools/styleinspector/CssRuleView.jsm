@@ -81,7 +81,9 @@ function ElementStyle(aElement, aStore)
   if (this.store.disabled) {
     this.store.disabled = aStore.disabled;
   } else {
-    this.store.disabled = WeakMap();
+    // FIXME: This should be a WeakMap once bug 753517 is fixed.
+    // See Bug 777373 for details.
+    this.store.disabled = new Map();
   }
 
   let doc = aElement.ownerDocument;
@@ -487,7 +489,11 @@ Rule.prototype = {
 
     // Store disabled properties in the disabled store.
     let disabled = this.elementStyle.store.disabled;
-    disabled.set(this.style, disabledProps);
+    if (disabledProps.length > 0) {
+      disabled.set(this.style, disabledProps);
+    } else {
+      disabled.delete(this.style);
+    }
 
     this.elementStyle.markOverridden();
   },
@@ -2157,7 +2163,9 @@ function _getInplaceEditorForSpan(aSpan) { return aSpan.inplaceEditor; };
  */
 function UserProperties()
 {
-  this.weakMap = new WeakMap();
+  // FIXME: This should be a WeakMap once bug 753517 is fixed.
+  // See Bug 777373 for details.
+  this.map = new Map();
 }
 
 UserProperties.prototype = {
@@ -2177,7 +2185,7 @@ UserProperties.prototype = {
    *          otherwise.
    */
   getProperty: function UP_getProperty(aStyle, aName, aComputedValue) {
-    let entry = this.weakMap.get(aStyle, null);
+    let entry = this.map.get(aStyle, null);
 
     if (entry && aName in entry) {
       let item = entry[aName];
@@ -2206,13 +2214,13 @@ UserProperties.prototype = {
    *        The value of the property to set.
    */
   setProperty: function UP_setProperty(aStyle, aName, aComputedValue, aUserValue) {
-    let entry = this.weakMap.get(aStyle, null);
+    let entry = this.map.get(aStyle, null);
     if (entry) {
       entry[aName] = { computed: aComputedValue, user: aUserValue };
     } else {
       let props = {};
       props[aName] = { computed: aComputedValue, user: aUserValue };
-      this.weakMap.set(aStyle, props);
+      this.map.set(aStyle, props);
     }
   },
 
@@ -2225,7 +2233,7 @@ UserProperties.prototype = {
    *        The name of the property to check.
    */
   contains: function UP_contains(aStyle, aName) {
-    let entry = this.weakMap.get(aStyle, null);
+    let entry = this.map.get(aStyle, null);
     return !!entry && aName in entry;
   },
 };
