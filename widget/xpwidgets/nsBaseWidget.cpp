@@ -1323,6 +1323,18 @@ nsBaseWidget::GetGLFrameBufferFormat()
   return LOCAL_GL_NONE;
 }
 
+void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  mSizeConstraints = aConstraints;
+  // We can't ensure that the size is honored at this point because we're
+  // probably in the middle of a reflow.
+}
+
+const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
+{
+  return mSizeConstraints;
+}
+
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

@@ -34,6 +34,8 @@
 #include "nsListControlFrame.h"
 #include "nsIBaseWindow.h"
 #include "nsThemeConstants.h"
+#include "nsBoxLayoutState.h"
+#include "nsRenderingContext.h"
 #include "nsCSSFrameConstructor.h"
 #include "mozilla/dom/Element.h"
 
@@ -632,7 +634,8 @@ IsTopLevelWidget(nsIWidget* aWidget)
 void
 nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
                                        nsIFrame*            aFrame,
-                                       nsIView*             aView)
+                                       nsIView*             aView,
+                                       nsRenderingContext*  aRC)
 {
 #ifdef MOZ_XUL
   if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
@@ -676,7 +679,45 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   nsIWidget* viewWidget = aView->GetWidget();
   viewWidget->SetTransparencyMode(mode);
   windowWidget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
+
+  if (!aRC)
+    return;
+  
+  nsBoxLayoutState aState(aPresContext, aRC);
+  nsSize minSize = rootFrame->GetMinSize(aState);
+  nsSize maxSize = rootFrame->GetMaxSize(aState);
+
+  SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
 #endif
+}
+
+void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
+                                          nsIWidget* aWidget,
+                                          const nsSize& aMinSize,
+                                          const nsSize& aMaxSize)
+{
+  nsIntSize devMinSize(aPresContext->AppUnitsToDevPixels(aMinSize.width),
+                       aPresContext->AppUnitsToDevPixels(aMinSize.height));
+  nsIntSize devMaxSize(aMaxSize.width == NS_INTRINSICSIZE ? NS_MAXSIZE :
+                         aPresContext->AppUnitsToDevPixels(aMaxSize.width),
+                       aMaxSize.height == NS_INTRINSICSIZE ? NS_MAXSIZE :
+                         aPresContext->AppUnitsToDevPixels(aMaxSize.height));
+  widget::SizeConstraints constraints(devMinSize, devMaxSize);
+
+  // The sizes are in inner window sizes, so convert them into outer window sizes.
+  // Use a size of (200, 200) as only the difference between the inner and outer
+  // size is needed.
+  nsIntSize windowSize = aWidget->ClientToWindowSize(nsIntSize(200, 200));
+  if (constraints.mMinSize.width)
+    constraints.mMinSize.width += windowSize.width - 200;
+  if (constraints.mMinSize.height)
+    constraints.mMinSize.height += windowSize.height - 200;
+  if (constraints.mMaxSize.width != NS_MAXSIZE)
+    constraints.mMaxSize.width += windowSize.width - 200;
+  if (constraints.mMaxSize.height != NS_MAXSIZE)
+    constraints.mMaxSize.height += windowSize.height - 200;
+
+  aWidget->SetSizeConstraints(constraints);
 }
 
 void

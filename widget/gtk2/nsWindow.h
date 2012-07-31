@@ -111,6 +111,7 @@ public:
     NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
                                          PRInt32 *aX,
                                          PRInt32 *aY);
+    virtual void       SetSizeConstraints(const SizeConstraints& aConstraints);
     NS_IMETHOD         Move(PRInt32 aX,
                             PRInt32 aY);
     NS_IMETHOD         Show             (bool aState);
