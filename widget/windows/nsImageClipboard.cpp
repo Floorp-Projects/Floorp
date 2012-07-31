@@ -13,6 +13,8 @@
 #include "nsLiteralString.h"
 #include "nsComponentManagerUtils.h"
 
+#define BFH_LENGTH 14
+
 /* Things To Do 11/8/00
 
 Check image metrics, can we support them? Do we need to?
@@ -116,47 +118,49 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     nsresult rv = inImage->CopyFrame(imgIContainer::FRAME_CURRENT,
                                      imgIContainer::FLAG_SYNC_DECODE,
                                      getter_AddRefs(frame));
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    const PRUint32 imageSize = frame->GetDataSize();
-    const PRInt32 bitmapSize = sizeof(BITMAPINFOHEADER) + imageSize;
-
-    HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, bitmapSize);
-    if (!glob) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Create the buffer where we'll copy the image bits (and header) into and lock it
-    void *data = (void*)::GlobalLock(glob);
-
-    BITMAPINFOHEADER *header = (BITMAPINFOHEADER*)data;
-    header->biSize          = sizeof(BITMAPINFOHEADER);
-    header->biWidth         = frame->Width();
-    header->biHeight        = frame->Height();
-
-    header->biPlanes        = 1;
-    if (frame->Format() == gfxASurface::ImageFormatARGB32)
-        header->biBitCount  = 32;
-    else if (frame->Format() == gfxASurface::ImageFormatRGB24)
-        header->biBitCount  = 24;
-    header->biCompression   = BI_RGB;
-    header->biSizeImage     = imageSize;
-
-    const PRUint32 bpr = frame->Stride();
-
-    BYTE *dstBits = (BYTE*)data + sizeof(BITMAPINFOHEADER);
-    BYTE *srcBits = frame->Data();
-    for (PRInt32 i = 0; i < header->biHeight; ++i) {
-        PRUint32 srcOffset = imageSize - (bpr * (i + 1));
-        PRUint32 dstOffset = i * bpr;
-        ::CopyMemory(dstBits + dstOffset, srcBits + srcOffset, bpr);
-    }
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/bmp", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     
+    PRUint32 format;
+    nsAutoString options;
+    options.AppendASCII("version=5;bpp=");
+    switch (frame->Format()) {
+    case gfxASurface::ImageFormatARGB32:
+        format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+        options.AppendInt(32);
+        break;
+    case gfxASurface::ImageFormatRGB24:
+        format = imgIEncoder::INPUT_FORMAT_RGB;
+        options.AppendInt(24);
+        break;
+    default:
+        return NS_ERROR_INVALID_ARG;  
+    }
+
+    rv = encoder->InitFromData(frame->Data(), 0, frame->Width(),
+                               frame->Height(), frame->Stride(),
+                               format, options);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 size;
+    encoder->GetImageBufferUsed(&size);
+    NS_ENSURE_TRUE(size > BFH_LENGTH, NS_ERROR_FAILURE);
+    HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT,
+                                 size - BFH_LENGTH);
+    if (!glob)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    char *dst = (char*) ::GlobalLock(glob);
+    char *src;
+    rv = encoder->GetImageBuffer(&src);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ::CopyMemory(dst, src + BFH_LENGTH, size - BFH_LENGTH);
     ::GlobalUnlock(glob);
-
+    
     *outBitmap = (HANDLE)glob;
-
     return NS_OK;
 }
 

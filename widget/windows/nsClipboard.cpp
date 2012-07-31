@@ -78,7 +78,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0 ||
            strcmp(aMimeStr, kJPGImageMime) == 0 ||
            strcmp(aMimeStr, kPNGImageMime) == 0)
-    format = CF_DIB;
+    format = CF_DIBV5;
   else if (strcmp(aMimeStr, kFileMime) == 0 ||
            strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
@@ -191,7 +191,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
                 strcmp(flavorStr, kNativeImageMime) == 0  ) {
         // if we're an image, register the native bitmap flavor
         FORMATETC imageFE;
-        SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        SET_FORMATETC(imageFE, CF_DIBV5, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(flavorStr, &imageFE);      
       }
       else if ( strcmp(flavorStr, kFilePromiseMime) == 0 ) {
@@ -371,7 +371,7 @@ static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATET
 
 
 //-------------------------------------------------------------------------
-// If aFormat is CF_DIB, aMIMEImageFormat must be a type for which we have
+// If aFormat is CF_DIBV5, aMIMEImageFormat must be a type for which we have
 // an image encoder (e.g. image/png).
 // For other values of aFormat, it is OK to pass null for aMIMEImageFormat.
 nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, const char * aMIMEImageFormat, void ** aData, PRUint32 * aLen)
@@ -435,7 +435,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 }
               } break;
 
-            case CF_DIB :
+            case CF_DIBV5:
               if (aMIMEImageFormat)
               {
                 PRUint32 allocLen = 0;
