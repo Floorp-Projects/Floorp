@@ -5956,9 +5956,15 @@ JS_InternJSString(JSContext *cx, JSString *str)
 JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s)
 {
+    return JS_InternStringN(cx, s, strlen(s));
+}
+
+JS_PUBLIC_API(JSString *)
+JS_InternStringN(JSContext *cx, const char *s, size_t length)
+{
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    JSAtom *atom = js_Atomize(cx, s, strlen(s), InternAtom);
+    JSAtom *atom = js_Atomize(cx, s, length, InternAtom);
     JS_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
     return atom;
 }
