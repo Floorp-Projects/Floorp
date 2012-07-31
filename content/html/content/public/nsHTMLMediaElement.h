@@ -16,6 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
+#include "nsDataHashtable.h"
 #include "nsAudioStream.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
@@ -42,6 +43,8 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaStream MediaStream;
   typedef mozilla::MediaResource MediaResource;
+
+  typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
   enum CanPlayStatus {
     CANPLAY_NO,
@@ -109,7 +112,10 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  void MetadataLoaded(PRUint32 aChannels, PRUint32 aRate, bool aHasAudio);
+  void MetadataLoaded(PRUint32 aChannels,
+                      PRUint32 aRate,
+                      bool aHasAudio,
+                      const MetadataTags* aTags);
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -699,6 +705,13 @@ protected:
 
   // Current audio sample rate.
   PRUint32 mRate;
+
+  // Helper function to iterate over a hash table
+  // and convert it to a JSObject.
+  static PLDHashOperator BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
+                                             nsCString aValue,
+                                             void* aUserArg);
+  nsAutoPtr<const MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
   // return in the currentSrc attribute. Use GetCurrentSrc() to access the
