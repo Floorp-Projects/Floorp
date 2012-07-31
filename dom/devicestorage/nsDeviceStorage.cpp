@@ -281,6 +281,60 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
   }
 }
 
+PRUint64
+DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, PRUint64 aSoFar)
+{
+  if (!aFile) {
+    return aSoFar;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> e;
+  rv = aFile->GetDirectoryEntries(getter_AddRefs(e));
+
+  if (NS_FAILED(rv) || !e) {
+    return aSoFar;
+  }
+
+  nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
+  NS_ASSERTION(files, "GetDirectoryEntries must return a nsIDirectoryEnumerator");
+
+  nsCOMPtr<nsIFile> f;
+  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
+    bool isDir;
+    rv = f->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    bool isFile;
+    rv = f->IsFile(&isFile);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    bool isLink;
+    rv = f->IsSymlink(&isLink);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+      
+    if (isLink) {
+      // for now, lets just totally ignore symlinks.
+      NS_WARNING("DirectoryDiskUsage ignores symlinks");
+    } else if (isDir) {
+      aSoFar += DirectoryDiskUsage(f, aSoFar);
+    } else if (isFile) {
+      PRInt64 size;
+      rv = f->GetFileSize(&size);
+      if (NS_SUCCEEDED(rv)) {
+	aSoFar += size;
+      }
+    }
+  }
+  return aSoFar;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
 #ifdef MOZ_WIDGET_GONK
@@ -359,26 +413,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
   mFile = f;
 }
 
-static jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aWindow, "Null Window");
-
-  if (aFile->mEditable) {
-    // TODO - needs janv's file handle support.
-    return JSVAL_NULL;
-  }
-
-  if (aFile == nullptr) {
-    return JSVAL_NULL;
-  }
-
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(aFile->mFile, aFile->mPath);
-  return BlobToJsval(aWindow, blob);
-}
-
-
-jsval BlobToJsval(nsPIDOMWindow* aWindow, nsIDOMBlob* aBlob)
+jsval InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
   if (!sgo) {
@@ -395,18 +430,37 @@ jsval BlobToJsval(nsPIDOMWindow* aWindow, nsIDOMBlob* aBlob)
     return JSVAL_NULL;
   }
 
-  jsval wrappedFile;
+  jsval someJsVal;
   nsresult rv = nsContentUtils::WrapNative(cx,
                                            JS_GetGlobalObject(cx),
-                                           aBlob,
-                                           &NS_GET_IID(nsIDOMFile),
-                                           &wrappedFile);
+                                           aObject,
+                                           aIID,
+                                           &someJsVal);
   if (NS_FAILED(rv)) {
     return JSVAL_NULL;
   }
 
-  return wrappedFile;
+  return someJsVal;
 }
+
+jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWindow, "Null Window");
+
+  if (aFile->mEditable) {
+    // TODO - needs janv's file handle support.
+    return JSVAL_NULL;
+  }
+
+  if (aFile == nullptr) {
+    return JSVAL_NULL;
+  }
+
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(aFile->mFile, aFile->mPath);
+  return InterfaceToJsval(aWindow, blob, &NS_GET_IID(nsIDOMBlob));
+ }
+
 
 jsval StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
 {
@@ -762,6 +816,39 @@ nsDOMDeviceStorageCursor::IPDLRelease()
   Release();
 }
 
+class PostStatResultEvent : public nsRunnable
+{
+public:
+  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, PRInt64 aFreeBytes, PRInt64 aTotalBytes)
+    : mFreeBytes(aFreeBytes)
+    , mTotalBytes(aTotalBytes)
+    {
+      mRequest.swap(aRequest);
+    }
+
+  ~PostStatResultEvent() {}
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes);
+
+    jsval result = InterfaceToJsval(mRequest->GetOwner(),
+				    domstat,
+				    &NS_GET_IID(nsIDOMDeviceStorageStat));
+
+    mRequest->FireSuccess(result);
+    mRequest = nsnull;
+    return NS_OK;
+  }
+
+private:
+  PRInt64 mFreeBytes, mTotalBytes;
+  nsRefPtr<DOMRequest> mRequest;
+};
+
+
 class PostResultEvent : public nsRunnable
 {
 public:
@@ -920,6 +1007,40 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
+class StatFileEvent : public nsRunnable
+{
+public:
+  StatFileEvent(DeviceStorageFile* aFile, nsRefPtr<DOMRequest>& aRequest)
+  : mFile(aFile)
+    {
+      mRequest.swap(aRequest);
+    }
+
+  ~StatFileEvent() {}
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+    nsCOMPtr<nsIRunnable> r;
+    PRUint64 diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
+    PRInt64 freeSpace = 0;
+    nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
+    if (NS_FAILED(rv)) {
+      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN, mFile);
+      NS_DispatchToMainThread(r);
+      return NS_OK;
+    }
+
+    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace);
+    NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<DeviceStorageFile> mFile;
+  nsRefPtr<DOMRequest> mRequest;
+};
+
 class DeviceStorageRequest MOZ_FINAL
   : public nsIContentPermissionRequest
   , public nsIRunnable
@@ -931,7 +1052,8 @@ public:
         DEVICE_STORAGE_REQUEST_READ,
         DEVICE_STORAGE_REQUEST_WRITE,
         DEVICE_STORAGE_REQUEST_DELETE,
-        DEVICE_STORAGE_REQUEST_WATCH
+        DEVICE_STORAGE_REQUEST_WATCH,
+        DEVICE_STORAGE_REQUEST_STAT
     };
 
     DeviceStorageRequest(const DeviceStorageRequestType aRequestType,
@@ -1097,6 +1219,18 @@ public:
           return NS_OK;
         }
         r = new DeleteFileEvent(mFile, mRequest);
+        break;
+      }
+
+      case DEVICE_STORAGE_REQUEST_STAT:
+      {
+        if (XRE_GetProcessType() != GeckoProcessType_Default) {
+          PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
+          DeviceStorageStatParams params(fullpath);
+          ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
+	  return NS_OK;
+        }
+        r = new StatFileEvent(mFile, mRequest);
         break;
       }
 
@@ -1411,6 +1545,27 @@ nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMReq
 }
 
 NS_IMETHODIMP
+nsDOMDeviceStorage::Stat(nsIDOMDOMRequest** aRetval)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  NS_ADDREF(*aRetval = request);
+
+  nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mFile);
+  nsCOMPtr<nsIRunnable> r = new DeviceStorageRequest(DeviceStorageRequest::DEVICE_STORAGE_REQUEST_STAT,
+						     win,
+						     mPrincipal,
+						     dsf,
+						     request);
+  NS_DispatchToMainThread(r);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDeviceStorage::Enumerate(const JS::Value & aName,
                              const JS::Value & aOptions,
                              JSContext* aCx,
@@ -1546,6 +1701,41 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
   DispatchEvent(ce, &ignore);
 }
 #endif
+
+DOMCI_DATA(DeviceStorageStat, nsDOMDeviceStorageStat)
+
+NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorageStat)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorageStat)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorageStat)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsDOMDeviceStorageStat)
+NS_IMPL_RELEASE(nsDOMDeviceStorageStat)
+
+nsDOMDeviceStorageStat::nsDOMDeviceStorageStat(PRUint64 aFreeBytes, PRUint64 aTotalBytes)
+  : mFreeBytes(aFreeBytes)
+  , mTotalBytes(aTotalBytes)
+{
+}
+
+nsDOMDeviceStorageStat::~nsDOMDeviceStorageStat()
+{
+}
+
+NS_IMETHODIMP
+nsDOMDeviceStorageStat::GetTotalBytes(PRUint64 *aTotalBytes)
+{
+  *aTotalBytes = mTotalBytes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDeviceStorageStat::GetFreeBytes(PRUint64 *aFreeBytes)
+{
+  *aFreeBytes = mFreeBytes;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
