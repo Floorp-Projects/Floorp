@@ -15,6 +15,10 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAPPLICATIONCACHESERVICE
 private:
+    nsresult GetJARIdentifier(nsIURI *aURI,
+                              nsILoadContext *aLoadContext,
+                              nsACString &_result);
+
     nsRefPtr<nsCacheService> mCacheService;
 };
 

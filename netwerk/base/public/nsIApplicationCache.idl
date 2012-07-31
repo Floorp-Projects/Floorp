@@ -8,6 +8,7 @@
 
 interface nsIArray;
 interface nsIFile;
+interface nsIURI;
 
 /**
  * Application caches can store a set of namespace entries that affect
@@ -79,7 +80,7 @@ interface nsIApplicationCacheNamespace : nsISupports
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(C3A17414-763B-4235-8BB7-B48324F95DF8)]
+[scriptable, uuid(06568DAE-C374-4383-A122-0CC96C7177F2)]
 interface nsIApplicationCache : nsISupports
 {
     /**
@@ -119,8 +120,13 @@ interface nsIApplicationCache : nsISupports
     const unsigned long ITEM_OPPORTUNISTIC = 1 << 6;
 
     /**
-     * The group ID for this cache group.  This is the URI of the
-     * manifest file.
+     * URI of the manfiest specifying this application cache.
+     **/
+    readonly attribute nsIURI manifestURI;
+
+    /**
+     * The group ID for this cache group.  It is an internally generated string
+     * and cannot be used as manifest URL spec.
      **/
     readonly attribute ACString groupID;
 
