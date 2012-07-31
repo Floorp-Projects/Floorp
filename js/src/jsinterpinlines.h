@@ -21,7 +21,6 @@
 
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 
@@ -357,17 +356,6 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
             return false;
     }
 
-    return true;
-}
-
-inline bool
-IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
-{
-    JSOp op = JSOp(*pc);
-    RootedPropertyName name(cx);
-    name = GetNameFromBytecode(cx, script, pc, op);
-    JSFunction *fun = cx->global()->getIntrinsicFunction(cx, name);
-    vp->setObject(*fun);
     return true;
 }
 
