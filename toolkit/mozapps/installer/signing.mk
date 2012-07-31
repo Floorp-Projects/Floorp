@@ -30,6 +30,12 @@ endif # Darwin
 ifeq (linux-gnu,$(TARGET_OS))
 MOZ_EXTERNAL_SIGNING_FORMAT :=
 endif # Linux
+
+ifdef MOZ_ASAN
+MOZ_INTERNAL_SIGNING_FORMAT :=
+MOZ_EXTERNAL_SIGNING_FORMAT :=
+endif
+
 endif # MOZ_SIGN_CMD
 
 endif # MOZ_PROFILE_GENERATE

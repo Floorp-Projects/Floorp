@@ -128,9 +128,10 @@ nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   nsSVGScriptElement* it = new nsSVGScriptElement(ni.forget(), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
-  nsresult rv = it->Init();
-  rv |= const_cast<nsSVGScriptElement*>(this)->CopyInnerTo(it);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv1 = it->Init();
+  nsresult rv2 = const_cast<nsSVGScriptElement*>(this)->CopyInnerTo(it);
+  NS_ENSURE_SUCCESS(rv1, rv1);
+  NS_ENSURE_SUCCESS(rv2, rv2);
 
   // The clone should be marked evaluated if we are.
   it->mAlreadyStarted = mAlreadyStarted;

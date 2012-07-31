@@ -1,4 +1,4 @@
-// |reftest| skip -- bug 528404 - disable due to random timeouts
+// |reftest| pref(javascript.options.xml.content,true) skip -- bug 528404 - disable due to random timeouts
 /* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

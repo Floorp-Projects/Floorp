@@ -6,11 +6,11 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
-import android.app.*;
-import android.content.*;
-import android.util.*;
-import android.os.*;
-import java.io.*;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+
 import org.mozilla.gecko.GeckoAppShell;
 
 public class Restarter extends Activity {
@@ -63,4 +63,4 @@ public class Restarter extends Activity {
         GeckoAppShell.waitForAnotherGeckoProc();
         System.exit(0);
     }
-};
+}

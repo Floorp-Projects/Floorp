@@ -981,14 +981,14 @@ struct ScriptSource
     ScriptSource *next;
   private:
     union {
-        // When the script source is ready, compressedLength > 0 implies
+        // When the script source is ready, compressedLength_ != 0 implies
         // compressed holds the compressed data; otherwise, source holds the
         // uncompressed source.
         jschar *source;
         unsigned char *compressed;
     } data;
     uint32_t length_;
-    uint32_t compressedLength;
+    uint32_t compressedLength_;
     bool marked:1;
     bool onRuntime_:1;
     bool argumentsNotIncluded_:1;
@@ -1023,8 +1023,7 @@ struct ScriptSource
     static bool performXDR(XDRState<mode> *xdr, ScriptSource **ss);
 
   private:
-    bool compressed() { return !!compressedLength; }
-    void considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource = false);
+    bool compressed() { return compressedLength_ != 0; }
 };
 
 #ifdef JS_THREADSAFE
@@ -1061,6 +1060,8 @@ class SourceCompressorThread
     PRCondVar *wakeup;
     // The main thread can block on this to wait for compression to finish.
     PRCondVar *done;
+    // Flag which can be set by the main thread to ask compression to abort.
+    volatile bool stop;
 
     void threadLoop();
     static void compressorThread(void *arg);
@@ -1078,6 +1079,7 @@ class SourceCompressorThread
     bool init();
     void compress(SourceCompressionToken *tok);
     void waitOnCompression(SourceCompressionToken *userTok);
+    void abort(SourceCompressionToken *userTok);
 };
 #endif
 
@@ -1086,19 +1088,21 @@ struct SourceCompressionToken
     friend struct ScriptSource;
     friend class SourceCompressorThread;
   private:
-    JSRuntime *rt;
+    JSContext *cx;
     ScriptSource *ss;
     const jschar *chars;
   public:
-    SourceCompressionToken(JSRuntime *rt)
-      : rt(rt), ss(NULL), chars(NULL) {}
+    SourceCompressionToken(JSContext *cx)
+      : cx(cx), ss(NULL), chars(NULL) {}
     ~SourceCompressionToken()
     {
         JS_ASSERT_IF(!ss, !chars);
         if (ss)
             ensureReady();
     }
+
     void ensureReady();
+    void abort();
 };
 
 extern void

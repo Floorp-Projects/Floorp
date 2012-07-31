@@ -166,7 +166,7 @@ CreateIFoo( void** result )
     *result = foop;
 
     printf("<<CreateIFoo()\n");
-    return 0;
+    return NS_OK;
   }
 
 void
@@ -260,7 +260,7 @@ CreateIBar( void** result )
     *result = barp;
 
     printf("<<CreateIBar()\n");
-    return 0;
+    return NS_OK;
   }
 
 void

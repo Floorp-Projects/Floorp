@@ -75,7 +75,7 @@ public:
 
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest, PRUint32 aStateFlags,
-                              PRUint32 aStatus)
+                              nsresult aStatus)
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);

@@ -122,7 +122,7 @@ IsInNoProxyList(const nsACString& aHost, PRInt32 aPort, const char* noProxyVal)
       ++colon;
       nsDependentCSubstring portStr(colon, last);
       nsCAutoString portStr2(portStr); // We need this for ToInteger. String API's suck.
-      PRInt32 err;
+      nsresult err;
       port = portStr2.ToInteger(&err);
       if (NS_FAILED(err)) {
         port = -2; // don't match any port, so we ignore this pattern
@@ -341,7 +341,7 @@ static bool HostIgnoredByProxy(const nsACString& aIgnore,
     ++slash;
     nsDependentCSubstring maskStr(slash, end);
     nsCAutoString maskStr2(maskStr);
-    PRInt32 err;
+    nsresult err;
     mask = maskStr2.ToInteger(&err);
     if (err != 0) {
       mask = 128;

@@ -180,7 +180,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // 4) X-Content-Duration.
       // 5) Perform a seek in the decoder to find the value.
       nsCAutoString durationText;
-      PRInt32 ec = 0;
+      nsresult ec = NS_OK;
       rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("Content-Duration"), durationText);
       if (NS_FAILED(rv)) {
         rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-AMZ-Meta-Content-Duration"), durationText);

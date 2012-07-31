@@ -10,6 +10,7 @@
 #include "Zip.h"
 #include "SeekableZStream.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Scoped.h"
 #include "zlib.h"
 
 /**
@@ -109,15 +110,15 @@ private:
    * AutoUnlinkFile keeps track or a file name and removes (unlinks) the file
    * when the instance is destroyed.
    */
-  struct AutoUnlinkFileTraits: public AutoDeleteArrayTraits<char>
+  struct AutoUnlinkFileTraits: public mozilla::ScopedDeleteArrayTraits<char>
   {
-    static void clean(char *value)
+    static void release(char *value)
     {
       unlink(value);
-      AutoDeleteArrayTraits<char>::clean(value);
+      mozilla::ScopedDeleteArrayTraits<char>::release(value);
     }
   };
-  typedef AutoClean<AutoUnlinkFileTraits> AutoUnlinkFile;
+  typedef mozilla::Scoped<AutoUnlinkFileTraits> AutoUnlinkFile;
 
   /* Extracted file */
   AutoUnlinkFile path;
@@ -155,7 +156,7 @@ private:
   mozilla::RefPtr<Zip> zip;
 
   /* Decompression buffer */
-  AutoDeletePtr<_MappableBuffer> buffer;
+  mozilla::ScopedDeletePtr<_MappableBuffer> buffer;
 
   /* Zlib data */
   z_stream zStream;
@@ -193,7 +194,7 @@ private:
   mozilla::RefPtr<Zip> zip;
 
   /* Decompression buffer */
-  AutoDeletePtr<_MappableBuffer> buffer;
+  mozilla::ScopedDeletePtr<_MappableBuffer> buffer;
 
   /* Seekable ZStream */
   SeekableZStream zStream;
@@ -236,7 +237,7 @@ private:
 
   /* Array keeping track of which chunks have already been decompressed.
    * Each value is the number of pages decompressed for the given chunk. */
-  AutoDeleteArray<unsigned char> chunkAvail;
+  mozilla::ScopedDeleteArray<unsigned char> chunkAvail;
 
   /* Number of chunks that have already been decompressed. */
   size_t chunkAvailNum;

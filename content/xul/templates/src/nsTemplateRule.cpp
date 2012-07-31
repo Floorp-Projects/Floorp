@@ -155,7 +155,7 @@ nsTemplateCondition::CheckMatchStrings(const nsAString& aLeftString,
             case eGreater:
             {
                 // non-numbers always compare false
-                PRInt32 err;
+                nsresult err;
                 PRInt32 leftint = PromiseFlatString(aLeftString).ToInteger(&err);
                 if (NS_SUCCEEDED(err)) {
                     PRInt32 rightint = PromiseFlatString(aRightString).ToInteger(&err);

@@ -880,13 +880,13 @@ private:
     return static_cast<nsBufferedAudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
   }
 
-  static int StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
+  static void StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
   {
-    return static_cast<nsBufferedAudioStream*>(aThis)->StateCallback(aState);
+    static_cast<nsBufferedAudioStream*>(aThis)->StateCallback(aState);
   }
 
   long DataCallback(void* aBuffer, long aFrames);
-  int StateCallback(cubeb_state aState);
+  void StateCallback(cubeb_state aState);
 
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
@@ -1147,12 +1147,19 @@ nsBufferedAudioStream::GetPosition()
   return -1;
 }
 
+// This function is miscompiled by PGO with MSVC 2010.  See bug 768333.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
 PRInt64
 nsBufferedAudioStream::GetPositionInFrames()
 {
   MonitorAutoLock mon(mMonitor);
   return GetPositionInFramesUnlocked();
 }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
 PRInt64
 nsBufferedAudioStream::GetPositionInFramesUnlocked()
@@ -1173,11 +1180,11 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
 
   // Adjust the reported position by the number of silent frames written
   // during stream underruns.
-  PRInt64 adjustedPosition = 0;
+  PRUint64 adjustedPosition = 0;
   if (position >= mLostFrames) {
     adjustedPosition = position - mLostFrames;
   }
-  return adjustedPosition;
+  return NS_MIN<PRUint64>(adjustedPosition, PR_INT64_MAX);
 }
 
 bool
@@ -1261,7 +1268,7 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   return aFrames - (bytesWanted / mBytesPerFrame);
 }
 
-int
+void
 nsBufferedAudioStream::StateCallback(cubeb_state aState)
 {
   MonitorAutoLock mon(mMonitor);
@@ -1271,7 +1278,6 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
     mState = ERRORED;
   }
   mon.NotifyAll();
-  return CUBEB_OK;
 }
 #endif
 

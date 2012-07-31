@@ -17,11 +17,16 @@
 #include "nsICanvasElementExternal.h"
 #include "nsLayoutUtils.h"
 
-#include "Layers.h"
-
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
 class nsIPropertyBag;
+
+namespace mozilla {
+namespace layers {
+class CanvasLayer;
+class LayerManager;
+}
+}
 
 class nsHTMLCanvasElement : public nsGenericHTMLElement,
                             public nsICanvasElementExternal,

@@ -37,7 +37,6 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		file_bug505915.html \
 		test_bug553407.html \
 		test_bug560351.html \
-		test_bug564330.html \
 		test_frameWrapping.html \
 		test_bug585745.html \
 		test_bug589028.html \
@@ -53,7 +52,6 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_bug629331.html \
 		test1_bug629331.html \
 		test2_bug629331.html \
-		test_bug618017.html \
 		test_bug636097.html \
 		test_bug661980.html \
 		test_bug650273.html \
@@ -83,7 +81,9 @@ MOCHITEST_CHROME_FILES	= \
 ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
 MOCHITEST_FILES +=	test_bug657267.html \
-		bug657267.jar
+		bug657267.jar \
+		test_bug564330.html \
+		test_bug618017.html
 endif
 endif
 

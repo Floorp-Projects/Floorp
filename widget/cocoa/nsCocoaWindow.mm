@@ -1072,6 +1072,32 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
   return NS_OK;
 }
 
+void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Popups can be smaller than (60, 60)
+  NSRect rect =
+    (mWindowType == eWindowType_popup) ? NSZeroRect : NSMakeRect(0.0, 0.0, 60, 60);
+  rect = [mWindow frameRectForContentRect:rect];
+
+  SizeConstraints c = aConstraints;
+  c.mMinSize.width = NS_MAX(PRInt32(rect.size.width), c.mMinSize.width);
+  c.mMinSize.height = NS_MAX(PRInt32(rect.size.height), c.mMinSize.height);
+
+  NSSize minSize = { static_cast<CGFloat>(c.mMinSize.width),
+                     static_cast<CGFloat>(c.mMinSize.height) };
+  [mWindow setMinSize:minSize];
+
+  NSSize maxSize = { c.mMaxSize.width == NS_MAXSIZE ? FLT_MAX : c.mMaxSize.width,
+                     c.mMaxSize.height == NS_MAXSIZE ? FLT_MAX : c.mMaxSize.height };
+  [mWindow setMaxSize:maxSize];
+
+  nsBaseWidget::SetSizeConstraints(c);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
@@ -1249,6 +1275,8 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  ConstrainSize(&aWidth, &aHeight);
 
   nsIntRect newBounds = nsIntRect(aX, aY, aWidth, aHeight);
   FitRectToVisibleAreaForScreen(newBounds, [mWindow screen]);
@@ -1616,11 +1644,6 @@ nsIntSize nsCocoaWindow::ClientToWindowSize(const nsIntSize& aClientSize)
 
   if (!mWindow)
     return nsIntSize(0, 0);
-
-  // this is only called for popups currently. If needed, expand this to support
-  // other types of windows
-  if (!IsPopupWithTitleBar())
-    return aClientSize;
 
   NSRect rect(NSMakeRect(0.0, 0.0, aClientSize.width, aClientSize.height));
 

@@ -50,6 +50,10 @@ function run_tests()
   numbers[0].value = 17;
   numbers[1].value = 20;
   text.setAttribute("rotate", "17 20 30");
+  // -- Invalid attribute
+  eventChecker.expect("modify");
+  text.setAttribute("rotate", ",20");
+  is(numbers.numberOfItems, 0, 'Checking that parsing stops at invalid token');
   // -- Attribute removal
   eventChecker.expect("remove");
   text.removeAttribute("rotate");

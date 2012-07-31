@@ -984,7 +984,7 @@ nsString::EqualsIgnoreCase( const char* aString, PRInt32 aCount ) const
    */
 
 double
-nsCString::ToDouble(PRInt32* aErrorCode) const
+nsCString::ToDouble(nsresult* aErrorCode) const
   {
     double res = 0.0;
     if (mLength > 0)
@@ -994,20 +994,20 @@ nsCString::ToDouble(PRInt32* aErrorCode) const
         // Use PR_strtod, not strtod, since we don't want locale involved.
         res = PR_strtod(str, &conv_stopped);
         if (conv_stopped == str+mLength)
-          *aErrorCode = (PRInt32) NS_OK;
+          *aErrorCode = NS_OK;
         else // Not all the string was scanned
-          *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
+          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
       }
     else
       {
         // The string was too short (0 characters)
-        *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
+        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
       }
     return res;
   }
 
 double
-nsString::ToDouble(PRInt32* aErrorCode) const
+nsString::ToDouble(nsresult* aErrorCode) const
   {
     return NS_LossyConvertUTF16toASCII(*this).ToDouble(aErrorCode);
   }

@@ -361,12 +361,24 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
   return currentClip.Intersect(scissor);
 }
 
-const gfx3DMatrix&
+const gfx3DMatrix
+Layer::GetTransform()
+{
+  gfx3DMatrix transform = mTransform;
+  transform.Scale(mXScale, mYScale, 1);
+  return transform;
+}
+
+const gfx3DMatrix
 Layer::GetLocalTransform()
 {
+  gfx3DMatrix transform;
   if (ShadowLayer* shadow = AsShadowLayer())
-    return shadow->GetShadowTransform();
-  return mTransform;
+    transform = shadow->GetShadowTransform();
+  else
+    transform = mTransform;
+  transform.Scale(mXScale, mYScale, 1);
+  return transform;
 }
 
 float
