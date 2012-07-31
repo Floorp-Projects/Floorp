@@ -1794,7 +1794,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest,
                                  PRUint32 aStateFlags,
-                                 PRUint32 aStatus)
+                                 nsresult aStatus)
 {
   // If STATE_STOP is never fired for any reason (redirect?  Failed state
   // change?) the form element will leak.  It will be kept around by the

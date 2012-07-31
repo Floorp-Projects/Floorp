@@ -114,20 +114,23 @@ bool
 VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap);
 
 bool
-GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp);
+GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp);
 
 bool
-VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
+VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
+                    MutableHandleValue vp);
 
 bool
-VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
+VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
+                      MutableHandleValue vp);
 
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.
  */
 bool
-EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props, Value *vp);
+EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
+                             MutableHandleValue vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -136,7 +139,7 @@ EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, Au
  * iterator will never be exposed to scripts.
  */
 bool
-ValueToIterator(JSContext *cx, unsigned flags, Value *vp);
+ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp);
 
 bool
 CloseIterator(JSContext *cx, JSObject *iterObj);
@@ -164,10 +167,10 @@ js_SuppressDeletedElements(JSContext *cx, js::HandleObject obj, uint32_t begin, 
  * picked up by IteratorNext(). The value is cached in the current context.
  */
 extern JSBool
-js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::Value *rval);
+js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
 extern JSBool
-js_IteratorNext(JSContext *cx, JSObject *iterobj, js::Value *rval);
+js_IteratorNext(JSContext *cx, JSObject *iterobj, js::MutableHandleValue rval);
 
 extern JSBool
 js_ThrowStopIteration(JSContext *cx);
@@ -181,13 +184,13 @@ namespace js {
  * more values, store the magic value JS_NO_ITER_VALUE in *vp and return true.
  */
 inline bool
-Next(JSContext *cx, HandleObject iter, Value *vp)
+Next(JSContext *cx, HandleObject iter, MutableHandleValue vp)
 {
     if (!js_IteratorMore(cx, iter, vp))
         return false;
-    if (vp->toBoolean())
+    if (vp.toBoolean())
         return js_IteratorNext(cx, iter, vp);
-    vp->setMagic(JS_NO_ITER_VALUE);
+    vp.setMagic(JS_NO_ITER_VALUE);
     return true;
 }
 
@@ -226,7 +229,7 @@ class ForOfIterator
         : cx(cx), iterator(cx, NULL), currentValue(cx), closed(false)
     {
         RootedValue iterv(cx, iterable);
-        ok = ValueToIterator(cx, JSITER_FOR_OF, iterv.address());
+        ok = ValueToIterator(cx, JSITER_FOR_OF, &iterv);
         iterator = ok ? &iterv.get().toObject() : NULL;
     }
 
@@ -237,7 +240,7 @@ class ForOfIterator
 
     bool next() {
         JS_ASSERT(!closed);
-        ok = ok && Next(cx, iterator, currentValue.address());
+        ok = ok && Next(cx, iterator, &currentValue);
         return ok && !currentValue.get().isMagic(JS_NO_ITER_VALUE);
     }
 

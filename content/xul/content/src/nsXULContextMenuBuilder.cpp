@@ -196,7 +196,7 @@ nsXULContextMenuBuilder::Init(nsIDOMDocumentFragment* aDocumentFragment,
 NS_IMETHODIMP
 nsXULContextMenuBuilder::Click(const nsAString& aGeneratedItemId)
 {
-  PRInt32 rv;
+  nsresult rv;
   PRInt32 idx = nsString(aGeneratedItemId).ToInteger(&rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMHTMLElement> element = mElements.SafeObjectAt(idx);

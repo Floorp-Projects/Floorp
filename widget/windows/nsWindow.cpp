@@ -1286,6 +1286,18 @@ BOOL CALLBACK nsWindow::UnregisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
  *
  **************************************************************/
 
+void
+nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  SizeConstraints c = aConstraints;
+  if (mWindowType != eWindowType_popup) {
+    c.mMinSize.width = NS_MAX(PRInt32(::GetSystemMetrics(SM_CXMINTRACK)), c.mMinSize.width);
+    c.mMinSize.height = NS_MAX(PRInt32(::GetSystemMetrics(SM_CYMINTRACK)), c.mMinSize.height);
+  }
+
+  nsBaseWidget::SetSizeConstraints(c);
+}
+
 // Move this component
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
@@ -1356,6 +1368,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_ASSERTION((aWidth >=0 ) , "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
+  ConstrainSize(&aWidth, &aHeight);
 
   // Avoid unnecessary resizing calls
   if (mBounds.width == aWidth && mBounds.height == aHeight && !aRepaint)
@@ -1394,6 +1407,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
 {
   NS_ASSERTION((aWidth >=0 ),  "Negative width passed to nsWindow::Resize");
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
+  ConstrainSize(&aWidth, &aHeight);
 
   // Avoid unnecessary resizing calls
   if (mBounds.x == aX && mBounds.y == aY &&
@@ -2883,7 +2897,7 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
 
 nsIntSize nsWindow::ClientToWindowSize(const nsIntSize& aClientSize)
 {
-  if (!IsPopupWithTitleBar())
+  if (mWindowType == eWindowType_popup && !IsPopupWithTitleBar())
     return aClientSize;
 
   // just use (200, 200) as the position
@@ -5060,6 +5074,22 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       LPWINDOWPOS info = (LPWINDOWPOS) lParam;
       OnWindowPosChanging(info);
+    }
+    break;
+
+    case WM_GETMINMAXINFO:
+    {
+      MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+      // Set the constraints. The minimum size should also be constrained to the
+      // default window maximum size so that it fits on screen.
+      mmi->ptMinTrackSize.x =
+        NS_MIN((PRInt32)mmi->ptMaxTrackSize.x,
+               NS_MAX((PRInt32)mmi->ptMinTrackSize.x, mSizeConstraints.mMinSize.width));
+      mmi->ptMinTrackSize.y =
+        NS_MIN((PRInt32)mmi->ptMaxTrackSize.y,
+        NS_MAX((PRInt32)mmi->ptMinTrackSize.y, mSizeConstraints.mMinSize.height));
+      mmi->ptMaxTrackSize.x = NS_MIN((PRInt32)mmi->ptMaxTrackSize.x, mSizeConstraints.mMaxSize.width);
+      mmi->ptMaxTrackSize.y = NS_MIN((PRInt32)mmi->ptMaxTrackSize.y, mSizeConstraints.mMaxSize.height);
     }
     break;
 

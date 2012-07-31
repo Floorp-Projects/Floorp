@@ -299,7 +299,7 @@ Sanity_Child()
     TestMutex m1("dd.sanity.m1");
     m1.Lock();
     m1.Lock();
-    return 0;                  // not reached
+    return NS_OK;                  // not reached
 }
 
 nsresult
@@ -329,7 +329,7 @@ Sanity2_Child()
     m1.Lock();
     m2.Lock();
     m1.Lock();
-    return 0;                  // not reached
+    return NS_OK;                  // not reached
 }
 
 nsresult
@@ -371,7 +371,7 @@ Sanity3_Child()
 
     m4.Lock();
     m1.Lock();
-    return 0;
+    return NS_OK;
 }
 
 nsresult
@@ -403,7 +403,7 @@ Sanity4_Child()
     m1.Enter();
     m2.Lock();
     m1.Enter();
-    return 0;
+    return NS_OK;
 }
 
 nsresult
@@ -463,7 +463,7 @@ TwoThreads_Child()
     PRThread* t2 = spawn(TwoThreads_thread, (void*) 1);
     PR_JoinThread(t2);
 
-    return 0;
+    return NS_OK;
 }
 
 nsresult
@@ -522,7 +522,7 @@ ContentionNoDeadlock_Child()
     for (PRUint32 i = 0; i < ArrayLength(cndMs); ++i)
         delete cndMs[i];
 
-    return 0;
+    return NS_OK;
 }
 
 nsresult

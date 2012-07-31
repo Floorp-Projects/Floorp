@@ -1173,7 +1173,7 @@ nsPermissionManager::Import()
     if (lineArray[0].EqualsLiteral(kMatchTypeHost) &&
         lineArray.Length() == 4) {
       
-      PRInt32 error;
+      nsresult error;
       PRUint32 permission = lineArray[2].ToInteger(&error);
       if (error)
         continue;

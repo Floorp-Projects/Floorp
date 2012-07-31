@@ -10,7 +10,6 @@
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"
-#include "LayersBackend.h"
 
 using namespace mozilla::gfx;
 

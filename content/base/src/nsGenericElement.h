@@ -1021,7 +1021,10 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
                                                                             \
   nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
   nsresult rv = it->Init();                                                 \
-  rv |= const_cast<_elementName*>(this)->CopyInnerTo(it);                   \
+  nsresult rv2 = const_cast<_elementName*>(this)->CopyInnerTo(it);          \
+  if (NS_FAILED(rv2)) {                                                     \
+    rv = rv2;                                                               \
+  }                                                                         \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
@@ -1048,7 +1051,8 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   NS_IMETHODIMP                                                         \
   _class::Get##_method(nsAString& aValue)                               \
   {                                                                     \
-    return GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);        \
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);               \
+    return NS_OK;                                                       \
   }                                                                     \
   NS_IMETHODIMP                                                         \
   _class::Set##_method(const nsAString& aValue)                         \

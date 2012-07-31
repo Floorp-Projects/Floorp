@@ -3736,9 +3736,9 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 
         unsigned idx = 0;
         RootedId id(cx);
+        RootedValue value(cx);
         for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
-            Value value;
-            if (!pn->getConstantValue(cx, strictChecks, &value))
+            if (!pn->getConstantValue(cx, strictChecks, value.address()))
                 return false;
             id = INT_TO_JSID(idx);
             if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
@@ -3759,8 +3759,8 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             return false;
 
         for (ParseNode *pn = pn_head; pn; pn = pn->pn_next) {
-            Value value;
-            if (!pn->pn_right->getConstantValue(cx, strictChecks, &value))
+            RootedValue value(cx);
+            if (!pn->pn_right->getConstantValue(cx, strictChecks, value.address()))
                 return false;
 
             ParseNode *pnid = pn->pn_left;
@@ -5752,7 +5752,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(pn3->pn_atom));
-                if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
+                RootedValue undefinedValue(cx, UndefinedValue());
+                if (!DefineNativeProperty(cx, obj, id, undefinedValue, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {
                     return false;

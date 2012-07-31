@@ -101,9 +101,9 @@ JSBool xpc_IsReportableErrorCode(nsresult code)
         case NS_ERROR_FACTORY_REGISTER_AGAIN:
         case NS_BASE_STREAM_WOULD_BLOCK:
             return false;
+        default:
+            return true;
     }
-
-    return true;
 }
 
 // static

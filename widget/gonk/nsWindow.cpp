@@ -35,6 +35,7 @@
 #include "nsTArray.h"
 #include "nsWindow.h"
 #include "cutils/properties.h"
+#include "BasicLayers.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN, "Gonk", ## args)
@@ -143,7 +144,7 @@ static void *frameBufferWatcher(void *) {
             NS_DispatchToMainThread(mScreenOnEvent);
         }
     }
-    
+
     return NULL;
 }
 
@@ -162,7 +163,7 @@ nsWindow::nsWindow()
         }
 
         nsIntSize screenSize;
-        bool gotFB = Framebuffer::GetSize(&screenSize);
+        mozilla::DebugOnly<bool> gotFB = Framebuffer::GetSize(&screenSize);
         MOZ_ASSERT(gotFB);
         gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
 
@@ -249,7 +250,7 @@ nsWindow::DoDraw(void)
 
             // No double-buffering needed.
             AutoLayerManagerSetup setupLayerManager(
-                gWindowToRedraw, ctx, BasicLayerManager::BUFFER_NONE,
+                gWindowToRedraw, ctx, mozilla::layers::BUFFER_NONE,
                 ScreenRotation(EffectiveScreenRotation()));
             gWindowToRedraw->mEventCallback(&event);
         }
@@ -689,7 +690,7 @@ nsScreenGonk::GetRotation(PRUint32* aRotation)
 NS_IMETHODIMP
 nsScreenGonk::SetRotation(PRUint32 aRotation)
 {
-    if (!(ROTATION_0_DEG <= aRotation && aRotation <= ROTATION_270_DEG))
+    if (!(aRotation <= ROTATION_270_DEG))
         return NS_ERROR_ILLEGAL_VALUE;
 
     if (sScreenRotation == aRotation)

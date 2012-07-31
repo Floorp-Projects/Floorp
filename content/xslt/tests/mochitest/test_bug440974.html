@@ -26,14 +26,14 @@ function isTxResult(node)
 }
 
 var xmldoc, xsltdoc;
-[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(String(xml), "text/xml") for each (xml in [ 
+[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for each (xml in [ 
 
-    <items><item><id>1</id></item><item><id>2</id></item><item><id>3</id></item></items> ,
+    '<items><item><id>1</id></item><item><id>2</id></item><item><id>3</id></item></items>' ,
 
-    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-        <xsl:output method="xml" />
-        <xsl:template match="item"><foo id="{id}"/></xsl:template>
-    </xsl:stylesheet>
+    '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+        <xsl:output method="xml" />\n\
+        <xsl:template match="item"><foo id="{id}"/></xsl:template>\n\
+    </xsl:stylesheet>'
 
 ]) ];
 var processor = new XSLTProcessor;

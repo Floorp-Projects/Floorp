@@ -17,6 +17,7 @@
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIURI.h"
+#include "nsIDocument.h"
 #include "nsNetUtil.h"
 
 ///////////////////////////////////////////////////////////////////////////////

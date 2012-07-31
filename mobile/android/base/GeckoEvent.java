@@ -5,16 +5,20 @@
 
 package org.mozilla.gecko;
 
-import android.app.*;
-import android.content.*;
-import android.graphics.*;
-import android.hardware.*;
-import android.location.*;
-import android.os.*;
+import android.graphics.Point;
+import android.graphics.PointF;
+import android.graphics.Rect;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Location;
+import android.os.Build;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.*;
-import android.widget.*;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.ViewportMetrics;

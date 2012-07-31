@@ -402,7 +402,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             if (wrappedProto && IsCrossCompartmentWrapper(wrappedProto) &&
                 (unwrappedProto = Wrapper::wrappedObject(wrappedProto))) {
                 JSAutoEnterCompartment ac;
-                if (!ac.enter(cx, obj))
+                if (!ac.enter(cx, unwrappedProto))
                     return NULL;
                 key = JS_IdentifyClassPrototype(cx, unwrappedProto);
             }

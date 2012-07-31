@@ -711,9 +711,8 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   SECItem altNameExtension = {siBuffer, NULL, 0 };
   CERTGeneralName *sanNameList = nullptr;
 
-  nsresult rv;
-  rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
-                              &altNameExtension);
+  SECStatus rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
+                                        &altNameExtension);
   if (rv != SECSuccess)
     return false;
 

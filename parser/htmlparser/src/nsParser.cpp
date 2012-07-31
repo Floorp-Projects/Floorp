@@ -198,7 +198,7 @@ nsParser::Initialize(bool aConstructor)
   mCharsetSource = kCharsetUninitialized;
   mCharset.AssignLiteral("ISO-8859-1");
   mInternalState = NS_OK;
-  mStreamStatus = 0;
+  mStreamStatus = NS_OK;
   mCommand = eViewNormal;
   mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
            NS_PARSER_FLAG_PARSER_ENABLED |

@@ -6,26 +6,37 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
-import org.json.*;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.WebAppAllocator;
 
-import android.os.*;
-import android.content.*;
-import android.app.*;
-import android.text.*;
-import android.util.*;
-import android.widget.*;
-import android.database.sqlite.*;
-import android.database.*;
-import android.view.*;
-import android.net.Uri;
-import android.graphics.*;
-
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
+import android.view.Window;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 public class LauncherShortcuts extends Activity {
 

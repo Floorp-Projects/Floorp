@@ -170,7 +170,10 @@ nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult,
     rv = file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
 #endif
     // We must create the profile directory here if it does not exist.
-    rv |= EnsureDirectoryExists(file);
+    nsresult tmp = EnsureDirectoryExists(file);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
   }
   file.swap(*aResult);
   return rv;
@@ -192,7 +195,10 @@ nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult,
     rv = file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
 #endif
     // We must create the profile directory here if it does not exist.
-    rv |= EnsureDirectoryExists(file);
+    nsresult tmp = EnsureDirectoryExists(file);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
   }
   file.swap(*aResult);
   return NS_OK;
@@ -395,8 +401,14 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     }
     else if (!strcmp(aProperty, NS_APP_PREFS_OVERRIDE_DIR)) {
       rv = mProfileDir->Clone(getter_AddRefs(file));
-      rv |= file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
-      rv |= EnsureDirectoryExists(file);
+      nsresult tmp = file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
+      if (NS_FAILED(tmp)) {
+        rv = tmp;
+      }
+      tmp = EnsureDirectoryExists(file);
+      if (NS_FAILED(tmp)) {
+        rv = tmp;
+      }
     }
   }
   if (NS_FAILED(rv) || !file)
