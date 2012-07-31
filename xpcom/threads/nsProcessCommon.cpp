@@ -67,6 +67,7 @@ nsProcess::nsProcess()
     : mThread(nullptr)
     , mLock("nsProcess.mLock")
     , mShutdown(false)
+    , mBlocking(false)
     , mPid(-1)
     , mObserver(nullptr)
     , mWeakObserver(nullptr)
@@ -222,9 +223,11 @@ static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine,
 
 void PR_CALLBACK nsProcess::Monitor(void *arg)
 {
-    PR_SetCurrentThreadName("RunProcess");
-
     nsRefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(arg));
+
+    if (!process->mBlocking)
+        PR_SetCurrentThreadName("RunProcess");
+
 #if defined(PROCESSMODEL_WINAPI)
     DWORD dwRetVal;
     unsigned long exitCode = -1;
@@ -507,6 +510,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
 #endif
 
     NS_ADDREF_THIS();
+    mBlocking = blocking;
     if (blocking) {
         Monitor(this);
         if (mExitValue < 0)
