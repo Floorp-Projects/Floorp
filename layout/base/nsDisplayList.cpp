@@ -276,7 +276,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   nsStyleContext* styleContext = aFrame->GetStyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
-  float scale = nsDeviceContext::AppUnitsPerCSSPixel();
+  float scale = presContext->AppUnitsPerDevPixel();
 
   float iterations = ea->mIterationCount != NS_IEEEPositiveInfinity()
                      ? ea->mIterationCount : -1;
