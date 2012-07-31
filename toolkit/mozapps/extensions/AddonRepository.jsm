@@ -1587,7 +1587,7 @@ var AddonDatabase = {
       ERROR("Failed to open database", e);
       if (aSecondAttempt || dbMissing) {
         this.databaseOk = false;
-        throw e;
+        throw Components.Exception("Failed to open database: " + e, e.result);
       }
       return tryAgain();
     }
@@ -1727,7 +1727,8 @@ var AddonDatabase = {
       return this.asyncStatementsCache[aKey] = this.connection.createAsyncStatement(sql);
     } catch (e) {
       ERROR("Error creating statement " + aKey + " (" + sql + ")");
-      throw e;
+      throw Components.Exception("Error creating statement " + aKey + " (" + sql + "): " + e,
+                                 e.result);
     }
   },
 

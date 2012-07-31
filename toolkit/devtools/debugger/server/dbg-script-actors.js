@@ -1,4 +1,4 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; js-indent-level: 2; -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,8 @@ function ThreadActor(aHooks)
   this._frameActors = [];
   this._environmentActors = [];
   this._hooks = aHooks ? aHooks : {};
+  this._breakpointStore = {};
+  this._scripts = {};
 }
 
 ThreadActor.prototype = {
@@ -41,10 +43,6 @@ ThreadActor.prototype = {
     }
     return this._threadLifetimePool;
   },
-
-  _breakpointStore: {},
-
-  _scripts: {},
 
   /**
    * Add a debuggee global to the Debugger object.
