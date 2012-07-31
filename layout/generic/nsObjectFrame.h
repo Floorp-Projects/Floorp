@@ -14,8 +14,6 @@
 #include "nsRegion.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
-#include "Layers.h"
-#include "ImageLayers.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
@@ -26,6 +24,14 @@ class nsPresContext;
 class nsDisplayPlugin;
 class nsIOSurface;
 class PluginBackgroundSink;
+
+namespace mozilla {
+namespace layers {
+class ImageContainer;
+class Layer;
+class LayerManager;
+}
+}
 
 #define nsObjectFrameSuper nsFrame
 

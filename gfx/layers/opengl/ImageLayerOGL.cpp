@@ -12,7 +12,6 @@
 #include "gfxUtils.h"
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
-#include "LayersBackend.h"
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
 # include "GLXLibrary.h"
 # include "mozilla/X11Util.h"

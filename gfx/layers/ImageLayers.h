@@ -16,7 +16,6 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/Mutex.h"
 #include "gfxPlatform.h"
-#include "LayersBackend.h"
 
 #ifdef XP_MACOSX
 #include "nsIOSurface.h"

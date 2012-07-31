@@ -105,7 +105,7 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
 }
 
 /*
- * Send Stereo Control Information. Used mainly to re-route 
+ * Send Stereo Control Information. Used mainly to re-route
  * calls from ImageLayerD3D9 to the 3DV COM object
  */
 void 
@@ -119,10 +119,10 @@ Nv3DVUtils::SendNv3DVControl(Nv_Stereo_Mode eStereoMode, bool bEnableStereo, DWO
 }
 
 /*
- * Send Stereo Metadata. Used mainly to re-route calls 
+ * Send Stereo Metadata. Used mainly to re-route calls
  * from ImageLayerD3D9 to the 3DV COM object
  */
-void 
+void
 Nv3DVUtils::SendNv3DVMetaData(unsigned int dwWidth, unsigned int dwHeight, HANDLE hSrcLuma, HANDLE hDst)
 {
   if (!m3DVStreaming)
