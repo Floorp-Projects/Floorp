@@ -396,8 +396,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           }
 
           // don't need to double buffer with anything but GDI
-          BasicLayerManager::BufferMode doubleBuffering =
-            BasicLayerManager::BUFFER_NONE;
+          BufferMode doubleBuffering = mozilla::layers::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
 #ifdef MOZ_XUL
             switch (mTransparencyMode) {
@@ -405,7 +404,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
               case eTransparencyBorderlessGlass:
               default:
                 // If we're not doing translucency, then double buffer
-                doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+                doubleBuffering = mozilla::layers::BUFFER_BUFFERED;
                 break;
               case eTransparencyTransparent:
                 // If we're rendering with translucency, we're going to be
@@ -416,7 +415,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
                 break;
             }
 #else
-            doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+            doubleBuffering = mozilla::layers::BUFFER_BUFFERED;
 #endif
           }
 

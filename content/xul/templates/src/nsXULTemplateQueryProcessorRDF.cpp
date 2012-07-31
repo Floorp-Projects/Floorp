@@ -1321,7 +1321,7 @@ nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType,
 
     if (aParseType.EqualsLiteral(PARSE_TYPE_INTEGER)) {
         nsCOMPtr<nsIRDFInt> intLiteral;
-        PRInt32 errorCode;
+        nsresult errorCode;
         PRInt32 intValue = aValue.ToInteger(&errorCode);
         if (NS_FAILED(errorCode))
             return NS_ERROR_FAILURE;

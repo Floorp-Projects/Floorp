@@ -17,11 +17,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=564330
 </div>
 <pre id="test">
 <script type="application/javascript">
+function getAllowXML(){
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getBoolPref("javascript.options.xml.content");
+}
 
+function setAllowXML(value){
+  // Set the value for e4x
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("javascript.options.xml.content", value);
+}
+
+// Save the initial preference
+var default_allow_xml = getAllowXML();
+function restoreAllowXML(){
+    setAllowXML(default_allow_xml);
+}
+
+setAllowXML(true);
+</script>
+<script>
 /** Test for Bug 564330 **/
 var pass = false;
 try {
-    document.createElement("span").setUserData("x", <y/>, null);
+    document.createElement("span").setUserData("x", eval('<y/>'), null);
 } catch (e) {
     pass = true;
 }
@@ -30,7 +51,7 @@ try {
 <script>
 
 ok(pass, "pass was set to true");
-
+restoreAllowXML();
 </script>
 </pre>
 </body>

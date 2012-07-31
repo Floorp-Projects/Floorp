@@ -3024,6 +3024,7 @@ pkix_Build_CheckInCache(
         PKIX_PL_Date *testDate = NULL;
         PKIX_BuildResult *buildResult = NULL;
         PKIX_ValidateResult *valResult = NULL;
+        PKIX_Error *buildError = NULL;
         PKIX_TrustAnchor *matchingAnchor = NULL;
         PKIX_PL_Cert *trustedCert = NULL;
         PKIX_List *certList = NULL;
@@ -3132,16 +3133,20 @@ cleanup:
             /* The anchor of this chain is no longer trusted or
              * chain cert(s) has been revoked.
              * Invalidate this result in the cache */
+            buildError = pkixErrorResult;
             PKIX_CHECK_FATAL(pkix_CacheCertChain_Remove
                        (targetCert,
                         anchors,
                         plContext),
                        PKIX_CACHECERTCHAINREMOVEFAILED);
+            pkixErrorResult = buildError;
+            buildError = NULL;
         }
 
 fatal:
        PKIX_DECREF(buildResult);
        PKIX_DECREF(valResult);
+       PKIX_DECREF(buildError);
        PKIX_DECREF(certList);
        PKIX_DECREF(matchingAnchor);
        PKIX_DECREF(trustedCert);

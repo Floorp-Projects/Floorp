@@ -42,6 +42,8 @@ struct Parser : private AutoGCRooter
 
     TreeContext         *tc;            /* innermost tree context (stack-allocated) */
 
+    SourceCompressionToken *sct;        /* compression token for aborting */
+
     /* Root atoms and objects allocated for the parsed tree. */
     AutoKeepAtoms       keepAtoms;
 

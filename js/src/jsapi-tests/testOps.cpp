@@ -11,10 +11,10 @@
 #include "tests.h"
 
 static JSBool
-my_convert(JSContext* context, JS::HandleObject obj, JSType type, jsval* rval)
+my_convert(JSContext* context, JS::HandleObject obj, JSType type, JS::MutableHandleValue rval)
 {
     if (type == JSTYPE_VOID || type == JSTYPE_STRING || type == JSTYPE_NUMBER || type == JSTYPE_BOOLEAN)
-        return JS_NewNumberValue(context, 123, rval);
+        return JS_NewNumberValue(context, 123, rval.address());
     return JS_FALSE;
 }
 

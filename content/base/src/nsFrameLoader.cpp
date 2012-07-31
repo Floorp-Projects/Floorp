@@ -2342,3 +2342,4 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
                         "remote-browser-frame-shown", NULL);
   }
 }
+

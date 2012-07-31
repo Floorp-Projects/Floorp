@@ -213,7 +213,7 @@ XULMenuitemAccessible::KeyboardShortcut() const
   if (keyStr.IsEmpty()) {
     nsAutoString keyCodeStr;
     keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCodeStr);
-    PRUint32 errorCode;
+    nsresult errorCode;
     key = keyStr.ToInteger(&errorCode, kAutoDetect);
   } else {
     key = keyStr[0];
@@ -538,7 +538,7 @@ XULMenupopupAccessible::ContainerWidget() const
     if (!menuPopup) // shouldn't be a real case
       return nullptr;
 
-    nsMenuFrame* menuFrame = menuPopupFrame->GetParentMenu();
+    nsMenuFrame* menuFrame = do_QueryFrame(menuPopupFrame->GetParent());
     if (!menuFrame) // context menu or popups
       return nullptr;
 

@@ -450,6 +450,14 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, b
     nsRect rect = GetRect();
     rect.x = rect.y = 0;
 
+    if (sizeChanged) {
+      // If the size of the popup changed, apply any size constraints.
+      nsIWidget* widget = view->GetWidget();
+      if (widget) {
+        SetSizeConstraints(pc, widget, minSize, maxSize);
+      }
+    }
+
     viewManager->ResizeView(view, rect);
 
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
@@ -473,7 +481,7 @@ nsMenuPopupFrame::GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame)
       return aMenuPopupFrame->mTriggerContent;
 
     // check up the menu hierarchy until a popup with a trigger node is found
-    nsMenuFrame* menuFrame = aMenuPopupFrame->GetParentMenu();
+    nsMenuFrame* menuFrame = do_QueryFrame(aMenuPopupFrame->GetParent());
     if (!menuFrame)
       break;
 
@@ -629,7 +637,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
 
-    PRInt32 err;
+    nsresult err;
     if (!left.IsEmpty()) {
       PRInt32 x = left.ToInteger(&err);
       if (NS_SUCCEEDED(err))
@@ -705,7 +713,7 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu, bool aSelectFirstItem)
     mPopupState = ePopupOpen;
     mIsOpenChanged = true;
 
-    nsMenuFrame* menuFrame = GetParentMenu();
+    nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
     if (menuFrame) {
       nsWeakFrame weakFrame(this);
       menuFrame->PopupOpened();
@@ -799,7 +807,7 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
     esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
   }
 
-  nsMenuFrame* menuFrame = GetParentMenu();
+  nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
   if (menuFrame) {
     menuFrame->PopupClosed(aDeselectMenu);
   }
@@ -1640,24 +1648,25 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
       if (StringBeginsWith(textKey, incrementalString,
                            nsCaseInsensitiveStringComparator())) {
         // mIncrementalString is a prefix of textKey
-        if (currFrame->GetType() == nsGkAtoms::menuFrame) {
+        nsMenuFrame* menu = do_QueryFrame(currFrame);
+        if (menu) {
           // There is one match
           matchCount++;
           if (isShortcut) {
             // There is one shortcut-key match
             matchShortcutCount++;
             // Record the matched item. If there is only one matched shortcut item, do it
-            frameShortcut = static_cast<nsMenuFrame *>(currFrame);
+            frameShortcut = menu;
           }
           if (!foundActive) {
             // It's a first candidate item located before/on the current item
             if (!frameBefore)
-              frameBefore = static_cast<nsMenuFrame *>(currFrame);
+              frameBefore = menu;
           }
           else {
             // It's a first candidate item located after the current item
             if (!frameAfter)
-              frameAfter = static_cast<nsMenuFrame *>(currFrame);
+              frameAfter = menu;
           }
         }
         else
@@ -1711,9 +1720,9 @@ nsMenuPopupFrame::LockMenuUntilClosed(bool aLock)
   mIsMenuLocked = aLock;
 
   // Lock / unlock the parent, too.
-  nsIFrame* parent = GetParent();
-  if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
-    nsMenuParent* parentParent = static_cast<nsMenuFrame*>(parent)->GetMenuParent();
+  nsMenuFrame* menu = do_QueryFrame(GetParent());
+  if (menu) {
+    nsMenuParent* parentParent = menu->GetMenuParent();
     if (parentParent) {
       parentParent->LockMenuUntilClosed(aLock);
     }
@@ -1791,7 +1800,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
   nsAutoString left, top;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
-  PRInt32 err1, err2;
+  nsresult err1, err2;
   PRInt32 xpos = left.ToInteger(&err1);
   PRInt32 ypos = top.ToInteger(&err2);
 
@@ -1802,11 +1811,11 @@ nsMenuPopupFrame::MoveToAttributePosition()
 void
 nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsIFrame* parent = GetParent();
-  if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+  nsMenuFrame* menu = do_QueryFrame(GetParent());
+  if (menu) {
     // clear the open attribute on the parent menu
     nsContentUtils::AddScriptRunner(
-      new nsUnsetAttrRunnable(parent->GetContent(), nsGkAtoms::open));
+      new nsUnsetAttrRunnable(menu->GetContent(), nsGkAtoms::open));
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();

@@ -601,7 +601,7 @@ nsListBoxBodyFrame::GetRowCount()
 PRInt32
 nsListBoxBodyFrame::GetFixedRowSize()
 {
-  PRInt32 dummy;
+  nsresult dummy;
 
   nsAutoString rows;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);

@@ -415,10 +415,12 @@ public:
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
 
-  // Read header data for all bitstreams in the file. Fills mInfo with
-  // the data required to present the media. Returns NS_OK on success,
-  // or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(nsVideoInfo* aInfo) = 0;
+  // Read header data for all bitstreams in the file. Fills aInfo with
+  // the data required to present the media, and optionally fills *aTags
+  // with tag metadata from the file.
+  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
+  virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
+                                nsHTMLMediaElement::MetadataTags** aTags) = 0;
 
   // Stores the presentation time of the first frame we'd be able to play if
   // we started playback at the current position. Returns the first video

@@ -324,7 +324,7 @@ CreateIFoo( IFoo** result )
     *result = foop;
 
     printf("<<CreateIFoo()\n");
-    return 0;
+    return NS_OK;
   }
 
 PLDHashOperator

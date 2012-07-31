@@ -105,34 +105,70 @@ FileSystemDataSource::Init()
 
     rv =  mRDFService->GetResource(NS_LITERAL_CSTRING("NC:FilesRoot"),
                                    getter_AddRefs(mNC_FileSystemRoot));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "child"),
+    nsresult tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "child"),
                                    getter_AddRefs(mNC_Child));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Name"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Name"),
                                    getter_AddRefs(mNC_Name));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "URL"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "URL"),
                                    getter_AddRefs(mNC_URL));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Icon"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Icon"),
                                    getter_AddRefs(mNC_Icon));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Content-Length"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "Content-Length"),
                                    getter_AddRefs(mNC_Length));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "IsDirectory"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "IsDirectory"),
                                    getter_AddRefs(mNC_IsDirectory));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastModifiedDate"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(WEB_NAMESPACE_URI "LastModifiedDate"),
                                    getter_AddRefs(mWEB_LastMod));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "FileSystemObject"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "FileSystemObject"),
                                    getter_AddRefs(mNC_FileSystemObject));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "pulse"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI  "pulse"),
                                    getter_AddRefs(mNC_pulse));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
                                    getter_AddRefs(mRDF_InstanceOf));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                                    getter_AddRefs(mRDF_type));
 
     static const PRUnichar kTrue[] = {'t','r','u','e','\0'};
     static const PRUnichar kFalse[] = {'f','a','l','s','e','\0'};
 
-    rv |= mRDFService->GetLiteral(kTrue, getter_AddRefs(mLiteralTrue));
-    rv |= mRDFService->GetLiteral(kFalse, getter_AddRefs(mLiteralFalse));
+    tmp = mRDFService->GetLiteral(kTrue, getter_AddRefs(mLiteralTrue));
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+    tmp = mRDFService->GetLiteral(kFalse, getter_AddRefs(mLiteralFalse));
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
 #ifdef USE_NC_EXTENSION
@@ -144,8 +180,11 @@ FileSystemDataSource::Init()
 #ifdef XP_WIN
     rv =  mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
                                   getter_AddRefs(mNC_IEFavoriteObject));
-    rv |= mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
+    tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
                                    getter_AddRefs(mNC_IEFavoriteFolder));
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIFile> file;
@@ -975,7 +1014,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
     if (!fileURL)
-        return(false);
+        return NS_OK;
 
     nsCOMPtr<nsIFile>   aDir;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aDir))))
@@ -1083,7 +1122,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
     if (!fileURL)
-        return(false);
+        return NS_OK;
 
     nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
@@ -1130,7 +1169,7 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
     if (!fileURL)
-        return(false);
+        return NS_OK;
 
     nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
@@ -1181,7 +1220,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
     if (!fileURL)
-        return(false);
+        return NS_OK;
 
     nsCOMPtr<nsIFile>   aFile;
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))

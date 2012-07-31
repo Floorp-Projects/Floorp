@@ -206,7 +206,8 @@ amManager.prototype = {
   _xpcom_factory: {
     createInstance: function(aOuter, aIid) {
       if (aOuter != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("Component does not support aggregation",
+                                   Cr.NS_ERROR_NO_AGGREGATION);
   
       if (!gSingleton)
         gSingleton = new amManager();
