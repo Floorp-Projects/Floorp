@@ -35,7 +35,8 @@ nsresult nsMediaPluginReader::Init(nsBuiltinDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-nsresult nsMediaPluginReader::ReadMetadata(nsVideoInfo* aInfo)
+nsresult nsMediaPluginReader::ReadMetadata(nsVideoInfo* aInfo,
+                                           nsHTMLMediaElement::MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -89,6 +90,7 @@ nsresult nsMediaPluginReader::ReadMetadata(nsVideoInfo* aInfo)
   }
 
  *aInfo = mInfo;
+ *aTags = nullptr;
   return NS_OK;
 }
 

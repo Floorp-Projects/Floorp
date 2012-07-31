@@ -194,7 +194,8 @@ void nsGStreamerReader::PlayBinSourceSetup(GstAppSrc *aSource)
   }
 }
 
-nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo)
+nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo,
+                                         nsHTMLMediaElement::MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   nsresult ret = NS_OK;
@@ -303,6 +304,8 @@ nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo)
   mInfo.mHasAudio = n_audio != 0;
 
   *aInfo = mInfo;
+
+  *aTags = nullptr;
 
   /* set the pipeline to PLAYING so that it starts decoding and queueing data in
    * the appsinks */
