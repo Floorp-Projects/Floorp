@@ -8,11 +8,13 @@ package org.mozilla.gecko;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.RemoteViews;
-import java.net.*;
+
+import java.net.URL;
 import java.text.NumberFormat;
 
 public class AlertNotification

@@ -11,7 +11,7 @@
 static int g_counter;
 
 static JSBool
-CounterAdd(JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp)
+CounterAdd(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
     g_counter++;
     return JS_TRUE;

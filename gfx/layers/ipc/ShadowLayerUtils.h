@@ -9,7 +9,7 @@
 #define IPC_ShadowLayerUtils_h
 
 #include "IPC/IPCMessageUtils.h"
-#include "Layers.h"
+#include "FrameMetrics.h"
 #include "GLContext.h"
 #include "mozilla/WidgetUtils.h"
 

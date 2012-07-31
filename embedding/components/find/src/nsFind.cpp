@@ -379,19 +379,19 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
 
     // make sure to place the outer-iterator outside
     // the text control so that we don't go there again.
-    nsresult res;
+    nsresult res1, res2;
     nsCOMPtr<nsIDOMNode> outerNode(do_QueryInterface(aContent));
     if (!mFindBackward) { // find forward
       // cut the outer-iterator after the current node
-      res = outerRange->SetEnd(mEndNode, mEndOffset);
-      res |= outerRange->SetStartAfter(outerNode);
+      res1 = outerRange->SetEnd(mEndNode, mEndOffset);
+      res2 = outerRange->SetStartAfter(outerNode);
     }
     else { // find backward
       // cut the outer-iterator before the current node
-      res = outerRange->SetStart(mStartNode, mStartOffset);
-      res |= outerRange->SetEndBefore(outerNode);
+      res1 = outerRange->SetStart(mStartNode, mStartOffset);
+      res2 = outerRange->SetEndBefore(outerNode);
     }
-    if (NS_FAILED(res)) {
+    if (NS_FAILED(res1) || NS_FAILED(res2)) {
       // we are done with the outer-iterator, the 
       // inner-iterator will traverse what we want
       outerRange->Collapse(true);

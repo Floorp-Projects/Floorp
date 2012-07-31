@@ -570,7 +570,7 @@ JSStructuredCloneWriter::write(const Value &v)
                 }
 
                 if (prop) {
-                    Value val;
+                    RootedValue val(context());
                     if (!writeId(id) ||
                         !obj->getGeneric(context(), id, &val) ||
                         !startWrite(val))
@@ -911,8 +911,8 @@ JSStructuredCloneReader::read(Value *vp)
         if (JSID_IS_VOID(id)) {
             objs.popBack();
         } else {
-            Value v;
-            if (!startRead(&v) || !obj->defineGeneric(context(), id, v))
+            RootedValue v(context());
+            if (!startRead(v.address()) || !obj->defineGeneric(context(), id, v))
                 return false;
         }
     }

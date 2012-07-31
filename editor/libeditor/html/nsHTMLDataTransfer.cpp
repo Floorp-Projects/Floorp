@@ -1043,7 +1043,7 @@ FindIntegerAfterString(const char *aLeadingString,
     return false;
 
   nsCAutoString numStr(Substring(aCStr, numFront, numBack-numFront));
-  PRInt32 errorCode;
+  nsresult errorCode;
   foundNumber = numStr.ToInteger(&errorCode);
   return true;
 }
@@ -2289,12 +2289,13 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsAutoString numstr1, numstr2;
   if (!aInfoStr.IsEmpty())
   {
-    PRInt32 err, sep, num;
+    PRInt32 sep, num;
     sep = aInfoStr.FindChar((PRUnichar)',');
     numstr1 = Substring(aInfoStr, 0, sep);
     numstr2 = Substring(aInfoStr, sep+1, aInfoStr.Length() - (sep+1));
 
     // Move the start and end children.
+    nsresult err;
     num = numstr1.ToInteger(&err);
     while (num--)
     {

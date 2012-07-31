@@ -412,7 +412,7 @@ protected:
     
     eParserCommands     mCommand;
     nsresult            mInternalState;
-    PRInt32             mStreamStatus;
+    nsresult            mStreamStatus;
     PRInt32             mCharsetSource;
     
     PRUint16            mFlags;

@@ -385,6 +385,7 @@ public:
   virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
   virtual NS_HIDDEN_(bool) IsPartOfApp();
+  virtual NS_HIDDEN_(bool) IsInAppOrigin();
 
   // nsIDOMStorageIndexedDB
   NS_DECL_NSIDOMSTORAGEINDEXEDDB
@@ -977,6 +978,9 @@ protected:
   // This is TriState_Unknown if the object is the content window of an
   // iframe which is neither mozBrowser nor mozApp.
   TriState               mIsApp : 2;
+
+  // Principal of the web app running in this window, if any.
+  nsCOMPtr<nsIPrincipal>        mAppPrincipal;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;

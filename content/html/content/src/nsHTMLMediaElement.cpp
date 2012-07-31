@@ -599,7 +599,9 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mDownloadSuspendedByCache = false;
   mSourcePointer = nullptr;
 
-  // TODO: The playback rate must be set to the default playback rate.
+  mChannels = 0;
+  mRate = 0;
+  mTags = nullptr;
 
   if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
@@ -1422,6 +1424,49 @@ nsHTMLMediaElement::GetMozSampleRate(PRUint32 *aMozSampleRate)
   }
 
   *aMozSampleRate = mRate;
+  return NS_OK;
+}
+
+// Helper struct with arguments for our hash iterator.
+typedef struct {
+  JSContext* cx;
+  JSObject*  tags;
+} MetadataIterCx;
+
+PLDHashOperator
+nsHTMLMediaElement::BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
+                                        nsCString aValue,
+                                        void* aUserArg)
+{
+  MetadataIterCx* args = static_cast<MetadataIterCx*>(aUserArg);
+
+  nsString wideValue = NS_ConvertUTF8toUTF16(aValue);
+  JSString* string = JS_NewUCStringCopyZ(args->cx, wideValue.Data());
+  JS::Value value = STRING_TO_JSVAL(string);
+  if (!JS_SetProperty(args->cx, args->tags, aKey.Data(), &value)) {
+    NS_WARNING("Failed to set metadata property");
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::MozGetMetadata(JSContext* cx, JS::Value* aValue)
+{
+  if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  JSObject* tags = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!tags) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mTags) {
+    MetadataIterCx iter = {cx, tags};
+    mTags->EnumerateRead(BuildObjectFromTags, static_cast<void*>(&iter));
+  }
+  *aValue = OBJECT_TO_JSVAL(tags);
+
   return NS_OK;
 }
 
@@ -2638,11 +2683,15 @@ void nsHTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
-void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate, bool aHasAudio)
+void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels,
+                                        PRUint32 aRate,
+                                        bool aHasAudio,
+                                        const MetadataTags* aTags)
 {
   mChannels = aChannels;
   mRate = aRate;
   mHasAudio = aHasAudio;
+  mTags = aTags;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));

@@ -121,23 +121,26 @@ private:
   nsCOMPtr<nsBuiltinDecoder> mDecoder;
 public:
   nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, PRUint32 aChannels,
-                             PRUint32 aRate, bool aHasAudio) :
+                             PRUint32 aRate, bool aHasAudio,
+                             nsHTMLMediaElement::MetadataTags* aTags) :
     mDecoder(aDecoder),
     mChannels(aChannels),
     mRate(aRate),
-    mHasAudio(aHasAudio)
+    mHasAudio(aHasAudio),
+    mTags(aTags)
   {
   }
 
   NS_IMETHOD Run()
   {
-    mDecoder->MetadataLoaded(mChannels, mRate, mHasAudio);
+    mDecoder->MetadataLoaded(mChannels, mRate, mHasAudio, mTags);
     return NS_OK;
   }
 
   const PRUint32 mChannels;
   const PRUint32 mRate;
   const bool mHasAudio;
+  nsHTMLMediaElement::MetadataTags* mTags;
 };
 
 // Owns the global state machine thread and counts of
@@ -1744,9 +1747,10 @@ nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
   LOG(PR_LOG_DEBUG, ("%p Decoding Media Headers", mDecoder.get()));
   nsresult res;
   nsVideoInfo info;
+  nsHTMLMediaElement::MetadataTags* tags;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    res = mReader->ReadMetadata(&info);
+    res = mReader->ReadMetadata(&info, &tags);
   }
   mInfo = info;
 
@@ -1800,7 +1804,11 @@ nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
     mDecoder->RequestFrameBufferLength(frameBufferLength);
   }
   nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate, HasAudio());
+    new nsAudioMetadataEventRunner(mDecoder,
+                                   mInfo.mAudioChannels,
+                                   mInfo.mAudioRate,
+                                   HasAudio(),
+                                   tags);
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
   if (mState == DECODER_STATE_DECODING_METADATA) {

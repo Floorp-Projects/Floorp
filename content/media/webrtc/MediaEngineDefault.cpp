@@ -25,6 +25,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
 /**
  * Default video source.
  */
+
+MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
+  : mTimer(nsnull), mState(kReleased)
+{}
+
+MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()
+{}
+
 void
 MediaEngineDefaultVideoSource::GetName(nsAString& aName)
 {

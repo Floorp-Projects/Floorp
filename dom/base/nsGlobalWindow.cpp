@@ -10662,6 +10662,34 @@ nsGlobalWindow::SetIsApp(bool aValue)
 }
 
 bool
+nsGlobalWindow::IsInAppOrigin()
+{
+  FORWARD_TO_OUTER(IsInAppOrigin, (), false);
+
+  nsIPrincipal* principal = GetPrincipal();
+  NS_ENSURE_TRUE(principal != nullptr, false);
+
+  // We go trough all window parents until we find one with |mIsApp| set to
+  // something. If none is found, we are not part of an application.
+  for (nsGlobalWindow* w = static_cast<nsGlobalWindow*>(this); w;
+      w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
+    if (w->mIsApp == TriState_True) {
+      // The window should be part of an application.
+      MOZ_ASSERT(w->mApp);
+      bool sameOrigin = false;
+      return w->mAppPrincipal &&
+             principal &&
+             NS_SUCCEEDED(principal->Equals(w->mAppPrincipal, &sameOrigin)) &&
+             sameOrigin;
+    } else if (w->mIsApp == TriState_False) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+bool
 nsGlobalWindow::IsPartOfApp()
 {
   nsCOMPtr<mozIDOMApplication> app;
@@ -10690,6 +10718,14 @@ nsGlobalWindow::SetApp(const nsAString& aManifestURL)
     NS_WARNING("No application found with the specified manifest URL");
     return NS_ERROR_FAILURE;
   }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult res = NS_NewURI(getter_AddRefs(uri), aManifestURL);
+  NS_ENSURE_SUCCESS(res, res);
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  res = ssm->GetSimpleCodebasePrincipal(uri, getter_AddRefs(mAppPrincipal));
+  NS_ENSURE_SUCCESS(res, res);
 
   mApp = app.forget();
 

@@ -1667,7 +1667,7 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
 PRInt32
 nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
 {
-  NS_ENSURE_ARG_POINTER(aFrame);
+  NS_ENSURE_TRUE(aFrame, -1);
   
   nsTableRowFrame *rowFrame = do_QueryFrame(aFrame);
   NS_ASSERTION(rowFrame, "RowGroup contains a frame that is not a row");

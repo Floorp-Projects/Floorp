@@ -1797,7 +1797,8 @@ DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
     bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
-        if (JSScript *script = GetTopScript(cx)) {
+        RootedScript script(cx, GetTopScript(cx));
+        if (script) {
             if (js_Disassemble(cx, script, p.lines, &sprinter)) {
                 SrcNotes(cx, script, &sprinter);
                 TryNotes(cx, script, &sprinter);
@@ -1834,7 +1835,8 @@ Disassemble(JSContext *cx, unsigned argc, jsval *vp)
     bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
-        if (JSScript *script = GetTopScript(cx)) {
+        RootedScript script(cx, GetTopScript(cx));
+        if (script) {
             if (js_Disassemble(cx, script, p.lines, &sprinter)) {
                 SrcNotes(cx, script, &sprinter);
                 TryNotes(cx, script, &sprinter);
@@ -1905,7 +1907,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
 {
 #define LINE_BUF_LEN 512
     unsigned i, len, line1, line2, bupline;
-    JSScript *script;
+    RootedScript script(cx);
     FILE *file;
     char linebuf[LINE_BUF_LEN];
     jsbytecode *pc, *end;
@@ -2713,18 +2715,22 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             return false;
         if (objp != referent)
             return true;
-        if (!referent->getGeneric(cx, id, &desc.value) ||
+        RootedValue value(cx);
+        if (!referent->getGeneric(cx, id, &value) ||
             !referent->getGenericAttributes(cx, id, &desc.attrs)) {
             return false;
         }
+        desc.value = value;
         desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
         desc.getter = JS_PropertyStub;
         desc.setter = JS_StrictPropertyStub;
         desc.shortid = 0;
     }
 
+    RootedValue value(cx, desc.value);
+
     objp.set(obj);
-    return !!DefineNativeProperty(cx, obj, id, desc.value, desc.getter, desc.setter,
+    return !!DefineNativeProperty(cx, obj, id, value, desc.getter, desc.setter,
                                   desc.attrs, propFlags, desc.shortid);
 }
 
@@ -3434,18 +3440,22 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 ParseLegacyJSON(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 1 || !JSVAL_IS_STRING(args[0])) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "parseLegacyJSON");
         return false;
     }
 
-    JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
+    JSString *str = JSVAL_TO_STRING(args[0]);
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
     if (!chars)
         return false;
-    return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), vp, LEGACY);
+
+    RootedValue value(cx, NullValue());
+    return js::ParseJSONWithReviver(cx, chars, length, value, args.rval(), LEGACY);
 }
 
 static JSBool
@@ -3899,10 +3909,10 @@ enum its_tinyid {
 };
 
 static JSBool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp);
+its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp);
+its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp);
 
 static JSBool
 its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
@@ -3932,51 +3942,51 @@ static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */
 
 static JSBool
-its_addProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!its_noisy)
         return true;
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, *vp);
+    ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return true;
 }
 
 static JSBool
-its_delProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!its_noisy)
         return true;
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, *vp);
+    ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return true;
 }
 
 static JSBool
-its_getProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!its_noisy)
         return true;
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, *vp);
+    ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return true;
 }
 
 static JSBool
-its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
     IdStringifier idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
-        ToStringHelper valueString(cx, *vp);
+        ToStringHelper valueString(cx, vp);
         fprintf(gOutFile, " new value %s\n", valueString.getBytes());
     }
 
@@ -3984,9 +3994,9 @@ its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsv
         return true;
 
     if (!strcmp(idString.getBytes(), "noisy"))
-        JS_ValueToBoolean(cx, *vp, &its_noisy);
+        JS_ValueToBoolean(cx, vp, &its_noisy);
     else if (!strcmp(idString.getBytes(), "enum_fail"))
-        JS_ValueToBoolean(cx, *vp, &its_enum_fail);
+        JS_ValueToBoolean(cx, vp, &its_enum_fail);
 
     return true;
 }
@@ -4055,7 +4065,7 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 }
 
 static JSBool
-its_convert(JSContext *cx, HandleObject obj, JSType type, jsval *vp)
+its_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     if (its_noisy)
         fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
@@ -4084,27 +4094,27 @@ static JSClass its_class = {
 };
 
 static JSBool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (JS_GetClass(obj) == &its_class) {
         jsval *val = (jsval *) JS_GetPrivate(obj);
-        *vp = val ? *val : JSVAL_VOID;
+        vp.set(val ? *val : JSVAL_VOID);
     } else {
-        *vp = JSVAL_VOID;
+        vp.set(JSVAL_VOID);
     }
 
     return true;
 }
 
 static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
     if (JS_GetClass(obj) != &its_class)
         return true;
 
     jsval *val = (jsval *) JS_GetPrivate(obj);
     if (val) {
-        *val = *vp;
+        *val = vp;
         return true;
     }
 
@@ -4121,7 +4131,7 @@ its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *v
 
     JS_SetPrivate(obj, (void*)val);
 
-    *val = *vp;
+    *val = vp;
     return true;
 }
 
@@ -4431,7 +4441,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -4440,7 +4450,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsv
     IdStringifier idstr(cx, id, true);
     if (idstr.threw())
         return false;
-    ToStringHelper valstr(cx, *vp, true);
+    ToStringHelper valstr(cx, vp, true);
     if (valstr.threw())
         return false;
 #if defined XP_WIN || defined HPUX || defined OSF1
@@ -4469,7 +4479,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsv
         JS_ReportError(cx, "can't set env variable %s to %s", idstr.getBytes(), valstr.getBytes());
         return false;
     }
-    *vp = valstr.getJSVal();
+    vp.set(valstr.getJSVal());
 #endif /* !defined XP_OS2 && !defined SOLARIS */
     return true;
 }

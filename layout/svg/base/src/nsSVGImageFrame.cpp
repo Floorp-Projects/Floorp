@@ -370,7 +370,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
         static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
       if (!rootSVGElem || !rootSVGElem->IsSVG(nsGkAtoms::svg)) {
         NS_ABORT_IF_FALSE(false, "missing or non-<svg> root node!!");
-        return false;
+        return NS_OK;
       }
 
       // Override preserveAspectRatio in our helper document

@@ -22,7 +22,7 @@
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
-#include "LayersBackend.h"
+#include "LayersTypes.h"
 
 // forward declarations
 class   nsFontMetrics;
@@ -162,7 +162,6 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
 };
-
 
 /**
  * Preference for receiving IME updates
@@ -351,6 +350,27 @@ struct InputContextAction {
   }
 };
 
+/**
+ * Size constraints for setting the minimum and maximum size of a widget.
+ * Values are in device pixels.
+ */
+struct SizeConstraints {
+  SizeConstraints()
+    : mMaxSize(NS_MAXSIZE, NS_MAXSIZE)
+  {
+  }
+
+  SizeConstraints(nsIntSize aMinSize,
+                  nsIntSize aMaxSize)
+  : mMinSize(aMinSize),
+    mMaxSize(aMaxSize)
+  {
+  }
+
+  nsIntSize mMinSize;
+  nsIntSize mMaxSize;
+};
+
 } // namespace widget
 } // namespace mozilla
 
@@ -369,6 +389,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::widget::IMEState IMEState;
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
+    typedef mozilla::widget::SizeConstraints SizeConstraints;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -658,7 +679,8 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD MoveClient(PRInt32 aX, PRInt32 aY) = 0;
 
     /**
-     * Resize this widget. 
+     * Resize this widget. Any size constraints set for the window by a
+     * previous call to SetSizeConstraints will be applied.
      *
      * @param aWidth  the new width expressed in the parent's coordinate system
      * @param aHeight the new height expressed in the parent's coordinate system
@@ -670,7 +692,8 @@ class nsIWidget : public nsISupports {
                       bool     aRepaint) = 0;
 
     /**
-     * Move or resize this widget.
+     * Move or resize this widget. Any size constraints set for the window by
+     * a previous call to SetSizeConstraints will be applied.
      *
      * @param aX       the new x position expressed in the parent's coordinate system
      * @param aY       the new y position expressed in the parent's coordinate system
@@ -1587,6 +1610,26 @@ class nsIWidget : public nsISupports {
         GetBounds(bounds);
         return bounds;
     }
+
+    /**
+     * Set size constraints on the window size such that it is never less than
+     * the specified minimum size and never larger than the specified maximum
+     * size. The size constraints are sizes of the outer rectangle including
+     * the window frame and title bar. Use 0 for an unconstrained minimum size
+     * and NS_MAXSIZE for an unconstrained maximum size. Note that this method
+     * does not necessarily change the size of a window to conform to this size,
+     * thus Resize should be called afterwards.
+     *
+     * @param aConstraints: the size constraints in device pixels
+     */
+    virtual void SetSizeConstraints(const SizeConstraints& aConstraints) = 0;
+
+    /**
+     * Return the size constraints currently observed by the widget.
+     *
+     * @return the constraints in device pixels
+     */
+    virtual const SizeConstraints& GetSizeConstraints() const = 0;
 
 protected:
 

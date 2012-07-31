@@ -15,6 +15,8 @@
 
 #include "js/Utility.h"
 
+#include "zlib.h"
+
 /* Forward declarations. */
 struct JSContext;
 
@@ -335,14 +337,32 @@ ClearAllBitArrayElements(size_t *array, size_t length)
         array[i] = 0;
 }
 
-#if USE_ZLIB
-/*
- * Attempt to compress some bytes. Return true if compression produced a
- * string smaller than the input. The caller is responsible for allocating
- * |out| to a string the same length as the input.
- */
-bool TryCompressString(const unsigned char *inp, size_t inplen,
-                       unsigned char *out, size_t *outlen);
+#ifdef USE_ZLIB
+class Compressor
+{
+    // Number of bytes we should hand to zlib each compressMore() call.
+    static const size_t CHUNKSIZE = 2048;
+    z_stream zs;
+    const unsigned char *inp;
+    size_t inplen;
+  public:
+    Compressor(const unsigned char *inp, size_t inplen, unsigned char *out)
+        : inp(inp),
+        inplen(inplen)
+    {
+        JS_ASSERT(inplen > 0);
+        zs.opaque = NULL;
+        zs.next_in = (Bytef *)inp;
+        zs.avail_in = 0;
+        zs.next_out = out;
+        zs.avail_out = inplen;
+    }
+    bool init();
+    // Compress some of the input. Return true if it should be called again.
+    bool compressMore();
+    // Finalize compression. Return the length of the compressed input.
+    size_t finish();
+};
 
 /*
  * Decompress a string. The caller must know the length of the output and

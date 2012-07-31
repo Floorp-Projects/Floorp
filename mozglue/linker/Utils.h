@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/Scoped.h"
 
 /**
  * On architectures that are little endian and that support unaligned reads,
@@ -77,71 +78,6 @@ typedef le_to_cpu<unsigned char> le_uint16;
 typedef le_to_cpu<le_uint16> le_uint32;
 #endif
 
-/**
- * AutoClean is a helper to create RAII wrappers
- * The Traits class is expected to look like the following:
- *   struct Traits {
- *     // Define the type of the value stored in the wrapper
- *     typedef value_type type;
- *     // Returns the value corresponding to the uninitialized or freed state
- *     const static type None();
- *     // Cleans up resources corresponding to the wrapped value
- *     const static void clean(type);
- *   }
- */
-template <typename Traits>
-class AutoClean
-{
-  typedef typename Traits::type T;
-public:
-  AutoClean(): value(Traits::None()) { }
-  AutoClean(const T& value): value(value) { }
-  ~AutoClean()
-  {
-    if (value != Traits::None())
-      Traits::clean(value);
-  }
-
-  operator const T&() const { return value; }
-  const T& operator->() const { return value; }
-  const T& get() const { return value; }
-
-  T forget()
-  {
-    T _value = value;
-    value = Traits::None();
-    return _value;
-  }
-
-  bool operator ==(T other) const
-  {
-    return value == other;
-  }
-
-  AutoClean& operator =(T other)
-  {
-    if (value != Traits::None())
-      Traits::clean(value);
-    value = other;
-    return *this;
-  }
-
-private:
-  T value;
-};
-
-/**
- * AUTOCLEAN_TEMPLATE defines a templated class derived from AutoClean
- * This allows to implement templates such as AutoFreePtr.
- */
-#define AUTOCLEAN_TEMPLATE(name, Traits) \
-template <typename T> \
-struct name: public AutoClean<Traits<T> > \
-{ \
-  using AutoClean<Traits<T> >::operator =; \
-  name(): AutoClean<Traits<T> >() { } \
-  name(typename Traits<T>::type ptr): AutoClean<Traits<T> >(ptr) { } \
-}
 
 /**
  * AutoCloseFD is a RAII wrapper for POSIX file descriptors
@@ -149,52 +85,11 @@ struct name: public AutoClean<Traits<T> > \
 struct AutoCloseFDTraits
 {
   typedef int type;
-  static int None() { return -1; }
-  static void clean(int fd) { close(fd); }
+  static int empty() { return -1; }
+  static void release(int fd) { close(fd); }
 };
-typedef AutoClean<AutoCloseFDTraits> AutoCloseFD;
+typedef mozilla::Scoped<AutoCloseFDTraits> AutoCloseFD;
 
-/**
- * AutoFreePtr is a RAII wrapper for pointers that need to be free()d.
- *
- *   struct S { ... };
- *   AutoFreePtr<S> foo = malloc(sizeof(S));
- *   AutoFreePtr<char> bar = strdup(str);
- */
-template <typename T>
-struct AutoFreePtrTraits
-{
-  typedef T *type;
-  static T *None() { return NULL; }
-  static void clean(T *ptr) { free(ptr); }
-};
-AUTOCLEAN_TEMPLATE(AutoFreePtr, AutoFreePtrTraits);
-
-/**
- * AutoDeletePtr is a RAII wrapper for pointers that need to be deleted.
- *
- *   struct S { ... };
- *   AutoDeletePtr<S> foo = new S();
- */
-template <typename T>
-struct AutoDeletePtrTraits: public AutoFreePtrTraits<T>
-{
-  static void clean(T *ptr) { delete ptr; }
-};
-AUTOCLEAN_TEMPLATE(AutoDeletePtr, AutoDeletePtrTraits);
-
-/**
- * AutoDeleteArray is a RAII wrapper for pointers that need to be delete[]ed.
- *
- *   struct S { ... };
- *   AutoDeleteArray<S> foo = new S[42];
- */
-template <typename T>
-struct AutoDeleteArrayTraits: public AutoFreePtrTraits<T>
-{
-  static void clean(T *ptr) { delete [] ptr; }
-};
-AUTOCLEAN_TEMPLATE(AutoDeleteArray, AutoDeleteArrayTraits);
 
 /**
  * MappedPtr is a RAII wrapper for mmap()ed memory. It can be used as

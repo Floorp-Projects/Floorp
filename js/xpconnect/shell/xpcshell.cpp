@@ -128,7 +128,7 @@ JSPrincipals *gJSPrincipals = nullptr;
 nsAutoString *gWorkingDirectory = nullptr;
 
 static JSBool
-GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
@@ -201,7 +201,7 @@ GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 
             if (NS_SUCCEEDED(rv) &&
                 NS_SUCCEEDED(locationHolder->GetJSObject(&locationObj))) {
-                *vp = OBJECT_TO_JSVAL(locationObj);
+                vp.set(OBJECT_TO_JSVAL(locationObj));
             }
         }
     }
@@ -815,7 +815,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
+env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -827,7 +827,7 @@ env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
         return false;
 
     idstr = JS_ValueToString(cx, idval);
-    valstr = JS_ValueToString(cx, *vp);
+    valstr = JS_ValueToString(cx, vp);
     if (!idstr || !valstr)
         return false;
     JSAutoByteString name(cx, idstr);
@@ -862,7 +862,7 @@ env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
         JS_ReportError(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
         return false;
     }
-    *vp = STRING_TO_JSVAL(valstr);
+    vp.set(STRING_TO_JSVAL(valstr));
 #endif /* !defined XP_OS2 && !defined SOLARIS */
     return true;
 }

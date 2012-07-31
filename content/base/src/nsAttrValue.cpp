@@ -1462,7 +1462,7 @@ bool nsAttrValue::ParseDoubleValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  PRInt32 ec;
+  nsresult ec;
   double val = PromiseFlatString(aString).ToDouble(&ec);
   if (NS_FAILED(ec)) {
     return false;
