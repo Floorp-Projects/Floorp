@@ -383,6 +383,12 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
   });
 }, 'system-messages-open-app', false);
 
+Services.obs.addObserver(function(aSubject, aTopic, aData) {
+  shell.sendEvent(shell.contentBrowser.contentWindow,
+                  "mozChromeEvent", { type: "fullscreenoriginchange",
+                                      fullscreenorigin: aData } );
+}, "fullscreen-origin-change", false);
+
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
     return;
