@@ -44,7 +44,7 @@ function IsAzureEnabled() {
 
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
     enabled = (backend != "none");
   } catch (e) { }
 
@@ -56,7 +56,7 @@ function IsAzureSkia() {
   
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
     enabled = (backend == "skia");
   } catch (e) { }
 
@@ -68,7 +68,7 @@ function IsAzureCairo() {
   
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
     enabled = (backend == "cairo");
   } catch (e) { }
 
