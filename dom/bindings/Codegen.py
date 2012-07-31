@@ -2040,17 +2040,24 @@ for (uint32_t i = 0; i < length; ++i) {
             nullBehavior = "eStringify"
             undefinedBehavior = "eStringify"
 
-        if defaultValue is not None:
-            if not isinstance(defaultValue, IDLNullValue):
-                raise TypeError("Can't handle non-null default values for "
-                                "strings yet")
-            if not type.nullable():
-                raise TypeError("Null default value for non-nullable string")
-            val = "(${haveValue}) ? ${val} : JSVAL_NULL"
-            valPtr = "(${haveValue}) ? ${valPtr} : NULL"
-        else:
-            val = "${val}"
-            valPtr = "${valPtr}"
+        def getConversionCode(varName):
+            conversionCode = (
+                "if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, %s)) {\n"
+                "  return false;\n"
+                "}" % (nullBehavior, undefinedBehavior, varName))
+            if defaultValue is None:
+                return conversionCode
+
+            if isinstance(defaultValue, IDLNullValue):
+                assert(type.nullable())
+                return handleDefault(conversionCode,
+                                     "%s.SetNull()" % varName)
+            return handleDefault(
+                conversionCode,
+                ("static const PRUnichar data[] = { %s, 0 };\n"
+                 "%s.SetData(data, ArrayLength(data) - 1)" %
+                 (", ".join("'" + char + "'" for char in defaultValue.value),
+                  varName)))
 
         if isMember:
             # We have to make a copy, because our jsval may well not
@@ -2059,25 +2066,20 @@ for (uint32_t i = 0; i < length; ++i) {
             return (
                 "{\n"
                 "  FakeDependentString str;\n"
-                "  if (!ConvertJSValueToString(cx, %s, %s, %s, %s, str)) {\n"
-                "    return false;\n"
-                "  }\n"
+                "%s\n"
                 "  ${declName} = str;\n"
-                "}\n" %
-                (val, valPtr, nullBehavior, undefinedBehavior),
-            declType, None,
-            isOptional)
+                "}\n" % CGIndenter(CGGeneric(getConversionCode("str"))).define(),
+                declType, None, isOptional)
 
         if isOptional:
             declType = "Optional<nsAString>"
         else:
             declType = "NonNull<nsAString>"
+
         return (
-            "if (!ConvertJSValueToString(cx, %s, %s, %s, %s, ${holderName})) {\n"
-            "  return false;\n"
-            "}\n"
+            "%s\n"
             "const_cast<%s&>(${declName}) = &${holderName};" %
-            (val, valPtr, nullBehavior, undefinedBehavior, declType),
+            (getConversionCode("${holderName}"), declType),
             CGGeneric("const " + declType), CGGeneric("FakeDependentString"),
             # No need to deal with Optional here; we have handled it already
             False)
