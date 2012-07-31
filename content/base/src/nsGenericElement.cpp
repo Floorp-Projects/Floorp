@@ -4762,14 +4762,18 @@ static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
   nsCOMPtr<nsPIDOMWindow> win = aDoc->GetWindow();
-  if (win && win->IsPartOfApp()) {
+  if (win && win->IsInAppOrigin()) {
+    // Request is in a web app and in the same origin as the web app.
+    // Don't enforce as strict security checks for web apps, the user
+    // is supposed to have trust in them. However documents cross-origin
+    // to the web app must still confirm to the normal security checks.
     return nullptr;
   }
 
   if (!nsContentUtils::IsRequestFullScreenAllowed()) {
     return "FullScreenDeniedNotInputDriven";
   }
-  
+
   if (nsContentUtils::IsSitePermDeny(aDoc->NodePrincipal(), "fullscreen")) {
     return "FullScreenDeniedBlocked";
   }
@@ -4784,6 +4788,8 @@ nsresult nsGenericElement::MozRequestFullScreen()
   // This stops the full-screen from being abused similar to the popups of old,
   // and it also makes it harder for bad guys' script to go full-screen and
   // spoof the browser chrome/window and phish logins etc.
+  // Note that requests for fullscreen inside a web app's origin are exempt
+  // from this restriction.
   const char* error = GetFullScreenError(OwnerDoc());
   if (error) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -4803,3 +4809,4 @@ nsresult nsGenericElement::MozRequestFullScreen()
 
   return NS_OK;
 }
+
