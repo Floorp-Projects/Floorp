@@ -484,11 +484,10 @@ TemporaryRef<DrawTarget>
 LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
                                     SurfaceFormat aFormat)
 {
-  BackendType backend;
   if ((aFormat != FORMAT_B8G8R8A8 &&
        aFormat != FORMAT_B8G8R8X8) ||
-       !gfxPlatform::GetPlatform()->SupportsAzureCanvas(backend) ||
-       backend != BACKEND_DIRECT2D) {
+       !gfxPlatform::GetPlatform()->SupportsAzureCanvas() ||
+       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() != BACKEND_DIRECT2D) {
     return LayerManager::CreateDrawTarget(aSize, aFormat);
   }
 
