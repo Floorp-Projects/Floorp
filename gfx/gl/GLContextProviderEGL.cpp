@@ -1415,7 +1415,7 @@ public:
         if (mBackingSurface && mUpdateSurface == mBackingSurface) {
 #ifdef MOZ_X11
             if (mBackingSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
-                XSync(DefaultXDisplay(), False);
+                FinishX(DefaultXDisplay());
             }
 #endif
 

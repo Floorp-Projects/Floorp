@@ -37,6 +37,16 @@ XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
     return false;
 }
 
+void
+FinishX(Display* aDisplay)
+{
+  unsigned long lastRequest = NextRequest(aDisplay) - 1;
+  if (lastRequest == LastKnownRequestProcessed(aDisplay))
+    return;
+
+  XSync(aDisplay, False);
+}
+
 ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
 
 int
@@ -67,7 +77,7 @@ ScopedXErrorHandler::~ScopedXErrorHandler()
 bool
 ScopedXErrorHandler::SyncAndGetError(Display *dpy, XErrorEvent *ev)
 {
-    XSync(dpy, False);
+    FinishX(dpy);
     return GetError(ev);
 }
 

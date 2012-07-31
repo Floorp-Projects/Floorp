@@ -187,7 +187,7 @@ ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
     // the child, even though they will be read operations.
     // Otherwise, the child might start scribbling on new back buffers
     // that are still participating in requests as old front buffers.
-    XSync(DefaultXDisplay(), False);
+    FinishX(DefaultXDisplay());
   }
 }
 
