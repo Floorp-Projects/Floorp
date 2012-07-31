@@ -745,8 +745,10 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
         surf = new gfxD2DSurface(size, OptimalFormatForContent(contentType));
 #endif
 
-    if (surf == nullptr)
+    if (surf == nullptr
+        || surf->CairoStatus()) {
         surf = new gfxImageSurface(size, OptimalFormatForContent(contentType));
+    }
 
     NS_IF_ADDREF(surf);
 

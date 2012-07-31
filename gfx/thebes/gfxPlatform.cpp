@@ -690,7 +690,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   if (aBackend == BACKEND_CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
-    if (!surf) {
+    if (!surf || surf->CairoStatus()) {
       return NULL;
     }
 
