@@ -127,6 +127,16 @@ private:
       nsRefPtr<DeviceStorageFile> mFile;
   };
 
+  class StatFileEvent : public CancelableRunnable
+  {
+    public:
+      StatFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
+      virtual ~StatFileEvent();
+      virtual nsresult CancelableRun();
+     private:
+       nsRefPtr<DeviceStorageFile> mFile;
+   };
+
   class ReadFileEvent : public CancelableRunnable
   {
     public:
@@ -159,6 +169,18 @@ private:
       nsRefPtr<DeviceStorageFile> mFile;
       nsString mPath;
   };
+
+  class PostStatResultEvent : public CancelableRunnable
+ {
+    public:
+      PostStatResultEvent(DeviceStorageRequestParent* aParent,
+                          PRInt64 aFreeBytes,
+                          PRInt64 aTotalBytes);
+      virtual ~PostStatResultEvent();
+      virtual nsresult CancelableRun();
+    private:
+      PRInt64 mFreeBytes, mTotalBytes;
+   };
 
 protected:
   void AddRunnable(CancelableRunnable* aRunnable) {

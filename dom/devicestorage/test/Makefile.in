@@ -19,6 +19,7 @@ MOCHITEST_FILES	= \
 		test_dotdot.html \
 		test_enumerateOptions.html \
 		test_lastModificationFilter.html \
+		test_stat.html \
 		devicestorage_common.js \
 		$(NULL)
 

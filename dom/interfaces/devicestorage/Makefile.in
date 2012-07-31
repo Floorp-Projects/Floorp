@@ -19,6 +19,7 @@ include $(topsrcdir)/dom/dom-config.mk
 
 XPIDLSRCS = \
 	nsIDOMDeviceStorage.idl \
+	nsIDOMDeviceStorageStat.idl \
 	nsIDOMDeviceStorageCursor.idl \
 	nsIDOMNavigatorDeviceStorage.idl \
 	nsIDOMDeviceStorageChangeEvent.idl
