@@ -23,7 +23,6 @@
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
-#include "BasicLayers.h"
 #include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"

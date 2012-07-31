@@ -14,16 +14,14 @@
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
-#include "BasicLayers.h"
 #include "nsIRollupListener.h"
-#include "LayersBackend.h"
-
 class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
 namespace mozilla {
 namespace layers {
+class BasicLayerManager;
 class CompositorChild;
 class CompositorParent;
 }
@@ -49,6 +47,7 @@ class nsBaseWidget : public nsIWidget
 protected:
   typedef base::Thread Thread;
   typedef mozilla::layers::BasicLayerManager BasicLayerManager;
+  typedef mozilla::layers::BufferMode BufferMode;
   typedef mozilla::layers::CompositorChild CompositorChild;
   typedef mozilla::layers::CompositorParent CompositorParent;
   typedef mozilla::ScreenRotation ScreenRotation;
@@ -56,9 +55,9 @@ protected:
 public:
   nsBaseWidget();
   virtual ~nsBaseWidget();
-  
+
   NS_DECL_ISUPPORTS
-  
+
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(bool aCapture);
   NS_IMETHOD              GetClientData(void*& aClientData);
@@ -180,6 +179,9 @@ public:
 
   virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
+  virtual const SizeConstraints& GetSizeConstraints() const;
+  virtual void SetSizeConstraints(const SizeConstraints& aConstraints);
+
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's
@@ -193,7 +195,7 @@ public:
   class AutoLayerManagerSetup {
   public:
     AutoLayerManagerSetup(nsBaseWidget* aWidget, gfxContext* aTarget,
-                          BasicLayerManager::BufferMode aDoubleBuffering,
+                          BufferMode aDoubleBuffering,
                           ScreenRotation aRotation = mozilla::ROTATION_0);
     ~AutoLayerManagerSetup();
   private:
@@ -284,6 +286,20 @@ protected:
     }
   }
 
+  /**
+   * Apply the current size constraints to the given size.
+   *
+   * @param aWidth width to constrain
+   * @param aHeight height to constrain
+   */
+  void ConstrainSize(PRInt32* aWidth, PRInt32* aHeight) const
+  {
+    *aWidth = NS_MAX(mSizeConstraints.mMinSize.width,
+                     NS_MIN(mSizeConstraints.mMaxSize.width, *aWidth));
+    *aHeight = NS_MAX(mSizeConstraints.mMinSize.height,
+                      NS_MIN(mSizeConstraints.mMaxSize.height, *aHeight));
+  }
+
 protected:
   /**
    * Starts the OMTC compositor destruction sequence.
@@ -323,6 +339,7 @@ protected:
   nsSizeMode        mSizeMode;
   nsPopupLevel      mPopupLevel;
   nsPopupType       mPopupType;
+  SizeConstraints   mSizeConstraints;
 
   // the last rolled up popup. Only set this when an nsAutoRollup is in scope,
   // so it can be cleared automatically.

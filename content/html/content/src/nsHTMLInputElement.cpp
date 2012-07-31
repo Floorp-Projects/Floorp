@@ -1005,7 +1005,7 @@ nsHTMLInputElement::GetValueAsDouble() const
 {
   double doubleValue;
   nsAutoString stringValue;
-  PRInt32 ec;
+  nsresult ec;
 
   GetValueInternal(stringValue);
   doubleValue = stringValue.ToDouble(&ec);
@@ -1107,7 +1107,7 @@ nsHTMLInputElement::GetMinAsDouble() const
   nsAutoString minStr;
   GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
 
-  PRInt32 ec;
+  nsresult ec;
   double min = minStr.ToDouble(&ec);
   return NS_SUCCEEDED(ec) ? min : MOZ_DOUBLE_NaN();
 }
@@ -1125,7 +1125,7 @@ nsHTMLInputElement::GetMaxAsDouble() const
   nsAutoString maxStr;
   GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
 
-  PRInt32 ec;
+  nsresult ec;
   double max = maxStr.ToDouble(&ec);
   return NS_SUCCEEDED(ec) ? max : MOZ_DOUBLE_NaN();
 }
@@ -2661,7 +2661,7 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
       break;
     case NS_FORM_INPUT_NUMBER:
       {
-        PRInt32 ec;
+        nsresult ec;
         PromiseFlatString(aValue).ToDouble(&ec);
         if (NS_FAILED(ec)) {
           aValue.Truncate();
@@ -3327,7 +3327,10 @@ nsHTMLInputElement::SaveState()
   }
 
   if (mDisabledChanged) {
-    rv |= GetPrimaryPresState(this, &state);
+    nsresult tmp = GetPrimaryPresState(this, &state);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     if (state) {
       // We do not want to save the real disabled state but the disabled
       // attribute.
@@ -3860,7 +3863,7 @@ nsHTMLInputElement::GetStep() const
       return kStepAny;
     }
 
-    PRInt32 ec;
+    nsresult ec;
     // NOTE: should be multiplied by defaultStepScaleFactor,
     // which is 1 for type=number.
     step = stepStr.ToDouble(&ec);

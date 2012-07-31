@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.106.2.1 $ $Date: 2012/05/17 21:40:54 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.106.2.2 $ $Date: 2012/07/27 21:48:13 $";
 #endif /* DEBUG */
 
 /*
@@ -444,6 +444,50 @@ nss3certificate_matchUsage(nssDecodedCert *dc, const NSSUsage *usage)
     return match;
 }
 
+static PRBool
+nss3certificate_isTrustedForUsage(nssDecodedCert *dc, const NSSUsage *usage)
+{
+    CERTCertificate *cc;
+    PRBool ca;
+    SECStatus secrv;
+    unsigned int requiredFlags;
+    unsigned int trustFlags;
+    SECTrustType trustType;
+    CERTCertTrust trust;
+
+    /* This is for NSS 3.3 functions that do not specify a usage */
+    if (usage->anyUsage) {
+	return PR_FALSE;  /* XXX is this right? */
+    }
+    cc = (CERTCertificate *)dc->data;
+    ca = usage->nss3lookingForCA;
+    if (!ca) {
+	PRBool trusted;
+	unsigned int failedFlags;
+	secrv = cert_CheckLeafTrust(cc, usage->nss3usage,
+				    &failedFlags, &trusted);
+	return secrv == SECSuccess && trusted;
+    }
+    secrv = CERT_TrustFlagsForCACertUsage(usage->nss3usage, &requiredFlags,
+					  &trustType);
+    if (secrv != SECSuccess) {
+	return PR_FALSE;
+    }
+    secrv = CERT_GetCertTrust(cc, &trust);
+    if (secrv != SECSuccess) {
+	return PR_FALSE;
+    }
+    if (trustType == trustTypeNone) {
+	/* normally trustTypeNone usages accept any of the given trust bits
+	 * being on as acceptable. */
+	trustFlags = trust.sslFlags | trust.emailFlags |
+		     trust.objectSigningFlags;
+    } else {
+	trustFlags = SEC_GET_TRUST_FLAGS(&trust, trustType);
+    }
+    return (trustFlags & requiredFlags) == requiredFlags;
+}
+
 static NSSASCII7 *
 nss3certificate_getEmailAddress(nssDecodedCert *dc)
 {
@@ -494,6 +538,7 @@ nssDecodedPKIXCertificate_Create (
 	    rvDC->isValidAtTime       = nss3certificate_isValidAtTime;
 	    rvDC->isNewerThan         = nss3certificate_isNewerThan;
 	    rvDC->matchUsage          = nss3certificate_matchUsage;
+	    rvDC->isTrustedForUsage   = nss3certificate_isTrustedForUsage;
 	    rvDC->getEmailAddress     = nss3certificate_getEmailAddress;
 	    rvDC->getDERSerialNumber  = nss3certificate_getDERSerialNumber;
 	} else {
@@ -521,7 +566,9 @@ create_decoded_pkix_cert_from_nss3cert (
 	rvDC->isValidAtTime       = nss3certificate_isValidAtTime;
 	rvDC->isNewerThan         = nss3certificate_isNewerThan;
 	rvDC->matchUsage          = nss3certificate_matchUsage;
+	rvDC->isTrustedForUsage   = nss3certificate_isTrustedForUsage;
 	rvDC->getEmailAddress     = nss3certificate_getEmailAddress;
+	rvDC->getDERSerialNumber  = nss3certificate_getDERSerialNumber;
     }
     return rvDC;
 }

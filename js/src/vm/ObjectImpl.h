@@ -231,9 +231,9 @@ struct PropDesc {
         return (attrs & JSPROP_READONLY) == 0;
     }
 
-    const Value & value() const {
+    HandleValue value() const {
         MOZ_ASSERT(hasValue());
-        return value_;
+        return HandleValue::fromMarkedLocation(&value_);
     }
 
     JSObject * getterObject() const {
@@ -247,15 +247,15 @@ struct PropDesc {
         return set_.isUndefined() ? NULL : &set_.toObject();
     }
 
-    const Value & getterValue() const {
+    HandleValue getterValue() const {
         MOZ_ASSERT(!isUndefined());
         MOZ_ASSERT(hasGet());
-        return get_;
+        return HandleValue::fromMarkedLocation(&get_);
     }
-    const Value & setterValue() const {
+    HandleValue setterValue() const {
         MOZ_ASSERT(!isUndefined());
         MOZ_ASSERT(hasSet());
-        return set_;
+        return HandleValue::fromMarkedLocation(&set_);
     }
 
     /*

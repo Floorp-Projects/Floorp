@@ -530,8 +530,7 @@ nsWyciwygChannel::GetCharsetAndSource(PRInt32* aSource, nsACString& aCharset)
   mCacheEntry->GetMetaDataElement("charset-source", getter_Copies(sourceStr));
 
   PRInt32 source;
-  // XXXbz ToInteger takes an PRInt32* but outputs an nsresult in it... :(
-  PRInt32 err;
+  nsresult err;
   source = sourceStr.ToInteger(&err);
   if (NS_FAILED(err) || source == 0) {
     return NS_ERROR_NOT_AVAILABLE;

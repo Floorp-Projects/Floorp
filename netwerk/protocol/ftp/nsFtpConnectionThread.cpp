@@ -1024,7 +1024,7 @@ nsFtpState::R_mdtm() {
 
             // Save lastModified time for downloaded files.
             nsCAutoString timeString;
-            PRInt32 error;
+            nsresult error;
             PRExplodedTime exTime;
 
             mResponseMsg.Mid(timeString, 0, 4);
@@ -1097,7 +1097,9 @@ nsresult
 nsFtpState::S_list() {
     nsresult rv = SetContentType();
     if (NS_FAILED(rv)) 
-        return FTP_ERROR;
+        // XXX Invalid cast of FTP_STATE to nsresult -- FTP_ERROR has
+        // value < 0x80000000 and will pass NS_SUCCEEDED() (bug 778109)
+        return (nsresult)FTP_ERROR;
 
     rv = mChannel->PushStreamConverter("text/ftp-dir",
                                        APPLICATION_HTTP_INDEX_FORMAT);
@@ -1287,7 +1289,9 @@ nsFtpState::S_pasv() {
 
         nsITransport *controlSocket = mControlConnection->Transport();
         if (!controlSocket)
-            return FTP_ERROR;
+            // XXX Invalid cast of FTP_STATE to nsresult -- FTP_ERROR has
+            // value < 0x80000000 and will pass NS_SUCCEEDED() (bug 778109)
+            return (nsresult)FTP_ERROR;
 
         nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(controlSocket);
         if (sTrans) {
@@ -2184,7 +2188,7 @@ nsFtpState::ReadCacheEntry()
     nsXPIDLCString serverType;
     mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
     nsCAutoString serverNum(serverType.get());
-    PRInt32 err;
+    nsresult err;
     mServerType = serverNum.ToInteger(&err);
     
     mChannel->PushStreamConverter("text/ftp-dir",

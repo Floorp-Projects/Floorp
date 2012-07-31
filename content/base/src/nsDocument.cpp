@@ -8499,7 +8499,7 @@ nsDocument::MozCancelFullScreen()
 }
 
 // Runnable to set window full-screen mode. Used as a script runner
-// to ensure we only call nsGlobalWindow::SetFullScreen() when it's safe to 
+// to ensure we only call nsGlobalWindow::SetFullScreen() when it's safe to
 // run script. nsGlobalWindow::SetFullScreen() dispatches a synchronous event
 // (handled in chome code) which is unsafe to run if this is called in
 // nsGenericElement::UnbindFromTree().
@@ -8547,13 +8547,54 @@ nsIDocument::ExitFullScreen(bool aRunAsync)
   nsDocument::ExitFullScreen();
 }
 
+// Returns true if the document is a direct child of a cross process parent
+// mozbrowser iframe. This is the case when the document has a null parent,
+// and its DocShell reports that it is a browser frame.
 static bool
-ResetFullScreen(nsIDocument* aDocument, void* aData) {
+HasCrossProcessParent(nsIDocument* aDocument)
+{
+  if (XRE_GetProcessType() != GeckoProcessType_Content) {
+    return false;
+  }
+  if (aDocument->GetParentDocument() != nullptr) {
+    return false;
+  }
+  nsPIDOMWindow* win = aDocument->GetWindow();
+  if (!win) {
+    return false;
+  }
+  nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
+  if (!docShell) {
+    return false;
+  }
+  bool isBrowserElement = false;
+  docShell->GetIsBrowserElement(&isBrowserElement);
+  return isBrowserElement;
+}
+
+static bool
+ResetFullScreen(nsIDocument* aDocument, void* aData)
+{
   if (aDocument->IsFullScreenDoc()) {
     static_cast<nsDocument*>(aDocument)->CleanupFullscreenState();
     NS_ASSERTION(!aDocument->IsFullScreenDoc(), "Should reset full-screen");
     nsTArray<nsIDocument*>* changed = reinterpret_cast<nsTArray<nsIDocument*>*>(aData);
     changed->AppendElement(aDocument);
+
+    if (HasCrossProcessParent(aDocument)) {
+      // We're at the top of the content-process side doc tree. Ask the parent
+      // process to exit fullscreen.
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      os->NotifyObservers(aDocument, "ask-parent-to-exit-fullscreen", nullptr);
+    }
+
+    // Dispatch a notification so that if this document has any
+    // cross-process subdocuments, they'll be notified to exit fullscreen.
+    // The BrowserElementParent listens for this event and performs the
+    // cross process notification if it has a remote child process.
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    os->NotifyObservers(aDocument, "ask-children-to-exit-fullscreen", nullptr);
+
     aDocument->EnumerateSubDocuments(ResetFullScreen, aData);
   }
   return true;
@@ -8623,8 +8664,15 @@ nsDocument::RestorePreviousFullScreenState()
     UnlockPointer();
   }
 
-  // Clear full-screen stacks in all descendant documents, bottom up.
   nsCOMPtr<nsIDocument> fullScreenDoc(do_QueryReferent(sFullScreenDoc));
+
+  // The fullscreen document may contain a <iframe mozbrowser> element which
+  // has a cross process child. So send a notification so that its browser
+  // parent will send a message to its child process to also exit fullscreen.
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  os->NotifyObservers(fullScreenDoc, "ask-children-to-exit-fullscreen", nullptr);
+
+  // Clear full-screen stacks in all descendant in process documents, bottom up.
   nsIDocument* doc = fullScreenDoc;
   while (doc != this) {
     NS_ASSERTION(doc->IsFullScreenDoc(), "Should be full-screen doc");
@@ -8641,6 +8689,12 @@ nsDocument::RestorePreviousFullScreenState()
     UnlockPointer();
     DispatchFullScreenChange(doc);
     if (static_cast<nsDocument*>(doc)->mFullScreenStack.IsEmpty()) {
+      if (HasCrossProcessParent(doc)) {
+        // Send notification to the parent process to tell it to rollback to
+        // the previous fullscreen elements in its fullscreen element stacks.
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        os->NotifyObservers(doc, "ask-parent-to-rollback-fullscreen", nullptr);
+      }
       // Full-screen stack in document is empty. Go back up to the parent
       // document. We'll pop the containing element off its stack, and use
       // its next full-screen element as the full-screen element.
@@ -8665,6 +8719,18 @@ nsDocument::RestorePreviousFullScreenState()
           e->PostDOMEvent();
         }
       }
+
+      if (!nsContentUtils::HaveEqualPrincipals(doc, fullScreenDoc)) {
+        // The origin which is fullscreen changed. Send a notification to
+        // the root process so that a warning or approval UI can be shown
+        // as necessary.
+        nsAutoString origin;
+        nsContentUtils::GetUTFOrigin(doc->NodePrincipal(), origin);
+        nsIDocument* root = nsContentUtils::GetRootDocument(doc);
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        os->NotifyObservers(root, "fullscreen-origin-change", origin.get());
+      }
+
       sFullScreenDoc = do_GetWeakReference(doc);
       break;
     }
@@ -8700,7 +8766,9 @@ public:
   NS_IMETHOD Run()
   {
     nsDocument* doc = static_cast<nsDocument*>(mDoc.get());
-    doc->RequestFullScreen(mElement, mWasCallerChrome);
+    doc->RequestFullScreen(mElement,
+                           mWasCallerChrome,
+                           /* aNotifyOnOriginChange */ true);
     return NS_OK;
   }
 
@@ -8867,7 +8935,7 @@ IsInActiveTab(nsIDocument* aDoc)
   if (!isActive) {
     return false;
   }
-  
+
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
   if (!dsti) {
     return false;
@@ -8896,8 +8964,43 @@ IsInActiveTab(nsIDocument* aDoc)
   return activeWindow == rootWin;
 }
 
+nsresult nsDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
+                                                  const nsAString& aOrigin)
+{
+  // Ensure the frame element is the fullscreen element in this document.
+  // If the frame element is already the fullscreen element in this document,
+  // this has no effect.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aFrameElement));
+  RequestFullScreen(content->AsElement(),
+                    /* aWasCallerChrome */ false,
+                    /* aNotifyOnOriginChange */ false);
+
+  // Origin changed in child process, send notifiction, so that chrome can
+  // update the UI to reflect the fullscreen origin change if necessary.
+  // The BrowserElementChild listens on this, and forwards it over its
+  // parent process, where it is redispatched. Chrome (in the root process,
+  // which could be *this* process) listens for this notification so that
+  // it can show a warning or approval UI.
+  if (!aOrigin.IsEmpty()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    os->NotifyObservers(nsContentUtils::GetRootDocument(this),
+                        "fullscreen-origin-change",
+                        PromiseFlatString(aOrigin).get());
+  }
+
+  return NS_OK;
+}
+
+nsresult nsDocument::RemoteFrameFullscreenReverted()
+{
+  RestorePreviousFullScreenState();
+  return NS_OK;
+}
+
 void
-nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
+nsDocument::RequestFullScreen(Element* aElement,
+                              bool aWasCallerChrome,
+                              bool aNotifyOnOriginChange)
 {
   NS_ASSERTION(aElement,
     "Must pass non-null element to nsDocument::RequestFullScreen");
@@ -8922,7 +9025,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   }
   if (GetFullScreenElement() &&
       !nsContentUtils::ContentIsDescendantOf(aElement, GetFullScreenElement())) {
-    // If this document is full-screen, only grant full-screen requests from 
+    // If this document is full-screen, only grant full-screen requests from
     // a descendent of the current full-screen element.
     LogFullScreenDenied(true, "FullScreenDeniedNotDescendant", this);
     return;
@@ -8958,12 +9061,12 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 
   // Remember the root document, so that if a full-screen document is hidden
   // we can reset full-screen state in the remaining visible full-screen documents.
-  nsIDocument* fullScreenDoc = nsContentUtils::GetRootDocument(this);
-  sFullScreenRootDoc = do_GetWeakReference(fullScreenDoc);
+  nsIDocument* fullScreenRootDoc = nsContentUtils::GetRootDocument(this);
+  sFullScreenRootDoc = do_GetWeakReference(fullScreenRootDoc);
 
   // If a document is already in fullscreen, then unlock the mouse pointer
   // before setting a new document to fullscreen
-  if (fullScreenDoc) {
+  if (sFullScreenDoc) {
     UnlockPointer();
   }
 
@@ -8981,15 +9084,18 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   DebugOnly<bool> x = FullScreenStackPush(aElement);
   NS_ASSERTION(x, "Full-screen state of requesting doc should always change!");
   changed.AppendElement(this);
-  
+
   // Propagate up the document hierarchy, setting the full-screen element as
   // the element's container in ancestor documents. This also sets the
   // appropriate css styles as well. Note we don't propagate down the
   // document hierarchy, the full-screen element (or its container) is not
-  // visible there.  
+  // visible there. Stop when we reach the root document.
   nsIDocument* child = this;
-  nsIDocument* parent;
-  while ((parent = child->GetParentDocument())) {
+  while (true) {
+    nsIDocument* parent = child->GetParentDocument();
+    if (!parent) {
+      break;
+    }
     Element* element = parent->FindContentForSubDocument(child)->AsElement();
     if (static_cast<nsDocument*>(parent)->FullScreenStackPush(element)) {
       changed.AppendElement(parent);
@@ -9012,10 +9118,12 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 
   // If this document hasn't already been approved in this session,
   // check to see if the user has granted the fullscreen access
-  // to the document's principal's host, if it has one.
+  // to the document's principal's host, if it has one. Note that documents
+  // in web apps which are the same origin as the web app are considered
+  // trusted and so are automatically approved.
   if (!mIsApprovedForFullscreen) {
     mIsApprovedForFullscreen =
-      GetWindow()->IsPartOfApp() ||
+      GetWindow()->IsInAppOrigin() ||
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
   }
 
@@ -9051,6 +9159,21 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   NS_ASSERTION(c->AsElement() == aElement,
     "GetMozFullScreenElement should match GetFullScreenElement()");
 #endif
+
+  // The origin which is fullscreen changed, send a notifiction so that the
+  // root document knows the origin of the document which requested fullscreen.
+  // This is used for the fullscreen approval UI. If we're in a child
+  // process, the root BrowserElementChild listens for this notification,
+  // and forwards it across to its BrowserElementParent, which
+  // re-broadcasts the message for the root document in its process.
+  if (aNotifyOnOriginChange &&
+      !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsIDocument* root = nsContentUtils::GetRootDocument(this);
+    nsAutoString origin;
+    nsContentUtils::GetUTFOrigin(NodePrincipal(), origin);
+    os->NotifyObservers(root, "fullscreen-origin-change", origin.get());
+  }
 
   // Make the window full-screen. Note we must make the state changes above
   // before making the window full-screen, as then the document reports as

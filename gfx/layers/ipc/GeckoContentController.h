@@ -7,7 +7,8 @@
 #ifndef mozilla_layers_GeckoContentController_h
 #define mozilla_layers_GeckoContentController_h
 
-#include "Layers.h"
+#include "FrameMetrics.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace layers {

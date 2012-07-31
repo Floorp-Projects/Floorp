@@ -141,7 +141,8 @@ public:
   // shadow.
   static void SyncWindowProperties(nsPresContext*       aPresContext,
                                    nsIFrame*            aFrame,
-                                   nsIView*             aView);
+                                   nsIView*             aView,
+                                   nsRenderingContext*  aRC = nullptr);
 
   // Sets the view's attributes from the frame style.
   // - visibility
@@ -154,6 +155,20 @@ public:
                                       nsStyleContext*  aStyleContext,
                                       nsIView*         aView,
                                       PRUint32         aFlags = 0);
+
+  /**
+   * Converts the minimum and maximum sizes given in inner window app units to
+   * outer window device pixel sizes and assigns these constraints to the widget.
+   *
+   * @param aPresContext pres context
+   * @param aWidget widget for this frame
+   * @param minimum size of the window in app units
+   * @param maxmimum size of the window in app units
+   */
+  static void SetSizeConstraints(nsPresContext* aPresContext,
+                                 nsIWidget* aWidget,
+                                 const nsSize& aMinSize,
+                                 const nsSize& aMaxSize);
 
   // Used by both nsInlineFrame and nsFirstLetterFrame.
   void DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,

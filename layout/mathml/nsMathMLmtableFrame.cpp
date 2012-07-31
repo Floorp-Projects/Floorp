@@ -320,7 +320,7 @@ ParseAlignAttribute(nsString& aValue, eAlign& aAlign, PRInt32& aRowIndex)
     aAlign = eAlign_axis;
   }
   if (len) {
-    PRInt32 error;
+    nsresult error;
     aValue.Cut(0, len); // aValue is not a const here
     aRowIndex = aValue.ToInteger(&error);
     if (error)
@@ -775,7 +775,7 @@ nsMathMLmtdFrame::GetRowSpan()
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
     if (!value.IsEmpty()) {
-      PRInt32 error;
+      nsresult error;
       rowspan = value.ToInteger(&error);
       if (error || rowspan < 0)
         rowspan = 1;
@@ -795,7 +795,7 @@ nsMathMLmtdFrame::GetColSpan()
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
     if (!value.IsEmpty()) {
-      PRInt32 error;
+      nsresult error;
       colspan = value.ToInteger(&error);
       if (error || colspan < 0 || colspan > MAX_COLSPAN)
         colspan = 1;

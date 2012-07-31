@@ -132,10 +132,18 @@ nsresult nsGStreamerReader::Init(nsBuiltinDecoderReader* aCloneDonor)
   mAudioSink = gst_parse_bin_from_description("capsfilter name=filter ! "
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
         "appsink name=audiosink sync=true caps=audio/x-raw-float,"
+#ifdef IS_LITTLE_ENDIAN
         "channels={1,2},rate=44100,width=32,endianness=1234", TRUE, NULL);
 #else
+        "channels={1,2},rate=44100,width=32,endianness=4321", TRUE, NULL);
+#endif
+#else
         "appsink name=audiosink sync=true caps=audio/x-raw-int,"
+#ifdef IS_LITTLE_ENDIAN
         "channels={1,2},rate=48000,width=16,endianness=1234", TRUE, NULL);
+#else
+        "channels={1,2},rate=48000,width=16,endianness=4321", TRUE, NULL);
+#endif
 #endif
   mAudioAppSink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(mAudioSink),
         "audiosink"));
@@ -186,7 +194,8 @@ void nsGStreamerReader::PlayBinSourceSetup(GstAppSrc *aSource)
   }
 }
 
-nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo)
+nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo,
+                                         nsHTMLMediaElement::MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   nsresult ret = NS_OK;
@@ -295,6 +304,8 @@ nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo)
   mInfo.mHasAudio = n_audio != 0;
 
   *aInfo = mInfo;
+
+  *aTags = nullptr;
 
   /* set the pipeline to PLAYING so that it starts decoding and queueing data in
    * the appsinks */

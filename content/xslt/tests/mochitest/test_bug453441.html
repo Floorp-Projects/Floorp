@@ -23,7 +23,7 @@ function tryImportStylesheet(xml, valid)
 {
   var processor = new XSLTProcessor;
 
-  var xsltdoc = new DOMParser().parseFromString(String(xml), "text/xml");
+  var xsltdoc = new DOMParser().parseFromString(xml, "text/xml");
   try
   {
     processor.importStylesheet(xsltdoc);
@@ -36,19 +36,19 @@ function tryImportStylesheet(xml, valid)
 }
 
 tryImportStylesheet(
-  <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-  <xsl:template match="/">
-    <html xmlns="http://www.w3.org/1999/xhtml" xsl:version="1.0" />
-  </xsl:template>
-  </xsl:stylesheet>
+  '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+  <xsl:template match="/">\n\
+    <html xmlns="http://www.w3.org/1999/xhtml" xsl:version="1.0" />\n\
+  </xsl:template>\n\
+  </xsl:stylesheet>'
 , true);
 
 tryImportStylesheet(
-  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />
+  '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />'
 , false);
 
 tryImportStylesheet(
-  <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />
+  '<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />'
 , false);
 
 </script>

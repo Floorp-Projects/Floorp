@@ -30,6 +30,7 @@ DOM_SRCDIRS = \
   layout/style \
   layout/xul/base/src \
   layout/xul/base/src/tree/src \
+  dom/camera \
   $(NULL)
 
 ifdef MOZ_B2G_RIL

@@ -120,8 +120,12 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          nsIntPoint nsMoveBy = aEvent->refPoint - mLastPoint;
 
          nsIFrame* parent = GetParent();
-         while (parent && parent->GetType() != nsGkAtoms::menuPopupFrame)
+         while (parent) {
+           nsMenuPopupFrame* popupFrame = do_QueryFrame(parent);
+           if (popupFrame)
+             break;
            parent = parent->GetParent();
+         }
 
          // if the titlebar is in a popup, move the popup frame, otherwise
          // move the widget associated with the window

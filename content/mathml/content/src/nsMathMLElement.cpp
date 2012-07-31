@@ -334,7 +334,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   }
 
   // Convert number to floating point
-  PRInt32 errorCode;
+  nsresult errorCode;
   float floatValue = number.ToFloat(&errorCode);
   if (NS_FAILED(errorCode))
     return false;
@@ -397,7 +397,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       str.CompressWhitespace();
       // MathML numbers can't have leading '+'
       if (str.Length() > 0 && str.CharAt(0) != '+') {
-        PRInt32 errorCode;
+        nsresult errorCode;
         float floatValue = str.ToFloat(&errorCode);
         // Negative scriptsizemultipliers are not parsed
         if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
@@ -443,7 +443,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       if (str.Length() > 0) {
-        PRInt32 errorCode;
+        nsresult errorCode;
         PRInt32 intValue = str.ToInteger(&errorCode);
         if (NS_SUCCEEDED(errorCode)) {
           // This is kind of cheesy ... if the scriptlevel has a sign,

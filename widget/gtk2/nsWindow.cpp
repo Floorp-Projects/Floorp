@@ -68,7 +68,7 @@
 #include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
 #include "nsIObserverService.h"
-
+#include "LayersTypes.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIPropertyBag2.h"
 
@@ -93,6 +93,7 @@ using namespace mozilla::widget;
 #include "nsImageToPixbuf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
+#include "BasicLayers.h"
 
 extern "C" {
 #define PIXMAN_DONT_DEFINE_STDINT
@@ -943,6 +944,23 @@ nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
     return NS_OK;
 }
 
+void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  if (mShell) {
+    GdkGeometry geometry;
+    geometry.min_width = aConstraints.mMinSize.width;
+    geometry.min_height = aConstraints.mMinSize.height;
+    geometry.max_width = aConstraints.mMaxSize.width;
+    geometry.max_height = aConstraints.mMaxSize.height;
+
+    PRUint32 hints = GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE;
+    gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr,
+                                  &geometry, GdkWindowHints(hints));
+  }
+
+  nsBaseWidget::SetSizeConstraints(aConstraints);
+}
+
 NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
@@ -1001,6 +1019,8 @@ nsWindow::Show(bool aState)
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
+    ConstrainSize(&aWidth, &aHeight);
+
     // For top-level windows, aWidth and aHeight should possibly be
     // interpreted as frame bounds, but NativeResize treats these as window
     // bounds (Bug 581866).
@@ -1078,6 +1098,8 @@ NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                        bool aRepaint)
 {
+    ConstrainSize(&aWidth, &aHeight);
+
     mBounds.x = aX;
     mBounds.y = aY;
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
@@ -2128,7 +2150,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
 #endif
         nsBaseWidget::AutoLayerManagerSetup
-          setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+          setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
         DispatchEvent(&event, status);
 
         g_free(rects);
@@ -2136,7 +2158,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         DispatchDidPaint(this);
 
         return TRUE;
-    
+
     } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
@@ -2150,7 +2172,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
         return TRUE;
     }
-            
+
 #if defined(MOZ_WIDGET_GTK2)
     nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
 #else
@@ -2174,21 +2196,21 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
     ctx->Clip();
 
-    BasicLayerManager::BufferMode layerBuffering;
+    BufferMode layerBuffering;
     if (translucent) {
         // The double buffering is done here to extract the shape mask.
         // (The shape mask won't be necessary when a visual with an alpha
         // channel is used on compositing window managers.)
-        layerBuffering = BasicLayerManager::BUFFER_NONE;
+        layerBuffering = mozilla::layers::BUFFER_NONE;
         ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 #ifdef MOZ_HAVE_SHMIMAGE
     } else if (nsShmImage::UseShm()) {
         // We're using an xshm mapping as a back buffer.
-        layerBuffering = BasicLayerManager::BUFFER_NONE;
+        layerBuffering = mozilla::layers::BUFFER_NONE;
 #endif // MOZ_HAVE_SHMIMAGE
     } else {
         // Get the layer manager to do double buffering (if necessary).
-        layerBuffering = BasicLayerManager::BUFFER_BUFFERED;
+        layerBuffering = mozilla::layers::BUFFER_BUFFERED;
     }
 
 #if 0
@@ -6202,7 +6224,7 @@ nsWindow::ClearCachedResources()
 {
     if (mLayerManager &&
         mLayerManager->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
-        static_cast<BasicLayerManager*> (mLayerManager.get())->
+        static_cast<mozilla::layers::BasicLayerManager*> (mLayerManager.get())->
             ClearCachedResources();
     }
 

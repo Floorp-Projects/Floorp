@@ -1794,7 +1794,7 @@ WorkerRunnable::Run()
 
   JSAutoEnterCompartment ac;
   if (targetCompartmentObject && !ac.enter(cx, targetCompartmentObject)) {
-    return false;
+    return NS_OK;
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);

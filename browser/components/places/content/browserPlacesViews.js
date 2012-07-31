@@ -181,8 +181,6 @@ PlacesViewBase.prototype = {
 
   destroyContextMenu: function PVB_destroyContextMenu(aPopup) {
     this._contextMenuShown = false;
-    if (window.content)
-      window.content.focus();
   },
 
   _cleanPopup: function PVB_cleanPopup(aPopup, aDelay) {

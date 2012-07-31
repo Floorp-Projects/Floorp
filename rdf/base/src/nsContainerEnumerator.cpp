@@ -159,7 +159,7 @@ ContainerEnumeratorImpl::HasMoreElements(bool* aResult)
          const PRUnichar *nextValStr;
          nextValLiteral->GetValueConst(&nextValStr);
 		 
-         PRInt32 err;
+         nsresult err;
          PRInt32 nextVal = nsAutoString(nextValStr).ToInteger(&err);
 
          if (nextVal > max)

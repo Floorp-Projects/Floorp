@@ -431,7 +431,9 @@ nsSelectionIterator::IsDone()
 {
   PRInt32 cnt = mDomSelection->mRanges.Length();
   if (mIndex >= 0 && mIndex < cnt) {
-    return NS_ENUMERATOR_FALSE;
+    // XXX This is completely incompatible with the meaning of nsresult.
+    // NS_ENUMERATOR_FALSE is defined to be 1.  (bug 778111)
+    return (nsresult)NS_ENUMERATOR_FALSE;
   }
   return NS_OK;
 }
@@ -4828,7 +4830,10 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
       return res;
     dir = eDirNext;
     res = difRange->SetEnd(range->GetEndParent(), range->EndOffset());
-    res |= difRange->SetStart(focusNode, focusOffset);
+    nsresult tmp = difRange->SetStart(focusNode, focusOffset);
+    if (NS_FAILED(tmp)) {
+      res = tmp;
+    }
     if (NS_FAILED(res))
       return res;
     selectFrames(presContext, difRange , true);
@@ -4850,7 +4855,10 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
     //deselect from 2 to 1
     res = difRange->SetEnd(focusNode, focusOffset);
-    res |= difRange->SetStart(aParentNode, aOffset);
+    nsresult tmp = difRange->SetStart(aParentNode, aOffset);
+    if (NS_FAILED(tmp)) {
+      res = tmp;
+    }
     if (NS_FAILED(res))
       return res;
 
@@ -4876,7 +4884,10 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
       return res;
     if (focusNode != anchorNode || focusOffset != anchorOffset) {//if collapsed diff dont do anything
       res = difRange->SetStart(focusNode, focusOffset);
-      res |= difRange->SetEnd(anchorNode, anchorOffset);
+      nsresult tmp = difRange->SetEnd(anchorNode, anchorOffset);
+      if (NS_FAILED(tmp)) {
+        res = tmp;
+      }
       if (NS_FAILED(res))
         return res;
       res = SetAnchorFocusToRange(range);
@@ -4897,7 +4908,10 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
   else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
     //deselect from 1 to 2
     res = difRange->SetEnd(aParentNode, aOffset);
-    res |= difRange->SetStart(focusNode, focusOffset);
+    nsresult tmp = difRange->SetStart(focusNode, focusOffset);
+    if (NS_FAILED(tmp)) {
+      res = tmp;
+    }
     if (NS_FAILED(res))
       return res;
     dir = eDirPrevious;
@@ -4923,8 +4937,14 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
     //deselect from a to 1
     if (focusNode != anchorNode || focusOffset!= anchorOffset) {//if collapsed diff dont do anything
       res = difRange->SetStart(anchorNode, anchorOffset);
-      res |= difRange->SetEnd(focusNode, focusOffset);
-      res |= SetAnchorFocusToRange(range);
+      nsresult tmp = difRange->SetEnd(focusNode, focusOffset);
+      if (NS_FAILED(tmp)) {
+        res = tmp;
+      }
+      tmp = SetAnchorFocusToRange(range);
+      if (NS_FAILED(tmp)) {
+        res = tmp;
+      }
       if (NS_FAILED(res))
         return res;
       selectFrames(presContext, difRange, false);
@@ -4945,7 +4965,10 @@ Selection::Extend(nsINode* aParentNode, PRInt32 aOffset)
       return res;
     dir = eDirPrevious;
     res = difRange->SetEnd(focusNode, focusOffset);
-    res |= difRange->SetStart(range->GetStartParent(), range->StartOffset());
+    nsresult tmp = difRange->SetStart(range->GetStartParent(), range->StartOffset());
+    if (NS_FAILED(tmp)) {
+      res = tmp;
+    }
     if (NS_FAILED(res))
       return res;
 

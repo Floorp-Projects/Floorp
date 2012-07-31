@@ -38,7 +38,7 @@ class nsHTMLImageElement;
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLReflowState.h"
 #include "nsIFrameLoader.h"
-#include "Layers.h"
+#include "FrameMetrics.h"
 
 class nsBlockFrame;
 class gfxDrawable;

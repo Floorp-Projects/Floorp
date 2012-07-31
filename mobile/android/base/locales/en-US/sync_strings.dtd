@@ -92,3 +92,4 @@
 <!ENTITY sync.title.redirect.to.set.up.sync.label 'Set up &syncBrand.shortName.label; to send tabs'>
 <!ENTITY sync.text.redirect.to.set.up.sync.label 'Set up &syncBrand.fullName.label; on your device to send tabs to other devices.'>
 <!ENTITY sync.text.tab.sent.label 'Your tab was sent!'>
+<!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>

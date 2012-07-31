@@ -2593,3 +2593,37 @@ nsDOMWindowUtils::GetApp(mozIDOMApplication** aApplication)
 
   return static_cast<nsGlobalWindow*>(window.get())->GetApp(aApplication);
 }
+
+nsresult
+nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
+                                            const nsAString& aNewOrigin)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  doc->RemoteFrameFullscreenChanged(aFrameElement, aNewOrigin);
+  return NS_OK;
+}
+
+nsresult
+nsDOMWindowUtils::RemoteFrameFullscreenReverted()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  doc->RemoteFrameFullscreenReverted();
+  return NS_OK;
+}
+
+nsresult
+nsDOMWindowUtils::ExitFullscreen()
+{
+  nsIDocument::ExitFullScreen(/* async = */ false);
+  return NS_OK;
+}

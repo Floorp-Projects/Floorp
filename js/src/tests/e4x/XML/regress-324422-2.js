@@ -1,4 +1,4 @@
-// |reftest| skip -- slow
+// |reftest| pref(javascript.options.xml.content,true) skip -- slow
 /* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
