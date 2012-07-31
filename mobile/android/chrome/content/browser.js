@@ -5890,6 +5890,12 @@ var WebappsUI = {
             return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
+          // The manifest is stored as UTF-8, sendMessageToJava expects UTF-16. Convert before sending
+          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+          converter.charset = "UTF-8";
+          let name = manifest.name ? converter.ConvertToUnicode(manifest.name) :
+                                     converter.ConvertToUnicode(manifest.fullLaunchPath());
+
           // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
           // a unique ID for Android webapp allocation
           this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(data.origin, null, null)),
@@ -5897,7 +5903,7 @@ var WebappsUI = {
                                 sendMessageToJava({
                                   gecko: {
                                     type: "WebApps:Install",
-                                    name: manifest.name,
+                                    name: name,
                                     launchPath: manifest.fullLaunchPath(),
                                     iconURL: icon,
                                     uniqueURI: data.origin
