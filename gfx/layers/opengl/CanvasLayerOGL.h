@@ -26,6 +26,7 @@ public:
     : CanvasLayer(aManager, NULL),
       LayerOGL(aManager),
       mTexture(0),
+      mTextureTarget(LOCAL_GL_TEXTURE_2D),
       mDelayedUpdates(false)
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
       ,mPixmap(0)
@@ -54,6 +55,7 @@ protected:
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
   GLuint mTexture;
+  GLenum mTextureTarget;
 
   bool mDelayedUpdates;
   bool mGLBufferIsPremultiplied;
