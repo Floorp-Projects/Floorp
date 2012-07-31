@@ -52,6 +52,15 @@ CPPSRCS	+= \
 	   DrawTargetCG.cpp \
 	   PathCG.cpp \
 	   $(NULL)
+
+CMMSRCS = \
+	   QuartzSupport.mm \
+	   $(NULL)
+
+EXPORTS_mozilla/gfx	+= \
+	   QuartzSupport.h \
+	   MacIOSurface.h \
+	   $(NULL)
 endif
 
 DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL

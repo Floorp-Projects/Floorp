@@ -379,7 +379,17 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 already_AddRefed<gfxASurface>
 gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
+  if (aTarget->GetType() == BACKEND_COREGRAPHICS_ACCELERATED) {
+    RefPtr<SourceSurface> source = aTarget->Snapshot();
+    RefPtr<DataSourceSurface> sourceData = source->GetDataSurface();
+    unsigned char* data = sourceData->GetData();
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(data, ThebesIntSize(sourceData->GetSize()), sourceData->Stride(),
+                                                         gfxImageSurface::ImageFormatARGB32);
+    // We could fix this by telling gfxImageSurface it owns data.
+    nsRefPtr<gfxImageSurface> cpy = new gfxImageSurface(ThebesIntSize(sourceData->GetSize()), gfxImageSurface::ImageFormatARGB32);
+    cpy->CopyFrom(surf);
+    return cpy.forget();
+  } else if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
     CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
 
     //XXX: it would be nice to have an implicit conversion from IntSize to gfxIntSize
@@ -395,6 +405,12 @@ gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
   return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
 }
 
+bool
+gfxPlatformMac::UseAcceleratedCanvas()
+{
+  // Lion or later is required
+  return false && OSXVersion() >= 0x1070 && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
+}
 
 qcms_profile *
 gfxPlatformMac::GetPlatformCMSOutputProfile()
