@@ -3025,6 +3025,10 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                                      nsGUIEvent*    aEvent,
                                      nsEventStatus* aEventStatus)
 {
+  if (aEvent->eventStructType != NS_MOUSE_EVENT) {
+    return NS_OK;
+  }
+
   nsIFrame* activeFrame = GetActiveSelectionFrame(aPresContext, this);
 
   nsCOMPtr<nsIContent> captureContent = nsIPresShell::GetCapturingContent();
