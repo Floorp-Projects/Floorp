@@ -106,8 +106,8 @@ public:
   void InitFrom(const VideoSegment& aOther)
   {
   }
-  void SliceFrom(const VideoSegment& aOther, TrackTicks aStart, TrackTicks aEnd) {
-    BaseSliceFrom(aOther, aStart, aEnd);
+  void CheckCompatible(const VideoSegment& aOther) const
+  {
   }
   static Type StaticType() { return VIDEO; }
 };

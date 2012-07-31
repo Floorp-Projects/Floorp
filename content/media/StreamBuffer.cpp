@@ -38,7 +38,7 @@ void
 StreamBuffer::ForgetUpTo(StreamTime aTime)
 {
   // Round to nearest 50ms so we don't spend too much time pruning segments.
-  const int roundTo = MillisecondsToMediaTime(50);
+  const MediaTime roundTo = MillisecondsToMediaTime(50);
   StreamTime forget = (aTime/roundTo)*roundTo;
   if (forget <= mForgottenTime) {
     return;
