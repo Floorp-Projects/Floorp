@@ -59,3 +59,23 @@ def WebIDLTest(parser, harness):
     harness.check(attr.identifier.name, "foo", "Attr has correct name")
 
     harness.check(str(attr.type), "TestEnum (Wrapper)", "Attr type is the correct name")
+
+    # Now reset our parser
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          enum Enum {
+            "a",
+            "b",
+            "c"
+          };
+          interface TestInterface {
+            void foo(optional Enum e = "d");
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow a bogus default value for an enum")
