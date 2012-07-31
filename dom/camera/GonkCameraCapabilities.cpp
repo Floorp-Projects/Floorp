@@ -119,11 +119,11 @@ ParseDimensionItemAndAdd(JSContext* aCx, JSObject* aArray, PRUint32 aIndex, cons
 }
 
 nsresult
-nsCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray, const char* aKey, ParseItemAndAddFunc aParseItemAndAdd)
+nsCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray, PRUint32 aKey, ParseItemAndAddFunc aParseItemAndAdd)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(aKey);
+  const char* value = mCamera->GetParameterConstChar(aKey);
   if (!value) {
     // in case we get nonsense data back
     *aArray = nullptr;
@@ -157,7 +157,7 @@ nsCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray,
 }
 
 nsresult
-nsCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, const char* aKey)
+nsCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, PRUint32 aKey)
 {
   JSObject* array;
 
@@ -169,7 +169,7 @@ nsCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, c
 }
 
 nsresult
-nsCameraCapabilities::DimensionListToNewObject(JSContext* aCx, JS::Value* aArray, const char* aKey)
+nsCameraCapabilities::DimensionListToNewObject(JSContext* aCx, JS::Value* aArray, PRUint32 aKey)
 {
   JSObject* array;
   nsresult rv;
@@ -185,56 +185,56 @@ nsCameraCapabilities::DimensionListToNewObject(JSContext* aCx, JS::Value* aArray
 NS_IMETHODIMP
 nsCameraCapabilities::GetPreviewSizes(JSContext* cx, JS::Value* aPreviewSizes)
 {
-  return DimensionListToNewObject(cx, aPreviewSizes, CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES);
+  return DimensionListToNewObject(cx, aPreviewSizes, nsCameraControl::CAMERA_PARAM_SUPPORTED_PREVIEWSIZES);
 }
 
 /* readonly attribute jsval pictureSizes; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetPictureSizes(JSContext* cx, JS::Value* aPictureSizes)
 {
-  return DimensionListToNewObject(cx, aPictureSizes, CameraParameters::KEY_SUPPORTED_PICTURE_SIZES);
+  return DimensionListToNewObject(cx, aPictureSizes, nsCameraControl::CAMERA_PARAM_SUPPORTED_PICTURESIZES);
 }
 
 /* readonly attribute jsval fileFormats; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetFileFormats(JSContext* cx, JS::Value* aFileFormats)
 {
-  return StringListToNewObject(cx, aFileFormats, CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS);
+  return StringListToNewObject(cx, aFileFormats, nsCameraControl::CAMERA_PARAM_SUPPORTED_PICTUREFORMATS);
 }
 
 /* readonly attribute jsval whiteBalanceModes; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetWhiteBalanceModes(JSContext* cx, JS::Value* aWhiteBalanceModes)
 {
-  return StringListToNewObject(cx, aWhiteBalanceModes, CameraParameters::KEY_SUPPORTED_WHITE_BALANCE);
+  return StringListToNewObject(cx, aWhiteBalanceModes, nsCameraControl::CAMERA_PARAM_SUPPORTED_WHITEBALANCES);
 }
 
 /* readonly attribute jsval sceneModes; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetSceneModes(JSContext* cx, JS::Value* aSceneModes)
 {
-  return StringListToNewObject(cx, aSceneModes, CameraParameters::KEY_SUPPORTED_SCENE_MODES);
+  return StringListToNewObject(cx, aSceneModes, nsCameraControl::CAMERA_PARAM_SUPPORTED_SCENEMODES);
 }
 
 /* readonly attribute jsval effects; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetEffects(JSContext* cx, JS::Value* aEffects)
 {
-  return StringListToNewObject(cx, aEffects, CameraParameters::KEY_SUPPORTED_EFFECTS);
+  return StringListToNewObject(cx, aEffects, nsCameraControl::CAMERA_PARAM_SUPPORTED_EFFECTS);
 }
 
 /* readonly attribute jsval flashModes; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetFlashModes(JSContext* cx, JS::Value* aFlashModes)
 {
-  return StringListToNewObject(cx, aFlashModes, CameraParameters::KEY_SUPPORTED_FLASH_MODES);
+  return StringListToNewObject(cx, aFlashModes, nsCameraControl::CAMERA_PARAM_SUPPORTED_FLASHMODES);
 }
 
 /* readonly attribute jsval focusModes; */
 NS_IMETHODIMP
 nsCameraCapabilities::GetFocusModes(JSContext* cx, JS::Value* aFocusModes)
 {
-  return StringListToNewObject(cx, aFocusModes, CameraParameters::KEY_SUPPORTED_FOCUS_MODES);
+  return StringListToNewObject(cx, aFocusModes, nsCameraControl::CAMERA_PARAM_SUPPORTED_FOCUSMODES);
 }
 
 /* readonly attribute long maxFocusAreas; */
@@ -243,7 +243,7 @@ nsCameraCapabilities::GetMaxFocusAreas(JSContext* cx, PRInt32* aMaxFocusAreas)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_MAX_NUM_FOCUS_AREAS);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS);
   if (!value) {
     // in case we get nonsense data back
     *aMaxFocusAreas = 0;
@@ -260,7 +260,7 @@ nsCameraCapabilities::GetMinExposureCompensation(JSContext* cx, double* aMinExpo
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION);
   if (!value) {
     // in case we get nonsense data back
     *aMinExposureCompensation = 0;
@@ -277,7 +277,7 @@ nsCameraCapabilities::GetMaxExposureCompensation(JSContext* cx, double* aMaxExpo
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION);
   if (!value) {
     // in case we get nonsense data back
     *aMaxExposureCompensation = 0;
@@ -294,7 +294,7 @@ nsCameraCapabilities::GetStepExposureCompensation(JSContext* cx, double* aStepEx
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP);
   if (!value) {
     // in case we get nonsense data back
     *aStepExposureCompensation = 0;
@@ -311,7 +311,7 @@ nsCameraCapabilities::GetMaxMeteringAreas(JSContext* cx, PRInt32* aMaxMeteringAr
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_MAX_NUM_METERING_AREAS);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS);
   if (!value) {
     // in case we get nonsense data back
     *aMaxMeteringAreas = 0;
@@ -328,7 +328,7 @@ nsCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  const char* value = mCamera->GetParameter(CameraParameters::KEY_ZOOM_SUPPORTED);
+  const char* value = mCamera->GetParameterConstChar(nsCameraControl::CAMERA_PARAM_SUPPORTED_ZOOM);
   if (!value || strcmp(value, CameraParameters::TRUE) != 0) {
     // if zoom is not supported, return a null object
     *aZoomRatios = JSVAL_NULL;
@@ -337,7 +337,7 @@ nsCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
 
   JSObject* array;
 
-  nsresult rv = ParameterListToNewArray(cx, &array, CameraParameters::KEY_ZOOM_RATIOS, ParseZoomRatioItemAndAdd);
+  nsresult rv = ParameterListToNewArray(cx, &array, nsCameraControl::CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, ParseZoomRatioItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aZoomRatios = OBJECT_TO_JSVAL(array);
@@ -348,5 +348,5 @@ nsCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
 NS_IMETHODIMP
 nsCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
 {
-  return DimensionListToNewObject(cx, aVideoSizes, CameraParameters::KEY_SUPPORTED_VIDEO_SIZES);
+  return DimensionListToNewObject(cx, aVideoSizes, nsCameraControl::CAMERA_PARAM_SUPPORTED_VIDEOSIZES);
 }
