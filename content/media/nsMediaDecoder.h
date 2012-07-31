@@ -41,6 +41,9 @@ public:
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
   typedef mozilla::SourceMediaStream SourceMediaStream;
+  typedef mozilla::ProcessedMediaStream ProcessedMediaStream;
+  typedef mozilla::MediaInputPort MediaInputPort;
+  typedef mozilla::MainThreadMediaStreamListener MainThreadMediaStreamListener;
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
@@ -102,7 +105,10 @@ public:
   virtual void SetAudioCaptured(bool aCaptured) = 0;
 
   // Add an output stream. All decoder output will be sent to the stream.
-  virtual void AddOutputStream(SourceMediaStream* aStream, bool aFinishWhenEnded) = 0;
+  // The stream is initially blocked. The decoder is responsible for unblocking
+  // it while it is playing back.
+  virtual void AddOutputStream(ProcessedMediaStream* aStream,
+                               bool aFinishWhenEnded) = 0;
 
   // Start playback of a video. 'Load' must have previously been
   // called.

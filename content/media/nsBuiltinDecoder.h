@@ -332,6 +332,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
 {
 public:
   typedef mozilla::MediaChannelStatistics MediaChannelStatistics;
+  class DecodedStreamMainThreadListener;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -377,21 +378,27 @@ public:
   virtual void SetVolume(double aVolume);
   virtual void SetAudioCaptured(bool aCaptured);
 
-  virtual void AddOutputStream(SourceMediaStream* aStream, bool aFinishWhenEnded);
-  // Protected by mReentrantMonitor. All decoder output is copied to these streams.
-  struct OutputMediaStream {
-    OutputMediaStream();
-    ~OutputMediaStream();
-    OutputMediaStream(const OutputMediaStream& rhs);
+  // All MediaStream-related data is protected by mReentrantMonitor.
+  // We have at most one DecodedStreamData per nsBuiltinDecoder. Its stream
+  // is used as the input for each ProcessedMediaStream created by calls to
+  // captureStream(UntilEnded). Seeking creates a new source stream, as does
+  // replaying after the input as ended. In the latter case, the new source is
+  // not connected to streams created by captureStreamUntilEnded.
 
-    void Init(int64_t aInitialTime, SourceMediaStream* aStream, bool aFinishWhenEnded);
-    
+  struct DecodedStreamData {
+    DecodedStreamData(nsBuiltinDecoder* aDecoder,
+                      int64_t aInitialTime, SourceMediaStream* aStream);
+    ~DecodedStreamData();
+
+    // The following group of fields are protected by the decoder's monitor
+    // and can be read or written on any thread.    
     int64_t mLastAudioPacketTime; // microseconds
     int64_t mLastAudioPacketEndTime; // microseconds
     // Count of audio frames written to the stream
     int64_t mAudioFramesWritten;
-    // Timestamp of the first audio packet whose frames we wrote.
-    int64_t mAudioFramesWrittenBaseTime; // microseconds
+    // Saved value of aInitialTime. Timestamp of the first audio and/or
+    // video packet written.
+    int64_t mInitialTime; // microseconds
     // mNextVideoTime is the end timestamp for the last packet sent to the stream.
     // Therefore video packets starting at or after this time need to be copied
     // to the output stream.
@@ -399,21 +406,78 @@ public:
     // The last video image sent to the stream. Useful if we need to replicate
     // the image.
     nsRefPtr<Image> mLastVideoImage;
-    nsRefPtr<SourceMediaStream> mStream;
     gfxIntSize mLastVideoImageDisplaySize;
     // This is set to true when the stream is initialized (audio and
     // video tracks added).
     bool mStreamInitialized;
-    bool mFinishWhenEnded;
     bool mHaveSentFinish;
     bool mHaveSentFinishAudio;
     bool mHaveSentFinishVideo;
+
+    // The decoder is responsible for calling Destroy() on this stream.
+    // Can be read from any thread.
+    const nsRefPtr<SourceMediaStream> mStream;
+    // A listener object that receives notifications when mStream's
+    // main-thread-visible state changes. Used on the main thread only.
+    const nsRefPtr<DecodedStreamMainThreadListener> mMainThreadListener;
+    // True when we've explicitly blocked this stream because we're
+    // not in PLAY_STATE_PLAYING. Used on the main thread only.
+    bool mHaveBlockedForPlayState;
   };
-  nsTArray<OutputMediaStream>& OutputStreams()
+  struct OutputStreamData {
+    void Init(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
+    {
+      mStream = aStream;
+      mFinishWhenEnded = aFinishWhenEnded;
+    }
+    nsRefPtr<ProcessedMediaStream> mStream;
+    // mPort connects mDecodedStream->mStream to our mStream.
+    nsRefPtr<MediaInputPort> mPort;
+    bool mFinishWhenEnded;
+  };
+  /**
+   * Connects mDecodedStream->mStream to aStream->mStream.
+   */
+  void ConnectDecodedStreamToOutputStream(OutputStreamData* aStream);
+  /**
+   * Disconnects mDecodedStream->mStream from all outputs and clears
+   * mDecodedStream.
+   */
+  void DestroyDecodedStream();
+  /**
+   * Recreates mDecodedStream. Call this to create mDecodedStream at first,
+   * and when seeking, to ensure a new stream is set up with fresh buffers.
+   * aStartTimeUSecs is relative to the state machine's mStartTime.
+   */
+  void RecreateDecodedStream(int64_t aStartTimeUSecs);
+  /**
+   * Called when the state of mDecodedStream as visible on the main thread
+   * has changed. In particular we want to know when the stream has finished
+   * so we can call PlaybackEnded.
+   */
+  void NotifyDecodedStreamMainThreadStateChanged();
+  nsTArray<OutputStreamData>& OutputStreams()
   {
     GetReentrantMonitor().AssertCurrentThreadIn();
     return mOutputStreams;
   }
+  DecodedStreamData* GetDecodedStream()
+  {
+    GetReentrantMonitor().AssertCurrentThreadIn();
+    return mDecodedStream;
+  }
+  class DecodedStreamMainThreadListener : public MainThreadMediaStreamListener {
+  public:
+    DecodedStreamMainThreadListener(nsBuiltinDecoder* aDecoder)
+      : mDecoder(aDecoder) {}
+    virtual void NotifyMainThreadStateChanged()
+    {
+      mDecoder->NotifyDecodedStreamMainThreadStateChanged();
+    }
+    nsBuiltinDecoder* mDecoder;
+  };
+
+  virtual void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
   virtual double GetDuration();
 
@@ -710,7 +774,13 @@ public:
   ReentrantMonitor mReentrantMonitor;
 
   // Data about MediaStreams that are being fed by this decoder.
-  nsTArray<OutputMediaStream> mOutputStreams;
+  nsTArray<OutputStreamData> mOutputStreams;
+  // The SourceMediaStream we are using to feed the mOutputStreams. This stream
+  // is never exposed outside the decoder.
+  // Only written on the main thread while holding the monitor. Therefore it
+  // can be read on any thread while holding the monitor, or on the main thread
+  // without holding the monitor.
+  nsAutoPtr<DecodedStreamData> mDecodedStream;
 
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
@@ -742,6 +812,10 @@ public:
 
   // True if the stream is infinite (e.g. a webradio).
   bool mInfiniteStream;
+
+  // True if NotifyDecodedStreamMainThreadStateChanged should retrigger
+  // PlaybackEnded when mDecodedStream->mStream finishes.
+  bool mTriggerPlaybackEndedWhenSourceStreamFinishes;
 };
 
 #endif
