@@ -552,7 +552,8 @@ namespace dom {
 bool
 AzureCanvasEnabled()
 {
-  return gfxPlatform::GetPlatform()->SupportsAzureCanvas();
+  BackendType dontCare;
+  return gfxPlatform::GetPlatform()->SupportsAzureCanvas(dontCare);
 }
 
 }
