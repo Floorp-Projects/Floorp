@@ -82,8 +82,8 @@ class Test(object):
         dirname, filename = os.path.split(self.path)
         cmd = js_cmd_prefix
         if self.allowXml:
-            cmd += [ '-e', 'options("allow_xml")' ]
-        cmd += Test.prefix_command(dirname)
+            cmd = cmd + [ '-e', 'options("allow_xml")' ]
+        cmd = cmd + Test.prefix_command(dirname)
         if self.debugMode:
             cmd += [ '-d' ]
         # There is a test that requires the path to start with './'.
