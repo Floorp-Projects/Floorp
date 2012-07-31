@@ -233,6 +233,7 @@ interface TestInterface {
   void passString(DOMString arg);
   void passNullableString(DOMString? arg);
   void passOptionalString(optional DOMString arg);
+  void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
 
@@ -357,6 +358,8 @@ dictionary Dict : ParentDict {
   long z = 9;
   DOMString str;
   TestEnum otherEnum = "b";
+  DOMString otherStr = "def";
+  DOMString? yetAnotherStr = null;
 };
 
 dictionary ParentDict : GrandparentDict {

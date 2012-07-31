@@ -335,6 +335,7 @@ public:
   void PassString(const nsAString&, ErrorResult&);
   void PassNullableString(const nsAString&, ErrorResult&);
   void PassOptionalString(const Optional<nsAString>&, ErrorResult&);
+  void PassOptionalStringWithDefaultValue(const nsAString&, ErrorResult&);
   void PassOptionalNullableString(const Optional<nsAString>&, ErrorResult&);
   void PassOptionalNullableStringWithDefaultValue(const nsAString&, ErrorResult&);
 
@@ -551,6 +552,7 @@ private:
   void PassString(nsAString&, ErrorResult&) MOZ_DELETE;
   void PassNullableString(nsAString&, ErrorResult&) MOZ_DELETE;
   void PassOptionalString(Optional<nsAString>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalStringWithDefaultValue(nsAString&, ErrorResult&) MOZ_DELETE;
   void PassOptionalNullableString(Optional<nsAString>&, ErrorResult&) MOZ_DELETE;
   void PassOptionalNullableStringWithDefaultValue(nsAString&, ErrorResult&) MOZ_DELETE;
 
