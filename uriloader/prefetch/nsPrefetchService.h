@@ -9,6 +9,7 @@
 #include "nsIObserver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
+#include "nsIRedirectResultListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
@@ -85,6 +86,7 @@ class nsPrefetchNode MOZ_FINAL : public nsIDOMLoadStatus
                                , public nsIStreamListener
                                , public nsIInterfaceRequestor
                                , public nsIChannelEventSink
+                               , public nsIRedirectResultListener
 {
 public:
     NS_DECL_ISUPPORTS
@@ -93,6 +95,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICHANNELEVENTSINK
+    NS_DECL_NSIREDIRECTRESULTLISTENER
 
     nsPrefetchNode(nsPrefetchService *aPrefetchService,
                    nsIURI *aURI,
@@ -112,6 +115,7 @@ public:
 private:
     nsRefPtr<nsPrefetchService> mService;
     nsCOMPtr<nsIChannel>        mChannel;
+    nsCOMPtr<nsIChannel>        mRedirectChannel;
     PRUint16                    mState;
     PRInt32                     mBytesRead;
 };
