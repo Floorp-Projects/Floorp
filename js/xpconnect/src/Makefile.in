@@ -166,24 +166,9 @@ dombindings_gen.cpp: $(srcdir)/dombindings.conf \
 	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
 	  $(srcdir)/dombindings.conf
 
-DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.h \
-                                 DictionaryHelpers.cpp
+DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.cpp
 
-DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
-                     event_impl_gen.conf \
-                     $(srcdir)/dictionary_helper_gen.py \
-                     $(srcdir)/codegen.py \
-                     $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                     $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/dictionary_helper_gen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --header-output DictionaryHelpers.h \
-	  $(srcdir)/dictionary_helper_gen.conf \
-	  event_impl_gen.conf
+DictionaryHelpers.h: DictionaryHelpers.cpp
 
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
                        event_impl_gen.conf \
@@ -197,6 +182,7 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
+	  --header-output DictionaryHelpers.h \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
 	  $(srcdir)/dictionary_helper_gen.conf \

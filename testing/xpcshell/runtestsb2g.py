@@ -29,7 +29,20 @@ class B2GXPCShellRemote(XPCShellRemote):
         XPCShellRemote.setupUtilities(self)
 
     def clean(self):
+        print >>sys.stderr, "\nCleaning files from previous run.."
         self.device.removeDir(DEVICE_TEST_ROOT)
+
+    # Overridden
+    def pushLibs(self):
+        if not self.options.use_device_libs:
+            XPCShellRemote.pushLibs(self)
+
+    # Overridden
+    def setLD_LIBRARY_PATH(self, env):
+        if self.options.use_device_libs:
+            env['LD_LIBRARY_PATH'] = '/system/b2g'
+        else:
+            XPCShellRemote.setLD_LIBRARY_PATH(self, env)
 
     # Overridden
     # This returns 1 even when tests pass - this is why it's switched to 0
@@ -52,10 +65,11 @@ class B2GOptions(RemoteXPCShellOptions):
                         help="Path to B2G repo or qemu dir")
         defaults['b2g_path'] = None
 
-        self.add_option('--marionette', action='store',
-                        type='string', dest='marionette',
-                        help="host:port to use when connecting to Marionette")
-        defaults['marionette'] = None
+        self.add_option('--emupath', action='store',
+                        type='string', dest='emu_path',
+                        help="Path to emulator folder (if different "
+                                                      "from b2gpath")
+        defaults['emu_path'] = None
 
         self.add_option('--emulator', action='store',
                         type='string', dest='emulator',
@@ -71,6 +85,16 @@ class B2GOptions(RemoteXPCShellOptions):
                         type='string', dest='adb_path',
                         help="Path to adb")
         defaults['adb_path'] = 'adb'
+
+        self.add_option('--address', action='store',
+                        type='string', dest='address',
+                        help="host:port of running Gecko instance to connect to")
+        defaults['address'] = None
+
+        self.add_option('--use-device-libs', action='store_true',
+                        dest='use_device_libs',
+                        help="Don't push .so's")
+        defaults['use_device_libs'] = False
 
         defaults['dm_trans'] = 'adb'
         defaults['debugger'] = None
@@ -97,11 +121,14 @@ def main():
         if options.no_window:
             kwargs['noWindow'] = True
     if options.b2g_path:
-        kwargs['homedir'] = options.b2g_path
-    if options.marionette:
-        host, port = options.marionette.split(':')
+        kwargs['homedir'] = options.emu_path or options.b2g_path
+    if options.address:
+        host, port = options.address.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
+        kwargs['baseurl'] = 'http://%s:%d/' % (host, int(port))
+        if options.emulator:
+            kwargs['connectToRunningEmulator'] = True
     marionette = Marionette(**kwargs)
 
     # Create the DeviceManager instance

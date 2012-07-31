@@ -357,10 +357,6 @@ if __name__ == '__main__':
 
     conf = readConfigFile(filename)
 
-    if options.header_output is not None:
-        outfd = open(options.header_output, 'w')
-        print_header_file(outfd, conf)
-        outfd.close()
     if options.stub_output is not None:
         make_targets.append(options.stub_output)
         outfd = open(options.stub_output, 'w')
@@ -368,4 +364,8 @@ if __name__ == '__main__':
         outfd.close()
         if options.makedepend_output is not None:
             writeMakeDependOutput(options.makedepend_output)
+    if options.header_output is not None:
+        outfd = open(options.header_output, 'w')
+        print_header_file(outfd, conf)
+        outfd.close()
 

@@ -214,10 +214,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const CommonLayerAttributes& common = attrs.common();
       layer->SetVisibleRegion(common.visibleRegion());
       layer->SetContentFlags(common.contentFlags());
-      layer->SetOpacity(common.opacity().value());
+      layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
-      layer->SetBaseTransform(common.transform().value());
-      layer->SetScale(common.xScale(), common.yScale());
+      layer->SetTransform(common.transform());
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
@@ -228,7 +227,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       } else {
         layer->SetMaskLayer(NULL);
       }
-      layer->SetAnimations(common.animations());
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();
@@ -259,7 +257,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         MOZ_LAYERS_LOG(("[ParentSide]   color layer"));
 
         static_cast<ColorLayer*>(layer)->SetColor(
-          specific.get_ColorLayerAttributes().color().value());
+          specific.get_ColorLayerAttributes().color());
         break;
 
       case Specific::TCanvasLayerAttributes:

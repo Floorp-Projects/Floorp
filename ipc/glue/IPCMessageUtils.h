@@ -9,7 +9,6 @@
 
 #include "chrome/common/ipc_message_utils.h"
 
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "mozilla/gfx/2D.h"
 
@@ -440,28 +439,11 @@ struct ParamTraits<gfxPoint>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return (ReadParam(aMsg, aIter, &aResult->x) &&
-            ReadParam(aMsg, aIter, &aResult->y));
- }
-};
+    if (ReadParam(aMsg, aIter, &aResult->x) &&
+        ReadParam(aMsg, aIter, &aResult->y))
+      return true;
 
-template<>
-struct ParamTraits<gfxPoint3D>
-{
-  typedef gfxPoint3D paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.x);
-    WriteParam(aMsg, aParam.y);
-    WriteParam(aMsg, aParam.z);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return (ReadParam(aMsg, aIter, &aResult->x) &&
-            ReadParam(aMsg, aIter, &aResult->y) &&
-            ReadParam(aMsg, aIter, &aResult->z));
+    return false;
   }
 };
 
@@ -596,28 +578,10 @@ struct ParamTraits<mozilla::null_t>
 };
 
 template<>
-struct ParamTraits<nsPoint>
-{
-  typedef nsPoint paramType;
-
-  static void Write(Message* msg, const paramType& param)
-  {
-    WriteParam(msg, param.x);
-    WriteParam(msg, param.y);
-  }
-
-  static bool Read(const Message* msg, void** iter, paramType* result)
-  {
-    return (ReadParam(msg, iter, &result->x) &&
-            ReadParam(msg, iter, &result->y));
-  }
-};
-
-template<>
 struct ParamTraits<nsIntPoint>
 {
   typedef nsIntPoint paramType;
-
+  
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.x);
@@ -635,7 +599,7 @@ template<>
 struct ParamTraits<nsIntRect>
 {
   typedef nsIntRect paramType;
-
+  
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.x);
@@ -684,11 +648,11 @@ template<>
 struct ParamTraits<nsIntSize>
 {
   typedef nsIntSize paramType;
-
+  
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.width);
-    WriteParam(msg, param.height);
+    WriteParam(msg, param.height); 
   }
 
   static bool Read(const Message* msg, void** iter, paramType* result)
@@ -702,11 +666,11 @@ template<>
 struct ParamTraits<mozilla::gfx::Size>
 {
   typedef mozilla::gfx::Size paramType;
-
+  
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.width);
-    WriteParam(msg, param.height);
+    WriteParam(msg, param.height); 
   }
 
   static bool Read(const Message* msg, void** iter, paramType* result)
@@ -742,7 +706,7 @@ template<>
 struct ParamTraits<nsRect>
 {
   typedef nsRect paramType;
-
+  
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.x);
@@ -800,34 +764,6 @@ struct ParamTraits<nsID>
       aLog->append(StringPrintf(L"%2.2X", aParam.m3[i]));
     aLog->append(L"}");
   }
-};
-
-template<>
-struct ParamTraits<mozilla::TimeDuration>
-{
-  typedef mozilla::TimeDuration paramType;
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mValue);
-  }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->mValue);
-  };
-};
-
-template<>
-struct ParamTraits<mozilla::TimeStamp>
-{
-  typedef mozilla::TimeStamp paramType;
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mValue);
-  }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->mValue);
-  };
 };
 
 } /* namespace IPC */
