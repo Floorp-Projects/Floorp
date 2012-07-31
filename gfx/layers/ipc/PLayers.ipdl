@@ -54,6 +54,8 @@ union CanvasSurface {
 // Change a layer's attributes
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
+  float xScale;
+  float yScale;
   gfx3DMatrix transform;
   PRUint32 contentFlags;
   float opacity;

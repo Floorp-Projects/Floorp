@@ -634,9 +634,16 @@ public:
    * XXX Currently only transformations corresponding to 2D affine transforms
    * are supported.
    */
-  void SetTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
     mTransform = aMatrix;
+    Mutated();
+  }
+
+  void SetScale(float aXScale, float aYScale)
+  {
+    mXScale = aXScale;
+    mYScale = aYScale;
     Mutated();
   }
 
@@ -667,7 +674,10 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nullptr; }
   virtual Layer* GetLastChild() { return nullptr; }
-  const gfx3DMatrix& GetTransform() { return mTransform; }
+  const gfx3DMatrix GetTransform();
+  const gfx3DMatrix& GetBaseTransform() { return mTransform; }
+  float GetXScale() { return mXScale; }
+  float GetYScale() { return mYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   Layer* GetMaskLayer() { return mMaskLayer; }
@@ -879,6 +889,8 @@ protected:
     mPrevSibling(nullptr),
     mImplData(aImplData),
     mMaskLayer(nullptr),
+    mXScale(1.0f),
+    mYScale(1.0f),
     mOpacity(1.0),
     mContentFlags(0),
     mUseClipRect(false),
@@ -900,7 +912,7 @@ protected:
    * Returns the local transform for this layer: either mTransform or,
    * for shadow layers, GetShadowTransform()
    */
-  const gfx3DMatrix& GetLocalTransform();
+  const gfx3DMatrix GetLocalTransform();
 
   /**
    * Computes a tweaked version of aTransform that snaps a point or a rectangle
@@ -926,6 +938,8 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
+  float mXScale;
+  float mYScale;
   gfx3DMatrix mEffectiveTransform;
   float mOpacity;
   nsIntRect mClipRect;
