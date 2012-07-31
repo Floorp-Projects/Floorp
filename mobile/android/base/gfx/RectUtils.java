@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.FloatUtils;
+import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +16,8 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 
 public final class RectUtils {
+    private RectUtils() {}
+
     public static Rect create(JSONObject json) {
         try {
             int x = json.getInt("x");
