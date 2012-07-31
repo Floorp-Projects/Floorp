@@ -486,8 +486,8 @@ function BuildConditionSandbox(aURL) {
     } catch (e) {
       sandbox.d2d = false;
     }
-    sandbox.azureQuartz = gfxInfo.getInfo().AzureBackend == "quartz";
-    sandbox.azureSkia = gfxInfo.getInfo().AzureBackend == "skia";
+    sandbox.azureQuartz = gfxInfo.getInfo().AzureCanvasBackend == "quartz";
+    sandbox.azureSkia = gfxInfo.getInfo().AzureCanvasBackend == "skia";
 
     sandbox.layersGPUAccelerated =
       gWindowUtils.layerManagerType != "Basic";
