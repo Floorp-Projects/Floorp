@@ -365,7 +365,7 @@ void
 GLXLibrary::AfterGLXCall()
 {
     if (mDebug) {
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
         if (sErrorEvent.mError.error_code) {
             char buffer[2048];
             XGetErrorText(DefaultXDisplay(), sErrorEvent.mError.error_code, buffer, sizeof(buffer));
