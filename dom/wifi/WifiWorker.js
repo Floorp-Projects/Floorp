@@ -1652,6 +1652,11 @@ WifiWorker.prototype = {
     function getConnectionInformation() {
       WifiManager.getConnectionInfo(function(info) {
         // See comments in calculateSignal for information about this.
+        if (!info) {
+          self._lastConnectionInfo = null;
+          return;
+        }
+
         let { rssi, linkspeed } = info;
         if (rssi > 0)
           rssi -= 256;
