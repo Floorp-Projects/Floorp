@@ -19,7 +19,7 @@
 const char*
 anp_system_getApplicationDataDirectory()
 {
-  static char *dir = NULL;
+  static char *dir;
 
   if (!dir) {
     dir = getenv("ANDROID_PLUGIN_DATADIR");
