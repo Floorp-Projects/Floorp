@@ -14,6 +14,7 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.ConfigurationUtils;
 import org.mozilla.gecko.util.FloatUtils;
 
@@ -244,8 +245,6 @@ public class GeckoAppShell
     public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId, long aProcessId);
 
-    public static native ByteBuffer allocateDirectBuffer(long size);
-    public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void scheduleComposite();
     public static native void schedulePauseComposition();
     public static native void scheduleResumeComposition(int width, int height);
@@ -2371,7 +2370,7 @@ class ScreenshotHandler implements Runnable {
         mMaxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), mMaxTextureSize * mMaxTextureSize);
         mMinTextureSize = (int)Math.ceil(mMaxPixels / mMaxTextureSize);
         mPendingScreenshots = new LinkedList<PendingScreenshot>();
-        mBuffer = GeckoAppShell.allocateDirectBuffer(mMaxPixels * BYTES_FOR_16BPP);
+        mBuffer = DirectBufferAllocator.allocate(mMaxPixels * BYTES_FOR_16BPP);
         mDirtyRect = new RectF();
         clearDirtyRect();
     }
