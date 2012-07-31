@@ -310,7 +310,7 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
     return false;
   }
 
-  mFrontSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
+  mFrontSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight);
   if (!mFrontSurface) {
     mCARenderer = nullptr;
     return false;
@@ -351,7 +351,7 @@ void nsDoubleBufferCARenderer::Render() {
 }
 
 void nsDoubleBufferCARenderer::SwapSurfaces() {
-  nsRefPtr<nsIOSurface> prevFrontSurface = mFrontSurface;
+  RefPtr<MacIOSurface> prevFrontSurface = mFrontSurface;
   mFrontSurface = mBackSurface;
   mBackSurface = prevFrontSurface;
 
