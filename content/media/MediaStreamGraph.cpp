@@ -964,13 +964,6 @@ MediaStreamGraphImpl::RecomputeBlockingAt(GraphTime aTime,
       MarkStreamBlocked(stream, aTime, aEnd);
       continue;
     }
-
-    if (stream->mAudioOutputs.IsEmpty() && stream->mVideoOutputs.IsEmpty()) {
-      // See if the stream is being consumed anywhere. If not, it should block.
-      LOG(PR_LOG_DEBUG, ("MediaStream %p is blocked due to having no consumers", stream));
-      MarkStreamBlocked(stream, aTime, aEnd);
-      continue;
-    }
   }
 
   NS_ASSERTION(*aEnd > aTime, "Failed to advance!");
