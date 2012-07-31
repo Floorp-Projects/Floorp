@@ -230,7 +230,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     prevIonTop_(cx->runtime->ionTop),
     prevIonJSContext_(cx->runtime->ionJSContext)
 {
-    fp->setRunningInIon();
+    if (fp)
+        fp->setRunningInIon();
     cx->runtime->ionJSContext = cx;
     cx->runtime->ionActivation = this;
     cx->runtime->ionStackLimit = cx->runtime->nativeStackLimit;
@@ -241,7 +242,8 @@ IonActivation::~IonActivation()
     JS_ASSERT(cx_->runtime->ionActivation == this);
     JS_ASSERT(!bailout_);
 
-    entryfp_->clearRunningInIon();
+    if (entryfp_)
+        entryfp_->clearRunningInIon();
     cx_->runtime->ionActivation = prev();
     cx_->runtime->ionTop = prevIonTop_;
     cx_->runtime->ionJSContext = prevIonJSContext_;

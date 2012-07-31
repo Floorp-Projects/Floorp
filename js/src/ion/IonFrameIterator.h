@@ -174,6 +174,9 @@ class IonActivationIterator
     uint8 *top_;
     IonActivation *activation_;
 
+  private:
+    void settle();
+
   public:
     IonActivationIterator(JSContext *cx);
     IonActivationIterator(JSRuntime *rt);

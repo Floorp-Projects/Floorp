@@ -9,6 +9,7 @@
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
 #include "ion/IonFrames.h"
+#include "ion/IonCompartment.h"
 #include "ion/Bailouts.h"
 #include "Stack.h"
 
@@ -1381,7 +1382,7 @@ StackIter::settleOnNewState()
             }
 
 #ifdef JS_ION
-            if (fp_->runningInIon()) {
+            if (fp_->runningInIon() || fp_->callingIntoIon()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_);
 
                 if (ionFrames_.isNative()) {
@@ -1389,8 +1390,16 @@ StackIter::settleOnNewState()
                     return;
                 }
 
-                while (!ionFrames_.isScripted())
+                while (!ionFrames_.isScripted() && !ionFrames_.done())
                     ++ionFrames_;
+
+                // When invoked from JM, we don't re-use the entryfp, so we
+                // may have an empty Ion activation.
+                if (ionFrames_.done()) {
+                    state_ = SCRIPTED;
+                    script_ = fp_->script();
+                    return;
+                }
 
                 state_ = ION;
                 ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
@@ -1485,10 +1494,16 @@ StackIter::popIonFrame()
             ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
             pc_ = ionInlineFrames_.pc();
             script_ = ionInlineFrames_.script();
-        } else {
+        } else if (fp_->runningInIon()) {
             ++ionActivations_;
             popFrame();
             settleOnNewState();
+        } else {
+            JS_ASSERT(fp_->callingIntoIon());
+            state_ = SCRIPTED;
+            script_ = fp_->script();
+            pc_ = ionActivations_.activation()->prevpc();
+            ++ionActivations_;
         }
     }
 }

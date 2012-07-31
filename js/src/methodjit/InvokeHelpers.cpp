@@ -254,16 +254,12 @@ ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee, JIT
         return true;
 
     // If we know Ion cannot compile either the caller or callee, use JM.
-    if (!caller->canIonCompile() || !callee->canIonCompile())
+    if (!callee->canIonCompile())
         return true;
 
     // Use JM if the callee has no loops. In this case calling into Ion
     // is likely not worth the overhead.
     if (!callee->hasAnalysis() || !callee->analysis()->hasLoops())
-        return true;
-
-    // If we make a ton of JM -> Ion calls, use JM.
-    if (callee->hasIonScript() && ++callerJit->ionCalls > 4000)
         return true;
 
     return false;
