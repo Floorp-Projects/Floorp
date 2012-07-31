@@ -48,6 +48,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } catch (e) {
         ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
       }
+      try {
+        var ctx = Components.utils.evalInSandbox("var ctx = document.createElement('canvas').getContext('2d'); ctx.foopy = 5; ctx", sandbox);
+        ok(!("foopy" in ctx), "We should have an Xray here");
+        var data = ctx.createImageData(1, 1);
+        for (var i = 0; i < data.data.length; ++i) {
+          // Watch out for premultiplied bits... just set all the alphas to 255
+          if (i % 4 == 3) {
+            data.data[i] = 255;
+          } else {
+            data.data[i] = i;
+          }
+        }
+        ctx.putImageData(data, 0, 0);
+        var data2 = ctx.getImageData(0, 0, 1, 1);
+        is(data2.data.length, data.data.length, "Lengths must match");
+        for (i = 0; i < data.data.length; ++i)
+          is(data.data[i], data2.data[i], "Data at " + i + " should match");
+      } catch (e) {
+        ok(false, "Imagedata manipulation via an Xray shouldn't throw " + e);
+      }
       SimpleTest.finish();
     }
 
