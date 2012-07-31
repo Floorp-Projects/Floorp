@@ -1450,6 +1450,27 @@ private:
     JSObject* mPreservedWrapper;
 };
 
+// Dynamically ensure that two objects don't end up with the same private.
+class AutoClonePrivateGuard NS_STACK_CLASS {
+public:
+    AutoClonePrivateGuard(JSObject *aOld, JSObject *aNew)
+        : mOldReflector(aOld), mNewReflector(aNew)
+    {
+        MOZ_ASSERT(JS_GetPrivate(aOld) == JS_GetPrivate(aNew));
+    }
+
+    ~AutoClonePrivateGuard()
+    {
+        if (JS_GetPrivate(mOldReflector)) {
+            JS_SetPrivate(mNewReflector, nullptr);
+        }
+    }
+
+private:
+    JSObject* mOldReflector;
+    JSObject* mNewReflector;
+};
+
 // static
 nsresult
 XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
@@ -1553,18 +1574,37 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             if (!newobj)
                 return NS_ERROR_FAILURE;
 
-            JSObject *propertyHolder =
-                JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
-            if (!propertyHolder)
-                return NS_ERROR_OUT_OF_MEMORY;
-            if (!JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
-                return NS_ERROR_FAILURE;
+            // At this point, both |flat| and |newobj| point to the same wrapped
+            // native, which is bad, because one of them will end up finalizing
+            // a wrapped native it does not own. |cloneGuard| ensures that if we
+            // exit before calling clearing |flat|'s private the private of
+            // |newobj| will be set to NULL. |flat| will go away soon, because
+            // we swap it with another object during the transplant and let that
+            // object die.
+            JSObject *propertyHolder;
+            {
+                AutoClonePrivateGuard cloneGuard(flat, newobj);
 
-            // Expandos from other compartments are attached to the target JS object.
-            // Copy them over, and let the old ones die a natural death.
-            SetExpandoChain(newobj, nullptr);
-            if (!XrayUtils::CloneExpandoChain(ccx, newobj, flat))
-                return NS_ERROR_FAILURE;
+                propertyHolder = JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
+                if (!propertyHolder)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                if (!JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
+                    return NS_ERROR_FAILURE;
+
+                // Expandos from other compartments are attached to the target JS object.
+                // Copy them over, and let the old ones die a natural death.
+                SetExpandoChain(newobj, nullptr);
+                if (!XrayUtils::CloneExpandoChain(ccx, newobj, flat))
+                    return NS_ERROR_FAILURE;
+
+                // We've set up |newobj|, so we make it own the WN by nulling out
+                // the private of |flat|.
+                //
+                // NB: It's important to do this _after_ copying the properties to
+                // propertyHolder. Otherwise, an object with |foo.x === foo| will
+                // crash when JS_CopyPropertiesFrom tries to call wrap() on foo.x.
+                JS_SetPrivate(flat, nullptr);
+            }
 
             {   // scoped lock
                 Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
@@ -1610,17 +1650,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                     !wrapper->GetSameCompartmentSecurityWrapper(ccx))
                     return NS_ERROR_FAILURE;
             }
-
-            // Null out the private of the JS reflector. If we don't, we'll end up
-            // with two JS objects with the same WN in their private slot, and both
-            // will try to delete it during finalization. The one in this
-            // compartment will actually go away quite soon, because we swap() it
-            // with another object during the transplant and let that object die.
-            //
-            // NB: It's important to do this _after_ copying the properties to
-            // propertyHolder. Otherwise, an object with |foo.x === foo| will
-            // crash when JS_CopyPropertiesFrom tries to call wrap() on foo.x.
-            JS_SetPrivate(flat, nullptr);
 
             JSObject *ww = wrapper->GetWrapper();
             if (ww) {
