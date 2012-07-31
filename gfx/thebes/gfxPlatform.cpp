@@ -213,7 +213,7 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
-  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureCanvasBackendInfo)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -675,7 +675,8 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
 {
-  if (!SupportsAzureCanvas()) {
+  BackendType backend;
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
 
@@ -690,7 +691,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   if (aBackend == BACKEND_CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
-    if (!surf || surf->CairoStatus()) {
+    if (!surf) {
       return NULL;
     }
 
@@ -703,11 +704,12 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
 RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
-  if (!SupportsAzureCanvas()) {
+  BackendType backend;
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
 
-  RefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
+  RefPtr<DrawTarget> target = CreateDrawTargetForBackend(backend, aSize, aFormat);
   if (target ||
       mFallbackCanvasBackend == BACKEND_NONE) {
     return target;
@@ -720,17 +722,19 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  if (!SupportsAzureCanvas()) {
+  BackendType backend;
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
-  return Factory::CreateDrawTargetForData(mPreferredCanvasBackend, aData, aSize, aStride, aFormat);
+  return Factory::CreateDrawTargetForData(backend, aData, aSize, aStride, aFormat); 
 }
 
 bool
-gfxPlatform::SupportsAzureCanvas()
+gfxPlatform::SupportsAzureCanvas(BackendType& aBackend)
 {
   NS_ASSERTION(mFallbackCanvasBackend == BACKEND_NONE || mPreferredCanvasBackend != BACKEND_NONE,
                "fallback backend with no preferred backend");
+  aBackend = mPreferredCanvasBackend;
   return mPreferredCanvasBackend != BACKEND_NONE;
 }
 
