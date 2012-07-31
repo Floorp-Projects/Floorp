@@ -98,7 +98,6 @@ enum ParseNodeKind {
     PNK_LP,
     PNK_RP,
     PNK_NAME,
-    PNK_INTRINSICNAME,
     PNK_NUMBER,
     PNK_STRING,
     PNK_REGEXP,

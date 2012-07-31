@@ -1418,6 +1418,8 @@ ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_UNUSED3)
+ADD_EMPTY_CASE(JSOP_UNUSED8)
+ADD_EMPTY_CASE(JSOP_UNUSED9)
 ADD_EMPTY_CASE(JSOP_UNUSED10)
 ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
@@ -2521,19 +2523,6 @@ BEGIN_CASE(JSOP_CALLNAME)
     TypeScript::Monitor(cx, script, regs.pc, rval);
 }
 END_CASE(JSOP_NAME)
-
-BEGIN_CASE(JSOP_INTRINSICNAME)
-BEGIN_CASE(JSOP_CALLINTRINSIC)
-{
-    RootedValue &rval = rootValue0;
-
-    if (!IntrinsicNameOperation(cx, script, regs.pc, rval.address()))
-        goto error;
-
-    PUSH_COPY(rval);
-    TypeScript::Monitor(cx, script, regs.pc, rval);
-}
-END_CASE(JSOP_INTRINSICNAME)
 
 BEGIN_CASE(JSOP_UINT16)
     PUSH_INT32((int32_t) GET_UINT16(regs.pc));
