@@ -13,6 +13,10 @@ include $(DEPTH)/config/autoconf.mk
 
 TEST_DIRS += content/test
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DOFFICIAL_BUILD=1
+endif
+
 EXTRA_PP_JS_MODULES = \
   SafeBrowsing.jsm \
   $(NULL)

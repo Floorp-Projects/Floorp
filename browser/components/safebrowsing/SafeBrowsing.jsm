@@ -13,18 +13,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 const phishingList = "goog-phish-shavar";
 const malwareList  = "goog-malware-shavar";
 
-var urlList = {
-  updateURL:             "http://safebrowsing.clients.google.com/safebrowsing/downloads?client=%SAFEBROWSING_ID%&appver=%VERSION%&pver=2.2",
-  keyURL:                "https://sb-ssl.google.com/safebrowsing/newkey?client=%SAFEBROWSING_ID%&appver=%VERSION%&pver=2.2",
-  reportURL:             "http://safebrowsing.clients.google.com/safebrowsing/report?",
-  gethashURL:            "http://safebrowsing.clients.google.com/safebrowsing/gethash?client=%SAFEBROWSING_ID%&appver=%VERSION%&pver=2.2",
-  reportGenericURL:      "http://%LOCALE%.phish-generic.mozilla.com/?hl=%LOCALE%",
-  reportErrorURL:        "http://%LOCALE%.phish-error.mozilla.com/?hl=%LOCALE%",
-  reportPhishURL:        "http://%LOCALE%.phish-report.mozilla.com/?hl=%LOCALE%",
-  reportMalwareURL:      "http://%LOCALE%.malware-report.mozilla.com/?hl=%LOCALE%",
-  reportMalwareErrorURL: "http://%LOCALE%.malware-error.mozilla.com/?hl=%LOCALE%",
-};
-
 var debug = false;
 function log(...stuff) {
   if (!debug)
@@ -37,15 +25,11 @@ function log(...stuff) {
 
 var SafeBrowsing = {
 
-  init: function(customURLs) {
+  init: function() {
     if (this.initialized) {
       log("Already initialized");
       return;
     }
-
-    // Allow tests to specify local urls for testing against a local server.
-    if (customURLs)
-      urlList = customURLs;
 
     Services.prefs.addObserver("browser.safebrowsing", this.readPrefs, false);
     this.readPrefs();
@@ -79,6 +63,7 @@ var SafeBrowsing = {
   phishingEnabled: false,
   malwareEnabled:  false,
 
+  provName:              null,
   updateURL:             null,
   keyURL:                null,
   reportURL:             null,
@@ -120,20 +105,57 @@ var SafeBrowsing = {
       return;
     }
 
-    // The following URLs were once prefs, "browser.safebrowsing.provider.0.*"
+    let basePref = "browser.safebrowsing.provider.0.";
+    this.provName = Services.prefs.getCharPref(basePref + "name");
 
     // Urls used to get data from a provider
-    this.updateURL  = Services.urlFormatter.formatURL(urlList["updateURL"]);
-    this.keyURL     = Services.urlFormatter.formatURL(urlList["keyURL"]);
-    this.reportURL  = Services.urlFormatter.formatURL(urlList["reportURL"]);
-    this.gethashURL = Services.urlFormatter.formatURL(urlList["gethashURL"]);
+    this.updateURL  = this.getUrlPref(basePref + "updateURL");
+    this.keyURL     = this.getUrlPref(basePref + "keyURL");
+    this.reportURL  = this.getUrlPref(basePref + "reportURL");
+    this.gethashURL = this.getUrlPref(basePref + "gethashURL");
 
     // Urls to HTML report pages
-    this.reportGenericURL      = Services.urlFormatter.formatURL(urlList["reportGenericURL"]);
-    this.reportErrorURL        = Services.urlFormatter.formatURL(urlList["reportErrorURL"]);
-    this.reportPhishURL        = Services.urlFormatter.formatURL(urlList["reportPhishURL"]);
-    this.reportMalwareURL      = Services.urlFormatter.formatURL(urlList["reportMalwareURL"]);
-    this.reportMalwareErrorURL = Services.urlFormatter.formatURL(urlList["reportMalwareErrorURL"]);
+    this.reportGenericURL      = this.getUrlPref(basePref + "reportGenericURL");
+    this.reportErrorURL        = this.getUrlPref(basePref + "reportErrorURL");
+    this.reportPhishURL        = this.getUrlPref(basePref + "reportPhishURL");
+    this.reportMalwareURL      = this.getUrlPref(basePref + "reportMalwareURL")
+    this.reportMalwareErrorURL = this.getUrlPref(basePref + "reportMalwareErrorURL")
+  },
+
+
+  getUrlPref: function(prefName) {
+    let MOZ_OFFICIAL_BUILD = false;
+#ifdef OFFICIAL_BUILD
+    MOZ_OFFICIAL_BUILD = true;
+#endif
+
+    let url = Services.prefs.getCharPref(prefName);
+
+    let clientName = MOZ_OFFICIAL_BUILD ? "navclient-auto-ffox" : Services.appinfo.name;
+    let clientVersion = Services.appinfo.version;
+
+    // Parameter substitution
+    // XXX: we should instead use nsIURLFormatter here.
+    url = url.replace(/\{moz:locale\}/g,  this.getLocale());
+    url = url.replace(/\{moz:client\}/g,  clientName);
+    url = url.replace(/\{moz:buildid\}/g, Services.appinfo.appBuildID);
+    url = url.replace(/\{moz:version\}/g, clientVersion);
+
+    log(prefName, "is", url);
+    return url;
+  },
+
+
+  getLocale: function() {
+    const localePref = "general.useragent.locale";
+
+    let locale = Services.prefs.getCharPref(localePref);
+    try {
+      // Dumb. This API only works if pref is localized or has a user value.
+      locale = Services.prefs.getComplexValue(localePref, Ci.nsIPrefLocalizedString).data;
+    } catch (e) { }
+
+    return locale;
   },
 
 
