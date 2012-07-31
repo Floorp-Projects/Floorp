@@ -1011,7 +1011,7 @@ var Scratchpad = {
     let state = null;
 
     let initialText = this.strings.formatStringFromName(
-      "scratchpadIntro",
+      "scratchpadIntro1",
       [SP_Pretty_Key(document.getElementById("sp-key-run")),
        SP_Pretty_Key(document.getElementById("sp-key-inspect")),
        SP_Pretty_Key(document.getElementById("sp-key-display"))],
