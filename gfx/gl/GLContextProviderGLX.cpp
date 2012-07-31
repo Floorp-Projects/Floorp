@@ -40,7 +40,6 @@ namespace mozilla {
 namespace gl {
 
 static bool gIsATI = false;
-static bool gIsChromium = false;
 static int gGLXMajorVersion = 0, gGLXMinorVersion = 0;
 
 // Check that we have at least version aMajor.aMinor .
@@ -173,7 +172,6 @@ GLXLibrary::EnsureInitialized()
 
     int screen = DefaultScreen(display);
     const char *serverVendor = NULL;
-    const char *serverVersionStr = NULL;
     const char *extensionsStr = NULL;
 
     if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
@@ -183,7 +181,6 @@ GLXLibrary::EnsureInitialized()
     }
 
     serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
-    serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
 
     if (!GLXVersionCheck(1, 1))
         // Not possible to query for extensions.
@@ -243,10 +240,6 @@ GLXLibrary::EnsureInitialized()
     }
 
     gIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
-    gIsChromium = (serverVendor &&
-                   DoesStringMatch(serverVendor, "Chromium")) ||
-        (serverVersionStr &&
-         DoesStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = true;
     return true;
