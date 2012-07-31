@@ -297,12 +297,8 @@ public:
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.
    */
-  void CreateOrDestroyAudioStream(GraphTime aAudioOutputStartTime,
-                                  MediaStream* aStream);
-  /**
-   * Update aStream->mFirstActiveTracks.
-   */
-  void UpdateFirstActiveTracks(MediaStream* aStream);
+  void CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime,
+                                   MediaStream* aStream);
   /**
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream.
@@ -745,15 +741,15 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
 GraphTime
 MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
 {
-  if (!aStream->mAudioOutput) {
+  if (aStream->mAudioOutputStreams.IsEmpty()) {
     return mCurrentTime;
   }
-  PRInt64 positionInFrames = aStream->mAudioOutput->GetPositionInFrames();
+  PRInt64 positionInFrames = aStream->mAudioOutputStreams[0].mStream->GetPositionInFrames();
   if (positionInFrames < 0) {
     return mCurrentTime;
   }
-  return aStream->mAudioPlaybackStartTime +
-      TicksToTimeRoundDown(aStream->mAudioOutput->GetRate(),
+  return aStream->mAudioOutputStreams[0].mAudioPlaybackStartTime +
+      TicksToTimeRoundDown(aStream->mAudioOutputStreams[0].mStream->GetRate(),
                            positionInFrames);
 }
 
@@ -1112,77 +1108,69 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
 }
 
 void
-MediaStreamGraphImpl::UpdateFirstActiveTracks(MediaStream* aStream)
+MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime,
+                                                  MediaStream* aStream)
 {
-  StreamBuffer::Track* newTracksByType[MediaSegment::TYPE_COUNT];
-  for (PRUint32 i = 0; i < ArrayLength(newTracksByType); ++i) {
-    newTracksByType[i] = nullptr;
+  nsAutoTArray<bool,2> audioOutputStreamsFound;
+  for (PRUint32 i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
+    audioOutputStreamsFound.AppendElement(false);
   }
 
-  for (StreamBuffer::TrackIter iter(aStream->mBuffer);
-       !iter.IsEnded(); iter.Next()) {
-    MediaSegment::Type type = iter->GetType();
-    if ((newTracksByType[type] &&
-         iter->GetStartTimeRoundDown() < newTracksByType[type]->GetStartTimeRoundDown()) ||
-         aStream->mFirstActiveTracks[type] == TRACK_NONE) {
-      newTracksByType[type] = &(*iter);
-      aStream->mFirstActiveTracks[type] = iter->GetID();
+  if (!aStream->mAudioOutputs.IsEmpty()) {
+    for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::AUDIO);
+         !tracks.IsEnded(); tracks.Next()) {
+      PRUint32 i;
+      for (i = 0; i < audioOutputStreamsFound.Length(); ++i) {
+        if (aStream->mAudioOutputStreams[i].mTrackID == tracks->GetID()) {
+          break;
+        }
+      }
+      if (i < audioOutputStreamsFound.Length()) {
+        audioOutputStreamsFound[i] = true;
+      } else {
+        // No output stream created for this track yet. Check if it's time to
+        // create one.
+        GraphTime startTime =
+          StreamTimeToGraphTime(aStream, tracks->GetStartTimeRoundDown(),
+                                INCLUDE_TRAILING_BLOCKED_INTERVAL);
+        if (startTime >= mStateComputedTime) {
+          // The stream wants to play audio, but nothing will play for the forseeable
+          // future, so don't create the stream.
+          continue;
+        }
+
+        // XXX allocating a nsAudioStream could be slow so we're going to have to do
+        // something here ... preallocation, async allocation, multiplexing onto a single
+        // stream ...
+        AudioSegment* audio = tracks->Get<AudioSegment>();
+        MediaStream::AudioOutputStream* audioOutputStream =
+          aStream->mAudioOutputStreams.AppendElement();
+        audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
+        audioOutputStream->mBlockedAudioTime = 0;
+        audioOutputStream->mStream = nsAudioStream::AllocateStream();
+        audioOutputStream->mStream->Init(audio->GetChannels(),
+                                         tracks->GetRate(),
+                                         audio->GetFirstFrameFormat());
+        audioOutputStream->mTrackID = tracks->GetID();
+      }
     }
   }
-}
 
-void
-MediaStreamGraphImpl::CreateOrDestroyAudioStream(GraphTime aAudioOutputStartTime,
-                                                 MediaStream* aStream)
-{
-  StreamBuffer::Track* track;
-
-  if (aStream->mAudioOutputs.IsEmpty() ||
-      !(track = aStream->mBuffer.FindTrack(aStream->mFirstActiveTracks[MediaSegment::AUDIO]))) {
-    if (aStream->mAudioOutput) {
-      aStream->mAudioOutput->Shutdown();
-      aStream->mAudioOutput = nullptr;
+  for (PRInt32 i = audioOutputStreamsFound.Length() - 1; i >= 0; --i) {
+    if (!audioOutputStreamsFound[i]) {
+      aStream->mAudioOutputStreams[i].mStream->Shutdown();
+      aStream->mAudioOutputStreams.RemoveElementAt(i);
     }
-    return;
   }
-
-  if (aStream->mAudioOutput)
-    return;
-
-  // No output stream created yet. Check if it's time to create one.
-  GraphTime startTime =
-    StreamTimeToGraphTime(aStream, track->GetStartTimeRoundDown(),
-                          INCLUDE_TRAILING_BLOCKED_INTERVAL);
-  if (startTime >= mStateComputedTime) {
-    // The stream wants to play audio, but nothing will play for the forseeable
-    // future, so don't create the stream.
-    return;
-  }
-
-  // Don't bother destroying the nsAudioStream for ended tracks yet.
-
-  // XXX allocating a nsAudioStream could be slow so we're going to have to do
-  // something here ... preallocation, async allocation, multiplexing onto a single
-  // stream ...
-
-  AudioSegment* audio = track->Get<AudioSegment>();
-  aStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
-  aStream->mAudioOutput = nsAudioStream::AllocateStream();
-  aStream->mAudioOutput->Init(audio->GetChannels(),
-                              track->GetRate(),
-                              audio->GetFirstFrameFormat());
 }
 
 void
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                                 GraphTime aFrom, GraphTime aTo)
 {
-  if (!aStream->mAudioOutput)
+  if (aStream->mAudioOutputStreams.IsEmpty()) {
     return;
-
-  StreamBuffer::Track* track =
-    aStream->mBuffer.FindTrack(aStream->mFirstActiveTracks[MediaSegment::AUDIO]);
-  AudioSegment* audio = track->Get<AudioSegment>();
+  }
 
   // When we're playing multiple copies of this stream at the same time, they're
   // perfectly correlated so adding volumes is the right thing to do.
@@ -1191,46 +1179,63 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     volume += aStream->mAudioOutputs[i].mVolume;
   }
 
-  // We don't update aStream->mBufferStartTime here to account for
-  // time spent blocked. Instead, we'll update it in UpdateCurrentTime after the
-  // blocked period has completed. But we do need to make sure we play from the
-  // right offsets in the stream buffer, even if we've already written silence for
-  // some amount of blocked time after the current time.
-  GraphTime t = aFrom;
-  while (t < aTo) {
-    GraphTime end;
-    bool blocked = aStream->mBlocked.GetAt(t, &end);
-    end = NS_MIN(end, aTo);
+  for (PRUint32 i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
+    MediaStream::AudioOutputStream& audioOutput = aStream->mAudioOutputStreams[i];
+    StreamBuffer::Track* track = aStream->mBuffer.FindTrack(audioOutput.mTrackID);
+    AudioSegment* audio = track->Get<AudioSegment>();
 
-    AudioSegment output;
-    if (blocked) {
-      // Track total blocked time in aStream->mBlockedAudioTime so that
-      // the amount of silent samples we've inserted for blocking never gets
-      // more than one sample away from the ideal amount.
-      TrackTicks startTicks =
-          TimeToTicksRoundDown(track->GetRate(), aStream->mBlockedAudioTime);
-      aStream->mBlockedAudioTime += end - t;
-      TrackTicks endTicks =
-          TimeToTicksRoundDown(track->GetRate(), aStream->mBlockedAudioTime);
+    // We don't update aStream->mBufferStartTime here to account for
+    // time spent blocked. Instead, we'll update it in UpdateCurrentTime after the
+    // blocked period has completed. But we do need to make sure we play from the
+    // right offsets in the stream buffer, even if we've already written silence for
+    // some amount of blocked time after the current time.
+    GraphTime t = aFrom;
+    while (t < aTo) {
+      GraphTime end;
+      bool blocked = aStream->mBlocked.GetAt(t, &end);
+      end = NS_MIN(end, aTo);
 
+      AudioSegment output;
       output.InitFrom(*audio);
-      output.InsertNullDataAtStart(endTicks - startTicks);
-      LOG(PR_LOG_DEBUG, ("MediaStream %p writing blocking-silence samples for %f to %f",
-                         aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end)));
-    } else {
-      TrackTicks startTicks =
-          track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, t));
-      TrackTicks endTicks =
-          track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, end));
+      if (blocked) {
+        // Track total blocked time in aStream->mBlockedAudioTime so that
+        // the amount of silent samples we've inserted for blocking never gets
+        // more than one sample away from the ideal amount.
+        TrackTicks startTicks =
+            TimeToTicksRoundDown(track->GetRate(), audioOutput.mBlockedAudioTime);
+        audioOutput.mBlockedAudioTime += end - t;
+        TrackTicks endTicks =
+            TimeToTicksRoundDown(track->GetRate(), audioOutput.mBlockedAudioTime);
 
-      output.AppendSlice(*audio, startTicks, endTicks);
-      output.ApplyVolume(volume);
-      LOG(PR_LOG_DEBUG, ("MediaStream %p writing samples for %f to %f (samples %lld to %lld)",
-                         aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
-                         startTicks, endTicks));
+        output.InsertNullDataAtStart(endTicks - startTicks);
+        LOG(PR_LOG_DEBUG, ("MediaStream %p writing blocking-silence samples for %f to %f",
+                         aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end)));
+      } else {
+        TrackTicks startTicks =
+            track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, t));
+        TrackTicks endTicks =
+            track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, end));
+
+        // If startTicks is before the track start, then that part of 'audio'
+        // will just be silence, which is fine here. But if endTicks is after
+        // the track end, then 'audio' won't be long enough, so we'll need
+        // to explicitly play silence.
+        TrackTicks sliceEnd = NS_MIN(endTicks, audio->GetDuration());
+        if (sliceEnd > startTicks) {
+          output.AppendSlice(*audio, startTicks, sliceEnd);
+        }
+        // Play silence where the track has ended
+        output.AppendNullData(endTicks - sliceEnd);
+        NS_ASSERTION(endTicks == sliceEnd || track->IsEnded(),
+                     "Ran out of data but track not ended?");
+        output.ApplyVolume(volume);
+        LOG(PR_LOG_DEBUG, ("MediaStream %p writing samples for %f to %f (samples %lld to %lld)",
+                           aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
+                           startTicks, endTicks));
+      }
+      output.WriteTo(audioOutput.mStream);
+      t = end;
     }
-    output.WriteTo(aStream->mAudioOutput);
-    t = end;
   }
 }
 
@@ -1240,44 +1245,46 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   if (aStream->mVideoOutputs.IsEmpty())
     return;
 
-  StreamBuffer::Track* track =
-    aStream->mBuffer.FindTrack(aStream->mFirstActiveTracks[MediaSegment::VIDEO]);
-  if (!track)
-    return;
-  VideoSegment* video = track->Get<VideoSegment>();
-
   // Display the next frame a bit early. This is better than letting the current
   // frame be displayed for too long.
   GraphTime framePosition = mCurrentTime + MEDIA_GRAPH_TARGET_PERIOD_MS;
   NS_ASSERTION(framePosition >= aStream->mBufferStartTime, "frame position before buffer?");
   StreamTime frameBufferTime = GraphTimeToStreamTime(aStream, framePosition);
-  TrackTicks start;
-  const VideoFrame* frame =
-    video->GetFrameAt(track->TimeToTicksRoundDown(frameBufferTime), &start);
-  if (!frame) {
-    frame = video->GetLastFrame(&start);
-    if (!frame)
-      return;
-  }
 
-  if (*frame != aStream->mLastPlayedVideoFrame) {
-    LOG(PR_LOG_DEBUG, ("MediaStream %p writing video frame %p (%dx%d)",
-                       aStream, frame->GetImage(), frame->GetIntrinsicSize().width,
-                       frame->GetIntrinsicSize().height));
-    GraphTime startTime = StreamTimeToGraphTime(aStream,
-        track->TicksToTimeRoundDown(start), INCLUDE_TRAILING_BLOCKED_INTERVAL);
-    TimeStamp targetTime = mCurrentTimeStamp +
-        TimeDuration::FromMilliseconds(double(startTime - mCurrentTime));
-    for (PRUint32 i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
-      VideoFrameContainer* output = aStream->mVideoOutputs[i];
-      output->SetCurrentFrame(frame->GetIntrinsicSize(), frame->GetImage(),
-                              targetTime);
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  TrackTicks start;
+  const VideoFrame* frame = nullptr;
+  StreamBuffer::Track* track;
+  for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::VIDEO);
+       !tracks.IsEnded(); tracks.Next()) {
+    VideoSegment* segment = tracks->Get<VideoSegment>();
+    TrackTicks thisStart;
+    const VideoFrame* thisFrame =
+      segment->GetFrameAt(tracks->TimeToTicksRoundDown(frameBufferTime), &thisStart);
+    if (thisFrame && thisFrame->GetImage()) {
+      start = thisStart;
+      frame = thisFrame;
+      track = tracks.get();
     }
-    aStream->mLastPlayedVideoFrame = *frame;
   }
+  if (!frame || *frame == aStream->mLastPlayedVideoFrame)
+    return;
+
+  LOG(PR_LOG_DEBUG, ("MediaStream %p writing video frame %p (%dx%d)",
+                     aStream, frame->GetImage(), frame->GetIntrinsicSize().width,
+                     frame->GetIntrinsicSize().height));
+  GraphTime startTime = StreamTimeToGraphTime(aStream,
+      track->TicksToTimeRoundDown(start), INCLUDE_TRAILING_BLOCKED_INTERVAL);
+  TimeStamp targetTime = mCurrentTimeStamp +
+      TimeDuration::FromMilliseconds(double(startTime - mCurrentTime));
+  for (PRUint32 i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
+    VideoFrameContainer* output = aStream->mVideoOutputs[i];
+    output->SetCurrentFrame(frame->GetIntrinsicSize(), frame->GetImage(),
+                            targetTime);
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
+  aStream->mLastPlayedVideoFrame = *frame;
 }
 
 void
@@ -1385,7 +1392,6 @@ MediaStreamGraphImpl::RunThread()
     // Figure out what each stream wants to do
     for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
       MediaStream* stream = mStreams[i];
-      UpdateFirstActiveTracks(stream);
       ProcessedMediaStream* ps = stream->AsProcessedStream();
       if (ps && !ps->mFinished) {
         ps->ProduceOutput(prevComputedTime, mStateComputedTime);
@@ -1393,11 +1399,9 @@ MediaStreamGraphImpl::RunThread()
                      GraphTimeToStreamTime(stream, mStateComputedTime),
                      "Stream did not produce enough data");
       }
-      CreateOrDestroyAudioStream(prevComputedTime, stream);
+      CreateOrDestroyAudioStreams(prevComputedTime, stream);
       PlayAudio(stream, prevComputedTime, mStateComputedTime);
-      if (stream->mAudioOutput) {
-        ++audioStreamsActive;
-      }
+      audioStreamsActive += stream->mAudioOutputStreams.Length();
       PlayVideo(stream);
       SourceMediaStream* is = stream->AsSourceStream();
       if (is) {
@@ -1761,10 +1765,10 @@ MediaStream::DestroyImpl()
   for (PRInt32 i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
-  if (mAudioOutput) {
-    mAudioOutput->Shutdown();
-    mAudioOutput = nullptr;
+  for (PRUint32 i = 0; i < mAudioOutputStreams.Length(); ++i) {
+    mAudioOutputStreams[i].mStream->Shutdown();
   }
+  mAudioOutputStreams.Clear();
 }
 
 void
