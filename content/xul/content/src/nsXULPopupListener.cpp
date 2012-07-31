@@ -43,6 +43,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
 #include "nsDOMError.h"
+#include "nsMenuFrame.h"
 
 using namespace mozilla;
 
@@ -387,8 +388,8 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   nsCOMPtr<nsIContent> popup = do_QueryInterface(popupElement);
   nsIContent* parent = popup->GetParent();
   if (parent) {
-    nsIFrame* frame = parent->GetPrimaryFrame();
-    if (frame && frame->GetType() == nsGkAtoms::menuFrame)
+    nsMenuFrame* menu = do_QueryFrame(parent->GetPrimaryFrame());
+    if (menu)
       return NS_OK;
   }
 

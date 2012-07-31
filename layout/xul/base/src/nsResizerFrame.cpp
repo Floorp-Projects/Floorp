@@ -157,10 +157,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       // check if the returned content really is a menupopup
       nsMenuPopupFrame* menuPopupFrame = nullptr;
       if (contentToResize) {
-        nsIFrame* frameToResize = contentToResize->GetPrimaryFrame();
-        if (frameToResize && frameToResize->GetType() == nsGkAtoms::menuPopupFrame) {
-          menuPopupFrame = static_cast<nsMenuPopupFrame *>(frameToResize);
-        }
+        menuPopupFrame = do_QueryFrame(contentToResize->GetPrimaryFrame());
       }
 
       // both MouseMove and direction are negative when pointing to the
@@ -284,8 +281,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       nsIContent* contentToResize =
         GetContentToResize(presShell, getter_AddRefs(window));
       if (contentToResize) {
-        nsIFrame* frameToResize = contentToResize->GetPrimaryFrame();
-        if (frameToResize && frameToResize->GetType() == nsGkAtoms::menuPopupFrame)
+        nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(contentToResize->GetPrimaryFrame());
+        if (menuPopupFrame)
           break; // Don't restore original sizing for menupopup frames until
                  // we handle screen constraints here. (Bug 357725)
 
@@ -316,8 +313,9 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     // resize the widget associated with the window.
     nsIFrame* popup = GetParent();
     while (popup) {
-      if (popup->GetType() == nsGkAtoms::menuPopupFrame) {
-        return popup->GetContent();
+      nsMenuPopupFrame* popupFrame = do_QueryFrame(popup);
+      if (popupFrame) {
+        return popupFrame->GetContent();
       }
       popup = popup->GetParent();
     }
