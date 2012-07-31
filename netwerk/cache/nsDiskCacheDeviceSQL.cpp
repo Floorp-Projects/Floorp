@@ -664,6 +664,19 @@ nsApplicationCache::InitAsHandle(const nsACString &groupId,
 }
 
 NS_IMETHODIMP
+nsApplicationCache::GetManifestURI(nsIURI **out)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), mGroup);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = uri->CloneIgnoringRef(out);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsApplicationCache::GetGroupID(nsACString &out)
 {
   out = mGroup;
@@ -1216,6 +1229,82 @@ nsOfflineCacheDevice::Init()
 
   rv = InitActiveCaches();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+namespace {
+
+nsresult
+GetGroupForCache(const nsCSubstring &clientID, nsCString &group)
+{
+  group.Assign(clientID);
+  group.Truncate(group.FindChar('|'));
+  NS_UnescapeURL(group);
+
+  return NS_OK;
+}
+
+nsresult
+GetJARIdentifier(nsIURI *aURI,
+                 nsILoadContext *aLoadContext,
+                 nsACString &_result)
+{
+    _result.Truncate();
+
+    if (!aLoadContext)
+        return NS_OK;
+
+    // These lines are here for compatibility only.  We must not fill the
+    // JAR identifier when this is no-app context, otherwise web content
+    // offline application cache loads would not be satisfied (cache would
+    // not be found).
+    bool isInBrowserElement;
+    nsresult rv = aLoadContext->GetIsInBrowserElement(&isInBrowserElement);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t appId;
+    rv = aLoadContext->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!isInBrowserElement && appId == NECKO_NO_APP_ID)
+        return NS_OK;
+
+    // This load context has some special attributes, create a jar identifier
+    _result.AppendInt(appId);
+    _result.Append('+');
+    _result.Append(isInBrowserElement ? 't' : 'f');
+
+    return NS_OK;
+}
+
+} // anon namespace
+
+// static
+nsresult
+nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
+                                                   nsILoadContext *aLoadContext,
+                                                   nsACString &_result)
+{
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = aManifestURL->CloneIgnoringRef(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString manifestSpec;
+  rv = newURI->GetAsciiSpec(manifestSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  _result.Assign(manifestSpec);
+
+  nsAutoCString jarid;
+  rv = GetJARIdentifier(aManifestURL, aLoadContext, jarid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Include JAR ID, i.e. the extended origin if present.
+  if (!jarid.IsEmpty()) {
+    _result.Append('#');
+    _result.Append(jarid);
+  }
 
   return NS_OK;
 }
@@ -2274,34 +2363,49 @@ nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 }
 
 bool
-nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
+nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI,
+                                  const nsACString &clientID,
+                                  nsILoadContext *loadContext)
 {
-  if (mActiveCaches.Contains(clientID)) {
-    nsAutoCString groupID;
-    nsresult rv = GetGroupForCache(clientID, groupID);
-    NS_ENSURE_SUCCESS(rv, false);
+  if (!mActiveCaches.Contains(clientID))
+    return false;
 
-    nsCOMPtr<nsIURI> groupURI;
-    rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
-    if (NS_SUCCEEDED(rv)) {
-      // When we are choosing an initial cache to load the top
-      // level document from, the URL of that document must have
-      // the same origin as the manifest, according to the spec.
-      // The following check is here because explicit, fallback
-      // and dynamic entries might have origin different from the
-      // manifest origin.
-      if (NS_SecurityCompareURIs(keyURI, groupURI,
-                                 GetStrictFileOriginPolicy()))
-        return true;
-    }
-  }
+  nsAutoCString groupID;
+  nsresult rv = GetGroupForCache(clientID, groupID);
+  NS_ENSURE_SUCCESS(rv, false);
 
-  return false;
+  nsCOMPtr<nsIURI> groupURI;
+  rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
+  if (NS_FAILED(rv))
+    return false;
+
+  // When we are choosing an initial cache to load the top
+  // level document from, the URL of that document must have
+  // the same origin as the manifest, according to the spec.
+  // The following check is here because explicit, fallback
+  // and dynamic entries might have origin different from the
+  // manifest origin.
+  if (!NS_SecurityCompareURIs(keyURI, groupURI,
+                              GetStrictFileOriginPolicy()))
+    return false;
+
+  // Check the groupID we found is equal to groupID based
+  // on the load context demanding load from app cache.
+  // This is check of extended origin.
+  nsAutoCString demandedGroupID;
+  rv = BuildApplicationCacheGroupID(groupURI, loadContext, demandedGroupID);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (groupID != demandedGroupID)
+    return false;
+
+  return true;
 }
 
 
 nsresult
 nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
+                                             nsILoadContext *loadContext,
                                              nsIApplicationCache **out)
 {
   *out = nullptr;
@@ -2329,7 +2433,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
       rv = statement->GetUTF8String(0, clientID);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (CanUseCache(keyURI, clientID)) {
+      if (CanUseCache(keyURI, clientID, loadContext)) {
         return GetApplicationCache(clientID, out);
       }
     }
@@ -2361,7 +2465,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
       rv = nsstatement->GetUTF8String(0, clientID);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (CanUseCache(keyURI, clientID)) {
+      if (CanUseCache(keyURI, clientID, loadContext)) {
         return GetApplicationCache(clientID, out);
       }
     }
@@ -2426,17 +2530,6 @@ nsOfflineCacheDevice::IsActiveCache(const nsCSubstring &group,
 {
   nsCString *active = nullptr;
   return mActiveCachesByGroup.Get(group, &active) && *active == clientID;
-}
-
-nsresult
-nsOfflineCacheDevice::GetGroupForCache(const nsACString &clientID,
-                                       nsCString &out)
-{
-  out.Assign(clientID);
-  out.Truncate(out.FindChar('|'));
-  NS_UnescapeURL(out);
-
-  return NS_OK;
 }
 
 /**

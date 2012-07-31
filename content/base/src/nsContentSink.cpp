@@ -886,12 +886,8 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                "mDocument must implement nsIApplicationCacheContainer.");
 
   if (aLoadApplicationCache) {
-    nsAutoCString groupID;
-    rv = aLoadApplicationCache->GetGroupID(groupID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIURI> groupURI;
-    rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
+    rv = aLoadApplicationCache->GetManifestURI(getter_AddRefs(groupURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool equal = false;
@@ -975,11 +971,7 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
 
     // Return the uri and invoke the update process for the selected
     // application cache.
-    nsAutoCString groupID;
-    rv = aLoadApplicationCache->GetGroupID(groupID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = NS_NewURI(aManifestURI, groupID);
+    rv = aLoadApplicationCache->GetManifestURI(aManifestURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aAction = CACHE_SELECTION_UPDATE;
