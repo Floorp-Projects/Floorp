@@ -1382,8 +1382,8 @@ abstract public class GeckoApp
         mFullScreenPluginContainer = new FullScreenHolder(this);
 
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.FILL_PARENT,
+                            ViewGroup.LayoutParams.FILL_PARENT,
                             Gravity.CENTER);
         mFullScreenPluginContainer.addView(view, layoutParams);
 
