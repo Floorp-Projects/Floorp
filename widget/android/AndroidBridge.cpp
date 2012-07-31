@@ -59,7 +59,7 @@ class AndroidRefable {
 // This isn't in AndroidBridge.h because including StrongPointer.h there is gross
 static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
-AndroidBridge *
+void
 AndroidBridge::ConstructBridge(JNIEnv *jEnv,
                                jclass jGeckoAppShellClass)
 {
@@ -73,12 +73,11 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
 
     PR_NewThreadPrivateIndex(&sJavaEnvThreadIndex, JavaThreadDetachFunc);
 
-    sBridge = new AndroidBridge();
-    if (!sBridge->Init(jEnv, jGeckoAppShellClass)) {
-        delete sBridge;
-        sBridge = 0;
+    AndroidBridge *bridge = new AndroidBridge();
+    if (!bridge->Init(jEnv, jGeckoAppShellClass)) {
+        delete bridge;
     }
-    return sBridge;
+    sBridge = bridge;
 }
 
 bool
