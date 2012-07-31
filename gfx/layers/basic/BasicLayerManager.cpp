@@ -746,8 +746,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
           (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
           !transform.HasNonAxisAlignedTransform()) {
 
-        Rect opaqueRect = dt->GetTransform().TransformBounds(
-          Rect(bounds.x, bounds.y, bounds.width, bounds.height));
+        gfx::Rect opaqueRect = dt->GetTransform().TransformBounds(
+          gfx::Rect(bounds.x, bounds.y, bounds.width, bounds.height));
         opaqueRect.RoundIn();
         IntRect intOpaqueRect;
         if (opaqueRect.ToIntRect(&intOpaqueRect)) {
