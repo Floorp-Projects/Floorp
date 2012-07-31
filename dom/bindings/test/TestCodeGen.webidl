@@ -241,6 +241,7 @@ interface TestInterface {
   // No support for nullable enums yet
   // void passNullableEnum(TestEnum? arg);
   void passOptionalEnum(optional TestEnum arg);
+  void passEnumWithDefault(optional TestEnum arg = "a");
   // void passOptionalNullableEnum(optional TestEnum? arg);
   // void passOptionalNullableEnumWithDefaultValue(optional TestEnum? arg = null);
   TestEnum receiveEnum();
@@ -355,6 +356,7 @@ dictionary Dict : ParentDict {
   long b = 8;
   long z = 9;
   DOMString str;
+  TestEnum otherEnum = "b";
 };
 
 dictionary ParentDict : GrandparentDict {

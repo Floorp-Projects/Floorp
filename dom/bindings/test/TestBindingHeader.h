@@ -341,6 +341,7 @@ public:
   // Enumarated types
   void PassEnum(TestEnum, ErrorResult&);
   void PassOptionalEnum(const Optional<TestEnum>&, ErrorResult&);
+  void PassEnumWithDefault(TestEnum, ErrorResult&);
   TestEnum ReceiveEnum(ErrorResult&);
   TestEnum GetEnumAttribute(ErrorResult&);
   TestEnum GetReadonlyEnumAttribute(ErrorResult&);
