@@ -216,7 +216,6 @@ public:
     , mNotifiedFinished(false)
     , mAudioPlaybackStartTime(0)
     , mBlockedAudioTime(0)
-    , mMessageAffectedTime(0)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
@@ -344,7 +343,7 @@ protected:
 
   // Precomputed blocking status (over GraphTime).
   // This is only valid between the graph's mCurrentTime and
-  // mBlockingDecisionsMadeUntilTime. The stream is considered to have
+  // mStateComputedTime. The stream is considered to have
   // not been blocked before mCurrentTime (its mBufferStartTime is increased
   // as necessary to account for that time instead) --- this avoids us having to
   // record the entire history of the stream's blocking-ness in mBlocked.
@@ -376,10 +375,6 @@ protected:
   // The first active track is the track that started earliest; if multiple
   // tracks start at the same time, the one with the lowest ID.
   TrackID mFirstActiveTracks[MediaSegment::TYPE_COUNT];
-
-  // Temporary data used by MediaStreamGraph on the graph thread
-  // The earliest time for which we would like to change this stream's output.
-  GraphTime mMessageAffectedTime;
 
   // This state is only used on the main thread.
   nsDOMMediaStream* mWrapper;
