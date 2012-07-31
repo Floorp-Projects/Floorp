@@ -80,7 +80,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     if (!CheckLength(cx, length))
         return NULL;
     AutoAttachToRuntime attacher(cx->runtime);
-    SourceCompressionToken sct(cx->runtime);
+    SourceCompressionToken sct(cx);
     ScriptSource *ss = NULL;
     if (!cx->hasRunOption(JSOPTION_ONLY_CNG_SOURCE) || options.compileAndGo) {
         ss = ScriptSource::createFromSource(cx, chars, length, false, &sct);
@@ -92,6 +92,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     Parser parser(cx, options, chars, length, /* foldConstants = */ true);
     if (!parser.init())
         return NULL;
+    parser.sct = &sct;
 
     SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, StrictModeFromContext(cx));
 
@@ -245,7 +246,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     if (!CheckLength(cx, length))
         return false;
     AutoAttachToRuntime attacher(cx->runtime);
-    SourceCompressionToken sct(cx->runtime);
+    SourceCompressionToken sct(cx);
     ScriptSource *ss = ScriptSource::createFromSource(cx, chars, length, true, &sct);
     if (!ss)
         return NULL;
@@ -255,6 +256,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     Parser parser(cx, options, chars, length, /* foldConstants = */ true);
     if (!parser.init())
         return false;
+    parser.sct = &sct;
 
     JS_ASSERT(fun);
     SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
