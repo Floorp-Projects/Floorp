@@ -1616,6 +1616,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                     return NS_ERROR_FAILURE;
             }
 
+            // Update scope maps. This section modifies global state, so from
+            // here on out we crash if anything fails.
             {   // scoped lock
                 Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
                 Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
@@ -1648,7 +1650,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 NS_ASSERTION(!newMap->Find(wrapper->GetIdentityObject()),
                              "wrapper already in new scope!");
 
-                (void) newMap->Add(wrapper);
+                if (!newMap->Add(wrapper))
+                    MOZ_CRASH();
             }
 
             JSObject *ww = wrapper->GetWrapper();
@@ -1659,41 +1662,37 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 if (xpc::WrapperFactory::IsLocationObject(flat)) {
                     newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
                     if (!newwrapper)
-                        return NS_ERROR_FAILURE;
+                        MOZ_CRASH();
                 } else {
                     NS_ASSERTION(wrapper->NeedsSOW(), "weird wrapper wrapper");
                     newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
                     if (!newwrapper)
-                        return NS_ERROR_FAILURE;
+                        MOZ_CRASH();
                 }
 
                 // Ok, now we do the special object-plus-wrapper transplant.
                 ww = xpc::TransplantObjectWithWrapper(ccx, flat, ww, newobj,
                                                       newwrapper);
                 if (!ww)
-                    return NS_ERROR_FAILURE;
+                    MOZ_CRASH();
 
                 flat = newobj;
                 wrapper->SetWrapper(ww);
             } else {
                 flat = xpc::TransplantObject(ccx, flat, newobj);
                 if (!flat)
-                    return NS_ERROR_FAILURE;
+                    MOZ_CRASH();
             }
 
             wrapper->mFlatJSObject = flat;
             if (cache)
                 cache->SetWrapper(flat);
             if (!JS_CopyPropertiesFrom(ccx, flat, propertyHolder))
-                return NS_ERROR_FAILURE;
+                MOZ_CRASH();
         } else {
             SetSlimWrapperProto(flat, newProto.get());
-            if (!JS_SetPrototype(ccx, flat, newProto->GetJSProtoObject())) {
-                // this is bad, very bad
-                SetSlimWrapperProto(flat, nullptr);
-                NS_ERROR("JS_SetPrototype failed");
-                return NS_ERROR_FAILURE;
-            }
+            if (!JS_SetPrototype(ccx, flat, newProto->GetJSProtoObject()))
+                MOZ_CRASH(); // this is bad, very bad
         }
 
         // Call the scriptable hook to indicate that we transplanted.
@@ -1706,13 +1705,13 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
     if (aNewParent) {
         if (!JS_SetParent(ccx, flat, aNewParent))
-            return NS_ERROR_FAILURE;
+            MOZ_CRASH();
 
         JSObject *nw;
         if (wrapper &&
             (nw = wrapper->GetWrapper()) &&
             !JS_SetParent(ccx, nw, JS_GetGlobalForObject(ccx, aNewParent))) {
-            return NS_ERROR_FAILURE;
+            MOZ_CRASH();
         }
     }
 
