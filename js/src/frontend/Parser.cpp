@@ -1628,6 +1628,9 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         funbox->bufEnd = tokenStream.offsetOfToken(tokenStream.currentToken()) + 1;
 #if JS_HAS_EXPR_CLOSURES
     } else {
+        // We shouldn't call endOffset if the tokenizer got an error.
+        if (tokenStream.hadError())
+            return NULL;
         funbox->bufEnd = tokenStream.endOffset(tokenStream.currentToken());
         if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
             return NULL;
