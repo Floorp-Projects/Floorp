@@ -944,6 +944,23 @@ nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
     return NS_OK;
 }
 
+void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  if (mShell) {
+    GdkGeometry geometry;
+    geometry.min_width = aConstraints.mMinSize.width;
+    geometry.min_height = aConstraints.mMinSize.height;
+    geometry.max_width = aConstraints.mMaxSize.width;
+    geometry.max_height = aConstraints.mMaxSize.height;
+
+    PRUint32 hints = GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE;
+    gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr,
+                                  &geometry, GdkWindowHints(hints));
+  }
+
+  nsBaseWidget::SetSizeConstraints(aConstraints);
+}
+
 NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
@@ -1002,6 +1019,8 @@ nsWindow::Show(bool aState)
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
+    ConstrainSize(&aWidth, &aHeight);
+
     // For top-level windows, aWidth and aHeight should possibly be
     // interpreted as frame bounds, but NativeResize treats these as window
     // bounds (Bug 581866).
@@ -1079,6 +1098,8 @@ NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                        bool aRepaint)
 {
+    ConstrainSize(&aWidth, &aHeight);
+
     mBounds.x = aX;
     mBounds.y = aY;
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
