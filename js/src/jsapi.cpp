@@ -5058,6 +5058,28 @@ ReadCompleteFile(JSContext *cx, FILE *fp, FileContents &buffer)
     return true;
 }
 
+/*
+ * Open a source file for reading. Supports "-" and NULL to mean stdin. The
+ * return value must be fclosed unless it is stdin.
+ */
+static FILE *
+OpenFile(JSContext *cx, const char *filename)
+{
+    FILE *fp;
+    if (!filename || strcmp(filename, "-") == 0) {
+        fp = stdin;
+    } else {
+        fp = fopen(filename, "r");
+        if (!fp) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
+                                 filename, "No such file or directory");
+            return NULL;
+        }
+    }
+    return fp;
+}
+
+
 JS::CompileOptions::CompileOptions(JSContext *cx)
     : principals(NULL),
       originPrincipals(NULL),
@@ -5123,18 +5145,10 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, FILE *fp)
 JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, const char *filename)
 {
-    FILE *fp;
-    if (!filename || strcmp(filename, "-") == 0) {
-        fp = stdin;
-    } else {
-        fp = fopen(filename, "r");
-        if (!fp) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
-                                 filename, "No such file or directory");
-            return NULL;
-        }
-    }
-
+    FILE *fp = OpenFile(cx, filename);
+    if (!fp)
+        return NULL;
+    options = options.setFileAndLine(filename, 1);
     JSScript *script = Compile(cx, obj, options, fp);
     if (fp != stdin)
         fclose(fp);
@@ -5623,6 +5637,24 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     bool ok = Evaluate(cx, obj, options, chars, length, rval);
     cx->free_(chars);
     return ok;
+}
+
+extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
+             const char *filename, jsval *rval)
+{
+    FILE *fp = OpenFile(cx, filename);
+    if (!fp)
+        return NULL;
+    FileContents buffer(cx);
+    bool ok = ReadCompleteFile(cx, fp, buffer);
+    if (fp != stdin)
+        fclose(fp);
+    if (!ok)
+        return NULL;
+
+    options = options.setFileAndLine(filename, 1);
+    return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
 }
 
 JS_PUBLIC_API(JSBool)
