@@ -5266,6 +5266,9 @@ extern JS_PUBLIC_API(JSString *)
 JS_InternJSString(JSContext *cx, JSString *str);
 
 extern JS_PUBLIC_API(JSString *)
+JS_InternStringN(JSContext *cx, const char *s, size_t length);
+
+extern JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSString *)
