@@ -18,10 +18,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 
-#include "Layers.h"
 #include "VideoUtils.h"
 #include "MediaEngine.h"
-#include "ImageLayers.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
 #include "StreamBuffer.h"

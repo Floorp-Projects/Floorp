@@ -505,7 +505,7 @@ PuppetWidget::DispatchPaintEvent()
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
-                                              BasicLayerManager::BUFFER_NONE);
+                                              BUFFER_NONE);
       DispatchEvent(&event, status);
       mTabChild->NotifyPainted();
     }

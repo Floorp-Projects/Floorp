@@ -22,7 +22,6 @@
 #include "RenderTrace.h"
 #include "sampler.h"
 #include "nsXULAppAPI.h"
-#include "LayersBackend.h"
 
 using namespace mozilla::ipc;
 

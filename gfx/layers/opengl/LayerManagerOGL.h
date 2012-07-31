@@ -6,7 +6,6 @@
 #ifndef GFX_LAYERMANAGEROGL_H
 #define GFX_LAYERMANAGEROGL_H
 
-#include "Layers.h"
 #include "LayerManagerOGLProgram.h"
 
 #include "mozilla/layers/ShadowLayers.h"

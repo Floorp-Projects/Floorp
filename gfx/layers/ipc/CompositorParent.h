@@ -19,8 +19,8 @@
 #include "mozilla/layers/PLayersParent.h"
 #include "base/thread.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/TimeStamp.h"
 #include "ShadowLayersManager.h"
-
 class nsIWidget;
 
 namespace base {
@@ -31,6 +31,7 @@ namespace mozilla {
 namespace layers {
 
 class AsyncPanZoomController;
+class Layer;
 class LayerManager;
 
 // Represents (affine) transforms that are calculated from a content view.

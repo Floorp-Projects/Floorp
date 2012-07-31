@@ -731,7 +731,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
 
 nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
     nsBaseWidget* aWidget, gfxContext* aTarget,
-    BasicLayerManager::BufferMode aDoubleBuffering, ScreenRotation aRotation)
+    BufferMode aDoubleBuffering, ScreenRotation aRotation)
   : mWidget(aWidget)
 {
   BasicLayerManager* manager =
@@ -750,7 +750,7 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
-    manager->SetDefaultTarget(nullptr, BasicLayerManager::BUFFER_NONE,
+    manager->SetDefaultTarget(nullptr, mozilla::layers::BUFFER_NONE,
                               ROTATION_0);
   }
 }

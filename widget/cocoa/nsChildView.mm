@@ -2584,7 +2584,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   bool painted;
   {
     nsBaseWidget::AutoLayerManagerSetup
-      setupLayerManager(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
+      setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
     painted = mGeckoChild->DispatchWindowEvent(paintEvent);
   }
 

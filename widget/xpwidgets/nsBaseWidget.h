@@ -14,16 +14,14 @@
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
-#include "BasicLayers.h"
 #include "nsIRollupListener.h"
-#include "LayersBackend.h"
-
 class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
 namespace mozilla {
 namespace layers {
+class BasicLayerManager;
 class CompositorChild;
 class CompositorParent;
 }
@@ -49,6 +47,7 @@ class nsBaseWidget : public nsIWidget
 protected:
   typedef base::Thread Thread;
   typedef mozilla::layers::BasicLayerManager BasicLayerManager;
+  typedef mozilla::layers::BufferMode BufferMode;
   typedef mozilla::layers::CompositorChild CompositorChild;
   typedef mozilla::layers::CompositorParent CompositorParent;
   typedef mozilla::ScreenRotation ScreenRotation;
@@ -56,9 +55,9 @@ protected:
 public:
   nsBaseWidget();
   virtual ~nsBaseWidget();
-  
+
   NS_DECL_ISUPPORTS
-  
+
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(bool aCapture);
   NS_IMETHOD              GetClientData(void*& aClientData);
@@ -193,7 +192,7 @@ public:
   class AutoLayerManagerSetup {
   public:
     AutoLayerManagerSetup(nsBaseWidget* aWidget, gfxContext* aTarget,
-                          BasicLayerManager::BufferMode aDoubleBuffering,
+                          BufferMode aDoubleBuffering,
                           ScreenRotation aRotation = mozilla::ROTATION_0);
     ~AutoLayerManagerSetup();
   private:
