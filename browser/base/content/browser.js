@@ -648,12 +648,6 @@ const gFormSubmitObserver = {
     this.panel = document.getElementById('invalid-form-popup');
   },
 
-  panelIsOpen: function()
-  {
-    return this.panel && this.panel.state != "hiding" &&
-           this.panel.state != "closed";
-  },
-
   notifyInvalidSubmit : function (aFormElement, aInvalidElements)
   {
     // We are going to handle invalid form submission attempt by focusing the
@@ -3949,7 +3943,7 @@ var XULBrowserWindow = {
     this._hostChanged = true;
 
     // Hide the form invalid popup.
-    if (gFormSubmitObserver.panelIsOpen()) {
+    if (gFormSubmitObserver.panel) {
       gFormSubmitObserver.panel.hidePopup();
     }
 
