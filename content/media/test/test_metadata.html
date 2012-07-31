@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test returning metadata from media files with mozGetMetadata()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<div id="output"></div>
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var a = document.createElement('audio');
+  a.token = token;
+  manager.started(token);
+
+  a.src = test.name;
+  a.name = test.name;
+
+  // Tags should not be available immediately.
+  var exception_fired = false;
+  try {
+    var m = a.mozGetMetadata();
+  } catch (e) {
+    is(e.name, 'InvalidStateError',
+       "early mozGetMetadata() threw incorrect exception");
+    exception_fired = true;
+  }
+  ok(exception_fired,
+     "mozGetMetadata() should throw an exception before HAVE_METADATA");
+
+  // Wait until metadata has loaded.
+  a.addEventListener('loadedmetadata', function() {
+    // read decoded tags
+    tags = a.mozGetMetadata();
+    ok(tags, "mozGetMetadata() failed");
+    // Dump them out.
+    var d = document.getElementById('output');
+    var html = '<table>\n';
+    html += '<caption><p>Called getMozMetadata()'
+    html += ' on '+test.name+'</p></caption>\n';
+    html += '<tr><th>tag</th>';
+    html += '<th>decoded value</th><th>expected value</th></tr>\n';
+    for (tag in tags) {
+      html += '<tr><td>'+tag+'</td>';
+      html += '<td>'+tags[tag]+'</td>';
+      html += '<td>'+test.tags[tag]+'</td>';
+      html += '</tr>\n';
+    }
+    if (!Object.keys(tags).length) {
+      html += '<tr><td colspan=3 align=center><em>no tags</em></td></tr>\n';
+    }
+    html += '</table>\n';
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    d.appendChild(div);
+    // Verify decoded tag values.
+    for (tag in tags) {
+      is(tags[tag], test.tags[tag], "Tag '"+tag+"' doesn't match");
+    }
+    // Verify expected tag values
+    for (tag in test.tags) {
+      is(tags[tag], test.tags[tag], "Tag '"+tag+"' doesn't match");
+    }
+    manager.finished(token);
+  }, false);
+}
+
+manager.runTests(gMetadataTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

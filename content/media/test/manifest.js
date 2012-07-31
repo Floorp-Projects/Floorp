@@ -303,6 +303,37 @@ var gFragmentTests = [
 ];
 
 
+// These are files with non-trivial tag sets.
+// Used by test_metadata.html.
+var gMetadataTests = [
+  // Ogg Vorbis files
+  { name:"short-video.ogv", tags: {
+      TITLE:"Lepidoptera",
+      ARTIST:"Epoq",
+      ALBUM:"Kahvi Collective",
+      DATE:"2002",
+      COMMENT:"http://www.kahvi.org",
+    }
+  },
+  { name:"bug516323.ogv", tags: {
+      GENRE:"Open Movie",
+      ENCODER:"Audacity",
+      TITLE:"Elephants Dream",
+      ARTIST:"Silvia Pfeiffer",
+      COMMENTS:"Audio Description"
+    }
+  },
+  { name:"bug516323.indexed.ogv", tags: {
+      GENRE:"Open Movie",
+      ENCODER:"Audacity",
+      TITLE:"Elephants Dream",
+      ARTIST:"Silvia Pfeiffer",
+      COMMENTS:"Audio Description"
+    }
+  },
+  { name:"sound.ogg", tags: { } }
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
