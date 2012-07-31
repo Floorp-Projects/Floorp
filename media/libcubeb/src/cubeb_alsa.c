@@ -20,6 +20,8 @@
 #define CUBEB_WATCHDOG_MS 10000
 #define UNUSED __attribute__ ((__unused__))
 
+#define ALSA_PA_PLUGIN "ALSA <-> PulseAudio PCM I/O Plugin"
+
 /* ALSA is not thread-safe.  snd_pcm_t instances are individually protected
    by the owning cubeb_stream's mutex.  snd_pcm_t creation and destruction
    is not thread-safe until ALSA 1.0.24 (see alsa-lib.git commit 91c9c8f1),
@@ -474,6 +476,24 @@ silent_error_handler(char const * file UNUSED, int line UNUSED, char const * fun
 {
 }
 
+static int
+pcm_uses_pulseaudio_plugin(snd_pcm_t * pcm)
+{
+  snd_output_t * out;
+  char * buf;
+  size_t bufsz;
+  int r;
+
+  snd_output_buffer_open(&out);
+  snd_pcm_dump(pcm, out);
+  bufsz = snd_output_buffer_string(out, &buf);
+  r = bufsz >= strlen(ALSA_PA_PLUGIN) &&
+      strncmp(buf, ALSA_PA_PLUGIN, strlen(ALSA_PA_PLUGIN)) == 0;
+  snd_output_close(out);
+
+  return r;
+}
+
 int
 cubeb_init(cubeb ** context, char const * context_name UNUSED)
 {
@@ -529,6 +549,12 @@ cubeb_init(cubeb ** context, char const * context_name UNUSED)
   *context = ctx;
 
   return CUBEB_OK;
+}
+
+char const *
+cubeb_get_backend_id(cubeb * ctx UNUSED)
+{
+  return "alsa";
 }
 
 void
@@ -620,6 +646,12 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name 
 
   r = snd_pcm_nonblock(stm->pcm, 1);
   assert(r == 0);
+
+  /* Ugly hack: the PA ALSA plugin allows buffer configurations that can't
+     possibly work.  See https://bugzilla.mozilla.org/show_bug.cgi?id=761274 */
+  if (pcm_uses_pulseaudio_plugin(stm->pcm)) {
+    latency = latency < 200 ? 200 : latency;
+  }
 
   r = snd_pcm_set_params(stm->pcm, format, SND_PCM_ACCESS_RW_INTERLEAVED,
                          stm->params.channels, stm->params.rate, 1,

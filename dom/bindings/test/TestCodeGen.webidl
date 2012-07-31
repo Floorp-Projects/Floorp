@@ -51,49 +51,49 @@ interface TestInterface {
   void passShort(short arg);
   short receiveShort();
   void passOptionalShort(optional short arg);
-  void passOptionalShortWithDefault(optional short arg = 0);
+  void passOptionalShortWithDefault(optional short arg = 5);
 
   readonly attribute long readonlyLong;
   attribute long writableLong;
   void passLong(long arg);
   long receiveLong();
   void passOptionalLong(optional long arg);
-  void passOptionalLongWithDefault(optional long arg = 0);
+  void passOptionalLongWithDefault(optional long arg = 7);
 
   readonly attribute long long readonlyLongLong;
   attribute long long writableLongLong;
   void passLongLong(long long arg);
   long long receiveLongLong();
   void passOptionalLongLong(optional long long arg);
-  void passOptionalLongLongWithDefault(optional long long arg = 0);
+  void passOptionalLongLongWithDefault(optional long long arg = -12);
 
   readonly attribute octet readonlyOctet;
   attribute octet writableOctet;
   void passOctet(octet arg);
   octet receiveOctet();
   void passOptionalOctet(optional octet arg);
-  void passOptionalOctetWithDefault(optional octet arg = 0);
+  void passOptionalOctetWithDefault(optional octet arg = 19);
 
   readonly attribute unsigned short readonlyUnsignedShort;
   attribute unsigned short writableUnsignedShort;
   void passUnsignedShort(unsigned short arg);
   unsigned short receiveUnsignedShort();
   void passOptionalUnsignedShort(optional unsigned short arg);
-  void passOptionalUnsignedShortWithDefault(optional unsigned short arg = 0);
+  void passOptionalUnsignedShortWithDefault(optional unsigned short arg = 2);
 
   readonly attribute unsigned long readonlyUnsignedLong;
   attribute unsigned long writableUnsignedLong;
   void passUnsignedLong(unsigned long arg);
   unsigned long receiveUnsignedLong();
   void passOptionalUnsignedLong(optional unsigned long arg);
-  void passOptionalUnsignedLongWithDefault(optional unsigned long arg = 0);
+  void passOptionalUnsignedLongWithDefault(optional unsigned long arg = 6);
 
   readonly attribute unsigned long long readonlyUnsignedLongLong;
   attribute unsigned long long  writableUnsignedLongLong;
   void passUnsignedLongLong(unsigned long long arg);
   unsigned long long receiveUnsignedLongLong();
   void passOptionalUnsignedLongLong(optional unsigned long long arg);
-  void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 0);
+  void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
 
   // Castable interface types
   // XXXbz add tests for infallible versions of all the castable interface stuff
@@ -233,6 +233,7 @@ interface TestInterface {
   void passString(DOMString arg);
   void passNullableString(DOMString? arg);
   void passOptionalString(optional DOMString arg);
+  void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
 
@@ -241,6 +242,7 @@ interface TestInterface {
   // No support for nullable enums yet
   // void passNullableEnum(TestEnum? arg);
   void passOptionalEnum(optional TestEnum arg);
+  void passEnumWithDefault(optional TestEnum arg = "a");
   // void passOptionalNullableEnum(optional TestEnum? arg);
   // void passOptionalNullableEnumWithDefaultValue(optional TestEnum? arg = null);
   TestEnum receiveEnum();
@@ -259,6 +261,7 @@ interface TestInterface {
   // Any types
   void passAny(any arg);
   void passOptionalAny(optional any arg);
+  void passAnyDefaultNull(optional any arg = null);
   any receiveAny();
 
   // object types
@@ -354,6 +357,9 @@ dictionary Dict : ParentDict {
   long b = 8;
   long z = 9;
   DOMString str;
+  TestEnum otherEnum = "b";
+  DOMString otherStr = "def";
+  DOMString? yetAnotherStr = null;
 };
 
 dictionary ParentDict : GrandparentDict {
