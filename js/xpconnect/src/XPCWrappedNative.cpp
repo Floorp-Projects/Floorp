@@ -1540,10 +1540,35 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         }
 
         if (wrapper) {
-            Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
-            Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
+
+            // First, the clone of the reflector, get a copy of its
+            // properties and clone its expando chain. The only part that is
+            // dangerous here if we have to return early is that we must avoid
+            // ending up with two reflectors pointing to the same WN. Other than
+            // that, the objects we create will just go away if we return early.
+
+            JSObject *newobj = JS_CloneObject(ccx, flat,
+                                              newProto->GetJSProtoObject(),
+                                              aNewParent);
+            if (!newobj)
+                return NS_ERROR_FAILURE;
+
+            JSObject *propertyHolder =
+                JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
+            if (!propertyHolder)
+                return NS_ERROR_OUT_OF_MEMORY;
+            if (!JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
+                return NS_ERROR_FAILURE;
+
+            // Expandos from other compartments are attached to the target JS object.
+            // Copy them over, and let the old ones die a natural death.
+            SetExpandoChain(newobj, nullptr);
+            if (!XrayUtils::CloneExpandoChain(ccx, newobj, flat))
+                return NS_ERROR_FAILURE;
 
             {   // scoped lock
+                Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
+                Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
                 XPCAutoLock lock(aOldScope->GetRuntime()->GetMapLock());
 
                 oldMap->Remove(wrapper);
@@ -1575,23 +1600,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
                 (void) newMap->Add(wrapper);
             }
-
-            JSObject *newobj = JS_CloneObject(ccx, flat,
-                                              newProto->GetJSProtoObject(),
-                                              aNewParent);
-            if (!newobj)
-                return NS_ERROR_FAILURE;
-
-            JSObject *propertyHolder =
-                JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
-            if (!propertyHolder || !JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            // Expandos from other compartments are attached to the target JS object.
-            // Copy them over, and let the old ones die a natural death.
-            SetExpandoChain(newobj, nullptr);
-            if (!XrayUtils::CloneExpandoChain(ccx, newobj, flat))
-                return NS_ERROR_FAILURE;
 
             // Before proceeding, eagerly create any same-compartment security wrappers
             // that the object might have. This forces us to take the 'WithWrapper' path
