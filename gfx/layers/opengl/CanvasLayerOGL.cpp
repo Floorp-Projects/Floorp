@@ -332,7 +332,7 @@ ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
- 
+
 ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
 {}
 
