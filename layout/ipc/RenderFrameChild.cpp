@@ -7,7 +7,6 @@
 
 #include "RenderFrameChild.h"
 #include "mozilla/layers/ShadowLayersChild.h"
-#include "LayersBackend.h"
 
 using mozilla::layers::PLayersChild;
 using mozilla::layers::ShadowLayersChild;

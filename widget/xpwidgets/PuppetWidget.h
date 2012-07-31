@@ -21,7 +21,6 @@
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
-#include "LayersBackend.h"
 
 class gfxASurface;
 

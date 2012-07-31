@@ -527,8 +527,9 @@ nsWindow::FindTopLevel()
 NS_IMETHODIMP
 nsWindow::SetFocus(bool aRaise)
 {
-    if (!aRaise)
+    if (!aRaise) {
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
+    }
 
     if (!AndroidBridge::Bridge())
         return NS_OK;
@@ -994,7 +995,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 {
                     mozilla::layers::RenderTraceScope trace2("Basic DrawTo", "727272");
                     AutoLayerManagerSetup
-                      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+                      setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
                     status = DispatchEvent(&event);
                 }

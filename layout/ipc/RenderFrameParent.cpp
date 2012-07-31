@@ -23,7 +23,6 @@
 #include "nsSubDocumentFrame.h"
 #include "nsViewportFrame.h"
 #include "RenderFrameParent.h"
-#include "LayersBackend.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::dom;

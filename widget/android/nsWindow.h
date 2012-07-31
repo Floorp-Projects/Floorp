@@ -13,7 +13,6 @@
 
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "AndroidJavaWrappers.h"
-#include "Layers.h"
 #endif
 
 class gfxASurface;
@@ -27,6 +26,7 @@ namespace mozilla {
     namespace layers {
         class CompositorParent;
         class CompositorChild;
+        class LayerManager;
     }
 }
 

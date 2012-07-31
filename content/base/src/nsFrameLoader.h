@@ -21,7 +21,7 @@
 #include "nsFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
-#include "Layers.h"
+#include "FrameMetrics.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
