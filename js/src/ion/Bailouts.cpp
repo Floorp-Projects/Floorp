@@ -247,18 +247,19 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     activation->setBailout(br);
 
     StackFrame *fp;
-    if (it.isEntryJSFrame()) {
+    if (it.isEntryJSFrame() && cx->fp()->runningInIon()) {
         // Avoid creating duplicate interpreter frames. This is necessary to
         // avoid blowing out the interpreter stack, and must be used in
         // conjunction with inline-OSR from within bailouts (since each Ion
         // activation must be tied to a unique JSStackFrame for StackIter to
         // work).
+        // 
+        // Note: If the entry frame is a placeholder (a stub frame pushed for
+        // JM -> Ion calls), then we cannot re-use it as it does not have
+        // enough slots.
         fp = cx->fp();
         cx->regs().sp = fp->base();
     } else {
-        // This is necessary a function frame because only the initial frame
-        // can be a script.
-
         br->constructFrame();
         if (!cx->stack.pushBailoutArgs(cx, it, br->argsGuard()))
             return BAILOUT_RETURN_FATAL_ERROR;

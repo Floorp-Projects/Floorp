@@ -574,8 +574,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
 
         JS_ASSERT(callIsAligned);
 
-        Call cl = call();
-        callPatches.append(CallPatch(cl, fun));
+        Call cl = callAddress(fun);
 #ifdef JS_CPU_ARM
         JS_ASSERT(initFlushCount == flushCount());
 #endif
@@ -587,6 +586,12 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
 #ifdef DEBUG
         callIsAligned = false;
 #endif
+        return cl;
+    }
+
+    Call callAddress(void *ptr) {
+        Call cl = call();
+        callPatches.append(CallPatch(cl, ptr));
         return cl;
     }
 

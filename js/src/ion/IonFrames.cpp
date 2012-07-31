@@ -328,16 +328,27 @@ ion::HandleException(ResumeFromException *rfe)
     rfe->stackPointer = iter.fp();
 }
 
+void
+IonActivationIterator::settle()
+{
+    while (activation_ && !activation_->entryfp()) {
+        top_ = activation_->prevIonTop();
+        activation_ = activation_->prev();
+    }
+}
+
 IonActivationIterator::IonActivationIterator(JSContext *cx)
   : top_(cx->runtime->ionTop),
     activation_(cx->runtime->ionActivation)
 {
+    settle();
 }
 
 IonActivationIterator::IonActivationIterator(JSRuntime *rt)
   : top_(rt->ionTop),
     activation_(rt->ionActivation)
 {
+    settle();
 }
 
 IonActivationIterator &
@@ -346,6 +357,7 @@ IonActivationIterator::operator++()
     JS_ASSERT(activation_);
     top_ = activation_->prevIonTop();
     activation_ = activation_->prev();
+    settle();
     return *this;
 }
 
