@@ -115,20 +115,16 @@ protected:
                         float aGraphicOpacity,
                         const gfxRect *aOverrideBounds);
   nsIFrame*  GetPatternFirstChild();
-  gfxRect    GetPatternRect(const gfxRect &bbox,
+  gfxRect    GetPatternRect(PRUint16 aPatternUnits,
+                            const gfxRect &bbox,
                             const gfxMatrix &callerCTM,
                             nsIFrame *aTarget);
-  gfxMatrix  GetPatternMatrix(const gfxMatrix &patternTransform,
-                              const gfxRect &bbox,
-                              const gfxRect &callerBBox,
-                              const gfxMatrix &callerCTM);
-  gfxMatrix  ConstructCTM(const gfxRect &callerBBox,
+  gfxMatrix  ConstructCTM(const nsSVGViewBox& aViewBox,
+                          PRUint16 aPatternContentUnits,
+                          PRUint16 aPatternUnits,
+                          const gfxRect &callerBBox,
                           const gfxMatrix &callerCTM,
                           nsIFrame *aTarget);
-  nsresult   GetTargetGeometry(gfxRect *aBBox,
-                               nsIFrame *aTarget,
-                               const gfxMatrix &aContextMatrix,
-                               const gfxRect *aOverrideBounds);
 
 private:
   // this is a *temporary* reference to the frame of the element currently
