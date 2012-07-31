@@ -14,7 +14,7 @@
 #include <d3d10_1.h>
 #include "nsRefPtrHashtable.h"
 #elif defined(MOZ_WIDGET_COCOA)
-#include "nsCoreAnimationSupport.h"
+#include "mozilla/gfx/QuartzSupport.h"
 #endif
 
 #include "npfunctions.h"
@@ -346,8 +346,8 @@ private:
     uint16_t               mShWidth;
     uint16_t               mShHeight;
     CGColorSpaceRef        mShColorSpace;
-    nsRefPtr<nsIOSurface> mIOSurface;
-    nsRefPtr<nsIOSurface> mFrontIOSurface;
+    RefPtr<MacIOSurface> mIOSurface;
+    RefPtr<MacIOSurface> mFrontIOSurface;
 #endif // definied(MOZ_WIDGET_COCOA)
 
     // ObjectFrame layer wrapper

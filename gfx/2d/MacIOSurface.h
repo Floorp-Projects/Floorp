@@ -4,27 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIOSurface_h__
-#define nsIOSurface_h__
+#ifndef MacIOSurface_h__
+#define MacIOSurface_h__
 #ifdef XP_MACOSX
 
 #import <OpenGL/OpenGL.h>
+#include "2D.h"
+#include "mozilla/RefPtr.h"
 
 class gfxASurface;
 struct _CGLContextObject;
 
 typedef _CGLContextObject* CGLContextObj;
+typedef struct CGContext* CGContextRef;
+typedef struct CGImage* CGImageRef;
 typedef uint32_t IOSurfaceID;
 
-class THEBES_API nsIOSurface {
-    NS_INLINE_DECL_REFCOUNTING(nsIOSurface)
+class MacIOSurface : public mozilla::RefCounted<MacIOSurface> {
 public:
-  static already_AddRefed<nsIOSurface> CreateIOSurface(int aWidth, int aHeight);
-  static void ReleaseIOSurface(nsIOSurface *aIOSurface);
-  static already_AddRefed<nsIOSurface> LookupSurface(IOSurfaceID aSurfaceID);
+  typedef mozilla::gfx::SourceSurface SourceSurface;
 
-  nsIOSurface(const void *aIOSurfacePtr) : mIOSurfacePtr(aIOSurfacePtr) {}
-  ~nsIOSurface();
+  static mozilla::TemporaryRef<MacIOSurface> CreateIOSurface(int aWidth, int aHeight);
+  static void ReleaseIOSurface(MacIOSurface *aIOSurface);
+  static mozilla::TemporaryRef<MacIOSurface> LookupSurface(IOSurfaceID aSurfaceID);
+
+  MacIOSurface(const void *aIOSurfacePtr) : mIOSurfacePtr(aIOSurfacePtr) {}
+  ~MacIOSurface();
   IOSurfaceID GetIOSurfaceID();
   void *GetBaseAddress();
   size_t GetWidth();
@@ -37,7 +42,13 @@ public:
   CGLError CGLTexImageIOSurface2D(void *ctxt,
                                   GLenum internalFormat, GLenum format,
                                   GLenum type, GLuint plane);
-  already_AddRefed<gfxASurface> GetAsSurface();
+  mozilla::TemporaryRef<SourceSurface> GetAsSurface();
+  CGContextRef CreateIOSurfaceContext();
+
+  // FIXME This doesn't really belong here
+  static CGImageRef CreateImageFromIOSurfaceContext(CGContextRef aContext);
+  static mozilla::TemporaryRef<MacIOSurface> IOSurfaceContextGetSurface(CGContextRef aContext);
+
 private:
   friend class nsCARenderer;
   const void* mIOSurfacePtr;

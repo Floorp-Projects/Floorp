@@ -1495,18 +1495,22 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   if (aWidth == 0 || aHeight == 0)
     return;
 
+  if (!mCARenderer) {
+    mCARenderer = new nsCARenderer();
+  }
+
   if (!mIOSurface ||
       (mIOSurface->GetWidth() != (size_t)aWidth ||
        mIOSurface->GetHeight() != (size_t)aHeight)) {
     mIOSurface = nullptr;
 
     // If the renderer is backed by an IOSurface, resize it as required.
-    mIOSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
+    mIOSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight);
     if (mIOSurface) {
-      nsRefPtr<nsIOSurface> attachSurface = nsIOSurface::LookupSurface(
+      RefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
                                               mIOSurface->GetIOSurfaceID());
       if (attachSurface) {
-        mCARenderer.AttachIOSurface(attachSurface);
+        mCARenderer->AttachIOSurface(attachSurface);
       } else {
         NS_ERROR("IOSurface attachment failed");
         mIOSurface = nullptr;
@@ -1518,7 +1522,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     mColorProfile = CreateSystemColorSpace();
   }
 
-  if (mCARenderer.isInit() == false) {
+  if (mCARenderer->isInit() == false) {
     void *caLayer = NULL;
     nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginCoreAnimationLayer, &caLayer);
     if (NS_FAILED(rv) || !caLayer) {
@@ -1527,7 +1531,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
 
     // We don't run Flash in-process so we can unconditionally disallow
     // the offliner renderer.
-    mCARenderer.SetupRenderer(caLayer, aWidth, aHeight, DISALLOW_OFFLINE_RENDERER);
+    mCARenderer->SetupRenderer(caLayer, aWidth, aHeight, DISALLOW_OFFLINE_RENDERER);
 
     // Setting up the CALayer requires resetting the painting otherwise we
     // get garbage for the first few frames.
@@ -1536,7 +1540,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   }
 
   CGImageRef caImage = NULL;
-  nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
+  nsresult rt = mCARenderer->Render(aWidth, aHeight, &caImage);
   if (rt == NS_OK && mIOSurface && mColorProfile) {
     nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, mColorProfile,
                                          0, 0, aWidth, aHeight);

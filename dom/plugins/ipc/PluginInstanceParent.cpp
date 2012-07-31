@@ -591,7 +591,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else if (newSurface.type() == SurfaceDescriptor::TIOSurfaceDescriptor) {
         IOSurfaceDescriptor iodesc = newSurface.get_IOSurfaceDescriptor();
     
-        nsRefPtr<nsIOSurface> newIOSurface = nsIOSurface::LookupSurface(iodesc.surfaceId());
+        RefPtr<MacIOSurface> newIOSurface = MacIOSurface::LookupSurface(iodesc.surfaceId());
 
         if (!newIOSurface) {
             NS_WARNING("Got bad IOSurfaceDescriptor in RecvShow");
@@ -709,7 +709,7 @@ nsresult
 PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 {
 #ifdef XP_MACOSX
-    nsIOSurface* ioSurface = NULL;
+    MacIOSurface* ioSurface = NULL;
   
     if (mFrontIOSurface) {
       ioSurface = mFrontIOSurface;
@@ -1019,7 +1019,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     if (mShWidth != window.width || mShHeight != window.height) {
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
-            mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
+            mIOSurface = MacIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {
                 DeallocShmem(mShSurface);
