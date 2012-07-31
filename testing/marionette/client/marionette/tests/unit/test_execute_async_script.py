@@ -20,7 +20,7 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
     def test_no_timeout(self):
-        self.marionette.set_script_timeout(2000)
+        self.marionette.set_script_timeout(10000)
         self.assertTrue(self.marionette.execute_async_script("""
             var callback = arguments[arguments.length - 1];
             setTimeout(function() { callback(true); }, 500);
