@@ -52,6 +52,19 @@ bool
 XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
                 Visual** aVisual, unsigned int* aDepth);
 
+
+/**
+ * Ensure that all X requests have been processed.
+ *
+ * This is similar to XSync, but doesn't need a round trip if the previous
+ * request was synchronous or if events have been received since the last
+ * request.  Subsequent FinishX calls will be noops if there have been no
+ * intermediate requests.
+ */
+
+void
+FinishX(Display* aDisplay);
+
 /**
  * Invoke XFree() on a pointer to memory allocated by Xlib (if the
  * pointer is nonnull) when this class goes out of scope.
