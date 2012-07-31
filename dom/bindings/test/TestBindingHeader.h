@@ -361,6 +361,7 @@ public:
   // Any types
   void PassAny(JSContext*, JS::Value, ErrorResult&);
   void PassOptionalAny(JSContext*, const Optional<JS::Value>&, ErrorResult&);
+  void PassAnyDefaultNull(JSContext*, JS::Value, ErrorResult&);
   JS::Value ReceiveAny(JSContext*, ErrorResult&);
 
   // object types
