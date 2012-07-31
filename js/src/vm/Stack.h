@@ -271,7 +271,8 @@ class StackFrame
         HAS_PUSHED_SPS_FRAME = 0x400000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION       = 0x800000   /* frame is running in Ion */
+        RUNNING_IN_ION       = 0x800000,  /* frame is running in Ion */
+        CALLING_INTO_ION    = 0x1000000   /* frame is calling into Ion */
     };
 
   private:
@@ -1083,6 +1084,9 @@ class StackFrame
 
     bool runningInIon() const {
         return !!(flags_ & RUNNING_IN_ION);
+    }
+    bool callingIntoIon() const {
+        return !!(flags_ & CALLING_INTO_ION);
     }
     void setRunningInIon() {
         flags_ |= RUNNING_IN_ION;
