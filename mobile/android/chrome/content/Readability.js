@@ -111,19 +111,17 @@ Readability.prototype = {
    */
   _fixRelativeUris: function(articleContent) {
     let baseUri = this._uri;
-    let ioService = Cc["@mozilla.org/network/io-service;1"]
-        .getService(Components.interfaces.nsIIOService);
 
     // Fix links.
     let links = articleContent.getElementsByTagName('a');
     for (let i = links.length - 1; i >= 0; i--) {
-      links[i].href = this._newURIErrorWrapper(links[i].href, baseUri, ioService);
+      links[i].href = this._newURIErrorWrapper(links[i].href, baseUri);
     }
 
     // Fix images.
     let images = articleContent.getElementsByTagName('img');
     for (let i = images.length - 1; i >= 0; i--) {
-      images[i].src = this._newURIErrorWrapper(images[i].src, baseUri, ioService);
+      images[i].src = this._newURIErrorWrapper(images[i].src, baseUri);
     }
   },
 
@@ -133,12 +131,11 @@ Readability.prototype = {
    *
    * @param string
    * @param nsIURI
-   * @param nsIIOService
    * @return string
    */
-  _newURIErrorWrapper: function(aSpec, aBaseURI, ioService) {
+  _newURIErrorWrapper: function(aSpec, aBaseURI) {
     try {
-      return ioService.newURI(aSpec, null, aBaseURI).spec;
+      return Services.io.newURI(aSpec, null, aBaseURI).spec;
     } catch (err) {
       dump("_newURIErrorWrapper: " + err.message);
       return "";
