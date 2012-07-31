@@ -54,6 +54,45 @@ MakeTextureIfNeeded(GLContext* gl, GLuint& aTexture)
   gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 }
 
+#ifdef XP_MACOSX
+static GLuint
+MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
+{
+  GLuint ioSurfaceTexture;
+
+  aGL->MakeCurrent();
+
+  aGL->fGenTextures(1, &ioSurfaceTexture);
+
+  aGL->fActiveTexture(LOCAL_GL_TEXTURE0);
+  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioSurfaceTexture);
+
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  RefPtr<MacIOSurface> ioSurface = MacIOSurface::IOSurfaceContextGetSurface((CGContextRef)aCGIOSurfaceContext);
+  void *nativeCtx = aGL->GetNativeData(GLContext::NativeGLContext);
+
+  ioSurface->CGLTexImageIOSurface2D(nativeCtx,
+                                    LOCAL_GL_RGBA, LOCAL_GL_BGRA,
+                                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+
+  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  return ioSurfaceTexture;
+}
+
+#else
+static GLuint
+MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
+{
+  NS_RUNTIMEABORT("Not implemented");
+  return 0;
+}
+#endif
+
 void
 CanvasLayerOGL::Destroy()
 {
@@ -77,7 +116,13 @@ CanvasLayerOGL::Initialize(const Data& aData)
 
   mOGLManager->MakeCurrent();
 
-  if (aData.mDrawTarget) {
+  if (aData.mDrawTarget &&
+      aData.mDrawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED)) {
+    mDrawTarget = aData.mDrawTarget;
+    mNeedsYFlip = false;
+    mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+    return;
+  } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
     mCanvasSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
     mNeedsYFlip = false;
@@ -128,43 +173,6 @@ CanvasLayerOGL::Initialize(const Data& aData)
   }
 }
 
-#ifdef XP_MACOSX
-static GLuint
-MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
-{
-  GLuint ioSurfaceTexture;
-
-  aGL->fGenTextures(1, &ioSurfaceTexture);
-
-  aGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioSurfaceTexture);
-
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  RefPtr<MacIOSurface> ioSurface = MacIOSurface::IOSurfaceContextGetSurface((CGContextRef)aCGIOSurfaceContext);
-  void *nativeCtx = aGL->GetNativeData(GLContext::NativeGLContext);
-
-  ioSurface->CGLTexImageIOSurface2D(nativeCtx,
-                                    LOCAL_GL_RGBA, LOCAL_GL_BGRA,
-                                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-
-  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
-
-  return ioSurfaceTexture;
-}
-
-#else
-static GLuint
-MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
-{
-  NS_RUNTIMEABORT("Not implemented");
-  return 0;
-}
-#endif
-
 /**
  * Following UpdateSurface(), mTexture on context this->gl() should contain the data we want,
  * unless mDelayedUpdates is true because of a too-large surface.
@@ -207,6 +215,19 @@ CanvasLayerOGL::UpdateSurface()
     }
     return;
   }
+
+#ifdef XP_MACOSX
+  if (mDrawTarget && mDrawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED)) {
+    if (!mTexture) {
+      mTexture = MakeIOSurfaceTexture((CGContextRef)mDrawTarget->GetNativeSurface(
+                                      gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED),
+                                      gl());
+      mTextureTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+      mLayerProgram = gl::RGBARectLayerProgramType;
+    }
+    return;
+  }
+#endif
 
   nsRefPtr<gfxASurface> updatedAreaSurface;
   if (mCanvasGLContext) {
