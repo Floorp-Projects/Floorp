@@ -1528,6 +1528,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
         return NULL;
 
     PodZero(script);
+    new (&script->bindings) Bindings;
 
     script->enclosingScope_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
@@ -1591,8 +1592,6 @@ JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
         return false;
 
     script->length = length;
-
-    new (&script->bindings) Bindings;
 
     uint8_t *cursor = script->data;
     if (nconsts != 0) {
@@ -2222,7 +2221,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         return NULL;
     }
 
-    new (&dst->bindings) Bindings;
     dst->bindings.transfer(&bindings);
 
     /* This assignment must occur before all the Rebase calls. */
