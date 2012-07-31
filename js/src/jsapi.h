@@ -5138,6 +5138,10 @@ extern JS_PUBLIC_API(bool)
 Evaluate(JSContext *cx, JSHandleObject obj, CompileOptions options,
          const char *bytes, size_t length, jsval *rval);
 
+extern JS_PUBLIC_API(bool)
+Evaluate(JSContext *cx, JSHandleObject obj, CompileOptions options,
+         const char *filename, jsval *rval);
+
 } /* namespace JS */
 
 JS_BEGIN_EXTERN_C
