@@ -40,6 +40,7 @@ namespace mozilla {
 namespace gl {
 
 static bool gIsATI = false;
+static bool gClientIsMesa = false;
 static int gGLXMajorVersion = 0, gGLXMinorVersion = 0;
 
 // Check that we have at least version aMajor.aMinor .
@@ -169,10 +170,7 @@ GLXLibrary::EnsureInitialized()
     }
 
     Display *display = DefaultXDisplay();
-
     int screen = DefaultScreen(display);
-    const char *serverVendor = NULL;
-    const char *extensionsStr = NULL;
 
     if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
         gGLXMajorVersion = 0;
@@ -180,13 +178,13 @@ GLXLibrary::EnsureInitialized()
         return false;
     }
 
-    serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
-
     if (!GLXVersionCheck(1, 1))
         // Not possible to query for extensions.
         return false;
 
-    extensionsStr = xQueryExtensionsString(display, screen);
+    const char *clientVendor = xGetClientString(display, GLX_VENDOR);
+    const char *serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
+    const char *extensionsStr = xQueryExtensionsString(display, screen);
 
     GLLibraryLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {
@@ -240,6 +238,7 @@ GLXLibrary::EnsureInitialized()
     }
 
     gIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
+    gClientIsMesa = clientVendor && DoesStringMatch(clientVendor, "Mesa");
 
     mInitialized = true;
     return true;
@@ -360,7 +359,14 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 
     Display *display = DefaultXDisplay();
     // Make sure all X drawing to the surface has finished before binding to a texture.
-    xWaitX();
+    if (gClientIsMesa) {
+        // Using XSync instead of Mesa's glXWaitX, because its glxWaitX is a
+        // noop when direct rendering unless the current drawable is a
+        // single-buffer window.
+        FinishX(display);
+    } else {
+        xWaitX();
+    }
     xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, NULL);
 }
 
