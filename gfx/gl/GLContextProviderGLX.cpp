@@ -270,36 +270,77 @@ GLXPixmap
 GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 {
     if (!SupportsTextureFromPixmap(aSurface)) {
-        return 0;
+        return None;
     }
+
+    gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
+    const XRenderPictFormat *format = xs->XRenderFormat();
+    if (!format || format->type != PictTypeDirect) {
+        return None;
+    }
+
+    bool withAlpha =
+        aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
 
     int attribs[] = { GLX_DOUBLEBUFFER, False,
                       GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-                      GLX_BIND_TO_TEXTURE_RGBA_EXT, True,
+                      (withAlpha ? GLX_BIND_TO_TEXTURE_RGBA_EXT
+                       : GLX_BIND_TO_TEXTURE_RGB_EXT), True,
                       None };
 
-    int numFormats;
-    Display *display = DefaultXDisplay();
+    int numConfigs = 0;
+    Display *display = xs->XDisplay();
     int xscreen = DefaultScreen(display);
 
-    ScopedXFree<GLXFBConfig> cfg(xChooseFBConfig(display,
-                                                 xscreen,
-                                                 attribs,
-                                                 &numFormats));
-    if (!cfg) {
-        return 0;
-    }
-    NS_ABORT_IF_FALSE(numFormats > 0,
-                 "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
+    ScopedXFree<GLXFBConfig> cfgs(xChooseFBConfig(display,
+                                                  xscreen,
+                                                  attribs,
+                                                  &numConfigs));
 
-    gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
+    int matchIndex = -1;
+    const XRenderDirectFormat& direct = format->direct;
+    unsigned long redMask =
+        static_cast<unsigned long>(direct.redMask) << direct.red;
+    unsigned long greenMask =
+        static_cast<unsigned long>(direct.greenMask) << direct.green;
+    unsigned long blueMask =
+        static_cast<unsigned long>(direct.blueMask) << direct.blue;
+    ScopedXFree<XVisualInfo> vinfo;
+
+    for (int i = 0; i < numConfigs; i++) {
+        int size;
+        // The visual depth won't necessarily match as it may not include the
+        // alpha buffer, so check buffer size.
+        if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
+                                           GLX_BUFFER_SIZE, &size) != Success ||
+            size != format->depth) {
+            continue;
+        }
+
+        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
+        if (!vinfo ||
+            vinfo->c_class != TrueColor ||
+            vinfo->red_mask != redMask ||
+            vinfo->green_mask != greenMask ||
+            vinfo->blue_mask != blueMask ) {
+            continue;
+        }
+
+        matchIndex = i;
+    }
+    if (matchIndex == -1) {
+        NS_WARNING("[GLX] Couldn't find a FBConfig matching Pixmap format");
+        return None;
+    }
 
     int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
-                            GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGBA_EXT,
+                            GLX_TEXTURE_FORMAT_EXT,
+                            (withAlpha ? GLX_TEXTURE_FORMAT_RGBA_EXT
+                             : GLX_TEXTURE_FORMAT_RGB_EXT),
                             None};
 
     GLXPixmap glxpixmap = xCreatePixmap(display,
-                                        cfg[0],
+                                        cfgs[matchIndex],
                                         xs->XDrawable(),
                                         pixmapAttribs);
 
