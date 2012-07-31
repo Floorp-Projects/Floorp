@@ -304,13 +304,6 @@ public:
 
   void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow);
 
-  // get the frame for a content node aContent if the frame's type
-  // matches aFrameType. Otherwise, return null. If aShouldFlush is true,
-  // then the frames are flushed before retrieving the frame.
-  nsIFrame* GetFrameOfTypeForContent(nsIContent* aContent,
-                                     nsIAtom* aFrameType,
-                                     bool aShouldFlush);
-
   // given a menu frame, find the prevous or next menu frame. If aPopup is
   // true then navigate a menupopup, from one item on the menu to the previous
   // or next one. This is used for cursor navigation between items in a popup
@@ -604,9 +597,6 @@ public:
 protected:
   nsXULPopupManager();
   ~nsXULPopupManager();
-
-  // get the nsMenuFrame, if any, for the given content node
-  nsMenuFrame* GetMenuFrameForContent(nsIContent* aContent);
 
   // get the nsMenuPopupFrame, if any, for the given content node
   nsMenuPopupFrame* GetPopupFrameForContent(nsIContent* aContent, bool aShouldFlush);
