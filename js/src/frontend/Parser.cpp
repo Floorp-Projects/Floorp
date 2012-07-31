@@ -114,6 +114,7 @@ Parser::Parser(JSContext *cx, const CompileOptions &options,
     allocator(cx),
     traceListHead(NULL),
     tc(NULL),
+    sct(NULL),
     keepAtoms(cx->runtime),
     foldConstants(foldConstants),
     compileAndGo(options.compileAndGo)
@@ -6514,6 +6515,14 @@ Parser::atomNode(ParseNodeKind kind, JSOp op)
     node->setOp(op);
     const Token &tok = tokenStream.currentToken();
     node->pn_atom = tok.atom();
+
+    // Large strings are fast to parse but slow to compress. Stop compression on
+    // them, so we don't wait for a long time for compression to finish at the
+    // end of compilation.
+    const size_t HUGE_STRING = 50000;
+    if (sct && kind == PNK_STRING && node->pn_atom->length() >= HUGE_STRING)
+        sct->abort();
+
     return node;
 }
 

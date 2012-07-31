@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,33 +42,51 @@ zlib_free(void *cx, void *addr)
     Foreground::free_(addr);
 }
 
-
 bool
-js::TryCompressString(const unsigned char *inp, size_t inplen, unsigned char *out, size_t *outlen)
+Compressor::init()
 {
-    JS_ASSERT(inplen);
     if (inplen >= UINT32_MAX)
         return false;
-    z_stream zs;
-    zs.opaque = NULL;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
-    zs.next_in = (Bytef *)inp;
-    zs.avail_in = inplen;
-    zs.next_out = out;
-    zs.avail_out = inplen;
-    int ret = deflateInit(&zs, Z_BEST_SPEED);
+    int ret = deflateInit(&zs, Z_DEFAULT_COMPRESSION);
     if (ret != Z_OK) {
         JS_ASSERT(ret == Z_MEM_ERROR);
         return false;
     }
-    ret = deflate(&zs, Z_FINISH);
-    DebugOnly<int> ret2 = deflateEnd(&zs);
-    JS_ASSERT(ret2 == Z_OK);
-    if (ret != Z_STREAM_END)
-        return false;
-    *outlen = inplen - zs.avail_out;
     return true;
+}
+
+bool
+Compressor::compressMore()
+{
+    uInt left = inplen - (zs.next_in - inp);
+    bool done = left <= CHUNKSIZE;
+    if (done)
+        zs.avail_in = left;
+    else if (zs.avail_in == 0)
+        zs.avail_in = CHUNKSIZE;
+    int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
+    if (ret == Z_BUF_ERROR) {
+        JS_ASSERT(zs.avail_out == 0);
+        return false;
+    }
+    JS_ASSERT_IF(!done, ret == Z_OK);
+    JS_ASSERT_IF(done, ret == Z_STREAM_END);
+    return !done;
+}
+
+size_t
+Compressor::finish()
+{
+    size_t outlen = inplen - zs.avail_out;
+    int ret = deflateEnd(&zs);
+    if (ret != Z_OK) {
+        // If we finished early, we can get a Z_DATA_ERROR.
+        JS_ASSERT(ret == Z_DATA_ERROR);
+        JS_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
+    }
+    return outlen;
 }
 
 bool
@@ -86,8 +104,8 @@ js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out
     zs.avail_out = outlen;
     int ret = inflateInit(&zs);
     if (ret != Z_OK) {
-      JS_ASSERT(ret == Z_MEM_ERROR);
-      return false;
+        JS_ASSERT(ret == Z_MEM_ERROR);
+        return false;
     }
     ret = inflate(&zs, Z_FINISH);
     JS_ASSERT(ret == Z_STREAM_END);
@@ -151,10 +169,10 @@ ValToBin(unsigned logscale, uint32_t val)
     if (val <= 1)
         return val;
     bin = (logscale == 10)
-          ? (unsigned) ceil(log10((double) val))
-          : (logscale == 2)
-          ? (unsigned) JS_CEILING_LOG2W(val)
-          : val;
+        ? (unsigned) ceil(log10((double) val))
+        : (logscale == 2)
+        ? (unsigned) JS_CEILING_LOG2W(val)
+        : val;
     return JS_MIN(bin, 10);
 }
 
