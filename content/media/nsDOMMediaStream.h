@@ -55,6 +55,11 @@ public:
    */
   static already_AddRefed<nsDOMMediaStream> CreateInputStream();
 
+  /**
+   * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
+   */
+  static already_AddRefed<nsDOMMediaStream> CreateTrackUnionStream();
+
 protected:
   // MediaStream is owned by the graph, but we tell it when to die, and it won't
   // die until we let it.
