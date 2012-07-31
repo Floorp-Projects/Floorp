@@ -778,7 +778,7 @@ DisableAlarm()
 }
 
 bool
-SetAlarm(long aSeconds, long aNanoseconds)
+SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds)
 {
   if (!sAlarmData) {
     HAL_LOG(("We should have enabled the alarm."));
