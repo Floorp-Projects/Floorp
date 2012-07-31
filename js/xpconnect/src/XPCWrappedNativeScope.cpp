@@ -390,14 +390,6 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
-static PLDHashOperator
-TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
-{
-    JS_CallObjectTracer(static_cast<JSTracer *>(aClosure), expando->GetKey(),
-                        "DOM expando object");
-    return PL_DHASH_NEXT;
-}
-
 // static
 void
 XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
@@ -410,8 +402,10 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntim
     // well as any DOM expando objects.
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
-        if (cur->mDOMExpandoMap)
-            cur->mDOMExpandoMap->EnumerateEntries(TraceDOMExpandos, trc);
+        if (cur->mDOMExpandoSet) {
+            for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
+                JS_CallObjectTracer(trc, r.front(), "DOM expando object");
+        }
     }
 }
 
@@ -430,17 +424,13 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
-static PLDHashOperator
-SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
+static void
+SuspectDOMExpandos(JSObject *obj, nsCycleCollectionTraversalCallback &cb)
 {
-    nsCycleCollectionTraversalCallback *cb =
-      static_cast<nsCycleCollectionTraversalCallback *>(arg);
-    JSObject* obj = key->GetKey();
     const dom::DOMClass* clasp = dom::GetDOMClass(obj);
     MOZ_ASSERT(clasp && clasp->mDOMObjectIsISupports);
     nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj);
-    cb->NoteXPCOMRoot(native);
-    return PL_DHASH_NEXT;
+    cb.NoteXPCOMRoot(native);
 }
 
 // static
@@ -452,8 +442,10 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
 
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &cb);
-        if (cur->mDOMExpandoMap)
-            cur->mDOMExpandoMap->EnumerateEntries(SuspectDOMExpandos, &cb);
+        if (cur->mDOMExpandoSet) {
+            for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
+                SuspectDOMExpandos(r.front(), cb);
+        }
     }
 }
 
