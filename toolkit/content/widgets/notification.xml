@@ -168,6 +168,12 @@
             if (aChild.eventCallback)
               aChild.eventCallback("removed");
             this.removeChild(aChild);
+
+            // make sure focus doesn't get lost (workaround for bug 570835)
+            let fm = Components.classes["@mozilla.org/focus-manager;1"]
+                               .getService(Components.interfaces.nsIFocusManager);
+            if (!fm.getFocusedElementForWindow(window, false, {}))
+              fm.moveFocus(window, this, fm.MOVEFOCUS_FORWARD, 0);
           ]]>
         </body>
       </method>
