@@ -106,7 +106,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
-  typedef nsBuiltinDecoder::OutputMediaStream OutputMediaStream;
+  typedef nsBuiltinDecoder::DecodedStreamData DecodedStreamData;
   typedef mozilla::SourceMediaStream SourceMediaStream;
   typedef mozilla::AudioSegment AudioSegment;
   typedef mozilla::VideoSegment VideoSegment;
@@ -260,12 +260,46 @@ public:
 
   // Copy queued audio/video data in the reader to any output MediaStreams that
   // need it.
-  void SendOutputStreamData();
-  void FinishOutputStreams();
+  void SendStreamData();
+  void FinishStreamData();
   bool HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
 
 protected:
+  class WakeDecoderRunnable : public nsRunnable {
+  public:
+    WakeDecoderRunnable(nsBuiltinDecoderStateMachine* aSM)
+      : mMutex("WakeDecoderRunnable"), mStateMachine(aSM) {}
+    NS_IMETHOD Run()
+    {
+      nsRefPtr<nsBuiltinDecoderStateMachine> stateMachine;
+      {
+        // Don't let Run() (called by media stream graph thread) race with
+        // Revoke() (called by decoder state machine thread)
+        MutexAutoLock lock(mMutex);
+        if (!mStateMachine)
+          return NS_OK;
+        stateMachine = mStateMachine;
+      }
+      stateMachine->ScheduleStateMachineWithLockAndWakeDecoder();
+      return NS_OK;
+    }
+    void Revoke()
+    {
+      MutexAutoLock lock(mMutex);
+      mStateMachine = nullptr;
+    }
+
+    Mutex mMutex;
+    // Protected by mMutex.
+    // We don't use an owning pointer here, because keeping mStateMachine alive
+    // would mean in some cases we'd have to destroy mStateMachine from this
+    // object, which would be problematic since nsBuiltinDecoderStateMachine can
+    // only be destroyed on the main thread whereas this object can be destroyed
+    // on the media stream graph thread.
+    nsBuiltinDecoderStateMachine* mStateMachine;
+  };
+  WakeDecoderRunnable* GetWakeDecoderRunnable();
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
@@ -430,8 +464,8 @@ protected:
 
   // Copy audio from an AudioData packet to aOutput. This may require
   // inserting silence depending on the timing of the audio packet.
-  void SendOutputStreamAudio(AudioData* aAudio, OutputMediaStream* aStream,
-                             AudioSegment* aOutput);
+  void SendStreamAudio(AudioData* aAudio, DecodedStreamData* aStream,
+                       AudioSegment* aOutput);
 
   // State machine thread run function. Defers to RunStateMachine().
   nsresult CallRunStateMachine();
@@ -529,6 +563,13 @@ protected:
   // This is created in the play state machine's constructor, and destroyed
   // in the play state machine's destructor.
   nsAutoPtr<nsBuiltinDecoderReader> mReader;
+
+  // Accessed only on the state machine thread.
+  // Not an nsRevocableEventPtr since we must Revoke() it well before
+  // this object is destroyed, anyway.
+  // Protected by decoder monitor except during the SHUTDOWN state after the
+  // decoder thread has been stopped.
+  nsRevocableEventPtr<WakeDecoderRunnable> mPendingWakeDecoder;
 
   // The time of the current frame in microseconds. This is referenced from
   // 0 which is the initial playback position. Set by the state machine
