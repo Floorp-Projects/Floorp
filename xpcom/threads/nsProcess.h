@@ -59,6 +59,7 @@ private:
   PRThread* mThread;
   mozilla::Mutex mLock;
   bool mShutdown;
+  bool mBlocking;
 
   nsCOMPtr<nsIFile> mExecutable;
   nsString mTargetPath;
