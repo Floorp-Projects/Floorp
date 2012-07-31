@@ -1,5 +1,5 @@
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-1a.html linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-1b.html linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-1b.html linear-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-keywords-1a.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-keywords-1b.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-percent.html linear-percent-ref.html
