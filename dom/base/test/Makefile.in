@@ -21,10 +21,6 @@ MOCHITEST_FILES = \
 MOCHITEST_CHROME_FILES = \
    test_bug715041.xul \
    test_bug715041_removal.xul \
-   MockIdleService.js \
-   bfcache_iframe1.html \
-   bfcache_iframe2.html \
-   test_bug769726.xul \
    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
