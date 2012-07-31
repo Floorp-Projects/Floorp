@@ -389,6 +389,7 @@ enum TokenStreamFlags
     TSF_XMLTEXTMODE = 0x200,    /* scanning XMLText terminal from E4X */
     TSF_XMLONLYMODE = 0x400,    /* don't scan {expr} within text/tag */
     TSF_OCTAL_CHAR = 0x800,     /* observed a octal character escape */
+    TSF_HAD_ERROR = 0x1000,     /* returned TOK_ERROR from getToken */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -409,7 +410,7 @@ enum TokenStreamFlags
      * It does not cope with malformed comment hiding hacks where --> is hidden
      * by C-style comments, or on a dirty line.  Such cases are already broken.
      */
-    TSF_IN_HTML_COMMENT = 0x1000
+    TSF_IN_HTML_COMMENT = 0x2000
 };
 
 struct Parser;
@@ -508,6 +509,7 @@ class TokenStream
     bool allowsXML() const { return allowXML && strictModeState() != StrictMode::STRICT; }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
+    bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenEquality() const {
         return TokenKindIsEquality(currentToken().type);
@@ -553,6 +555,7 @@ class TokenStream
     bool reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, va_list args);
 
   private:
+    void onError();
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
     bool putIdentInTokenbuf(const jschar *identStart);
 
