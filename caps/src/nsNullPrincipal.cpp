@@ -335,6 +335,13 @@ nsNullPrincipal::GetAppId(PRUint32* aAppId)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNullPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  *aIsInBrowserElement = false;
+  return NS_OK;
+}
+
 /**
  * nsISerializable implementation
  */
