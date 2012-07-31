@@ -150,8 +150,7 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   rv = GetFile(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = files.AppendObject(file);
-  NS_ENSURE_SUCCESS(rv,rv);
+  files.AppendObject(file);
 
   return NS_NewArrayEnumerator(aFiles, files);
 }

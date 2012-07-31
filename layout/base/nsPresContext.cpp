@@ -19,6 +19,8 @@
 #include "nsIFrame.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
+#include "nsIPrintSettings.h"
+#include "nsILanguageAtomService.h"
 #include "nsStyleContext.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsIComponentManager.h"
@@ -246,8 +248,6 @@ nsPresContext::~nsPresContext()
     // unclear if these are needed, but can't hurt
     mEventManager->NotifyDestroyPresContext(this);
     mEventManager->SetPresContext(nullptr);
-
-    NS_RELEASE(mEventManager);
   }
 
   if (mPrefChangedTimer)
@@ -295,9 +295,6 @@ nsPresContext::~nsPresContext()
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "layout.css.devPixelsPerPx",
                                   this);
-
-  NS_IF_RELEASE(mDeviceContext);
-  NS_IF_RELEASE(mLanguage);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -352,13 +349,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument);
-  NS_RELEASE(tmp->mDeviceContext); // worth bothering?
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDeviceContext); // worth bothering?
   if (tmp->mEventManager) {
     // unclear if these are needed, but can't hurt
     tmp->mEventManager->NotifyDestroyPresContext(tmp);
     tmp->mEventManager->SetPresContext(nullptr);
-
-    NS_RELEASE(tmp->mEventManager);
+    tmp->mEventManager = nullptr;
   }
 
   // We own only the items in mDOMMediaQueryLists that have listeners;
@@ -914,7 +910,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   NS_ENSURE_ARG(aDeviceContext);
 
   mDeviceContext = aDeviceContext;
-  NS_ADDREF(mDeviceContext);
 
   if (mDeviceContext->SetPixelScale(mFullZoom))
     mDeviceContext->FlushFontCache();
@@ -925,7 +920,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   }
 
   mEventManager = new nsEventStateManager();
-  NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
 
@@ -1121,14 +1115,12 @@ void
 nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
   if (mLangService) {
-    NS_IF_RELEASE(mLanguage);
-    mLanguage = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
+    mLanguage = mLangService->LookupCharSet(aCharSet.get());
     // this will be a language group (or script) code rather than a true language code
 
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
     if (mLanguage == nsGkAtoms::Unicode) {
-      NS_RELEASE(mLanguage);
-      NS_IF_ADDREF(mLanguage = mLangService->GetLocaleLanguage()); 
+      mLanguage = mLangService->GetLocaleLanguage();
     }
     ResetCachedFontPrefs();
   }
@@ -1534,6 +1526,18 @@ nsPresContext::GetContainerExternal() const
 }
 
 #ifdef IBMBIDI
+bool
+nsPresContext::BidiEnabledExternal() const
+{
+  return BidiEnabledInternal();
+}
+
+bool
+nsPresContext::BidiEnabledInternal() const
+{
+  return Document()->GetBidiEnabled();
+}
+
 void
 nsPresContext::SetBidiEnabled() const
 {
@@ -1817,6 +1821,12 @@ nsPresContext::MatchMedia(const nsAString& aMediaQueryList,
   PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
 
   result.forget(aResult);
+}
+
+nsCompatibility
+nsPresContext::CompatibilityMode() const
+{
+  return Document()->GetCompatibilityMode();
 }
 
 void
@@ -2394,6 +2404,18 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   }
   return mHasPendingInterrupt;
 }
+
+nsIFrame*
+nsPresContext::GetPrimaryFrameFor(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "Don't do that");
+  if (GetPresShell() &&
+      GetPresShell()->GetDocument() == aContent->GetCurrentDoc()) {
+    return aContent->GetPrimaryFrame();
+  }
+  return nullptr;
+}
+
 
 size_t
 nsPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const

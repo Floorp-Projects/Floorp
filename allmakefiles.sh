@@ -125,6 +125,7 @@ if [ "$ENABLE_TESTS" ]; then
     config/makefiles/test/Makefile
     config/tests/makefiles/autodeps/Makefile
     config/tests/src-simple/Makefile
+    mfbt/tests/Makefile
   "
   if [ ! "$LIBXUL_SDK" ]; then 
     add_makefiles "

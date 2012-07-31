@@ -128,7 +128,8 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultVal
 
   nsAutoString attr;
   aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
-  PRInt32 err, value = attr.ToInteger(&err);
+  nsresult err;
+  PRInt32 value = attr.ToInteger(&err);
   if (attr.IsEmpty() || NS_FAILED(err))
     return defaultValue;
 

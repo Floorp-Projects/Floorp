@@ -182,7 +182,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     return false;
   }
 
-  PRInt32 errorCode;
+  nsresult errorCode;
   float floatValue = number.ToFloat(&errorCode);
   if (errorCode) {
     aSign = NS_MATHML_SIGN_INVALID;

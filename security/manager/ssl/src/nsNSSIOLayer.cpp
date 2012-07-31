@@ -2423,6 +2423,7 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* layer = nullptr;
   nsresult rv;
+  PRStatus stat;
 
   nsNSSSocketInfo* infoObject = new nsNSSSocketInfo();
   if (!infoObject) return NS_ERROR_FAILURE;
@@ -2454,9 +2455,9 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
     goto loser;
   
   layer->secret = (PRFilePrivate*) infoObject;
-  rv = PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer);
+  stat = PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer);
   
-  if (NS_FAILED(rv)) {
+  if (stat == PR_FAILURE) {
     goto loser;
   }
   

@@ -50,6 +50,10 @@ function run_tests()
   points[0].x = 30;
   points[1].y = 380;
   polyline.setAttribute("points", "30,375 150,380");
+  // -- Invalid attribute
+  eventChecker.expect("modify");
+  polyline.setAttribute("points", ",30,375");
+  is(points.numberOfItems, 0, 'Checking that parsing stops at invalid token');
   // -- Attribute removal
   eventChecker.expect("remove");
   polyline.removeAttribute("points");

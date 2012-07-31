@@ -648,12 +648,6 @@ const gFormSubmitObserver = {
     this.panel = document.getElementById('invalid-form-popup');
   },
 
-  panelIsOpen: function()
-  {
-    return this.panel && this.panel.state != "hiding" &&
-           this.panel.state != "closed";
-  },
-
   notifyInvalidSubmit : function (aFormElement, aInvalidElements)
   {
     // We are going to handle invalid form submission attempt by focusing the
@@ -1251,7 +1245,8 @@ var gBrowserInit = {
     gDelayedStartupTimeoutId = null;
 
 #ifdef MOZ_SAFE_BROWSING
-    SafeBrowsing.init();
+    // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
+    setTimeout(function() { SafeBrowsing.init(); }, 2000);
 #endif
 
     Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
@@ -3949,7 +3944,7 @@ var XULBrowserWindow = {
     this._hostChanged = true;
 
     // Hide the form invalid popup.
-    if (gFormSubmitObserver.panelIsOpen()) {
+    if (gFormSubmitObserver.panel) {
       gFormSubmitObserver.panel.hidePopup();
     }
 

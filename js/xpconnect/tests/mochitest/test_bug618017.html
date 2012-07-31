@@ -11,15 +11,45 @@ Parsing XML must not override the version.
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<script type='application/javascript;version=1.5'>
+function getAllowXML(){
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getBoolPref("javascript.options.xml.content");
+}
+
+function setAllowXML(value){
+  // Set the value for e4x
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("javascript.options.xml.content", value);
+}
+
+// Save the initial preference
+var default_allow_xml = getAllowXML();
+function restoreAllowXML(){
+    setAllowXML(default_allow_xml);
+}
+
+setAllowXML(true);
+var uneval_xml = uneval(eval('<test />'));
+</script>
+
 <script type='application/javascript;version=1.7'>
 let x = 12;
 function doLetEval() {
   ok(eval('let x = 13; x') === 13, 'let statement is valid syntax in version 1.7');
 }
 </script>
+
 <script type='application/javascript;version=1.5'>
-ok(uneval(<test />) === '<test/>', 'xml can be parsed in any version');
+ok(uneval_xml === '<test/>', 'xml can be parsed in any version');
 doLetEval(); // Call to a function with a different version.
 </script>
+
+<script type='application/javascript;version=1.5'>
+restoreAllowXML();
+</script>
+
 </body>
 </html>

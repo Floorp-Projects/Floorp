@@ -4163,8 +4163,8 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 
   PRInt32 imgWidth, imgHeight;
   rv = imgContainer->GetWidth(&imgWidth);
-  rv |= imgContainer->GetHeight(&imgHeight);
-  if (NS_FAILED(rv))
+  nsresult rv2 = imgContainer->GetHeight(&imgHeight);
+  if (NS_FAILED(rv) || NS_FAILED(rv2))
     return result;
 
   if (wantImageSurface && framesurf->GetType() != gfxASurface::SurfaceTypeImage) {

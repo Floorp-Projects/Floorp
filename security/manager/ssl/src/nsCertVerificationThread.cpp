@@ -159,7 +159,7 @@ void nsCertVerificationThread::Run(void)
 }
 
 nsCertVerificationResult::nsCertVerificationResult()
-: mRV(0),
+: mRV(NS_OK),
   mVerified(0),
   mCount(0),
   mUsages(0)

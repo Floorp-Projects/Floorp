@@ -230,7 +230,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   }
 
   if (!installed) {
-    args.rval() = JS::UndefinedValue();
+    args.rval().setUndefined();
     return true;
   }
 
@@ -238,7 +238,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   if (!JS_GetPropertyById(cx, thisObj, id, v.address())) {
     return false;
   }
-  args.rval() = v;
+  args.rval().set(v);
   return true;
 }
 

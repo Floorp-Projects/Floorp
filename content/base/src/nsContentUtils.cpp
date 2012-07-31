@@ -1261,8 +1261,8 @@ nsContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& resul
     if (end <= 0)
       return false;
 
-    PRInt32 ec, val = 
-      nsString(Substring(marginStr, start, end)).ToInteger(&ec);
+    nsresult ec;
+    PRInt32 val = nsString(Substring(marginStr, start, end)).ToInteger(&ec);
     if (NS_FAILED(ec))
       return false;
 
@@ -5020,11 +5020,10 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
     return ret;
   }
 
-  PRInt32 errorCode;
-
   nsAutoString minScaleStr;
   aDocument->GetHeaderData(nsGkAtoms::minimum_scale, minScaleStr);
 
+  nsresult errorCode;
   float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
 
   if (errorCode) {
@@ -5039,7 +5038,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   // We define a special error code variable for the scale and max scale,
   // because they are used later (see the width calculations).
-  PRInt32 scaleMaxErrorCode;
+  nsresult scaleMaxErrorCode;
   float scaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
 
   if (scaleMaxErrorCode) {
@@ -5052,7 +5051,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   nsAutoString scaleStr;
   aDocument->GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
 
-  PRInt32 scaleErrorCode;
+  nsresult scaleErrorCode;
   float scaleFloat = scaleStr.ToFloat(&scaleErrorCode);
   scaleFloat = NS_MIN(scaleFloat, scaleMaxFloat);
   scaleFloat = NS_MAX(scaleFloat, scaleMinFloat);

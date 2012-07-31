@@ -61,6 +61,10 @@ function run_tests()
   lengths[0].valueAsString = "10";
   lengths[0].convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER);
   lengths[0].newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER, 10);
+  // -- Invalid attribute
+  eventChecker.expect("modify");
+  text.setAttribute("x", ",20");
+  is(lengths.numberOfItems, 0, 'Checking that parsing stops at invalid token');
   // -- Attribute removal
   eventChecker.expect("remove");
   text.removeAttribute("x");

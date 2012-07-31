@@ -961,7 +961,7 @@ public:
       // the one and only TabChild.
       TabChild* child = GetTabChildFrom(mWindow->GetDocShell());
       if (!child)
-	return false;
+        return NS_OK;
 
       // Retain a reference so the object isn't deleted without IPDL's knowledge.
       // Corresponding release occurs in DeallocPContentPermissionRequest.
@@ -1457,7 +1457,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     // the one and only TabChild.
     TabChild* child = GetTabChildFrom(win->GetDocShell());
     if (!child)
-      return false;
+      return NS_OK;
 
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.

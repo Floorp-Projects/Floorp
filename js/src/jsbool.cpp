@@ -169,7 +169,8 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                                 js_NewFunction(cx, NULL, bool_valueOf, 0, 0, global, valueOfName));
     if (!valueOf)
         return NULL;
-    if (!booleanProto->defineProperty(cx, valueOfName, ObjectValue(*valueOf),
+    RootedValue value(cx, ObjectValue(*valueOf));
+    if (!booleanProto->defineProperty(cx, valueOfName, value,
                                       JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
         return NULL;

@@ -27,7 +27,7 @@ static struct ResultMap
     {(val), #val, format},
 #include "xpc.msg"
 #undef XPC_MSG_DEF
-    {0,0,0}   // sentinel to mark end of array
+    {NS_OK,0,0}   // sentinel to mark end of array
 };
 
 #define RESULT_COUNT ((sizeof(map) / sizeof(map[0]))-1)
@@ -100,7 +100,7 @@ NS_IMPL_CI_INTERFACE_GETTER1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
     : mMessage(nullptr),
-      mResult(0),
+      mResult(NS_OK),
       mName(nullptr),
       mLocation(nullptr),
       mData(nullptr),
