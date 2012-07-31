@@ -1024,7 +1024,6 @@ struct ScriptSource
 
   private:
     bool compressed() { return compressedLength_ != 0; }
-    void considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource = false);
 };
 
 #ifdef JS_THREADSAFE
@@ -1061,6 +1060,8 @@ class SourceCompressorThread
     PRCondVar *wakeup;
     // The main thread can block on this to wait for compression to finish.
     PRCondVar *done;
+    // Flag which can be set by the main thread to ask compression to abort.
+    volatile bool stop;
 
     void threadLoop();
     static void compressorThread(void *arg);
@@ -1078,6 +1079,7 @@ class SourceCompressorThread
     bool init();
     void compress(SourceCompressionToken *tok);
     void waitOnCompression(SourceCompressionToken *userTok);
+    void abort(SourceCompressionToken *userTok);
 };
 #endif
 
@@ -1086,19 +1088,21 @@ struct SourceCompressionToken
     friend struct ScriptSource;
     friend class SourceCompressorThread;
   private:
-    JSRuntime *rt;
+    JSContext *cx;
     ScriptSource *ss;
     const jschar *chars;
   public:
-    SourceCompressionToken(JSRuntime *rt)
-      : rt(rt), ss(NULL), chars(NULL) {}
+    SourceCompressionToken(JSContext *cx)
+      : cx(cx), ss(NULL), chars(NULL) {}
     ~SourceCompressionToken()
     {
         JS_ASSERT_IF(!ss, !chars);
         if (ss)
             ensureReady();
     }
+
     void ensureReady();
+    void abort();
 };
 
 extern void
