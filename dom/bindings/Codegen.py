@@ -2083,9 +2083,6 @@ for (uint32_t i = 0; i < length; ++i) {
             False)
 
     if type.isEnum():
-        if defaultValue is not None:
-            raise TypeError("Can't handle default values for enums")
-
         if type.nullable():
             raise TypeError("We don't support nullable enumerated arguments "
                             "yet")
@@ -2098,7 +2095,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "    return true;\n"
                 "  }\n")
             
-        return (
+        template = (
             "{\n"
             "  bool ok;\n"
             "  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, \"%(enumtype)s\", &ok);\n"
@@ -2110,8 +2107,15 @@ for (uint32_t i = 0; i < length; ++i) {
             "}" % { "enumtype" : enum,
                       "values" : enum + "Values::strings",
        "invalidEnumValueFatal" : toStringBool(invalidEnumValueFatal),
-  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode },
-            CGGeneric(enum), None, isOptional)
+  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode })
+
+        if defaultValue is not None:
+            assert(defaultValue.type.tag() == IDLType.Tags.domstring)
+            template = handleDefault(template,
+                                     ("${declName} = %sValues::%s" %
+                                      (enum,
+                                       getEnumValueName(defaultValue.value))))
+        return (template, CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
         if isMember:
