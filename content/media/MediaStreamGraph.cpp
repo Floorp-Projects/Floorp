@@ -18,12 +18,11 @@
 #include "prlog.h"
 #include "VideoUtils.h"
 #include "mozilla/Attributes.h"
+#include "TrackUnionStream.h"
 
 using namespace mozilla::layers;
 
 namespace mozilla {
-
-namespace {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaStreamGraphLog;
@@ -31,6 +30,8 @@ PRLogModuleInfo* gMediaStreamGraphLog;
 #else
 #define LOG(type, msg)
 #endif
+
+namespace {
 
 /**
  * Assume we can run an iteration of the MediaStreamGraph loop in this much time
@@ -2262,6 +2263,15 @@ SourceMediaStream*
 MediaStreamGraph::CreateInputStream(nsDOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
+  NS_ADDREF(stream);
+  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  return stream;
+}
+
+ProcessedMediaStream*
+MediaStreamGraph::CreateTrackUnionStream(nsDOMMediaStream* aWrapper)
+{
+  TrackUnionStream* stream = new TrackUnionStream(aWrapper);
   NS_ADDREF(stream);
   static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
   return stream;
