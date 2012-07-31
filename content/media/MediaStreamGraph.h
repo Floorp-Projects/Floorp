@@ -20,6 +20,10 @@ class nsDOMMediaStream;
 
 namespace mozilla {
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gMediaStreamGraphLog;
+#endif
+
 /**
  * Microseconds relative to the start of the graph timeline.
  */
@@ -743,6 +747,21 @@ public:
    * media data, such as a camera) can write to.
    */
   SourceMediaStream* CreateInputStream(nsDOMMediaStream* aWrapper);
+  /**
+   * Create a stream that will form the union of the tracks of its input
+   * streams.
+   * A TrackUnionStream contains all the tracks of all its input streams.
+   * Adding a new input stream makes that stream's tracks immediately appear as new
+   * tracks starting at the time the input stream was added.
+   * Removing an input stream makes the output tracks corresponding to the
+   * removed tracks immediately end.
+   * For each added track, the track ID of the output track is the track ID
+   * of the input track or one plus the maximum ID of all previously added
+   * tracks, whichever is greater.
+   * TODO at some point we will probably need to add API to select
+   * particular tracks of each input stream.
+   */
+  ProcessedMediaStream* CreateTrackUnionStream(nsDOMMediaStream* aWrapper);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected
