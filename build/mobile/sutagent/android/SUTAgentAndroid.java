@@ -377,6 +377,39 @@ public class SUTAgentAndroid extends Activity
             }
         }
 
+    @Override
+    public void onLowMemory()
+        {
+        System.gc();
+        DoCommand dc = new DoCommand(getApplication());
+        if (dc != null)
+            {
+            logToFile(dc.GetTestRoot(), dc.GetSystemTime(), "onLowMemory");
+            logToFile(dc.GetTestRoot(), dc.GetSystemTime(), dc.GetMemoryInfo());
+            String procInfo = dc.GetProcessInfo();
+            if (procInfo != null)
+                {
+                String lines[] = procInfo.split("\n");
+                for (String line : lines) 
+                    {
+                    if (line.contains("mozilla"))
+                        {
+                        logToFile(dc.GetTestRoot(), dc.GetSystemTime(), line);
+                        String words[] = line.split("\t");
+                        if ((words != null) && (words.length > 1))
+                            {
+                            logToFile(dc.GetTestRoot(), dc.GetSystemTime(), dc.StatProcess(words[1]));
+                            }
+                        }
+                    }
+                }
+            }
+        else
+            {
+            Log.e("SUTAgentAndroid", "onLowMemory: unable to log to file!");
+            }
+        }
+
     private void monitorBatteryState()
         {
         battReceiver = new BroadcastReceiver()
