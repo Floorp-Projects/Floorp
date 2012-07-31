@@ -1,0 +1,341 @@
+#include "domstubs.idl"
+
+#include "nsIDOMMediaStream.idl"
+#include "nsIDOMDOMRequest.idl"
+
+
+interface nsIDOMBlob;
+
+/* Used to set the dimensions of a captured picture,
+   a preview stream, a video capture stream, etc. */
+dictionary CameraSize {
+    unsigned long width;
+    unsigned long height;
+};
+
+/* Camera regions are used to set focus and metering areas;
+   the coordinates are referenced to the sensor:
+     (-1000, -1000) is the top left corner
+     (1000, 1000) is the bottom left corner
+   The weight of the region can range from 0 to 1000. */
+dictionary CameraRegion {
+    long top;
+    long left;
+    long bottom;
+    long right;
+    unsigned long weight;
+};
+
+/* The position information to record in the image header.
+   'NaN' indicates the information is not available. */
+dictionary CameraPosition {
+    double latitude;
+    double longitude;
+    double altitude;
+    double timestamp;
+};
+
+/* Select a camera to use. */
+dictionary CameraSelector {
+    DOMString camera = "back";
+};
+
+[scriptable, uuid(64196840-0d03-4b65-a955-790f43a4b810)]
+interface nsICameraCapabilities : nsISupports
+{
+    /* an array of objects with 'height' and 'width' properties
+       supported for the preview stream */
+    [implicit_jscontext]
+    readonly attribute jsval        previewSizes;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for picture taking */
+    [implicit_jscontext]
+    readonly attribute jsval        pictureSizes;
+
+    /* an array of strings, e.g. [ "jpeg", "rgb565" ] */
+    [implicit_jscontext]
+    readonly attribute jsval        fileFormats;
+
+    /* an array of strings, e.g. [ "auto", "fluorescent", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        whiteBalanceModes;
+
+    /* an array of strings, e.g. [ "auto", "night", "beach", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        sceneModes;
+
+    /* an array of strings, e.g. [ "normal", "sepia", "mono", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        effects;
+
+    /* an array of strings, e.g. [ "auto", "off", "on", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        flashModes;
+
+    /* an array of strings, e.g. [ "auto", "fixed", "macro", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        focusModes;
+
+    /* the maximum number of focus areas supported by the camera */
+    [implicit_jscontext]
+    readonly attribute long         maxFocusAreas;
+
+    /* the minimum supported exposure compensation value */
+    [implicit_jscontext]
+    readonly attribute double       minExposureCompensation;
+
+    /* the maximum supported exposure compensation value */
+    [implicit_jscontext]
+    readonly attribute double       maxExposureCompensation;
+
+    /* exposure compensation minimum step-size */
+    [implicit_jscontext]
+    readonly attribute double       stepExposureCompensation;
+
+    /* the maximum number of metering areas supported by the camera */
+    [implicit_jscontext]
+    readonly attribute long         maxMeteringAreas;
+
+    /* an array of doubles, e.g. [ 1.0, 1.2, 1.5, 2.0, 3.0, etc. ],
+       or null if zooming is not supported */
+    [implicit_jscontext]
+    readonly attribute jsval        zoomRatios;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for video recording */
+    [implicit_jscontext]
+    readonly attribute jsval        videoSizes;
+};
+
+/*
+    These properties only affect the captured image;
+    invalid property settings are ignored.
+*/
+dictionary CameraPictureOptions
+{
+    /* an object with a combination of 'height' and 'width' properties
+       chosen from nsICameraCapabilities.pictureSizes */
+    jsval     pictureSize;
+
+    /* one of the file formats chosen from
+       nsICameraCapabilities.fileFormats */
+    DOMString fileFormat;
+
+    /* the rotation of the image in degrees, from 0 to 270 in
+       steps of 90; this doesn't affect the image, only the
+       rotation recorded in the image header.*/
+    long      rotation;
+
+    /* an object containing any or all of 'latitude', 'longitude',
+       'altitude', and 'timestamp', used to record when and where
+       the image was taken.  e.g.
+        {
+            latitude:  43.647118,
+            longitude: -79.3943,
+            altitude:  500
+            // timestamp not specified, in this case, and
+            // won't be included in the image header
+        }
+
+        can be null in the case where position information isn't
+        available/desired.
+
+        'altitude' is in metres; 'timestamp' is UTC, in seconds from
+        January 1, 1970.
+    */
+    jsval     position;
+};
+
+[scriptable, function, uuid(0444a687-4bc9-462c-8246-5423f0fe46a4)]
+interface nsICameraPreviewStreamCallback : nsISupports
+{
+    void handleEvent(in nsIDOMMediaStream stream);
+};
+
+[scriptable, function, uuid(6baa4ac7-9c25-4c48-9bb0-5193b38b9b0a)]
+interface nsICameraAutoFocusCallback : nsISupports
+{
+    void handleEvent(in boolean success);
+};
+
+[scriptable, function, uuid(17af779e-cb6f-4ca5-890c-06468ff82e4f)]
+interface nsICameraTakePictureCallback : nsISupports
+{
+    void handleEvent(in nsIDOMBlob picture);
+};
+
+[scriptable, function, uuid(ac43f123-529c-48d3-84dd-ad206b7aca9b)]
+interface nsICameraStartRecordingCallback : nsISupports
+{
+    void handleEvent(in nsIDOMMediaStream stream);
+};
+
+[scriptable, function, uuid(fb80db71-e315-42f0-9ea9-dd3dd312ed70)]
+interface nsICameraShutterCallback : nsISupports
+{
+    void handleEvent();
+};
+
+[scriptable, function, uuid(a302c6c9-3776-4d1d-a395-f4105d47c3d3)]
+interface nsICameraErrorCallback : nsISupports
+{
+    void handleEvent(in DOMString error);
+};
+
+/*
+    attributes here affect the preview, any pictures taken, and/or
+    any video recorded by the camera.
+*/
+[scriptable, uuid(3066c884-d2c3-4477-847d-08ea1c2d188a)]
+interface nsICameraControl : nsISupports
+{
+    readonly attribute nsICameraCapabilities capabilities;
+
+    /* one of the vales chosen from capabilities.effects;
+       default is "none" */
+    attribute DOMString         effect;
+
+    /* one of the values chosen from capabilities.whiteBalanceModes;
+       default is "auto" */
+    attribute DOMString         whiteBalanceMode;
+
+    /* one of the valus chosen from capabilities.sceneModes;
+       default is "auto" */
+    attribute DOMString         sceneMode;
+
+    /* one of the values chosen from capabilities.flashModes;
+       default is "auto" */
+    attribute DOMString         flashMode;
+
+    /* one of the values chosen from capabilities.focusModes;
+       default is "auto", if supported, or "fixed" */
+    attribute DOMString         focusMode;
+
+    /* one of the values chosen from capabilities.zoomRatios; other
+       values will be rounded to the nearest supported value;
+       default is 1.0 */
+    attribute double            zoom;
+
+    /* an array of one or more objects that define where the
+       camera will perform light metering, each defining the properties:
+        {
+            top: -1000,
+            left: -1000,
+            bottom: 1000,
+            right: 1000,
+            weight: 1000
+        }
+
+        'top', 'left', 'bottom', and 'right' all range from -1000 at
+        the top-/leftmost of the sensor to 1000 at the bottom-/rightmost
+        of the sensor.
+
+        objects missing one or more of these properties will be ignored;
+        if the array contains more than capabilities.maxMeteringAreas,
+        extra areas will be ignored.
+
+        this attribute can be set to null to allow the camera to determine
+        where to perform light metering. */
+    [implicit_jscontext]
+    attribute jsval             meteringAreas;
+
+    /* an array of one or more objects that define where the camera will
+       perform auto-focusing, with the same definition as meteringAreas.
+
+       if the array contains more than capabilities.maxFocusAreas, extra
+       areas will be ignored.
+
+       this attribute can be set to null to allow the camera to determine
+       where to focus. */
+    [implicit_jscontext]
+    attribute jsval             focusAreas;
+
+    /* focal length in millimetres */
+    readonly attribute double   focalLength;
+
+    /* the distances in metres to where the image subject appears to be
+       in focus.  'focusDistanceOptimum' is where the subject will appear
+       sharpest; the difference between 'focusDistanceFar' and
+       'focusDistanceNear' is the image's depth of field.
+
+       'focusDistanceFar' may be infinity. */
+    readonly attribute double   focusDistanceNear;
+    readonly attribute double   focusDistanceOptimum;
+    readonly attribute double   focusDistanceFar;
+
+    /* 'compensation' is optional, and if missing, will
+       set the camera to use automatic exposure compensation.
+
+       acceptable values must range from minExposureCompensation
+       to maxExposureCompensation in steps of stepExposureCompensation;
+       invalid values will be rounded to the nearest valid value. */
+    [implicit_jscontext]
+    void setExposureCompensation([optional] in jsval compensation);
+    readonly attribute double   exposureCompensation;
+
+    /* the function to call on the camera's shutter event, to trigger
+       a shutter sound and/or a visual shutter indicator. */
+    attribute nsICameraShutterCallback onShutter;
+
+    /* tell the camera to attempt to focus the image */
+    void autoFocus(in nsICameraAutoFocusCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* capture an image and return it as a blob to the 'onSuccess' callback;
+       if the camera supports it, this may be invoked while the camera is
+       already recording video.
+
+       invoking this function will stop the preview stream, which must be
+       manually restarted (e.g. by calling .play() on it). */
+    [implicit_jscontext]
+    void takePicture(in jsval aOptions, in nsICameraTakePictureCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* start recording video; 'aOptions' define the frame size of to
+       capture, chosen from capabilities.videoSizes, e.g.:
+        {
+            width: 640,
+            height: 480
+        }
+    */
+    [implicit_jscontext]
+    void startRecording(in jsval aOptions, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* stop precording video. */
+    void stopRecording();
+
+    /* get a media stream to be used as a camera viewfinder; the options
+       define the desired frame size of the preview, chosen from
+       capabilities.previewSizes, e.g.:
+        {
+            height: 640,
+            width:  480,
+         }
+    */
+    [implicit_jscontext]
+    void getPreviewStream(in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+};
+
+[scriptable, function, uuid(a267afbc-d91c-413a-8de5-0b94aecffa3e)]
+interface nsICameraGetCameraCallback : nsISupports
+{
+    void handleEvent(in nsICameraControl camera);
+};
+
+[scriptable, uuid(671ee624-0336-441a-a24e-26b5319f14fe)]
+interface nsIDOMCameraManager : nsISupports
+{
+    /* get a camera instance; options will be used to specify which
+       camera to get from the list returned by getListOfCameras(), e.g.:
+        {
+            camera: front
+        }
+    */
+    [implicit_jscontext]
+    void getCamera([optional] in jsval aOptions, in nsICameraGetCameraCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* return a JSON array of camera   identifiers, e.g.
+        [ "front", "back" ]
+    */
+    [implicit_jscontext]
+    jsval getListOfCameras();
+};

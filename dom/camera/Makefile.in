@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH            = ../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE           = dom
+LIBRARY_NAME     = domcamera_s
+XPIDL_MODULE     = dom_camera
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/dom/dom-config.mk
+
+CPPSRCS = \
+  DOMCameraManager.cpp \
+  CameraControl.cpp \
+  CameraPreview.cpp \
+  $(NULL)
+
+ifeq ($(MOZ_B2G_CAMERA),1)
+CPPSRCS += \
+  GonkCameraManager.cpp \
+  GonkCameraControl.cpp \
+  GonkCameraHwMgr.cpp \
+  GonkCameraPreview.cpp \
+  GonkNativeWindow.cpp \
+  GonkCameraCapabilities.cpp \
+  $(NULL)
+else
+CPPSRCS += \
+  FallbackCameraManager.cpp \
+  FallbackCameraControl.cpp \
+  FallbackCameraCapabilities.cpp \
+  $(NULL)
+endif
+
+XPIDLSRCS = \
+  nsIDOMNavigatorCamera.idl \
+  nsIDOMCameraManager.idl \
+  $(NULL)
+
+EXPORTS = \
+  DOMCameraManager.h \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
