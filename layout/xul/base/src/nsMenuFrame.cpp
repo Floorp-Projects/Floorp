@@ -199,15 +199,18 @@ void
 nsMenuFrame::InitMenuParent(nsIFrame* aParent)
 {
   while (aParent) {
-    nsIAtom* type = aParent->GetType();
-    if (type == nsGkAtoms::menuPopupFrame) {
-      mMenuParent = static_cast<nsMenuPopupFrame *>(aParent);
+    nsMenuPopupFrame* popup = do_QueryFrame(aParent);
+    if (popup) {
+      mMenuParent = popup;
       break;
     }
-    else if (type == nsGkAtoms::menuBarFrame) {
-      mMenuParent = static_cast<nsMenuBarFrame *>(aParent);
+
+    nsMenuBarFrame* menubar = do_QueryFrame(aParent);
+    if (menubar) {
+      mMenuParent = menubar;
       break;
     }
+
     aParent = aParent->GetParent();
   }
 }
@@ -223,12 +226,10 @@ public:
   virtual bool ReflowFinished()
   {
     bool shouldFlush = false;
-    if (mWeakFrame.IsAlive()) {
-      if (mWeakFrame.GetFrame()->GetType() == nsGkAtoms::menuFrame) {
-        nsMenuFrame* menu = static_cast<nsMenuFrame*>(mWeakFrame.GetFrame());
-        menu->UpdateMenuType(menu->PresContext());
-        shouldFlush = true;
-      }
+    nsMenuFrame* menu = do_QueryFrame(mWeakFrame.GetFrame());
+    if (menu) {
+      menu->UpdateMenuType(menu->PresContext());
+      shouldFlush = true;
     }
     delete this;
     return shouldFlush;
@@ -321,9 +322,9 @@ void
 nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList)
 {
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    if (e.get()->GetType() == nsGkAtoms::menuPopupFrame) {
+    nsMenuPopupFrame* popupFrame = do_QueryFrame(e.get());
+    if (popupFrame) {
       // Remove the frame from the list and store it in a nsFrameList* property.
-      nsIFrame* popupFrame = e.get();
       aFrameList.RemoveFrame(popupFrame);
       nsFrameList* popupList = new nsFrameList(popupFrame, popupFrame);
       Properties().Set(PopupListProperty(), popupList);
@@ -603,16 +604,17 @@ nsMenuFrame::SelectMenu(bool aActivateFlag)
     if (aActivateFlag) {
       nsIFrame* parent = GetParent();
       while (parent) {
-        if (parent->GetType() == nsGkAtoms::menuPopupFrame) {
+        nsMenuPopupFrame* menupopup = do_QueryFrame(parent);
+        if (menupopup) {
           // a menu is always the direct parent of a menupopup
-          parent = parent->GetParent();
-          if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+          nsMenuFrame* menu = do_QueryFrame(menupopup->GetParent());
+          if (menu) {
             // a popup however is not necessarily the direct parent of a menu
-            nsIFrame* popupParent = parent->GetParent();
+            nsIFrame* popupParent = menu->GetParent();
             while (popupParent) {
-              if (popupParent->GetType() == nsGkAtoms::menuPopupFrame) {
-                nsMenuPopupFrame* popup = static_cast<nsMenuPopupFrame *>(popupParent);
-                popup->SetCurrentMenuItem(static_cast<nsMenuFrame *>(parent));
+              menupopup = do_QueryFrame(popupParent);
+              if (menupopup) {
+                menupopup->SetCurrentMenuItem(menu);
                 break;
               }
               popupParent = popupParent->GetParent();
@@ -966,11 +968,10 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
   nsIFrame* sib = GetParent()->GetFirstPrincipalChild();
 
   while (sib) {
-    if (sib != this && sib->GetType() == nsGkAtoms::menuFrame) {
-      nsMenuFrame* menu = static_cast<nsMenuFrame*>(sib);
-      if (menu->GetMenuType() == eMenuType_Radio &&
-          menu->IsChecked() &&
-          (menu->GetRadioGroupName() == mGroupName)) {      
+    if (sib != this) {
+      nsMenuFrame* menu = do_QueryFrame(sib);
+      if (menu && menu->GetMenuType() == eMenuType_Radio &&
+          menu->IsChecked() && menu->GetRadioGroupName() == mGroupName) {
         /* uncheck the old item */
         sib->GetContent()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                                      true);
@@ -1426,9 +1427,9 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
 
-  nsIFrame* kid = child->GetPrimaryFrame();
-  if (kid && kid->GetType() == nsGkAtoms::menuFrame)
-    popupFrame->ChangeMenuItem(static_cast<nsMenuFrame *>(kid), false);
+  nsMenuFrame* menu = do_QueryFrame(child->GetPrimaryFrame());
+  if (menu)
+    popupFrame->ChangeMenuItem(menu, false);
   return NS_OK;
 }
 

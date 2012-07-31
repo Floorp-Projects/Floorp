@@ -538,7 +538,7 @@ XULMenupopupAccessible::ContainerWidget() const
     if (!menuPopup) // shouldn't be a real case
       return nullptr;
 
-    nsMenuFrame* menuFrame = menuPopupFrame->GetParentMenu();
+    nsMenuFrame* menuFrame = do_QueryFrame(menuPopupFrame->GetParent());
     if (!menuFrame) // context menu or popups
       return nullptr;
 
