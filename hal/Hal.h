@@ -400,7 +400,7 @@ void NotifyAlarmFired();
  * This API is currently only allowed to be used from non-sandboxed
  * contexts.
  */
-bool SetAlarm(long aSeconds, long aNanoseconds);
+bool SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds);
 
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
