@@ -22,6 +22,18 @@ nsApplicationCacheService::nsApplicationCacheService()
 }
 
 NS_IMETHODIMP
+nsApplicationCacheService::BuildGroupID(nsIURI *aManifestURL,
+                                        nsILoadContext *aLoadContext,
+                                        nsACString &_result)
+{
+    nsresult rv = nsOfflineCacheDevice::BuildApplicationCacheGroupID(
+        aManifestURL, aLoadContext, _result);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsApplicationCacheService::CreateApplicationCache(const nsACString &group,
                                                   nsIApplicationCache **out)
 {
@@ -91,6 +103,7 @@ nsApplicationCacheService::DeactivateGroup(const nsACString &group)
 
 NS_IMETHODIMP
 nsApplicationCacheService::ChooseApplicationCache(const nsACString &key,
+                                                  nsILoadContext *aLoadContext,
                                                   nsIApplicationCache **out)
 {
     if (!mCacheService)
@@ -99,7 +112,8 @@ nsApplicationCacheService::ChooseApplicationCache(const nsACString &key,
     nsRefPtr<nsOfflineCacheDevice> device;
     nsresult rv = mCacheService->GetOfflineDevice(getter_AddRefs(device));
     NS_ENSURE_SUCCESS(rv, rv);
-    return device->ChooseApplicationCache(key, out);
+
+    return device->ChooseApplicationCache(key, aLoadContext, out);
 }
 
 NS_IMETHODIMP

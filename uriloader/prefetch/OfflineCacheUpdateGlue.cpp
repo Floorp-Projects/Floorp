@@ -92,7 +92,8 @@ NS_IMETHODIMP
 OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI, 
                              nsIURI *aDocumentURI,
                              nsIDOMDocument *aDocument,
-                             nsIFile *aCustomProfileDir)
+                             nsIFile *aCustomProfileDir,
+                             nsILoadContext *aLoadContext)
 {
     if (!EnsureUpdate())
         return NS_ERROR_NULL_POINTER;
@@ -102,7 +103,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
     if (aDocument)
         SetDocument(aDocument);
 
-    return mUpdate->Init(aManifestURI, aDocumentURI, nullptr, aCustomProfileDir);
+    return mUpdate->Init(aManifestURI, aDocumentURI, nullptr, aCustomProfileDir, aLoadContext);
 }
 
 void
