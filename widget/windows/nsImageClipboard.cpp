@@ -194,33 +194,31 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
   // neg. heights mean the Y axis is inverted and we don't handle that case
   NS_ENSURE_TRUE(height > 0, NS_ERROR_FAILURE); 
 
-  unsigned char * rgbData = new unsigned char[width * height * 3 /* RGB */];
+  static mozilla::fallible_t fallible = mozilla::fallible_t();
+  unsigned char * rgbaData = new (fallible) unsigned char[width * height * 4 /* RGBA */];
+  if (!rgbaData)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-  if (rgbData) {
-    BYTE  * pGlobal = (BYTE *) aClipboardData;
-    // Convert the clipboard image into RGB packed pixel data
-    rv = ConvertColorBitMap((unsigned char *) (pGlobal + header->bmiHeader.biSize), header, rgbData);
-    // if that succeeded, encode the bitmap as aMIMEFormat data. Don't return early or we risk leaking rgbData
-    if (NS_SUCCEEDED(rv)) {
-      nsCAutoString encoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
-
-      // Map image/jpg to image/jpeg (which is how the encoder is registered).
-      if (strcmp(aMIMEFormat, kJPGImageMime) == 0)
-        encoderCID.Append("image/jpeg");
-      else
-        encoderCID.Append(aMIMEFormat);
-      nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get(), &rv);
-      if (NS_SUCCEEDED(rv)){
-        rv = encoder->InitFromData(rgbData, 0, width, height, 3 * width /* RGB * # pixels in a row */, 
-                                   imgIEncoder::INPUT_FORMAT_RGB, EmptyString());
-        if (NS_SUCCEEDED(rv))
-          encoder->QueryInterface(NS_GET_IID(nsIInputStream), (void **) aInputStream);
-      }
+  BYTE  * pGlobal = (BYTE *) aClipboardData;
+  // Convert the clipboard image into RGB packed pixel data
+  rv = ConvertColorBitMap((unsigned char *) (pGlobal + header->bmiHeader.biSize), header, rgbaData);
+  // if that succeeded, encode the bitmap as aMIMEFormat data. Don't return early or we risk leaking rgbData
+  if (NS_SUCCEEDED(rv)) {
+    nsCAutoString encoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
+    // Map image/jpg to image/jpeg (which is how the encoder is registered).
+    if (strcmp(aMIMEFormat, kJPEGImageMime) == 0)
+      encoderCID.Append("image/jpeg");
+    else
+      encoderCID.Append(aMIMEFormat);
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get(), &rv);
+    if (NS_SUCCEEDED(rv)){
+      rv = encoder->InitFromData(rgbaData, 0, width, height, 4 * width /* RGBA * # pixels in a row */, 
+                                 imgIEncoder::INPUT_FORMAT_RGBA, EmptyString());
+      if (NS_SUCCEEDED(rv))
+        encoder->QueryInterface(NS_GET_IID(nsIInputStream), (void **) aInputStream);
     }
-    delete [] rgbData;
-  } 
-  else 
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  delete[] rgbaData;
 
   return rv;
 } // GetImage
@@ -257,7 +255,7 @@ nsImageFromClipboard::InvertRows(unsigned char * aInitialBuffer, PRUint32 aSizeO
 //
 // ConvertColorBitMap
 //
-// Takes the clipboard bitmap and converts it into a RGB packed pixel values.
+// Takes the clipboard bitmap and converts it into a RGBA packed pixel values.
 //
 nsresult 
 nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPINFO pBitMapInfo, unsigned char * aOutBuffer)
@@ -324,6 +322,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbRed;
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbGreen;
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbBlue;
+            aOutBuffer[writeIndex++] = 0xFF;
             numPixelsLeftInRow--;
           }
           pos += 1;
@@ -336,6 +335,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbRed;
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbGreen;
             aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbBlue;
+            aOutBuffer[writeIndex++] = 0xFF;
             numPixelsLeftInRow--;
 
             if (numPixelsLeftInRow) // now read the second pixel
@@ -344,6 +344,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
               aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbRed;
               aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbGreen;
               aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[colorTableEntry].rgbBlue;
+              aOutBuffer[writeIndex++] = 0xFF;
               numPixelsLeftInRow--;
             }
             pos += 1;
@@ -353,6 +354,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
           aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[aInputBuffer[index]].rgbRed;
           aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[aInputBuffer[index]].rgbGreen;
           aOutBuffer[writeIndex++] = pBitMapInfo->bmiColors[aInputBuffer[index]].rgbBlue;
+          aOutBuffer[writeIndex++] = 0xFF;
           numPixelsLeftInRow--;
           pos += 1;    
           break;
@@ -371,6 +373,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
             aOutBuffer[writeIndex++] = redValue;
             aOutBuffer[writeIndex++] = greenValue;
             aOutBuffer[writeIndex++] = blueValue;
+            aOutBuffer[writeIndex++] = 0xFF;
             numPixelsLeftInRow--;
             pos += 2;          
           }
@@ -383,14 +386,22 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
             aOutBuffer[writeIndex++] = (val & colorMasks.red) >> colorMasks.redRightShift << colorMasks.redLeftShift;
             aOutBuffer[writeIndex++] =  (val & colorMasks.green) >> colorMasks.greenRightShift << colorMasks.greenLeftShift;
             aOutBuffer[writeIndex++] = (val & colorMasks.blue) >> colorMasks.blueRightShift << colorMasks.blueLeftShift;
+            aOutBuffer[writeIndex++] = 0xFF;
             numPixelsLeftInRow--;
+            // If biCompression == BI_BITFIELDS, bpp != 24, since BI_BITFIELDS
+            // only supports 16 and 32 bpp. Hence, bpp == 32, and we can always
+            // read 4 bytes here.
             pos += 4; // we read in 4 bytes of data in order to process this pixel
           }
           else
           {
             aOutBuffer[writeIndex++] = aInputBuffer[index+2];
-            aOutBuffer[writeIndex++] =  aInputBuffer[index+1];
+            aOutBuffer[writeIndex++] = aInputBuffer[index+1];
             aOutBuffer[writeIndex++] = aInputBuffer[index];
+            if (bytesPerPixel > 3)
+                aOutBuffer[writeIndex++] = aInputBuffer[index+3];
+            else
+                aOutBuffer[writeIndex++] = 0xFF;
             numPixelsLeftInRow--;
             pos += bytesPerPixel; // 3 bytes for 24 bit data, 4 bytes for 32 bit data (we skip over the 4th byte)...
           }
