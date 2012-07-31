@@ -78,12 +78,7 @@ bool
 ScopedXErrorHandler::SyncAndGetError(Display *dpy, XErrorEvent *ev)
 {
     FinishX(dpy);
-    return GetError(ev);
-}
 
-bool
-ScopedXErrorHandler::GetError(XErrorEvent *ev)
-{
     bool retval = mXError.mError.error_code != 0;
     if (ev)
         *ev = mXError.mError;
