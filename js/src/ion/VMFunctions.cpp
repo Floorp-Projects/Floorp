@@ -250,28 +250,20 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 }
 
 JSObject*
-NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
+NewInitObject(JSContext *cx, HandleObject templateObject)
 {
-    RootedObject obj(cx);
-    if (baseObj) {
-        // JSOP_NEWOBJECT
-        obj = CopyInitializerObject(cx, baseObj);
-    } else {
-        // JSOP_NEWINIT
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
-    }
+    RootedObject obj(cx, CopyInitializerObject(cx, templateObject));
 
     if (!obj)
         return NULL;
 
-    if (!type) {
+    if (templateObject->hasSingletonType()) {
         if (!obj->setSingletonType(cx))
             return NULL;
 
         types::TypeScript::Monitor(cx, ObjectValue(*obj));
     } else {
-        obj->setType(type);
+        obj->setType(templateObject->type());
     }
 
     return obj;

@@ -176,8 +176,9 @@ CodeGeneratorARM::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
 
-        IonCompartment *ion = gen->cx->compartment->ionCompartment();
-        IonCode *handler = ion->getGenericBailoutHandler(gen->cx);
+        JSContext *cx = GetIonContext()->cx;
+        IonCompartment *ion = cx->compartment->ionCompartment();
+        IonCode *handler = ion->getGenericBailoutHandler(cx);
         if (!handler)
             return false;
         masm.branch(handler);
@@ -1409,7 +1410,7 @@ CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    void *interrupt = (void*)&gen->cx->runtime->interrupt;
+    void *interrupt = (void*)&gen->compartment->rt->interrupt;
     masm.load32(AbsoluteAddress(interrupt), lr);
     masm.ma_cmp(lr, Imm32(0));
     masm.ma_b(ool->entry(), Assembler::NonZero);
@@ -1430,9 +1431,12 @@ CodeGeneratorARM::generateInvalidateEpilogue()
 
     // Push the return address of the point that we bailed out at onto the stack
     masm.Push(lr);
+
+    JSContext *cx = GetIonContext()->cx;
+
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
+    IonCode *thunk = cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx);
     if (!thunk)
         return false;
 

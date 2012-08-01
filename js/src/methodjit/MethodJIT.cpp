@@ -1029,7 +1029,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
-        ion::IonContext ictx(cx, NULL);
+        ion::IonContext ictx(cx, cx->compartment, NULL);
         ion::IonActivation activation(cx, NULL);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 

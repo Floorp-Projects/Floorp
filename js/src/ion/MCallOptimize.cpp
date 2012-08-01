@@ -146,7 +146,11 @@ IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bo
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    MMathFunction *ins = MMathFunction::New(argv[1], function);
+    MathCache *cache = cx->runtime->getMathCache(cx);
+    if (!cache)
+        return InliningStatus_Error;
+
+    MMathFunction *ins = MMathFunction::New(argv[1], function, cache);
     current->add(ins);
     current->push(ins);
     return InliningStatus_Inlined;
@@ -179,8 +183,11 @@ IonBuilder::inlineArray(uint32 argc, bool constructing)
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-    MNewArray *ins = new MNewArray(initLength, type, MNewArray::NewArray_Unallocating);
+    JSObject *templateObject = getNewArrayTemplateObject(initLength);
+    if (!templateObject)
+        return InliningStatus_Error;
+
+    MNewArray *ins = new MNewArray(initLength, templateObject, MNewArray::NewArray_Unallocating);
     current->add(ins);
     current->push(ins);
 

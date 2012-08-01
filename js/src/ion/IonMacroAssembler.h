@@ -73,7 +73,7 @@ class MacroAssembler : public MacroAssemblerSpecific
       : autoRooter_(cx, thisFromCtor()),
         enoughMemory_(true)
     {
-        ionContext_.construct(cx, (js::ion::TempAllocator *)NULL);
+        ionContext_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
         alloc_.construct(cx);
 #ifdef JS_CPU_ARM
         m_buffer.id = GetIonContext()->getNextAssemblerId();
@@ -406,8 +406,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void clampDoubleToUint8(FloatRegister input, Register output);
 
     // Inline allocation.
-    void newGCThing(JSContext *cx, const Register &result, HandleObject templateObject, Label *fail);
-    void initGCThing(JSContext *cx, const Register &obj, HandleObject templateObject);
+    void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
+    void initGCThing(const Register &obj, JSObject *templateObject);
 
     // If the IonCode that created this assembler needs to transition into the VM,
     // we want to store the IonCode on the stack in order to mark it during a GC.

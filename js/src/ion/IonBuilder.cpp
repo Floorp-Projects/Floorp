@@ -23,10 +23,11 @@
 using namespace js;
 using namespace js::ion;
 
-IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
-                       CompileInfo &info, size_t inliningDepth, uint32 loopDepth)
-  : MIRGenerator(cx, temp, graph, info),
-    script(info.script()),
+IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
+                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32 loopDepth)
+  : MIRGenerator(cx->compartment, temp, graph, info),
+    script(info->script()),
+    cx(cx),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),
     callerBuilder_(NULL),
@@ -35,7 +36,14 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, Type
     failedBoundsCheck_(script->failedBoundsCheck),
     lazyArguments_(NULL)
 {
-    pc = info.startPC();
+    pc = info->startPC();
+}
+
+void
+IonBuilder::clearForBackEnd()
+{
+    cx = NULL;
+    oracle = NULL;
 }
 
 bool
@@ -279,8 +287,13 @@ IonBuilder::build()
 
     // Emit the start instruction, so we can begin real instructions.
     current->makeStart(MStart::New(MStart::StartType_Default));
-    if (instrumentedProfiling())
-        current->add(MProfilingEnter::New(script));
+    if (instrumentedProfiling()) {
+        SPSProfiler *profiler = &cx->runtime->spsProfiler;
+        const char *string = profiler->profileString(cx, script, script->function());
+        if (!string)
+            return false;
+        current->add(MProfilingEnter::New(string));
+    }
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -393,8 +406,13 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     current->setCallerResumePoint(callerResumePoint);
 
     // Flag the entry into an inlined function with a special MStart block
-    if (instrumentedProfiling())
-        current->add(MProfilingEnter::New(script));
+    if (instrumentedProfiling()) {
+        SPSProfiler *profiler = &cx->runtime->spsProfiler;
+        const char *string = profiler->profileString(cx, script, script->function());
+        if (!string)
+            return false;
+        current->add(MProfilingEnter::New(string));
+    }
 
     // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerBuilder->current;
@@ -1165,7 +1183,7 @@ IonBuilder::processIfEnd(CFGState &state)
     }
 
     current = state.branch.ifFalse;
-    graph_.moveBlockToEnd(current);
+    graph().moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -1180,7 +1198,7 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
     state.stopAt = state.branch.falseEnd;
     pc = state.branch.ifFalse->pc();
     current = state.branch.ifFalse;
-    graph_.moveBlockToEnd(current);
+    graph().moveBlockToEnd(current);
     return ControlStatus_Jumped;
 }
 
@@ -1230,7 +1248,7 @@ IonBuilder::processBrokenLoop(CFGState &state)
 
     // A broken loop is not a real loop (it has no header or backedge), so
     // reset the loop depth.
-    for (MBasicBlockIterator i(graph_.begin(state.loop.entry)); i != graph_.end(); i++) {
+    for (MBasicBlockIterator i(graph().begin(state.loop.entry)); i != graph().end(); i++) {
         if (i->loopDepth() > loopDepth_)
             i->setLoopDepth(i->loopDepth() - 1);
     }
@@ -1241,7 +1259,7 @@ IonBuilder::processBrokenLoop(CFGState &state)
     current = state.loop.successor;
     if (current) {
         JS_ASSERT(current->loopDepth() == loopDepth_);
-        graph_.moveBlockToEnd(current);
+        graph().moveBlockToEnd(current);
     }
 
     // Join the breaks together and continue parsing.
@@ -1285,7 +1303,7 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     if (!state.loop.entry->setBackedge(current))
         return ControlStatus_Error;
     if (successor) {
-        graph_.moveBlockToEnd(successor);
+        graph().moveBlockToEnd(successor);
         successor->inheritPhis(state.loop.entry);
     }
 
@@ -1542,7 +1560,7 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
         successor->addPredecessor(current);
 
         // Insert successor after the current block, to maintain RPO.
-        graph_.moveBlockToEnd(successor);
+        graph().moveBlockToEnd(successor);
     }
 
     // If this is the last successor the block should stop at the end of the tableswitch
@@ -1617,7 +1635,7 @@ IonBuilder::processNextLookupSwitchCase(CFGState &state)
     }
 
     // Move next body block to end to maintain RPO.
-    graph_.moveBlockToEnd(successor);
+    graph().moveBlockToEnd(successor);
 
     // If this is the last successor the block should stop at the end of the lookupswitch
     // Else it should stop at the start of the next successor
@@ -1676,7 +1694,7 @@ IonBuilder::processAndOrEnd(CFGState &state)
         return ControlStatus_Error;
 
     current = state.branch.ifFalse;
-    graph_.moveBlockToEnd(current);
+    graph().moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -2156,7 +2174,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     }
 
     // Move defaultcase to the end, to maintain RPO.
-    graph_.moveBlockToEnd(defaultcase);
+    graph().moveBlockToEnd(defaultcase);
 
     JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
@@ -2370,7 +2388,7 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
     for (size_t i = 0; i < bodyBlocks.length(); i++) {
         (*state.lookupswitch.bodies)[i] = bodyBlocks[i];
     }
-    graph_.moveBlockToEnd(bodyBlocks[0]);
+    graph().moveBlockToEnd(bodyBlocks[0]);
 
     // Create control flow info
     ControlFlowInfo switchinfo(cfgStack_.length(), exitpc);
@@ -2805,7 +2823,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     if (!oracle.init(cx, callee->script()))
         return false;
 
-    IonBuilder inlineBuilder(cx, temp(), graph(), &oracle, *info, inliningDepth + 1, loopDepth_);
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
+                             info, inliningDepth + 1, loopDepth_);
 
     // Create |this| on the caller-side for inlined constructors.
     MDefinition *thisDefn = NULL;
@@ -3244,7 +3263,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
             MConstant *constFun = disp->getFunctionConstant(i);
             RootedFunction target(cx, constFun->value().toObject().toFunction());
             MBasicBlock *block = disp->getSuccessor(i);
-            graph_.moveBlockToEnd(block);
+            graph().moveBlockToEnd(block);
             current = block;
             
             if (!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
@@ -3255,9 +3274,9 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
         // a fallback case to consider.  Move the fallback blocks to the end of the graph
         // and link them to the bottom block.
         if (disp->inlinePropertyTable()) {
-            graph_.moveBlockToEnd(disp->fallbackPrepBlock());
-            graph_.moveBlockToEnd(disp->fallbackMidBlock());
-            graph_.moveBlockToEnd(disp->fallbackEndBlock());
+            graph().moveBlockToEnd(disp->fallbackPrepBlock());
+            graph().moveBlockToEnd(disp->fallbackMidBlock());
+            graph().moveBlockToEnd(disp->fallbackEndBlock());
 
             // Link the end fallback block to bottom.
             MBasicBlock *fallbackEndBlock = disp->fallbackEndBlock();
@@ -3270,7 +3289,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
         }
     }
 
-    graph_.moveBlockToEnd(bottom);
+    graph().moveBlockToEnd(bottom);
 
     bottom->inheritSlots(top);
 
@@ -3803,19 +3822,36 @@ IonBuilder::jsop_compare(JSOp op)
     return true;
 }
 
+JSObject *
+IonBuilder::getNewArrayTemplateObject(uint32 count)
+{
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, count);
+    if (!templateObject)
+        return NULL;
+
+    if (types::UseNewTypeForInitializer(cx, script, pc, JSProto_Array)) {
+        if (!templateObject->setSingletonType(cx))
+            return NULL;
+    } else {
+        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+        if (!type)
+            return NULL;
+        templateObject->setType(type);
+    }
+
+    return templateObject;
+}
+
 bool
 IonBuilder::jsop_newarray(uint32 count)
 {
     JS_ASSERT(script->hasGlobal());
 
-    types::TypeObject *type = NULL;
-    if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Array)) {
-        type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-        if (!type)
-            return false;
-    }
+    JSObject *templateObject = getNewArrayTemplateObject(count);
+    if (!templateObject)
+        return false;
 
-    MNewArray *ins = new MNewArray(count, type, MNewArray::NewArray_Allocating);
+    MNewArray *ins = new MNewArray(count, templateObject, MNewArray::NewArray_Allocating);
 
     current->add(ins);
     current->push(ins);
@@ -3829,14 +3865,29 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script->hasGlobal());
 
-    types::TypeObject *type = NULL;
-    if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Object)) {
-        type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
-        if (!type)
-            return false;
+    JSObject *templateObject;
+
+    if (baseObj) {
+        templateObject = CopyInitializerObject(cx, baseObj);
+    } else {
+        gc::AllocKind kind = GuessObjectGCKind(0);
+        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
 
-    MNewObject *ins = MNewObject::New(baseObj, type);
+    if (!templateObject)
+        return false;
+
+    if (types::UseNewTypeForInitializer(cx, script, pc, JSProto_Object)) {
+        if (!templateObject->setSingletonType(cx))
+            return false;
+    } else {
+        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
+        if (!type)
+            return false;
+        templateObject->setType(type);
+    }
+
+    MNewObject *ins = MNewObject::New(templateObject);
 
     current->add(ins);
     current->push(ins);
@@ -3886,26 +3937,27 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MDefinition *value = current->pop();
     MDefinition *obj = current->peek(-1);
 
-    RootedObject baseObj(cx, obj->toNewObject()->baseObj());
+    RootedObject templateObject(cx, obj->toNewObject()->templateObject());
 
     if (!oracle->propertyWriteCanSpecialize(script, pc)) {
         // This should only happen for a few names like __proto__.
         return abort("INITPROP Monitored initprop");
     }
 
-    // JSOP_NEWINIT becomes an MNewObject without a known base.
-    if (!baseObj) {
+    RootedObject holder(cx);
+    RootedShape shape(cx);
+    RootedId id(cx, NameToId(name));
+    bool res = LookupPropertyWithFlags(cx, templateObject, id,
+                                       JSRESOLVE_QUALIFIED, &holder, &shape);
+    if (!res)
+        return false;
+
+    if (!shape || holder != templateObject) {
+        // JSOP_NEWINIT becomes an MNewObject without preconfigured properties.
         MInitProp *init = MInitProp::New(obj, name, value);
         current->add(init);
         return resumeAfter(init);
     }
-
-    RootedObject holder(cx);
-    RootedShape shape(cx);
-    RootedId id(cx, NameToId(name));
-    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, id,
-                                                  JSRESOLVE_QUALIFIED, &holder, &shape);
-    JS_ASSERT(res && shape && holder == baseObj);
 
     bool needsBarrier = true;
     TypeOracle::BinaryTypes b = oracle->binaryTypes(script, pc);
@@ -3916,7 +3968,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
         needsBarrier = false;
     }
 
-    if (baseObj->isFixedSlot(shape->slot())) {
+    if (templateObject->isFixedSlot(shape->slot())) {
         MStoreFixedSlot *store = MStoreFixedSlot::New(obj, shape->slot(), value);
         if (needsBarrier)
             store->setNeedsBarrier();
@@ -3928,7 +3980,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MSlots *slots = MSlots::New(obj);
     current->add(slots);
 
-    MStoreSlot *store = MStoreSlot::New(slots, baseObj->dynamicSlotIndex(shape->slot()), value);
+    MStoreSlot *store = MStoreSlot::New(slots, templateObject->dynamicSlotIndex(shape->slot()), value);
     if (needsBarrier)
         store->setNeedsBarrier();
 
@@ -3967,7 +4019,7 @@ IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode 
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
     if (!block)
         return NULL;
-    graph_.insertBlockAfter(at, block);
+    graph().insertBlockAfter(at, block);
     return block;
 }
 
@@ -3987,7 +4039,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     // Create two blocks: one for the OSR entry with no predecessors, one for
     // the preheader, which has the OSR entry block as a predecessor. The
     // OSR block is always the second block (with id 1).
-    MBasicBlock *osrBlock  = newBlockAfter(*graph_.begin(), loopEntry);
+    MBasicBlock *osrBlock  = newBlockAfter(*graph().begin(), loopEntry);
     MBasicBlock *preheader = newBlock(predecessor, loopEntry);
     if (!osrBlock || !preheader)
         return NULL;
@@ -5705,7 +5757,11 @@ IonBuilder::jsop_delprop(JSAtom *atom)
 bool
 IonBuilder::jsop_regexp(RegExpObject *reobj)
 {
-    MRegExp *ins = MRegExp::New(reobj, MRegExp::MustClone);
+    JSObject *prototype = script->global().getOrCreateRegExpPrototype(cx);
+    if (!prototype)
+        return false;
+
+    MRegExp *ins = MRegExp::New(reobj, prototype, MRegExp::MustClone);
     current->add(ins);
     current->push(ins);
 

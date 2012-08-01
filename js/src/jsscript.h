@@ -26,6 +26,7 @@ namespace ion {
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
+# define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
 
 struct Shape;
 

@@ -763,7 +763,7 @@ MMod::foldsTo(bool useValueNumbers)
     if (MDefinition *folded = EvaluateConstantOperands(this))
         return folded;
 
-    JSRuntime *rt = GetIonContext()->cx->runtime;
+    JSRuntime *rt = GetIonContext()->compartment->rt;
     double NaN = rt->NaNValue.toDouble();
     double Inf = rt->positiveInfinityValue.toDouble();
 
@@ -1078,8 +1078,8 @@ MTypeOf::foldsTo(bool useValueNumbers)
         return this;
     }
 
-    JSContext *cx = GetIonContext()->cx;
-    return MConstant::New(StringValue(cx->runtime->atomState.typeAtoms[type]));
+    JSRuntime *rt = GetIonContext()->compartment->rt;
+    return MConstant::New(StringValue(rt->atomState.typeAtoms[type]));
 }
 
 MBitAnd *
@@ -1196,11 +1196,8 @@ MToDouble::foldsTo(bool useValueNumbers)
 {
     if (input()->isConstant()) {
         const Value &v = input()->toConstant()->value();
-        if (v.isPrimitive()) {
-            double out;
-            DebugOnly<bool> ok = ToNumber(GetIonContext()->cx, v, &out);
-            JS_ASSERT(ok);
-
+        if (v.isNumber()) {
+            double out = v.toNumber();
             return MConstant::New(DoubleValue(out));
         }
     }

@@ -298,7 +298,7 @@ CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    void *interrupt = (void*)&gen->cx->runtime->interrupt;
+    void *interrupt = (void*)&gen->compartment->rt->interrupt;
     masm.cmpl(Operand(interrupt), Imm32(0));
     masm.j(Assembler::NonZero, ool->entry());
     masm.bind(ool->rejoin());
