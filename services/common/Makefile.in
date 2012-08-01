@@ -32,7 +32,12 @@ libs::
 
 TEST_DIRS += tests
 
-TESTING_JS_MODULES := aitcserver.js storageserver.js
+TESTING_JS_MODULES := \
+  aitcserver.js \
+  storageserver.js \
+  modules-testing/utils.js \
+  $(NULL)
+
 TESTING_JS_MODULE_DIR := services-common
 
 # What follows is a helper to launch a standalone storage server instance.
