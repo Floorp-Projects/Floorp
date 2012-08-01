@@ -22,7 +22,7 @@ function sub2_0 (n) {
 var num = 1.5;
 
 function main () {
-    for (var i = 0; i < 10000; i++) {
+    for (var i = 0; i < 1000; i++) {
         assertEq(add0_5(num), 2);
         assertEq(add1_0(num), 2.5);
         assertEq(add1_5(num), 3);
@@ -30,6 +30,4 @@ function main () {
         assertEq(sub2_0(num), -0.5);
     }
 }
-
-for (var i = 0; i < 1000; i++)
-    main();
+main();
