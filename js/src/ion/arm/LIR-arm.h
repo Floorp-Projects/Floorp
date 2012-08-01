@@ -56,9 +56,6 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     const LAllocation *type() {
         return getOperand(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 class LUnboxDouble : public LInstructionHelper<1, 2, 0>
@@ -68,9 +65,6 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
 
     static const size_t Input = 0;
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MUnbox *mir() const {
         return mir_->toUnbox();
     }
@@ -155,16 +149,16 @@ class LModMaskI : public LInstructionHelper<1, 1, 1>
 
   public:
     LIR_HEADER(ModMaskI);
-    int32 shift()
-    {
-        return shift_;
-    }
 
     LModMaskI(const LAllocation &lhs, const LDefinition &temp1, int32 shift)
       : shift_(shift)
     {
         setOperand(0, lhs);
         setTemp(0, temp1);
+    }
+
+    int32 shift() const {
+        return shift_;
     }
 };
 
@@ -190,8 +184,7 @@ class LTableSwitch : public LInstructionHelper<0, 1, 1>
   public:
     LIR_HEADER(TableSwitch);
 
-    LTableSwitch(const LAllocation &in, const LDefinition &inputCopy, MTableSwitch *ins)
-    {
+    LTableSwitch(const LAllocation &in, const LDefinition &inputCopy, MTableSwitch *ins) {
         setOperand(0, in);
         setTemp(0, inputCopy);
         setMir(ins);
@@ -221,9 +214,6 @@ class LGuardShape : public LInstructionHelper<0, 1, 1>
     }
     const MGuardShape *mir() const {
         return mir_->toGuardShape();
-    }
-    const LAllocation *input() {
-        return getOperand(0);
     }
     const LAllocation *tempInt() {
         return getTemp(0)->output();
