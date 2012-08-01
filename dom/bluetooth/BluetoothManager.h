@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothmanager_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothPropertyContainer.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMBluetoothManager.h"
 #include "mozilla/Observer.h"
@@ -15,9 +16,12 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothNamedValue;
+
 class BluetoothManager : public nsDOMEventTargetHelper
                        , public nsIDOMBluetoothManager
                        , public BluetoothSignalObserver
+                       , public BluetoothPropertyContainer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -34,12 +38,11 @@ public:
   static already_AddRefed<BluetoothManager>
   Create(nsPIDOMWindow* aWindow);
   void Notify(const BluetoothSignal& aData);
+  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);
 private:
-  BluetoothManager() {}
   BluetoothManager(nsPIDOMWindow* aWindow);
   ~BluetoothManager();
   bool mEnabled;
-  nsString mName;
 
   NS_DECL_EVENT_HANDLER(enabled)
 };

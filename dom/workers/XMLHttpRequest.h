@@ -162,7 +162,7 @@ public:
 
   void
   Send(ArrayBuffer& aBody, ErrorResult& aRv) {
-    return Send(aBody.mObj, aRv);
+    return Send(aBody.Obj(), aRv);
   }
 
   void

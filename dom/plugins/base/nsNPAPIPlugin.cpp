@@ -536,17 +536,17 @@ nsNPAPIPlugin::RetainStream(NPStream *pstream, nsISupports **aRetainedPeer)
   *aRetainedPeer = NULL;
 
   if (!pstream || !pstream->ndata)
-    return NPERR_INVALID_PARAM;
+    return NS_ERROR_NULL_POINTER;
 
   nsNPAPIStreamWrapper* streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
   nsNPAPIPluginStreamListener* listener = streamWrapper->GetStreamListener();
   if (!listener) {
-    return NPERR_GENERIC_ERROR;
+    return NS_ERROR_NULL_POINTER;
   }
 
   nsIStreamListener* streamListener = listener->GetStreamListenerPeer();
   if (!streamListener) {
-    return NPERR_GENERIC_ERROR;
+    return NS_ERROR_NULL_POINTER;
   }
 
   *aRetainedPeer = streamListener;

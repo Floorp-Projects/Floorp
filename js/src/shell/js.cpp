@@ -715,15 +715,13 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         if (!filename)
             return false;
         errno = 0;
-        uint32_t oldopts = JS_GetOptions(cx);
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        JSScript *script = JS_CompileUTF8File(cx, thisobj, filename.ptr());
-        JS_SetOptions(cx, oldopts);
-        if (!script)
+        CompileOptions opts(cx);
+        opts.setCompileAndGo(true).setNoScriptRval(true);
+        if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr())) ||
+            !Evaluate(cx, thisobj, opts, filename.ptr(), NULL))
+        {
             return false;
-
-        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, script, NULL))
-            return false;
+        }
     }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

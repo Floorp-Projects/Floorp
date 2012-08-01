@@ -131,6 +131,7 @@ function startTest2() {
     "onStateChange",
     "onLocationChange",
     "onSecurityChange",
+    "onSecurityChange",
     "onStateChange"
   ];
   gFrontNotifications = gAllNotifications;
@@ -154,6 +155,7 @@ function startTest4() {
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
+    "onSecurityChange",
     "onSecurityChange",
     "onStateChange"
   ];

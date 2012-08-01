@@ -110,6 +110,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
 
+// If we haven't painted in 100ms, we allow for a longer GC budget
+#define NS_INTERSLICE_GC_BUDGET     40 // ms
+
 // The amount of time we wait between a request to CC (after GC ran)
 // and doing the actual CC.
 #define NS_CC_DELAY                 6000 // ms
@@ -2917,10 +2920,13 @@ void
 nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
                                IsIncremental aIncremental,
                                IsCompartment aCompartment,
-                               IsShrinking aShrinking)
+                               IsShrinking aShrinking,
+                               int64_t aSliceMillis)
 {
   NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "GarbageCollectNow");
+
+  MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
 
   KillGCTimer();
   KillShrinkGCBuffersTimer();
@@ -2941,7 +2947,7 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
   if (sCCLockedOut && aIncremental == IncrementalGC) {
     // We're in the middle of incremental GC. Do another slice.
     js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
-    js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+    js::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
     return;
   }
 
@@ -2962,7 +2968,7 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
     }
     if (js::IsGCScheduled(nsJSRuntime::sRuntime)) {
       if (aIncremental == IncrementalGC) {
-        js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+        js::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
       } else {
         js::GCForReason(nsJSRuntime::sRuntime, aReason);
       }
@@ -2975,7 +2981,7 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
   }
   js::PrepareForFullGC(nsJSRuntime::sRuntime);
   if (aIncremental == IncrementalGC) {
-    js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+    js::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
   } else {
     js::GCForReason(nsJSRuntime::sRuntime, aReason);
   }
@@ -3225,13 +3231,21 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 // static
 void
+InterSliceGCTimerFired(nsITimer *aTimer, void *aClosure)
+{
+  NS_RELEASE(sInterSliceGCTimer);
+  nsJSContext::GarbageCollectNow(js::gcreason::INTER_SLICE_GC,
+                                 nsJSContext::IncrementalGC,
+                                 nsJSContext::CompartmentGC,
+                                 nsJSContext::NonShrinkingGC,
+                                 NS_INTERSLICE_GC_BUDGET);
+}
+
+// static
+void
 GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  if (aTimer == sGCTimer) {
-    NS_RELEASE(sGCTimer);
-  } else {
-    NS_RELEASE(sInterSliceGCTimer);
-  }
+  NS_RELEASE(sGCTimer);
 
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
@@ -3554,9 +3568,8 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   if (aProgress == js::GC_SLICE_END) {
     nsJSContext::KillInterSliceGCTimer();
     CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
-    js::gcreason::Reason reason = js::gcreason::INTER_SLICE_GC;
-    sInterSliceGCTimer->InitWithFuncCallback(GCTimerFired,
-                                             reinterpret_cast<void *>(reason),
+    sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
+                                             NULL,
                                              NS_INTERSLICE_GC_DELAY,
                                              nsITimer::TYPE_ONE_SHOT);
   }

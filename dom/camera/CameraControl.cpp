@@ -25,8 +25,8 @@ NS_INTERFACE_MAP_BEGIN(nsCameraControl)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CameraControl)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsCameraControl)
-NS_IMPL_RELEASE(nsCameraControl)
+NS_IMPL_THREADSAFE_ADDREF(nsCameraControl)
+NS_IMPL_THREADSAFE_RELEASE(nsCameraControl)
 
 // Helpers for string properties.
 nsresult

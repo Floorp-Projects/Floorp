@@ -85,7 +85,8 @@ DocAccessible::
   mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible;
-  mPresShell->SetAccDocument(this);
+  if (mPresShell)
+    mPresShell->SetAccDocument(this);
 
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?

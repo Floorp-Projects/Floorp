@@ -117,7 +117,8 @@ Parser::Parser(JSContext *cx, const CompileOptions &options,
     sct(NULL),
     keepAtoms(cx->runtime),
     foldConstants(foldConstants),
-    compileAndGo(options.compileAndGo)
+    compileAndGo(options.compileAndGo),
+    allowIntrinsicsCalls(options.allowIntrinsicsCalls)
 {
     cx->activeCompilations++;
 }
@@ -1628,6 +1629,9 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         funbox->bufEnd = tokenStream.offsetOfToken(tokenStream.currentToken()) + 1;
 #if JS_HAS_EXPR_CLOSURES
     } else {
+        // We shouldn't call endOffset if the tokenizer got an error.
+        if (tokenStream.hadError())
+            return NULL;
         funbox->bufEnd = tokenStream.endOffset(tokenStream.currentToken());
         if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
             return NULL;
@@ -6494,6 +6498,30 @@ Parser::identifierName(bool afterDoubleDot)
     return node;
 }
 
+ParseNode *
+Parser::intrinsicName()
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_MOD));
+    if (tokenStream.getToken() != TOK_NAME) {
+        reportError(NULL, JSMSG_SYNTAX_ERROR);
+        return NULL;
+    }
+
+    PropertyName *name = tokenStream.currentToken().name();
+    if (!(name == context->runtime->atomState._CallFunctionAtom ||
+          context->global()->hasIntrinsicFunction(context, name)))
+    {
+        reportError(NULL, JSMSG_INTRINSIC_NOT_DEFINED, JS_EncodeString(context, name));
+        return NULL;
+    }
+    ParseNode *node = NameNode::create(PNK_INTRINSICNAME, name, this, this->tc);
+    if (!node)
+        return NULL;
+    JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
+    node->setOp(JSOP_INTRINSICNAME);
+    return node;
+}
+
 #if JS_HAS_XML_SUPPORT
 ParseNode *
 Parser::starOrAtPropertyIdentifier(TokenKind tt)
@@ -7050,6 +7078,12 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         return new_<ThisLiteral>(tokenStream.currentToken().pos);
       case TOK_NULL:
         return new_<NullLiteral>(tokenStream.currentToken().pos);
+
+      case TOK_MOD:
+        if (allowIntrinsicsCalls)
+            return intrinsicName();
+        else
+            goto syntaxerror;
 
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */

@@ -120,7 +120,8 @@ public:
    */
   virtual nsresult HandleScriptError(nsScriptErrorEvent *aErrorEvent,
                                      nsEventStatus *aEventStatus) {
-    return NS_HandleScriptError(this, aErrorEvent, aEventStatus);
+    NS_ENSURE_STATE(NS_HandleScriptError(this, aErrorEvent, aEventStatus));
+    return NS_OK;
   }
 
   virtual bool IsBlackForCC() { return false; }

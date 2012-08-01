@@ -6,11 +6,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function test() {
   waitForExplicitFinish();
-  let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab = gBrowser.addTab("about:preferences"));
-  newTabBrowser.addEventListener("load", function () {
-    newTabBrowser.removeEventListener("load", arguments.callee, true);
-    runTest(gBrowser.contentWindow);
-  }, true);
+  open_preferences(runTest);
 }
 
 function runTest(win) {

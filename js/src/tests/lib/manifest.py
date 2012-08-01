@@ -112,6 +112,7 @@ def _parse_one(parts, xul_tester):
     random = False
     slow = False
     debugMode = False
+    allowXml = False
 
     pos = 0
     while pos < len(parts):
@@ -174,11 +175,14 @@ def _parse_one(parts, xul_tester):
             if xul_tester.test("xulRuntime.OS == 'Darwin'"):
                 expect = enable = False
             pos += 1
+        elif parts[pos] == 'pref(javascript.options.xml.content,true)':
+            allowXml = True
+            pos += 1
         else:
             print 'warning: invalid manifest line element "%s"'%parts[pos]
             pos += 1
 
-    return script, (enable, expect, random, slow, debugMode)
+    return script, (enable, expect, random, slow, debugMode, allowXml)
 
 def _map_prefixes_left(test_list):
     """
@@ -282,6 +286,7 @@ def _parse_test_header(fullpath, testcase, xul_tester):
     testcase.random = properties[2]
     testcase.slow = properties[3]
     testcase.debugMode = properties[4]
+    testcase.allowXml = properties[5]
 
 def load(location, xul_tester, reldir = ''):
     """
@@ -319,7 +324,8 @@ def load(location, xul_tester, reldir = ''):
                             expect = True,
                             random = False,
                             slow = False,
-                            debugMode = False)
+                            debugMode = False,
+                            allowXml = False)
         _parse_test_header(fullpath, testcase, xul_tester)
         tests.append(testcase)
     return tests

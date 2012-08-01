@@ -47,8 +47,6 @@ public class RunCmdThread extends Thread
 
     public void run() {
         try {
-            int    nIterations = 0;
-
             SvrSocket.setSoTimeout(5000);
             while (bListening)
                 {
@@ -61,16 +59,6 @@ public class RunCmdThread extends Thread
                     }
                 catch (SocketTimeoutException toe)
                     {
-                    if (++nIterations > 60)
-                        {
-                        nIterations = 0;
-                        String sRet = SendPing("www.mozilla.org");
-                        if (sRet.contains("3 received"))
-                            handler.post(new doCancelNotification());
-                        else
-                            handler.post(new doSendNotification("SUTAgent - Network Connectivity Error", sRet));
-                        sRet = null;
-                        }
                     continue;
                     }
                 catch (IOException e)

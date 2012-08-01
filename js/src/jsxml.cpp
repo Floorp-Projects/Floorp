@@ -5045,6 +5045,8 @@ xml_toString_helper(JSContext *cx, JSXML *xml);
 JSBool
 xml_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue rval)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     JS_ASSERT(obj->isXML());
 
