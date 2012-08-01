@@ -906,16 +906,20 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
     PaintTracker pt;
 
     NPCocoaEvent evcopy = event.event;
-    nsRefPtr<nsIOSurface> surf = nsIOSurface::LookupSurface(surfaceid);
+    RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(surfaceid);
     if (!surf) {
         NS_ERROR("Invalid IOSurface.");
         *handled = false;
         return false;
     }
 
+    if (!mCARenderer) {
+      mCARenderer = new nsCARenderer();
+    }
+
     if (evcopy.type == NPCocoaEventDrawRect) {
-        mCARenderer.AttachIOSurface(surf);
-        if (!mCARenderer.isInit()) {
+        mCARenderer->AttachIOSurface(surf);
+        if (!mCARenderer->isInit()) {
             void *caLayer = nullptr;
             NPError result = mPluginIface->getvalue(GetNPP(), 
                                      NPPVpluginCoreAnimationLayer,
@@ -928,7 +932,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
                 return false;
             }
 
-            mCARenderer.SetupRenderer(caLayer, mWindow.width, mWindow.height,
+            mCARenderer->SetupRenderer(caLayer, mWindow.width, mWindow.height,
                             GetQuirks() & PluginModuleChild::QUIRK_ALLOW_OFFLINE_RENDERER ?
                             ALLOW_OFFLINE_RENDERER : DISALLOW_OFFLINE_RENDERER);
 
@@ -943,7 +947,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
         return false;
     } 
 
-    mCARenderer.Render(mWindow.width, mWindow.height, nullptr);
+    mCARenderer->Render(mWindow.width, mWindow.height, nullptr);
 
     return true;
 

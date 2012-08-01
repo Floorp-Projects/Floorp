@@ -82,6 +82,10 @@ random == rotate-1f.html rotate-1-ref.html
 == transform-svg-1a.xhtml transform-svg-1-ref.xhtml
 == transform-svg-2a.xhtml transform-svg-2-ref.xhtml
 != transform-svg-2a.xhtml transform-svg-2-fail.xhtml
+# skew should allow a mix of one and two parameters.
+== skew-1a.html skew-1-ref.html
+== skew-1b.html skew-1-ref.html
+== skew-2a.html skew-2-ref.html
 # matrix with values equal to other transforms should behave indistinguishably
 == matrix-1a.html matrix-1-ref.html
 == matrix-2a.html matrix-2-ref.html

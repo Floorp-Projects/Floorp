@@ -607,14 +607,15 @@ function optionsInit() {
 function optionsClear() {
        
   // turn off current settings
-  // except jit.
+  // except jit and allow_xml.
   var optionNames = options().split(',');
   for (var i = 0; i < optionNames.length; i++)
   {
     var optionName = optionNames[i];
     if (optionName &&
         optionName != "methodjit" &&
-        optionName != "methodjit_always")
+        optionName != "methodjit_always" &&
+        optionName != "allow_xml")
     {
       options(optionName);
     }
@@ -679,7 +680,6 @@ if (typeof options == 'function')
 {
   optionsInit();
   optionsClear();
-  options("allow_xml");
 }
 
 function getTestCaseResult(expected, actual)

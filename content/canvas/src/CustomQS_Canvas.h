@@ -9,6 +9,8 @@
 
 #include "mozilla/dom/ImageData.h"
 
+#include "XPCQuickStubs.h"
+
 static bool
 GetImageData(JSContext* cx, JS::Value& imageData,
              uint32_t* width, uint32_t* height, JS::Anchor<JSObject*>* array)

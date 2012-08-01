@@ -183,21 +183,25 @@ enum CanvasMultiGetterType {
   [implicit_jscontext]
   nsIDOMImageData getImageData(in double sx, in double sy, in double sw, in double sh);
 
-  // This is just a dummy function; for JS, it is implemented as a quickstub
-  // that call the _explicit methods below.  Native callers should use the
-  // _explicit method directly.
-  void putImageData();
+
+  // void putImageData(ImageData imagedata, double dx, double dy);
+  // void putImageDataHD(ImageData imagedata, double dx, double dy, double dirtyX, double dirtyY, double dirtyWidth, double dirtyHeight);
+  // We use jsval for the imageData because that's what our C++ code wants
+  [implicit_jscontext, optional_argc]
+  void putImageData(in jsval imageData, in double dx, in double dy,
+                    [optional] in double dirtyX, [optional] in double dirtyY,
+                    [optional] in double dirtyWidth,
+                    [optional] in double dirtyHeight);
 
   // dataLen must be == width*height*4 in this call
   [noscript] void putImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
                                         [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen, in boolean hasDirtyRect,
                                         in long dirtyX, in long dirtyY, in long dirtyWidth, in long dirtyHeight);
 
-  // ImageData createImageData(in float w, in float h);
-  // Note: this is basically script-only (and really, quickstub-only).  Native callers
-  // should just use the noscript 'explicit' get/put methods above, instead of using
-  // a separate ImageData object.
-  void createImageData();
+  // ImageData createImageData(double w, double h);
+  // ImageData createImageData(ImageData data);
+  [implicit_jscontext, optional_argc]
+  nsIDOMImageData createImageData(in jsval arg1, [optional] in jsval arg2);
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
