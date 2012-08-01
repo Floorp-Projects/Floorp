@@ -162,8 +162,8 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
   }
 }
 
-void
-GonkCameraPreview::Start()
+nsresult
+GonkCameraPreview::StartImpl()
 {
   DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
 
@@ -177,21 +177,25 @@ GonkCameraPreview::Start()
   GonkCameraHardware::GetPreviewSize(mHwHandle, &mWidth, &mHeight);
   SetFrameRate(GonkCameraHardware::GetFps(mHwHandle));
 
-  if (GonkCameraHardware::StartPreview(mHwHandle) == OK) {
-    // GetPreviewFormat() must be called after StartPreview().
-    mFormat = GonkCameraHardware::GetPreviewFormat(mHwHandle);
-    DOM_CAMERA_LOGI("preview stream is (actually!) %d x %d (w x h), %d frames per second, format %d\n", mWidth, mHeight, mFramesPerSecond, mFormat);
-  } else {
+  if (GonkCameraHardware::StartPreview(mHwHandle) != OK) {
     DOM_CAMERA_LOGE("%s: failed to start preview\n", __func__);
+    return NS_ERROR_FAILURE;
   }
+
+  // GetPreviewFormat() must be called after StartPreview().
+  mFormat = GonkCameraHardware::GetPreviewFormat(mHwHandle);
+  DOM_CAMERA_LOGI("preview stream is (actually!) %d x %d (w x h), %d frames per second, format %d\n", mWidth, mHeight, mFramesPerSecond, mFormat);
+  return NS_OK;
 }
 
-void
-GonkCameraPreview::Stop()
+nsresult
+GonkCameraPreview::StopImpl()
 {
   DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
 
   GonkCameraHardware::StopPreview(mHwHandle);
   mInput->EndTrack(TRACK_VIDEO);
   mInput->Finish();
+
+  return NS_OK;
 }
