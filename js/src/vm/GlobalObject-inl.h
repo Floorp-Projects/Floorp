@@ -213,6 +213,13 @@ GlobalObject::setProtoGetter(JSFunction *protoGetter)
     setSlot(PROTO_GETTER, ObjectValue(*protoGetter));
 }
 
+void
+GlobalObject::setIntrinsicsHolder(JSObject *obj)
+{
+    JS_ASSERT(getSlotRef(INTRINSICS).isUndefined());
+    setSlot(INTRINSICS, ObjectValue(*obj));
+}
+
 } // namespace js
 
 #endif

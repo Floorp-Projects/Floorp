@@ -385,7 +385,9 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
       /* aChromeFlags = */ 0, mIsBrowserElement, mAppId));
 
   nsCAutoString spec;
-  aURI->GetSpec(spec);
+  if (aURI) {
+    aURI->GetSpec(spec);
+  }
 
   NS_ConvertUTF8toUTF16 url(spec);
   nsString name(aName);

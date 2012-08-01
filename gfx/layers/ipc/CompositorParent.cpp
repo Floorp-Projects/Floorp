@@ -692,7 +692,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
                                                  container->GetFrameMetrics(),
-                                                 aLayer->GetTransform(),
+                                                 aLayer,
                                                  &newTransform);
 
     shadow->SetShadowTransform(newTransform);
