@@ -113,12 +113,18 @@ ion::EliminatePhis(MIRGraph &graph)
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
+            // Flag all as unused, only observable phis would be marked as used
+            // when processed by the work list.
+            iter->setUnused();
+
             // If the phi is redundant, remove it here.
             if (MDefinition *redundant = IsPhiRedundant(*iter)) {
                 iter->replaceAllUsesWith(redundant);
                 iter = block->discardPhiAt(iter);
                 continue;
             }
+
+            // Enqueue observable Phis.
             if (IsPhiObservable(*iter)) {
                 iter->setInWorklist();
                 if (!worklist.append(*iter))
@@ -131,10 +137,22 @@ ion::EliminatePhis(MIRGraph &graph)
     // Iteratively mark all phis reachable from live phis.
     while (!worklist.empty()) {
         MPhi *phi = worklist.popCopy();
+        JS_ASSERT(phi->isUnused());
+        phi->setNotInWorklist();
+
+        // The removal of Phis can produce newly redundant phis.
+        if (MDefinition *redundant = IsPhiRedundant(phi)) {
+            phi->replaceAllUsesWith(redundant);
+            if (redundant->isPhi())
+                redundant->setUnusedUnchecked();
+        } else {
+            // Otherwise flag them as used.
+            phi->setNotUnused();
+        }
 
         for (size_t i = 0; i < phi->numOperands(); i++) {
             MDefinition *in = phi->getOperand(i);
-            if (!in->isPhi() || in->isInWorklist())
+            if (!in->isPhi() || !in->isUnused() || in->isInWorklist())
                 continue;
             in->setInWorklist();
             if (!worklist.append(in->toPhi()))
@@ -146,13 +164,10 @@ ion::EliminatePhis(MIRGraph &graph)
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
-            if (iter->isInWorklist()) {
-                iter->setNotInWorklist();
-                iter++;
-            } else {
-                iter->setUnused();
+            if (iter->isUnused())
                 iter = block->discardPhiAt(iter);
-            }
+            else
+                iter++;
         }
     }
 
