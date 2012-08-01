@@ -5236,6 +5236,10 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
 
             // Otherwise try using the prototype.
             curObj = typeObj->proto;
+        } else {
+            // Can't optimize setters on watched singleton objects.
+            if (!isGetter && curObj->watched())
+                return true;
         }
 
         // Turns out that we need to check for a property lookup op, else we
