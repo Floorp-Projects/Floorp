@@ -701,8 +701,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
         // previous transaction on the pipeline.
         nsITransport *transport = Transport();
         if (transport)
-            OnTransportStatus(transport,
-                              nsISocketTransport::STATUS_RECEIVING_FROM,
+            OnTransportStatus(transport, NS_NET_STATUS_RECEIVING_FROM,
                               mReceivingFromProgress);
 
         // the push back buffer is never larger than NS_HTTP_SEGMENT_SIZE,
