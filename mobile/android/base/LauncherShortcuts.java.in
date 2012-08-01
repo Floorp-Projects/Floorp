@@ -28,7 +28,6 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.WebAppAllocator;
-import org.mozilla.gecko.util.ConfigurationUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -95,7 +94,8 @@ public class LauncherShortcuts extends Activity {
         intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, title);
         intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutintent);
 
-        DisplayMetrics dm = ConfigurationUtils.getDisplayMetrics(this);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
         int size;
         switch (dm.densityDpi) {
             case DisplayMetrics.DENSITY_MEDIUM:

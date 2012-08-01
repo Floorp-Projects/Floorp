@@ -15,7 +15,6 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
-import org.mozilla.gecko.util.ConfigurationUtils;
 import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONObject;
@@ -524,7 +523,7 @@ public class GeckoAppShell
         if (restoreMode != RESTORE_NONE)
             combinedArgs += " -restoremode " + restoreMode;
 
-        DisplayMetrics metrics = ConfigurationUtils.getDisplayMetrics(GeckoApp.mAppContext);
+        DisplayMetrics metrics = GeckoApp.mAppContext.getDisplayMetrics();
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
 
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
@@ -1395,7 +1394,7 @@ public class GeckoAppShell
 
     public static int getDpi() {
         if (sDensityDpi == 0) {
-            sDensityDpi = ConfigurationUtils.getDisplayMetrics(GeckoApp.mAppContext).densityDpi;
+            sDensityDpi = GeckoApp.mAppContext.getDisplayMetrics().densityDpi;
         }
 
         return sDensityDpi;
