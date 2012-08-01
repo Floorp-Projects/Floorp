@@ -89,6 +89,7 @@ public class LayerController implements PanZoomTarget {
 
     public void setForceRedraw() {
         mForceRedraw = true;
+        notifyLayerClientOfGeometryChange();
     }
 
     public Layer getRoot()                        { return mRootLayer; }
@@ -161,14 +162,13 @@ public class LayerController implements PanZoomTarget {
     }
 
     /**
-     * Sets the entire viewport metrics at once. This function does not notify the layer client or
-     * the pan/zoom controller, so you will need to call notifyLayerClientOfGeometryChange() or
-     * notifyPanZoomControllerOfGeometryChange() after calling this. You must hold the monitor
-     * while calling this.
+     * Sets the entire viewport metrics at once.
+     * You must hold the monitor while calling this.
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
         mViewportMetrics = new ImmutableViewportMetrics(viewport);
         mView.requestRender();
+        notifyLayerClientOfGeometryChange();
     }
 
     public void setAnimationTarget(ViewportMetrics viewport) {
@@ -185,11 +185,7 @@ public class LayerController implements PanZoomTarget {
 
     public boolean post(Runnable action) { return mView.post(action); }
 
-    /**
-     * The view as well as the controller itself use this method to notify the layer client that
-     * the geometry changed.
-     */
-    public void notifyLayerClientOfGeometryChange() {
+    private void notifyLayerClientOfGeometryChange() {
         if (mLayerClient != null)
             mLayerClient.geometryChanged();
     }
