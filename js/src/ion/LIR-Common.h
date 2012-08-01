@@ -1222,7 +1222,7 @@ class LAbsI : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Absolute value of an integer.
+// Absolute value of a double.
 class LAbsD : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -1239,7 +1239,7 @@ class LAbsD : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Absolute value of an integer.
+// Square root of a double.
 class LSqrtD : public LInstructionHelper<1, 1, 0>
 {
   public:

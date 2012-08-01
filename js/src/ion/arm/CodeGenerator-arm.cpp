@@ -278,8 +278,8 @@ bool
 CodeGeneratorARM::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister output = ToFloatRegister(ins->output());
-    masm.as_vabs(output, input);
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.as_vabs(input, input);
     return true;
 }
 
@@ -287,8 +287,8 @@ bool
 CodeGeneratorARM::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister output = ToFloatRegister(ins->output());
-    masm.as_vsqrt(output, input);
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.as_vsqrt(input, input);
     return true;
 }
 
