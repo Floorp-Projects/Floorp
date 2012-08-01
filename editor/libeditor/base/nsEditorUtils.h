@@ -78,7 +78,7 @@ class NS_STACK_CLASS nsAutoRules
 {
   public:
   
-  nsAutoRules(nsEditor *ed, nsEditor::OperationID action,
+  nsAutoRules(nsEditor *ed, OperationID action,
               nsIEditor::EDirection aDirection) :
          mEd(ed), mDoNothing(false)
   { 
