@@ -10,6 +10,7 @@ const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
@@ -18,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
 
 function AddonUtilsInternal() {
   this._log = Log4Moz.repository.getLogger("Sync.AddonUtils");
+  this._log.Level = Log4Moz.Level[Svc.Prefs.get("log.logger.addonutils")];
 }
 AddonUtilsInternal.prototype = {
   /**
