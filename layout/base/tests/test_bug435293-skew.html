@@ -37,33 +37,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435293
       -moz-transform: skewy(60deg);
     }
     #test3 {
-      -moz-transform: skewx(45deg);
+      -moz-transform: skew(45deg, 45deg);
     }
     #test4 {
-      -moz-transform: skewy(360deg);
+      -moz-transform: skew(360deg, 45deg);
     }
     #test5 {
-      -moz-transform: skewx(80%);
+      -moz-transform: skew(45deg, 150grad);
     }
     #test6 {
-      -moz-transform: skewy(2em);
+      -moz-transform: skew(80%, 78px);
     }
     #test7 {
-      -moz-transform: skewx(-45deg);
+      -moz-transform: skew(2em, 40ex);
     }
     #test8 {
-      -moz-transform: skewy(-465deg);
+      -moz-transform: skew(-45deg, -465deg);
     }
     #test9 {
-      -moz-transform: skewx(30deg, 30deg);
+      -moz-transform: skew(30deg, 30deg, 30deg);
     }
 
     /* approach the singularity from the negative side */
     #test10 {
-      -moz-transform: skewx(90.001deg);
+      -moz-transform: skew(50grad, 90.001deg);
     }
     #test11 {
-      -moz-transform: skewy(90.001deg);
+      -moz-transform: skew(300grad, 90.001deg);
     }
   </style>
 </head>
@@ -117,49 +117,49 @@ function runtests() {
   is((+tformValues[5]), 0, "Test2: skewy: param 5 is 0");
 
   style = window.getComputedStyle(document.getElementById("test3"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 1, 1, 0, 0)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 1, 1, 1, 0, 0)",
      "Test3: Skew proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test4"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 1, 0, 0)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 1, 0, 1, 0, 0)",
      "Test4: Skew angle wrap: proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test5"), "");
-  is(style.getPropertyValue("-moz-transform"), "none",
-     "Test5: Skewx with invalid units");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, -1, 1, 1, 0, 0)",
+     "Test5: Skew mixing deg and grad");
 
   style = window.getComputedStyle(document.getElementById("test6"), "");
   is(style.getPropertyValue("-moz-transform"), "none",
-     "Test6: Skewy with invalid units");
+     "Test6: Skew with invalid units");
 
   style = window.getComputedStyle(document.getElementById("test7"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, -1, 1, 0, 0)",
-     "Test7: Skewx with negative angle");
+  is(style.getPropertyValue("-moz-transform"), "none",
+     "Test7: Skew with more invalid units");
 
   // Test 8: skew with negative degrees, here again we must handle rounding.
-  // The matrix should be: matrix(1, 3.73206, 0, 1, 0, 0)
+  // The matrix should be: matrix(1, 3.73206, -1, 1, 0, 0)
   style = window.getComputedStyle(document.getElementById("test8"), "");
   tformStyle = style.getPropertyValue("-moz-transform");
   tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
                                      tformStyle.indexOf(')')).split(',');
   is(tformValues[0], 1, "Test8: Test skew with negative degrees-param 0 is 1");
   ok(verifyRounded(tformValues[1], 3.73206), "Test8: Rounded param 1 is in bounds");
-  is((+tformValues[2]), 0, "Test8: param 2 is 0");
+  is((+tformValues[2]), -1, "Test8: param 2 is -1");
   is((+tformValues[3]), 1, "Test8: param 3 is 1");
   is((+tformValues[4]), 0, "Test8: param 4 is 0");
   is((+tformValues[5]), 0, "Test8: param 5 is 0");
 
   style = window.getComputedStyle(document.getElementById("test9"), "");
   is(style.getPropertyValue("-moz-transform"), "none",
-     "Test9: Skewx with two parameters should be ignored");
+     "Test9: Skew in 3d should be ignored");
 
   style = window.getComputedStyle(document.getElementById("test10"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, -10000, 1, 0, 0)",
-     "Test10: Skewx with nearly infinite numbers");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, -10000, 1, 1, 0, 0)",
+     "Test10: Skew with nearly infinite numbers");
 
   style = window.getComputedStyle(document.getElementById("test11"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, -10000, 0, 1, 0, 0)",
-     "Test11: Skewy with nearly infinite numbers");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, -10000, 10000, 1, 0, 0)",
+     "Test11: Skew with more infinite numbers");
 }
 
 // Verifies that aVal is +/- 0.00001 of aTrueVal

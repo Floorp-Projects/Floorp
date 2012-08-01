@@ -9,6 +9,7 @@
 #include "Rect.h"
 #include "PathCG.h"
 #include "SourceSurfaceCG.h"
+#include "GLDefs.h"
 
 namespace mozilla {
 namespace gfx {
@@ -87,7 +88,7 @@ public:
   DrawTargetCG();
   virtual ~DrawTargetCG();
 
-  virtual BackendType GetType() const { return BACKEND_COREGRAPHICS; }
+  virtual BackendType GetType() const;
   virtual TemporaryRef<SourceSurface> Snapshot();
 
   virtual void DrawSurface(SourceSurface *aSurface,
@@ -102,12 +103,12 @@ public:
 
 
   //XXX: why do we take a reference to SurfaceFormat?
-  bool Init(const IntSize &aSize, SurfaceFormat&);
-  bool Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+  bool Init(BackendType aType, const IntSize &aSize, SurfaceFormat&);
+  bool Init(BackendType aType, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
   bool Init(CGContextRef cgContext, const IntSize &aSize);
 
-
-  virtual void Flush() {}
+  // Flush if using IOSurface context
+  virtual void Flush();
 
   virtual void DrawSurfaceWithShadow(SourceSurface *, const Point &, const Color &, const Point &, Float, CompositionOp);
   virtual void ClearRect(const Rect &);
@@ -150,6 +151,8 @@ private:
   CGColorSpaceRef mColorSpace;
   CGContextRef mCg;
 
+  GLuint mIOSurfaceTexture;
+
   /**
    * A pointer to the image buffer if the buffer is owned by this class (set to
    * NULL otherwise).
@@ -160,9 +163,7 @@ private:
    */
   void *mData;
 
-  SurfaceFormat mFormat;
-
-  RefPtr<SourceSurfaceCGBitmapContext> mSnapshot;
+  RefPtr<SourceSurfaceCGContext> mSnapshot;
 };
 
 }

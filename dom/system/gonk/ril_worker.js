@@ -957,12 +957,12 @@ let RIL = {
 
   /**
    *  Request an ICC I/O operation.
-   * 
+   *
    *  See TS 27.007 "restricted SIM" operation, "AT Command +CRSM".
    *  The sequence is in the same order as how libril reads this parcel,
    *  see the struct RIL_SIM_IO_v5 or RIL_SIM_IO_v6 defined in ril.h
    *
-   *  @param command 
+   *  @param command
    *         The I/O command, one of the ICC_COMMAND_* constants.
    *  @param fileId
    *         The file to operate on, one of the ICC_EF_* constants.
@@ -974,6 +974,8 @@ let RIL = {
    *         String parameter for the command.
    *  @param pin2 [optional]
    *         String containing the PIN2.
+   *  @param aid
+   *         String for the AID.
    */
   iccIO: function iccIO(options) {
     let token = Buf.newParcel(REQUEST_SIM_IO, options);
@@ -984,9 +986,9 @@ let RIL = {
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
     Buf.writeString(options.data);
-    if (options.pin2 != null) {
-      Buf.writeString(options.pin2);
-    }
+    Buf.writeString(options.pin2 ? options.pin2 : null);
+    let appIndex = this.iccStatus.gsmUmtsSubscriptionAppIndex;
+    Buf.writeString(this.iccStatus.apps[appIndex].aid);
     Buf.sendParcel();
   },
 
@@ -1016,7 +1018,8 @@ let RIL = {
     }
     let token = Buf.newParcel(REQUEST_GET_IMSI);
     Buf.writeUint32(1);
-    Buf.writeString(null);
+    let appIndex = this.iccStatus.gsmUmtsSubscriptionAppIndex;
+    Buf.writeString(this.iccStatus.apps[appIndex].aid);
     Buf.sendParcel();
   },
 
@@ -1050,7 +1053,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_MSISDN,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1093,7 +1096,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_AD,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1145,7 +1148,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_UST,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1181,7 +1184,7 @@ let RIL = {
     let numLen = GsmPDUHelper.readHexOctet();
     if (numLen != 0xff) {
       if (numLen > MSISDN_MAX_NUMBER_SIZE_BYTES) {
-        debug("ICC_EF_FDN: invalid length of BCD number/SSC contents - " + numLen);
+        debug("invalid length of BCD number/SSC contents - " + numLen);
         return;
       }
 
@@ -1288,7 +1291,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    options.fileId,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK,
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1325,7 +1328,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_MBDN,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_GSM,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -3218,10 +3221,8 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
-
+  // Don't need to read rilRequestError since we can know error status from
+  // sw1 and sw2.
   let sw1 = Buf.readUint32();
   let sw2 = Buf.readUint32();
   if (sw1 != ICC_STATUS_NORMAL_ENDING) {

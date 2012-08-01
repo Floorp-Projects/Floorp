@@ -31,7 +31,8 @@ static const uint32_t MAX_GETELEM_IC_STUBS = 17;
 enum LookupStatus {
     Lookup_Error = 0,
     Lookup_Uncacheable,
-    Lookup_Cacheable
+    Lookup_Cacheable,
+    Lookup_NoProperty
 };
 
 struct BaseIC : public MacroAssemblerTypedefs {

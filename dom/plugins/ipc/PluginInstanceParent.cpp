@@ -133,7 +133,7 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         const NPRect rect = {0, 0, 0, 0};
         RecvNPN_InvalidateRect(rect);
 #ifdef MOZ_X11
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 #endif
     }
 }
@@ -591,7 +591,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else if (newSurface.type() == SurfaceDescriptor::TIOSurfaceDescriptor) {
         IOSurfaceDescriptor iodesc = newSurface.get_IOSurfaceDescriptor();
     
-        nsRefPtr<nsIOSurface> newIOSurface = nsIOSurface::LookupSurface(iodesc.surfaceId());
+        RefPtr<MacIOSurface> newIOSurface = MacIOSurface::LookupSurface(iodesc.surfaceId());
 
         if (!newIOSurface) {
             NS_WARNING("Got bad IOSurfaceDescriptor in RecvShow");
@@ -634,7 +634,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         // referencing it, so we XSync here to let them finish before
         // the plugin starts scribbling on it again, or worse,
         // destroys it.
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 #endif
 
     if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
@@ -709,7 +709,7 @@ nsresult
 PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 {
 #ifdef XP_MACOSX
-    nsIOSurface* ioSurface = NULL;
+    MacIOSurface* ioSurface = NULL;
   
     if (mFrontIOSurface) {
       ioSurface = mFrontIOSurface;
@@ -1019,7 +1019,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     if (mShWidth != window.width || mShHeight != window.height) {
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
-            mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
+            mIOSurface = MacIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {
                 DeallocShmem(mShSurface);
@@ -1260,7 +1260,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // process does not need to wait; the child is the process that needs
         // to wait.  A possibly-slightly-better alternative would be to send
         // an X event to the child that the child would wait for.
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 
         return CallPaint(npremoteevent, &handled) ? handled : 0;
 

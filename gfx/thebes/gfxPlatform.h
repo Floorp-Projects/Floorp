@@ -118,6 +118,8 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
   switch (aBackend) {
       case mozilla::gfx::BACKEND_DIRECT2D:
         return "direct2d";
+      case mozilla::gfx::BACKEND_COREGRAPHICS_ACCELERATED:
+        return "quartz accelerated";
       case mozilla::gfx::BACKEND_COREGRAPHICS:
         return "quartz";
       case mozilla::gfx::BACKEND_CAIRO:

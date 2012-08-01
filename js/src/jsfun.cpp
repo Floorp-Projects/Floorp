@@ -625,8 +625,11 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         }
     }
     bool haveSource = fun->isInterpreted();
-    if (haveSource && !fun->script()->scriptSource() && !fun->script()->loadSource(cx, &haveSource))
-            return NULL;
+    if (haveSource && !fun->script()->scriptSource()->hasSourceData() &&
+        !fun->script()->loadSource(cx, &haveSource))
+    {
+        return NULL;
+    }
     if (haveSource) {
         RootedScript script(cx, fun->script());
         RootedString src(cx, fun->script()->sourceData(cx));

@@ -52,6 +52,19 @@ bool
 XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
                 Visual** aVisual, unsigned int* aDepth);
 
+
+/**
+ * Ensure that all X requests have been processed.
+ *
+ * This is similar to XSync, but doesn't need a round trip if the previous
+ * request was synchronous or if events have been received since the last
+ * request.  Subsequent FinishX calls will be noops if there have been no
+ * intermediate requests.
+ */
+
+void
+FinishX(Display* aDisplay);
+
 /**
  * Invoke XFree() on a pointer to memory allocated by Xlib (if the
  * pointer is nonnull) when this class goes out of scope.
@@ -124,13 +137,6 @@ public:
      *           the first one will be returned.
      */
     bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nullptr);
-
-    /** Like SyncAndGetError, but does not sync. Faster, but only reliably catches errors in synchronous calls.
-     *
-     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object. If multiple errors occurred,
-     *           the first one will be returned.
-     */
-    bool GetError(XErrorEvent *ev = nullptr);
 };
 
 } // namespace mozilla

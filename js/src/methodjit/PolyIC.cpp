@@ -652,8 +652,26 @@ struct GetPropHelper {
         if (monitor.recompiled())
             return Lookup_Uncacheable;
 
-        if (!prop)
-            return ic.disable(f, "lookup failed");
+        if (!prop) {
+            /*
+             * Just because we didn't find the property on the object doesn't
+             * mean it won't magically appear through various engine hacks:
+             */
+            if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
+                return Lookup_Uncacheable;
+
+#if JS_HAS_NO_SUCH_METHOD
+            /*
+             * The __noSuchMethod__ hook may substitute in a valid method.
+             * Since, if o.m is missing, o.m() will probably be an error,
+             * just mark all missing callprops as uncacheable.
+             */
+            if (*f.pc() == JSOP_CALLPROP)
+                return Lookup_Uncacheable;
+#endif
+
+            return Lookup_NoProperty;
+        }
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(f, "non-native holder");
         shape = prop;
@@ -1230,22 +1248,39 @@ class GetPropCompiler : public PICStubCompiler
                 return error();
             }
 
-            // Bake in the holder identity. Careful not to clobber |objReg|, since we can't remat it.
-            holderReg = pic.shapeReg;
-            masm.move(ImmPtr(holder), holderReg);
-            pic.shapeRegHasBaseShape = false;
+            if (holder) {
+                // Bake in the holder identity. Careful not to clobber |objReg|, since we can't remat it.
+                holderReg = pic.shapeReg;
+                masm.move(ImmPtr(holder), holderReg);
+                pic.shapeRegHasBaseShape = false;
 
-            // Guard on the holder's shape.
-            Jump j = masm.guardShape(holderReg, holder);
-            if (!shapeMismatches.append(j))
-                return error();
+                // Guard on the holder's shape.
+                Jump j = masm.guardShape(holderReg, holder);
+                if (!shapeMismatches.append(j))
+                    return error();
+            } else {
+                // Like when we add a property, we need to guard on the shape of
+                // everything on the prototype chain.
+                JSObject *proto = obj->getProto();
+                RegisterID lastReg = pic.objReg;
+                while (proto) {
+                    masm.loadPtr(Address(lastReg, JSObject::offsetOfType()), pic.shapeReg);
+                    masm.loadPtr(Address(pic.shapeReg, offsetof(types::TypeObject, proto)), pic.shapeReg);
+                    Jump protoGuard = masm.guardShape(pic.shapeReg, proto);
+                    if (!shapeMismatches.append(protoGuard))
+                        return error();
+
+                    proto = proto->getProto();
+                    lastReg = pic.shapeReg;
+                }
+            }
 
             pic.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
         } else {
             pic.secondShapeGuard = 0;
         }
 
-        if (!shape->hasDefaultGetter()) {
+        if (shape && !shape->hasDefaultGetter()) {
             MarkNotIdempotent(f.script(), f.pc());
 
             if (shape->hasGetterValue()) {
@@ -1261,10 +1296,19 @@ class GetPropCompiler : public PICStubCompiler
             return Lookup_Cacheable;
         }
 
-        /* Load the value out of the object. */
-        masm.loadObjProp(holder, holderReg, shape, pic.shapeReg, pic.objReg);
-        Jump done = masm.jump();
+        /*
+         * A non-null 'shape' tells us where to find the property value in the
+         * holder object. A null shape means that the above checks guard the
+         * absence of the property, so the get-prop returns 'undefined'. A
+         * missing property guarantees a type barrier below so we don't have to
+         * check type information.
+         */
+        if (shape)
+            masm.loadObjProp(holder, holderReg, shape, pic.shapeReg, pic.objReg);
+        else
+            masm.loadValueAsComponents(UndefinedValue(), pic.shapeReg, pic.objReg);
 
+        Jump done = masm.jump();
         pic.updatePCCounters(f, masm);
 
         PICLinker buffer(masm, pic);
@@ -1336,7 +1380,7 @@ class GetPropCompiler : public PICStubCompiler
 
         GetPropHelper<GetPropCompiler> getprop(cx, obj, name, *this, f);
         LookupStatus status = getprop.lookupAndTest();
-        if (status != Lookup_Cacheable) {
+        if (status != Lookup_Cacheable && status != Lookup_NoProperty) {
             MarkNotIdempotent(f.script(), f.pc());
             return status;
         }
@@ -2486,7 +2530,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
         LookupStatus status = ic->update(f, obj, idval_, id, res);
-        if (status != Lookup_Uncacheable) {
+        if (status != Lookup_Uncacheable && status != Lookup_NoProperty) {
             if (status == Lookup_Error)
                 THROW();
 

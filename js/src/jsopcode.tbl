@@ -350,9 +350,17 @@ OPDEF(JSOP_DECALIASEDVAR, 140,"decaliasedvar",NULL,   10, 0,  1, 15,  JOF_SCOPEC
 OPDEF(JSOP_ALIASEDVARINC, 141,"aliasedvarinc",NULL,   10, 0,  1, 15,  JOF_SCOPECOORD|JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT3|JOF_DECOMPOSE)
 OPDEF(JSOP_ALIASEDVARDEC, 142,"aliasedvardec",NULL,   10, 0,  1, 15,  JOF_SCOPECOORD|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3|JOF_DECOMPOSE)
 
+/*
+ * Intrinsic names have the syntax %name and can only be used when the 
+ * CompileOptions flag "allowIntrinsicsCalls" is set.
+ *
+ * They are used to access intrinsic functions the runtime doesn't give 
+ * client JS code access to from self-hosted code.
+ */
+OPDEF(JSOP_INTRINSICNAME, 143, "intrinsicname", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_CALLINTRINSIC, 144, "callintrinsic", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
+
 /* Unused. */
-OPDEF(JSOP_UNUSED8,       143,"unused8",  NULL,       1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED9,       144,"unused9",  NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED10,      145,"unused10", NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED11,      146,"unused11", NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED12,      147,"unused12", NULL,       1,  0,  0,  0,  JOF_BYTE)

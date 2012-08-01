@@ -11,6 +11,7 @@
 #include "nsChangeHint.h"
 #include "nsINode.h"
 #include "nsIDocument.h" // for IsInHTMLDocument
+#include "nsCSSProperty.h"
 
 // Forward declarations
 class nsIAtom;
@@ -760,31 +761,6 @@ public:
    * hint rules) for this content node.
    */
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
-
-  /**
-   * Is the attribute named stored in the mapped attributes?
-   *
-   * // XXXbz we use this method in HasAttributeDependentStyle, so svg
-   *    returns true here even though it stores nothing in the mapped
-   *    attributes.
-   */
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const = 0;
-
-  /**
-   * Get a hint that tells the style system what to do when 
-   * an attribute on this node changes, if something needs to happen
-   * in response to the change *other* than the result of what is
-   * mapped into style data via any type of style rule.
-   */
-  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const = 0;
-
-  /**
-   * Returns an atom holding the name of the "class" attribute on this
-   * content node (if applicable).  Returns null if there is no
-   * "class" attribute for this type of content node.
-   */
-  virtual nsIAtom *GetClassAttributeName() const = 0;
 
   /**
    * Should be called when the node can become editable or when it can stop

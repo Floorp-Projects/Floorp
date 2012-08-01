@@ -948,10 +948,9 @@ WordSplitState::ShouldSkipWord(PRInt32 aStart, PRInt32 aLength)
 
   // check to see if the word contains a digit
   for (PRInt32 i = aStart; i < last; i ++) {
-    PRUnichar ch = mDOMWordText[i];
-    // XXX Shouldn't this be something a lot more complex, Unicode-based?
-    if (ch >= '0' && ch <= '9')
+    if (unicode::GetGenCategory(mDOMWordText[i]) == nsIUGenCategory::kNumber) {
       return true;
+    }
   }
 
   // not special

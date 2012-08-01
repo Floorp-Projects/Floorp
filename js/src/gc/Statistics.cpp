@@ -25,8 +25,8 @@
 namespace js {
 namespace gcstats {
 
-/* Except for the first and last, slices of less than 12ms are not reported. */
-static const int64_t SLICE_MIN_REPORT_TIME = 12 * PRMJ_USEC_PER_MSEC;
+/* Except for the first and last, slices of less than 42ms are not reported. */
+static const int64_t SLICE_MIN_REPORT_TIME = 42 * PRMJ_USEC_PER_MSEC;
 
 class StatisticsSerializer
 {

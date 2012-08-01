@@ -124,6 +124,43 @@ CanvasLayerOGL::Initialize(const Data& aData)
   }
 }
 
+#ifdef XP_MACOSX
+static GLuint
+MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
+{
+  GLuint ioSurfaceTexture;
+
+  aGL->fGenTextures(1, &ioSurfaceTexture);
+
+  aGL->fActiveTexture(LOCAL_GL_TEXTURE0);
+  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioSurfaceTexture);
+
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  RefPtr<MacIOSurface> ioSurface = MacIOSurface::IOSurfaceContextGetSurface((CGContextRef)aCGIOSurfaceContext);
+  void *nativeCtx = aGL->GetNativeData(GLContext::NativeGLContext);
+
+  ioSurface->CGLTexImageIOSurface2D(nativeCtx,
+                                    LOCAL_GL_RGBA, LOCAL_GL_BGRA,
+                                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+
+  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  return ioSurfaceTexture;
+}
+
+#else
+static GLuint
+MakeIOSurfaceTexture(void* aCGIOSurfaceContext, mozilla::gl::GLContext* aGL)
+{
+  NS_RUNTIMEABORT("Not implemented");
+  return 0;
+}
+#endif
+
 /**
  * Following UpdateSurface(), mTexture on context this->gl() should contain the data we want,
  * unless mDelayedUpdates is true because of a too-large surface.
@@ -203,7 +240,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   if (mTexture) {
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+    gl()->fBindTexture(mTextureTarget, mTexture);
   }
 
   ShaderProgramOGL *program = nullptr;
@@ -244,6 +281,10 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->ApplyFilterToBoundTexture(mFilter);
 
   program->Activate();
+  if (mLayerProgram == gl::RGBARectLayerProgramType) {
+    // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
+    program->SetTexCoordMultiplier(mDrawTarget->GetSize().width, mDrawTarget->GetSize().height);
+  }
   program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
   program->SetLayerOpacity(GetEffectiveOpacity());
@@ -291,7 +332,7 @@ ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
- 
+
 ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
 {}
 
