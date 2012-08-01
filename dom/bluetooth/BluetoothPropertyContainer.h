@@ -9,7 +9,6 @@
 
 #include "BluetoothCommon.h"
 #include "BluetoothReplyRunnable.h"
-#include "mozilla/RefPtr.h"
 
 class nsIDOMDOMRequest;
 class nsIDOMWindow;
