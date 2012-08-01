@@ -414,7 +414,7 @@ nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStrea
   nsresult rv;
 
   if (!preview) {
-    preview = new GonkCameraPreview(mHwHandle, aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height);
+    preview = new GonkCameraPreview(mCameraThread, mHwHandle, aGetPreviewStream->mSize.width, aGetPreviewStream->mSize.height);
     if (!preview) {
       if (aGetPreviewStream->mOnErrorCb) {
         rv = NS_DispatchToMainThread(new CameraErrorResult(aGetPreviewStream->mOnErrorCb, NS_LITERAL_STRING("OUT_OF_MEMORY")));
