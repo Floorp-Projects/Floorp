@@ -405,10 +405,10 @@ bool
 CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister output = ToFloatRegister(ins->output());
-    masm.xorpd(output, output);
-    masm.subsd(input, output); // negate the sign bit.
-    masm.andpd(input, output); // s & ~s
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
+    masm.subsd(input, ScratchFloatReg); // negate the sign bit.
+    masm.andpd(ScratchFloatReg, input); // s & ~s
     return true;
 }
 
@@ -416,8 +416,8 @@ bool
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister output = ToFloatRegister(ins->output());
-    masm.sqrtsd(input, output);
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.sqrtsd(input, input);
     return true;
 }
 
