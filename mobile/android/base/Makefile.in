@@ -106,7 +106,6 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   WebAppAllocator.java \
-  ZoomConstraints.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -124,6 +123,7 @@ FENNEC_JAVA_FILES = \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \
+  gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
   gfx/PluginLayer.java \
@@ -144,7 +144,6 @@ FENNEC_JAVA_FILES = \
   gfx/VirtualLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
-  ui/PanZoomTarget.java \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
