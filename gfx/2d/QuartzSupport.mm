@@ -463,7 +463,6 @@ void cgdata_release_callback(void *aCGData, const void *data, size_t size) {
 }
 
 void nsCARenderer::Destroy() {
-  printf("Destroy\n");
   if (mCARenderer) {
     CARenderer* caRenderer = (CARenderer*)mCARenderer;
     // Bug 556453:
@@ -503,11 +502,9 @@ void nsCARenderer::Destroy() {
   mFBOTexture = 0;
   mOpenGLContext = nullptr;
   mCGImage = nullptr;
-  printf("Destroy: set null\n");
   mIOSurface = nullptr;
   mFBO = 0;
   mIOTexture = 0;
-  printf("Destroy: cleanup\n");
 }
 
 nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
@@ -711,7 +708,6 @@ void nsCARenderer::SetViewport(int aWidth, int aHeight) {
 }
 
 void nsCARenderer::AttachIOSurface(RefPtr<MacIOSurface> aSurface) {
-  printf("*****Attach*****\n\n\n\n\n");
   if (mIOSurface &&
       aSurface->GetIOSurfaceID() == mIOSurface->GetIOSurfaceID()) {
     // This object isn't needed since we already have a
