@@ -8,89 +8,89 @@
 
 using namespace mozilla;
 
-jclass AndroidGeckoEvent::jGeckoEventClass = nullptr;
-jfieldID AndroidGeckoEvent::jActionField = nullptr;
-jfieldID AndroidGeckoEvent::jTypeField = nullptr;
-jfieldID AndroidGeckoEvent::jTimeField = nullptr;
-jfieldID AndroidGeckoEvent::jPoints = nullptr;
-jfieldID AndroidGeckoEvent::jPointIndicies = nullptr;
-jfieldID AndroidGeckoEvent::jPressures = nullptr;
-jfieldID AndroidGeckoEvent::jPointRadii = nullptr;
-jfieldID AndroidGeckoEvent::jOrientations = nullptr;
-jfieldID AndroidGeckoEvent::jXField = nullptr;
-jfieldID AndroidGeckoEvent::jYField = nullptr;
-jfieldID AndroidGeckoEvent::jZField = nullptr;
-jfieldID AndroidGeckoEvent::jDistanceField = nullptr;
-jfieldID AndroidGeckoEvent::jRectField = nullptr;
-jfieldID AndroidGeckoEvent::jNativeWindowField = nullptr;
+jclass AndroidGeckoEvent::jGeckoEventClass = 0;
+jfieldID AndroidGeckoEvent::jActionField = 0;
+jfieldID AndroidGeckoEvent::jTypeField = 0;
+jfieldID AndroidGeckoEvent::jTimeField = 0;
+jfieldID AndroidGeckoEvent::jPoints = 0;
+jfieldID AndroidGeckoEvent::jPointIndicies = 0;
+jfieldID AndroidGeckoEvent::jPressures = 0;
+jfieldID AndroidGeckoEvent::jPointRadii = 0;
+jfieldID AndroidGeckoEvent::jOrientations = 0;
+jfieldID AndroidGeckoEvent::jXField = 0;
+jfieldID AndroidGeckoEvent::jYField = 0;
+jfieldID AndroidGeckoEvent::jZField = 0;
+jfieldID AndroidGeckoEvent::jDistanceField = 0;
+jfieldID AndroidGeckoEvent::jRectField = 0;
+jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
-jfieldID AndroidGeckoEvent::jCharactersField = nullptr;
-jfieldID AndroidGeckoEvent::jCharactersExtraField = nullptr;
-jfieldID AndroidGeckoEvent::jKeyCodeField = nullptr;
-jfieldID AndroidGeckoEvent::jMetaStateField = nullptr;
-jfieldID AndroidGeckoEvent::jFlagsField = nullptr;
-jfieldID AndroidGeckoEvent::jUnicodeCharField = nullptr;
-jfieldID AndroidGeckoEvent::jRepeatCountField = nullptr;
-jfieldID AndroidGeckoEvent::jOffsetField = nullptr;
-jfieldID AndroidGeckoEvent::jCountField = nullptr;
-jfieldID AndroidGeckoEvent::jPointerIndexField = nullptr;
-jfieldID AndroidGeckoEvent::jRangeTypeField = nullptr;
-jfieldID AndroidGeckoEvent::jRangeStylesField = nullptr;
-jfieldID AndroidGeckoEvent::jRangeForeColorField = nullptr;
-jfieldID AndroidGeckoEvent::jRangeBackColorField = nullptr;
-jfieldID AndroidGeckoEvent::jLocationField = nullptr;
-jfieldID AndroidGeckoEvent::jBandwidthField = nullptr;
-jfieldID AndroidGeckoEvent::jCanBeMeteredField = nullptr;
-jfieldID AndroidGeckoEvent::jScreenOrientationField = nullptr;
-jfieldID AndroidGeckoEvent::jByteBufferField = nullptr;
+jfieldID AndroidGeckoEvent::jCharactersField = 0;
+jfieldID AndroidGeckoEvent::jCharactersExtraField = 0;
+jfieldID AndroidGeckoEvent::jKeyCodeField = 0;
+jfieldID AndroidGeckoEvent::jMetaStateField = 0;
+jfieldID AndroidGeckoEvent::jFlagsField = 0;
+jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
+jfieldID AndroidGeckoEvent::jRepeatCountField = 0;
+jfieldID AndroidGeckoEvent::jOffsetField = 0;
+jfieldID AndroidGeckoEvent::jCountField = 0;
+jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
+jfieldID AndroidGeckoEvent::jRangeTypeField = 0;
+jfieldID AndroidGeckoEvent::jRangeStylesField = 0;
+jfieldID AndroidGeckoEvent::jRangeForeColorField = 0;
+jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
+jfieldID AndroidGeckoEvent::jLocationField = 0;
+jfieldID AndroidGeckoEvent::jBandwidthField = 0;
+jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
+jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 
-jclass AndroidPoint::jPointClass = nullptr;
-jfieldID AndroidPoint::jXField = nullptr;
-jfieldID AndroidPoint::jYField = nullptr;
+jclass AndroidPoint::jPointClass = 0;
+jfieldID AndroidPoint::jXField = 0;
+jfieldID AndroidPoint::jYField = 0;
 
-jclass AndroidRect::jRectClass = nullptr;
-jfieldID AndroidRect::jBottomField = nullptr;
-jfieldID AndroidRect::jLeftField = nullptr;
-jfieldID AndroidRect::jRightField = nullptr;
-jfieldID AndroidRect::jTopField = nullptr;
+jclass AndroidRect::jRectClass = 0;
+jfieldID AndroidRect::jBottomField = 0;
+jfieldID AndroidRect::jLeftField = 0;
+jfieldID AndroidRect::jRightField = 0;
+jfieldID AndroidRect::jTopField = 0;
 
-jclass AndroidLocation::jLocationClass = nullptr;
-jmethodID AndroidLocation::jGetLatitudeMethod = nullptr;
-jmethodID AndroidLocation::jGetLongitudeMethod = nullptr;
-jmethodID AndroidLocation::jGetAltitudeMethod = nullptr;
-jmethodID AndroidLocation::jGetAccuracyMethod = nullptr;
-jmethodID AndroidLocation::jGetBearingMethod = nullptr;
-jmethodID AndroidLocation::jGetSpeedMethod = nullptr;
-jmethodID AndroidLocation::jGetTimeMethod = nullptr;
+jclass AndroidLocation::jLocationClass = 0;
+jmethodID AndroidLocation::jGetLatitudeMethod = 0;
+jmethodID AndroidLocation::jGetLongitudeMethod = 0;
+jmethodID AndroidLocation::jGetAltitudeMethod = 0;
+jmethodID AndroidLocation::jGetAccuracyMethod = 0;
+jmethodID AndroidLocation::jGetBearingMethod = 0;
+jmethodID AndroidLocation::jGetSpeedMethod = 0;
+jmethodID AndroidLocation::jGetTimeMethod = 0;
 
-jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = nullptr;
-jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = nullptr;
-jmethodID AndroidGeckoLayerClient::jSetPageRect = nullptr;
-jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = nullptr;
-jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = nullptr;
-jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = nullptr;
-jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = nullptr;
+jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
+jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
+jmethodID AndroidGeckoLayerClient::jSetPageRect = 0;
+jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = 0;
+jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
+jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
+jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = 0;
 
-jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = nullptr;
-jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = nullptr;
-jmethodID AndroidLayerRendererFrame::jDrawBackgroundMethod = nullptr;
-jmethodID AndroidLayerRendererFrame::jDrawForegroundMethod = nullptr;
-jmethodID AndroidLayerRendererFrame::jEndDrawingMethod = nullptr;
+jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
+jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
+jmethodID AndroidLayerRendererFrame::jDrawBackgroundMethod = 0;
+jmethodID AndroidLayerRendererFrame::jDrawForegroundMethod = 0;
+jmethodID AndroidLayerRendererFrame::jEndDrawingMethod = 0;
 
-jclass AndroidViewTransform::jViewTransformClass = nullptr;
-jfieldID AndroidViewTransform::jXField = nullptr;
-jfieldID AndroidViewTransform::jYField = nullptr;
-jfieldID AndroidViewTransform::jScaleField = nullptr;
+jclass AndroidViewTransform::jViewTransformClass = 0;
+jfieldID AndroidViewTransform::jXField = 0;
+jfieldID AndroidViewTransform::jYField = 0;
+jfieldID AndroidViewTransform::jScaleField = 0;
 
-jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = nullptr;
-jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = nullptr;
-jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = nullptr;
+jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
+jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
 static jclass GetClassGlobalRef(JNIEnv* env, const char* className)
 {
@@ -110,7 +110,7 @@ static jclass GetClassGlobalRef(JNIEnv* env, const char* className)
 
     // Local ref no longer necessary because we have a global ref.
     env->DeleteLocalRef(classLocalRef);
-    classLocalRef = nullptr;
+    classLocalRef = NULL;
 
     return static_cast<jclass>(classGlobalRef);
 }
@@ -158,7 +158,7 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jClass,
 RefCountedJavaObject::~RefCountedJavaObject() {
     if (mObject)
         GetJNIForThread()->DeleteGlobalRef(mObject);
-    mObject = nullptr;
+    mObject = NULL;
 }
 
 void
@@ -255,19 +255,19 @@ AndroidLocation::CreateGeoPosition(JNIEnv *jenv, jobject jobj)
     AutoLocalJNIFrame jniFrame(jenv);
 
     double latitude  = jenv->CallDoubleMethod(jobj, jGetLatitudeMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     double longitude = jenv->CallDoubleMethod(jobj, jGetLongitudeMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     double altitude  = jenv->CallDoubleMethod(jobj, jGetAltitudeMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     float  accuracy  = jenv->CallFloatMethod (jobj, jGetAccuracyMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     float  bearing   = jenv->CallFloatMethod (jobj, jGetBearingMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     float  speed     = jenv->CallFloatMethod (jobj, jGetSpeedMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
     long long time   = jenv->CallLongMethod  (jobj, jGetTimeMethod);
-    if (jniFrame.CheckForException()) return nullptr;
+    if (jniFrame.CheckForException()) return NULL;
 
     return new nsGeoPosition(latitude, longitude,
                              altitude, accuracy,
@@ -641,7 +641,7 @@ AndroidLayerRendererFrame::Dispose(JNIEnv *env)
     }
 
     env->DeleteGlobalRef(wrapped_obj);
-    wrapped_obj = nullptr;
+    wrapped_obj = 0;
 }
 
 void
@@ -967,7 +967,7 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
             return;
         }
     }
-    const jchar* jCharPtr = jni->GetStringChars(jstr, nullptr);
+    const jchar* jCharPtr = jni->GetStringChars(jstr, NULL);
 
     if (!jCharPtr) {
         SetIsVoid(true);

@@ -46,7 +46,7 @@ using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
 
-AndroidBridge *AndroidBridge::sBridge = nullptr;
+AndroidBridge *AndroidBridge::sBridge = 0;
 static PRUintn sJavaEnvThreadIndex = 0;
 static void JavaThreadDetachFunc(void *arg);
 
@@ -254,11 +254,10 @@ AndroidBridge::NotifyIME(int aType, int aState)
                               sBridge->jNotifyIME,  aType, aState);
 }
 
-static jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string,
-                             PRUint32 len) {
+jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, PRUint32 len) {
     jstring ret = frame->GetEnv()->NewString( string, len);
     if (frame->CheckForException())
-        return nullptr;
+        return NULL;
     return ret;
 }
 
@@ -1111,13 +1110,13 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
     // and we had to recreate it, but all the Gecko-side things were not destroyed.
     // We therefore need to link up the new java objects to Gecko, and that's what
     // we do here.
-    bool resetting = (mLayerClient != nullptr);
+    bool resetting = (mLayerClient != NULL);
 
     if (resetting) {
         // clear out the old layer client
         env->DeleteGlobalRef(mLayerClient->wrappedObject());
         delete mLayerClient;
-        mLayerClient = nullptr;
+        mLayerClient = NULL;
     }
 
     AndroidGeckoLayerClient *client = new AndroidGeckoLayerClient();
@@ -1149,7 +1148,7 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 
     JNIEnv *env = GetJNIForThread();        // called on the compositor thread
     if (!env)
-        return nullptr;
+        return NULL;
 
     AutoLocalJNIFrame jniFrame(env);
 
@@ -1183,8 +1182,7 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
     jobject jconf = env->NewObject(jEGLConfigImplClass, constructConfig, (int) config);
 
     // make the call
-    jobject surf = env->CallObjectMethod(egl, createWindowSurface, jdpy, jconf, surfaceHolder,
-                                         nullptr);
+    jobject surf = env->CallObjectMethod(egl, createWindowSurface, jdpy, jconf, surfaceHolder, NULL);
     if (jniFrame.CheckForException() || !surf)
         return nullptr;
 
@@ -2047,13 +2045,13 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
     };
 
     int err;
-    *bits = nullptr;
+    *bits = NULL;
     *width = *height = *format = 0;
 
     if (mHasNativeWindowAccess) {
         ANativeWindow_Buffer buffer;
 
-        if ((err = ANativeWindow_lock(window, (void*)&buffer, nullptr)) != 0) {
+        if ((err = ANativeWindow_lock(window, (void*)&buffer, NULL)) != 0) {
             ALOG_BRIDGE("ANativeWindow_lock failed! (error %d)", err);
             return false;
         }
@@ -2066,7 +2064,7 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
     } else if (mHasNativeWindowFallback) {
         SurfaceInfo info;
 
-        if ((err = Surface_lock(window, &info, nullptr, true)) != 0) {
+        if ((err = Surface_lock(window, &info, NULL, true)) != 0) {
             ALOG_BRIDGE("Surface_lock failed! (error %d)", err);
             return false;
         }
@@ -2148,7 +2146,7 @@ AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayRes
 }
 
 AndroidBridge::AndroidBridge()
-  : mLayerClient(nullptr)
+  : mLayerClient(NULL)
 {
 }
 
@@ -2194,7 +2192,7 @@ static void
 JavaThreadDetachFunc(void *arg)
 {
     JNIEnv *env = (JNIEnv*) arg;
-    JavaVM *vm = nullptr;
+    JavaVM *vm = NULL;
     env->GetJavaVM(&vm);
     vm->DetachCurrentThread();
 }
@@ -2203,11 +2201,11 @@ extern "C" {
     __attribute__ ((visibility("default")))
     JNIEnv * GetJNIForThread()
     {
-        JNIEnv *jEnv = nullptr;
+        JNIEnv *jEnv = NULL;
         JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
         if (!jVm) {
             __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "Returned a null VM");
-            return nullptr;
+            return NULL;
         }
         jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
 
@@ -2217,16 +2215,16 @@ extern "C" {
         int status = jVm->GetEnv((void**) &jEnv, JNI_VERSION_1_2);
         if (status) {
 
-            status = jVm->AttachCurrentThread(&jEnv, nullptr);
+            status = jVm->AttachCurrentThread(&jEnv, NULL);
             if (status) {
                 __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread",  "Could not attach");
-                return nullptr;
+                return NULL;
             }
-
+            
             PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
         }
         if (!jEnv) {
-            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "returning nullptr");
+            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "returning NULL");
         }
         return jEnv;
     }
