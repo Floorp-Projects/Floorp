@@ -35,15 +35,6 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-SimplePolicy::adjustInputs(MInstruction *def)
-{
-    if (specialized())
-        return true;
-
-    return BoxInputsPolicy::adjustInputs(def);
-}
-
-bool
 ArithPolicy::adjustInputs(MInstruction *ins)
 {
     if (specialization_ == MIRType_None)
@@ -246,6 +237,37 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     
     ins->block()->insertBefore(ins, replace);
     ins->replaceOperand(0, replace);
+
+    return true;
+}
+
+bool
+PowPolicy::adjustInputs(MInstruction *ins)
+{
+    JS_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Double);
+
+    MDefinition *input = ins->getOperand(0);
+    MDefinition *power = ins->getOperand(1);
+
+    // Input must be a double.
+    if (input->type() != MIRType_Double) {
+        MToDouble *replace = MToDouble::New(input);
+        ins->block()->insertBefore(ins, replace);
+        ins->replaceOperand(0, replace);
+    }
+
+    // Power may be an int32 or a double. Integers receive a faster path.
+    if (power->type() != specialization_) {
+        if (specialization_ == MIRType_Double) {
+            MToDouble *replace = MToDouble::New(power);
+            ins->block()->insertBefore(ins, replace);
+            ins->replaceOperand(1, replace);
+        } else {
+            MUnbox *replace = MUnbox::New(power, MIRType_Int32, MUnbox::Fallible);
+            ins->block()->insertBefore(ins, replace);
+            ins->replaceOperand(1, replace);
+        }
+    }
 
     return true;
 }

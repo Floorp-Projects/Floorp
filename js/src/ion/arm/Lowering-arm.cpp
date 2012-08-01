@@ -279,6 +279,15 @@ LIRGeneratorARM::lowerModI(MMod *mod)
 }
 
 bool
+LIRGeneratorARM::visitPowHalf(MPowHalf *ins)
+{
+    MDefinition *input = ins->input();
+    JS_ASSERT(input->type() == MIRType_Double);
+    LPowHalfD *lir = new LPowHalfD(useRegisterAtStart(input));
+    return defineReuseInput(lir, ins, 0);
+}
+
+bool
 LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
 {
     MDefinition *opd = tableswitch->getOperand(0);

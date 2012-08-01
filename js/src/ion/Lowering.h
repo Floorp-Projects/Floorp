@@ -106,6 +106,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRound(MRound *ins);
     bool visitAbs(MAbs *ins);
     bool visitSqrt(MSqrt *ins);
+    bool visitPow(MPow *ins);
     bool visitMathFunction(MMathFunction *ins);
     bool visitAdd(MAdd *ins);
     bool visitSub(MSub *ins);

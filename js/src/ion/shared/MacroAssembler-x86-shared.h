@@ -44,8 +44,9 @@ class MacroAssemblerX86Shared : public Assembler
         else
             ucomisd(lhs, rhs);
     }
-    void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
-                      Label *label) {
+    void branchDouble(DoubleCondition cond, const FloatRegister &lhs,
+                      const FloatRegister &rhs, Label *label)
+    {
         compareDouble(cond, lhs, rhs);
 
         if (cond == DoubleEqual) {
@@ -56,8 +57,8 @@ class MacroAssemblerX86Shared : public Assembler
             return;
         }
         if (cond == DoubleNotEqualOrUnordered) {
-            j(Parity, label);
             j(NotEqual, label);
+            j(Parity, label);
             return;
         }
 
@@ -255,6 +256,10 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
     }
+    void loadFloatAsDouble(const Register &src, FloatRegister dest) {
+        movd(src, dest);
+        cvtss2sd(dest, dest);
+    }
     void loadFloatAsDouble(const Address &src, FloatRegister dest) {
         movss(Operand(src), dest);
         cvtss2sd(dest, dest);
@@ -296,8 +301,12 @@ class MacroAssemblerX86Shared : public Assembler
         // This implements parts of "13.4 Generating constants" of 
         // "2. Optimizing subroutines in assembly language" by Agner Fog.
         switch (u) {
-          case 0ULL:
+          case 0x0000000000000000ULL: // 0.0
             xorpd(dest, dest);
+            break;
+          case 0x8000000000000000ULL: // -0.0
+            pcmpeqw(dest, dest);
+            psllq(Imm32(63), dest);
             break;
           case 0x3fe0000000000000ULL: // 0.5
             pcmpeqw(dest, dest);

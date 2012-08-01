@@ -131,7 +131,7 @@ class LModI : public LBinaryMath<3>
     }
 };
 
-class LModPowTwoI : public LInstructionHelper<1,1,0>
+class LModPowTwoI : public LInstructionHelper<1, 1, 0>
 {
     const int32 shift_;
 
@@ -149,7 +149,7 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
     }
 };
 
-class LModMaskI : public LInstructionHelper<1,1,1>
+class LModMaskI : public LInstructionHelper<1, 1, 1>
 {
     const int32 shift_;
 
@@ -167,6 +167,23 @@ class LModMaskI : public LInstructionHelper<1,1,1>
         setTemp(0, temp1);
     }
 };
+
+class LPowHalfD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(PowHalfD);
+    LPowHalfD(const LAllocation &input) {
+        setOperand(0, input);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 1>
 {
@@ -246,4 +263,3 @@ class LMulI : public LBinaryMath<0>
 } // namespace js
 
 #endif // jsion_lir_arm_h__
-

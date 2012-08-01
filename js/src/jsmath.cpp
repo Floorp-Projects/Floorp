@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -418,8 +419,8 @@ js_math_min(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-static double
-powi(double x, int y)
+double
+js::powi(double x, int y)
 {
     unsigned n = (y < 0) ? -y : y;
     double m = x;
@@ -444,6 +445,18 @@ powi(double x, int y)
         }
         m *= m;
     }
+}
+
+double
+js::ecmaPow(double x, double y)
+{
+    /*
+     * Because C99 and ECMA specify different behavior for pow(),
+     * we need to wrap the libm call to make it ECMA compliant.
+     */
+    if (!MOZ_DOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0))
+        return js_NaN;
+    return pow(x, y);
 }
 
 JSBool
@@ -471,14 +484,6 @@ js_math_pow(JSContext *cx, unsigned argc, Value *vp)
             return JS_TRUE;
         }
     }
-    /*
-     * Because C99 and ECMA specify different behavior for pow(),
-     * we need to wrap the libm call to make it ECMA compliant.
-     */
-    if (!MOZ_DOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
-    }
     /* pow(x, +-0) is always 1, even for x = NaN. */
     if (y == 0) {
         vp->setInt32(1);
@@ -493,7 +498,7 @@ js_math_pow(JSContext *cx, unsigned argc, Value *vp)
     if (int32_t(y) == y)
         z = powi(x, int32_t(y));
     else
-        z = pow(x, y);
+        z = ecmaPow(x, y);
 
     vp->setNumber(z);
     return JS_TRUE;
