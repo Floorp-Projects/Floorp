@@ -1668,6 +1668,10 @@ pref("dom.ipc.processCount", 1);
 
 pref("svg.smil.enabled", true);
 
+// Enable the use of display-lists for SVG hit-testing and painting.
+pref("svg.display-lists.hit-testing.enabled", true);
+pref("svg.display-lists.painting.enabled", true);
+
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);
 pref("font.minimum-size.x-beng", 0);
