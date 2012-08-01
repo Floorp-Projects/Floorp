@@ -240,7 +240,7 @@ private:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
-    virtual bool UseAsyncPainting() MOZ_OVERRIDE { return true; }
+    virtual bool IsOOP() MOZ_OVERRIDE { return true; }
     virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect& aRect,
