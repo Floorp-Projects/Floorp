@@ -38,6 +38,7 @@ using mozilla::dom::ContentChild;
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "DictionaryHelpers.h"
+#include "GeneratedEvents.h"
 
 // calls FlushAndDeleteTemporaryTables(false)
 #define NS_DOMSTORAGE_FLUSH_TIMER_TOPIC "domstorage-flush-timer"
@@ -1893,7 +1894,9 @@ nsDOMStorage2::BroadcastChangeNotification(const nsSubstring &aKey,
                                            const nsSubstring &aNewValue)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMStorageEvent> event = new nsDOMStorageEvent();
+  nsCOMPtr<nsIDOMEvent> domEvent;
+  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), nsnull, nsnull);
+  nsCOMPtr<nsIDOMStorageEvent> event = do_QueryInterface(domEvent);
   rv = event->InitStorageEvent(NS_LITERAL_STRING("storage"),
                                false,
                                false,
@@ -2079,97 +2082,3 @@ nsDOMStorageItem::ToString(nsAString& aStr)
   return GetValue(aStr);
 }
 
-// Cycle collection implementation for nsDOMStorageEvent
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMStorageEvent)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMStorageEvent, nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mStorageArea)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMStorageEvent, nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStorageArea)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(nsDOMStorageEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMStorageEvent, nsDOMEvent)
-
-DOMCI_DATA(StorageEvent, nsDOMStorageEvent)
-
-// QueryInterface implementation for nsDOMStorageEvent
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMStorageEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
-
-
-/* readonly attribute DOMString key; */
-NS_IMETHODIMP nsDOMStorageEvent::GetKey(nsAString & aKey)
-{
-  aKey = mKey;
-  return NS_OK;
-}
-
-/* readonly attribute DOMString oldValue; */
-NS_IMETHODIMP nsDOMStorageEvent::GetOldValue(nsAString & aOldValue)
-{
-  aOldValue = mOldValue;
-  return NS_OK;
-}
-
-/* readonly attribute DOMString newValue; */
-NS_IMETHODIMP nsDOMStorageEvent::GetNewValue(nsAString & aNewValue)
-{
-  aNewValue = mNewValue;
-  return NS_OK;
-}
-
-/* readonly attribute DOMString url; */
-NS_IMETHODIMP nsDOMStorageEvent::GetUrl(nsAString & aUrl)
-{
-  aUrl = mUrl;
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMStorage storageArea; */
-NS_IMETHODIMP nsDOMStorageEvent::GetStorageArea(nsIDOMStorage * *aStorageArea)
-{
-  NS_ENSURE_ARG_POINTER(aStorageArea);
-
-  NS_IF_ADDREF(*aStorageArea = mStorageArea);
-  return NS_OK;
-}
-
-/* void initStorageEvent (in DOMString typeArg, in boolean canBubbleArg, in boolean cancelableArg, in DOMString keyArg, in DOMString oldValueArg, in DOMString newValueArg, in DOMString urlArg, in nsIDOMStorage storageAreaArg); */
-NS_IMETHODIMP nsDOMStorageEvent::InitStorageEvent(const nsAString & typeArg,
-                                                  bool canBubbleArg,
-                                                  bool cancelableArg,
-                                                  const nsAString & keyArg,
-                                                  const nsAString & oldValueArg,
-                                                  const nsAString & newValueArg,
-                                                  const nsAString & urlArg,
-                                                  nsIDOMStorage *storageAreaArg)
-{
-  nsresult rv;
-
-  rv = InitEvent(typeArg, canBubbleArg, cancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mKey = keyArg;
-  mOldValue = oldValueArg;
-  mNewValue = newValueArg;
-  mUrl = urlArg;
-  mStorageArea = storageAreaArg;
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageEvent::InitFromCtor(const nsAString& aType,
-                                JSContext* aCx, jsval* aVal)
-{
-  mozilla::dom::StorageEventInit d;
-  nsresult rv = d.Init(aCx, aVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return InitStorageEvent(aType, d.bubbles, d.cancelable, d.key, d.oldValue,
-                          d.newValue, d.url, d.storageArea);
-}
