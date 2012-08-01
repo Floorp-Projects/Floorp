@@ -298,7 +298,7 @@ Snapshot(JSContext *cx, JSObject *obj_, unsigned flags, AutoIdVector *props)
     size_t n = props->length();
 
     AutoIdVector tmp(cx);
-    if (!tmp.resizeUninitialized(n))
+    if (!tmp.resize(n))
         return false;
 
     if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx)))
