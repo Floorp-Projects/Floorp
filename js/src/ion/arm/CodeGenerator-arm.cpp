@@ -31,7 +31,7 @@ class DeferredJumpTable : public DeferredData
     MacroAssembler *masm;
   public:
     DeferredJumpTable(LTableSwitch *lswitch, BufferOffset off_, MacroAssembler *masm_)
-        : lswitch(lswitch), off(off_), masm(masm_)
+      : lswitch(lswitch), off(off_), masm(masm_)
     { }
 
     void copy(IonCode *code, uint8 *ignore__) const {
@@ -691,6 +691,29 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
             return false;
     }
 
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    Label done;
+
+    // Masm.pow(-Infinity, 0.5) == Infinity.
+    masm.ma_vimm(js_NegativeInfinity, ScratchFloatReg);
+    masm.compareDouble(input, ScratchFloatReg);
+    masm.as_vneg(ScratchFloatReg, output, Assembler::Equal);
+    masm.ma_b(&done, Assembler::Equal);
+
+    // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5). Adding 0 converts any -0 to 0.
+    masm.ma_vimm(0.0, ScratchFloatReg);
+    masm.ma_vadd(ScratchFloatReg, input, output);
+    masm.as_vsqrt(output, output);
+
+    masm.bind(&done);
     return true;
 }
 

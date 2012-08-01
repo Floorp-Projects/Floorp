@@ -113,6 +113,12 @@ math_tan(JSContext *cx, unsigned argc, js::Value *vp);
 extern double
 math_tan_impl(MathCache *cache, double x);
 
+extern double
+powi(double x, int y);
+
+extern double
+ecmaPow(double x, double y);
+
 } /* namespace js */
 
 #endif /* jsmath_h___ */

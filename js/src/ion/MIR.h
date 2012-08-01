@@ -2252,6 +2252,7 @@ class MAbs
     }
 };
 
+// Inline implementation of Math.sqrt().
 class MSqrt
   : public MUnaryInstruction,
     public DoublePolicy<0>
@@ -2277,6 +2278,73 @@ class MSqrt
         return congruentIfOperandsEqual(ins);
     }
 
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Inline implementation of Math.pow().
+class MPow
+  : public MBinaryInstruction,
+    public PowPolicy
+{
+    MPow(MDefinition *input, MDefinition *power, MIRType powerType)
+      : MBinaryInstruction(input, power),
+        PowPolicy(powerType)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Pow);
+    static MPow *New(MDefinition *input, MDefinition *power, MIRType powerType) {
+        return new MPow(input, power, powerType);
+    }
+
+    MDefinition *input() const {
+        return lhs();
+    }
+    MDefinition *power() const {
+        return rhs();
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Inline implementation of Math.pow(x, 0.5), which subtly differs from Math.sqrt(x).
+class MPowHalf
+  : public MUnaryInstruction,
+    public DoublePolicy<0>
+{
+    MPowHalf(MDefinition *input)
+      : MUnaryInstruction(input)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(PowHalf);
+    static MPowHalf *New(MDefinition *input) {
+        return new MPowHalf(input);
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
@@ -2419,17 +2487,22 @@ class MMul : public MBinaryArithInstruction
 {
     bool canBeNegativeZero_;
 
-    MMul(MDefinition *left, MDefinition *right)
+    MMul(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         canBeNegativeZero_(true)
     {
-        setResultType(MIRType_Value);
+        if (type != MIRType_Value)
+            specialization_ = type;
+        setResultType(type);
     }
 
   public:
     INSTRUCTION_HEADER(Mul);
     static MMul *New(MDefinition *left, MDefinition *right) {
-        return new MMul(left, right);
+        return new MMul(left, right, MIRType_Value);
+    }
+    static MMul *New(MDefinition *left, MDefinition *right, MIRType type) {
+        return new MMul(left, right, type);
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
@@ -2471,20 +2544,26 @@ class MDiv : public MBinaryArithInstruction
     bool canBeDivideByZero_;
     bool implicitTruncate_;
 
-    MDiv(MDefinition *left, MDefinition *right)
+    MDiv(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
         implicitTruncate_(false)
     {
-        setResultType(MIRType_Value);
+        if (type != MIRType_Value)
+            specialization_ = type;
+        setResultType(type);
     }
+
 
   public:
     INSTRUCTION_HEADER(Div);
     static MDiv *New(MDefinition *left, MDefinition *right) {
-        return new MDiv(left, right);
+        return new MDiv(left, right, MIRType_Value);
+    }
+    static MDiv *New(MDefinition *left, MDefinition *right, MIRType type) {
+        return new MDiv(left, right, type);
     }
 
     MDefinition *foldsTo(bool useValueNumbers);

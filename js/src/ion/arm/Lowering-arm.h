@@ -45,6 +45,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerDivI(MDiv *div);
     bool lowerModI(MMod *mod);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
+    bool visitPowHalf(MPowHalf *ins);
     bool visitTableSwitch(MTableSwitch *tableswitch);
 
   public:

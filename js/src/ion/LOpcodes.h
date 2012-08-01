@@ -62,6 +62,8 @@
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \
+    _(PowI)                         \
+    _(PowD)                         \
     _(MathFunctionD)                \
     _(NotI)                         \
     _(NotD)                         \

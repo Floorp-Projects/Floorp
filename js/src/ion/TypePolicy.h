@@ -85,8 +85,7 @@ class ComparePolicy : public BoxInputsPolicy
   public:
     ComparePolicy()
       : specialization_(MIRType_None)
-    {
-    }
+    { }
 
     bool adjustInputs(MInstruction *def);
 };
@@ -102,6 +101,19 @@ class CallPolicy : public BoxInputsPolicy
 {
   public:
     bool adjustInputs(MInstruction *def);
+};
+
+// Policy for MPow. First operand Double; second Double or Int32.
+class PowPolicy : public BoxInputsPolicy
+{
+    MIRType specialization_;
+
+  public:
+    PowPolicy(MIRType specialization)
+      : specialization_(specialization)
+    { }
+
+    bool adjustInputs(MInstruction *ins);
 };
 
 // Single-string input. If the input is a Value, it is unboxed.
@@ -161,36 +173,16 @@ class BoxPolicy : public BoxInputsPolicy
     }
 };
 
-// Ignore the input, unless unspecialized, and then use BoxInputsPolicy.
-class SimplePolicy : public BoxInputsPolicy
-{
-    bool specialized_;
-
-  public:
-    SimplePolicy()
-      : specialized_(true)
-    { }
-
-    bool adjustInputs(MInstruction *def);
-    bool specialized() const {
-        return specialized_;
-    }
-    void unspecialize() {
-        specialized_ = false;
-    }
-};
-
 // Combine multiple policies.
 template <class Lhs, class Rhs>
-class MixPolicy
-  : public BoxInputsPolicy
+class MixPolicy : public TypePolicy
 {
   public:
-    static bool staticAdjustInputs(MInstruction *def) {
-        return Lhs::staticAdjustInputs(def) && Rhs::staticAdjustInputs(def);
+    static bool staticAdjustInputs(MInstruction *ins) {
+        return Lhs::staticAdjustInputs(ins) && Rhs::staticAdjustInputs(ins);
     }
-    virtual bool adjustInputs(MInstruction *def) {
-        return staticAdjustInputs(def);
+    virtual bool adjustInputs(MInstruction *ins) {
+        return staticAdjustInputs(ins);
     }
 };
 

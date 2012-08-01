@@ -676,6 +676,25 @@ LIRGenerator::visitSqrt(MSqrt *ins)
 }
 
 bool
+LIRGenerator::visitPow(MPow *ins)
+{
+    MDefinition *input = ins->input();
+    JS_ASSERT(input->type() == MIRType_Double);
+
+    MDefinition *power = ins->power();
+    JS_ASSERT(power->type() == MIRType_Int32 || power->type() == MIRType_Double);
+
+    if (power->type() == MIRType_Int32) {
+        LPowI *lir = new LPowI(useRegister(input), useRegisterOrConstant(power),
+                               tempFixed(CallTempReg0));
+        return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+    }
+
+    LPowD *lir = new LPowD(useRegister(input), useRegister(power), tempFixed(CallTempReg0));
+    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+}
+
+bool
 LIRGenerator::visitMathFunction(MMathFunction *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Double);
