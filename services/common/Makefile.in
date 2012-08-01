@@ -32,11 +32,13 @@ libs::
 
 TEST_DIRS += tests
 
-TESTING_JS_MODULES := \
+testing_modules := \
   aitcserver.js \
   storageserver.js \
-  modules-testing/utils.js \
+  utils.js \
   $(NULL)
+
+TESTING_JS_MODULES := $(foreach file,$(testing_modules),modules-testing/$(file))
 
 TESTING_JS_MODULE_DIR := services-common
 
