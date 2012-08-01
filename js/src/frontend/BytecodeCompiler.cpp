@@ -85,7 +85,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     AutoAttachToRuntime attacher(cx->runtime, ss);
     SourceCompressionToken sct(cx);
     if (!cx->hasRunOption(JSOPTION_ONLY_CNG_SOURCE) || options.compileAndGo) {
-        if (!ss->setSource(cx, chars, length, false, &sct))
+        if (!ss->setSourceCopy(cx, chars, length, false, &sct))
             return NULL;
     }
 
@@ -250,7 +250,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         return NULL;
     AutoAttachToRuntime attacher(cx->runtime, ss);
     SourceCompressionToken sct(cx);
-    if (!ss->setSource(cx, chars, length, true, &sct))
+    if (!ss->setSourceCopy(cx, chars, length, true, &sct))
         return NULL;
 
     options.setCompileAndGo(false);
