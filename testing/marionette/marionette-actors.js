@@ -582,7 +582,6 @@ MarionetteDriverActor.prototype = {
     else {
       this.scriptTimeout = timeout;
       this.sendAsync("setScriptTimeout", {value: timeout});
-      this.sendOk();
     }
   },
 
