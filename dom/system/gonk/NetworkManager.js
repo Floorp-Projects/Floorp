@@ -23,6 +23,8 @@ const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_DEFAULT_ROUTE_CHANGED    = "network-default-route-changed";
 
+const MANUAL_PROXY_CONFIGURATION = 1;
+
 const DEBUG = false;
 
 /**
@@ -188,8 +190,35 @@ NetworkManager.prototype = {
       oldIfname: (oldInterface && oldInterface != this.active) ? oldInterface.name : null
     };
     this.worker.postMessage(options);
+    this.setNetworkProxy();
   },
 
+  setNetworkProxy: function setNetworkProxy() {
+    try {
+      if (!this.active.httpProxyHost || this.active.httpProxyHost == "") {
+        // Sets direct connection to internet.
+        Services.prefs.clearUserPref("network.proxy.type");
+        Services.prefs.clearUserPref("network.proxy.share_proxy_settings");
+        Services.prefs.clearUserPref("network.proxy.http");
+        Services.prefs.clearUserPref("network.proxy.http_port");
+        debug("No proxy support for " + this.active.name + " network interface.");
+        return;
+      }
+
+      debug("Going to set proxy settings for " + this.active.name + " network interface.");
+      // Sets manual proxy configuration.
+      Services.prefs.setIntPref("network.proxy.type", MANUAL_PROXY_CONFIGURATION);
+      // Do not use this proxy server for all protocols.
+      Services.prefs.setBoolPref("network.proxy.share_proxy_settings", false);
+      Services.prefs.setCharPref("network.proxy.http", this.active.httpProxyHost);
+      let port = this.active.httpProxyPort == "" ? 8080 : this.active.httpProxyPort;
+      Services.prefs.setIntPref("network.proxy.http_port", port);
+    } catch (ex) {
+       debug("Exception " + ex + ". Unable to set proxy setting for "
+             + this.active.name + " network interface.");
+       return;
+    }
+  },
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);

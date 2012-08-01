@@ -7,7 +7,7 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(e016d594-3072-11e1-9b7d-0010183a41af)]
+[scriptable, uuid(57b56c6f-4c3f-4c55-bf1b-e5af22407931)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -43,6 +43,16 @@ interface nsINetworkInterface : nsISupports
    * Indicates whether DHCP should be run when the interface connects.
    */
   readonly attribute boolean dhcp;
+
+  /**
+   * The host name of the http proxy server.
+   */
+  readonly attribute DOMString httpProxyHost;
+
+  /*
+   * The port number of the http proxy server. 
+   */
+  readonly attribute long httpProxyPort;
 
 };
 
