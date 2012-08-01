@@ -2854,7 +2854,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
         if (constructing) {
             if (rval->type() == MIRType_Value) {
                 MReturnFromCtor *filter = MReturnFromCtor::New(rval, thisDefn);
-                rval->block()->add(filter);
+                exitBlock->add(filter);
                 rval = filter;
             } else if (rval->type() != MIRType_Object) {
                 rval = thisDefn;
