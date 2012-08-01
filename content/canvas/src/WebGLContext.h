@@ -424,11 +424,7 @@ protected:
 
 struct WebGLContextOptions {
     // these are defaults
-    WebGLContextOptions()
-        : alpha(true), depth(true), stencil(false),
-          premultipliedAlpha(true), antialias(true),
-          preserveDrawingBuffer(false)
-    { }
+    WebGLContextOptions();
 
     bool operator==(const WebGLContextOptions& other) const {
         return
