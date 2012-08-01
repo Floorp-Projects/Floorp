@@ -1651,12 +1651,22 @@ sidebarheader {
   -moz-appearance: none;
 }
 
-#sidebar-splitter {
+.sidebar-splitter {
   -moz-border-start: none;
   -moz-border-end: 1px solid #404040;
   min-width: 1px;
-  width: 1px;
+  width: 3px;
   background-image: none !important;
+  background-color: transparent;
+  -moz-margin-start: -3px;
+  position: relative;
+}
+
+#appcontent ~ .sidebar-splitter {
+  -moz-border-start: 1px solid #404040;
+  -moz-border-end: none;
+  -moz-margin-start: 0;
+  -moz-margin-end: -3px;
 }
 
 #sidebar-title {
