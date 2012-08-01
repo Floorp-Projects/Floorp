@@ -96,7 +96,7 @@ Addon.prototype = {
     // for the addon's install .xml; we'll read the actual id from the .xml.
 
     let cb = Async.makeSpinningCallback();
-    AddonUtils.installAddons([{id: this.id}], cb);
+    AddonUtils.installAddons([{id: this.id, requireSecureURI: false}], cb);
     let result = cb.wait();
 
     Logger.AssertEqual(1, result.installedIDs.length, "Exactly 1 add-on was installed.");
