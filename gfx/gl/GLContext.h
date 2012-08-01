@@ -560,6 +560,8 @@ public:
                 tip = tip->mSharedContext;
             tip->SharedContextDestroyed(this);
             tip->ReportOutstandingNames();
+        } else {
+            ReportOutstandingNames();
         }
 #endif
     }
@@ -592,6 +594,13 @@ public:
     bool MakeCurrent(bool aForce = false) {
 #ifdef DEBUG
         PR_SetThreadPrivate(sCurrentGLContextTLS, this);
+
+        // IsOwningThreadCurrent is a bit of a misnomer;
+        // the "owning thread" is the creation thread,
+        // and the only thread that can own this.  We don't
+        // support contexts used on multiple threads.
+        NS_ASSERTION(IsOwningThreadCurrent(),
+                     "MakeCurrent() called on different thread than this context was created on!");
 #endif
         return MakeCurrentImpl(aForce);
     }
