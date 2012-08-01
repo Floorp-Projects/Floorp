@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_Element_h__
 #define mozilla_dom_Element_h__
 
-#include "nsIContent.h"
+#include "mozilla/dom/FragmentOrElement.h"
 #include "nsEventStates.h"
 
 class nsEventStateManager;
@@ -60,12 +60,12 @@ class Link;
 { 0xc6c049a1, 0x96e8, 0x4580, \
   { 0xa6, 0x93, 0xb9, 0x5f, 0x53, 0xbe, 0xe8, 0x1c } }
 
-class Element : public nsIContent
+class Element : public FragmentOrElement
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
   Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
-    nsIContent(aNodeInfo),
+    FragmentOrElement(aNodeInfo),
     mState(NS_EVENT_STATE_MOZ_READONLY)
   {}
 #endif // MOZILLA_INTERNAL_API
@@ -188,6 +188,31 @@ public:
    * Returns if the element is labelable as per HTML specification.
    */
   virtual bool IsLabelable() const = 0;
+
+  /**
+   * Is the attribute named stored in the mapped attributes?
+   *
+   * // XXXbz we use this method in HasAttributeDependentStyle, so svg
+   *    returns true here even though it stores nothing in the mapped
+   *    attributes.
+   */
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const = 0;
+
+  /**
+   * Get a hint that tells the style system what to do when
+   * an attribute on this node changes, if something needs to happen
+   * in response to the change *other* than the result of what is
+   * mapped into style data via any type of style rule.
+   */
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const = 0;
+
+  /**
+   * Returns an atom holding the name of the "class" attribute on this
+   * content node (if applicable).  Returns null if there is no
+   * "class" attribute for this type of content node.
+   */
+  virtual nsIAtom *GetClassAttributeName() const = 0;
 
 protected:
   /**
