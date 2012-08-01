@@ -29,7 +29,7 @@ namespace net {
 
 HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
   : mIPCClosed(false)
-  , mStoredStatus(0)
+  , mStoredStatus(NS_OK)
   , mStoredProgress(0)
   , mStoredProgressMax(0)
   , mSentRedirect1Begin(false)
