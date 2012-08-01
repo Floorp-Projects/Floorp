@@ -113,14 +113,12 @@ class LInteger : public LInstructionHelper<1, 0, 0>
   public:
     LIR_HEADER(Integer);
 
-    LInteger(int32 i32) : i32_(i32)
+    LInteger(int32 i32)
+      : i32_(i32)
     { }
 
     int32 getValue() const {
         return i32_;
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -140,10 +138,12 @@ class LPointer : public LInstructionHelper<1, 0, 0>
   public:
     LIR_HEADER(Pointer);
 
-    LPointer(gc::Cell *ptr) : ptr_(ptr), kind_(GC_THING)
+    LPointer(gc::Cell *ptr)
+      : ptr_(ptr), kind_(GC_THING)
     { }
 
-    LPointer(void *ptr, Kind kind) : ptr_(ptr), kind_(kind)
+    LPointer(void *ptr, Kind kind)
+      : ptr_(ptr), kind_(kind)
     { }
 
     void *ptr() const {
@@ -157,10 +157,6 @@ class LPointer : public LInstructionHelper<1, 0, 0>
         JS_ASSERT(kind() == GC_THING);
         return (gc::Cell *) ptr_;
     }
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // A constant Value.
@@ -171,7 +167,8 @@ class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
   public:
     LIR_HEADER(Value);
 
-    LValue(const Value &v) : v_(v)
+    LValue(const Value &v)
+      : v_(v)
     { }
 
     Value value() const {
@@ -216,16 +213,12 @@ class LNewSlots : public LCallInstructionHelper<1, 0, 3>
   public:
     LIR_HEADER(NewSlots);
 
-    LNewSlots(const LDefinition &temp1, const LDefinition &temp2,
-              const LDefinition &temp3) {
+    LNewSlots(const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3) {
         setTemp(0, temp1);
         setTemp(1, temp2);
         setTemp(2, temp3);
     }
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const LDefinition *temp1() {
         return getTemp(0);
     }
@@ -246,10 +239,6 @@ class LNewArray : public LInstructionHelper<1, 0, 0>
   public:
     LIR_HEADER(NewArray);
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
-
     MNewArray *mir() const {
         return mir_->toNewArray();
     }
@@ -259,10 +248,6 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(NewObject);
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
 
     MNewObject *mir() const {
         return mir_->toNewObject();
@@ -283,16 +268,12 @@ class LNewCallObject : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(NewCallObject);
 
-    LNewCallObject(const LAllocation &slots)
-    {
+    LNewCallObject(const LAllocation &slots) {
         setOperand(0, slots);
     }
 
     bool isCall() const;
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const LAllocation *slots() {
         return getOperand(0);
     }
@@ -302,13 +283,12 @@ class LNewCallObject : public LInstructionHelper<1, 1, 0>
 };
 
 // Takes in an Object and a Value.
-class LInitProp : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
+class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(InitProp);
 
-    LInitProp(const LAllocation &object)
-    {
+    LInitProp(const LAllocation &object) {
         setOperand(0, object);
     }
 
@@ -321,9 +301,6 @@ class LInitProp : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
         return getOperand(1);
     }
 
-    bool isCall() const {
-        return true;
-    }
     MInitProp *mir() const {
         return mir_->toInitProp();
     }
@@ -376,9 +353,6 @@ class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 0>
     MTypeOf *mir() const {
         return mir_->toTypeOf();
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
@@ -400,16 +374,13 @@ class LCreateThis : public LInstructionHelper<1, 0, 0>
     LCreateThis()
     { }
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MCreateThis *mir() const {
         return mir_->toCreateThis();
     }
 };
 
 // Allocate an object for |new| on the caller-side, when there is no templateObject.
-class LCreateThisVM : public LInstructionHelper<1, 2, 0>
+class LCreateThisVM : public LCallInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(CreateThisVM);
@@ -426,13 +397,7 @@ class LCreateThisVM : public LInstructionHelper<1, 2, 0>
     const LAllocation *getPrototype() {
         return getOperand(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 
-    bool isCall() const {
-        return true;
-    }
     MCreateThis *mir() const {
         return mir_->toCreateThis();
     }
@@ -453,9 +418,6 @@ class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
 
     const LAllocation *getObject() {
         return getOperand(LReturnFromCtor::ObjectIndex);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 
     static const size_t ValueIndex = 0;
@@ -597,7 +559,7 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
 
 // Generates a polymorphic callsite for |new|, where |this| has not been
 // pre-allocated by the caller.
-class LCallConstructor : public LInstructionHelper<BOX_PIECES, 1, 0>
+class LCallConstructor : public LCallInstructionHelper<BOX_PIECES, 1, 0>
 {
     uint32 argslot_;
 
@@ -623,9 +585,6 @@ class LCallConstructor : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
     uint32 numActualArgs() const {
         return mir()->numActualArgs();
-    }
-    bool isCall() const {
-        return true;
     }
 
     const LAllocation *getFunction() {
@@ -700,9 +659,6 @@ class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
     MBasicBlock *ifFalse() const {
         return ifFalse_;
     }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
@@ -726,9 +682,6 @@ class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
     }
     MBasicBlock *ifFalse() const {
         return ifFalse_;
-    }
-    const LAllocation *input() {
-        return getOperand(0);
     }
 };
 
@@ -768,10 +721,6 @@ class LPolyInlineDispatch : public LInstructionHelper<0, 1, 0>
         setOperand(0, in);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-
     MPolyInlineDispatch *mir() {
         return mir_->toPolyInlineDispatch();
     }
@@ -802,9 +751,6 @@ class LCompare : public LInstructionHelper<1, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MCompare *mir() {
         return mir_->toCompare();
     }
@@ -825,9 +771,6 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MCompare *mir() {
         return mir_->toCompare();
     }
@@ -847,9 +790,6 @@ class LCompareS : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation *right() {
         return getOperand(1);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
     MCompare *mir() {
         return mir_->toCompare();
@@ -960,9 +900,6 @@ class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0>
         return getOperand(BOX_PIECES);
     }
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MCompare *mir() {
         return mir_->toCompare();
     }
@@ -1006,9 +943,6 @@ class LIsNullOrUndefined : public LInstructionHelper<1, BOX_PIECES, 0>
 
     static const size_t Value = 0;
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MCompare *mir() {
         return mir_->toCompare();
     }
@@ -1048,12 +982,6 @@ class LNotI : public LInstructionHelper<1, 1, 0>
     LNotI(const LAllocation &input) {
         setOperand(0, input);
     }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Not operation on a double.
@@ -1064,12 +992,6 @@ class LNotD : public LInstructionHelper<1, 1, 0>
 
     LNotD(const LAllocation &input) {
         setOperand(0, input);
-    }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -1083,13 +1005,6 @@ class LNotV : public LInstructionHelper<1, BOX_PIECES, 1>
     LNotV(const LDefinition &temp)
     {
         setTemp(0, temp);
-    }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 
     const LAllocation *tempFloat() {
@@ -1200,9 +1115,6 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
     const LAllocation *rhs() {
         return this->getOperand(1);
     }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Absolute value of an integer.
@@ -1212,13 +1124,6 @@ class LAbsI : public LInstructionHelper<1, 1, 0>
     LIR_HEADER(AbsI);
     LAbsI(const LAllocation &num) {
         setOperand(0, num);
-    }
-
-    const LAllocation *input() {
-        return this->getOperand(0);
-    }
-    const LDefinition *output() {
-        return this->getDef(0);
     }
 };
 
@@ -1230,13 +1135,6 @@ class LAbsD : public LInstructionHelper<1, 1, 0>
     LAbsD(const LAllocation &num) {
         setOperand(0, num);
     }
-
-    const LAllocation *input() {
-        return this->getOperand(0);
-    }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Square root of a double.
@@ -1247,27 +1145,20 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     LSqrtD(const LAllocation &num) {
         setOperand(0, num);
     }
-
-    const LAllocation *input() {
-        return this->getOperand(0);
-    }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Double raised to an integer power.
-class LPowI : public LInstructionHelper<1, 2, 1>
+class LPowI : public LCallInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(PowI);
-    LPowI(const LAllocation &input, const LAllocation &power, const LDefinition &temp) {
-        setOperand(0, input);
+    LPowI(const LAllocation &value, const LAllocation &power, const LDefinition &temp) {
+        setOperand(0, value);
         setOperand(1, power);
         setTemp(0, temp);
     }
 
-    const LAllocation *input() {
+    const LAllocation *value() {
         return getOperand(0);
     }
     const LAllocation *power() {
@@ -1278,26 +1169,21 @@ class LPowI : public LInstructionHelper<1, 2, 1>
     }
     const LDefinition *output() {
         return getDef(0);
-    }
-
-    // Currently no inline path is implemented.
-    bool isCall() const {
-        return true;
     }
 };
 
 // Double raised to a double power.
-class LPowD : public LInstructionHelper<1, 2, 1>
+class LPowD : public LCallInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(PowD);
-    LPowD(const LAllocation &input, const LAllocation &power, const LDefinition &temp) {
-        setOperand(0, input);
+    LPowD(const LAllocation &value, const LAllocation &power, const LDefinition &temp) {
+        setOperand(0, value);
         setOperand(1, power);
         setTemp(0, temp);
     }
 
-    const LAllocation *input() {
+    const LAllocation *value() {
         return getOperand(0);
     }
     const LAllocation *power() {
@@ -1306,16 +1192,9 @@ class LPowD : public LInstructionHelper<1, 2, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
-
-    bool isCall() const {
-        return true;
-    }
 };
 
-class LMathFunctionD : public LInstructionHelper<1, 1, 1>
+class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(MathFunctionD);
@@ -1324,21 +1203,11 @@ class LMathFunctionD : public LInstructionHelper<1, 1, 1>
         setTemp(0, temp);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const LDefinition *temp() {
         return getTemp(0);
     }
     MMathFunction *mir() const {
         return mir_->toMathFunction();
-    }
-
-    bool isCall() const {
-        return true;
     }
 };
 
@@ -1429,9 +1298,6 @@ class LConcat : public LCallInstructionHelper<1, 2, 0>
     const LAllocation *rhs() {
         return this->getOperand(1);
     }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Get uint16 character code from a string.
@@ -1451,9 +1317,6 @@ class LCharCodeAt : public LInstructionHelper<1, 2, 0>
     const LAllocation *index() {
         return this->getOperand(1);
     }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Convert uint16 character code to a string.
@@ -1469,9 +1332,6 @@ class LFromCharCode : public LInstructionHelper<1, 1, 0>
     const LAllocation *code() {
         return this->getOperand(0);
     }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
 };
 
 // Convert a 32-bit integer to a double.
@@ -1483,13 +1343,6 @@ class LInt32ToDouble : public LInstructionHelper<1, 1, 0>
     LInt32ToDouble(const LAllocation &input) {
         setOperand(0, input);
     }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Convert a value to a double.
@@ -1497,12 +1350,7 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(ValueToDouble);
-
     static const size_t Input = 0;
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Convert a value to an int32.
@@ -1526,7 +1374,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
   public:
     LIR_HEADER(ValueToInt32);
 
-    LValueToInt32(const LDefinition &temp, Mode mode) : mode_(mode) {
+    LValueToInt32(const LDefinition &temp, Mode mode)
+      : mode_(mode)
+    {
         setTemp(0, temp);
     }
 
@@ -1537,9 +1387,6 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
     }
     const LDefinition *tempFloat() {
         return getTemp(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
     MToInt32 *mir() const {
         return mir_->toToInt32();
@@ -1557,14 +1404,6 @@ class LDoubleToInt32 : public LInstructionHelper<1, 1, 0>
 
     LDoubleToInt32(const LAllocation &in) {
         setOperand(0, in);
-    }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-
-    const LDefinition *output() {
-        return getDef(0);
     }
 
     MToInt32 *mir() const {
@@ -1586,14 +1425,8 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
         setTemp(0, temp);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
     const LDefinition *tempFloat() {
         return getTemp(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -1608,12 +1441,6 @@ class LIntToString : public LCallInstructionHelper<1, 1, 0>
         setOperand(0, input);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const MToString *mir() {
         return mir_->toToString();
     }
@@ -1725,9 +1552,6 @@ class LLambda : public LInstructionHelper<1, 1, 0>
     const LAllocation *scopeChain() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const MLambda *mir() const {
         return mir_->toLambda();
     }
@@ -1767,9 +1591,6 @@ class LSlots : public LInstructionHelper<1, 1, 0>
     const LAllocation *object() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Load the "elements" member out of a JSObject.
@@ -1787,9 +1608,6 @@ class LElements : public LInstructionHelper<1, 1, 0>
     const LAllocation *object() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Load a dense array's initialized length from an elements vector.
@@ -1804,9 +1622,6 @@ class LInitializedLength : public LInstructionHelper<1, 1, 0>
 
     const LAllocation *elements() {
         return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -1842,9 +1657,6 @@ class LArrayLength : public LInstructionHelper<1, 1, 0>
     const LAllocation *elements() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Read the length of a typed array.
@@ -1860,9 +1672,6 @@ class LTypedArrayLength : public LInstructionHelper<1, 1, 0>
     const LAllocation *object() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Load a typed array's elements vector.
@@ -1876,9 +1685,6 @@ class LTypedArrayElements : public LInstructionHelper<1, 1, 0>
     }
     const LAllocation *object() {
         return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2014,9 +1820,6 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation *index() {
         return getOperand(1);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2181,9 +1984,6 @@ class LArrayPopShiftT : public LInstructionHelper<1, 1, 2>
     const LDefinition *temp1() {
         return getTemp(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
@@ -2206,9 +2006,6 @@ class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2235,9 +2032,6 @@ class LArrayPushT : public LInstructionHelper<1, 2, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Load a typed value from a typed array's elements vector.
@@ -2263,9 +2057,6 @@ class LLoadTypedArrayElement : public LInstructionHelper<1, 2, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2324,13 +2115,6 @@ class LClampIToUint8 : public LInstructionHelper<1, 1, 0>
     LClampIToUint8(const LAllocation &in) {
         setOperand(0, in);
     }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 class LClampDToUint8 : public LInstructionHelper<1, 1, 1>
@@ -2341,13 +2125,6 @@ class LClampDToUint8 : public LInstructionHelper<1, 1, 1>
     LClampDToUint8(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
         setTemp(0, temp);
-    }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2364,9 +2141,6 @@ class LClampVToUint8 : public LInstructionHelper<1, BOX_PIECES, 1>
 
     const LDefinition *tempFloat() {
         return getTemp(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2520,9 +2294,6 @@ class LBindNameCache : public LInstructionHelper<1, 1, 0>
     const LAllocation *scopeChain() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const MBindNameCache *mir() const {
         return mir_->toBindNameCache();
     }
@@ -2541,9 +2312,6 @@ class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
     const MLoadSlot *mir() const {
         return mir_->toLoadSlot();
     }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
 };
 
 // Load a typed value from an object's dslots or a slots vector. Unlike
@@ -2559,12 +2327,6 @@ class LLoadSlotT : public LInstructionHelper<1, 1, 0>
     }
     const MLoadSlot *mir() const {
         return mir_->toLoadSlot();
-    }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2627,9 +2389,6 @@ class LStringLength : public LInstructionHelper<1, 1, 0>
     const LAllocation *string() {
         return getOperand(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Take the floor of a number. Implements Math.floor().
@@ -2642,12 +2401,6 @@ class LFloor : public LInstructionHelper<1, 1, 0>
         setOperand(0, num);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MRound *mir() const {
         return mir_->toRound();
     }
@@ -2664,12 +2417,6 @@ class LRound : public LInstructionHelper<1, 1, 1>
         setTemp(0, temp);
     }
 
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     const LDefinition *temp() {
         return getTemp(0);
     }
@@ -2689,9 +2436,6 @@ class LFunctionEnvironment : public LInstructionHelper<1, 1, 0>
     }
     const LAllocation *function() {
         return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
@@ -2847,9 +2591,6 @@ class LIteratorStart : public LInstructionHelper<1, 1, 3>
     const LDefinition *temp3() {
         return getTemp(2);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MIteratorStart *mir() const {
         return mir_->toIteratorStart();
     }
@@ -2891,9 +2632,6 @@ class LIteratorMore : public LInstructionHelper<1, 1, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MIteratorMore *mir() const {
         return mir_->toIteratorMore();
     }
@@ -2929,10 +2667,6 @@ class LArgumentsLength : public LInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(ArgumentsLength);
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Load a value from the actual arguments.
@@ -3003,9 +2737,6 @@ class LGuardClass : public LInstructionHelper<0, 1, 1>
     }
     const MGuardClass *mir() const {
         return mir_->toGuardClass();
-    }
-    const LAllocation *input() {
-        return getOperand(0);
     }
     const LAllocation *tempInt() {
         return getTemp(0)->output();
@@ -3088,9 +2819,6 @@ class LInstanceOfO : public LInstructionHelper<1, 2, 2>
     const LAllocation *rhs() {
         return getOperand(1);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES+1, 2>
@@ -3108,9 +2836,6 @@ class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES+1, 2>
     }
     const LAllocation *rhs() {
         return getOperand(RHS);
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 
     static const size_t LHS = 0;

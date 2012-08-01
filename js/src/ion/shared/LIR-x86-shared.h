@@ -25,7 +25,6 @@ class LDivI : public LBinaryMath<1>
     const LDefinition *remainder() {
         return getTemp(0);
     }
-
     MDiv *mir() const {
         return mir_->toDiv();
     }
@@ -52,9 +51,6 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
 
   public:
     LIR_HEADER(ModPowTwoI);
-    int32 shift() {
-        return shift_;
-    }
 
     LModPowTwoI(const LAllocation &lhs, int32 shift)
       : shift_(shift)
@@ -62,6 +58,9 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
         setOperand(0, lhs);
     }
 
+    int32 shift() const {
+        return shift_;
+    }
     const LDefinition *remainder() {
         return getDef(0);
     }
@@ -130,9 +129,6 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
     const MGuardShape *mir() const {
         return mir_->toGuardShape();
     }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
 };
 
 class LRecompileCheck : public LInstructionHelper<0, 0, 0>
@@ -152,9 +148,7 @@ class LMulI : public LBinaryMath<0, 1>
   public:
     LIR_HEADER(MulI);
 
-    LMulI(const LAllocation &lhs, const LAllocation &rhs,
-          const LAllocation &lhsCopy)
-    {
+    LMulI(const LAllocation &lhs, const LAllocation &rhs, const LAllocation &lhsCopy) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setOperand(2, lhsCopy);
@@ -165,9 +159,6 @@ class LMulI : public LBinaryMath<0, 1>
     }
     const LAllocation *lhsCopy() {
         return this->getOperand(2);
-    }
-    const LDefinition *output() {
-        return this->getDef(0);
     }
 };
 

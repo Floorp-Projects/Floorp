@@ -37,16 +37,12 @@ class LBox : public LInstructionHelper<1, 1, 0>
 class LUnboxBase : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LUnboxBase(const LAllocation &input)
-    {
+    LUnboxBase(const LAllocation &input) {
         setOperand(0, input);
     }
 
     static const size_t Input = 0;
 
-    const LDefinition *output() {
-        return getDef(0);
-    }
     MUnbox *mir() const {
         return mir_->toUnbox();
     }
@@ -78,14 +74,12 @@ class LDouble : public LInstructionHelper<1, 0, 0>
   public:
     LIR_HEADER(Double);
 
-    LDouble(double d) : d_(d)
+    LDouble(double d)
+      : d_(d)
     { }
 
     double getDouble() const {
         return d_;
-    }
-    const LDefinition *output() {
-        return getDef(0);
     }
 };
 
