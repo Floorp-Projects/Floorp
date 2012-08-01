@@ -4,7 +4,6 @@
 
 #include "domstubs.idl"
 #include "nsIDOMEventTarget.idl"
-#include "nsIDOMEvent.idl"
 
 interface nsIDOMDOMRequest;
 interface nsIVariant;
@@ -30,23 +29,4 @@ interface nsIDOMSettingsManager : nsISupports
   void removeObserver(in DOMString name, in jsval callback);
 
   attribute nsIDOMEventListener onsettingchange;
-};
-
-[scriptable, builtinclass, uuid(5e304193-af49-4546-8329-bf7c9159ed98)]
-interface nsIDOMMozSettingsEvent : nsIDOMEvent
-{
-  readonly attribute DOMString  settingName;
-  readonly attribute nsIVariant settingValue;
-
-  [noscript] void initMozSettingsEvent(in DOMString aType,
-                                       in boolean aCanBubble,
-                                       in boolean aCancelable,
-                                       in DOMString aSettingName,
-                                       in nsIVariant aSettingValue);
-};
-
-dictionary MozSettingsEventInit : EventInit
-{
-  DOMString  settingName;
-  nsIVariant settingValue;
 };

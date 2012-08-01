@@ -8,7 +8,9 @@
  <name>Init dictionary for the event constructor. """
 
 simple_events = [
+    'StorageEvent',
     'DeviceProximityEvent',
+    'MozSettingsEvent',
     'UserProximityEvent',
     'CustomEvent',
     'PageTransitionEvent',
