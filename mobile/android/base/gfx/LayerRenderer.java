@@ -445,7 +445,7 @@ public class LayerRenderer {
 
             mUpdated = true;
 
-            Layer rootLayer = mView.getController().getRoot();
+            Layer rootLayer = mView.getLayerClient().getRoot();
 
             if (!mPageContext.fuzzyEquals(mLastPageContext)) {
                 // the viewport or page changed, so show the scrollbars again
@@ -518,7 +518,7 @@ public class LayerRenderer {
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
             /* Update background color. */
-            mBackgroundColor = mView.getController().getCheckerboardColor();
+            mBackgroundColor = mView.getLayerClient().getCheckerboardColor();
 
             /* Clear to the page background colour. The bits set here need to
              * match up with those used in gfx/layers/opengl/LayerManagerOGL.cpp.
@@ -543,9 +543,9 @@ public class LayerRenderer {
             /* Draw the 'checkerboard'. We use gfx.show_checkerboard_pattern to
              * determine whether to draw the screenshot layer.
              */
-            if (mView.getController().checkerboardShouldShowChecks()) {
+            if (mView.getLayerClient().checkerboardShouldShowChecks()) {
                 /* Find the area the root layer will render into, to mask the checkerboard layer */
-                Rect rootMask = getMaskForLayer(mView.getController().getRoot());
+                Rect rootMask = getMaskForLayer(mView.getLayerClient().getRoot());
                 mCheckerboardLayer.setMask(rootMask);
 
                 /* Scissor around the page-rect, in case the page has shrunk
@@ -558,7 +558,7 @@ public class LayerRenderer {
 
         // Draws the layer the client added to us.
         void drawRootLayer() {
-            Layer rootLayer = mView.getController().getRoot();
+            Layer rootLayer = mView.getLayerClient().getRoot();
             if (rootLayer == null) {
                 return;
             }
@@ -590,7 +590,7 @@ public class LayerRenderer {
                 mHorizScrollLayer.draw(mPageContext);
 
             /* Measure how much of the screen is checkerboarding */
-            Layer rootLayer = mView.getController().getRoot();
+            Layer rootLayer = mView.getLayerClient().getRoot();
             if ((rootLayer != null) &&
                 (mProfileRender || PanningPerfAPI.isRecordingCheckerboard())) {
                 // Find out how much of the viewport area is valid
