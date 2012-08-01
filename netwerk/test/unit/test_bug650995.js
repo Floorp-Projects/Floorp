@@ -17,31 +17,6 @@ function repeatToLargerThan1K(data) {
     return data;
 }
 
-function SyncWithCacheThread(aFunc) {
-  do_check_eq(sync_with_cache_IO_thread_cb.listener, null);
-  sync_with_cache_IO_thread_cb.listener = aFunc;
-
-  var cache = get_cache_service();
-  var session = cache.createSession(
-                  "HTTP",
-                  Ci.nsICache.STORE_ANYWHERE,
-                  Ci.nsICache.STREAM_BASED);
-
-  session.asyncOpenCacheEntry("nonexistententry",
-                              Ci.nsICache.ACCESS_READ,
-                              sync_with_cache_IO_thread_cb);
-}
-var sync_with_cache_IO_thread_cb = {
-  listener: null,
-
-  onCacheEntryAvailable: function oCEA(descriptor, accessGranted, status) {
-    do_check_neq(status, Cr.NS_OK);
-    cb = this.listener;
-    this.listener = null;
-    do_execute_soon(cb);
-  }
-};
-
 function setupChannel(suffix, value) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
@@ -79,9 +54,9 @@ var tests = [
 function nextTest() {
     // We really want each test to be self-contained. Make sure cache is
     // cleared and also let all operations finish before starting a new test
-    SyncWithCacheThread(function() {
+    syncWithCacheIOThread(function() {
         evict_cache_entries();
-        SyncWithCacheThread(runNextTest);
+        syncWithCacheIOThread(runNextTest);
     });
 }
 
