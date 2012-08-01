@@ -297,7 +297,8 @@ nsHttpConnectionMgr::CancelTransaction(nsHttpTransaction *trans, nsresult reason
     LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%x reason=%x]\n", trans, reason));
 
     NS_ADDREF(trans);
-    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgCancelTransaction, reason, trans);
+    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgCancelTransaction,
+                            static_cast<PRInt32>(reason), trans);
     if (NS_FAILED(rv))
         NS_RELEASE(trans);
     return rv;
@@ -1879,6 +1880,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(PRInt32 reason, void *param)
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]\n", param));
 
+    nsresult closeCode = static_cast<nsresult>(reason);
     nsHttpTransaction *trans = (nsHttpTransaction *) param;
     //
     // if the transaction owns a connection and the transaction is not done,
@@ -1887,7 +1889,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(PRInt32 reason, void *param)
     //
     nsAHttpConnection *conn = trans->Connection();
     if (conn && !trans->IsDone())
-        conn->CloseTransaction(trans, reason);
+        conn->CloseTransaction(trans, closeCode);
     else {
         nsConnectionEntry *ent = LookupConnectionEntry(trans->ConnectionInfo(),
                                                        nullptr, trans);
@@ -1900,7 +1902,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(PRInt32 reason, void *param)
                 NS_RELEASE(temp); // b/c NS_RELEASE nulls its argument!
             }
         }
-        trans->Close(reason);
+        trans->Close(closeCode);
     }
     NS_RELEASE(trans);
 }
