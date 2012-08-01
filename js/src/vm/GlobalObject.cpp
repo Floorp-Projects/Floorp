@@ -238,10 +238,12 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         jschar *source = InflateString(cx, rawSource, &sourceLen);
         if (!source)
             return NULL;
-        ScriptSource *ss = ScriptSource::createFromSource(cx, source, sourceLen);
-        cx->free_(source);
-        if (!ss)
+        ScriptSource *ss = cx->new_<ScriptSource>();
+        if (!ss) {
+            cx->free_(source);
             return NULL;
+        }
+        JS_ALWAYS_TRUE(ss->setSource(cx, source, sourceLen, false, NULL, true));
 
         CompileOptions options(cx);
         options.setNoScriptRval(true)
