@@ -500,37 +500,6 @@ protected:
   nsRefPtr<DOMStorageBase> mStorage;
 };
 
-class nsDOMStorageEvent : public nsDOMEvent,
-                          public nsIDOMStorageEvent
-{
-public:
-  nsDOMStorageEvent()
-    : nsDOMEvent(nullptr, nullptr)
-  {
-  }
-
-  virtual ~nsDOMStorageEvent()
-  {
-  }
-
-  nsresult Init();
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMStorageEvent, nsDOMEvent)
-
-  NS_DECL_NSIDOMSTORAGEEVENT
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-
-  virtual nsresult InitFromCtor(const nsAString& aType,
-                                JSContext* aCx, jsval* aVal);
-protected:
-  nsString mKey;
-  nsString mOldValue;
-  nsString mNewValue;
-  nsString mUrl;
-  nsCOMPtr<nsIDOMStorage> mStorageArea;
-};
-
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 

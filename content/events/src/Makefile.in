@@ -60,7 +60,6 @@ CPPSRCS		= \
 		nsDOMScrollAreaEvent.cpp \
 		nsDOMTransitionEvent.cpp \
 		nsDOMAnimationEvent.cpp \
-		nsDOMSettingsEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCompositionEvent.cpp \
 		$(NULL)

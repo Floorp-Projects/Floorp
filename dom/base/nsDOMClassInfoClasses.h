@@ -341,7 +341,6 @@ DOMCI_CLASS(XPathResult)
 DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
 DOMCI_CLASS(StorageItem)
-DOMCI_CLASS(StorageEvent)
 
 // DOMParser, XMLSerializer
 DOMCI_CLASS(DOMParser)
@@ -506,8 +505,6 @@ DOMCI_CLASS(MediaQueryList)
 
 DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
-
-DOMCI_CLASS(MozSettingsEvent)
 
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozWifiStatusChangeEvent)
