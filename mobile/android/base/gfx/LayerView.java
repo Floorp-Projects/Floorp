@@ -32,15 +32,12 @@ import java.nio.IntBuffer;
 /**
  * A view rendered by the layer compositor.
  *
- * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
- * mediator between the LayerRenderer and the LayerController.
- *
  * Note that LayerView is accessed by Robocop via reflection.
  */
 public class LayerView extends FrameLayout {
     private static String LOGTAG = "GeckoLayerView";
 
-    private LayerController mController;
+    private GeckoLayerClient mLayerClient;
     private TouchEventHandler mTouchEventHandler;
     private GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -79,9 +76,9 @@ public class LayerView extends FrameLayout {
         mGLController = new GLController(this);
     }
 
-    void connect(LayerController controller) {
-        mController = controller;
-        mTouchEventHandler = new TouchEventHandler(getContext(), this, mController);
+    void connect(GeckoLayerClient layerClient) {
+        mLayerClient = layerClient;
+        mTouchEventHandler = new TouchEventHandler(getContext(), this, layerClient);
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
 
@@ -106,12 +103,12 @@ public class LayerView extends FrameLayout {
         return mTouchEventHandler.handleEvent(event);
     }
 
-    public LayerController getController() { return mController; }
+    public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public TouchEventHandler getTouchEventHandler() { return mTouchEventHandler; }
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
     public void setViewportSize(IntSize size) {
-        mController.setViewportSize(new FloatSize(size));
+        mLayerClient.setViewportSize(new FloatSize(size));
     }
 
     public GeckoInputConnection setInputConnectionHandler() {
@@ -266,7 +263,7 @@ public class LayerView extends FrameLayout {
     /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
     public static GLController registerCxxCompositor() {
         try {
-            LayerView layerView = GeckoApp.mAppContext.getLayerController().getView();
+            LayerView layerView = GeckoApp.mAppContext.getLayerClient().getView();
             layerView.mListener.compositorCreated();
             return layerView.getGLController();
         } catch (Exception e) {
