@@ -12,8 +12,6 @@ struct DBusMessage;
 namespace mozilla {
 namespace ipc {
 
-class nsCString;
-
 /** 
  * Starts the DBus thread, which handles returning signals to objects
  * that call asynchronous functions. This should be called from the
