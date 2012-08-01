@@ -16,67 +16,46 @@ class DBusMessage;
 BEGIN_BLUETOOTH_NAMESPACE
 
 /**
- * BluetoothService functions are used to dispatch messages to Bluetooth DOM
- * objects on the main thread, as well as provide platform independent access
- * to BT functionality. Tasks for polling for outside messages will usually
- * happen on the IO Thread (see ipc/dbus for instance), and these messages will
- * be encased in runnables that will then be distributed via observers managed
- * here.
+ * BluetoothDBusService is the implementation of BluetoothService for DBus on
+ * linux/android/B2G. Function comments are in BluetoothService.h
  */
 
 class BluetoothDBusService : public BluetoothService
                            , private mozilla::ipc::RawDBusConnection
 {
 public:
-  /** 
-   * Set up variables and start the platform specific connection. Must
-   * be called from outside main thread.
-   *
-   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE
-   * otherwise
-   */
   virtual nsresult StartInternal();
-
-  /** 
-   * Stop the platform specific connection. Must be called from outside main
-   * thread.
-   *
-   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE
-   * otherwise
-   */
   virtual nsresult StopInternal();
-
-  /** 
-   * Returns the path of the default adapter, implemented via a platform
-   * specific method.
-   *
-   * @return Default adapter path/name on success, NULL otherwise
-   */
   virtual nsresult GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable);
-
-  /** 
-   * Start device discovery (platform specific implementation)
-   *
-   * @param aAdapterPath Adapter to start discovery on
-   *
-   * @return NS_OK if discovery stopped correctly, NS_ERROR_FAILURE otherwise
-   */
   virtual nsresult StartDiscoveryInternal(const nsAString& aAdapterPath,
                                           BluetoothReplyRunnable* aRunnable);
-  /** 
-   * Stop device discovery (platform specific implementation)
-   *
-   * @param aAdapterPath Adapter to stop discovery on
-   *
-   * @return NS_OK if discovery stopped correctly, NS_ERROR_FAILURE otherwise
-   */
   virtual nsresult StopDiscoveryInternal(const nsAString& aAdapterPath,
                                          BluetoothReplyRunnable* aRunnable);
+  virtual nsresult
+  GetProperties(BluetoothObjectType aType,
+                const nsAString& aPath,
+                BluetoothReplyRunnable* aRunnable);
+  virtual nsresult
+  SetProperty(BluetoothObjectType aType,
+              const nsAString& aPath,
+              const BluetoothNamedValue& aValue,
+              BluetoothReplyRunnable* aRunnable);
+  virtual bool
+  GetDevicePath(const nsAString& aAdapterPath,
+                const nsAString& aDeviceAddress,
+                nsAString& aDevicePath);
 
 private:
+  nsresult SendGetPropertyMessage(const nsAString& aPath,
+                                  const char* aInterface,
+                                  void (*aCB)(DBusMessage *, void *),
+                                  BluetoothReplyRunnable* aRunnable);
   nsresult SendDiscoveryMessage(const nsAString& aAdapterPath,
                                 const char* aMessageName,
                                 BluetoothReplyRunnable* aRunnable);
+  nsresult SendSetPropertyMessage(const nsString& aPath, const char* aInterface,
+                                  const BluetoothNamedValue& aValue,
+                                  BluetoothReplyRunnable* aRunnable);
 };
 
 END_BLUETOOTH_NAMESPACE

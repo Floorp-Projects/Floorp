@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothadapter_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothPropertyContainer.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMBluetoothAdapter.h"
@@ -23,6 +24,7 @@ class BluetoothNamedValue;
 class BluetoothAdapter : public nsDOMEventTargetHelper
                        , public nsIDOMBluetoothAdapter
                        , public BluetoothSignalObserver
+                       , public BluetoothPropertyContainer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,8 +32,9 @@ public:
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothAdapter,
-                                           nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(BluetoothAdapter,
+                                                         nsDOMEventTargetHelper)
+
   static already_AddRefed<BluetoothAdapter>
   Create(nsPIDOMWindow* aOwner, const nsAString& name);
 
@@ -50,23 +53,18 @@ public:
     return ToIDOMEventTarget();
   }
 
-  nsresult GetProperties();
-  void SetPropertyByValue(const BluetoothNamedValue& aValue);  
+  void Unroot();
+  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);  
 private:
   
-  BluetoothAdapter(const nsAString& aPath) : mPath(aPath)
-  {
-  }
-
+  BluetoothAdapter(nsPIDOMWindow* aOwner, const nsAString& aPath);
   ~BluetoothAdapter();
 
-  nsresult SetProperty(const BluetoothNamedValue& aValue,
-                       nsIDOMDOMRequest** aRequest);
+  void Root();
   nsresult StartStopDiscovery(bool aStart, nsIDOMDOMRequest** aRequest);
   
   nsString mAddress;
   nsString mName;
-  nsString mPath;
   bool mEnabled;
   bool mDiscoverable;
   bool mDiscovering;
@@ -77,7 +75,10 @@ private:
   PRUint32 mClass;
   nsTArray<nsString> mDeviceAddresses;
   nsTArray<nsString> mUuids;
-
+  JSObject* mJsUuids;
+  JSObject* mJsDeviceAddresses;
+  bool mIsRooted;
+  
   NS_DECL_EVENT_HANDLER(propertychanged)
   NS_DECL_EVENT_HANDLER(devicefound)
   NS_DECL_EVENT_HANDLER(devicedisappeared)

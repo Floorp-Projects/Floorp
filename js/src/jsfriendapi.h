@@ -707,7 +707,7 @@ extern JS_FRIEND_API(void)
 ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-IncrementalGC(JSRuntime *rt, gcreason::Reason reason);
+IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
 
 extern JS_FRIEND_API(void)
 FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason);
@@ -1092,6 +1092,35 @@ extern JS_FRIEND_API(JSBool)
 JS_IsFloat32Array(JSObject *obj, JSContext *cx);
 extern JS_FRIEND_API(JSBool)
 JS_IsFloat64Array(JSObject *obj, JSContext *cx);
+
+
+/*
+ * Unwrap Typed arrays all at once. Return NULL without throwing if the object
+ * cannot be viewed as the correct typed array, or the typed array object on
+ * success, filling both outparameters.
+ */
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsInt8Array(JSContext *cx, JSObject *obj, uint32_t *length, int8_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsUint8Array(JSContext *cx, JSObject *obj, uint32_t *length, uint8_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsUint8ClampedArray(JSContext *cx, JSObject *obj, uint32_t *length, uint8_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsInt16Array(JSContext *cx, JSObject *obj, uint32_t *length, int16_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsUint16Array(JSContext *cx, JSObject *obj, uint32_t *length, uint16_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsInt32Array(JSContext *cx, JSObject *obj, uint32_t *length, int32_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsUint32Array(JSContext *cx, JSObject *obj, uint32_t *length, uint32_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsFloat32Array(JSContext *cx, JSObject *obj, uint32_t *length, float **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsFloat64Array(JSContext *cx, JSObject *obj, uint32_t *length, double **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsArrayBufferView(JSContext *cx, JSObject *obj, uint32_t *length, uint8_t **data);
+extern JS_FRIEND_API(JSObject *)
+JS_GetObjectAsArrayBuffer(JSContext *cx, JSObject *obj, uint32_t *length, uint8_t **data);
 
 /*
  * Get the type of elements in a typed array.

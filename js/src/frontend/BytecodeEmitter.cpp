@@ -1209,7 +1209,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 static bool
 BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_NAME));
+    JS_ASSERT(pn->isKind(PNK_NAME) || pn->isKind(PNK_INTRINSICNAME));
 
     /* Don't attempt if 'pn' is already bound or deoptimized or a nop. */
     JSOp op = pn->getOp();
@@ -1745,6 +1745,9 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
         switch (op) {
           case JSOP_NAME:
             op = JSOP_CALLNAME;
+            break;
+          case JSOP_INTRINSICNAME:
+            op = JSOP_CALLINTRINSIC;
             break;
           case JSOP_GETGNAME:
             op = JSOP_CALLGNAME;
@@ -5332,9 +5335,51 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * value required for calls (which non-strict mode functions
      * will box into the global object).
      */
+    uint32_t argc = pn->pn_count - 1;
+    bool emitArgs = true;
     ParseNode *pn2 = pn->pn_head;
     switch (pn2->getKind()) {
       case PNK_NAME:
+        if (!EmitNameOp(cx, bce, pn2, callop))
+            return false;
+        break;
+      case PNK_INTRINSICNAME:
+        if (pn2->atom() == cx->runtime->atomState._CallFunctionAtom)
+        {
+            /*
+             * Special-casing of %_CallFunction to emit bytecode that directly
+             * invokes the callee with the correct |this| object and arguments.
+             * The call %_CallFunction(receiver, ...args, fun) thus becomes:
+             * - emit lookup for fun
+             * - emit lookup for receiver
+             * - emit lookups for ...args
+             *
+             * argc is set to the amount of actually emitted args and the
+             * emitting of args below is disabled by setting emitArgs to false.
+             */
+            if (pn->pn_count < 3) {
+                bce->reportError(pn, JSMSG_MORE_ARGS_NEEDED, "%_CallFunction", "1", "s");
+                return false;
+            }
+            ParseNode *funNode = pn2->pn_next;
+            while (funNode->pn_next)
+                funNode = funNode->pn_next;
+            if (!EmitTree(cx, bce, funNode))
+                return false;
+            ParseNode *receiver = pn2->pn_next;
+            if (!EmitTree(cx, bce, receiver))
+                return false;
+            bool oldInForInit = bce->inForInit;
+            bce->inForInit = false;
+            for (ParseNode *argpn = receiver->pn_next; argpn != funNode; argpn = argpn->pn_next) {
+                if (!EmitTree(cx, bce, argpn))
+                    return false;
+            }
+            bce->inForInit = oldInForInit;
+            argc -= 2;
+            emitArgs = false;
+            break;
+        }
         if (!EmitNameOp(cx, bce, pn2, callop))
             return false;
         break;
@@ -5364,25 +5409,23 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (!callop && Emit1(cx, bce, JSOP_UNDEFINED) < 0)
         return false;
 
-    /* Remember start of callable-object bytecode for decompilation hint. */
-    ptrdiff_t off = top;
-
-    /*
-     * Emit code for each argument in order, then emit the JSOP_*CALL or
-     * JSOP_NEW bytecode with a two-byte immediate telling how many args
-     * were pushed on the operand stack.
-     */
-    bool oldInForInit = bce->inForInit;
-    bce->inForInit = false;
-    for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
-        if (!EmitTree(cx, bce, pn3))
-            return false;
+    if (emitArgs) {
+        /*
+         * Emit code for each argument in order, then emit the JSOP_*CALL or
+         * JSOP_NEW bytecode with a two-byte immediate telling how many args
+         * were pushed on the operand stack.
+         */
+        bool oldInForInit = bce->inForInit;
+        bce->inForInit = false;
+        for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
+            if (!EmitTree(cx, bce, pn3))
+                return false;
+        }
+        bce->inForInit = oldInForInit;
     }
-    bce->inForInit = oldInForInit;
-    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
+    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
         return false;
 
-    uint32_t argc = pn->pn_count - 1;
     if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
         return false;
     CheckTypeSet(cx, bce, pn->getOp());
