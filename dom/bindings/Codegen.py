@@ -2056,9 +2056,9 @@ for (uint32_t i = 0; i < length; ++i) {
                                      "%s.SetNull()" % varName)
             return handleDefault(
                 conversionCode,
-                ("static const PRUnichar data[] = { %s, 0 };\n"
+                ("static const PRUnichar data[] = { %s };\n"
                  "%s.SetData(data, ArrayLength(data) - 1)" %
-                 (", ".join("'" + char + "'" for char in defaultValue.value),
+                 (", ".join(["'" + char + "'" for char in defaultValue.value] + ["0"]),
                   varName)))
 
         if isMember:
