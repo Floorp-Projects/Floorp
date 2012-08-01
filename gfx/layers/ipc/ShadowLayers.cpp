@@ -314,6 +314,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
       common.maskLayerChild() = NULL;
     }
     common.maskLayerParent() = NULL;
+    common.animations() = mutant->GetAnimations();
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 

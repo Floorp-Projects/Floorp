@@ -519,6 +519,14 @@ var gCSSProperties = {
 		// negative and zero invalid per editor's draft
 		invalid_values: [ "-1", "0", "3px" ]
 	},
+        "-moz-column-fill": {
+                domProp: "MozColumnFill",
+                inherited: false,
+                type: CSS_TYPE_LONGHAND,
+                initial_values: [ "balance" ],
+                other_values: [ "auto" ],
+                invalid_values: [ "2px", "dotted", "5em" ]
+        },
 	"-moz-column-gap": {
 		domProp: "MozColumnGap",
 		inherited: false,
@@ -1291,9 +1299,7 @@ var gCSSProperties = {
 			"translatex(-moz-max(5px,10%))",
 			"translate(10px, calc(min(5px,10%)))",
 			"translate(calc(max(5px,10%)), 10%)",
-			"matrix(1, 0, 0, 1, -moz-max(5px * 3), calc(10% - 3px))",
-			// Bug 734953
-			"skew(45deg)", "skew(45deg, 45deg)",
+			"matrix(1, 0, 0, 1, max(5px * 3), calc(10% - 3px))"
 		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
 			"perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)",
 			"matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)",
