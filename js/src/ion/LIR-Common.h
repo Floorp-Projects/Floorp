@@ -1167,9 +1167,6 @@ class LPowI : public LCallInstructionHelper<1, 2, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    const LDefinition *output() {
-        return getDef(0);
-    }
 };
 
 // Double raised to a double power.

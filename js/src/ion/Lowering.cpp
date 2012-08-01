@@ -685,7 +685,7 @@ LIRGenerator::visitPow(MPow *ins)
     JS_ASSERT(power->type() == MIRType_Int32 || power->type() == MIRType_Double);
 
     if (power->type() == MIRType_Int32) {
-        LPowI *lir = new LPowI(useRegister(input), useRegisterOrConstant(power),
+        LPowI *lir = new LPowI(useRegister(input), useFixed(power, CallTempReg1),
                                tempFixed(CallTempReg0));
         return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
     }

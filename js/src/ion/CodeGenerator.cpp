@@ -1544,6 +1544,7 @@ CodeGenerator::visitPowI(LPowI *ins)
 
     const LAllocation *power = ins->power();
     if (power->isRegister()) {
+        JS_ASSERT(ToRegister(power) != temp);
         masm.passABIArg(ToRegister(power));
     } else {
         masm.move32(Imm32(ToInt32(power)), temp);
