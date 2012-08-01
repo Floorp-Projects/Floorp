@@ -2759,6 +2759,9 @@ static void
 DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
                    float aToolbarHeight, BOOL aIsMain)
 {
+  if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
+    return;
+  }
   int unifiedHeight = aTitlebarRect.size.height + aToolbarHeight;
   CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
           (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:

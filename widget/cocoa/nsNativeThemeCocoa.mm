@@ -1594,6 +1594,9 @@ nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
   nsIFrame* left = GetAdjacentSiblingFrameWithSameAppearance(aFrame, isRTL);
   nsIFrame* right = GetAdjacentSiblingFrameWithSameAppearance(aFrame, !isRTL);
   CGRect drawRect = SeparatorAdjustedRect(inBoxRect, left, aFrame, right);
+  if (drawRect.size.width * drawRect.size.height > CUIDRAW_MAX_AREA) {
+    return;
+  }
   BOOL drawLeftSeparator = SeparatorResponsibility(left, aFrame) == aFrame;
   BOOL drawRightSeparator = SeparatorResponsibility(aFrame, right) == aFrame;
   NSControlSize controlSize = FindControlSize(drawRect.size.height, aSettings.heights, 4.0f);
@@ -1792,16 +1795,18 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   CGContextClipToRect(cgContext, inBoxRect);
 
   CGRect drawRect = CGRectOffset(inBoxRect, 0, -titlebarHeight);
-  CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
-          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-            @"kCUIWidgetWindowFrame", @"widget",
-            @"regularwin", @"windowtype",
-            (isMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
-            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            nil],
-          nil);
+  if (drawRect.size.width * drawRect.size.height <= CUIDRAW_MAX_AREA) {
+    CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
+            (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+              @"kCUIWidgetWindowFrame", @"widget",
+              @"regularwin", @"windowtype",
+              (isMain ? @"normal" : @"inactive"), @"state",
+              [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+              [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
+              [NSNumber numberWithBool:YES], @"is.flipped",
+              nil],
+            nil);
+  }
 
   CGContextRestoreGState(cgContext);
 
@@ -1827,16 +1832,18 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
   const int extendUpwards = 40;
   drawRect.origin.y -= extendUpwards;
   drawRect.size.height += extendUpwards;
-  CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
-          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-            @"kCUIWidgetWindowFrame", @"widget",
-            @"regularwin", @"windowtype",
-            (IsActive(aFrame, YES) ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:inBoxRect.size.height], @"kCUIWindowFrameBottomBarHeightKey",
-            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawBottomBarSeparatorKey",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            nil],
-          nil);
+  if (drawRect.size.width * drawRect.size.height <= CUIDRAW_MAX_AREA) {
+    CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
+            (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+              @"kCUIWidgetWindowFrame", @"widget",
+              @"regularwin", @"windowtype",
+              (IsActive(aFrame, YES) ? @"normal" : @"inactive"), @"state",
+              [NSNumber numberWithInt:inBoxRect.size.height], @"kCUIWindowFrameBottomBarHeightKey",
+              [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawBottomBarSeparatorKey",
+              [NSNumber numberWithBool:YES], @"is.flipped",
+              nil],
+            nil);
+  }
 
   CGContextRestoreGState(cgContext);
 
