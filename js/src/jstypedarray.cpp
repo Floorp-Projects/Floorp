@@ -2939,40 +2939,6 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint32, uint32_t)
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float32, float)
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
 
-#define IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Name, ExternalType, InternalType)              \
-  JS_FRIEND_API(JSObject *) JS_GetObjectAs ## Name ## Array(JSContext *cx,                  \
-                                                            JSObject *obj,                  \
-                                                            uint32_t *length,               \
-                                                            ExternalType **data)            \
-  {                                                                                         \
-      if (obj->isWrapper()) {                                                               \
-          MOZ_ASSERT(!cx->isExceptionPending());                                            \
-          if (!(obj = UnwrapObjectChecked(cx, obj))) {                                      \
-              cx->clearPendingException();                                                  \
-              return NULL;                                                                  \
-          }                                                                                 \
-      }                                                                                     \
-                                                                                            \
-      Class *clasp = obj->getClass();                                                       \
-      if (clasp != &TypedArray::classes[TypedArrayTemplate<InternalType>::ArrayTypeID()])   \
-          return NULL;                                                                      \
-                                                                                            \
-      *length = obj->getSlot(TypedArray::FIELD_LENGTH).toInt32();                           \
-      *data = static_cast<ExternalType *>(TypedArray::viewData(obj));                       \
-                                                                                            \
-      return obj;                                                                           \
-  }
-
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int8, int8_t, int8_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8, uint8_t, uint8_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8Clamped, uint8_t, uint8_clamped)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int16, int16_t, int16_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint16, uint16_t, uint16_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int32, int32_t, int32_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
-
 #define IMPL_TYPED_ARRAY_PROTO_CLASS(_typedArray)                               \
 {                                                                              \
     #_typedArray "Prototype",                                                  \
@@ -3594,43 +3560,4 @@ JS_GetArrayBufferViewByteLength(JSObject *obj, JSContext *cx)
     return obj->isDataView()
            ? obj->asDataView().byteLength()
            : TypedArray::byteLengthValue(obj).toInt32();
-}
-
-JS_FRIEND_API(JSObject *)
-JS_GetObjectAsArrayBufferView(JSContext *cx, JSObject *obj,
-                              uint32_t *length, uint8_t **data)
-{
-    if (obj->isWrapper()) {
-        if (!(obj = UnwrapObjectChecked(cx, obj))) {
-            cx->clearPendingException();
-            return NULL;
-        }
-    }
-    if (!(obj->isTypedArray() || obj->isDataView()))
-        return NULL;
-
-    *length = obj->isDataView() ? obj->asDataView().byteLength()
-                                : TypedArray::byteLengthValue(obj).toInt32();
-
-    *data = static_cast<uint8_t *>(obj->isDataView() ? obj->asDataView().dataPointer()
-                                                     : TypedArray::viewData(obj));
-    return obj;
-}
-
-JS_FRIEND_API(JSObject *)
-JS_GetObjectAsArrayBuffer(JSContext *cx, JSObject *obj, uint32_t *length, uint8_t **data)
-{
-    if (obj->isWrapper()) {
-        if (!(obj = UnwrapObjectChecked(cx, obj))) {
-            cx->clearPendingException();
-            return NULL;
-        }
-    }
-    if (!obj->isArrayBuffer())
-        return NULL;
-
-    *length = obj->asArrayBuffer().byteLength();
-    *data = obj->asArrayBuffer().dataPointer();
-
-    return obj;
 }
