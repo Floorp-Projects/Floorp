@@ -18,31 +18,50 @@ namespace dom {
  * a subclass of the base class that supports creation of a relevant typed array
  * or array buffer object.
  */
-template<typename T, typename U,
-         U* GetData(JSObject*, JSContext*),
-         uint32_t GetLength(JSObject*, JSContext*)>
+template<typename T,
+         JSObject* UnboxArray(JSContext*, JSObject*, uint32_t*, T**)>
 struct TypedArray_base {
-  TypedArray_base(JSContext* cx, JSObject* obj) :
-    mData(static_cast<T*>(GetData(obj, cx))),
-    mLength(GetLength(obj, cx)),
-    mObj(obj)
-  {}
+  TypedArray_base(JSContext* cx, JSObject* obj)
+  {
+    mObj = UnboxArray(cx, obj, &mLength, &mData);
+  }
 
-  T* const mData;
-  const uint32_t mLength;
-  JSObject* const mObj;
+private:
+  T* mData;
+  uint32_t mLength;
+  JSObject* mObj;
+
+public:
+  inline bool inited() const {
+    return !!mObj;
+  }
+
+  inline T *Data() const {
+    MOZ_ASSERT(inited());
+    return mData;
+  }
+
+  inline uint32_t Length() const {
+    MOZ_ASSERT(inited());
+    return mLength;
+  }
+
+  inline JSObject *Obj() const {
+    MOZ_ASSERT(inited());
+    return mObj;
+  }
 };
 
 
-template<typename T, typename U,
-         U* GetData(JSObject*, JSContext*),
-         uint32_t GetLength(JSObject*, JSContext*),
+template<typename T,
+         T* GetData(JSObject*, JSContext*),
+         JSObject* UnboxArray(JSContext*, JSObject*, uint32_t*, T**),
          JSObject* CreateNew(JSContext*, uint32_t)>
-struct TypedArray : public TypedArray_base<T,U,GetData,GetLength> {
+struct TypedArray : public TypedArray_base<T,UnboxArray> {
   TypedArray(JSContext* cx, JSObject* obj) :
-    TypedArray_base<T,U,GetData,GetLength>(cx, obj)
+    TypedArray_base<T,UnboxArray>(cx, obj)
   {}
-  
+
   static inline JSObject*
   Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
          T* data = NULL) {
@@ -65,38 +84,37 @@ struct TypedArray : public TypedArray_base<T,U,GetData,GetLength> {
   }
 };
 
-typedef TypedArray<int8_t, int8_t, JS_GetInt8ArrayData, JS_GetTypedArrayLength,
+typedef TypedArray<int8_t, JS_GetInt8ArrayData, JS_GetObjectAsInt8Array,
                    JS_NewInt8Array>
         Int8Array;
-typedef TypedArray<uint8_t, uint8_t, JS_GetUint8ArrayData,
-                   JS_GetTypedArrayLength, JS_NewUint8Array>
+typedef TypedArray<uint8_t, JS_GetUint8ArrayData,
+                   JS_GetObjectAsUint8Array, JS_NewUint8Array>
         Uint8Array;
-typedef TypedArray<uint8_t, uint8_t, JS_GetUint8ClampedArrayData,
-                   JS_GetTypedArrayLength, JS_NewUint8ClampedArray>
+typedef TypedArray<uint8_t, JS_GetUint8ClampedArrayData,
+                   JS_GetObjectAsUint8ClampedArray, JS_NewUint8ClampedArray>
         Uint8ClampedArray;
-typedef TypedArray<int16_t, int16_t, JS_GetInt16ArrayData,
-                   JS_GetTypedArrayLength, JS_NewInt16Array>
+typedef TypedArray<int16_t, JS_GetInt16ArrayData,
+                   JS_GetObjectAsInt16Array, JS_NewInt16Array>
         Int16Array;
-typedef TypedArray<uint16_t, uint16_t, JS_GetUint16ArrayData,
-                   JS_GetTypedArrayLength, JS_NewUint16Array>
+typedef TypedArray<uint16_t, JS_GetUint16ArrayData,
+                   JS_GetObjectAsUint16Array, JS_NewUint16Array>
         Uint16Array;
-typedef TypedArray<int32_t, int32_t, JS_GetInt32ArrayData,
-                   JS_GetTypedArrayLength, JS_NewInt32Array>
+typedef TypedArray<int32_t, JS_GetInt32ArrayData,
+                   JS_GetObjectAsInt32Array, JS_NewInt32Array>
         Int32Array;
-typedef TypedArray<uint32_t, uint32_t, JS_GetUint32ArrayData,
-                   JS_GetTypedArrayLength, JS_NewUint32Array>
+typedef TypedArray<uint32_t, JS_GetUint32ArrayData,
+                   JS_GetObjectAsUint32Array, JS_NewUint32Array>
         Uint32Array;
-typedef TypedArray<float, float, JS_GetFloat32ArrayData, JS_GetTypedArrayLength,
-                   JS_NewFloat32Array>
+typedef TypedArray<float, JS_GetFloat32ArrayData,
+                   JS_GetObjectAsFloat32Array, JS_NewFloat32Array>
         Float32Array;
-typedef TypedArray<double, double, JS_GetFloat64ArrayData,
-                   JS_GetTypedArrayLength, JS_NewFloat64Array>
+typedef TypedArray<double, JS_GetFloat64ArrayData,
+                   JS_GetObjectAsFloat64Array, JS_NewFloat64Array>
         Float64Array;
-typedef TypedArray_base<uint8_t, void, JS_GetArrayBufferViewData,
-                        JS_GetArrayBufferViewByteLength>
+typedef TypedArray_base<uint8_t, JS_GetObjectAsArrayBufferView>
         ArrayBufferView;
-typedef TypedArray<uint8_t, uint8_t, JS_GetArrayBufferData,
-                   JS_GetArrayBufferByteLength, JS_NewArrayBuffer>
+typedef TypedArray<uint8_t, JS_GetArrayBufferData,
+                   JS_GetObjectAsArrayBuffer, JS_NewArrayBuffer>
         ArrayBuffer;
 
 } // namespace dom
