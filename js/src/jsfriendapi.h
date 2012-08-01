@@ -707,7 +707,7 @@ extern JS_FRIEND_API(void)
 ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-IncrementalGC(JSRuntime *rt, gcreason::Reason reason);
+IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
 
 extern JS_FRIEND_API(void)
 FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason);
