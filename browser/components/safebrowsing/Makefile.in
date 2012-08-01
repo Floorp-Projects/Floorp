@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,8 +12,12 @@ include $(DEPTH)/config/autoconf.mk
 
 TEST_DIRS += content/test
 
+# Normally the "client ID" sent in updates is appinfo.name, but for
+# official Firefox releases from Mozilla we use a special identifier.
 ifdef MOZILLA_OFFICIAL
-DEFINES += -DOFFICIAL_BUILD=1
+ifdef MOZ_PHOENIX
+DEFINES += -DUSE_HISTORIC_SAFEBROWSING_ID=1
+endif
 endif
 
 EXTRA_PP_JS_MODULES = \
