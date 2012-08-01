@@ -11381,7 +11381,7 @@ nsDocShell::GetExtendedOrigin(nsIURI *aUri, nsACString &aResult)
 
     nsCOMPtr<nsIScriptSecurityManager> ssmgr =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(ssmgr, false);
+    NS_ENSURE_TRUE(ssmgr, NS_ERROR_FAILURE);
 
     return ssmgr->GetExtendedOrigin(aUri, mAppId, isInBrowserElement, aResult);
 }
