@@ -43,6 +43,20 @@ public:
   GetSuccessResult(JSContext* aCx, jsval* aVal) MOZ_OVERRIDE;
 
   virtual nsresult
+  OnSuccess() MOZ_OVERRIDE
+  {
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    return AsyncConnectionHelper::OnSuccess();
+  }
+
+  virtual void
+  OnError() MOZ_OVERRIDE
+  {
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    AsyncConnectionHelper::OnError();
+  }
+
+  virtual nsresult
   DoDatabaseWork(mozIStorageConnection* aConnection) MOZ_OVERRIDE;
 };
 
@@ -339,8 +353,6 @@ IndexedDBDatabaseChild::RecvSuccess(
     openHelper = new IPCOpenDatabaseHelper(mDatabase, request);
   }
 
-  request->SetTransaction(NULL);
-
   MainThreadEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCOpenDatabaseHelper failed!");
@@ -372,7 +384,6 @@ IndexedDBDatabaseChild::RecvError(const nsresult& aRv)
   }
 
   openHelper->SetError(aRv);
-  request->SetTransaction(NULL);
 
   MainThreadEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
