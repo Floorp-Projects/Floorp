@@ -80,7 +80,7 @@ WebGLContextOptions::WebGLContextOptions()
 {
     // Set default alpha state based on preference.
     if (Preferences::GetBool("webgl.default-no-alpha", false))
-        alpha = false
+        alpha = false;
 }
 
 WebGLContext::WebGLContext()
