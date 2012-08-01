@@ -4322,11 +4322,13 @@ nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
 
     // If no compartment was given, recompute all.
     if (!c)
-        return js::RecomputeWrappers(cx, js::AllCompartments(), js::AllCompartments());
-
+        js::RecomputeWrappers(cx, js::AllCompartments(), js::AllCompartments());
     // Otherwise, recompute wrappers for the given compartment.
-    return js::RecomputeWrappers(cx, js::SingleCompartment(c), js::AllCompartments()) &&
-           js::RecomputeWrappers(cx, js::AllCompartments(), js::SingleCompartment(c));
+    else
+        js::RecomputeWrappers(cx, js::SingleCompartment(c), js::AllCompartments()) &&
+        js::RecomputeWrappers(cx, js::AllCompartments(), js::SingleCompartment(c));
+
+    return NS_OK;
 }
 
 /* string canCreateWrapper (in nsIIDPtr iid); */
