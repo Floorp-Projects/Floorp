@@ -39,7 +39,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private DisplayPortMetrics mReturnDisplayPort;
 
     private boolean mRecordDrawTimes;
-    private DrawTimingQueue mDrawTimingQueue;
+    private final DrawTimingQueue mDrawTimingQueue;
 
     private VirtualLayer mRootLayer;
 
@@ -52,13 +52,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
      */
     private ImmutableViewportMetrics mFrameMetrics;
 
-    private String mLastCheckerboardColor;
-
     /* Used by robocop for testing purposes */
     private DrawListener mDrawListener;
 
     /* Used as a temporary ViewTransform by syncViewportInfo */
-    private ViewTransform mCurrentViewTransform;
+    private final ViewTransform mCurrentViewTransform;
 
     /* This is written by the compositor thread and read by the UI thread. */
     private volatile boolean mCompositorCreated;
