@@ -173,10 +173,11 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
     }
 #elif defined XP_MACOSX
   case BACKEND_COREGRAPHICS:
+  case BACKEND_COREGRAPHICS_ACCELERATED:
     {
       RefPtr<DrawTargetCG> newTarget;
       newTarget = new DrawTargetCG();
-      if (newTarget->Init(aSize, aFormat)) {
+      if (newTarget->Init(aBackend, aSize, aFormat)) {
         return newTarget;
       }
       break;
@@ -224,7 +225,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   case BACKEND_COREGRAPHICS:
     {
       RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
-      if (newTarget->Init(aData, aSize, aStride, aFormat))
+      if (newTarget->Init(aBackend, aData, aSize, aStride, aFormat))
         return newTarget;
       break;
     }

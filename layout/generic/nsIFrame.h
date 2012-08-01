@@ -1227,6 +1227,8 @@ public:
    * an SVG viewBox attribute).
    */
   bool IsTransformed() const;
+  
+  bool HasOpacity() const;
 
   /**
    * Returns true if this frame is an SVG frame that has SVG transforms applied

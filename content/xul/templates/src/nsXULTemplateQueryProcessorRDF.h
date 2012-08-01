@@ -47,6 +47,7 @@ class nsXULTemplateQueryProcessorRDF MOZ_FINAL : public nsIXULTemplateQueryProce
                                                  public nsIRDFObserver
 {
 public:
+    typedef nsTArray<nsCOMPtr<nsXULTemplateResultRDF> > ResultArray;
 
     nsXULTemplateQueryProcessorRDF();
 
@@ -201,14 +202,14 @@ public:
      * assertion is added to or removed from the graph involving that
      * resource, that result must be recalculated.
      */
-    nsresult
+    void
     AddBindingDependency(nsXULTemplateResultRDF* aResult,
                          nsIRDFResource* aResource);
 
     /**
      * Remove a dependency a result has on a particular resource.
      */
-    nsresult
+    void
     RemoveBindingDependency(nsXULTemplateResultRDF* aResult,
                             nsIRDFResource* aResource);
 
@@ -314,8 +315,7 @@ protected:
      * in this binding map. If it exists, the corresponding results must then
      * be synchronized.
      */
-    nsClassHashtable<nsISupportsHashKey,
-                     nsCOMArray<nsXULTemplateResultRDF> > mBindingDependencies;
+    nsClassHashtable<nsISupportsHashKey, ResultArray> mBindingDependencies;
 
     /**
      * A map between memory elements and an array of nsIXULTemplateResults.
@@ -333,7 +333,7 @@ protected:
     /**
      * The queries
      */
-    nsCOMArray<nsITemplateRDFQuery> mQueries;
+    nsTArray<nsCOMPtr<nsITemplateRDFQuery> > mQueries;
 
     /**
      * All of the RDF tests in the rule network, which are checked when a new
