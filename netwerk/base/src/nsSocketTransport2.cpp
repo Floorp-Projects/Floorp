@@ -358,7 +358,7 @@ nsSocketInputStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
     // only send this notification if we have indeed read some data.
     // see bug 196827 for an example of why this is important.
     if (n > 0)
-        mTransport->SendStatus(nsISocketTransport::STATUS_RECEIVING_FROM);
+        mTransport->SendStatus(NS_NET_STATUS_RECEIVING_FROM);
     return rv;
 }
 
@@ -581,7 +581,7 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
     // only send this notification if we have indeed written some data.
     // see bug 196827 for an example of why this is important.
     if (n > 0)
-        mTransport->SendStatus(nsISocketTransport::STATUS_SENDING_TO);
+        mTransport->SendStatus(NS_NET_STATUS_SENDING_TO);
     return rv;
 }
 
@@ -869,10 +869,10 @@ nsSocketTransport::SendStatus(nsresult status)
         MutexAutoLock lock(mLock);
         sink = mEventSink;
         switch (status) {
-        case STATUS_SENDING_TO:
+        case NS_NET_STATUS_SENDING_TO:
             progress = mOutput.ByteCount();
             break;
-        case STATUS_RECEIVING_FROM:
+        case NS_NET_STATUS_RECEIVING_FROM:
             progress = mInput.ByteCount();
             break;
         default:
@@ -923,7 +923,7 @@ nsSocketTransport::ResolveHost()
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV6)
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
 
-    SendStatus(STATUS_RESOLVING);
+    SendStatus(NS_NET_STATUS_RESOLVING_HOST);
     rv = dns->AsyncResolve(SocketHost(), dnsFlags, this, nullptr,
                            getter_AddRefs(mDNSRequest));
     if (NS_SUCCEEDED(rv)) {
@@ -1144,7 +1144,7 @@ nsSocketTransport::InitiateSocket()
     SOCKET_LOG(("  advancing to STATE_CONNECTING\n"));
     mState = STATE_CONNECTING;
     mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
-    SendStatus(STATUS_CONNECTING_TO);
+    SendStatus(NS_NET_STATUS_CONNECTING_TO);
 
 #if defined(PR_LOGGING)
     if (SOCKET_LOG_ENABLED()) {
@@ -1381,7 +1381,7 @@ nsSocketTransport::OnSocketConnected()
         mFDconnected = true;
     }
 
-    SendStatus(STATUS_CONNECTED_TO);
+    SendStatus(NS_NET_STATUS_CONNECTED_TO);
 }
 
 PRFileDesc *
@@ -1444,7 +1444,7 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, nsresult status, nsISupports *pa
 
     case MSG_DNS_LOOKUP_COMPLETE:
         if (mDNSRequest)  // only send this if we actually resolved anything
-            SendStatus(STATUS_RESOLVED);
+            SendStatus(NS_NET_STATUS_RESOLVED_HOST);
 
         SOCKET_LOG(("  MSG_DNS_LOOKUP_COMPLETE\n"));
         mDNSRequest = 0;

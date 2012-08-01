@@ -2694,7 +2694,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     // just completed. We can't do coalescing if using a proxy because the
     // ip addresses are not available to the client.
 
-    if (status == nsISocketTransport::STATUS_CONNECTED_TO &&
+    if (status == NS_NET_STATUS_CONNECTED_TO &&
         gHttpHandler->IsSpdyEnabled() &&
         gHttpHandler->CoalesceSpdy() &&
         mEnt && mEnt->mConnInfo && mEnt->mConnInfo->UsingSSL() &&
@@ -2725,7 +2725,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     }
 
     switch (status) {
-    case nsISocketTransport::STATUS_CONNECTING_TO:
+    case NS_NET_STATUS_CONNECTING_TO:
         // Passed DNS resolution, now trying to connect, start the backup timer
         // only prevent creating another backup transport.
         // We also check for mEnt presence to not instantiate the timer after
@@ -2738,7 +2738,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
             SetupBackupTimer();
         break;
 
-    case nsISocketTransport::STATUS_CONNECTED_TO:
+    case NS_NET_STATUS_CONNECTED_TO:
         // TCP connection's up, now transfer or SSL negotiantion starts,
         // no need for backup socket
         CancelBackupTimer();
