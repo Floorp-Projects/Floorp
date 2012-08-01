@@ -2455,7 +2455,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
     const Register temp = ToRegister(lir->temp());
     const ValueOperand output = ToOutValue(lir);
 
-    typedef bool (*pf)(JSContext *, JSObject *, Value *);
+    typedef bool (*pf)(JSContext *, JSObject *, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(js_IteratorNext);
 
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj), StoreValueTo(output));
@@ -2731,7 +2731,7 @@ typedef bool (*GetPropertyOrNameFn)(JSContext *, HandleObject, HandlePropertyNam
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, Value *);
+    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
     pushArg(ImmGCPtr(lir->mir()->name()));
@@ -2742,7 +2742,7 @@ CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 bool
 CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
     static const VMFunction GetElementInfo = FunctionInfo<pf>(js::GetElement);
     static const VMFunction CallElementInfo = FunctionInfo<pf>(js::CallElement);
 
@@ -2928,7 +2928,7 @@ CodeGenerator::visitOutOfLineGetNameCache(OutOfLineCache *ool)
 
     saveLive(lir);
 
-    typedef bool (*pf)(JSContext *, size_t, HandleObject, Value *);
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, MutableHandleValue);
     static const VMFunction GetNameCacheInfo = FunctionInfo<pf>(GetNameCache);
 
     pushArg(scopeChain);
@@ -2994,7 +2994,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, size_t, HandleObject, Value *);
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, MutableHandleValue);
     static const VMFunction GetPropertyCacheInfo = FunctionInfo<pf>(GetPropertyCache);
 
     pushArg(objReg);
@@ -3032,7 +3032,7 @@ CodeGenerator::visitOutOfLineGetElementCache(OutOfLineCache *ool)
 
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value &, Value *);
+    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value &, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetElementCache);
 
     pushArg(index);
@@ -3322,7 +3322,7 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 bool
 CodeGenerator::visitToIdV(LToIdV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(ToIdOperation);
 
     pushArg(ToValue(lir, LToIdV::Index));
@@ -3473,7 +3473,7 @@ CodeGenerator::visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool)
     Register object = ToRegister(ins->object());
     ValueOperand out = ToOutValue(ins);
 
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(js::GetElementMonitored);
 
     if (ins->index()->isConstant())

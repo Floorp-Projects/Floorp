@@ -130,7 +130,9 @@ IsNSSErrorCode(PRErrorCode code)
 static nsresult
 GetXPCOMFromNSSError(PRErrorCode code)
 {
-    return NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, -1 * code);
+    // XXX Don't make up nsresults, it's supposed to be an enum (bug 778113)
+    return (nsresult)NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
+                                               -1 * code);
 }
 
 static nsresult

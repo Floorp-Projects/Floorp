@@ -71,7 +71,7 @@ using namespace js::types;
 using namespace js::frontend;
 
 static JSBool
-fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
+fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
 {
     JSObject *obj = obj_;
     while (!obj->isFunction()) {
@@ -93,7 +93,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
     }
 
     /* Set to early to null in case of error */
-    vp->setNull();
+    vp.setNull();
 
     /* Find fun's top-most activation record. */
     StackIter iter(cx);
@@ -133,7 +133,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
             ion::ForbidCompilation(script);
 #endif
 
-        *vp = ObjectValue(*argsobj);
+        vp.setObject(*argsobj);
         return true;
     }
 
@@ -161,16 +161,16 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
         ++iter;
         if (iter.done() || !iter.isFunctionFrame()) {
-            JS_ASSERT(vp->isNull());
+            JS_ASSERT(vp.isNull());
             return true;
         }
 
-        *vp = iter.calleev();
+        vp.set(iter.calleev());
 
         /* Censor the caller if it is from another compartment. */
-        JSObject &caller = vp->toObject();
+        JSObject &caller = vp.toObject();
         if (caller.compartment() != cx->compartment) {
-            vp->setNull();
+            vp.setNull();
         } else if (caller.isFunction()) {
             JSFunction *callerFun = caller.toFunction();
             if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
@@ -262,11 +262,13 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
      * the prototype's .constructor property is configurable, non-enumerable,
      * and writable.
      */
+    RootedValue protoVal(cx, ObjectValue(*proto));
+    RootedValue objVal(cx, ObjectValue(*obj));
     if (!obj->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
-                             ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
+                             protoVal, JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT) ||
         !proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
-                               ObjectValue(*obj), JS_PropertyStub, JS_StrictPropertyStub, 0))
+                               objVal, JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
     }
@@ -309,7 +311,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         JSID_IS_ATOM(id, cx->runtime->atomState.nameAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
 
-        Value v;
+        RootedValue v(cx);
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
             v.setInt32(fun->nargs - fun->hasRest());
         else
@@ -343,7 +345,8 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 setter = JS_StrictPropertyStub;
             }
 
-            if (!DefineNativeProperty(cx, fun, id, UndefinedValue(), getter, setter,
+            RootedValue value(cx, UndefinedValue());
+            if (!DefineNativeProperty(cx, fun, id, value, getter, setter,
                                       attrs, 0, 0)) {
                 return false;
             }
@@ -476,7 +479,7 @@ fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
         obj = obj->toFunction()->getBoundFunctionTarget();
     }
 
-    Value pval;
+    RootedValue pval(cx);
     if (!obj->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &pval))
         return JS_FALSE;
 
@@ -1550,7 +1553,8 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     if (!fun)
         return NULL;
 
-    if (!obj->defineGeneric(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    RootedValue funVal(cx, ObjectValue(*fun));
+    if (!obj->defineGeneric(cx, id, funVal, gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;

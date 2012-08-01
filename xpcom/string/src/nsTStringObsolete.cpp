@@ -109,7 +109,7 @@ nsTString_CharT::RFindCharInSet( const CharT* aSet, PRInt32 aOffset ) const
   // to help performance.  this function also gets to keep the rickg style
   // indentation :-/
 PRInt32
-nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
+nsTString_CharT::ToInteger( nsresult* aErrorCode, PRUint32 aRadix ) const
 {
   CharT*  cp=mData;
   PRInt32 theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)

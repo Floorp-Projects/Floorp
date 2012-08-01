@@ -76,10 +76,6 @@ public:
    * mode we always completely overwrite the contents of aContext's
    * destination surface (within the clip region) using OPERATOR_SOURCE.
    */
-  enum BufferMode {
-    BUFFER_NONE,
-    BUFFER_BUFFERED
-  };
   virtual void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering,
                                 ScreenRotation aRotation);
   gfxContext* GetDefaultTarget() { return mDefaultTarget; }

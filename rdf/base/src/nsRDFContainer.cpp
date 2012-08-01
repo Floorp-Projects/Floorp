@@ -184,7 +184,7 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
     nsAutoString nextValStr(s);
 
     PRInt32 nextVal;
-    PRInt32 err;
+    nsresult err;
     nextVal = nextValStr.ToInteger(&err);
     if (NS_FAILED(err))
         return NS_ERROR_UNEXPECTED;

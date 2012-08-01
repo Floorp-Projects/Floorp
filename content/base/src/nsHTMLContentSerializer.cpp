@@ -241,7 +241,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::start, start);
     if (!start.IsEmpty()){
-      PRInt32 rv = 0;
+      nsresult rv = NS_OK;
       startAttrVal = start.ToInteger(&rv);
       //If OL has "start" attribute, first LI element has to start with that value
       //Therefore subtracting 1 as all the LI elements are incrementing it before using it;

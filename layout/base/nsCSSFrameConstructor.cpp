@@ -1557,7 +1557,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       if (-1 != barIndex) {
         nsAutoString  nameSpaceVal;
         contentString.Left(nameSpaceVal, barIndex);
-        PRInt32 error;
+        nsresult error;
         attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
         contentString.Cut(0, barIndex + 1);
         if (contentString.Length()) {

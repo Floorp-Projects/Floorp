@@ -260,7 +260,7 @@ js_FindXMLProperty(JSContext *cx, const js::Value &nameval,
                    js::MutableHandleObject objp, jsid *idp);
 
 extern JSBool
-js_GetXMLMethod(JSContext *cx, js::HandleObject obj, jsid id, js::Value *vp);
+js_GetXMLMethod(JSContext *cx, js::HandleObject obj, jsid id, js::MutableHandleValue vp);
 
 extern JSBool
 js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);

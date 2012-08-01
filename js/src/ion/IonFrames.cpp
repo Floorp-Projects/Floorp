@@ -543,6 +543,9 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
             break;
         }
     }
+
+    if (f->outParam == Type_Handle)
+        gc::MarkValueRoot(trc, footer->outVp(), "ion-vm-outvp");
 }
 
 static void

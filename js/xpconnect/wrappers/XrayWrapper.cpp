@@ -508,7 +508,7 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
 JSBool
-holder_get(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, jsval *vp)
+holder_get(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, JSMutableHandleValue vp)
 {
     JSObject *wrapper = FindWrapper(wrapper_);
 
@@ -521,7 +521,7 @@ holder_get(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, jsval *vp)
             return false;
         bool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper,
-                                                               id, vp, &retval);
+                                                               id, vp.address(), &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
@@ -532,7 +532,7 @@ holder_get(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, jsval *vp)
 }
 
 JSBool
-holder_set(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, JSBool strict, jsval *vp)
+holder_set(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
 {
     JSObject *wrapper = FindWrapper(wrapper_);
 
@@ -548,7 +548,7 @@ holder_set(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, JSBool strict,
             return false;
         bool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper,
-                                                               id, vp, &retval);
+                                                               id, vp.address(), &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
@@ -645,16 +645,16 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
 }
 
 static JSBool
-wrappedJSObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
+wrappedJSObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
         return false;
     }
 
-    *vp = OBJECT_TO_JSVAL(wrapper);
+    vp.set(OBJECT_TO_JSVAL(wrapper));
 
-    return WrapperFactory::WaiveXrayAndWrap(cx, vp);
+    return WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
 }
 
 template <typename T>
@@ -683,7 +683,7 @@ WrapURI(JSContext *cx, nsIURI *uri, jsval *vp)
 }
 
 static JSBool
-documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
+documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -704,11 +704,11 @@ documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, j
         return false;
     }
 
-    return WrapURI(cx, uri, vp);
+    return WrapURI(cx, uri, vp.address());
 }
 
 static JSBool
-baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
+baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -728,11 +728,11 @@ baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval
         return false;
     }
 
-    return WrapURI(cx, uri, vp);
+    return WrapURI(cx, uri, vp.address());
 }
 
 static JSBool
-nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
+nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSMutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -751,7 +751,7 @@ nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
                                                            &NS_GET_IID(nsIPrincipal), true,
-                                                           vp, nullptr);
+                                                           vp.address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;

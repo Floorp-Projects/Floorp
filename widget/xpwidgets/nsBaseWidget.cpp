@@ -731,7 +731,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
 
 nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
     nsBaseWidget* aWidget, gfxContext* aTarget,
-    BasicLayerManager::BufferMode aDoubleBuffering, ScreenRotation aRotation)
+    BufferMode aDoubleBuffering, ScreenRotation aRotation)
   : mWidget(aWidget)
 {
   BasicLayerManager* manager =
@@ -750,7 +750,7 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
-    manager->SetDefaultTarget(nullptr, BasicLayerManager::BUFFER_NONE,
+    manager->SetDefaultTarget(nullptr, mozilla::layers::BUFFER_NONE,
                               ROTATION_0);
   }
 }
@@ -1321,6 +1321,18 @@ nsBaseWidget::GetGLFrameBufferFormat()
     return LOCAL_GL_RGBA;
   }
   return LOCAL_GL_NONE;
+}
+
+void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
+{
+  mSizeConstraints = aConstraints;
+  // We can't ensure that the size is honored at this point because we're
+  // probably in the middle of a reflow.
+}
+
+const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
+{
+  return mSizeConstraints;
 }
 
 #ifdef DEBUG

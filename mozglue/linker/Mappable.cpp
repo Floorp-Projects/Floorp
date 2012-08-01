@@ -74,7 +74,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
         "not extracting");
     return NULL;
   }
-  AutoDeleteArray<char> path = new char[strlen(cachePath) + strlen(name) + 2];
+  mozilla::ScopedDeleteArray<char> path;
+  path = new char[strlen(cachePath) + strlen(name) + 2];
   sprintf(path, "%s/%s", cachePath, name);
   struct stat cacheStat;
   if (stat(path, &cacheStat) == 0) {
@@ -86,13 +87,15 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
     }
   }
   debug("Extracting to %s", static_cast<char *>(path));
-  AutoCloseFD fd = open(path, O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
-                              S_IRUSR | S_IWUSR);
+  AutoCloseFD fd;
+  fd = open(path, O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
+                  S_IRUSR | S_IWUSR);
   if (fd == -1) {
     log("Couldn't open %s to decompress library", path.get());
     return NULL;
   }
-  AutoUnlinkFile file = path.forget();
+  AutoUnlinkFile file;
+  file = path.forget();
   if (stream->GetType() == Zip::Stream::DEFLATE) {
     if (ftruncate(fd, stream->GetUncompressedSize()) == -1) {
       log("Couldn't ftruncate %s to decompress library", file.get());
@@ -341,8 +344,8 @@ MappableSeekableZStream::Create(const char *name, Zip *zip,
                                 Zip::Stream *stream)
 {
   MOZ_ASSERT(stream->GetType() == Zip::Stream::STORE);
-  AutoDeletePtr<MappableSeekableZStream> mappable =
-    new MappableSeekableZStream(zip);
+  mozilla::ScopedDeletePtr<MappableSeekableZStream> mappable;
+  mappable = new MappableSeekableZStream(zip);
 
   if (pthread_mutex_init(&mappable->mutex, NULL))
     return NULL;
@@ -523,7 +526,8 @@ MappableSeekableZStream::stats(const char *when, const char *name) const
         name, when, chunkAvailNum, nEntries);
 
   size_t len = 64;
-  AutoDeleteArray<char> map = new char[len + 3];
+  mozilla::ScopedDeleteArray<char> map;
+  map = new char[len + 3];
   map[0] = '[';
 
   for (size_t i = 0, j = 1; i < nEntries; i++, j++) {

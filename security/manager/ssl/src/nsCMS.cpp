@@ -283,10 +283,10 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
     if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams))) {
       goto loser;
     }
-    rv = CERT_PKIXVerifyCert(si->cert, certificateUsageEmailSigner,
+    SECStatus stat = CERT_PKIXVerifyCert(si->cert, certificateUsageEmailSigner,
 			    survivingParams->GetRawPointerForNSS(),
 			    cvout, si->cmsg->pwfn_arg);
-    if (rv != SECSuccess) {
+    if (stat != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
       rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
       goto loser;

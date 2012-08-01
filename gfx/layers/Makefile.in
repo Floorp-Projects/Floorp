@@ -31,9 +31,10 @@ EXPORTS = \
         BasicLayers.h \
         BasicTiledThebesLayer.h \
         BasicImplData.h \
+        FrameMetrics.h \
         ImageLayers.h \
         Layers.h \
-        LayersBackend.h \
+        LayersTypes.h \
         LayerManagerOGLShaders.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \

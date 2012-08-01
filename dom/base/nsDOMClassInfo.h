@@ -386,11 +386,11 @@ public:
                                               JSHandleId id, unsigned flags,
                                               JSMutableHandleObject objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, jsval *vp);
+                                               JSHandleId id, JSMutableHandleValue vp);
   static JSBool SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                          jsval *vp);
+                                          JSMutableHandleValue vp);
   static JSBool SecurityCheckOnSetProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                       JSBool strict, jsval *vp);
+                                       JSBool strict, JSMutableHandleValue vp);
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);
@@ -780,13 +780,13 @@ protected:
 
 public:
   static JSBool DocumentAllGetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                       jsval *vp);
+                                       JSMutableHandleValue vp);
   static JSBool DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                       unsigned flags, JSMutableHandleObject objp);
   static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
   static JSBool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
   static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj,
-                                             JSHandleId id, jsval *vp);
+                                             JSHandleId id, JSMutableHandleValue vp);
   static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
                                             JSHandleId id, unsigned flags,
                                             JSMutableHandleObject objp);

@@ -122,7 +122,7 @@ bool
 InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value)
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
-    Value rval = value;
+    RootedValue rval(cx, value);
     RootedId id(cx, NameToId(name));
 
     if (name == cx->runtime->atomState.protoAtom)
@@ -222,7 +222,7 @@ ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 bool
 IteratorMore(JSContext *cx, HandleObject obj, JSBool *res)
 {
-    Value tmp;
+    RootedValue tmp(cx);
     if (!js_IteratorMore(cx, obj, &tmp))
         return false;
 
@@ -328,7 +328,7 @@ bool
 SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
             bool strict, bool isSetName)
 {
-    Value v = value;
+    RootedValue v(cx, value);
     RootedId id(cx, NameToId(name));
 
     if (JS_LIKELY(!obj->getOps()->setProperty)) {

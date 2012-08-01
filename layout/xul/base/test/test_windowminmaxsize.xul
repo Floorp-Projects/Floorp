@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Window Minimum and Maximum Size Tests" onload="nextTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<panel id="panel" onpopupshown="doPanelTest(this)" onpopuphidden="nextPopupTest(this)"
+       align="start" pack="start" style="-moz-appearance: none; margin: 0; border: 0; padding: 0;">
+  <resizer id="popupresizer" dir="bottomright" flex="1" width="60" height="60"
+           style="-moz-appearance: none; margin: 0; border: 0; padding: 0;"/>
+</panel>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gTestId = -1;
+
+var prefix = "data:application/vnd.mozilla.xul+xml,<?xml-stylesheet href='chrome://global/skin' type='text/css'?><window " +
+             "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' " +
+             "align='start' pack='start' style='-moz-appearance: none; margin: 0; padding: 0; border: 0; ";
+var suffix = "><resizer dir='bottomright' flex='1' width='150' height='150' style='-moz-appearance: none; margin: 0; border: 0; padding: 0;'/></window>";
+var titledpanel = "<panel noautohide='true' titlebar='normal' minwidth='120' minheight='140'/><label value='Test'/>";
+
+// width and height in the tests below specify the expected size of the window.
+var tests = [
+  { testname: "unconstrained",
+    style: "", attrs: "",
+    width: 150, height: 150 },
+  { testname: "constraint min style",
+    style: "min-width: 180px; min-height: 210px;", attrs: "",
+    width: 180, height: 210 },
+  { testname: "constraint max style",
+    style: "max-width: 120px; max-height: 140px;", attrs: "",
+    width: 120, height: 140 },
+  { testname: "constraint min attributes",
+    style: "", attrs: "minwidth='240' minheight='220'",
+    width: 240, height: 220 },
+  { testname: "constraint min attributes with width and height set",
+    style: "", attrs: "width='190' height='220' minwidth='215' minheight='235'",
+    width: 215, height: 235 },
+  { testname: "constraint max attributes",
+    style: "", attrs: "maxwidth='125' maxheight='95'",
+    width: 125, height: 95 },
+  // this gets the inner width as <window minwidth='210'> makes the box 210 pixels wide
+  { testname: "constraint min width attribute only",
+    style: "", attrs: "minwidth='210'",
+    width: 210, height: 150 },
+  { testname: "constraint max width attribute only",
+    style: "", attrs: "maxwidth='128'",
+    width: 128, height: 150 },
+  { testname: "constraint max width attribute with minheight",
+    style: "", attrs: "maxwidth='195' width='230' height='120' minheight='180'",
+    width: 195, height: 180 },
+  { testname: "constraint minwidth, minheight, maxwidth and maxheight set",
+    style: "", attrs: "minwidth='120' maxwidth='480' minheight='110' maxheight='470'",
+    width: 150, height: 150, last: true }
+];
+
+var popupTests = [
+  { testname: "popup unconstrained",
+    width: 60, height: 60
+  },
+  { testname: "popup with minimum size",
+    minwidth: 150, minheight: 180,
+    width: 150, height: 180
+  },
+  { testname: "popup with maximum size",
+    maxwidth: 50, maxheight: 45,
+    width: 50, height: 45,
+  },
+  { testname: "popup with minimum and size",
+    minwidth: 80, minheight: 70, maxwidth: 250, maxheight: 220,
+    width: 80, height: 70, last: true
+  }
+];
+
+function nextTest()
+{
+  // Run through each of the tests above by opening a simple window with
+  // the attributes or style defined for that test. The comparisons will be
+  // done by windowOpened. gTestId holds the index into the tests array.
+  if (++gTestId >= tests.length) {
+    // Now do the popup tests
+    gTestId = -1;
+    SimpleTest.waitForFocus(function () { nextPopupTest(document.getElementById("panel")) } );
+  }
+  else {
+    tests[gTestId].window = window.open(prefix + tests[gTestId].style + "' " + tests[gTestId].attrs + suffix, "_blank", "chrome,resizable=yes");
+    SimpleTest.waitForFocus(windowOpened, tests[gTestId].window);
+  }
+}
+
+function windowOpened(otherWindow)
+{
+  // Check the width and the width plus one due to bug 696746.
+  ok(otherWindow.innerWidth == tests[gTestId].width ||
+     otherWindow.innerWidth == tests[gTestId].width + 1,
+    tests[gTestId].testname + " width of " + otherWindow.innerWidth + " matches " + tests[gTestId].width);
+  is(otherWindow.innerHeight, tests[gTestId].height, tests[gTestId].testname + " height");
+
+  // On the last test, try moving the resizer to a size larger than the maximum
+  // and smaller than the minimum. This test is only done on Mac as the other
+  // platforms use native resizing.
+  if ('last' in tests[gTestId] && (navigator.platform.indexOf("Mac") == 0)) {
+    var resizer = otherWindow.document.documentElement.firstChild;
+    synthesizeMouse(resizer, 4, 4, { type:"mousedown" }, otherWindow);
+    synthesizeMouse(resizer, 800, 800, { type:"mousemove" }, otherWindow);
+    is(otherWindow.innerWidth, 480, "Width after maximum resize");
+    is(otherWindow.innerHeight, 470, "Height after maximum resize");
+
+    synthesizeMouse(resizer, -100, -100, { type:"mousemove" }, otherWindow);
+    is(otherWindow.innerWidth, 120, "Width after minimum resize");
+    is(otherWindow.innerHeight, 110, "Height after minimum resize");
+
+    synthesizeMouse(resizer, 4, 4, { type:"mouseup" }, otherWindow);
+
+    // Change the minimum and maximum size and try resizing the window again.
+    otherWindow.document.documentElement.minWidth = 140;
+    otherWindow.document.documentElement.minHeight = 130;
+    otherWindow.document.documentElement.maxWidth = 380;
+    otherWindow.document.documentElement.maxHeight = 360;
+
+    synthesizeMouse(resizer, 4, 4, { type:"mousedown" }, otherWindow);
+    synthesizeMouse(resizer, 800, 800, { type:"mousemove" }, otherWindow);
+    is(otherWindow.innerWidth, 380, "Width after changed maximum resize");
+    is(otherWindow.innerHeight, 360, "Height after changed maximum resize");
+
+    synthesizeMouse(resizer, -100, -100, { type:"mousemove" }, otherWindow);
+    is(otherWindow.innerWidth, 140, "Width after changed minimum resize");
+    is(otherWindow.innerHeight, 130, "Height after changed minimum resize");
+
+    synthesizeMouse(resizer, 4, 4, { type:"mouseup" }, otherWindow);
+  }
+
+  otherWindow.close();
+  nextTest();
+}
+
+function doPanelTest(panel)
+{
+  var rect = panel.getBoundingClientRect();
+  is(rect.width, popupTests[gTestId].width, popupTests[gTestId].testname + " width");
+  is(rect.height, popupTests[gTestId].height, popupTests[gTestId].testname + " height");
+
+  if ('last' in popupTests[gTestId]) {
+    var resizer = document.getElementById("popupresizer");
+    synthesizeMouse(resizer, 4, 4, { type:"mousedown" });
+    synthesizeMouse(resizer, 800, 800, { type:"mousemove" });
+
+    rect = panel.getBoundingClientRect();
+    is(rect.width, 250, "Popup width after maximum resize");
+    is(rect.height, 220, "Popup height after maximum resize");
+
+    synthesizeMouse(resizer, -100, -100, { type:"mousemove" });
+
+    rect = panel.getBoundingClientRect();
+    is(rect.width, 80, "Popup width after minimum resize");
+    is(rect.height, 70, "Popup height after minimum resize");
+
+    synthesizeMouse(resizer, 4, 4, { type:"mouseup" });
+  }
+
+  panel.hidePopup();
+}
+
+function nextPopupTest(panel)
+{
+  if (++gTestId >= popupTests.length) {
+    // Next, check a panel that has a titlebar to ensure that it is accounted for
+    // properly in the size.
+    var titledPanelWindow = window.open(prefix + "'>" + titledpanel + "</window>", "_blank", "chrome,resizable=yes");
+    SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
+  }
+  else {
+    function setattr(attr) {
+      if (attr in popupTests[gTestId])
+        panel.setAttribute(attr, popupTests[gTestId][attr]);
+      else
+        panel.removeAttribute(attr);
+    }
+    setattr("minwidth");
+    setattr("minheight");
+    setattr("maxwidth");
+    setattr("maxheight");
+
+    // Remove the flexibility as it causes the resizer to not shrink down
+    // when resizing.
+    if ("last" in popupTests[gTestId])
+      document.getElementById("popupresizer").removeAttribute("flex");
+
+    panel.openPopup();
+  }
+}
+
+function titledPanelWindowOpened(panelwindow)
+{
+  var panel = panelwindow.document.documentElement.firstChild;
+  panel.openPopup();
+  panel.addEventListener("popupshown", function() doTitledPanelTest(panel), false);
+  panel.addEventListener("popuphidden", function() done(panelwindow), false);
+}
+
+function doTitledPanelTest(panel)
+{
+  var rect = panel.getBoundingClientRect();
+  is(rect.width, 120, "panel with titlebar width");
+  is(rect.height, 140, "panel with titlebar height");
+  panel.hidePopup();
+}
+
+function done(panelwindow)
+{
+  panelwindow.close();
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

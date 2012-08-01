@@ -82,17 +82,18 @@ js_SetLengthProperty(JSContext *cx, js::HandleObject obj, double length);
 namespace js {
 
 extern JSBool
-array_defineElement(JSContext *cx, HandleObject obj, uint32_t index, const Value *value,
+array_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
 extern JSBool
-array_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, Value *rval, JSBool strict);
+array_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
+                    MutableHandleValue rval, JSBool strict);
 
 /*
  * Copy 'length' elements from aobj to vp.
  *
  * This function assumes 'length' is effectively the result of calling
- * js_GetLengthProperty on aobj.
+ * js_GetLengthProperty on aobj. vp must point to rooted memory.
  */
 extern bool
 GetElements(JSContext *cx, HandleObject aobj, uint32_t length, js::Value *vp);

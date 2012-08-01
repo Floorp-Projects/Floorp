@@ -151,13 +151,43 @@ void nsOggReader::BuildSerialList(nsTArray<PRUint32>& aTracks)
   }
 }
 
-nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
+static
+nsHTMLMediaElement::MetadataTags* TagsFromVorbisComment(vorbis_comment *vc)
+{
+  nsHTMLMediaElement::MetadataTags* tags;
+  int i;
+
+  tags = new nsHTMLMediaElement::MetadataTags;
+  tags->Init();
+  for (i = 0; i < vc->comments; i++) {
+    char *comment = vc->user_comments[i];
+    char *div = (char*)memchr(comment, '=', vc->comment_lengths[i]);
+    if (!div) {
+      LOG(PR_LOG_DEBUG, ("Invalid vorbis comment: no separator"));
+      continue;
+    }
+    // This should be ASCII.
+    nsCString key = nsCString(comment, div-comment);
+    PRUint32 value_length = vc->comment_lengths[i] - (div-comment);
+    // This should be utf-8.
+    nsCString value = nsCString(div + 1, value_length);
+    tags->Put(key, value);
+  }
+
+  return tags;
+}
+
+nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
+                                   nsHTMLMediaElement::MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   // We read packets until all bitstreams have read all their header packets.
   // We record the offset of the first non-header page so that we know
   // what page to seek to when seeking to the media start.
+
+  NS_ASSERTION(aTags, "Called with null MetadataTags**.");
+  *aTags = nullptr;
 
   ogg_page page;
   nsAutoTArray<nsOggCodecState*,4> bitstreams;
@@ -283,6 +313,7 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
     memcpy(&mVorbisInfo, &mVorbisState->mInfo, sizeof(mVorbisInfo));
     mVorbisInfo.codec_setup = NULL;
     mVorbisSerial = mVorbisState->mSerial;
+    *aTags = TagsFromVorbisComment(&mVorbisState->mComment);
   } else {
     memset(&mVorbisInfo, 0, sizeof(mVorbisInfo));
   }
@@ -1623,7 +1654,10 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       else {
         // Page is for a stream we don't know about (possibly a chained
         // ogg), return an error.
-        return PAGE_SYNC_ERROR;
+        //
+        // XXX Invalid cast of PageSyncResult to nsresult -- this has numeric
+        // value 1 and will pass an NS_SUCCEEDED() check (bug 778105)
+        return (nsresult)PAGE_SYNC_ERROR;
       }
     }
 

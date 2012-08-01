@@ -83,6 +83,13 @@ class RefTest(object):
     browserEnv = self.automation.environment(xrePath = options.xrePath)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
+    for v in options.environment:
+      ix = v.find("=")
+      if ix <= 0:
+        print "Error: syntax error in --setenv=" + v
+        return None
+      browserEnv[v[:ix]] = v[ix + 1:]    
+
     # Enable leaks detection to its own log file.
     self.leakLogFile = os.path.join(profileDir, "runreftest_leaks.log")
     browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leakLogFile
@@ -222,6 +229,13 @@ class ReftestOptions(OptionParser):
                            "the extension's id as indicated in its install.rdf."
                            "An optional path can be specified too.")
     defaults["extensionsToInstall"] = []
+
+    self.add_option("--setenv",
+                    action = "append", type = "string",
+                    dest = "environment", metavar = "NAME=VALUE",
+                    help = "sets the given variable in the application's "
+                           "environment")
+    defaults["environment"] = []
 
     self.set_defaults(**defaults)
 

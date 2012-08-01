@@ -251,18 +251,29 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     PRUint32 count, i;
     nsCOMPtr<nsIURI> styleOverlayURI;
 
-    rv |= aStream->Read32(&count);
-    if (NS_FAILED(rv)) return rv;
+    nsresult tmp = aStream->Read32(&count);
+    if (NS_FAILED(tmp)) {
+      return tmp;
+    }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     for (i = 0; i < count; ++i) {
-        rv |= aStream->ReadObject(true, getter_AddRefs(styleOverlayURI));
+        tmp = aStream->ReadObject(true, getter_AddRefs(styleOverlayURI));
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
         mStyleSheetReferences.AppendObject(styleOverlayURI);
     }
 
 
     // nsIPrincipal mNodeInfoManager->mPrincipal
     nsCOMPtr<nsIPrincipal> principal;
-    rv |= aStream->ReadObject(true, getter_AddRefs(principal));
+    tmp = aStream->ReadObject(true, getter_AddRefs(principal));
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     // Better safe than sorry....
     mNodeInfoManager->SetDocumentPrincipal(principal);
 
@@ -279,56 +290,89 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
 
-    rv |= aStream->Read32(&count);
+    tmp = aStream->Read32(&count);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     nsAutoString namespaceURI, prefixStr, localName;
     bool prefixIsNull;
     nsCOMPtr<nsIAtom> prefix;
     for (i = 0; i < count; ++i) {
-        rv |= aStream->ReadString(namespaceURI);
-        rv |= aStream->ReadBoolean(&prefixIsNull);
+        tmp = aStream->ReadString(namespaceURI);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
+        tmp = aStream->ReadBoolean(&prefixIsNull);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
         if (prefixIsNull) {
             prefix = nullptr;
         } else {
-            rv |= aStream->ReadString(prefixStr);
+            tmp = aStream->ReadString(prefixStr);
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
             prefix = do_GetAtom(prefixStr);
         }
-        rv |= aStream->ReadString(localName);
+        tmp = aStream->ReadString(localName);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
         // Using PR_UINT16_MAX here as we don't know which nodeinfos will be
         // used for attributes and which for elements. And that doesn't really
         // matter.
-        rv |= mNodeInfoManager->GetNodeInfo(localName, prefix, namespaceURI,
+        tmp = mNodeInfoManager->GetNodeInfo(localName, prefix, namespaceURI,
                                             PR_UINT16_MAX,
                                             getter_AddRefs(nodeInfo));
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
         if (!nodeInfos.AppendObject(nodeInfo))
-            rv |= NS_ERROR_OUT_OF_MEMORY;
+          rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Document contents
     PRUint32 type;
     while (NS_SUCCEEDED(rv)) {
-        rv |= aStream->Read32(&type);
+        tmp = aStream->Read32(&type);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
             nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
             if (! pi) {
-               rv |= NS_ERROR_OUT_OF_MEMORY;
+               rv = NS_ERROR_OUT_OF_MEMORY;
                break;
             }
 
-            rv |= pi->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
-            rv |= AddProcessingInstruction(pi);
+            tmp = pi->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
+            tmp = AddProcessingInstruction(pi);
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
         } else if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_Element) {
-            rv |= mRoot->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
+            tmp = mRoot->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
             break;
         } else {
             NS_NOTREACHED("Unexpected prototype node type");
-            rv |= NS_ERROR_FAILURE;
+            rv = NS_ERROR_FAILURE;
             break;
         }
     }
-    rv |= NotifyLoadDone();
+    tmp = NotifyLoadDone();
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
 
     return rv;
 }
@@ -389,17 +433,26 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     PRUint32 count;
 
     count = mStyleSheetReferences.Count();
-    rv |= aStream->Write32(count);
+    nsresult tmp = aStream->Write32(count);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
 
     PRUint32 i;
     for (i = 0; i < count; ++i) {
-        rv |= aStream->WriteCompoundObject(mStyleSheetReferences[i],
+        tmp = aStream->WriteCompoundObject(mStyleSheetReferences[i],
                                            NS_GET_IID(nsIURI), true);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
     }
 
     // nsIPrincipal mNodeInfoManager->mPrincipal
-    rv |= aStream->WriteObject(mNodeInfoManager->DocumentPrincipal(),
+    tmp = aStream->WriteObject(mNodeInfoManager->DocumentPrincipal(),
                                true);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     
 #ifdef DEBUG
     // XXX Worrisome if we're caching things without system principal.
@@ -410,30 +463,52 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
-    if (mRoot)
-        rv |= GetNodeInfos(mRoot, nodeInfos);
+    if (mRoot) {
+      tmp = GetNodeInfos(mRoot, nodeInfos);
+      if (NS_FAILED(tmp)) {
+        rv = tmp;
+      }
+    }
 
     PRUint32 nodeInfoCount = nodeInfos.Count();
-    rv |= aStream->Write32(nodeInfoCount);
+    tmp = aStream->Write32(nodeInfoCount);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     for (i = 0; i < nodeInfoCount; ++i) {
         nsINodeInfo *nodeInfo = nodeInfos[i];
         NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
         nsAutoString namespaceURI;
-        rv |= nodeInfo->GetNamespaceURI(namespaceURI);
-        rv |= aStream->WriteWStringZ(namespaceURI.get());
+        tmp = nodeInfo->GetNamespaceURI(namespaceURI);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
+        tmp = aStream->WriteWStringZ(namespaceURI.get());
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
 
         nsAutoString prefix;
         nodeInfo->GetPrefix(prefix);
         bool nullPrefix = DOMStringIsNull(prefix);
-        rv |= aStream->WriteBoolean(nullPrefix);
+        tmp = aStream->WriteBoolean(nullPrefix);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
         if (!nullPrefix) {
-            rv |= aStream->WriteWStringZ(prefix.get());
+            tmp = aStream->WriteWStringZ(prefix.get());
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
         }
 
         nsAutoString localName;
         nodeInfo->GetName(localName);
-        rv |= aStream->WriteWStringZ(localName.get());
+        tmp = aStream->WriteWStringZ(localName.get());
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
     }
 
     // Now serialize the document contents
@@ -443,11 +518,18 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     count = mProcessingInstructions.Length();
     for (i = 0; i < count; ++i) {
         nsXULPrototypePI* pi = mProcessingInstructions[i];
-        rv |= pi->Serialize(aStream, globalObject, &nodeInfos);
+        tmp = pi->Serialize(aStream, globalObject, &nodeInfos);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
     }
 
-    if (mRoot)
-        rv |= mRoot->Serialize(aStream, globalObject, &nodeInfos);
+    if (mRoot) {
+      tmp = mRoot->Serialize(aStream, globalObject, &nodeInfos);
+      if (NS_FAILED(tmp)) {
+        rv = tmp;
+      }
+    }
  
     return rv;
 }
