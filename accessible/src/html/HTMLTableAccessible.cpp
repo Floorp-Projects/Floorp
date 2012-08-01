@@ -14,6 +14,7 @@
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "nsIMutableArray.h"
 
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMElement.h"

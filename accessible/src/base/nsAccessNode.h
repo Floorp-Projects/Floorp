@@ -11,18 +11,13 @@
 #define _nsAccessNode_H_
 
 #include "nsIAccessibleTypes.h"
-
+#include "nsINode.h"
 #include "a11yGeneric.h"
-
-#include "nsIContent.h"
-#include "nsIDOMNode.h"
-#include "nsINameSpaceManager.h"
-#include "nsIStringBundle.h"
-#include "nsWeakReference.h"
 
 class nsAccessNode;
 class DocAccessible;
 class nsIAccessibleDocument;
+class nsIContent;
 
 namespace mozilla {
 namespace a11y {
@@ -75,10 +70,9 @@ public:
   /**
    * Return DOM node associated with the accessible.
    */
-  virtual nsINode* GetNode() const { return mContent; }
+  virtual nsINode* GetNode() const;
   nsIContent* GetContent() const { return mContent; }
-  virtual nsIDocument* GetDocumentNode() const
-    { return mContent ? mContent->OwnerDoc() : nullptr; }
+  virtual nsIDocument* GetDocumentNode() const;
 
   /**
    * Return node type information of DOM node associated with the accessible.
