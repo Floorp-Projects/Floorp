@@ -18,6 +18,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventListener;
+import org.mozilla.gecko.ZoomConstraints;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.FloatMath;
@@ -793,14 +794,16 @@ public class PanZoomController
         float minZoomFactor = 0.0f;
         float maxZoomFactor = MAX_ZOOM;
 
-        if (mController.getMinZoom() > 0)
-            minZoomFactor = mController.getMinZoom();
-        if (mController.getMaxZoom() > 0)
-            maxZoomFactor = mController.getMaxZoom();
+        ZoomConstraints constraints = mController.getZoomConstraints();
 
-        if (!mController.getAllowZoom()) {
+        if (constraints.getMinZoom() > 0)
+            minZoomFactor = constraints.getMinZoom();
+        if (constraints.getMaxZoom() > 0)
+            maxZoomFactor = constraints.getMaxZoom();
+
+        if (!constraints.getAllowZoom()) {
             // If allowZoom is false, clamp to the default zoom level.
-            maxZoomFactor = minZoomFactor = mController.getDefaultZoom();
+            maxZoomFactor = minZoomFactor = constraints.getDefaultZoom();
         }
 
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
@@ -870,7 +873,7 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
-        if (!mController.getAllowZoom())
+        if (!mController.getZoomConstraints().getAllowZoom())
             return false;
 
         setState(PanZoomState.PINCHING);
@@ -911,10 +914,12 @@ public class PanZoomController
             float minZoomFactor = 0.0f;
             float maxZoomFactor = MAX_ZOOM;
 
-            if (mController.getMinZoom() > 0)
-                minZoomFactor = mController.getMinZoom();
-            if (mController.getMaxZoom() > 0)
-                maxZoomFactor = mController.getMaxZoom();
+            ZoomConstraints constraints = mController.getZoomConstraints();
+
+            if (constraints.getMinZoom() > 0)
+                minZoomFactor = constraints.getMinZoom();
+            if (constraints.getMaxZoom() > 0)
+                maxZoomFactor = constraints.getMaxZoom();
 
             if (newZoomFactor < minZoomFactor) {
                 // apply resistance when zooming past minZoomFactor,
@@ -999,7 +1004,7 @@ public class PanZoomController
     @Override
     public boolean onSingleTapUp(MotionEvent motionEvent) {
         // When zooming is enabled, wait to see if there's a double-tap.
-        if (!mController.getAllowZoom()) {
+        if (!mController.getZoomConstraints().getAllowZoom()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         // return false because we still want to get the ACTION_UP event that triggers this
@@ -1009,7 +1014,7 @@ public class PanZoomController
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
         // When zooming is disabled, we handle this in onSingleTapUp.
-        if (mController.getAllowZoom()) {
+        if (mController.getZoomConstraints().getAllowZoom()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         return true;
@@ -1017,7 +1022,7 @@ public class PanZoomController
 
     @Override
     public boolean onDoubleTap(MotionEvent motionEvent) {
-        if (mController.getAllowZoom()) {
+        if (mController.getZoomConstraints().getAllowZoom()) {
             sendPointToGecko("Gesture:DoubleTap", motionEvent);
         }
         return true;
