@@ -458,11 +458,11 @@ ContactManager.prototype = {
 
     let perm = principal == secMan.getSystemPrincipal()
                  ? Ci.nsIPermissionManager.ALLOW_ACTION
-                 : Services.perms.testExactPermissionFromPrincipal(principal, "webcontacts-manage");
+                 : Services.perms.testExactPermissionFromPrincipal(principal, "contacts");
  
     //only pages with perm set can use the contacts
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    debug("has privileges :" + this.hasPrivileges);
+    debug("Contacts permission: " + this.hasPrivileges);
   },
 
   // Called from DOMRequestIpcHelper
