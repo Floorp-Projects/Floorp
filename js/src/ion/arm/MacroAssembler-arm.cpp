@@ -1894,10 +1894,13 @@ MacroAssemblerARMCompat::addPtr(Imm32 imm, const Address &dest)
 void
 MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 {
+    // Compare the doubles, setting vector status flags.
     if (rhs == InvalidFloatReg)
         ma_vcmpz(lhs);
     else
         ma_vcmp(lhs, rhs);
+
+    // Move vector status bits to normal status flags.
     as_vmrs(pc);
 }
 

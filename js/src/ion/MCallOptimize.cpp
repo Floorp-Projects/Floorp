@@ -37,6 +37,8 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
         return inlineMathRound(argc, constructing);
     if (native == js_math_sqrt)
         return inlineMathSqrt(argc, constructing);
+    if (native == js_math_pow)
+        return inlineMathPow(argc, constructing);
     if (native == js::math_sin)
         return inlineMathFunction(MMathFunction::Sin, argc, constructing);
     if (native == js::math_cos)
@@ -124,8 +126,16 @@ IonBuilder::getInlineArgType(uint32 argc, uint32 arg)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bool constructing)
 {
-    if (argc != 1 || constructing)
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    // Math.{$Function}() == NaN.
+    if (argc == 0) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
 
     if (getInlineReturnType() != MIRType_Double)
         return InliningStatus_NotInlined;
@@ -282,8 +292,16 @@ IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathAbs(uint32 argc, bool constructing)
 {
-    if (argc != 1 || constructing)
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    // Math.abs() == NaN.
+    if (argc == 0) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
 
     MIRType returnType = getInlineReturnType();
     MIRType argType = getInlineArgType(argc, 1);
@@ -305,9 +323,18 @@ IonBuilder::inlineMathAbs(uint32 argc, bool constructing)
 
 IonBuilder::InliningStatus
 IonBuilder::inlineMathFloor(uint32 argc, bool constructing)
-{  
-    if (argc != 1 || constructing)
+{
+
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    // Math.floor() == NaN.
+    if (argc == 0) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
 
     MIRType argType = getInlineArgType(argc, 1);
     if (getInlineReturnType() != MIRType_Int32)
@@ -338,8 +365,16 @@ IonBuilder::inlineMathFloor(uint32 argc, bool constructing)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathRound(uint32 argc, bool constructing)
 {
-    if (argc != 1 || constructing)
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    // Math.round() == NaN.
+    if (argc == 0) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
 
     MIRType returnType = getInlineReturnType();
     MIRType argType = getInlineArgType(argc, 1);
@@ -369,8 +404,16 @@ IonBuilder::inlineMathRound(uint32 argc, bool constructing)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathSqrt(uint32 argc, bool constructing)
 {
-    if (argc != 1 || constructing)
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    // Math.sqrt() == NaN.
+    if (argc == 0) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
 
     MIRType argType = getInlineArgType(argc, 1);
     if (getInlineReturnType() != MIRType_Double)
@@ -385,6 +428,119 @@ IonBuilder::inlineMathSqrt(uint32 argc, bool constructing)
     MSqrt *sqrt = MSqrt::New(argv[1]);
     current->add(sqrt);
     current->push(sqrt);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathPow(uint32 argc, bool constructing)
+{
+    if (constructing)
+        return InliningStatus_NotInlined;
+
+    // Math.pow() == Math.pow(x) == NaN.
+    if (argc < 2) {
+        MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+        current->add(nan);
+        current->push(nan);
+        return InliningStatus_Inlined;
+    }
+
+    // Typechecking.
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MIRType arg1Type = getInlineArgType(argc, 1);
+    MIRType arg2Type = getInlineArgType(argc, 2);
+
+    if (arg1Type != MIRType_Int32 && arg1Type != MIRType_Double)
+        return InliningStatus_NotInlined;
+    if (arg2Type != MIRType_Int32 && arg2Type != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    // If the non-power input is integer, convert it to a Double.
+    // Safe since the output must be a Double.
+    if (arg1Type == MIRType_Int32) {
+        MToDouble *conv = MToDouble::New(argv[1]);
+        current->add(conv);
+        argv[1] = conv;
+    }
+
+    // Optimize some constant powers.
+    if (argv[2]->isConstant()) {
+        double pow;
+        if (!ToNumber(GetIonContext()->cx, argv[2]->toConstant()->value(), &pow))
+            return InliningStatus_Error;
+
+        // Math.pow(x, +-0) == 1, even for x = NaN.
+        if (pow == 0.0) {
+            MConstant *nan = MConstant::New(GetIonContext()->cx->runtime->NaNValue);
+            current->add(nan);
+            current->push(nan);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, 0.5) is a sqrt with edge-case detection.
+        if (pow == 0.5) {
+            MPowHalf *half = MPowHalf::New(argv[1]);
+            current->add(half);
+            current->push(half);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, -0.5) == 1 / Math.pow(x, 0.5), even for edge cases.
+        if (pow == -0.5) {
+            MPowHalf *half = MPowHalf::New(argv[1]);
+            current->add(half);
+            MConstant *one = MConstant::New(DoubleValue(1.0));
+            current->add(one);
+            MDiv *div = MDiv::New(one, half, MIRType_Double);
+            current->add(div);
+            current->push(div);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, 1) == x.
+        if (pow == 1.0) {
+            current->push(argv[1]);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, 2) == x*x.
+        if (pow == 2.0) {
+            MMul *mul = MMul::New(argv[1], argv[1], MIRType_Double);
+            current->add(mul);
+            current->push(mul);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, 3) == x*x*x.
+        if (pow == 3.0) {
+            MMul *mul1 = MMul::New(argv[1], argv[1], MIRType_Double);
+            current->add(mul1);
+            MMul *mul2 = MMul::New(argv[1], mul1, MIRType_Double);
+            current->add(mul2);
+            current->push(mul2);
+            return InliningStatus_Inlined;
+        }
+
+        // Math.pow(x, 4) == y*y, where y = x*x.
+        if (pow == 4.0) {
+            MMul *y = MMul::New(argv[1], argv[1], MIRType_Double);
+            current->add(y);
+            MMul *mul = MMul::New(y, y, MIRType_Double);
+            current->add(mul);
+            current->push(mul);
+            return InliningStatus_Inlined;
+        }
+    }
+
+    MPow *ins = MPow::New(argv[1], argv[2], arg2Type);
+    current->add(ins);
+    current->push(ins);
     return InliningStatus_Inlined;
 }
 

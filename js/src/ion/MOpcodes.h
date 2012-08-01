@@ -45,6 +45,8 @@ namespace ion {
     _(Ursh)                                                                 \
     _(Abs)                                                                  \
     _(Sqrt)                                                                 \
+    _(Pow)                                                                  \
+    _(PowHalf)                                                              \
     _(MathFunction)                                                         \
     _(Add)                                                                  \
     _(Sub)                                                                  \

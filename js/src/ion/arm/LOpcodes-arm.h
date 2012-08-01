@@ -16,6 +16,8 @@
     _(DivI)                     \
     _(ModI)                     \
     _(ModPowTwoI)               \
-    _(ModMaskI)
+    _(ModMaskI)                 \
+    _(PowHalfD)
+
 #endif // jsion_lir_opcodes_arm_h__
 

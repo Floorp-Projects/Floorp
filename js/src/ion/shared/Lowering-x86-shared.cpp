@@ -68,6 +68,15 @@ LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 }
 
 bool
+LIRGeneratorX86Shared::visitPowHalf(MPowHalf *ins)
+{
+    MDefinition *input = ins->input();
+    JS_ASSERT(input->type() == MIRType_Double);
+    LPowHalfD *lir = new LPowHalfD(useRegisterAtStart(input), temp());
+    return defineReuseInput(lir, ins, 0);
+}
+
+bool
 LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     // Note: lhs is used twice, so that we can restore the original value for the

@@ -1256,6 +1256,65 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Double raised to an integer power.
+class LPowI : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(PowI);
+    LPowI(const LAllocation &input, const LAllocation &power, const LDefinition &temp) {
+        setOperand(0, input);
+        setOperand(1, power);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LAllocation *power() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    // Currently no inline path is implemented.
+    bool isCall() const {
+        return true;
+    }
+};
+
+// Double raised to a double power.
+class LPowD : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(PowD);
+    LPowD(const LAllocation &input, const LAllocation &power, const LDefinition &temp) {
+        setOperand(0, input);
+        setOperand(1, power);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LAllocation *power() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    bool isCall() const {
+        return true;
+    }
+};
+
 class LMathFunctionD : public LInstructionHelper<1, 1, 1>
 {
   public:
