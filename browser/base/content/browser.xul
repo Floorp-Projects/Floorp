@@ -1056,7 +1056,7 @@
                 style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
 
-    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
+    <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
     <vbox id="appcontent" flex="1">
       <tabbrowser id="content" disablehistory="true"
                   flex="1" contenttooltip="aHTMLTooltip"
@@ -1075,7 +1075,7 @@
       <deck id="devtools-sidebar-deck" flex="1"/>
     </vbox>
     <splitter id="social-sidebar-splitter"
-              class="chromeclass-extrachrome"
+              class="chromeclass-extrachrome sidebar-splitter"
               observes="socialSidebarBroadcaster"/>
     <vbox id="social-sidebar-box"
           class="chromeclass-extrachrome"
