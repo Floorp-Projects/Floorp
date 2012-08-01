@@ -84,6 +84,25 @@ MBasicBlock::New(MIRGraph &graph, CompileInfo &info,
 }
 
 MBasicBlock *
+MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
+                                MBasicBlock *pred, jsbytecode *entryPc,
+                                MResumePoint *resumePoint)
+{
+    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
+
+    resumePoint->block_ = block;
+    block->entryResumePoint_ = resumePoint;
+
+    if (!block->init())
+        return NULL;
+
+    if (!block->inheritResumePoint(pred))
+        return NULL;
+
+    return block;
+}
+
+MBasicBlock *
 MBasicBlock::NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                   MBasicBlock *pred, jsbytecode *entryPc)
 {
@@ -104,6 +123,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     pc_(pc),
     lir_(NULL),
     start_(NULL),
+    entryResumePoint_(NULL),
     successorWithPhis_(NULL),
     positionInPhiSuccessor_(0),
     kind_(kind),
@@ -148,6 +168,7 @@ MBasicBlock::inherit(MBasicBlock *pred)
     }
 
     JS_ASSERT(info_.nslots() >= stackPosition_);
+    JS_ASSERT(!entryResumePoint_);
 
     // Propagate the caller resume point from the inherited block.
     MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;
@@ -175,6 +196,24 @@ MBasicBlock::inherit(MBasicBlock *pred)
                 entryResumePoint()->initOperand(i, getSlot(i));
         }
     }
+
+    return true;
+}
+
+bool
+MBasicBlock::inheritResumePoint(MBasicBlock *pred)
+{
+    // Copy slots from the resume point.
+    stackPosition_ = entryResumePoint_->numOperands();
+    for (uint32 i = 0; i < stackPosition_; i++)
+        slots_[i] = entryResumePoint_->getOperand(i);
+
+    JS_ASSERT(info_.nslots() >= stackPosition_);
+    JS_ASSERT(kind_ != PENDING_LOOP_HEADER);
+    JS_ASSERT(pred != NULL);
+
+    if (!predecessors_.append(pred))
+        return false;
 
     return true;
 }
@@ -373,6 +412,18 @@ MBasicBlock::discardLastIns()
     JS_ASSERT(lastIns_);
     discard(lastIns_);
     lastIns_ = NULL;
+}
+
+void
+MBasicBlock::addFromElsewhere(MInstruction *ins)
+{
+    JS_ASSERT(ins->block() != this);
+
+    // Remove |ins| from its containing block.
+    ins->block()->instructions_.remove(ins);
+
+    // Add it to this block.
+    add(ins);
 }
 
 void

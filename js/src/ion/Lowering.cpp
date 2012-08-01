@@ -395,7 +395,10 @@ LIRGenerator::visitTest(MTest *test)
 bool
 LIRGenerator::visitPolyInlineDispatch(MPolyInlineDispatch *ins)
 {
-    LPolyInlineDispatch *lir = new LPolyInlineDispatch(useRegister(ins->input()));
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->inlinePropertyTable())
+        tempDef = temp();
+    LPolyInlineDispatch *lir = new LPolyInlineDispatch(useRegister(ins->input()), tempDef);
     return add(lir, ins);
 }
 

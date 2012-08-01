@@ -892,89 +892,6 @@ class MTest
     MDefinition *foldsTo(bool useValueNumbers);
 };
 
-// Represents a polymorphic dispatch to one or more functions.
-class MPolyInlineDispatch : public MControlInstruction, public SingleObjectPolicy
-{
-    // A table to map JSFunctions to the blocks that execute them.
-    struct Entry {
-        MConstant *funcConst;
-        MBasicBlock *block;
-        Entry(MConstant *funcConst, MBasicBlock *block)
-            : funcConst(funcConst), block(block) {}
-    };
-    Vector<Entry, 4, IonAllocPolicy> dispatchTable_;
-
-    MDefinition *operand_;
-
-    MPolyInlineDispatch(MDefinition *ins)
-      : dispatchTable_(), operand_(NULL)
-    {
-        initOperand(0, ins);
-    }
-
-  protected:
-    virtual void setOperand(size_t index, MDefinition *operand) {
-        JS_ASSERT(index == 0);
-        operand_ = operand;
-    }
-
-  public:
-    INSTRUCTION_HEADER(PolyInlineDispatch);
-
-    virtual MDefinition *getOperand(size_t index) const {
-        JS_ASSERT(index == 0);
-        return operand_;
-    }
-
-    virtual size_t numOperands() const { return 1; }
-    virtual size_t numSuccessors() const { return dispatchTable_.length(); }
-
-    virtual void replaceSuccessor(size_t i, MBasicBlock *successor) {
-        JS_ASSERT(i < dispatchTable_.length());
-        dispatchTable_[i].block = successor;
-    }
-
-    static MPolyInlineDispatch *New(MDefinition *ins) {
-        return new MPolyInlineDispatch(ins);
-    }
-
-    size_t numCallees() const {
-        return dispatchTable_.length();
-    }
-
-    void addCallee(MConstant *funcConst, MBasicBlock *block) {
-        dispatchTable_.append(Entry(funcConst, block));
-    }
-
-    MConstant *getFunctionConstant(size_t i) const {
-        JS_ASSERT(i < numCallees());
-        return dispatchTable_[i].funcConst;
-    }
-
-    JSFunction *getFunction(size_t i) const {
-        return getFunctionConstant(i)->value().toObject().toFunction();
-    }
-
-    void setSuccessor(size_t i, MBasicBlock *successor) {
-        JS_ASSERT(i < numCallees());
-        dispatchTable_[i].block = successor;
-    }
-
-    MBasicBlock *getSuccessor(size_t i) const {
-        JS_ASSERT(i < numCallees());
-        return dispatchTable_[i].block;
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-};
-
-
 // Returns from this function to the previous caller.
 class MReturn
   : public MAryControlInstruction<1, 0>,
@@ -3999,6 +3916,72 @@ class MStoreFixedSlot
     }
 };
 
+class InlinePropertyTable : public TempObject
+{
+    struct Entry {
+        HeapPtr<types::TypeObject> typeObj;
+        HeapPtr<JSFunction> func;
+
+        Entry(types::TypeObject *typeObj, JSFunction *func)
+            : typeObj(typeObj), func(func) {}
+    };
+    jsbytecode *pc_;
+    MResumePoint *priorResumePoint_;
+    Vector<Entry, 4, IonAllocPolicy> entries_;
+
+  public:
+    InlinePropertyTable(jsbytecode *pc)
+        : pc_(pc), priorResumePoint_(NULL), entries_() {}
+
+    void setPriorResumePoint(MResumePoint *resumePoint) {
+        JS_ASSERT(priorResumePoint_ == NULL);
+        priorResumePoint_ = resumePoint;
+    }
+
+    MResumePoint *priorResumePoint() const {
+        return priorResumePoint_;
+    }
+
+    jsbytecode *pc() const {
+        return pc_;
+    }
+
+    bool addEntry(types::TypeObject *typeObj, JSFunction *func) {
+        return entries_.append(Entry(typeObj, func));
+    }
+
+    size_t numEntries() const {
+        return entries_.length();
+    }
+
+    types::TypeObject *getTypeObject(size_t i) const {
+        JS_ASSERT(i < numEntries());
+        return entries_[i].typeObj;
+    }
+
+    JSFunction *getFunction(size_t i) const {
+        JS_ASSERT(i < numEntries());
+        return entries_[i].func;
+    }
+
+    void trimToTargets(AutoObjectVector &targets) {
+        size_t i = 0;
+        while (i < numEntries()) {
+            bool foundFunc = false;
+            for (size_t j = 0; j < targets.length(); j++) {
+                if (entries_[i].func == targets[j]) {
+                    foundFunc = true;
+                    break;
+                }
+            }
+            if (!foundFunc)
+                entries_.erase(&(entries_[i]));
+            else
+                i++;
+        }
+    }
+};
+
 class MGetPropertyCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -4006,10 +3989,13 @@ class MGetPropertyCache
     CompilerRootPropertyName name_;
     bool idempotent_;
 
+    InlinePropertyTable *inlinePropertyTable_;
+
     MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
       : MUnaryInstruction(obj),
         name_(name),
-        idempotent_(false)
+        idempotent_(false),
+        inlinePropertyTable_(NULL)
     {
         setResultType(MIRType_Value);
 
@@ -4024,6 +4010,20 @@ class MGetPropertyCache
 
     static MGetPropertyCache *New(MDefinition *obj, HandlePropertyName name) {
         return new MGetPropertyCache(obj, name);
+    }
+
+    InlinePropertyTable *initInlinePropertyTable(jsbytecode *pc) {
+        JS_ASSERT(inlinePropertyTable_ == NULL);
+        inlinePropertyTable_ = new InlinePropertyTable(pc);
+        return inlinePropertyTable_;
+    }
+
+    void clearInlinePropertyTable() {
+        inlinePropertyTable_ = NULL;
+    }
+
+    InlinePropertyTable *inlinePropertyTable() const {
+        return inlinePropertyTable_;
     }
 
     MDefinition *object() const {
@@ -4058,6 +4058,163 @@ class MGetPropertyCache
     }
 
 };
+
+// Represents a polymorphic dispatch to one or more functions.
+class MPolyInlineDispatch : public MControlInstruction, public SingleObjectPolicy
+{
+    // A table to map JSFunctions to the blocks that execute them.
+    struct Entry {
+        MConstant *funcConst;
+        MBasicBlock *block;
+        Entry(MConstant *funcConst, MBasicBlock *block)
+            : funcConst(funcConst), block(block) {}
+    };
+    Vector<Entry, 4, IonAllocPolicy> dispatchTable_;
+
+    MDefinition *operand_;
+    InlinePropertyTable *inlinePropertyTable_;
+    MBasicBlock *fallbackPrepBlock_;
+    MBasicBlock *fallbackMidBlock_;
+    MBasicBlock *fallbackEndBlock_;
+
+    MPolyInlineDispatch(MDefinition *ins)
+      : dispatchTable_(), operand_(NULL),
+        inlinePropertyTable_(NULL),
+        fallbackPrepBlock_(NULL),
+        fallbackMidBlock_(NULL),
+        fallbackEndBlock_(NULL)
+    {
+        initOperand(0, ins);
+    }
+
+    MPolyInlineDispatch(MDefinition *ins, InlinePropertyTable *inlinePropertyTable,
+                        MBasicBlock *fallbackPrepBlock,
+                        MBasicBlock *fallbackMidBlock,
+                        MBasicBlock *fallbackEndBlock)
+      : dispatchTable_(), operand_(NULL),
+        inlinePropertyTable_(inlinePropertyTable),
+        fallbackPrepBlock_(fallbackPrepBlock),
+        fallbackMidBlock_(fallbackMidBlock),
+        fallbackEndBlock_(fallbackEndBlock)
+    {
+        initOperand(0, ins);
+    }
+
+  protected:
+    virtual void setOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_ = operand;
+    }
+
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(i < numSuccessors());
+        if (inlinePropertyTable_ && (i == numSuccessors() - 1))
+            fallbackPrepBlock_ = successor;
+        else
+            dispatchTable_[i].block = successor;
+    }
+
+  public:
+    INSTRUCTION_HEADER(PolyInlineDispatch);
+
+    virtual MDefinition *getOperand(size_t index) const {
+        JS_ASSERT(index == 0);
+        return operand_;
+    }
+
+    virtual size_t numOperands() const {
+        return 1;
+    }
+    virtual size_t numSuccessors() const {
+        return dispatchTable_.length() + (inlinePropertyTable_ ? 1 : 0);
+    }
+
+    virtual void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        setSuccessor(i, successor);
+    }
+
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_ASSERT(i < numSuccessors());
+        if (inlinePropertyTable_ && (i == numSuccessors() - 1))
+            return fallbackPrepBlock_;
+        else
+            return dispatchTable_[i].block;
+    }
+
+    static MPolyInlineDispatch *New(MDefinition *ins) {
+        return new MPolyInlineDispatch(ins);
+    }
+
+    static MPolyInlineDispatch *New(MDefinition *ins, InlinePropertyTable *inlinePropTable,
+                                    MBasicBlock *fallbackPrepBlock,
+                                    MBasicBlock *fallbackMidBlock,
+                                    MBasicBlock *fallbackEndBlock)
+    {
+        return new MPolyInlineDispatch(ins, inlinePropTable,
+                                       fallbackPrepBlock,
+                                       fallbackMidBlock,
+                                       fallbackEndBlock);
+    }
+
+    size_t numCallees() const {
+        return dispatchTable_.length();
+    }
+
+    void addCallee(MConstant *funcConst, MBasicBlock *block) {
+        dispatchTable_.append(Entry(funcConst, block));
+    }
+
+    MConstant *getFunctionConstant(size_t i) const {
+        JS_ASSERT(i < numCallees());
+        return dispatchTable_[i].funcConst;
+    }
+
+    JSFunction *getFunction(size_t i) const {
+        return getFunctionConstant(i)->value().toObject().toFunction();
+    }
+
+    MBasicBlock *getFunctionBlock(size_t i) const {
+        JS_ASSERT(i < numCallees());
+        return dispatchTable_[i].block;
+    }
+
+    MBasicBlock *getFunctionBlock(JSFunction *func) const {
+        for (size_t i = 0; i < numCallees(); i++) {
+            if (getFunction(i) == func)
+                return getFunctionBlock(i);
+        }
+        JS_NOT_REACHED("Bad function lookup!");
+    }
+
+    InlinePropertyTable *inlinePropertyTable() const {
+        return inlinePropertyTable_;
+    }
+
+    MBasicBlock *fallbackPrepBlock() const {
+        JS_ASSERT(inlinePropertyTable_ != NULL);
+        return fallbackPrepBlock_;
+    }
+
+    MBasicBlock *fallbackMidBlock() const {
+        JS_ASSERT(inlinePropertyTable_ != NULL);
+        return fallbackMidBlock_;
+    }
+
+    MBasicBlock *fallbackEndBlock() const {
+        JS_ASSERT(inlinePropertyTable_ != NULL);
+        return fallbackEndBlock_;
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+
 
 class MGetElementCache
   : public MBinaryInstruction,
