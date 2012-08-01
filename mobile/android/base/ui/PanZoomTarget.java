@@ -17,8 +17,6 @@ public interface PanZoomTarget {
 
     public void setAnimationTarget(ViewportMetrics viewport);
     public void setViewportMetrics(ViewportMetrics viewport);
-    public void scrollBy(PointF point);
-    public void scaleWithFocus(float zoomFactor, PointF focus);
 
     public void notifyLayerClientOfGeometryChange();
     public void setForceRedraw();
