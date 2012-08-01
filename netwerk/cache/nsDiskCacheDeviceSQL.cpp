@@ -925,14 +925,35 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
   AutoResetStatement statement(mStatement_UpdateEntry);
 
   nsresult rv;
-  rv  = statement->BindBlobByIndex(0, rec.metaData, rec.metaDataLen);
-  rv |= statement->BindInt32ByIndex(1, rec.dataSize);
-  rv |= statement->BindInt32ByIndex(2, rec.fetchCount);
-  rv |= statement->BindInt64ByIndex(3, rec.lastFetched);
-  rv |= statement->BindInt64ByIndex(4, rec.lastModified);
-  rv |= statement->BindInt64ByIndex(5, rec.expirationTime);
-  rv |= statement->BindUTF8StringByIndex(6, nsDependentCString(cid));
-  rv |= statement->BindUTF8StringByIndex(7, nsDependentCString(key));
+  rv = statement->BindBlobByIndex(0, rec.metaData, rec.metaDataLen);
+  nsresult tmp = statement->BindInt32ByIndex(1, rec.dataSize);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt32ByIndex(2, rec.fetchCount);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(3, rec.lastFetched);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(4, rec.lastModified);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(5, rec.expirationTime);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindUTF8StringByIndex(6, nsDependentCString(cid));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindUTF8StringByIndex(7, nsDependentCString(key));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasRows;
@@ -954,10 +975,15 @@ nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
 
   AutoResetStatement statement(mStatement_UpdateEntrySize);
 
-  nsresult rv;
-  rv  = statement->BindInt32ByIndex(0, newSize);
-  rv |= statement->BindUTF8StringByIndex(1, nsDependentCString(cid));
-  rv |= statement->BindUTF8StringByIndex(2, nsDependentCString(key));
+  nsresult rv = statement->BindInt32ByIndex(0, newSize);
+  nsresult tmp = statement->BindUTF8StringByIndex(1, nsDependentCString(cid));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindUTF8StringByIndex(2, nsDependentCString(key));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasRows;
@@ -986,10 +1012,10 @@ nsOfflineCacheDevice::DeleteEntry(nsCacheEntry *entry, bool deleteData)
 
   AutoResetStatement statement(mStatement_DeleteEntry);
 
-  nsresult rv;
-  rv  = statement->BindUTF8StringByIndex(0, nsDependentCString(cid));
-  rv |= statement->BindUTF8StringByIndex(1, nsDependentCString(key));
+  nsresult rv = statement->BindUTF8StringByIndex(0, nsDependentCString(cid));
+  nsresult rv2 = statement->BindUTF8StringByIndex(1, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv2, rv2);
 
   bool hasRows;
   rv = statement->ExecuteStep(&hasRows);
@@ -1351,10 +1377,10 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
 
   AutoResetStatement statement(mStatement_FindEntry);
 
-  nsresult rv;
-  rv  = statement->BindUTF8StringByIndex(0, nsDependentCString(cid));
-  rv |= statement->BindUTF8StringByIndex(1, nsDependentCString(key));
+  nsresult rv = statement->BindUTF8StringByIndex(0, nsDependentCString(cid));
+  nsresult rv2 = statement->BindUTF8StringByIndex(1, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv2, nullptr);
 
   bool hasRows;
   rv = statement->ExecuteStep(&hasRows);
@@ -1488,16 +1514,39 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
 
   AutoResetStatement statement(mStatement_BindEntry);
 
-  nsresult rv;
-  rv  = statement->BindUTF8StringByIndex(0, nsDependentCString(rec.clientID));
-  rv |= statement->BindUTF8StringByIndex(1, nsDependentCString(rec.key));
-  rv |= statement->BindBlobByIndex(2, rec.metaData, rec.metaDataLen);
-  rv |= statement->BindInt32ByIndex(3, rec.generation);
-  rv |= statement->BindInt32ByIndex(4, rec.dataSize);
-  rv |= statement->BindInt32ByIndex(5, rec.fetchCount);
-  rv |= statement->BindInt64ByIndex(6, rec.lastFetched);
-  rv |= statement->BindInt64ByIndex(7, rec.lastModified);
-  rv |= statement->BindInt64ByIndex(8, rec.expirationTime);
+  nsresult rv = statement->BindUTF8StringByIndex(0, nsDependentCString(rec.clientID));
+  nsresult tmp = statement->BindUTF8StringByIndex(1, nsDependentCString(rec.key));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindBlobByIndex(2, rec.metaData, rec.metaDataLen);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt32ByIndex(3, rec.generation);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt32ByIndex(4, rec.dataSize);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt32ByIndex(5, rec.fetchCount);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(6, rec.lastFetched);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(7, rec.lastModified);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = statement->BindInt64ByIndex(8, rec.expirationTime);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
   
   bool hasRows;

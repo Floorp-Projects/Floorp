@@ -4140,6 +4140,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Broken Content Detected. e.g. Content-MD5 check failure.
             error.AssignLiteral("corruptedContentError");
             break;
+        default:
+            break;
         }
     }
 
@@ -4270,7 +4272,8 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     if (aURI)
     {
         nsresult rv = aURI->GetSpec(url);
-        rv |= aURI->GetOriginCharset(charset);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = aURI->GetOriginCharset(charset);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aURL)

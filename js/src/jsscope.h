@@ -698,8 +698,8 @@ struct Shape : public js::gc::Cell
                                      uint32_t aslot, unsigned aattrs, unsigned aflags,
                                      int ashortid) const;
 
-    bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, js::Value* vp);
-    bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, js::Value* vp);
+    bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, MutableHandleValue vp);
+    bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp);
 
     BaseShape *base() const { return base_; }
 

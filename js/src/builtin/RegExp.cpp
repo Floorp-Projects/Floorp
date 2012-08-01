@@ -22,29 +22,31 @@ class RegExpMatchBuilder
     JSContext   * const cx;
     RootedObject array;
 
-    bool setProperty(Handle<PropertyName*> name, Value v) {
-        return !!baseops::DefineProperty(cx, array, name, &v,
+    bool setProperty(Handle<PropertyName*> name, HandleValue v) {
+        return !!baseops::DefineProperty(cx, array, name, v,
                                          JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
     }
 
   public:
     RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(cx, array) {}
 
-    bool append(uint32_t index, Value v) {
+    bool append(uint32_t index, HandleValue v) {
         JS_ASSERT(!array->getOps()->getElement);
-        return !!baseops::DefineElement(cx, array, index, &v, JS_PropertyStub, JS_StrictPropertyStub,
+        return !!baseops::DefineElement(cx, array, index, v, JS_PropertyStub, JS_StrictPropertyStub,
                                         JSPROP_ENUMERATE);
     }
 
     bool setIndex(int index) {
         Rooted<PropertyName*> name(cx, cx->runtime->atomState.indexAtom);
-        return setProperty(name, Int32Value(index));
+        RootedValue value(cx, Int32Value(index));
+        return setProperty(name, value);
     }
 
     bool setInput(JSString *str) {
         JS_ASSERT(str);
         Rooted<PropertyName*> name(cx, cx->runtime->atomState.inputAtom);
-        return setProperty(name, StringValue(str));
+        RootedValue value(cx, StringValue(str));
+        return setProperty(name, value);
     }
 };
 
@@ -74,6 +76,7 @@ CreateRegExpMatchResult(JSContext *cx, JSString *input_, const jschar *chars, si
     }
 
     RegExpMatchBuilder builder(cx, array);
+    RootedValue undefinedValue(cx, UndefinedValue());
 
     for (size_t i = 0; i < matchPairs->pairCount(); ++i) {
         MatchPair pair = matchPairs->pair(i);
@@ -81,11 +84,12 @@ CreateRegExpMatchResult(JSContext *cx, JSString *input_, const jschar *chars, si
         JSString *captured;
         if (pair.isUndefined()) {
             JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            if (!builder.append(i, UndefinedValue()))
+            if (!builder.append(i, undefinedValue))
                 return false;
         } else {
             captured = js_NewDependentString(cx, input, pair.start, pair.length());
-            if (!captured || !builder.append(i, StringValue(captured)))
+            RootedValue value(cx, StringValue(captured));
+            if (!captured || !builder.append(i, value))
                 return false;
         }
     }
@@ -199,7 +203,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         RegExpObject *reobj = builder.build(empty, res->getFlags());
         if (!reobj)
             return false;
-        args.rval() = ObjectValue(*reobj);
+        args.rval().setObject(*reobj);
         return true;
     }
 
@@ -239,7 +243,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          * 'toSource' is a permanent read-only property, so this is equivalent
          * to executing RegExpObject::getSource on the unwrapped object.
          */
-        Value v;
+        RootedValue v(cx);
         if (!sourceObj.getProperty(cx, cx->runtime->atomState.sourceAtom, &v))
             return false;
 
@@ -248,7 +252,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!reobj)
             return false;
 
-        args.rval() = ObjectValue(*reobj);
+        args.rval().setObject(*reobj);
         return true;
     }
 
@@ -288,7 +292,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     if (!reobj)
         return false;
 
-    args.rval() = ObjectValue(*reobj);
+    args.rval().setObject(*reobj);
     return true;
 }
 
@@ -328,7 +332,7 @@ regexp_construct(JSContext *cx, unsigned argc, Value *vp)
             IsObjectWithClass(args[0], ESClass_RegExp, cx) &&
             !args.hasDefined(1))
         {
-            args.rval() = args[0];
+            args.rval().set(args[0]);
             return true;
         }
     }
@@ -346,7 +350,7 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
     if (!str)
         return false;
 
-    args.rval() = StringValue(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -383,33 +387,33 @@ static JSFunctionSpec regexp_methods[] = {
 
 #define DEFINE_STATIC_GETTER(name, code)                                        \
     static JSBool                                                               \
-    name(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)               \
+    name(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)   \
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
     }
 
-DEFINE_STATIC_GETTER(static_input_getter,        return res->createPendingInput(cx, vp))
-DEFINE_STATIC_GETTER(static_multiline_getter,    *vp = BOOLEAN_TO_JSVAL(res->multiline());
+DEFINE_STATIC_GETTER(static_input_getter,        return res->createPendingInput(cx, vp.address()))
+DEFINE_STATIC_GETTER(static_multiline_getter,    vp.set(BOOLEAN_TO_JSVAL(res->multiline()));
                                                  return true)
-DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, vp))
-DEFINE_STATIC_GETTER(static_lastParen_getter,    return res->createLastParen(cx, vp))
-DEFINE_STATIC_GETTER(static_leftContext_getter,  return res->createLeftContext(cx, vp))
-DEFINE_STATIC_GETTER(static_rightContext_getter, return res->createRightContext(cx, vp))
+DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, vp.address()))
+DEFINE_STATIC_GETTER(static_lastParen_getter,    return res->createLastParen(cx, vp.address()))
+DEFINE_STATIC_GETTER(static_leftContext_getter,  return res->createLeftContext(cx, vp.address()))
+DEFINE_STATIC_GETTER(static_rightContext_getter, return res->createRightContext(cx, vp.address()))
 
-DEFINE_STATIC_GETTER(static_paren1_getter,       return res->createParen(cx, 1, vp))
-DEFINE_STATIC_GETTER(static_paren2_getter,       return res->createParen(cx, 2, vp))
-DEFINE_STATIC_GETTER(static_paren3_getter,       return res->createParen(cx, 3, vp))
-DEFINE_STATIC_GETTER(static_paren4_getter,       return res->createParen(cx, 4, vp))
-DEFINE_STATIC_GETTER(static_paren5_getter,       return res->createParen(cx, 5, vp))
-DEFINE_STATIC_GETTER(static_paren6_getter,       return res->createParen(cx, 6, vp))
-DEFINE_STATIC_GETTER(static_paren7_getter,       return res->createParen(cx, 7, vp))
-DEFINE_STATIC_GETTER(static_paren8_getter,       return res->createParen(cx, 8, vp))
-DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, vp))
+DEFINE_STATIC_GETTER(static_paren1_getter,       return res->createParen(cx, 1, vp.address()))
+DEFINE_STATIC_GETTER(static_paren2_getter,       return res->createParen(cx, 2, vp.address()))
+DEFINE_STATIC_GETTER(static_paren3_getter,       return res->createParen(cx, 3, vp.address()))
+DEFINE_STATIC_GETTER(static_paren4_getter,       return res->createParen(cx, 4, vp.address()))
+DEFINE_STATIC_GETTER(static_paren5_getter,       return res->createParen(cx, 5, vp.address()))
+DEFINE_STATIC_GETTER(static_paren6_getter,       return res->createParen(cx, 6, vp.address()))
+DEFINE_STATIC_GETTER(static_paren7_getter,       return res->createParen(cx, 7, vp.address()))
+DEFINE_STATIC_GETTER(static_paren8_getter,       return res->createParen(cx, 8, vp.address()))
+DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, vp.address()))
 
 #define DEFINE_STATIC_SETTER(name, code)                                        \
     static JSBool                                                               \
-    name(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)\
+    name(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)\
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
@@ -417,13 +421,13 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, 
     }
 
 DEFINE_STATIC_SETTER(static_input_setter,
-                     if (!JSVAL_IS_STRING(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp))
+                     if (!JSVAL_IS_STRING(vp) && !JS_ConvertValue(cx, vp, JSTYPE_STRING, vp.address()))
                          return false;
-                     res->setPendingInput(JSVAL_TO_STRING(*vp)))
+                     res->setPendingInput(JSVAL_TO_STRING(vp)))
 DEFINE_STATIC_SETTER(static_multiline_setter,
-                     if (!JSVAL_IS_BOOLEAN(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp))
+                     if (!JSVAL_IS_BOOLEAN(vp) && !JS_ConvertValue(cx, vp, JSTYPE_BOOLEAN, vp.address()))
                          return false;
-                     res->setMultiline(cx, !!JSVAL_TO_BOOLEAN(*vp)))
+                     res->setMultiline(cx, !!JSVAL_TO_BOOLEAN(vp)))
 
 const uint8_t REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
 const uint8_t RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
@@ -591,14 +595,14 @@ ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
     /* Step 9a. */
     if (i < 0 || i > length) {
         reobj->zeroLastIndex();
-        args.rval() = NullValue();
+        args.rval().setNull();
         return true;
     }
 
     /* Steps 8-21. */
     size_t lastIndexInt(i);
     if (!ExecuteRegExp(cx, res, *re, linearInput, chars, length, &lastIndexInt, execType,
-                       &args.rval())) {
+                       args.rval().address())) {
         return false;
     }
 

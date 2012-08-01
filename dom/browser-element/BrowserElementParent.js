@@ -83,17 +83,17 @@ BrowserElementParentFactory.prototype = {
 
   _observeInProcessBrowserFrameShown: function(frameLoader) {
     debug("In-process browser frame shown " + frameLoader);
-    this._createBrowserElementParent(frameLoader);
+    this._createBrowserElementParent(frameLoader, /* hasRemoteFrame = */ false);
   },
 
   _observeRemoteBrowserFrameShown: function(frameLoader) {
     debug("Remote browser frame shown " + frameLoader);
-    this._createBrowserElementParent(frameLoader);
+    this._createBrowserElementParent(frameLoader, /* hasRemoteFrame = */ true);
   },
 
-  _createBrowserElementParent: function(frameLoader) {
+  _createBrowserElementParent: function(frameLoader, hasRemoteFrame) {
     let frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
-    this._bepMap.set(frameElement, new BrowserElementParent(frameLoader));
+    this._bepMap.set(frameElement, new BrowserElementParent(frameLoader, hasRemoteFrame));
   },
 
   observe: function(subject, topic, data) {
@@ -119,10 +119,11 @@ BrowserElementParentFactory.prototype = {
   },
 };
 
-function BrowserElementParent(frameLoader) {
+function BrowserElementParent(frameLoader, hasRemoteFrame) {
   debug("Creating new BrowserElementParent object for " + frameLoader);
   this._domRequestCounter = 0;
   this._pendingDOMRequests = {};
+  this._hasRemoteFrame = hasRemoteFrame;
 
   this._frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
   if (!this._frameElement) {
@@ -162,6 +163,12 @@ function BrowserElementParent(frameLoader) {
   addMessageListener('got-screenshot', this._gotDOMRequestResult);
   addMessageListener('got-can-go-back', this._gotDOMRequestResult);
   addMessageListener('got-can-go-forward', this._gotDOMRequestResult);
+  addMessageListener('fullscreen-origin-change', this._remoteFullscreenOriginChange);
+  addMessageListener('rollback-fullscreen', this._remoteFrameFullscreenReverted);
+  addMessageListener('exit-fullscreen', this._exitFullscreen);
+
+  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  os.addObserver(this, 'ask-children-to-exit-fullscreen', /* ownsWeak = */ true);
 
   function defineMethod(name, fn) {
     XPCNativeWrapper.unwrap(self._frameElement)[name] = function() {
@@ -202,6 +209,10 @@ function BrowserElementParent(frameLoader) {
 }
 
 BrowserElementParent.prototype = {
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
   /**
    * You shouldn't touch this._frameElement or this._window if _isAlive is
    * false.  (You'll likely get an exception if you do.)
@@ -214,6 +225,11 @@ BrowserElementParent.prototype = {
 
   get _window() {
     return this._frameElement.ownerDocument.defaultView;
+  },
+
+  get _windowUtils() {
+    return this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
   },
 
   _sendAsyncMsg: function(msg, data) {
@@ -434,6 +450,27 @@ BrowserElementParent.prototype = {
   _ownerVisibilityChange: function() {
     this._sendAsyncMsg('owner-visibility-change',
                        {visible: !this._window.document.mozHidden});
+  },
+
+  _exitFullscreen: function() {
+    this._windowUtils.exitFullscreen();
+  },
+
+  _remoteFullscreenOriginChange: function(data) {
+    let origin = data.json;
+    this._windowUtils.remoteFrameFullscreenChanged(this._frameElement, origin);
+  },
+
+  _remoteFrameFullscreenReverted: function(data) {
+    this._windowUtils.remoteFrameFullscreenReverted();
+  },
+
+  observe: function(subject, topic, data) {
+    if (topic == 'ask-children-to-exit-fullscreen' &&
+        this._isAlive() &&
+        this._frameElement.ownerDocument == subject &&
+        this._hasRemoteFrame)
+      this._sendAsyncMsg('exit-fullscreen');
   },
 };
 

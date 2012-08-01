@@ -602,6 +602,12 @@ public:
    */
   virtual bool IsPartOfApp() = 0;
 
+  /**
+   * Returns true of this window is part of an we app, and this window has
+   * the same origin (principal) as the web app.
+   */
+  virtual bool IsInAppOrigin() = 0;
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer

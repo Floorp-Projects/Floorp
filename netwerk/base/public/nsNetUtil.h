@@ -191,17 +191,25 @@ NS_NewChannel(nsIChannel           **result,
         nsCOMPtr<nsIChannel> chan;
         rv = ioService->NewChannelFromURI(uri, getter_AddRefs(chan));
         if (NS_SUCCEEDED(rv)) {
-            if (loadGroup)
-                rv |= chan->SetLoadGroup(loadGroup);
-            if (callbacks)
-                rv |= chan->SetNotificationCallbacks(callbacks);
+            if (loadGroup) {
+                rv = chan->SetLoadGroup(loadGroup);
+            }
+            if (callbacks) {
+                nsresult tmp = chan->SetNotificationCallbacks(callbacks);
+                if (NS_FAILED(tmp)) {
+                    rv = tmp;
+                }
+            }
             if (loadFlags != nsIRequest::LOAD_NORMAL) {
                 // Retain the LOAD_REPLACE load flag if set.
                 nsLoadFlags normalLoadFlags = 0;
                 chan->GetLoadFlags(&normalLoadFlags);
-                rv |= chan->SetLoadFlags(loadFlags | 
-                                         (normalLoadFlags & 
-                                          nsIChannel::LOAD_REPLACE));
+                nsresult tmp = chan->SetLoadFlags(loadFlags |
+                                                  (normalLoadFlags &
+                                                   nsIChannel::LOAD_REPLACE));
+                if (NS_FAILED(tmp)) {
+                    rv = tmp;
+                }
             }
             if (channelPolicy) {
                 nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(chan);
@@ -406,17 +414,24 @@ NS_NewInputStreamChannel(nsIChannel      **result,
         do_CreateInstance(NS_INPUTSTREAMCHANNEL_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
-    rv |= isc->SetURI(uri);
-    rv |= isc->SetContentStream(stream);
+    rv = isc->SetURI(uri);
+    nsresult tmp = isc->SetContentStream(stream);
+    if (NS_FAILED(tmp)) {
+        rv = tmp;
+    }
     if (NS_FAILED(rv))
         return rv;
     nsCOMPtr<nsIChannel> chan = do_QueryInterface(isc, &rv);
     if (NS_FAILED(rv))
         return rv;
     if (!contentType.IsEmpty())
-        rv |= chan->SetContentType(contentType);
-    if (contentCharset && !contentCharset->IsEmpty())
-        rv |= chan->SetContentCharset(*contentCharset);
+        rv = chan->SetContentType(contentType);
+    if (contentCharset && !contentCharset->IsEmpty()) {
+        tmp = chan->SetContentCharset(*contentCharset);
+        if (NS_FAILED(tmp)) {
+            rv = tmp;
+        }
+    }
     if (NS_SUCCEEDED(rv)) {
         *result = nullptr;
         chan.swap(*result);

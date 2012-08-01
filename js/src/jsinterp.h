@@ -275,7 +275,7 @@ extern void
 UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 
 extern bool
-OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
+OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, MutableHandleValue vp);
 
 class TryNoteIter
 {
@@ -328,25 +328,26 @@ bool
 Throw(JSContext *cx, const Value &v);
 
 bool
-GetProperty(JSContext *cx, const Value &value, PropertyName *name, Value *vp);
+GetProperty(JSContext *cx, const Value &value, PropertyName *name, MutableHandleValue vp);
 
 bool
-GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp);
+GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
 
 bool
-GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp);
+GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                      MutableHandleValue vp);
 
 JSObject *
 Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
 
 bool
-GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
+GetElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
 
 bool
-GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref, Value *res);
+GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
 
 bool
-CallElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
+CallElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
 
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, const Value &index, const Value &value,

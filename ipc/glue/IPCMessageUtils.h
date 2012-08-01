@@ -25,7 +25,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
-#include "LayersBackend.h"
+#include "LayersTypes.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )

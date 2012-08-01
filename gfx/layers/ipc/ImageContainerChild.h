@@ -13,16 +13,17 @@ namespace mozilla {
 namespace layers {
 
 class ImageBridgeCopyAndSendTask;
+class ImageContainer;
 
 /**
  * ImageContainerChild is the content-side part of the ImageBridge IPDL protocol
- * acting at the ImageContainer level. 
+ * acting at the ImageContainer level.
  *
  * There is one ImageContainerChild/Parent
  * pair for each ImageContainer that uses the protocol.
  * ImageContainers that use the ImageBridge protocol forward frames through
  * ImageContainerChild to the compositor without using the main thread whereas
- * ImageContainers that don't use it will forward frames in the main thread 
+ * ImageContainers that don't use it will forward frames in the main thread
  * within a transaction.
  *
  * See ImageBridgeChild.h for more details about the ImageBridge protocol

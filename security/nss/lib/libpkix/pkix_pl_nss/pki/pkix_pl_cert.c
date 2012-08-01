@@ -2430,14 +2430,14 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
                                 PKIX_DECREF(pkixOID);
                         }
 
+                        PKIX_CHECK(PKIX_List_SetImmutable
+                                    (oidsList, plContext),
+                                    PKIX_LISTSETIMMUTABLEFAILED);
+
                         /* save a cached copy in case it is asked for again */
                         cert->extKeyUsages = oidsList;
                         oidsList = NULL;
                 }
-
-                PKIX_CHECK(PKIX_List_SetImmutable
-                            (cert->extKeyUsages, plContext),
-                            PKIX_LISTSETIMMUTABLEFAILED);
 
                 PKIX_OBJECT_UNLOCK(cert);
         }

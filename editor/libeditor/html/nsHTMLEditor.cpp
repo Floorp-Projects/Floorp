@@ -4465,20 +4465,18 @@ nsHTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.  Form Widgets not empty.
   if (!IsContainer(aNode->AsDOMNode())                      ||
-      (aNode->IsElement() &&
-       (nsHTMLEditUtils::IsNamedAnchor(aNode->AsElement())  ||
-        nsHTMLEditUtils::IsFormWidget(aNode->AsElement())   ||
-        (aListOrCellNotEmpty &&
-         (nsHTMLEditUtils::IsListItem(aNode->AsElement())   ||
-          nsHTMLEditUtils::IsTableCell(aNode->AsElement()))))))  {
+      (nsHTMLEditUtils::IsNamedAnchor(aNode) ||
+       nsHTMLEditUtils::IsFormWidget(aNode) ||
+       (aListOrCellNotEmpty &&
+        (nsHTMLEditUtils::IsListItem(aNode) ||
+         nsHTMLEditUtils::IsTableCell(aNode))))) {
     *outIsEmptyNode = false;
     return NS_OK;
   }
     
   // need this for later
-  bool isListItemOrCell = aNode->IsElement() &&
-       (nsHTMLEditUtils::IsListItem(aNode->AsElement()) ||
-        nsHTMLEditUtils::IsTableCell(aNode->AsElement()));
+  bool isListItemOrCell = nsHTMLEditUtils::IsListItem(aNode) ||
+                          nsHTMLEditUtils::IsTableCell(aNode);
        
   // loop over children of node. if no children, or all children are either 
   // empty text nodes or non-editable, then node qualifies as empty
@@ -4510,12 +4508,13 @@ nsHTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
           // if they contain other lists or tables
           if (child->IsElement()) {
             if (isListItemOrCell) {
-              if (nsHTMLEditUtils::IsList(child->AsElement()) || child->IsHTML(nsGkAtoms::table)) {
+              if (nsHTMLEditUtils::IsList(child) ||
+                  child->IsHTML(nsGkAtoms::table)) {
                 // break out if we find we aren't empty
                 *outIsEmptyNode = false;
                 return NS_OK;
               }
-            } else if (nsHTMLEditUtils::IsFormWidget(child->AsElement())) {
+            } else if (nsHTMLEditUtils::IsFormWidget(child)) {
               // is it a form widget?
               // break out if we find we aren't empty
               *outIsEmptyNode = false;

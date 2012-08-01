@@ -453,7 +453,7 @@ XULSortServiceImpl::CompareValues(const nsAString& aLeft,
                                   PRUint32 aSortHints)
 {
   if (aSortHints & SORT_INTEGER) {
-    PRInt32 err;
+    nsresult err;
     PRInt32 leftint = PromiseFlatString(aLeft).ToInteger(&err);
     if (NS_SUCCEEDED(err)) {
       PRInt32 rightint = PromiseFlatString(aRight).ToInteger(&err);

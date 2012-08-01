@@ -233,8 +233,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
     currFrame = currFrame->GetNextSibling();
   }
   if (foundMenu) {
-    return (foundMenu->GetType() == nsGkAtoms::menuFrame) ?
-           static_cast<nsMenuFrame *>(foundMenu) : nullptr;
+    return do_QueryFrame(foundMenu);
   }
 
   // didn't find a matching menu item
@@ -313,8 +312,7 @@ public:
     // HidePopup doesn't deactivate the menubar when the first menu closes.
     nsMenuBarFrame* menubar = nullptr;
     if (mOldMenu && mNewMenu) {
-      menubar = static_cast<nsMenuBarFrame *>
-        (pm->GetFrameOfTypeForContent(mMenuBar, nsGkAtoms::menuBarFrame, false));
+      menubar = do_QueryFrame(mMenuBar->GetPrimaryFrame());
       if (menubar)
         menubar->SetStayActive(true);
     }

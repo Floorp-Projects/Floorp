@@ -1972,7 +1972,8 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (idstr == atom) {
         *resolved = true;
-        return obj->defineProperty(cx, atom->asPropertyName(), UndefinedValue(),
+        RootedValue value(cx, UndefinedValue());
+        return obj->defineProperty(cx, atom->asPropertyName(), value,
                                    JS_PropertyStub, JS_StrictPropertyStub,
                                    JSPROP_PERMANENT | JSPROP_READONLY);
     }
@@ -2064,8 +2065,9 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
      */
     RootedPropertyName undefinedName(cx, cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     RootedId undefinedId(cx, NameToId(undefinedName));
+    RootedValue undefinedValue(cx, UndefinedValue());
     if (!obj->nativeContains(cx, undefinedId) &&
-        !obj->defineProperty(cx, undefinedName, UndefinedValue(),
+        !obj->defineProperty(cx, undefinedName, undefinedValue,
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return false;
@@ -3217,17 +3219,23 @@ JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj != NULL);
     JS_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
-    return obj->defaultValue(cx, hint, vp);
+
+    RootedValue value(cx);
+    if (!obj->defaultValue(cx, hint, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
+JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
 {
     return JS_TRUE;
 }
@@ -3245,7 +3253,7 @@ JS_ResolveStub(JSContext *cx, JSHandleObject obj, JSHandleId id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
+JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp)
 {
     JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
     JS_ASSERT(obj);
@@ -3372,7 +3380,7 @@ JS_SetParent(JSContext *cx, JSObject *obj_, JSObject *parent_)
 JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, JSObject *proto)
 {
-    Value cval;
+    RootedValue cval(cx);
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4177,15 +4185,28 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id_, JSObject *onBeha
     assertSameCompartment(cx, obj, id);
     assertSameCompartment(cx, onBehalfOf);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->getGeneric(cx, onBehalfOf, id, vp);
+
+    RootedValue value(cx);
+    if (!obj->getGeneric(cx, onBehalfOf, id, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj_, jsid id_, jsval def, jsval *vp)
+JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj_, jsid id_, jsval def_, jsval *vp)
 {
     Rooted<JSObject*> obj(cx, obj_);
     Rooted<jsid> id(cx, id_);
-    return baseops::GetPropertyDefault(cx, obj, id, def, vp);
+    RootedValue def(cx, def_);
+
+    RootedValue value(cx);
+    if (!baseops::GetPropertyDefault(cx, obj, id, def, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4203,7 +4224,13 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *o
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->getElement(cx, onBehalfOf, index, vp);
+
+    RootedValue value(cx);
+    if (!obj->getElement(cx, onBehalfOf, index, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4215,9 +4242,13 @@ JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32_t index, JSObject *o
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
+    RootedValue value(cx);
     bool isPresent;
-    if (!obj->getElementIfPresent(cx, onBehalfOf, index, vp, &isPresent))
+    if (!obj->getElementIfPresent(cx, onBehalfOf, index, &value, &isPresent))
         return false;
+
+    *vp = value;
     *present = isPresent;
     return true;
 }
@@ -4255,8 +4286,12 @@ JS_GetMethodById(JSContext *cx, JSObject *obj_, jsid id_, JSObject **objp, jsval
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    if (!GetMethod(cx, obj, id, 0, vp))
+
+    RootedValue value(cx);
+    if (!GetMethod(cx, obj, id, 0, &value))
         return JS_FALSE;
+    *vp = value;
+
     if (objp)
         *objp = obj;
     return JS_TRUE;
@@ -4279,7 +4314,13 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid id_, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setGeneric(cx, obj, id, vp, false);
+
+    RootedValue value(cx, *vp);
+    if (!obj->setGeneric(cx, obj, id, &value, false))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4291,7 +4332,13 @@ JS_SetElement(JSContext *cx, JSObject *obj_, uint32_t index, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, *vp);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setElement(cx, obj, index, vp, false);
+
+    RootedValue value(cx, *vp);
+    if (!obj->setElement(cx, obj, index, &value, false))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4318,12 +4365,19 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
+    RootedValue value(cx);
+
     if (JSID_IS_SPECIAL(id)) {
         Rooted<SpecialId> sid(cx, JSID_TO_SPECIALID(id));
-        return obj->deleteSpecial(cx, sid, rval, false);
+        if (!obj->deleteSpecial(cx, sid, &value, false))
+            return false;
+    } else {
+        if (!obj->deleteByValue(cx, IdToValue(id), &value, false))
+            return false;
     }
 
-    return obj->deleteByValue(cx, IdToValue(id), rval, false);
+    *rval = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4333,7 +4387,13 @@ JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32_t index, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteElement(cx, index, rval, false);
+
+    RootedValue value(cx);
+    if (!obj->deleteElement(cx, index, &value, false))
+        return false;
+
+    *rval = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4349,7 +4409,12 @@ JS_DeleteProperty2(JSContext *cx, JSObject *obj_, const char *name, jsval *rval)
     if (!atom)
         return false;
 
-    return obj->deleteByValue(cx, StringValue(atom), rval, false);
+    RootedValue value(cx);
+    if (!obj->deleteByValue(cx, StringValue(atom), &value, false))
+        return false;
+
+    *rval = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4365,7 +4430,12 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj_, const jschar *name, size_t n
     if (!atom)
         return false;
 
-    return obj->deleteByValue(cx, StringValue(atom), rval, false);
+    RootedValue value(cx);
+    if (!obj->deleteByValue(cx, StringValue(atom), &value, false))
+        return false;
+
+    *rval = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5350,7 +5420,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 
     if (obj && funAtom) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
-        if (!obj->defineGeneric(cx, id, ObjectValue(*fun), NULL, NULL, JSPROP_ENUMERATE))
+        RootedValue value(cx, ObjectValue(*fun));
+        if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
             return NULL;
     }
 
@@ -5707,11 +5778,11 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj_, const char *name, unsigned ar
 
     RootedObject obj(cx, obj_);
 
-    Value v;
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return false;
 
+    RootedValue v(cx);
     Rooted<jsid> id(cx, AtomToId(atom));
     return GetMethod(cx, obj, id, 0, &v) &&
            Invoke(cx, ObjectOrNullValue(obj), v, argc, argv, rval);
@@ -6231,16 +6302,26 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return ParseJSONWithReviver(cx, chars, len, NullValue(), vp);
+    RootedValue reviver(cx, NullValue()), value(cx);
+    if (!ParseJSONWithReviver(cx, chars, len, reviver, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviver, jsval *vp)
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviverArg, jsval *vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return ParseJSONWithReviver(cx, chars, len, reviver, vp);
+    RootedValue reviver(cx, reviverArg), value(cx);
+    if (!ParseJSONWithReviver(cx, chars, len, reviver, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)

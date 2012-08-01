@@ -34,7 +34,7 @@ private:
   bool                              m_processCanceled;
   nsString                          m_pendingStatus;
   PRInt32                           m_pendingStateFlags;
-  PRInt32                           m_pendingStateValue;
+  nsresult                          m_pendingStateValue;
   nsCOMPtr<nsIDOMWindow>            m_dialog;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
   nsCOMPtr<nsIObserver>             m_observer;
