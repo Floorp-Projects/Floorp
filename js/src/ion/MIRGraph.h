@@ -454,7 +454,7 @@ typedef Vector<MBasicBlock *, 1, IonAllocPolicy> MIRGraphExits;
 class MIRGraph
 {
     InlineList<MBasicBlock> blocks_;
-    TempAllocator &alloc_;
+    TempAllocator *alloc_;
     MIRGraphExits *exitAccumulator_;
     uint32 blockIdGen_;
     uint32 idGen_;
@@ -465,7 +465,7 @@ class MIRGraph
 #endif
 
   public:
-    MIRGraph(TempAllocator &alloc)
+    MIRGraph(TempAllocator *alloc)
       : alloc_(alloc),
         exitAccumulator_(NULL),
         blockIdGen_(0),
@@ -479,7 +479,7 @@ class MIRGraph
 
     template <typename T>
     T * allocate(size_t count = 1) {
-        return reinterpret_cast<T *>(alloc_.allocate(sizeof(T) * count));
+        return reinterpret_cast<T *>(alloc_->allocate(sizeof(T) * count));
     }
 
     void addBlock(MBasicBlock *block);

@@ -176,14 +176,16 @@ enum MethodStatus
 
 // An Ion context is needed to enter into either an Ion method or an instance
 // of the Ion compiler. It points to a temporary allocator and the active
-// JSContext.
+// JSContext, either of which may be NULL, and the active compartment, which
+// will not be NULL.
 class IonContext
 {
   public:
-    IonContext(JSContext *cx, TempAllocator *temp);
+    IonContext(JSContext *cx, JSCompartment *compartment, TempAllocator *temp);
     ~IonContext();
 
     JSContext *cx;
+    JSCompartment *compartment;
     TempAllocator *temp;
     int getNextAssemblerId() {
         return assemblerCount_++;

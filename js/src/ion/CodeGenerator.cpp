@@ -207,8 +207,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 bool
 CodeGenerator::visitRegExp(LRegExp *lir)
 {
-    GlobalObject *global = &gen->info().script()->global();
-    RootedObject proto(gen->cx, global->getOrCreateRegExpPrototype(gen->cx));
+    JSObject *proto = lir->mir()->getRegExpPrototype();
 
     typedef JSObject *(*pf)(JSContext *, JSObject *, JSObject *);
     static const VMFunction CloneRegExpObjectInfo = FunctionInfo<pf>(CloneRegExpObject);
@@ -234,7 +233,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
     Register output = ToRegister(lir->output());
-    RootedFunction fun(gen->cx, lir->mir()->fun());
+    JSFunction *fun = lir->mir()->fun();
 
     typedef JSObject *(*pf)(JSContext *, HandleFunction, HandleObject);
     static const VMFunction Info = FunctionInfo<pf>(js::Lambda);
@@ -244,23 +243,11 @@ CodeGenerator::visitLambda(LLambda *lir)
     if (!ool)
         return false;
 
-    JS_ASSERT(gen->cx->compartment == fun->compartment());
+    JS_ASSERT(gen->compartment == fun->compartment());
     JS_ASSERT(!fun->hasSingletonType());
 
-    // Because of compartment-per-global and compile'n'go, the Function prototype,
-    // first non-scope object on the scope chain, and global object, are all
-    // invariant. We can thus use CloneFunctionObject with the global object to get
-    // a bogus clone and use that as our template object.
-    RootedObject parent(gen->cx, &fun->global());
-    RootedFunction clone(gen->cx, CloneFunctionObject(gen->cx, fun, parent));
-    if (!clone)
-        return false;
-
-    JS_ASSERT(clone->getAllocKind() != JSFunction::ExtendedFinalizeKind);
-    JS_ASSERT(clone->isInterpreted());
-
-    masm.newGCThing(gen->cx, output, clone, ool->entry());
-    masm.initGCThing(gen->cx, output, clone);
+    masm.newGCThing(output, fun, ool->entry());
+    masm.initGCThing(output, fun);
 
     // Initialize nargs and flags. We do this with a single uint32 to avoid
     // 16-bit writes.
@@ -276,9 +263,9 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(clone->script()), Address(output, JSFunction::offsetOfNativeOrScript()));
+    masm.storePtr(ImmGCPtr(fun->script()), Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
-    masm.storePtr(ImmGCPtr(clone->atom), Address(output, offsetof(JSFunction, atom)));
+    masm.storePtr(ImmGCPtr(fun->atom), Address(output, offsetof(JSFunction, atom)));
 
     masm.bind(ool->rejoin());
     return true;
@@ -619,7 +606,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     if (call->hasSingleTarget() &&
         call->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT)
     {
-        emitCallInvokeFunction(call, unusedStack);
+        if (!emitCallInvokeFunction(call, unusedStack))
+            return false;
 
         if (call->mir()->isConstructing()) {
             Label notPrimitive;
@@ -652,7 +640,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
 
     // Guard that the IonScript has been compiled.
-    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_DISABLED_SCRIPT), &invoke);
+    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
 
     // Nestle %esp up to the argument vector.
     masm.freeStack(unusedStack);
@@ -691,7 +679,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
         // Hardcode the address of the argumentsRectifier code.
         IonCompartment *ion = gen->ionCompartment();
-        IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
+        IonCode *argumentsRectifier = ion->getArgumentsRectifier(GetIonContext()->cx);
         if (!argumentsRectifier)
             return false;
 
@@ -721,7 +709,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Handle uncompiled or native functions.
     masm.bind(&invoke);
-    emitCallInvokeFunction(call, unusedStack);
+    if (!emitCallInvokeFunction(call, unusedStack))
+        return false;
 
     masm.bind(&end);
 
@@ -885,7 +874,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         (!apply->getSingleTarget()->isInterpreted() ||
          apply->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT))
     {
-        emitCallInvokeFunction(apply, copyreg);
+        if (!emitCallInvokeFunction(apply, copyreg))
+            return false;
         emitPopArguments(apply, copyreg);
         return true;
     }
@@ -910,7 +900,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
 
     // Guard that the IonScript has been compiled.
-    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_DISABLED_SCRIPT), &invoke);
+    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
 
     // Call with an Ion frame or a rectifier frame.
     {
@@ -951,7 +941,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
             // Hardcode the address of the argumentsRectifier code.
             IonCompartment *ion = gen->ionCompartment();
-            IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
+            IonCode *argumentsRectifier = ion->getArgumentsRectifier(GetIonContext()->cx);
             if (!argumentsRectifier)
                 return false;
 
@@ -982,7 +972,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     // Handle uncompiled or native functions.
     {
         masm.bind(&invoke);
-        emitCallInvokeFunction(apply, copyreg);
+        if (!emitCallInvokeFunction(apply, copyreg))
+            return false;
     }
 
     // Pop arguments and continue.
@@ -1068,7 +1059,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // Ion may legally place frames very close to the limit. Calling additional
     // C functions may then violate the limit without any checking.
 
-    JSRuntime *rt = gen->cx->runtime;
+    JSRuntime *rt = gen->compartment->rt;
     Register limitReg = ToRegister(lir->limitTemp());
 
     // Since Ion frames exist on the C stack, the stack limit may be
@@ -1184,7 +1175,10 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     JS_ASSERT(!lir->isCall());
     saveLive(lir);
 
-    pushArg(ImmGCPtr(lir->mir()->type()));
+    JSObject *templateObject = lir->mir()->templateObject();
+    types::TypeObject *type = templateObject->hasSingletonType() ? NULL : templateObject->type();
+
+    pushArg(ImmGCPtr(type));
     pushArg(Imm32(lir->mir()->count()));
 
     if (!callVM(NewInitArrayInfo, lir))
@@ -1206,7 +1200,7 @@ CodeGenerator::visitNewSlots(LNewSlots *lir)
     Register temp3 = ToRegister(lir->temp3());
     Register output = ToRegister(lir->output());
 
-    masm.mov(ImmWord(gen->cx->runtime), temp1);
+    masm.mov(ImmWord(gen->compartment->rt), temp1);
     masm.mov(Imm32(lir->mir()->nslots()), temp2);
 
     masm.setupUnalignedABICall(2, temp3);
@@ -1225,7 +1219,7 @@ bool
 CodeGenerator::visitNewArray(LNewArray *lir)
 {
     Register objReg = ToRegister(lir->output());
-    types::TypeObject *typeObj = lir->mir()->type();
+    JSObject *templateObject = lir->mir()->templateObject();
     uint32 count = lir->mir()->count();
 
     JS_ASSERT(count < JSObject::NELEMENTS_LIMIT);
@@ -1238,20 +1232,15 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     // but only when data doesn't fit the available array slots.
     bool allocating = lir->mir()->isAllocating() && count > maxArraySlots;
 
-    if (!gen->cx->typeInferenceEnabled() || !typeObj || allocating)
+    if (templateObject->hasSingletonType() || allocating)
         return visitNewArrayCallVM(lir);
 
     OutOfLineNewArray *ool = new OutOfLineNewArray(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
-    RootedObject templateObject(gen->cx, NewDenseUnallocatedArray(gen->cx, count));
-    if (!templateObject)
-        return false;
-    templateObject->setType(typeObj);
-
-    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
-    masm.initGCThing(gen->cx, objReg, templateObject);
+    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.initGCThing(objReg, templateObject);
 
     masm.bind(ool->rejoin());
     return true;
@@ -1290,14 +1279,13 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
 
-    typedef JSObject *(*pf)(JSContext *, HandleObject, types::TypeObject *);
+    typedef JSObject *(*pf)(JSContext *, HandleObject);
     static const VMFunction Info = FunctionInfo<pf>(NewInitObject);
 
     JS_ASSERT(!lir->isCall());
     saveLive(lir);
 
-    pushArg(ImmGCPtr(lir->mir()->type()));
-    pushArg(ImmGCPtr(lir->mir()->baseObj()));
+    pushArg(ImmGCPtr(lir->mir()->templateObject()));
     if (!callVM(Info, lir))
         return false;
 
@@ -1313,26 +1301,17 @@ CodeGenerator::visitNewObject(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
 
-    RootedObject baseObj(gen->cx, lir->mir()->baseObj());
-    types::TypeObject *typeObj = lir->mir()->type();
+    JSObject *templateObject = lir->mir()->templateObject();
 
-    if (!gen->cx->typeInferenceEnabled() || !typeObj ||
-        !baseObj || baseObj->hasDynamicSlots())
-    {
+    if (templateObject->hasSingletonType() || templateObject->hasDynamicSlots())
         return visitNewObjectVMCall(lir);
-    }
 
     OutOfLineNewObject *ool = new OutOfLineNewObject(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
-    RootedObject templateObject(gen->cx, CopyInitializerObject(gen->cx, baseObj));
-    if (!templateObject)
-        return false;
-    templateObject->setType(typeObj);
-
-    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
-    masm.initGCThing(gen->cx, objReg, templateObject);
+    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.initGCThing(objReg, templateObject);
 
     masm.bind(ool->rejoin());
     return true;
@@ -1355,8 +1334,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     typedef JSObject *(*pf)(JSContext *, HandleShape, HandleTypeObject, HeapSlot *, HandleObject);
     static const VMFunction NewCallObjectInfo = FunctionInfo<pf>(NewCallObject);
 
-    RootedObject global(gen->cx, gen->cx->compartment->maybeGlobal());
-    RootedObject templateObj(gen->cx, lir->mir()->templateObj());
+    JSObject *templateObj = lir->mir()->templateObj();
+    JSObject *global = &templateObj->global();
+
     if (lir->isCall()) {
         pushArg(ImmGCPtr(global));
         if (lir->slots()->isRegister())
@@ -1388,8 +1368,8 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     if (!ool)
         return false;
 
-    masm.newGCThing(gen->cx, obj, templateObj, ool->entry());
-    masm.initGCThing(gen->cx, obj, templateObj);
+    masm.newGCThing(obj, templateObj, ool->entry());
+    masm.initGCThing(obj, templateObj);
 
     if (lir->slots()->isRegister())
         masm.storePtr(ToRegister(lir->slots()), Address(obj, JSObject::offsetOfSlots()));
@@ -1417,7 +1397,7 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
 {
     JS_ASSERT(lir->mir()->hasTemplateObject());
 
-    RootedObject templateObject(gen->cx, lir->mir()->getTemplateObject());
+    JSObject *templateObject = lir->mir()->getTemplateObject();
     gc::AllocKind allocKind = templateObject->getAllocKind();
     int thingSize = (int)gc::Arena::thingSize(allocKind);
     Register objReg = ToRegister(lir->output());
@@ -1432,11 +1412,11 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
         return false;
 
     // Allocate. If the FreeList is empty, call to VM, which may GC.
-    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
+    masm.newGCThing(objReg, templateObject, ool->entry());
 
     // Initialize based on the templateObject.
     masm.bind(ool->rejoin());
-    masm.initGCThing(gen->cx, objReg, templateObject);
+    masm.initGCThing(objReg, templateObject);
 
     return true;
 }
@@ -1596,7 +1576,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
 
-    MathCache *mathCache = gen->cx->runtime->getMathCache(gen->cx);
+    MathCache *mathCache = ins->mir()->cache();
 
     masm.setupUnalignedABICall(2, temp);
     masm.movePtr(ImmWord(mathCache), temp);
@@ -1928,7 +1908,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
 
     masm.jump(ool->entry());
     masm.bind(&fast);
-    masm.movePtr(ImmWord(&gen->cx->runtime->staticStrings.unitStaticTable), output);
+    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
     masm.bind(ool->rejoin());
     return true;
@@ -2441,7 +2421,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     JS_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not NULL.
-    masm.loadPtr(AbsoluteAddress(&gen->cx->runtime->nativeIterCache.last), output);
+    masm.loadPtr(AbsoluteAddress(&gen->compartment->rt->nativeIterCache.last), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.
@@ -2634,7 +2614,7 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
 bool
 CodeGenerator::generate()
 {
-    JSContext *cx = gen->cx;
+    JSContext *cx = GetIonContext()->cx;
 
     unsigned slots = graph.localSlotCount() +
                      (graph.argumentSlotCount() * sizeof(Value) / STACK_SLOT_SIZE);
@@ -3019,11 +2999,11 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     // and which atom property it should get
     // Note: because all registers are saved, the output register should be
     //       a def register, else the result will be overriden by restoreLive(ins)
-    RootedPropertyName name(gen->cx);
+    PropertyName *name = NULL;
     switch (ins->op()) {
       case LInstruction::LOp_InstanceOfO:
       case LInstruction::LOp_InstanceOfV:
-        name = GetIonContext()->cx->runtime->atomState.classPrototypeAtom;
+        name = gen->compartment->rt->atomState.classPrototypeAtom;
         objReg = ToRegister(ins->getTemp(1));
         output = TypedOrValueRegister(MIRType_Object, ToAnyRegister(ins->getDef(0)));
         break;
@@ -3320,7 +3300,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    PropertyName **typeAtoms = gen->cx->runtime->atomState.typeAtoms;
+    PropertyName **typeAtoms = gen->compartment->rt->atomState.typeAtoms;
 
     // Jump to the OOL path if the value is an object. Objects are complicated
     // since they may have a typeof hook.
@@ -3792,15 +3772,10 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
 bool
 CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
 {
-    SPSProfiler *profiler = &gen->cx->runtime->spsProfiler;
+    SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
     JS_ASSERT(profiler->enabled());
 
-    // This could be a push for an inline script, so we can't always use
-    // gen->info().script() blindly.
-    JSScript *script = lir->script();
-    const char *string = profiler->profileString(gen->cx, script, script->function());
-    if (string == NULL)
-        return false;
+    const char *string = lir->profileString();
 
     Register size = ToRegister(lir->temp1()->output());
     Register base = ToRegister(lir->temp2()->output());
@@ -3832,7 +3807,7 @@ CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
 bool
 CodeGenerator::visitProfilingExit(LProfilingExit *exit)
 {
-    SPSProfiler *profiler = &gen->cx->runtime->spsProfiler;
+    SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
     JS_ASSERT(profiler->enabled());
     Register temp = ToRegister(exit->temp());
     masm.movePtr(ImmWord(profiler->sizePointer()), temp);

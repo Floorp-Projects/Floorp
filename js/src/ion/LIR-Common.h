@@ -2862,8 +2862,8 @@ class LProfilingEnter : public LInstructionHelper<0, 0, 2>
         return getTemp(1);
     }
 
-    JSScript *script() const {
-        return mir_->toProfilingEnter()->script();
+    const char *profileString() const {
+        return mir_->toProfilingEnter()->profileString();
     }
 };
 

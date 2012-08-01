@@ -948,17 +948,17 @@ class MNewArray : public MNullaryInstruction
   private:
     // Number of space to allocate for the array.
     uint32 count_;
-    // Type of the object.
-    HeapPtr<types::TypeObject> type_;
+    // Template for the created object.
+    HeapPtr<JSObject> templateObject_;
     // Allocate space at initialization or not
     AllocatingBehaviour allocating_;
 
   public:
     INSTRUCTION_HEADER(NewArray);
 
-    MNewArray(uint32 count, types::TypeObject *type, AllocatingBehaviour allocating)
+    MNewArray(uint32 count, JSObject *templateObject, AllocatingBehaviour allocating)
       : count_(count),
-        type_(type),
+        templateObject_(templateObject),
         allocating_(allocating)
     {
         setResultType(MIRType_Object);
@@ -968,8 +968,8 @@ class MNewArray : public MNullaryInstruction
         return count_;
     }
 
-    types::TypeObject *type() const {
-        return type_;
+    JSObject *templateObject() const {
+        return templateObject_;
     }
 
     bool isAllocating() const {
@@ -990,11 +990,11 @@ class MNewArray : public MNullaryInstruction
 class MNewObject : public MNullaryInstruction
 {
     CompilerRootObject baseObj_;
-    HeapPtr<types::TypeObject> type_;
+    // Template for the created object.
+    HeapPtr<JSObject> templateObject_;
 
-    MNewObject(HandleObject baseObj, types::TypeObject *type)
-      : baseObj_(baseObj),
-        type_(type)
+    MNewObject(JSObject *templateObject)
+      : templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
     }
@@ -1002,15 +1002,12 @@ class MNewObject : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(NewObject);
 
-    static MNewObject *New(HandleObject baseObj, types::TypeObject *type) {
-        return new MNewObject(baseObj, type);
+    static MNewObject *New(JSObject *templateObject) {
+        return new MNewObject(templateObject);
     }
 
-    JSObject *baseObj() const {
-        return baseObj_;
-    }
-    types::TypeObject *type() const {
-        return type_;
+    JSObject *templateObject() const {
+        return templateObject_;
     }
 };
 
@@ -2281,9 +2278,10 @@ class MMathFunction
 
   private:
     Function function_;
+    MathCache *cache_;
 
-    MMathFunction(MDefinition *input, Function function)
-      : MUnaryInstruction(input), function_(function)
+    MMathFunction(MDefinition *input, Function function, MathCache *cache)
+      : MUnaryInstruction(input), function_(function), cache_(cache)
     {
         setResultType(MIRType_Double);
         setMovable();
@@ -2291,11 +2289,14 @@ class MMathFunction
 
   public:
     INSTRUCTION_HEADER(MathFunction);
-    static MMathFunction *New(MDefinition *input, Function function) {
-        return new MMathFunction(input, function);
+    static MMathFunction *New(MDefinition *input, Function function, MathCache *cache) {
+        return new MMathFunction(input, function, cache);
     }
     Function function() const {
         return function_;
+    }
+    MathCache *cache() const {
+        return cache_;
     }
     MDefinition *input() const {
         return getOperand(0);
@@ -2886,10 +2887,12 @@ class MRegExp : public MNullaryInstruction
 
   private:
     HeapPtr<RegExpObject> source_;
+    HeapPtr<JSObject> prototype_;
     CloneBehavior shouldClone_;
 
-    MRegExp(RegExpObject *source, CloneBehavior shouldClone)
+    MRegExp(RegExpObject *source, JSObject *prototype, CloneBehavior shouldClone)
       : source_(source),
+        prototype_(prototype),
         shouldClone_(shouldClone)
     {
         setResultType(MIRType_Object);
@@ -2903,12 +2906,15 @@ class MRegExp : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(RegExp)
 
-    static MRegExp *New(RegExpObject *source, CloneBehavior shouldClone) {
-        return new MRegExp(source, shouldClone);
+    static MRegExp *New(RegExpObject *source, JSObject *prototype, CloneBehavior shouldClone) {
+        return new MRegExp(source, prototype, shouldClone);
     }
 
     const HeapPtr<RegExpObject> &source() const {
         return source_;
+    }
+    JSObject *getRegExpPrototype() const {
+        return prototype_;
     }
     CloneBehavior shouldClone() const {
         return shouldClone_;
@@ -5154,22 +5160,22 @@ class MNewCallObject : public MUnaryInstruction
 // ones)
 class MProfilingEnter : public MNullaryInstruction
 {
-    JSScript *script_;
+    const char *string_;
 
-    MProfilingEnter(JSScript *script) : script_(script) {
-        JS_ASSERT(script != NULL);
+    MProfilingEnter(const char *string) : string_(string) {
+        JS_ASSERT(string != NULL);
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(ProfilingEnter);
 
-    static MProfilingEnter *New(JSScript *script) {
-        return new MProfilingEnter(script);
+    static MProfilingEnter *New(const char *string) {
+        return new MProfilingEnter(string);
     }
 
-    JSScript *script() {
-        return script_;
+    const char *profileString() {
+        return string_;
     }
 
     AliasSet getAliasSet() const {

@@ -16,8 +16,9 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, MIRGraph &graph, CompileInfo &info)
-  : cx(cx),
+MIRGenerator::MIRGenerator(JSCompartment *compartment,
+                           TempAllocator *temp, MIRGraph *graph, CompileInfo *info)
+  : compartment(compartment),
     info_(info),
     temp_(temp),
     graph_(graph),

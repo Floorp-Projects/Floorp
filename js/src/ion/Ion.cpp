@@ -8,6 +8,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
+#include "IonLinker.h"
 #include "IonSpewer.h"
 #include "LIR.h"
 #include "AliasAnalysis.h"
@@ -35,6 +36,7 @@
 #include "vm/Stack-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "ion/CompilerRoot.h"
+#include "methodjit/Retcon.h"
 
 using namespace js;
 using namespace js::ion;
@@ -86,8 +88,9 @@ ion::GetIonContext()
     return CurrentIonContext();
 }
 
-IonContext::IonContext(JSContext *cx, TempAllocator *temp)
+IonContext::IonContext(JSContext *cx, JSCompartment *compartment, TempAllocator *temp)
   : cx(cx),
+    compartment(compartment),
     temp(temp),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
@@ -849,12 +852,12 @@ static bool
 IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
     TempAllocator temp(&cx->tempLifoAlloc());
-    IonContext ictx(cx, &temp);
+    IonContext ictx(cx, cx->compartment, &temp);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
-    MIRGraph graph(temp);
+    MIRGraph graph(&temp);
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun, osrPc, constructing);
     if (!info)
         return false;
@@ -869,7 +872,7 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
     enterCompiler.init(script, false, 0);
     AutoCompilerRoots roots(script->compartment()->rt);
 
-    IonBuilder builder(cx, temp, graph, &oracle, *info);
+    IonBuilder builder(cx, &temp, &graph, &oracle, info);
     if (!Compiler(builder, graph)) {
         IonSpew(IonSpew_Abort, "IM Compilation failed.");
         return false;
@@ -1144,7 +1147,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     Value result = Int32Value(numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
-        IonContext ictx(cx, NULL);
+        IonContext ictx(cx, cx->compartment, NULL);
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 

@@ -12,6 +12,8 @@
 #include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
 
+#include "jscompartment.h"
+
 namespace js {
 namespace ion {
 
@@ -707,8 +709,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Save an exit frame (which must be aligned to the stack pointer) to
     // ThreadData::ionTop.
     void linkExitFrame() {
-        JSContext *cx = GetIonContext()->cx;
-        movl(StackPointer, Operand(&cx->runtime->ionTop));
+        JSCompartment *compartment = GetIonContext()->compartment;
+        movl(StackPointer, Operand(&compartment->rt->ionTop));
     }
 
     void callWithExitFrame(IonCode *target, Register dynStack) {

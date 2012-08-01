@@ -338,8 +338,8 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssembler::newGCThing(JSContext *cx, const Register &result,
-                           HandleObject templateObject, Label *fail)
+MacroAssembler::newGCThing(const Register &result,
+                           JSObject *templateObject, Label *fail)
 {
     // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
 
@@ -347,12 +347,13 @@ MacroAssembler::newGCThing(JSContext *cx, const Register &result,
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
     int thingSize = (int)gc::Arena::thingSize(allocKind);
 
-    JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(!templateObject->hasDynamicElements());
+
+    JSCompartment *compartment = GetIonContext()->compartment;
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
-    movePtr(ImmWord(cx->runtime), result);
+    movePtr(ImmWord(compartment->rt), result);
     loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
     branch32(Assembler::NotEqual, result, Imm32(0), fail);
 #endif
@@ -362,7 +363,7 @@ MacroAssembler::newGCThing(JSContext *cx, const Register &result,
     // If a FreeSpan is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
     gc::FreeSpan *list = const_cast<gc::FreeSpan *>
-                         (cx->compartment->arenas.getFreeList(allocKind));
+                         (compartment->arenas.getFreeList(allocKind));
     loadPtr(AbsoluteAddress(&list->first), result);
     branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result, fail);
 
@@ -372,7 +373,7 @@ MacroAssembler::newGCThing(JSContext *cx, const Register &result,
 }
 
 void
-MacroAssembler::initGCThing(JSContext *cx, const Register &obj, HandleObject templateObject)
+MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 {
     // Fast initialization of an empty object returned by NewGCThing().
 

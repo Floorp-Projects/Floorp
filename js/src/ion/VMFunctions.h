@@ -424,7 +424,7 @@ bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 
 // Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT
 JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
-JSObject *NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type);
+JSObject *NewInitObject(JSContext *cx, HandleObject templateObject);
 
 bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
 bool ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length);

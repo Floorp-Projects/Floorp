@@ -159,8 +159,8 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
-               CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
+    IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
+               TypeOracle *oracle, CompileInfo *info, size_t inliningDepth = 0, uint32 loopDepth = 0);
 
     bool build();
     bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
@@ -283,6 +283,8 @@ class IonBuilder : public MIRGenerator
     MDefinition *walkScopeChain(unsigned hops);
 
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
+
+    JSObject *getNewArrayTemplateObject(uint32 count);
 
     bool invalidatedIdempotentCache();
 
@@ -423,7 +425,11 @@ class IonBuilder : public MIRGenerator
     // A builder is inextricably tied to a particular script.
     JSScript * const script;
 
+    void clearForBackEnd();
+
   private:
+    JSContext *cx;
+
     jsbytecode *pc;
     MBasicBlock *current;
     uint32 loopDepth_;

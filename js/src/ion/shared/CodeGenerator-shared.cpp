@@ -201,7 +201,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         DebugOnly<jsbytecode *> bailPC = pc;
         if (mir->mode() == MResumePoint::ResumeAfter)
           bailPC = GetNextPc(pc);
-        JS_ASSERT(exprStack == js_ReconstructStackDepth(gen->cx, script, bailPC));
+        JS_ASSERT(exprStack == js_ReconstructStackDepth(GetIonContext()->cx, script, bailPC));
 
 #ifdef TRACK_SNAPSHOTS
         LInstruction *ins = instruction();
@@ -360,8 +360,9 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
     // Generate the wrapper of the VM function.
-    IonCompartment *ion = gen->cx->compartment->ionCompartment();
-    IonCode *wrapper = ion->generateVMWrapper(gen->cx, fun);
+    JSContext *cx = GetIonContext()->cx;
+    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCode *wrapper = ion->generateVMWrapper(cx, fun);
     if (!wrapper)
         return false;
 
