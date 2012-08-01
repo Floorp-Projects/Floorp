@@ -21,6 +21,7 @@
 
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
+#include "jsopcodeinlines.h"
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 
@@ -385,6 +386,17 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         if (!NativeGet(cx, normalized, obj2, shape, 0, vp))
             return false;
     }
+    return true;
+}
+
+inline bool
+IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
+{
+    JSOp op = JSOp(*pc);
+    RootedPropertyName name(cx);
+    name = GetNameFromBytecode(cx, script, pc, op);
+    JSFunction *fun = cx->global()->getIntrinsicFunction(cx, name);
+    vp->setObject(*fun);
     return true;
 }
 

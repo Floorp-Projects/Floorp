@@ -95,6 +95,7 @@ protected:
   PRInt32 mSubRequestsBrokenSecurity;
   PRInt32 mSubRequestsNoSecurity;
   bool mRestoreSubrequests;
+  bool mOnLocationChangeSeen;
 #ifdef DEBUG
   /* related to mReentrantMonitor */
   PRInt32 mOnStateLocationChangeReentranceDetection;

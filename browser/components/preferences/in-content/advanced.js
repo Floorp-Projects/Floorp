@@ -675,10 +675,15 @@ var gAdvancedPane = {
    */
   updateSetDefaultBrowser: function()
   {
-    var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
-                             .getService(Components.interfaces.nsIShellService);
+    let shellSvc = getShellService();
+    let setDefaultPane = document.getElementById("setDefaultPane");
+    if (!shellSvc) {
+      setDefaultPane.hidden = true;
+      document.getElementById("alwaysCheckDefault").disabled = true;
+      return;
+    }
     let selectedIndex = shellSvc.isDefaultBrowser(false) ? 1 : 0;
-    document.getElementById("setDefaultPane").selectedIndex = selectedIndex;
+    setDefaultPane.selectedIndex = selectedIndex;
   },
 
   /**
@@ -686,8 +691,9 @@ var gAdvancedPane = {
    */
   setDefaultBrowser: function()
   {
-    var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
-                             .getService(Components.interfaces.nsIShellService);
+    let shellSvc = getShellService();
+    if (!shellSvc)
+      return;
     shellSvc.setDefaultBrowser(true, false);
     document.getElementById("setDefaultPane").selectedIndex = 1;
   }

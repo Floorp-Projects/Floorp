@@ -2151,6 +2151,14 @@ TokenStream::getTokenInternal()
     tp->pos.end.index = tp->pos.begin.index + 1;
     tp->type = TOK_ERROR;
     JS_ASSERT(IsTokenSane(tp));
+    onError();
+    return TOK_ERROR;
+}
+
+void
+TokenStream::onError()
+{
+    flags |= TSF_HAD_ERROR;
 #ifdef DEBUG
     /*
      * Poisoning userbuf on error establishes an invariant: once an erroneous
@@ -2163,7 +2171,6 @@ TokenStream::getTokenInternal()
      */
     userbuf.poison();
 #endif
-    return TOK_ERROR;
 }
 
 JS_FRIEND_API(int)

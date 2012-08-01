@@ -60,7 +60,7 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
     }
 
     const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
-    Rect transformedBounds = dt->GetTransform().TransformBounds(Rect(Float(bounds.x), Float(bounds.y),
+    gfx::Rect transformedBounds = dt->GetTransform().TransformBounds(gfx::Rect(Float(bounds.x), Float(bounds.y),
                                                                      Float(bounds.width), Float(bounds.height)));
     transformedBounds.RoundOut();
     IntRect intTransformedBounds;

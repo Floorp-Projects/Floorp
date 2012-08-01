@@ -47,8 +47,6 @@ EXPORTS	= \
 	gfxTypes.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
-	nsCoreAnimationSupport.h \
-	nsIOSurface.h \
 	nsSurfaceTexture.h \
 	gfxSharedImageSurface.h \
 	gfxReusableSurfaceWrapper.h \
@@ -331,7 +329,6 @@ CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 
 CMMSRCS = \
 	gfxMacPlatformFontList.mm \
-	nsCoreAnimationSupport.mm \
 	$(NULL)
 
 endif

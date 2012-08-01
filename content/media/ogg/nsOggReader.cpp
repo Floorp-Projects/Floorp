@@ -1653,11 +1653,10 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       }
       else {
         // Page is for a stream we don't know about (possibly a chained
-        // ogg), return an error.
-        //
-        // XXX Invalid cast of PageSyncResult to nsresult -- this has numeric
-        // value 1 and will pass an NS_SUCCEEDED() check (bug 778105)
-        return (nsresult)PAGE_SYNC_ERROR;
+        // ogg), return OK to abort the finding any further ranges. This
+        // prevents us searching through the rest of the media when we
+        // may not be able to extract timestamps from it.
+        return NS_OK;
       }
     }
 
