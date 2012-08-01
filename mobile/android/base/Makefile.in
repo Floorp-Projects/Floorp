@@ -21,7 +21,6 @@ MOZGLUE_JAVA_FILES := \
   $(NULL)
 
 UTIL_JAVA_FILES := \
-  util/ConfigurationUtils.java \
   util/FloatUtils.java \
   $(NULL)
 
