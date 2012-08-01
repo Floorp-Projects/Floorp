@@ -148,6 +148,18 @@ nsAccessNode::GetFrame() const
   return mContent ? mContent->GetPrimaryFrame() : nullptr;
 }
 
+nsINode*
+nsAccessNode::GetNode() const
+{
+  return mContent;
+}
+
+nsIDocument*
+nsAccessNode::GetDocumentNode() const
+{
+  return mContent ? mContent->OwnerDoc() : nullptr;
+}
+
 bool
 nsAccessNode::IsPrimaryForNode() const
 {
