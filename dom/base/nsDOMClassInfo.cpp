@@ -1371,8 +1371,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_NEWENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(StorageEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1749,13 +1747,6 @@ NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
 #undef MOZ_GENERATED_EVENT_LIST
 
 nsresult
-NS_DOMStorageEventCtor(nsISupports** aInstancePtrResult)
-{
-  nsDOMStorageEvent* e = new nsDOMStorageEvent();
-  return CallQueryInterface(e, aInstancePtrResult);
-}
-
-nsresult
 NS_XMLHttpRequestCtor(nsISupports** aInstancePtrResult)
 {
   nsXMLHttpRequest* xhr = new nsXMLHttpRequest();
@@ -1782,7 +1773,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(StorageEvent)
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiConnectionInfoEvent)
@@ -3928,11 +3918,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(StorageItem, nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(StorageEvent, nsIDOMStorageEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMParser, nsIDOMParser)
