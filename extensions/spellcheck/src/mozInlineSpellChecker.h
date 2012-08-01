@@ -35,7 +35,7 @@ class mozInlineSpellStatus
 public:
   mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(nsEditor::OperationID aAction,
+  nsresult InitForEditorChange(OperationID aAction,
                                nsIDOMNode* aAnchorNode, PRInt32 aAnchorOffset,
                                nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
                                nsIDOMNode* aStartNode, PRInt32 aStartOffset,
@@ -62,8 +62,8 @@ public:
   PRInt32 mWordCount;
 
   // what happened?
-  enum Operation { eOpChange,       // for SpellCheckAfterChange except kOpDeleteSelection
-                   eOpChangeDelete, // for SpellCheckAfterChange kOpDeleteSelection
+  enum Operation { eOpChange,       // for SpellCheckAfterChange except deleteSelection
+                   eOpChangeDelete, // for SpellCheckAfterChange deleteSelection
                    eOpNavigation,   // for HandleNavigationEvent
                    eOpSelection,    // re-check all misspelled words
                    eOpResume };     // for resuming a previously started check
