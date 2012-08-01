@@ -3604,8 +3604,10 @@ BeginSweepPhase(JSRuntime *rt)
         c->arenas.queueScriptsForSweep(&fop);
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueShapesForSweep(&fop);
+#ifdef JS_ION
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueIonCodeForSweep(&fop);
+#endif
 
     rt->gcSweepPhase = 0;
     rt->gcSweepCompartmentIndex = 0;
