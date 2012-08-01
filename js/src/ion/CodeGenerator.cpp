@@ -1533,14 +1533,14 @@ CodeGenerator::visitAbsI(LAbsI *ins)
 bool
 CodeGenerator::visitPowI(LPowI *ins)
 {
-    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister value = ToFloatRegister(ins->value());
     Register temp = ToRegister(ins->temp());
 
     // In all implementations, setupUnalignedABICall() relinquishes use of
     // its scratch register. We can therefore save an input register by
     // reusing the scratch register to pass constants to callWithABI.
     masm.setupUnalignedABICall(2, temp);
-    masm.passABIArg(input);
+    masm.passABIArg(value);
 
     const LAllocation *power = ins->power();
     if (power->isRegister()) {
@@ -1559,12 +1559,12 @@ CodeGenerator::visitPowI(LPowI *ins)
 bool
 CodeGenerator::visitPowD(LPowD *ins)
 {
-    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister value = ToFloatRegister(ins->value());
     FloatRegister power = ToFloatRegister(ins->power());
     Register temp = ToRegister(ins->temp());
 
     masm.setupUnalignedABICall(2, temp);
-    masm.passABIArg(input);
+    masm.passABIArg(value);
     masm.passABIArg(power);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaPow), MacroAssembler::DOUBLE);
 
