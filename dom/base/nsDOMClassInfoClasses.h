@@ -507,8 +507,6 @@ DOMCI_CLASS(MediaQueryList)
 DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
 
-DOMCI_CLASS(MozSettingsEvent)
-
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozWifiStatusChangeEvent)
 DOMCI_CLASS(MozWifiConnectionInfoEvent)

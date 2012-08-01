@@ -9,6 +9,7 @@
 
 simple_events = [
     'DeviceProximityEvent',
+    'MozSettingsEvent',
     'UserProximityEvent',
     'CustomEvent',
     'PageTransitionEvent',
