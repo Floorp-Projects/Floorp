@@ -18,6 +18,7 @@
 
 #include "gtk2compat.h"
 #include "gtk2xtbin.h"
+#include "mozilla/X11Util.h"
 
 class nsPluginNativeWindowGtk2 : public nsPluginNativeWindow {
 public: 
@@ -307,6 +308,6 @@ socket_unrealize_cb(GtkWidget *widget, gpointer data)
 
   if (children) XFree(children);
 
-  XSync(display, False);
+  mozilla::FinishX(display);
   gdk_error_trap_pop();
 }

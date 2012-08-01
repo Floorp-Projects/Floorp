@@ -49,6 +49,8 @@
 #include "libui/InputReader.h"
 #include "libui/InputDispatcher.h"
 
+#include "sampler.h"
+
 #define LOG(args...)                                            \
     __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #ifdef VERBOSE_LOG_ENABLED
@@ -571,11 +573,15 @@ nsAppShell::ScheduleNativeEventCallback()
 bool
 nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
+    SAMPLE_LABEL("nsAppShell", "ProcessNextNativeEvent");
     epoll_event events[16] = {{ 0 }};
 
     int event_count;
-    if ((event_count = epoll_wait(epollfd, events, 16,  mayWait ? -1 : 0)) <= 0)
-        return true;
+    {
+        SAMPLE_LABEL("nsAppShell", "ProcessNextNativeEvent::Wait");
+        if ((event_count = epoll_wait(epollfd, events, 16,  mayWait ? -1 : 0)) <= 0)
+            return true;
+    }
 
     for (int i = 0; i < event_count; i++)
         mHandlers[events[i].data.u32].run();

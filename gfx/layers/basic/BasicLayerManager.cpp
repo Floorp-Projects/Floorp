@@ -924,7 +924,8 @@ BasicLayerManager::CreateReadbackLayer()
 }
 
 BasicShadowLayerManager::BasicShadowLayerManager(nsIWidget* aWidget) :
-  BasicLayerManager(aWidget), mTargetRotation(ROTATION_0)
+  BasicLayerManager(aWidget), mTargetRotation(ROTATION_0),
+  mRepeatTransaction(false)
 {
   MOZ_COUNT_CTOR(BasicShadowLayerManager);
 }

@@ -9,7 +9,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(CameraPreview, CameraPreview)
+NS_IMPL_THREADSAFE_ISUPPORTS1(CameraPreview, CameraPreview)
 
 class CameraPreviewListener : public MediaStreamListener
 {

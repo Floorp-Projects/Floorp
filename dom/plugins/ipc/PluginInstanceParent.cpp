@@ -133,7 +133,7 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         const NPRect rect = {0, 0, 0, 0};
         RecvNPN_InvalidateRect(rect);
 #ifdef MOZ_X11
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 #endif
     }
 }
@@ -634,7 +634,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         // referencing it, so we XSync here to let them finish before
         // the plugin starts scribbling on it again, or worse,
         // destroys it.
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 #endif
 
     if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
@@ -1260,7 +1260,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // process does not need to wait; the child is the process that needs
         // to wait.  A possibly-slightly-better alternative would be to send
         // an X event to the child that the child would wait for.
-        XSync(DefaultXDisplay(), False);
+        FinishX(DefaultXDisplay());
 
         return CallPaint(npremoteevent, &handled) ? handled : 0;
 
