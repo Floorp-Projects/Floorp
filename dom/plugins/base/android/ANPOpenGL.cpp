@@ -24,7 +24,7 @@ static ANPEGLContext anp_opengl_acquireContext(NPP instance) {
 
     GLContext* context = pinst->GLContext();
     if (!context)
-        return nullptr;
+        return NULL;
 
     context->MakeCurrent();
     return context->GetNativeData(GLContext::NativeGLContext);

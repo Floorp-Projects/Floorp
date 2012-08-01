@@ -171,7 +171,7 @@ nsWindow::~nsWindow()
         top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
 #ifdef MOZ_JAVA_COMPOSITOR
-    SetCompositor(nullptr, nullptr);
+    SetCompositor(NULL, NULL);
 #endif
 }
 
@@ -1274,9 +1274,9 @@ void *
 nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch (aDataType) {
-        // used by GLContextProviderEGL, nullptr is EGL_DEFAULT_DISPLAY
+        // used by GLContextProviderEGL, NULL is EGL_DEFAULT_DISPLAY
         case NS_NATIVE_DISPLAY:
-            return nullptr;
+            return NULL;
 
         case NS_NATIVE_WIDGET:
             return (void *) this;
@@ -1694,7 +1694,7 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
         event.isChar = (key.UnicodeChar() >= ' ');
         event.charCode = event.isChar ? key.UnicodeChar() : 0;
         event.keyCode = (event.charCode > 0) ? 0 : domKeyCode;
-        event.pluginEvent = nullptr;
+        event.pluginEvent = NULL;
     } else {
 #ifdef DEBUG
         if (event.message != NS_KEY_DOWN && event.message != NS_KEY_UP) {
@@ -2276,8 +2276,8 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
 // off-main-thread compositor fields and functions
 
-nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = nullptr;
-nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = nullptr;
+nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
+nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 bool nsWindow::sCompositorPaused = false;
 
 void

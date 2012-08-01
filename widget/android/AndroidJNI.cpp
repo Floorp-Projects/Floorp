@@ -120,7 +120,7 @@ Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstrin
     if (!nsAppShell::gAppShell)
         return;
 
-    const jchar *observerKey = jenv->GetStringChars(jObserverKey, nullptr);
+    const jchar *observerKey = jenv->GetStringChars(jObserverKey, NULL);
     nsString sObserverKey(observerKey);
     sObserverKey.SetLength(jenv->GetStringLength(jObserverKey));
     jenv->ReleaseStringChars(jObserverKey, observerKey);
@@ -906,7 +906,7 @@ NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv* jenv, jclass, jobject surface)
 {
     static jclass jSurfaceBitsClass = nullptr;
-    static jmethodID jSurfaceBitsCtor = nullptr;
+    static jmethodID jSurfaceBitsCtor = 0;
     static jfieldID jSurfaceBitsWidth, jSurfaceBitsHeight, jSurfaceBitsFormat, jSurfaceBitsBuffer;
 
     jobject surfaceBits = nullptr;
@@ -1015,7 +1015,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclas
         jNextMethod = jenv->GetMethodID(jMessageQueueCls, "next", "()Landroid/os/Message;");
     }
     if (!jMessageQueueCls || !jMessagesField || !jNextMethod)
-        return nullptr;
+        return NULL;
     jobject msg = jenv->GetObjectField(queue, jMessagesField);
     // if queue.mMessages is null, queue.next() will block, which we don't want
     if (!msg)

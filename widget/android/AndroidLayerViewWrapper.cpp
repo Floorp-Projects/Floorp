@@ -12,7 +12,7 @@ using namespace mozilla;
 #define ASSERT_THREAD() \
         NS_ASSERTION(pthread_self() == mThread, "Something is calling AndroidGLController from the wrong thread!")
 
-static jfieldID jEGLSurfacePointerField = nullptr;
+static jfieldID jEGLSurfacePointerField = 0;
 
 void AndroidEGLObject::Init(JNIEnv* aJEnv) {
     jclass jClass;
@@ -21,10 +21,10 @@ void AndroidEGLObject::Init(JNIEnv* aJEnv) {
     jEGLSurfacePointerField = aJEnv->GetFieldID(jClass, "mEGLSurface", "I");
 }
 
-jmethodID AndroidGLController::jSetGLVersionMethod = nullptr;
-jmethodID AndroidGLController::jWaitForValidSurfaceMethod = nullptr;
-jmethodID AndroidGLController::jProvideEGLSurfaceMethod = nullptr;
-jmethodID AndroidGLController::jResumeCompositorIfValidMethod = nullptr;
+jmethodID AndroidGLController::jSetGLVersionMethod = 0;
+jmethodID AndroidGLController::jWaitForValidSurfaceMethod = 0;
+jmethodID AndroidGLController::jProvideEGLSurfaceMethod = 0;
+jmethodID AndroidGLController::jResumeCompositorIfValidMethod = 0;
 
 void
 AndroidGLController::Init(JNIEnv* aJEnv)
@@ -71,7 +71,7 @@ AndroidGLController::ProvideEGLSurface()
     AutoLocalJNIFrame jniFrame(mJEnv);
     jobject jObj = mJEnv->CallObjectMethod(mJObj, jProvideEGLSurfaceMethod);
     if (jniFrame.CheckForException())
-        return nullptr;
+        return NULL;
 
     return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
 }

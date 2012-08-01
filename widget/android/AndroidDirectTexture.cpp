@@ -18,7 +18,7 @@ AndroidDirectTexture::AndroidDirectTexture(PRUint32 width, PRUint32 height, PRUi
   , mWidth(width)
   , mHeight(height)
   , mFormat(format)
-  , mPendingReallocBuffer(nullptr)
+  , mPendingReallocBuffer(NULL)
 {
   mFrontBuffer = new AndroidGraphicBuffer(width, height, usage, format);
   mBackBuffer = new AndroidGraphicBuffer(width, height, usage, format);
@@ -26,8 +26,15 @@ AndroidDirectTexture::AndroidDirectTexture(PRUint32 width, PRUint32 height, PRUi
 
 AndroidDirectTexture::~AndroidDirectTexture()
 {
-  delete mFrontBuffer;
-  delete mBackBuffer;
+  if (mFrontBuffer) {
+    delete mFrontBuffer;
+    mFrontBuffer = NULL;
+  }
+
+  if (mBackBuffer) {
+    delete mBackBuffer;
+    mBackBuffer = NULL;
+  }
 }
 
 void
@@ -40,7 +47,7 @@ AndroidDirectTexture::ReallocPendingBuffer()
   // It is assumed that mLock is already acquired
   if (mPendingReallocBuffer == mBackBuffer) {
     mBackBuffer->Reallocate(mWidth, mHeight, mFormat);
-    mPendingReallocBuffer = nullptr;
+    mPendingReallocBuffer = NULL;
   }
 }
 
