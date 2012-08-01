@@ -337,9 +337,8 @@ class IonCacheGetElement : public IonCache
         u.getelem.hasDenseArrayStub = true;
     }
 
-    bool attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name,
-                       Value *res);
-    bool attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval, Value *res);
+    bool attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name);
+    bool attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval);
 };
 
 class IonCacheBindName : public IonCache
@@ -406,20 +405,21 @@ class IonCacheName : public IonCache
 };
 
 bool
-GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp);
+GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
 
 bool
 SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value,
                  bool isSetName);
 
 bool
-GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res);
+GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval,
+                MutableHandleValue vp);
 
 JSObject *
 BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain);
 
 bool
-GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, Value *vp);
+GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
 
 } // namespace ion
 } // namespace js

@@ -12,7 +12,6 @@
 #include "GLDefs.h"
 
 #include "ImageLayers.h"
-#include "LayersBackend.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/WidgetUtils.h"
 

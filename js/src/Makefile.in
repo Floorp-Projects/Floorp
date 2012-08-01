@@ -741,7 +741,10 @@ endif
 
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
 EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
-ifdef MOZ_LIB_LIBS
+# Enable zlib usage if zlib has been located. When building the browser on
+# Windows, MOZ_ZLIB_LIBS is empty because zlib is part of libmozglue. We thus
+# also enable zlib if mozglue is present.
+ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
 

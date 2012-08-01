@@ -181,6 +181,7 @@ template <> struct TypeToDataType<HandlePropertyName> { static const DataType re
 template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 
 // Convert argument types to properties of the argument known by the jit.
 template <class T> struct TypeToArgProperties {
@@ -206,6 +207,9 @@ template <> struct TypeToArgProperties<HandleScript> {
     static const uint32 result = TypeToArgProperties<JSScript *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleValue> {
+    static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<MutableHandleValue> {
     static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleShape> {
@@ -234,6 +238,9 @@ template <> struct TypeToRootType<HandleFunction> {
 template <> struct TypeToRootType<HandleValue> {
     static const uint32 result = VMFunction::RootValue;
 };
+template <> struct TypeToRootType<MutableHandleValue> {
+    static const uint32 result = VMFunction::RootValue;
+};
 template <> struct TypeToRootType<HandleShape> {
     static const uint32 result = VMFunction::RootCell;
 };
@@ -245,6 +252,7 @@ template <class> struct OutParamToDataType { static const DataType result = Type
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
 template <> struct OutParamToDataType<int *> { static const DataType result = Type_Int32; };
 template <> struct OutParamToDataType<uint32_t *> { static const DataType result = Type_Int32; };
+template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)

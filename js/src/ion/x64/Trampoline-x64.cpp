@@ -512,6 +512,12 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.movq(esp, outReg);
         break;
 
+      case Type_Handle:
+        outReg = regs.takeAny();
+        masm.Push(UndefinedValue());
+        masm.movq(esp, outReg);
+        break;
+
       case Type_Int32:
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(int32));
@@ -578,6 +584,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Load the outparam and free any allocated stack.
     switch (f.outParam) {
+      case Type_Handle:
       case Type_Value:
         masm.loadValue(Address(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));

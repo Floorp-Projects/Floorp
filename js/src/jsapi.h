@@ -861,6 +861,9 @@ class ValueOperations
     bool isPrimitive() const { return value()->isPrimitive(); }
     bool isGCThing() const { return value()->isGCThing(); }
 
+    bool isNullOrUndefined() const { return value()->isNullOrUndefined(); }
+    bool isObjectOrNull() const { return value()->isObjectOrNull(); }
+
     bool toBoolean() const { return value()->toBoolean(); }
     double toNumber() const { return value()->toNumber(); }
     int32_t toInt32() const { return value()->toInt32(); }
@@ -898,7 +901,7 @@ class MutableValueOperations : public ValueOperations<Outer>
     void setMagic(JSWhyMagic why) { value()->setMagic(why); }
     bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
     bool setNumber(double d) { return value()->setNumber(d); }
-    void setObjectOrNull(JSObject *arg) { value()->setObjectOrNull(); }
+    void setObjectOrNull(JSObject *arg) { value()->setObjectOrNull(arg); }
 };
 
 /*
@@ -944,7 +947,7 @@ class RootedBase<Value> : public MutableValueOperations<Rooted<Value> >
         return static_cast<const Rooted<Value>*>(this)->address();
     }
 
-    friend class MutableValueOperations<Handle<Value> >;
+    friend class MutableValueOperations<Rooted<Value> >;
     Value * extractMutable() {
         return static_cast<Rooted<Value>*>(this)->address();
     }
@@ -1376,9 +1379,9 @@ class CallReceiver
     Value &calleev() const { JS_ASSERT(!usedRval_); return argv_[-2]; }
     Value &thisv() const { return argv_[-1]; }
 
-    Value &rval() const {
+    JS::MutableHandleValue rval() const {
         setUsedRval();
-        return argv_[-2];
+        return JS::MutableHandleValue::fromMarkedLocation(&argv_[-2]);
     }
 
     Value *spAfterCall() const {
@@ -1614,8 +1617,8 @@ typedef JS::MutableHandle<JS::Value> JSMutableHandleValue;
 typedef struct { JSObject **_; } JSHandleObject;
 typedef struct { JSString **_; } JSHandleString;
 typedef struct { JSObject **_; } JSMutableHandleObject;
-typedef struct { jsid *_; } JSHandleId;
 typedef struct { jsval *_; } JSMutableHandleValue;
+typedef struct { jsid *_; } JSHandleId;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
@@ -1638,7 +1641,7 @@ void JS_DestroyHandleId(JSContext *cx, JSHandleId handle);
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+(* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
 /*
  * Set a property named by id in obj, treating the assignment as strict
@@ -1648,7 +1651,7 @@ typedef JSBool
  * set.
  */
 typedef JSBool
-(* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+(* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -1731,7 +1734,7 @@ typedef JSBool
  * *vp on success, and returning false on error or exception.
  */
 typedef JSBool
-(* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
+(* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
 
 /*
  * Delegate typeof to an object so it can cloak a primitive or another object.
@@ -3759,7 +3762,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 #ifdef JS_GC_ZEAL
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
     JS_BEGIN_MACRO                                                            \
-        if ((trc)->realLocation == NULL || (location) == NULL)                \
+        if (!(trc)->realLocation || !(location))                              \
             (trc)->realLocation = (location);                                 \
     JS_END_MACRO
 #else
@@ -4197,10 +4200,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSHandleObject obj);
@@ -4209,7 +4212,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_ResolveStub(JSContext *cx, JSHandleObject obj, JSHandleId id);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
+JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
 
 struct JSConstDoubleSpec {
     double          dval;

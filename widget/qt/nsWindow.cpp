@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
+#include "BasicLayers.h"
 
 #include <QtOpenGL/QGLWidget>
 #include <QtOpenGL/QGLContext>
@@ -307,7 +308,6 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nullptr)
     if (aWidget) {
         if (gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType() ==
             gfxASurface::SurfaceTypeImage) {
-            Display* dpy = mozilla::DefaultXDisplay();
             gShmImage = nsShmImage::Create(gBufferMaxSize,
                                            DefaultVisualOfScreen(gfxQtPlatform::GetXScreen(aWidget)),
                                            aDepth);
@@ -1118,7 +1118,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     event.region = nsIntRegion(rect);
     {
         AutoLayerManagerSetup
-            setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+            setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
         status = DispatchEvent(&event);
     }
 

@@ -18,7 +18,8 @@
 #include "gfxPattern.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "LayersBackend.h"
+#include "LayersTypes.h"
+#include "FrameMetrics.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
 
@@ -60,75 +61,6 @@ class ShadowableLayer;
 class ShadowLayerForwarder;
 class ShadowLayerManager;
 class SpecificLayerAttributes;
-
-/**
- * The viewport and displayport metrics for the painted frame at the
- * time of a layer-tree transaction.  These metrics are especially
- * useful for shadow layers, because the metrics values are updated
- * atomically with new pixels.
- */
-struct THEBES_API FrameMetrics {
-public:
-  // We use IDs to identify frames across processes.
-  typedef PRUint64 ViewID;
-  static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
-  static const ViewID ROOT_SCROLL_ID;   // This is the root scroll frame.
-  static const ViewID START_SCROLL_ID;  // This is the ID that scrolling subframes
-                                        // will begin at.
-
-  FrameMetrics()
-    : mViewport(0, 0, 0, 0)
-    , mContentRect(0, 0, 0, 0)
-    , mViewportScrollOffset(0, 0)
-    , mScrollId(NULL_SCROLL_ID)
-    , mCSSContentRect(0, 0, 0, 0)
-    , mResolution(1, 1)
-  {}
-
-  // Default copy ctor and operator= are fine
-
-  bool operator==(const FrameMetrics& aOther) const
-  {
-    return (mViewport.IsEqualEdges(aOther.mViewport) &&
-            mViewportScrollOffset == aOther.mViewportScrollOffset &&
-            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
-            mScrollId == aOther.mScrollId);
-  }
-  bool operator!=(const FrameMetrics& aOther) const
-  { 
-    return !operator==(aOther);
-  }
-
-  bool IsDefault() const
-  {
-    return (FrameMetrics() == *this);
-  }
-
-  bool IsRootScrollable() const
-  {
-    return mScrollId == ROOT_SCROLL_ID;
-  }
-
-  bool IsScrollable() const
-  {
-    return mScrollId != NULL_SCROLL_ID;
-  }
-
-  // These are all in layer coordinate space.
-  nsIntRect mViewport;
-  nsIntRect mContentRect;
-  nsIntPoint mViewportScrollOffset;
-  nsIntRect mDisplayPort;
-  ViewID mScrollId;
-
-  // Consumers often want to know the origin/size before scaling to pixels
-  // so we record this as well.
-  gfx::Rect mCSSContentRect;
-
-  // This represents the resolution at which the associated layer
-  // will been rendered.
-  gfxSize mResolution;
-};
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
   virtual const char* Name() const { return n; }            \
@@ -702,9 +634,16 @@ public:
    * XXX Currently only transformations corresponding to 2D affine transforms
    * are supported.
    */
-  void SetTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
     mTransform = aMatrix;
+    Mutated();
+  }
+
+  void SetScale(float aXScale, float aYScale)
+  {
+    mXScale = aXScale;
+    mYScale = aYScale;
     Mutated();
   }
 
@@ -735,7 +674,10 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nullptr; }
   virtual Layer* GetLastChild() { return nullptr; }
-  const gfx3DMatrix& GetTransform() { return mTransform; }
+  const gfx3DMatrix GetTransform();
+  const gfx3DMatrix& GetBaseTransform() { return mTransform; }
+  float GetXScale() { return mXScale; }
+  float GetYScale() { return mYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   Layer* GetMaskLayer() { return mMaskLayer; }
@@ -947,6 +889,8 @@ protected:
     mPrevSibling(nullptr),
     mImplData(aImplData),
     mMaskLayer(nullptr),
+    mXScale(1.0f),
+    mYScale(1.0f),
     mOpacity(1.0),
     mContentFlags(0),
     mUseClipRect(false),
@@ -968,7 +912,7 @@ protected:
    * Returns the local transform for this layer: either mTransform or,
    * for shadow layers, GetShadowTransform()
    */
-  const gfx3DMatrix& GetLocalTransform();
+  const gfx3DMatrix GetLocalTransform();
 
   /**
    * Computes a tweaked version of aTransform that snaps a point or a rectangle
@@ -994,6 +938,8 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
+  float mXScale;
+  float mYScale;
   gfx3DMatrix mEffectiveTransform;
   float mOpacity;
   nsIntRect mClipRect;

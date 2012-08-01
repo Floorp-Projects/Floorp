@@ -27,6 +27,7 @@ MOCHITEST_FILES = 	test_resizer_incontent.xul \
 MOCHITEST_CHROME_FILES +=	test_resizer.xul \
 		window_resizer.xul \
 		window_resizer_element.xul \
+		test_windowminmaxsize.xul \
 		$(NULL)
 endif
 

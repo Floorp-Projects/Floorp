@@ -906,7 +906,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
         PRUint32 index;
         for (index=0; index < portListArray.Length(); index++) {
             portListArray[index].StripWhitespace();
-            PRInt32 aErrorCode, portBegin, portEnd;
+            PRInt32 portBegin, portEnd;
 
             if (PR_sscanf(portListArray[index].get(), "%d-%d", &portBegin, &portEnd) == 2) {
                if ((portBegin < 65536) && (portEnd < 65536)) {
@@ -920,6 +920,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
                    }
                }
             } else {
+               nsresult aErrorCode;
                PRInt32 port = portListArray[index].ToInteger(&aErrorCode);
                if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
                    if (remove)

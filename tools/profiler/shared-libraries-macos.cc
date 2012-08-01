@@ -65,7 +65,7 @@ void addSharedLibrary(const platform_mach_header* header, char *name, SharedLibr
       if (!strcmp(seg->segname, "__TEXT")) {
         size = seg->vmsize;
         unsigned long long start = reinterpret_cast<unsigned long long>(header);
-        info.AddSharedLibrary(SharedLibrary(start, start+seg->vmsize, seg->vmsize, name));
+        info.AddSharedLibrary(SharedLibrary(start, start+seg->vmsize, 0, name));
         return;
       }
     }

@@ -85,3 +85,4 @@
   <string name="sync_title_redirect_to_set_up_sync">&sync.title.redirect.to.set.up.sync.label;</string>
   <string name="sync_text_redirect_to_set_up_sync">&sync.text.redirect.to.set.up.sync.label;</string>
   <string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
+  <string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>

@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import org.mozilla.gecko.gfx.LayerView;
 
 public final class GeckoViewsFactory implements LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoViewsFactory";
@@ -50,6 +51,10 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new TabsPanel(context, attrs);
             else if (TextUtils.equals(viewName, "TextSelectionHandle"))
                 return new TextSelectionHandle(context, attrs);
+            else if (TextUtils.equals(viewName, "gfx.LayerView"))
+                return new LayerView(context, attrs);
+            else
+                Log.e(LOGTAG, "Error: unknown custom view: " + viewName);
         }
 
         return null;

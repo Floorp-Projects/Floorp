@@ -3285,7 +3285,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
   // and want the next one.
   if (aNoBlockCrossing && IsBlockNode(aParentNode)) {
     // don't cross out of parent block
-    return NS_OK;
+    return nullptr;
   }
 
   return GetNextNode(aParentNode, aEditableNode, aNoBlockCrossing);

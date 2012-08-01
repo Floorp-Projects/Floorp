@@ -14,43 +14,93 @@ import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.ui.PanZoomController;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.zip.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.*;
-import java.util.concurrent.*;
-import java.lang.reflect.*;
-import java.net.*;
+import java.nio.ByteBuffer;
 
-import org.json.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import android.os.*;
-import android.app.*;
-import android.text.*;
-import android.view.*;
-import android.view.inputmethod.*;
-import android.content.*;
-import android.content.res.*;
-import android.graphics.*;
-import android.graphics.drawable.Drawable;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
+import android.content.pm.Signature;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.widget.*;
-import android.hardware.*;
-import android.location.*;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.location.Location;
+import android.location.LocationListener;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.PowerManager;
+import android.os.StrictMode;
+import android.os.SystemClock;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityEvent;
-
-import android.util.*;
-import android.net.*;
-import android.database.*;
-import android.database.sqlite.*;
-import android.provider.*;
-import android.content.pm.*;
-import android.content.pm.PackageManager.*;
-import dalvik.system.*;
+import android.widget.AbsoluteLayout;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.SparseBooleanArray;
 
 abstract public class GeckoApp
                 extends GeckoActivity 
@@ -1683,12 +1733,7 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            View v = mLayerController.getView();
-
-            // Instead of flickering the checkerboard, show a white screen until Gecko paints
-            v.setBackgroundColor(Color.WHITE);
-
-            mGeckoLayout.addView(v, 0);
+            mLayerController.setView((LayerView)findViewById(R.id.layer_view));
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);

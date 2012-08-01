@@ -275,7 +275,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
       }
       else {
         // Otherwise just convert to integer.
-        PRInt32 err;
+        nsresult err;
         specs[i].mValue = token.ToInteger(&err);
         if (err) {
           specs[i].mValue = 0;

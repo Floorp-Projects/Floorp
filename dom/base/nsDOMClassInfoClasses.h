@@ -526,6 +526,10 @@ DOMCI_CLASS(BluetoothDevice)
 DOMCI_CLASS(BluetoothDeviceEvent)
 #endif
 
+DOMCI_CLASS(CameraManager)
+DOMCI_CLASS(CameraControl)
+DOMCI_CLASS(CameraCapabilities)
+
 DOMCI_CLASS(DOMError)
 DOMCI_CLASS(DOMRequest)
 DOMCI_CLASS(OpenWindowEventDetail)

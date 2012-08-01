@@ -35,8 +35,22 @@ protected:
   nsIContent* GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow);
 
   Direction GetDirection();
+
+  /**
+   * Adjust the window position and size in a direction according to the mouse
+   * movement and the resizer direction. The minimum and maximum size is used
+   * to constrain the size.
+   *
+   * @param aPos left or top position
+   * @param aSize width or height
+   * @param aMinSize minimum width or height
+   * @param aMacSize maximum width or height
+   * @param aMovement the amount the mouse was moved
+   * @param aResizerDirection resizer direction returned by GetDirection
+   */
   static void AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
-                        PRInt32 aMovement, PRInt8 aResizerDirection);
+                               PRInt32 aMinSize, PRInt32 aMaxSize,
+                               PRInt32 aMovement, PRInt8 aResizerDirection);
 
   struct SizeInfo {
     nsString width, height;

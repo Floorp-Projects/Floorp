@@ -291,7 +291,7 @@ TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, HandleObject obj,
 }
 
 bool
-js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp)
+js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp)
 {
     JSScript *topScript = GetTopIonJSScript(cx);
     IonScript *ion = topScript->ionScript();
@@ -304,7 +304,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     cache.getScriptedLocation(&script, &pc);
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, vp, ion);
+    AutoDetectInvalidation adi(cx, vp.address(), ion);
 
     // If the cache is idempotent, we will redo the op in the interpreter.
     if (cache.idempotent())
@@ -347,14 +347,14 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
 
 #if JS_HAS_NO_SUCH_METHOD
         // Handle objects with __noSuchMethod__.
-        if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp->isPrimitive())) {
+        if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp.isPrimitive())) {
             if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
                 return false;
         }
 #endif
 
         // Monitor changes to cache entry.
-        types::TypeScript::Monitor(cx, script, pc, *vp);
+        types::TypeScript::Monitor(cx, script, pc, vp);
     }
 
     return true;
@@ -640,8 +640,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 }
 
 bool
-IonCacheGetElement::attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name,
-                                  Value *res)
+IonCacheGetElement::attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name)
 {
     RootedObject holder(cx);
     RootedShape shape(cx);
@@ -699,7 +698,7 @@ GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
 }
 
 bool
-IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval, Value *res)
+IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval)
 {
     JS_ASSERT(obj->isDenseArray());
     JS_ASSERT(idval.isInt32());
@@ -775,14 +774,15 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &
 }
 
 bool
-js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res)
+js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval,
+                         MutableHandleValue res)
 {
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, res, ion);
+    AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
     if (!FetchElementId(cx, obj, idval, id.address(), res))
@@ -794,14 +794,14 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
 
             uint32_t dummy;
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
-                if (!cache.attachGetProp(cx, obj, idval, JSID_TO_ATOM(id)->asPropertyName(), res))
+                if (!cache.attachGetProp(cx, obj, idval, JSID_TO_ATOM(id)->asPropertyName()))
                     return false;
             }
         } else if (!cache.hasDenseArrayStub() && obj->isDenseArray() && idval.isInt32()) {
             // Generate at most one dense array stub.
             cache.incrementStubCount();
 
-            if (!cache.attachDenseArray(cx, obj, idval, res))
+            if (!cache.attachDenseArray(cx, obj, idval))
                 return false;
         }
     }
@@ -813,7 +813,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
     if (!GetElementOperation(cx, JSOp(*pc), ObjectValue(*obj), idval, res))
         return false;
 
-    types::TypeScript::Monitor(cx, script, pc, *res);
+    types::TypeScript::Monitor(cx, script, pc, res);
     return true;
 }
 
@@ -1119,7 +1119,7 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
 }
 
 bool
-js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, Value *vp)
+js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp)
 {
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
@@ -1153,7 +1153,7 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     }
 
     // Monitor changes to cache entry.
-    types::TypeScript::Monitor(cx, script, pc, *vp);
+    types::TypeScript::Monitor(cx, script, pc, vp);
 
     return true;
 }

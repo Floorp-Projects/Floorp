@@ -533,7 +533,7 @@ CachePrefChangedCallback(const char* aPref, void* aClosure)
 nsresult
 nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 {
-    nsresult rv;
+    nsresult rv, tmp;
 
     nsCAutoString path;
     aURI->GetPath(path);
@@ -606,7 +606,10 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     if (NS_SUCCEEDED(rv)) {
         buf.forget();
         rv = objectInput->ReadCString(fileLocale);
-        rv |= objectInput->ReadCString(fileChromePath);
+        tmp = objectInput->ReadCString(fileChromePath);
+        if (NS_FAILED(tmp)) {
+          rv = tmp;
+        }
         if (NS_FAILED(rv) ||
             (!fileChromePath.Equals(chromePath) ||
              !fileLocale.Equals(locale))) {
@@ -630,9 +633,18 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
                                                  false);
         if (NS_SUCCEEDED(rv)) {
             rv = objectOutput->WriteStringZ(locale.get());
-            rv |= objectOutput->WriteStringZ(chromePath.get());
-            rv |= objectOutput->Close();
-            rv |= storageStream->NewInputStream(0, getter_AddRefs(inputStream));
+            tmp = objectOutput->WriteStringZ(chromePath.get());
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
+            tmp = objectOutput->Close();
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
+            tmp = storageStream->NewInputStream(0, getter_AddRefs(inputStream));
+            if (NS_FAILED(tmp)) {
+              rv = tmp;
+            }
         }
         if (NS_SUCCEEDED(rv))
             rv = inputStream->Available(&len);

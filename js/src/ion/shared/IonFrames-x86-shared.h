@@ -131,6 +131,11 @@ class IonExitFooterFrame
     inline const VMFunction *function() const {
         return function_;
     }
+
+    // This should only be called for function()->outParam == Type_Handle
+    Value *outVp() {
+        return reinterpret_cast<Value *>(reinterpret_cast<char *>(this) - sizeof(Value));
+    }
 };
 
 class IonNativeExitFrameLayout;

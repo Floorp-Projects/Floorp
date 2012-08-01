@@ -170,7 +170,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::selection_,
                value);
   if (!value.IsEmpty()) {
-    PRInt32 errorCode;
+    nsresult errorCode;
     selection = value.ToInteger(&errorCode);
     if (NS_FAILED(errorCode)) 
       selection = 1;

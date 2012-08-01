@@ -1457,9 +1457,10 @@ PKIX_List *cert_PKIXMakeOIDList(const SECOidTag *oids, int oidCount, void *plCon
         error = PKIX_List_AppendItem(policyList, 
                 (PKIX_PL_Object *)policyOID, plContext);
         if (error != NULL) {
-            PKIX_PL_Object_DecRef((PKIX_PL_Object *)policyOID, plContext);
             goto cleanup;
         }
+        PKIX_PL_Object_DecRef((PKIX_PL_Object *)policyOID, plContext);
+        policyOID = NULL;
     }
 
     error = PKIX_List_SetImmutable(policyList, plContext);

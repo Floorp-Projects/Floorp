@@ -8,13 +8,8 @@
 
 #include "prtypes.h"  // for PRInt32
 
-namespace mozilla {
-namespace dom {
-class Element;
-} // namespace dom
-} // namespace mozilla
-
 class nsIDOMNode;
+class nsINode;
 
 class nsHTMLEditUtils
 {
@@ -24,26 +19,26 @@ public:
   static bool IsSmall(nsIDOMNode *aNode);
 
   // from nsHTMLEditRules:
-  static bool IsInlineStyle(mozilla::dom::Element* aNode);
+  static bool IsInlineStyle(nsINode* aNode);
   static bool IsInlineStyle(nsIDOMNode *aNode);
-  static bool IsFormatNode(mozilla::dom::Element* aNode);
+  static bool IsFormatNode(nsINode* aNode);
   static bool IsFormatNode(nsIDOMNode *aNode);
   static bool IsNodeThatCanOutdent(nsIDOMNode *aNode);
   static bool IsHeader(nsIDOMNode *aNode);
   static bool IsParagraph(nsIDOMNode *aNode);
   static bool IsHR(nsIDOMNode *aNode);
-  static bool IsListItem(mozilla::dom::Element* aNode);
+  static bool IsListItem(nsINode* aNode);
   static bool IsListItem(nsIDOMNode *aNode);
   static bool IsTable(nsIDOMNode *aNode);
   static bool IsTableRow(nsIDOMNode *aNode);
-  static bool IsTableElement(mozilla::dom::Element* aNode);
+  static bool IsTableElement(nsINode* aNode);
   static bool IsTableElement(nsIDOMNode *aNode);
-  static bool IsTableElementButNotTable(mozilla::dom::Element* aNode);
+  static bool IsTableElementButNotTable(nsINode* aNode);
   static bool IsTableElementButNotTable(nsIDOMNode *aNode);
-  static bool IsTableCell(mozilla::dom::Element* node);
+  static bool IsTableCell(nsINode* node);
   static bool IsTableCell(nsIDOMNode *aNode);
   static bool IsTableCellOrCaption(nsIDOMNode *aNode);
-  static bool IsList(mozilla::dom::Element* aNode);
+  static bool IsList(nsINode* aNode);
   static bool IsList(nsIDOMNode *aNode);
   static bool IsOrderedList(nsIDOMNode *aNode);
   static bool IsUnorderedList(nsIDOMNode *aNode);
@@ -52,13 +47,13 @@ public:
   static bool IsAnchor(nsIDOMNode *aNode);
   static bool IsImage(nsIDOMNode *aNode);
   static bool IsLink(nsIDOMNode *aNode);
-  static bool IsNamedAnchor(mozilla::dom::Element* aNode);
+  static bool IsNamedAnchor(nsINode* aNode);
   static bool IsNamedAnchor(nsIDOMNode *aNode);
   static bool IsDiv(nsIDOMNode *aNode);
   static bool IsMozDiv(nsIDOMNode *aNode);
-  static bool IsMailCite(mozilla::dom::Element* aNode);
+  static bool IsMailCite(nsINode* aNode);
   static bool IsMailCite(nsIDOMNode *aNode);
-  static bool IsFormWidget(mozilla::dom::Element* aNode);
+  static bool IsFormWidget(nsINode* aNode);
   static bool IsFormWidget(nsIDOMNode *aNode);
   static bool SupportsAlignAttr(nsIDOMNode *aNode);
   static bool CanContain(PRInt32 aParent, PRInt32 aChild);

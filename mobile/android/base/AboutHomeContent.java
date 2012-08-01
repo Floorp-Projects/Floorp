@@ -27,7 +27,6 @@ import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.OnAccountsUpdateListener;
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;

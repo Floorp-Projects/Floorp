@@ -140,12 +140,12 @@ WeakMap_has_impl(JSContext *cx, CallArgs args)
 
     if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
-            args.rval() = BooleanValue(true);
+            args.rval().setBoolean(true);
             return true;
         }
     }
 
-    args.rval() = BooleanValue(false);
+    args.rval().setBoolean(false);
     return true;
 }
 
@@ -172,12 +172,12 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
 
     if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
-            args.rval() = ptr->value;
+            args.rval().set(ptr->value);
             return true;
         }
     }
 
-    args.rval() = (args.length() > 1) ? args[1] : UndefinedValue();
+    args.rval().set((args.length() > 1) ? args[1] : UndefinedValue());
     return true;
 }
 
@@ -205,12 +205,12 @@ WeakMap_delete_impl(JSContext *cx, CallArgs args)
     if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             map->remove(ptr);
-            args.rval() = BooleanValue(true);
+            args.rval().setBoolean(true);
             return true;
         }
     }
 
-    args.rval() = BooleanValue(false);
+    args.rval().setBoolean(false);
     return true;
 }
 

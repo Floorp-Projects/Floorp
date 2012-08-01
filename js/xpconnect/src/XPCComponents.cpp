@@ -42,7 +42,7 @@ using mozilla::dom::DestroyProtoOrIfaceCache;
 /***************************************************************************/
 // stuff used by all
 
-static nsresult ThrowAndFail(unsigned errNum, JSContext* cx, bool* retval)
+static nsresult ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval)
 {
     XPCThrower::Throw(errNum, cx);
     *retval = false;
@@ -2984,10 +2984,10 @@ sandbox_finalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
+sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp)
 {
     if (type == JSTYPE_OBJECT) {
-        *vp = OBJECT_TO_JSVAL(obj);
+        vp.set(OBJECT_TO_JSVAL(obj));
         return true;
     }
 
@@ -3150,9 +3150,9 @@ bool BindPropertyOp(JSContext *cx, Op& op, PropertyDescriptor *desc, jsid id,
 }
 
 extern JSBool
-XPC_WN_Helper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+XPC_WN_Helper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 extern JSBool
-XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,

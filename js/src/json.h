@@ -37,8 +37,8 @@ enum DecodingMode { STRICT, LEGACY };
 namespace js {
 
 extern JS_FRIEND_API(JSBool)
-ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Value &filter,
-                     Value *vp, DecodingMode decodingMode = STRICT);
+ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, HandleValue filter,
+                     MutableHandleValue vp, DecodingMode decodingMode = STRICT);
 
 } /* namespace js */
 

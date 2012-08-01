@@ -305,12 +305,12 @@ IDBTransaction::ReleaseSavepoint()
   nsCOMPtr<mozIStorageStatement> stmt = GetCachedStatement(NS_LITERAL_CSTRING(
     "RELEASE SAVEPOINT " SAVEPOINT_NAME
   ));
-  NS_ENSURE_TRUE(stmt, false);
+  NS_ENSURE_TRUE(stmt, NS_OK);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   --mSavepointCount;
 
