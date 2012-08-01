@@ -38,7 +38,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
 import org.mozilla.gecko.gfx.InputConnectionHandler;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
+import org.mozilla.gecko.gfx.LayerController;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -294,8 +294,8 @@ public class GeckoInputConnection
     }
 
     private static View getView() {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        return (layerClient == null ? null : layerClient.getView());
+        LayerController controller = GeckoApp.mAppContext.getLayerController();
+        return (controller == null ? null : controller.getView());
     }
 
     private Span getSelection() {

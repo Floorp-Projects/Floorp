@@ -124,17 +124,17 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     //   processed. (n is the absolute value of the balance.)
     private int mProcessingBalance;
 
-    TouchEventHandler(Context context, LayerView view, GeckoLayerClient layerClient) {
+    TouchEventHandler(Context context, LayerView view, LayerController controller) {
         mView = view;
 
         mEventQueue = new LinkedList<MotionEvent>();
-        mPanZoomController = layerClient.getPanZoomController();
-        mGestureDetector = new GestureDetector(context, mPanZoomController);
-        mScaleGestureDetector = new SimpleScaleGestureDetector(mPanZoomController);
+        mGestureDetector = new GestureDetector(context, controller.getGestureListener());
+        mScaleGestureDetector = new SimpleScaleGestureDetector(controller.getScaleGestureListener());
+        mPanZoomController = controller.getPanZoomController();
         mListenerTimeoutProcessor = new ListenerTimeoutProcessor();
         mDispatchEvents = true;
 
-        mGestureDetector.setOnDoubleTapListener(mPanZoomController);
+        mGestureDetector.setOnDoubleTapListener(controller.getDoubleTapListener());
 
         Tabs.registerOnTabsChangedListener(this);
     }
