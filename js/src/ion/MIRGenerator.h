@@ -28,22 +28,22 @@ class MStart;
 class MIRGenerator
 {
   public:
-    MIRGenerator(JSContext *cx, TempAllocator &temp, MIRGraph &graph, CompileInfo &info);
+    MIRGenerator(JSCompartment *compartment, TempAllocator *temp, MIRGraph *graph, CompileInfo *info);
 
     TempAllocator &temp() {
-        return temp_;
+        return *temp_;
     }
     MIRGraph &graph() {
-        return graph_;
+        return *graph_;
     }
     bool ensureBallast() {
         return temp().ensureBallast();
     }
     IonCompartment *ionCompartment() const {
-        return cx->compartment->ionCompartment();
+        return compartment->ionCompartment();
     }
     CompileInfo &info() {
-        return info_;
+        return *info_;
     }
 
     template <typename T>
@@ -61,14 +61,14 @@ class MIRGenerator
     }
 
   public:
-    JSContext *cx;
+    JSCompartment *compartment;
 
   protected:
-    CompileInfo &info_;
-    TempAllocator &temp_;
+    CompileInfo *info_;
+    TempAllocator *temp_;
     JSFunction *fun_;
     uint32 nslots_;
-    MIRGraph &graph_;
+    MIRGraph *graph_;
     bool error_;
 };
 

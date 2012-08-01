@@ -17,26 +17,6 @@
 namespace js {
 namespace ion {
 
-class IonAllocPolicy
-{
-  public:
-    void *malloc_(size_t bytes) {
-        JSContext *cx = GetIonContext()->cx;
-        return cx->tempLifoAlloc().alloc(bytes);
-    }
-    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-        void *n = malloc_(bytes);
-        if (!n)
-            return n;
-        memcpy(n, p, Min(oldBytes, bytes));
-        return n;
-    }
-    void free_(void *p) {
-    }
-    void reportAllocOverflow() const {
-    }
-};
-
 class TempAllocator
 {
     LifoAlloc *lifoAlloc_;
@@ -68,10 +48,34 @@ class TempAllocator
         return p;
     }
 
+    LifoAlloc *lifoAlloc()
+    {
+        return lifoAlloc_;
+    }
+
     bool ensureBallast() {
         // Most infallible Ion allocations are small, so we use a ballast of
         // ~16K for now.
         return lifoAlloc_->ensureUnusedApproximate(16 * 1024);
+    }
+};
+
+class IonAllocPolicy
+{
+  public:
+    void *malloc_(size_t bytes) {
+        return GetIonContext()->temp->allocate(bytes);
+    }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        void *n = malloc_(bytes);
+        if (!n)
+            return n;
+        memcpy(n, p, Min(oldBytes, bytes));
+        return n;
+    }
+    void free_(void *p) {
+    }
+    void reportAllocOverflow() const {
     }
 };
 
