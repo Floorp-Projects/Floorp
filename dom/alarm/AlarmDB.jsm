@@ -79,19 +79,40 @@ AlarmDB.prototype = {
   /**
    * @param aId
    *        The ID of record to be removed.
+   * @param aManifestURL
+   *        The manifest URL of the app that alarm belongs to.
+   *        If null, directly remove the ID record; otherwise,
+   *        need to check if the alarm belongs to this app.
    * @param aSuccessCb
    *        Callback function to invoke with result.
    * @param aErrorCb [optional]
    *        Callback function to invoke when there was an error.
    */
-  remove: function remove(aId, aSuccessCb, aErrorCb) {
+  remove: function remove(aId, aManifestURL, aSuccessCb, aErrorCb) {
     debug("remove()");
 
     this.newTxn(
       "readwrite", 
       function txnCb(aTxn, aStore) {
         debug("Going to remove " + aId);
-        aStore.delete(aId);
+
+        // Look up the existing record and compare the manifestURL
+        // to see if the alarm to be removed belongs to this app.
+        aStore.get(aId).onsuccess = function doRemove(aEvent) {
+          let alarm = aEvent.target.result;
+
+          if (!alarm) {
+            debug("Alarm doesn't exist. No need to remove it.");
+            return;
+          }
+
+          if (aManifestURL && aManifestURL != alarm.manifestURL) {
+            debug("Cannot remove the alarm added by other apps.");
+            return;
+          }
+
+          aStore.delete(aId);
+        };
       }, 
       aSuccessCb, 
       aErrorCb
@@ -99,22 +120,30 @@ AlarmDB.prototype = {
   },
 
   /**
+   * @param aManifestURL
+   *        The manifest URL of the app that alarms belong to.
+   *        If null, directly return all alarms; otherwise,
+   *        only return the alarms that belong to this app.
    * @param aSuccessCb
    *        Callback function to invoke with result array.
    * @param aErrorCb [optional]
    *        Callback function to invoke when there was an error.
    */
-  getAll: function getAll(aSuccessCb, aErrorCb) {
+  getAll: function getAll(aManifestURL, aSuccessCb, aErrorCb) {
     debug("getAll()");
 
     this.newTxn(
       "readonly", 
       function txnCb(aTxn, aStore) {
         if (!aTxn.result)
-          aTxn.result = {};
+          aTxn.result = [];
 
         aStore.mozGetAll().onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
+          aEvent.target.result.forEach(function addAlarm(aAlarm) {
+            if (!aManifestURL || aManifestURL == aAlarm.manifestURL)
+              aTxn.result.push(aAlarm);
+          });
+
           debug("Request successful. Record count: " + aTxn.result.length);
         };
       }, 
