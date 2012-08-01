@@ -253,19 +253,20 @@ AndroidGraphicBuffer::DestroyBuffer()
   if (mEGLImage) {
     if (sGLFunctions.EnsureInitialized()) {
       sGLFunctions.fDestroyImageKHR(sGLFunctions.fGetDisplay(EGL_DEFAULT_DISPLAY), mEGLImage);
-      mEGLImage = nullptr;
+      mEGLImage = NULL;
     }
   }
 #endif
-  mEGLImage = nullptr;
+  mEGLImage = NULL;
 
   if (mHandle) {
     if (sGLFunctions.EnsureInitialized()) {
       sGLFunctions.fGraphicBufferDtor(mHandle);
     }
     free(mHandle);
-    mHandle = nullptr;
+    mHandle = NULL;
   }
+
 }
 
 bool
@@ -400,7 +401,7 @@ AndroidGraphicBuffer::EnsureEGLImage()
   void* nativeBuffer = sGLFunctions.fGraphicBufferGetNativeBuffer(mHandle);
 
   mEGLImage = sGLFunctions.fCreateImageKHR(sGLFunctions.fGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, (EGLClientBuffer)nativeBuffer, eglImgAttrs);
-  return (mEGLImage != nullptr);
+  return mEGLImage != NULL;
 }
 
 bool
@@ -432,7 +433,7 @@ static const char* const sAllowedBoards[] = {
   "sgh-i997",   // Samsung Infuse 4G
   "herring",    // Samsung Nexus S
   "sgh-t839",   // Samsung Sidekick 4G
-  nullptr
+  NULL
 };
 
 bool

@@ -258,7 +258,7 @@ public:
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
     // Switch Java to composite with the Gecko Compositor thread
-    void RegisterCompositor(JNIEnv* env = nullptr, bool resetting = false);
+    void RegisterCompositor(JNIEnv* env = NULL, bool resetting = false);
     EGLSurface ProvideEGLSurface();
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nullptr);
@@ -551,7 +551,7 @@ public:
     void Purge() {
         if (mJNIEnv) {
             if (mHasFrameBeenPushed)
-                mJNIEnv->PopLocalFrame(nullptr);
+                mJNIEnv->PopLocalFrame(NULL);
             Push();
         }
     }
@@ -577,7 +577,7 @@ public:
         CheckForException();
 
         if (mHasFrameBeenPushed)
-            mJNIEnv->PopLocalFrame(nullptr);
+            mJNIEnv->PopLocalFrame(NULL);
     }
 
 private:

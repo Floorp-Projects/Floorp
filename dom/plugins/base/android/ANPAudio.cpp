@@ -131,7 +131,7 @@ AudioRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  jbyte *byte = jenv->GetByteArrayElements(bytearray, nullptr);
+  jbyte *byte = jenv->GetByteArrayElements(bytearray, NULL);
   if (!byte) {
     LOG("AudioRunnable:: Run.  Could not create bytearray");
     return NS_ERROR_FAILURE;
@@ -193,13 +193,13 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
                    void* user)
 {
   ANPAudioTrack *s = (ANPAudioTrack*) malloc(sizeof(ANPAudioTrack));
-  if (s == nullptr) {
-    return nullptr;
+  if (s == NULL) {
+    return NULL;
   }
 
   JNIEnv *jenv = GetJNIForThread();
   if (!jenv)
-    return nullptr;
+    return NULL;
 
   s->at_class = init_jni_bindings(jenv);
   s->rate = sampleRate;
@@ -250,10 +250,10 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
                                 s->bufferSize,
                                 MODE_STREAM);
 
-  if (autoFrame.CheckForException() || obj == nullptr) {
+  if (autoFrame.CheckForException() || obj == NULL) {
     jenv->DeleteGlobalRef(s->at_class);
     free(s);
-    return nullptr;
+    return NULL;
   }
 
   jint state = jenv->CallIntMethod(obj, at.getstate);
@@ -261,7 +261,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
   if (autoFrame.CheckForException() || state == STATE_UNINITIALIZED) {
     jenv->DeleteGlobalRef(s->at_class);
     free(s);
-    return nullptr;
+    return NULL;
   }
 
   s->output_unit = jenv->NewGlobalRef(obj);
@@ -271,7 +271,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
 void
 anp_audio_deleteTrack(ANPAudioTrack* s)
 {
-  if (s == nullptr) {
+  if (s == NULL) {
     return;
   }
 
@@ -285,7 +285,7 @@ anp_audio_deleteTrack(ANPAudioTrack* s)
 void
 anp_audio_start(ANPAudioTrack* s)
 {
-  if (s == nullptr || s->output_unit == nullptr) {
+  if (s == NULL || s->output_unit == NULL) {
     return;
   }
 
@@ -320,7 +320,7 @@ anp_audio_start(ANPAudioTrack* s)
 void
 anp_audio_pause(ANPAudioTrack* s)
 {
-  if (s == nullptr || s->output_unit == nullptr) {
+  if (s == NULL || s->output_unit == NULL) {
     return;
   }
 
@@ -335,7 +335,7 @@ anp_audio_pause(ANPAudioTrack* s)
 void
 anp_audio_stop(ANPAudioTrack* s)
 {
-  if (s == nullptr || s->output_unit == nullptr) {
+  if (s == NULL || s->output_unit == NULL) {
     return;
   }
 
