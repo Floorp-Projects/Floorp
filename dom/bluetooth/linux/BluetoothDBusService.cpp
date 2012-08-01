@@ -140,7 +140,10 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     BluetoothService* bs = BluetoothService::Get();
-    MOZ_ASSERT(bs);
+    if (!bs) {
+      NS_WARNING("BluetoothService not available!");
+      return NS_ERROR_FAILURE;
+    }    
     return bs->DistributeSignal(mSignal);
   }  
 };

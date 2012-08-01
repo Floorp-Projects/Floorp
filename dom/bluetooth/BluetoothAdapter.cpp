@@ -8,15 +8,18 @@
 #include "BluetoothAdapter.h"
 #include "BluetoothDevice.h"
 #include "BluetoothDeviceEvent.h"
+#include "BluetoothPropertyEvent.h"
 #include "BluetoothService.h"
 #include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
+#include "BluetoothUtils.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIDOMDOMRequest.h"
+#include "nsContentUtils.h"
 
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
@@ -29,8 +32,15 @@ DOMCI_DATA(BluetoothAdapter, BluetoothAdapter)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothAdapter)
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothAdapter,
+                                               nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsUuids)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsDeviceAddresses)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothAdapter, 
                                                   nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(devicefound)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(devicedisappeared)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(propertychanged)  
@@ -38,6 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothAdapter, 
                                                 nsDOMEventTargetHelper)
+  tmp->Unroot();
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(devicefound)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(devicedisappeared)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(propertychanged)  
@@ -51,36 +62,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
 
-class GetPropertiesTask : public BluetoothReplyRunnable
+BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aOwner, const nsAString& aPath)
+    : BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
+    , mJsUuids(nullptr)
+    , mJsDeviceAddresses(nullptr)
+    , mIsRooted(false)
 {
-public:
-  GetPropertiesTask(BluetoothAdapter* aAdapter, nsIDOMDOMRequest* aReq) :
-    BluetoothReplyRunnable(aReq),
-    mAdapterPtr(aAdapter)
-  {
-  }
-
-  bool
-  ParseSuccessfulReply(jsval* aValue)
-  {
-    const InfallibleTArray<BluetoothNamedValue>& values =
-      mReply->get_BluetoothReplySuccess().value().get_ArrayOfBluetoothNamedValue();
-    for (uint32_t i = 0; i < values.Length(); ++i) {
-      mAdapterPtr->SetPropertyByValue(values[i]);
-    }
-    *aValue = JSVAL_VOID;
-    return true;
-  }
-
-  void
-  ReleaseMembers()
-  {
-    BluetoothReplyRunnable::ReleaseMembers();
-    mAdapterPtr = nullptr;
-  }
-private:
-  nsRefPtr<BluetoothAdapter> mAdapterPtr;
-};
+  BindToOwner(aOwner);
+  mPath = aPath;
+}
 
 BluetoothAdapter::~BluetoothAdapter()
 {
@@ -91,6 +81,27 @@ BluetoothAdapter::~BluetoothAdapter()
       NS_WARNING("Failed to unregister object with observer!");
     }
   }
+  Unroot();
+}
+
+void
+BluetoothAdapter::Unroot()
+{
+  if (!mIsRooted) {
+    return;
+  }
+  NS_DROP_JS_OBJECTS(this, BluetoothAdapter);
+  mIsRooted = false;
+}
+
+void
+BluetoothAdapter::Root()
+{
+  if (mIsRooted) {
+    return;
+  }
+  NS_HOLD_JS_OBJECTS(this, BluetoothAdapter);
+  mIsRooted = true;
 }
 
 void
@@ -102,10 +113,14 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mName = value.get_nsString();
   } else if (name.EqualsLiteral("Address")) {
     mAddress = value.get_nsString();
+  } else if (name.EqualsLiteral("Path")) {
+    mPath = value.get_nsString();
   } else if (name.EqualsLiteral("Enabled")) {
     mEnabled = value.get_bool();
   } else if (name.EqualsLiteral("Discoverable")) {
     mDiscoverable = value.get_bool();
+  } else if (name.EqualsLiteral("Discovering")) {
+    mDiscovering = value.get_bool();
   } else if (name.EqualsLiteral("Pairable")) {
     mPairable = value.get_bool();
   } else if (name.EqualsLiteral("Powered")) {
@@ -118,6 +133,36 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mClass = value.get_uint32_t();
   } else if (name.EqualsLiteral("UUIDs")) {
     mUuids = value.get_ArrayOfnsString();
+    nsresult rv;
+    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+    if (sc) {
+      rv =
+        StringArrayToJSArray(sc->GetNativeContext(),
+                             sc->GetNativeGlobal(), mUuids, &mJsUuids);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Cannot set JS UUIDs object!");
+        return;
+      }
+      Root();
+    } else {
+      NS_WARNING("Could not get context!");
+    }
+  } else if (name.EqualsLiteral("Devices")) {
+    mDeviceAddresses = value.get_ArrayOfnsString();
+    nsresult rv;
+    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+    if (sc) {
+      rv =
+        StringArrayToJSArray(sc->GetNativeContext(),
+                             sc->GetNativeGlobal(), mUuids, &mJsDeviceAddresses);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Cannot set JS Devices Addresses object!");
+        return;
+      }
+      Root();
+    } else {
+      NS_WARNING("Could not get context!");
+    }
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -136,11 +181,15 @@ BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const nsAString& aPath)
   NS_ASSERTION(!aPath.IsEmpty(), "Adapter created with empty path!");
     
   BluetoothService* bs = BluetoothService::Get();
-  MOZ_ASSERT(bs);
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return nullptr;
+  }
 
-  nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aPath);
-  adapter->BindToOwner(aOwner);
-  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(aPath, adapter))) {
+  nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aOwner, aPath);
+  nsString path;
+  path = adapter->GetPath();
+  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(path, adapter))) {
     NS_WARNING("Failed to register object with observer!");
     return nullptr;
   }
@@ -151,9 +200,21 @@ void
 BluetoothAdapter::Notify(const BluetoothSignal& aData)
 {
   if (aData.name().EqualsLiteral("DeviceFound")) {
-    nsRefPtr<BluetoothDevice> d = BluetoothDevice::Create(GetOwner(), aData);
+    nsRefPtr<BluetoothDevice> d = BluetoothDevice::Create(GetOwner(), mPath, aData.value());
     nsRefPtr<BluetoothDeviceEvent> e = BluetoothDeviceEvent::Create(d);
     e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("devicefound"));
+  } else if (aData.name().EqualsLiteral("PropertyChanged")) {
+    // Get BluetoothNamedValue, make sure array length is 1
+    InfallibleTArray<BluetoothNamedValue> arr = aData.value().get_ArrayOfBluetoothNamedValue();
+    if (arr.Length() != 1) {
+      // This really should not happen
+      NS_ERROR("Got more than one property in a change message!");
+      return;
+    }
+    BluetoothNamedValue v = arr[0];
+    SetPropertyByValue(v);
+    nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(v.name());
+    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -168,10 +229,12 @@ nsresult
 BluetoothAdapter::StartStopDiscovery(bool aStart, nsIDOMDOMRequest** aRequest)
 {
   BluetoothService* bs = BluetoothService::Get();
-  MOZ_ASSERT(bs);
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
-    
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");    
   if (!rs) {
     NS_WARNING("No DOMRequest Service!");
     return NS_ERROR_FAILURE;
@@ -268,8 +331,64 @@ BluetoothAdapter::GetDiscoverableTimeout(PRUint32* aDiscoverableTimeout)
 NS_IMETHODIMP
 BluetoothAdapter::GetDevices(JSContext* aCx, jsval* aDevices)
 {
-  NS_WARNING("GetDevices not yet implemented.");
+  if (mJsDeviceAddresses) {
+    aDevices->setObject(*mJsDeviceAddresses);
+  }
+  else {
+    NS_WARNING("UUIDs not yet set!\n");
+    return NS_ERROR_FAILURE;
+  }    
   return NS_OK;
+}
+
+nsresult
+BluetoothAdapter::GetUuids(JSContext* aCx, jsval* aValue)
+{
+  if (mJsUuids) {
+    aValue->setObject(*mJsUuids);
+  }
+  else {
+    NS_WARNING("UUIDs not yet set!\n");
+    return NS_ERROR_FAILURE;
+  }    
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::SetName(const nsAString& aName,
+                          nsIDOMDOMRequest** aRequest)
+{
+  if (mName.Equals(aName)) {
+    return NS_OK;
+  }
+  nsString name(aName);
+  BluetoothValue value(name);
+  BluetoothNamedValue property(NS_LITERAL_STRING("Name"), value);
+  return SetProperty(GetOwner(), property, aRequest);
+}
+ 
+NS_IMETHODIMP
+BluetoothAdapter::SetDiscoverable(const bool aDiscoverable,
+                                  nsIDOMDOMRequest** aRequest)
+{
+  if (aDiscoverable == mDiscoverable) {
+    return NS_OK;
+  }
+  BluetoothValue value(aDiscoverable);
+  BluetoothNamedValue property(NS_LITERAL_STRING("Discoverable"), value);
+  return SetProperty(GetOwner(), property, aRequest);
+}
+ 
+NS_IMETHODIMP
+BluetoothAdapter::SetDiscoverableTimeout(const PRUint32 aDiscoverableTimeout,
+                                         nsIDOMDOMRequest** aRequest)
+{
+  if (aDiscoverableTimeout == mDiscoverableTimeout) {
+    return NS_OK;
+  }
+  BluetoothValue value(aDiscoverableTimeout);
+  BluetoothNamedValue property(NS_LITERAL_STRING("DiscoverableTimeout"), value);
+  return SetProperty(GetOwner(), property, aRequest);
 }
 
 NS_IMPL_EVENT_HANDLER(BluetoothAdapter, propertychanged)

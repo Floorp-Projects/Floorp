@@ -9,7 +9,7 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(48df7f05-2bbc-4ac8-aa88-9fecd4c24028)]
+[scriptable, builtinclass, uuid(86e9fe78-ce64-476e-a357-333f7d3c8980)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -20,11 +20,17 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   [implicit_jscontext]
   readonly attribute jsval devices;
 
+  [implicit_jscontext]
+  readonly attribute jsval uuids;
+  
   readonly attribute DOMString name;
   readonly attribute bool discoverable;
   // Unit: sec
   readonly attribute unsigned long discoverableTimeout;
 
+  nsIDOMDOMRequest setName(in DOMString name);
+  nsIDOMDOMRequest setDiscoverable(in bool discoverable);
+  nsIDOMDOMRequest setDiscoverableTimeout(in unsigned long timeout);
   nsIDOMDOMRequest startDiscovery();
   nsIDOMDOMRequest stopDiscovery();
   // Fired when discoverying and any device is discovered.
