@@ -103,7 +103,7 @@ mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
 
 nsresult
 mozInlineSpellStatus::InitForEditorChange(
-    PRInt32 aAction,
+    nsEditor::OperationID aAction,
     nsIDOMNode* aAnchorNode, PRInt32 aAnchorOffset,
     nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
     nsIDOMNode* aStartNode, PRInt32 aStartOffset,
@@ -731,7 +731,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozInlineSpellStatus status(this);
-  rv = status.InitForEditorChange(aAction,
+  rv = status.InitForEditorChange((nsEditor::OperationID)aAction,
                                   anchorNode, anchorOffset,
                                   aPreviousSelectedNode, aPreviousSelectedOffset,
                                   aStartNode, aStartOffset,

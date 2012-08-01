@@ -5043,14 +5043,13 @@ nsEditor::HandleInlineSpellCheck(OperationID action,
                                    nsIDOMNode *aEndNode,
                                    PRInt32 aEndOffset)
 {
-  return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(action,
-                                                       aSelection,
-                                                       previousSelectedNode,
-                                                       previousSelectedOffset,
-                                                       aStartNode,
-                                                       aStartOffset,
-                                                       aEndNode,
-                                                       aEndOffset) : NS_OK;
+  // Have to cast action here because this method is from an IDL
+  return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(
+                                 (PRInt32)action, aSelection,
+                                 previousSelectedNode, previousSelectedOffset,
+                                 aStartNode, aStartOffset, aEndNode,
+                                 aEndOffset)
+                             : NS_OK;
 }
 
 already_AddRefed<nsIContent>

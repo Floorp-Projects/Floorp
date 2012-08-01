@@ -14,7 +14,7 @@
 #include "nsITextServicesDocument.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsWeakReference.h"
-#include "nsIEditor.h"
+#include "nsEditor.h"
 #include "nsIDOMEventListener.h"
 #include "nsWeakReference.h"
 #include "mozISpellI18NUtil.h"
@@ -35,7 +35,7 @@ class mozInlineSpellStatus
 public:
   mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(PRInt32 aAction,
+  nsresult InitForEditorChange(nsEditor::OperationID aAction,
                                nsIDOMNode* aAnchorNode, PRInt32 aAnchorOffset,
                                nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
                                nsIDOMNode* aStartNode, PRInt32 aStartOffset,
