@@ -6,8 +6,7 @@ let prefName = "social.enabled",
     shareButton,
     sharePopup,
     okButton,
-    undoButton,
-    displayName;
+    undoButton;
 
 function test() {
   waitForExplicitFinish();
@@ -52,20 +51,6 @@ function testInitial() {
   sharePopup = SocialShareButton.sharePopup;
   ok(shareButton, "share button exists");
   ok(sharePopup, "share popup exists");
-
-  let profile = {
-    portrait: "https://example.com/portrait.jpg",
-    userName: "trickster",
-    displayName: "Kuma Lisa",
-    profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
-  }
-  Social.provider.updateUserProfile(profile);
-  // check dom values
-  let portrait = document.getElementById("socialUserPortrait").getAttribute("src");
-  is(profile.portrait, portrait, "portrait is set");
-  displayName = document.getElementById("socialUserDisplayName");
-  is(displayName.label, profile.displayName, "display name is set");
-  ok(!document.getElementById("editSharePopupHeader").hidden, "user profile is visible");
 
   okButton = document.getElementById("editSharePopupOkButton");
   undoButton = document.getElementById("editSharePopupUndoButton");
@@ -131,20 +116,9 @@ function checkShortcutWorked(keyTarget) {
 
 function checkOKButton() {
   is(document.activeElement, okButton, "ok button should be focused by default");
-  // Linux has the buttons in the [unshare] [ok] order, so displayName will come first.
-  if (navigator.platform.indexOf("Linux") != -1) {
-    checkNextInTabOrder(displayName, function () {
-      checkNextInTabOrder(undoButton, function () {
-        checkNextInTabOrder(okButton, testCloseBySpace);
-      });
-    });
-  } else {
-    checkNextInTabOrder(undoButton, function () {
-      checkNextInTabOrder(displayName, function () {
-        checkNextInTabOrder(okButton, testCloseBySpace);
-      });
-    });
-  }
+  checkNextInTabOrder(undoButton, function () {
+    checkNextInTabOrder(okButton, testCloseBySpace);
+  });
 }
 
 function checkNextInTabOrder(element, next) {
