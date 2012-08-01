@@ -70,7 +70,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     sourceMapMap(NULL),
     debugScriptMap(NULL)
 {
-    setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
+    setGCMaxMallocBytes(rt->gcMaxMallocBytes);
 }
 
 JSCompartment::~JSCompartment()
