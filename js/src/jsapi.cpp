@@ -5058,25 +5058,45 @@ ReadCompleteFile(JSContext *cx, FILE *fp, FileContents &buffer)
     return true;
 }
 
+class AutoFile
+{
+    FILE *fp_;
+  public:
+    AutoFile()
+      : fp_(NULL)
+    {}
+    ~AutoFile()
+    {
+        if (fp_ && fp_ != stdin)
+            fclose(fp_);
+    }
+    FILE *fp() const { return fp_; }
+    bool open(JSContext *cx, const char *filename);
+    bool readAll(JSContext *cx, FileContents &buffer)
+    {
+        JS_ASSERT(fp_);
+        return ReadCompleteFile(cx, fp_, buffer);
+    }
+};
+
 /*
  * Open a source file for reading. Supports "-" and NULL to mean stdin. The
  * return value must be fclosed unless it is stdin.
  */
-static FILE *
-OpenFile(JSContext *cx, const char *filename)
+bool
+AutoFile::open(JSContext *cx, const char *filename)
 {
-    FILE *fp;
     if (!filename || strcmp(filename, "-") == 0) {
-        fp = stdin;
+        fp_ = stdin;
     } else {
-        fp = fopen(filename, "r");
-        if (!fp) {
+        fp_ = fopen(filename, "r");
+        if (!fp_) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
                                  filename, "No such file or directory");
-            return NULL;
+            return false;
         }
     }
-    return fp;
+    return true;
 }
 
 
@@ -5145,13 +5165,11 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, FILE *fp)
 JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, const char *filename)
 {
-    FILE *fp = OpenFile(cx, filename);
-    if (!fp)
+    AutoFile file;
+    if (!file.open(cx, filename))
         return NULL;
     options = options.setFileAndLine(filename, 1);
-    JSScript *script = Compile(cx, obj, options, fp);
-    if (fp != stdin)
-        fclose(fp);
+    JSScript *script = Compile(cx, obj, options, file.fp());
     return script;
 }
 
@@ -5643,15 +5661,12 @@ extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
              const char *filename, jsval *rval)
 {
-    FILE *fp = OpenFile(cx, filename);
-    if (!fp)
-        return NULL;
     FileContents buffer(cx);
-    bool ok = ReadCompleteFile(cx, fp, buffer);
-    if (fp != stdin)
-        fclose(fp);
-    if (!ok)
-        return NULL;
+    {
+        AutoFile file;
+        if (!file.open(cx, filename) || !file.readAll(cx, buffer))
+            return NULL;
+    }
 
     options = options.setFileAndLine(filename, 1);
     return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
