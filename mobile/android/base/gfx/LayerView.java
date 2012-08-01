@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoInputConnection;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
@@ -18,6 +19,8 @@ import android.view.TextureView;
 import android.widget.FrameLayout;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -218,6 +221,23 @@ public class LayerView extends FrameLayout {
 
     public GLController getGLController() {
         return mGLController;
+    }
+
+    private Bitmap getDrawable(String name) {
+        Context context = getContext();
+        Resources resources = context.getResources();
+        int resourceID = resources.getIdentifier(name, "drawable", context.getPackageName());
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        return BitmapFactory.decodeResource(context.getResources(), resourceID, options);
+    }
+
+    Bitmap getBackgroundPattern() {
+        return getDrawable("tabs_tray_selected_bg");
+    }
+
+    Bitmap getShadowPattern() {
+        return getDrawable("shadow");
     }
 
     private void onSizeChanged(int width, int height) {
