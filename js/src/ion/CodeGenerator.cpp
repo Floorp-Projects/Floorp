@@ -165,14 +165,30 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
     MPolyInlineDispatch *mir = lir->mir();
     Register inputReg = ToRegister(lir->input());
 
-    for (size_t i = 0; i < mir->numCallees(); i++) {
-        JSFunction *func = mir->getFunction(i);
-        LBlock *target = mir->getSuccessor(i)->lir();
-        if (i < mir->numCallees() - 1) {
-            masm.branchPtr(Assembler::Equal, inputReg, ImmGCPtr(func), target->label());
-        } else {
-            // Don't generate guard for final case
-            masm.jump(target->label());
+    InlinePropertyTable *inlinePropTable = mir->inlinePropertyTable();
+    if (inlinePropTable) {
+        Register tempReg = ToRegister(lir->temp());
+
+        masm.loadPtr(Address(inputReg, JSObject::offsetOfType()), tempReg);
+        for (size_t i = 0; i < inlinePropTable->numEntries(); i++) {
+            types::TypeObject *typeObj = inlinePropTable->getTypeObject(i);
+            JSFunction *func = inlinePropTable->getFunction(i);
+            LBlock *target = mir->getFunctionBlock(func)->lir();
+            masm.branchPtr(Assembler::Equal, tempReg, ImmGCPtr(typeObj), target->label());
+        }
+        // Jump to fallback block
+        LBlock *fallback = mir->fallbackPrepBlock()->lir();
+        masm.jump(fallback->label());
+    } else {
+        for (size_t i = 0; i < mir->numCallees(); i++) {
+            JSFunction *func = mir->getFunction(i);
+            LBlock *target = mir->getFunctionBlock(i)->lir();
+            if (i < mir->numCallees() - 1) {
+                masm.branchPtr(Assembler::Equal, inputReg, ImmGCPtr(func), target->label());
+            } else {
+                // Don't generate guard for final case
+                masm.jump(target->label());
+            }
         }
     }
     return true;
