@@ -50,6 +50,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
+    bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
     // Sets a slot, taking care to rewrite copies.
@@ -71,6 +72,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGraph &graph, CompileInfo &info,
                             MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
+    static MBasicBlock *NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
+                                           MBasicBlock *pred, jsbytecode *entryPc,
+                                           MResumePoint *resumePoint);
     static MBasicBlock *NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
@@ -161,6 +165,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
+
+    // Add an instruction to this block, from elsewhere in the graph.
+    void addFromElsewhere(MInstruction *ins);
 
     // Move an instruction. Movement may cross block boundaries.
     void moveBefore(MInstruction *at, MInstruction *ins);
