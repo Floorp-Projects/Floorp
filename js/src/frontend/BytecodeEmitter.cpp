@@ -3520,7 +3520,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             return false;
         if (Emit1(cx, bce, JSOP_BINDXMLNAME) < 0)
             return false;
-        offset++;
+        offset += 2;
         break;
 #endif
       default:
