@@ -659,11 +659,11 @@ LIRGenerator::visitAbs(MAbs *ins)
         if (!ins->range()->isFinite() && !assignSnapshot(lir))
             return false;
         return defineReuseInput(lir, ins, 0);
-    } else {
-        JS_ASSERT(num->type() == MIRType_Double);
-        LAbsD *lir = new LAbsD(useRegister(num));
-        return define(lir, ins);
     }
+
+    JS_ASSERT(num->type() == MIRType_Double);
+    LAbsD *lir = new LAbsD(useRegisterAtStart(num));
+    return defineReuseInput(lir, ins, 0);
 }
 
 bool
@@ -672,7 +672,7 @@ LIRGenerator::visitSqrt(MSqrt *ins)
     MDefinition *num = ins->num();
     JS_ASSERT(num->type() == MIRType_Double);
     LSqrtD *lir = new LSqrtD(useRegisterAtStart(num));
-    return define(lir, ins);
+    return defineReuseInput(lir, ins, 0);
 }
 
 bool
