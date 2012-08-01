@@ -3833,8 +3833,6 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         return;
 
-    AutoCopyFreeListToArenas copy(rt);
-
     if (rt->gcIncrementalState == SWEEP) {
         /* If we've finished marking then sweep to completion here. */
         IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);
@@ -3842,6 +3840,8 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
         return;
     }
+
+    AutoCopyFreeListToArenas copy(rt);
 
     JS_ASSERT(rt->gcIncrementalState == MARK);
 
