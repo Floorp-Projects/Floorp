@@ -37,6 +37,12 @@
   <commandset id="editMenuCommands"/>
   <commandset id="sourceEditorCommands"/>
   <keyset id="sourceEditorKeys"/>
+  <keyset id="scriptSearchKeys">
+    <key key="P" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onSearch()"/>
+    <key key="T" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onTokenSearch()"/>
+  </keyset>
 
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
