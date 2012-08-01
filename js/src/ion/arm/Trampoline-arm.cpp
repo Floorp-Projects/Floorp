@@ -634,7 +634,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
 
       case Type_Handle:
-        outReg = regs.takeAny();
+        outReg = r4;
+        regs.take(outReg);
         masm.Push(UndefinedValue());
         masm.ma_mov(sp, outReg);
         break;
