@@ -711,14 +711,19 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
     Label *ifFalse();
 };
 
-class LPolyInlineDispatch : public LInstructionHelper<0, 1, 0>
+class LPolyInlineDispatch : public LInstructionHelper<0, 1, 1>
 {
   // Accesses function/block table from MIR instruction.
   public:
     LIR_HEADER(PolyInlineDispatch);
 
-    LPolyInlineDispatch(const LAllocation &in) {
+    LPolyInlineDispatch(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
+        setTemp(0, temp);
+    }
+ 
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 
     MPolyInlineDispatch *mir() {
