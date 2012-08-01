@@ -543,7 +543,7 @@ public class GeckoAppShell
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
         mInputConnection = v.setInputConnectionHandler();
-        layerController.notifyLayerClientOfGeometryChange();
+        layerController.setForceRedraw();
     }
 
     static void sendPendingEventsToGecko() {
