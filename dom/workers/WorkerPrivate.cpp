@@ -1554,9 +1554,6 @@ public:
     if (!mWorkerPrivate) {
 #ifdef DEBUG
       nsCAutoString message("Unable to report memory for ");
-      if (mWorkerPrivate->IsChromeWorker()) {
-        message.AppendLiteral("Chrome");
-      }
       message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
                  NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
                                     "the process of being destroyed");
