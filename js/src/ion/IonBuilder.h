@@ -223,6 +223,7 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *addBlock(MBasicBlock *block, uint32 loopDepth);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth);
+    MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc, MResumePoint *priorResumePoint);
     MBasicBlock *newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopEntry);
     MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
@@ -390,7 +391,8 @@ class IonBuilder : public MIRGenerator
     bool jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
                           MConstant *constFun, MBasicBlock *bottom,
                           Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
-    bool inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing);
+    bool inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing,
+                            types::TypeSet *types, types::TypeSet *barrier);
     bool makeInliningDecision(AutoObjectVector &targets);
 
     bool jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
@@ -404,6 +406,18 @@ class IonBuilder : public MIRGenerator
     inline bool TestCommonPropFunc(JSContext *cx, types::TypeSet *types,
                                    HandleId id, JSFunction **funcp, 
                                    bool isGetter);
+
+    bool annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
+                                  types::TypeSet *objTypes, types::TypeSet *pushedTypes);
+
+    MGetPropertyCache *checkInlineableGetPropertyCache(uint32_t argc);
+
+    MPolyInlineDispatch *
+    makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int argc,
+                           MGetPropertyCache *getPropCache,
+                           types::TypeSet *types, types::TypeSet *barrier,
+                           MBasicBlock *bottom,
+                           Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
 
   public:
     // A builder is inextricably tied to a particular script.
