@@ -55,7 +55,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
   @abstractmethod
   def mkDir(self, name):
     """
@@ -64,7 +64,7 @@ class DeviceManager:
     success: directory name
     failure: None
     """
-    
+
   def mkDirs(self, filename):
     """
     make directory structure on the device
@@ -85,7 +85,7 @@ class DeviceManager:
                     print "failed making directory: " + str(name)
                     return None
     return name
-    
+
   @abstractmethod
   def pushDir(self, localDir, remoteDir):
     """
@@ -104,7 +104,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
   @abstractmethod
   def fileExists(self, filepath):
     """
@@ -115,7 +115,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
   @abstractmethod
   def listFiles(self, rootdir):
     """
@@ -125,7 +125,7 @@ class DeviceManager:
     success: array of filenames, ['file1', 'file2', ...]
     failure: None
     """
-  
+
   @abstractmethod
   def removeFile(self, filename):
     """
@@ -134,7 +134,7 @@ class DeviceManager:
     success: output of telnet, i.e. "removing file: /mnt/sdcard/tests/test.txt"
     failure: None
     """
-    
+
   @abstractmethod
   def removeDir(self, remoteDir):
     """
@@ -144,7 +144,7 @@ class DeviceManager:
     success: output of telnet, i.e. "removing file: /mnt/sdcard/tests/test.txt"
     failure: None
     """
-    
+
   @abstractmethod
   def getProcessList(self):
     """
@@ -182,7 +182,7 @@ class DeviceManager:
     success: pid
     failure: None
     """
-    
+
     pid = None
 
     #filter out extra spaces
@@ -194,7 +194,7 @@ class DeviceManager:
     parts = appname.split('"')
     if (len(parts) > 2):
       appname = ' '.join(parts[2:]).strip()
-  
+
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
     app = parts[-1]
@@ -202,7 +202,7 @@ class DeviceManager:
     procList = self.getProcessList()
     if (procList == []):
       return None
-      
+
     for proc in procList:
       procName = proc[1].split('/')[-1]
       if (procName == app):
@@ -219,7 +219,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
   @abstractmethod
   def catFile(self, remoteFile):
     """
@@ -228,7 +228,7 @@ class DeviceManager:
     success: filecontents
     failure: None
     """
-    
+
   @abstractmethod
   def pullFile(self, remoteFile):
     """
@@ -237,7 +237,7 @@ class DeviceManager:
     success: output of pullfile, string
     failure: None
     """
-    
+
   @abstractmethod
   def getFile(self, remoteFile, localFile = ''):
     """
@@ -247,7 +247,7 @@ class DeviceManager:
     success: output of pullfile, string
     failure: None
     """
-    
+
   @abstractmethod
   def getDirectory(self, remoteDir, localDir, checkDir=True):
     """
@@ -260,7 +260,7 @@ class DeviceManager:
     success: list of files, string
     failure: None
     """
-    
+
   @abstractmethod
   def isDir(self, remotePath):
     """
@@ -270,7 +270,7 @@ class DeviceManager:
     failure: False
     Throws a FileError exception when null (invalid dir/filename)
     """
-    
+
   @abstractmethod
   def validateFile(self, remoteFile, localFile):
     """
@@ -280,7 +280,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
   @abstractmethod
   def getRemoteHash(self, filename):
     """
@@ -290,7 +290,7 @@ class DeviceManager:
     success: MD5 hash for given filename
     failure: None
     """
-    
+
   def getLocalHash(self, filename):
     """
     return the md5 sum of a file on the host
@@ -299,7 +299,7 @@ class DeviceManager:
     success: MD5 hash for given filename
     failure: None
     """
-    
+
     file = open(filename, 'rb')
     if (file == None):
       return None
@@ -362,7 +362,7 @@ class DeviceManager:
     success: path for test root
     failure: None
     """
-    
+
     devroot = self.getDeviceRoot()
     if (devroot == None):
       return None
@@ -381,24 +381,24 @@ class DeviceManager:
     For Example: SIGINT and SIGDFL to process x
     """
     #currently not implemented in device agent - todo
-    
+
     pass
 
   def getReturnCode(self, processID):
     """Get a return code from process ending -- needs support on device-agent"""
     # TODO: make this real
-    
+
     return 0
 
   @abstractmethod
-  def unpackFile(self, filename):
+  def unpackFile(self, file_path, dest_dir=None):
     """
     external function
     returns:
     success: output of unzip command
     failure: None
     """
-    
+
   @abstractmethod
   def reboot(self, ipAddr=None, port=30000):
     """
@@ -407,7 +407,7 @@ class DeviceManager:
     success: status from test agent
     failure: None
     """
-    
+
   def validateDir(self, localDir, remoteDir):
     """
     validate localDir from host to remoteDir on the device
@@ -416,7 +416,7 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
     if (self.debug >= 2): print "validating directory: " + localDir + " to " + remoteDir
     for root, dirs, files in os.walk(localDir):
       parts = root.split(localDir)
@@ -428,7 +428,7 @@ class DeviceManager:
         if (self.validateFile(remoteName, os.path.join(root, file)) <> True):
             return False
     return True
-    
+
   @abstractmethod
   def getInfo(self, directive=None):
     """
@@ -448,7 +448,7 @@ class DeviceManager:
     success: dict of info strings by directive name
     failure: None
     """
-    
+
   @abstractmethod
   def installApp(self, appBundlePath, destPath=None):
     """
@@ -466,7 +466,7 @@ class DeviceManager:
     success: True
     failure: None
     """
-    
+
   @abstractmethod
   def updateApp(self, appBundlePath, processName=None,
                 destPath=None, ipAddr=None, port=30000):
@@ -476,7 +476,7 @@ class DeviceManager:
     success: text status from command or callback server
     failure: None
     """
-  
+
   @abstractmethod
   def getCurrentTime(self):
     """
@@ -491,7 +491,7 @@ class DeviceManager:
     external function
     returns:
     success: file is created in <testroot>/logcat.log
-    failure: 
+    failure:
     """
     #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
 
@@ -590,14 +590,14 @@ class NetworkTools:
           connected = True
           s.close()
           break
-        except:          
+        except:
           if seed > maxportnum:
             print "Could not find open port after checking 5000 ports"
           raise
         seed += 1
     except:
       print "Socket error trying to find open port"
-        
+
     return seed
 
 def _pop_last_line(file):
