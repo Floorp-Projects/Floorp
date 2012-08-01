@@ -170,7 +170,7 @@ EventFilter(DBusConnection *aConn, DBusMessage *aMsg,
 nsresult
 StartBluetoothConnection()
 {
-  if(sDBusConnection) {
+  if (sDBusConnection) {
     NS_WARNING("DBusConnection already established, skipping");
     return NS_OK;    
   }
@@ -193,7 +193,7 @@ StartBluetoothConnection()
 nsresult
 StopBluetoothConnection()
 {
-  if(!sDBusConnection) {
+  if (!sDBusConnection) {
     NS_WARNING("DBusConnection does not exist, nothing to stop, skipping.");
     return NS_OK;
   }
