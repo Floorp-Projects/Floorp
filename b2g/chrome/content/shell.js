@@ -49,14 +49,13 @@ function getContentWindow() {
 }
 
 // FIXME Bug 707625
-// until we have a proper security model, add some rights to
-// the pre-installed web applications
+// Please don't add more permissions here.
 // XXX never grant 'content-camera' to non-gaia apps
 function addPermissions(urls) {
   let permissions = [
     'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
     'websettings-read', 'websettings-readwrite',
-    'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
+    'content-camera', 'wifi-manage', 'desktop-notification',
     'geolocation', 'device-storage', 'alarms'
   ];
 
