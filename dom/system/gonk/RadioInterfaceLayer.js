@@ -179,13 +179,17 @@ function RadioInterfaceLayer() {
   gSettingsService.getLock().get("ril.data.apn", this);
   gSettingsService.getLock().get("ril.data.user", this);
   gSettingsService.getLock().get("ril.data.passwd", this);
+  gSettingsService.getLock().get("ril.data.httpProxyHost", this);
+  gSettingsService.getLock().get("ril.data.httpProxyPort", this);
   gSettingsService.getLock().get("ril.data.roaming_enabled", this);
   gSettingsService.getLock().get("ril.data.enabled", this);
   this._dataCallSettingsToRead = ["ril.data.enabled",
                                   "ril.data.roaming_enabled",
                                   "ril.data.apn",
                                   "ril.data.user",
-                                  "ril.data.passwd"];
+                                  "ril.data.passwd",
+                                  "ril.data.httpProxyHost",
+                                  "ril.data.httpProxyPort"];
 
   for each (let msgname in RIL_IPC_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
@@ -1028,6 +1032,8 @@ RadioInterfaceLayer.prototype = {
       case "ril.data.apn":
       case "ril.data.user":
       case "ril.data.passwd":
+      case "ril.data.httpProxyHost":
+      case "ril.data.httpProxyPort":
         let key = aName.slice(9);
         this.dataCallSettings[key] = aResult;
         debug("'" + aName + "'" + " is now " + this.dataCallSettings[key]);
@@ -1757,6 +1763,10 @@ let RILNetworkInterface = {
 
   dhcp: false,
 
+  httpProxyHost: null,
+
+  httpProxyPort: null,
+
   // nsIRILDataCallback
 
   dataCallStateChanged: function dataCallStateChanged(datacall) {
@@ -1828,6 +1838,9 @@ let RILNetworkInterface = {
       // Save the APN data locally for using them in connection retries. 
       this.dataCallSettings = options;
     }
+
+    this.httpProxyHost = this.dataCallSettings["httpProxyHost"];
+    this.httpProxyPort = this.dataCallSettings["httpProxyPort"];
 
     debug("Going to set up data connection with APN " + this.dataCallSettings["apn"]);
     this.mRIL.setupDataCall(RIL.DATACALL_RADIOTECHNOLOGY_GSM,
