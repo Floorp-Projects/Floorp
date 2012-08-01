@@ -151,7 +151,7 @@ private:
   // can't create a cycle.
   mozilla::image::Image* mImage;
   PRUint32 mState;
-  nsresult mImageStatus;
+  PRUint32 mImageStatus;
   bool mHadLastPart;
 };
 
