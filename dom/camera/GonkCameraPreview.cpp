@@ -72,7 +72,7 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
         uint8_t* y = aData;
         uint32_t yN = mWidth * mHeight;
 
-        NS_ASSERTION(yN & 0x3 == 0, "Invalid image dimensions!");
+        NS_ASSERTION((yN & 0x3) == 0, "Invalid image dimensions!");
 
         uint32_t uvN = yN / 4;
         uint32_t* src = (uint32_t*)( y + yN );
@@ -81,7 +81,7 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
         uint32_t* v = u + uvN / 4;
 
         // we're handling pairs of 32-bit words, so divide by 8
-        NS_ASSERTION(uvN & 0x7 == 0, "Invalid image dimensions!");
+        NS_ASSERTION((uvN & 0x7) == 0, "Invalid image dimensions!");
         uvN /= 8;
 
         while (uvN--) {
@@ -136,11 +136,11 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
   data.mYSize = gfxIntSize(mWidth, mHeight);
 
   data.mYStride = mWidth * lumaBpp;
-  NS_ASSERTION(data.mYStride & 0x7 == 0, "Invalid image dimensions!");
+  NS_ASSERTION((data.mYStride & 0x7) == 0, "Invalid image dimensions!");
   data.mYStride /= 8;
 
   data.mCbCrStride = mWidth * chromaBpp;
-  NS_ASSERTION(data.mCbCrStride & 0x7 == 0, "Invalid image dimensions!");
+  NS_ASSERTION((data.mCbCrStride & 0x7) == 0, "Invalid image dimensions!");
   data.mCbCrStride /= 8;
 
   data.mCbChannel = aData + mHeight * data.mYStride;
