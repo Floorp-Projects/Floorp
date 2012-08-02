@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -17,9 +20,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import org.json.JSONObject;
-import org.json.JSONException;
 
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private static final String LOGTAG = "DoorHanger";

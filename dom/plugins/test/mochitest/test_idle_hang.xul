@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>Plugin Idle Hang Test</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="http://mochi.test:8888/chrome/dom/plugins/test/hang_test.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
+if (isOSXLion) {
+  todo(false, "Can't test plugin crash notification on OS X 10.7, see bug 705047");
+  SimpleTest.finish();
+}
+
+function runTests() {
+  if (!SimpleTest.testPluginIsOOP()) {
+    ok(true, "Skipping this test when test plugin is not OOP.");
+    SimpleTest.finish();
+    return;
+  }
+  
+  // Default plugin hang timeout is too high for mochitests
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefBranch);
+  var timeoutPref = "dom.ipc.plugins.timeoutSecs";
+  prefs.setIntPref(timeoutPref, 5);
+
+  var os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  os.addObserver(testObserver, "plugin-crashed", true);
+
+  testObserver.idleHang = true;
+  document.addEventListener("PluginCrashed", onPluginCrashed, false);
+
+  var pluginElement = document.getElementById("plugin1");
+  try {
+    pluginElement.hang(false);
+  } catch (e) {
+  }
+}
+]]>
+</script>
+</window>
+

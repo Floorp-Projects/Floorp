@@ -57,14 +57,14 @@ static JSFunctionSpec ptestFunctions[] = {
 
 BEGIN_TEST(testClassGetter_isCalled)
 {
-    CHECK(JS_InitClass(cx, JS_GetGlobalObject(cx), NULL, &ptestClass, PTest, 0,
+    CHECK(JS_InitClass(cx, global, NULL, &ptestClass, PTest, 0,
                        NULL, ptestFunctions, NULL, NULL));
 
     EXEC("function check() { var o = new PTest(); o.test_fn(); o.test_value1; o.test_value2; o.test_value1; }");
 
     for (int i = 1; i < 9; i++) {
-        jsvalRoot rval(cx);
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.addr()));
+        JS::RootedValue rval(cx);
+        CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.address()));
         CHECK_SAME(INT_TO_JSVAL(called_test_fn), INT_TO_JSVAL(i));
         CHECK_SAME(INT_TO_JSVAL(called_test_prop_get), INT_TO_JSVAL(4 * i));
     }

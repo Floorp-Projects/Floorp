@@ -5,16 +5,16 @@
 
 package org.mozilla.gecko;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import android.view.animation.Interpolator;
-import android.view.animation.DecelerateInterpolator;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.util.Log;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PropertyAnimator extends TimerTask {
     private static final String LOGTAG = "GeckoPropertyAnimator";

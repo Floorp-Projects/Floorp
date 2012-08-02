@@ -5,14 +5,17 @@
 
 package org.mozilla.gecko.gfx;
 
-import java.util.Map;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.FloatUtils;
+
+import org.json.JSONArray;
+
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.FloatMath;
 import android.util.Log;
-import org.json.JSONArray;
-import org.mozilla.gecko.FloatUtils;
-import org.mozilla.gecko.GeckoAppShell;
+
+import java.util.Map;
 
 final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPortCalculator";

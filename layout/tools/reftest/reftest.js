@@ -486,8 +486,13 @@ function BuildConditionSandbox(aURL) {
     } catch (e) {
       sandbox.d2d = false;
     }
-    sandbox.azureQuartz = gfxInfo.getInfo().AzureBackend == "quartz";
-    sandbox.azureSkia = gfxInfo.getInfo().AzureBackend == "skia";
+    
+    var info = gfxInfo.getInfo();
+    sandbox.azureQuartz = info.AzureCanvasBackend == "quartz";
+    sandbox.azureSkia = info.AzureCanvasBackend == "skia";
+    // true if we are using the same Azure backend for rendering canvas and content
+    sandbox.contentSameGfxBackendAsCanvas = info.AzureContentBackend == info.AzureCanvasBackend
+                                            || (info.AzureContentBackend == "none" && info.AzureCanvasBackend == "cairo");
 
     sandbox.layersGPUAccelerated =
       gWindowUtils.layerManagerType != "Basic";

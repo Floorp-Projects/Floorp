@@ -165,42 +165,40 @@ function check_bug() {
   let appcache =
     appcache_service.chooseApplicationCache(kHttpLocation + "pages/foo1");
   let clientID = appcache.clientID;
-  let cache_service = Cc[kNS_CACHESERVICE_CONTRACTID].
-    getService(Ci.nsICacheService);
-  let session = cache_service.createSession(clientID,
-					    Ci.nsICache.STORE_OFFLINE,
-					    true);
   // activate foo1
-  let entry = session.openCacheEntry(kHttpLocation + "pages/foo1",
-				       Ci.nsICache.ACCESS_READ,
-				       true);
+  asyncOpenCacheEntry(
+    kHttpLocation + "pages/foo1",
+    clientID,
+    Ci.nsICache.STORE_OFFLINE,
+    Ci.nsICache.ACCESS_READ,
+    function(status, entry) {
+      var count = 0;
 
-  var count = 0;
+      let listener = {
+        onCacheEntryDoomed: function (status) {
+          do_print("doomed " + count);
+          do_check_eq(status, 0);
+          count = count + 1;
+          do_check_true(count <= 2, "too much callbacks");
+          if (count == 2) {
+            do_timeout(100, function () { check_evict_cache(clientID); });
+          }
+        },
+      };
 
-  let listener = {
-    onCacheEntryAvailable: function onCacheEntryAvailable(descriptor,
-							  accessGranted,
-							  status) {
-    },
-    onCacheEntryDoomed: function onCacheEntryDoomed(status) {
-      do_print("doomed " + count);
-      do_check_eq(status, 0);
-      count = count + 1;
-      do_check_true(count <= 2, "too much callbacks");
-      if (count == 2) {
-	do_timeout(100, function () { check_evict_cache(session); });
-      }
-    },
-  };
+      let session = get_cache_service().createSession(clientID,
+                                                      Ci.nsICache.STORE_OFFLINE,
+                                                      Ci.nsICache.STREAM_BASED);
 
-  // Doom foo1 & foo2
-  session.doomEntry(kHttpLocation + "pages/foo1", listener);
-  session.doomEntry(kHttpLocation + "pages/foo2", listener);
+      // Doom foo1 & foo2
+      session.doomEntry(kHttpLocation + "pages/foo1", listener);
+      session.doomEntry(kHttpLocation + "pages/foo2", listener);
 
-  hold_entry_foo1 = entry;
+      hold_entry_foo1 = entry;
+    });
 }
 
-function check_evict_cache(session) {
+function check_evict_cache(clientID) {
   // Only foo2 should be removed.
   let file = do_get_profile().clone();
   file.append("OfflineCache");
@@ -217,60 +215,68 @@ function check_evict_cache(session) {
   do_check_eq(file.exists(), false);
 
   // activate foo3
-  hold_entry_foo3 = session.openCacheEntry(kHttpLocation + "pages/foo3",
-					   Ci.nsICache.ACCESS_READ,
-					   true);
+  asyncOpenCacheEntry(
+    kHttpLocation + "pages/foo3",
+    clientID,
+    Ci.nsICache.STORE_OFFLINE,
+    Ci.nsICache.ACCESS_READ,
+    function(status, entry) {
+      hold_entry_foo3 = entry;
 
-  // evict all documents.
-  session.evictEntries();
+      // evict all documents.
+      get_cache_service().createSession(clientID,
+                                        Ci.nsICache.STORE_OFFLINE,
+                                        Ci.nsICache.STREAM_BASED).
+                          evictEntries();
 
-  // All documents are removed except foo1 & foo3.
+      // All documents are removed except foo1 & foo3.
 
-  // foo1
-  let file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("5");
-  file.append("9");
-  file.append("8379C6596B8CA4-0");
-  do_check_eq(file.exists(), true);
+      // foo1
+      let file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("5");
+      file.append("9");
+      file.append("8379C6596B8CA4-0");
+      do_check_eq(file.exists(), true);
 
-  file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("0");
-  file.append("0");
-  file.append("61FEE819921D39-0");
-  do_check_eq(file.exists(), false);
+      file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("0");
+      file.append("0");
+      file.append("61FEE819921D39-0");
+      do_check_eq(file.exists(), false);
 
-  file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("3");
-  file.append("9");
-  file.append("0D8759F1DE5452-0");
-  do_check_eq(file.exists(), false);
+      file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("3");
+      file.append("9");
+      file.append("0D8759F1DE5452-0");
+      do_check_eq(file.exists(), false);
 
-  file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("C");
-  file.append("2");
-  file.append("5F356A168B5E3B-0");
-  do_check_eq(file.exists(), false);
+      file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("C");
+      file.append("2");
+      file.append("5F356A168B5E3B-0");
+      do_check_eq(file.exists(), false);
 
-  // foo3
-  file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("D");
-  file.append("C");
-  file.append("1ADCCC843B5C00-0");
-  do_check_eq(file.exists(), true);
+      // foo3
+      file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("D");
+      file.append("C");
+      file.append("1ADCCC843B5C00-0");
+      do_check_eq(file.exists(), true);
 
-  file = do_get_profile().clone();
-  file.append("OfflineCache");
-  file.append("F");
-  file.append("0");
-  file.append("FC3E6D6C1164E9-0");
-  do_check_eq(file.exists(), false);
+      file = do_get_profile().clone();
+      file.append("OfflineCache");
+      file.append("F");
+      file.append("0");
+      file.append("FC3E6D6C1164E9-0");
+      do_check_eq(file.exists(), false);
 
-  httpServer.stop(do_test_finished);
+      httpServer.stop(do_test_finished);
+    });
 }
 
 function run_test() {

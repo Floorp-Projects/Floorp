@@ -16,6 +16,14 @@ DIST_FILES = package-name.txt
 
 include $(topsrcdir)/mobile/android/base/android-sync-files.mk
 
+MOZGLUE_JAVA_FILES := \
+  mozglue/DirectBufferAllocator.java \
+  $(NULL)
+
+UTIL_JAVA_FILES := \
+  util/FloatUtils.java \
+  $(NULL)
+
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AboutHomeSection.java \
@@ -47,7 +55,6 @@ FENNEC_JAVA_FILES = \
   FilePickerResultHandler.java \
   FilePickerResultHandlerSync.java \
   FindInPageBar.java \
-  FloatUtils.java \
   FlowLayout.java \
   FontSizePreference.java \
   FormAssistPopup.java \
@@ -148,6 +155,8 @@ FENNEC_JAVA_FILES = \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
+  $(MOZGLUE_JAVA_FILES) \
+  $(UTIL_JAVA_FILES) \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
@@ -1007,7 +1016,6 @@ RES_DIRS= \
   res/menu-large-v11            \
   res/menu-xlarge-v11           \
   $(NULL)
-
 
 include $(topsrcdir)/config/rules.mk
 

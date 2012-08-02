@@ -9,20 +9,20 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoInputConnection;
 
 import android.content.Context;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
-import android.view.ViewGroup;
-import android.view.TextureView;
-import android.widget.FrameLayout;
+import android.graphics.PixelFormat;
+import android.graphics.SurfaceTexture;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.graphics.PixelFormat;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.os.Build;
-import android.graphics.SurfaceTexture;
+import android.view.TextureView;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.widget.FrameLayout;
 
 import java.nio.IntBuffer;
 

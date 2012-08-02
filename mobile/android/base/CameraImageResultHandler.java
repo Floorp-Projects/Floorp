@@ -4,13 +4,14 @@
 
 package org.mozilla.gecko;
 
-import java.io.File;
-import java.util.concurrent.SynchronousQueue;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Environment;
 import android.text.format.Time;
 import android.util.Log;
+
+import java.io.File;
+import java.util.concurrent.SynchronousQueue;
 
 class CameraImageResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoCameraImageResultHandler";

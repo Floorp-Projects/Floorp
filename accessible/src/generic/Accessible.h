@@ -14,8 +14,8 @@
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
-#include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
+#include "nsIContent.h"
 
 #include "nsStringGlue.h"
 #include "nsTArray.h"

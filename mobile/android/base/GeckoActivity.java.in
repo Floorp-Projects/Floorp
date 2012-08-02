@@ -6,8 +6,8 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.ComponentName;
+import android.content.Intent;
 
 public class GeckoActivity extends Activity {
     private boolean hasStarted = false;

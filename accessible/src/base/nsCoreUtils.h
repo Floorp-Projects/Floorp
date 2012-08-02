@@ -7,21 +7,21 @@
 #define nsCoreUtils_h_
 
 
-#include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsIBoxObject.h"
-#include "nsITreeBoxObject.h"
-#include "nsITreeColumns.h"
+#include "nsIPresShell.h"
 
-#include "nsIFrame.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMDOMStringList.h"
-#include "nsIMutableArray.h"
 #include "nsPoint.h"
 #include "nsTArray.h"
 
 class nsRange;
+class nsIDOMNode;
+class nsIFrame;
+class nsIDocShellTreeItem;
+class nsITreeColumn;
+class nsITreeBoxObject;
+class nsIWidget;
 
 /**
  * Core utils.
