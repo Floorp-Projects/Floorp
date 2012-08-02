@@ -15,7 +15,7 @@ enterFunc (String (BUGNUMBER));
 
 // should throw an error in strict mode
 var actual = '';
-var expect = 's.length is read-only';
+var expect = '"length" is read-only';
 var status = summary + ': Throw if STRICT and WERROR is enabled';
 
 if (!options().match(/strict/))
