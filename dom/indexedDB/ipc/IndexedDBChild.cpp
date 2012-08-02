@@ -6,9 +6,10 @@
 
 #include "IndexedDBChild.h"
 
-#include "mozilla/Assertions.h"
-
 #include "nsIAtom.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/ContentChild.h"
 
 #include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"
@@ -20,6 +21,8 @@
 #include "IndexedDatabaseManager.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+using namespace mozilla::dom;
 
 namespace {
 
@@ -41,6 +44,20 @@ public:
 
   virtual nsresult
   GetSuccessResult(JSContext* aCx, jsval* aVal) MOZ_OVERRIDE;
+
+  virtual nsresult
+  OnSuccess() MOZ_OVERRIDE
+  {
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    return AsyncConnectionHelper::OnSuccess();
+  }
+
+  virtual void
+  OnError() MOZ_OVERRIDE
+  {
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    AsyncConnectionHelper::OnError();
+  }
 
   virtual nsresult
   DoDatabaseWork(mozIStorageConnection* aConnection) MOZ_OVERRIDE;
@@ -275,7 +292,8 @@ IndexedDBDatabaseChild::EnsureDatabase(
 
   if (!mDatabase) {
     nsRefPtr<IDBDatabase> database =
-      IDBDatabase::Create(aRequest, dbInfo.forget(), aDBInfo.origin, NULL);
+      IDBDatabase::Create(aRequest, dbInfo.forget(), aDBInfo.origin, NULL,
+                          NULL);
     if (!database) {
       NS_WARNING("Failed to create database!");
       return false;
@@ -339,8 +357,6 @@ IndexedDBDatabaseChild::RecvSuccess(
     openHelper = new IPCOpenDatabaseHelper(mDatabase, request);
   }
 
-  request->SetTransaction(NULL);
-
   MainThreadEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCOpenDatabaseHelper failed!");
@@ -372,7 +388,6 @@ IndexedDBDatabaseChild::RecvError(const nsresult& aRv)
   }
 
   openHelper->SetError(aRv);
-  request->SetTransaction(NULL);
 
   MainThreadEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
@@ -635,12 +650,17 @@ IndexedDBObjectStoreChild::RecvPIndexedDBCursorConstructor(
 
   size_t direction = static_cast<size_t>(aParams.direction());
 
+  nsTArray<StructuredCloneFile> blobs;
+  IDBObjectStore::ConvertActorsToBlobs(aParams.blobsChild(), blobs);
+
   nsRefPtr<IDBCursor> cursor;
   nsresult rv =
     mObjectStore->OpenCursorFromChildProcess(request, direction, aParams.key(),
-                                             aParams.cloneInfo(),
+                                             aParams.cloneInfo(), blobs,
                                              getter_AddRefs(cursor));
   NS_ENSURE_SUCCESS(rv, false);
+
+  MOZ_ASSERT(blobs.IsEmpty(), "Should have swapped blob elements!");
 
   actor->SetCursor(cursor);
   return true;
@@ -743,16 +763,22 @@ IndexedDBIndexChild::RecvPIndexedDBCursorConstructor(
 
   switch (aParams.optionalCloneInfo().type()) {
     case CursorUnionType::TSerializedStructuredCloneReadInfo: {
+      nsTArray<StructuredCloneFile> blobs;
+      IDBObjectStore::ConvertActorsToBlobs(aParams.blobsChild(), blobs);
+
       const SerializedStructuredCloneReadInfo& cloneInfo =
         aParams.optionalCloneInfo().get_SerializedStructuredCloneReadInfo();
 
       rv = mIndex->OpenCursorFromChildProcess(request, direction, aParams.key(),
                                               aParams.objectKey(), cloneInfo,
+                                              blobs,
                                               getter_AddRefs(cursor));
       NS_ENSURE_SUCCESS(rv, false);
     } break;
 
     case CursorUnionType::Tvoid_t:
+      MOZ_ASSERT(aParams.blobsChild().IsEmpty());
+
       rv = mIndex->OpenCursorFromChildProcess(request, direction, aParams.key(),
                                               aParams.objectKey(),
                                               getter_AddRefs(cursor));

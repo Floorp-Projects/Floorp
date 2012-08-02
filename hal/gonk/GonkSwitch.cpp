@@ -15,12 +15,15 @@
  */
 
 #include <android/log.h>
+#include <fcntl.h>
 #include <sysutils/NetlinkEvent.h>
 
 #include "base/message_loop.h"
 
 #include "Hal.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
+#include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "UeventPoller.h"
 
@@ -28,31 +31,170 @@ using namespace mozilla::hal;
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkSwitch" , ## args) 
 
+#define SWITCH_HEADSET_DEVPATH "/devices/virtual/switch/h2w"
+#define SWITCH_USB_DEVPATH_GB  "/devices/virtual/switch/usb_configuration"
+#define SWITCH_USB_DEVPATH_ICS "/devices/virtual/android_usb/android0"
+
 namespace mozilla {
 namespace hal_impl {
+/**
+ * The uevent for a headset on SGS2 insertion looks like:
+ * 
+ * change@/devices/virtual/switch/h2w
+ *   ACTION=change
+ *   DEVPATH=/devices/virtual/switch/h2w
+ *   SUBSYSTEM=switch
+ *   SWITCH_NAME=h2w
+ *   SWITCH_STATE=2
+ *   SEQNUM=2581
+ * On Otoro, SWITCH_NAME could be Headset/No Device when plug/unplug.
+ * change@/devices/virtual/switch/h2w
+ *   ACTION=change
+ *   DEVPATH=/devices/virtual/switch/h2w
+ *   SUBSYSTEM=switch
+ *   SWITCH_NAME=Headset
+ *   SWITCH_STATE=1
+ *   SEQNUM=1602
+ * 
+ * The uevent for usb on GB,
+ *  change@/devices/virtual/switch/usb_configuration
+ *    ACTION=change
+ *    DEVPATH=/devices/virtual/switch/usb_configuration
+ *    SUBSYSTEM=switch
+ *    SWITCH_NAME=usb_configuration
+ *    SWITCH_STATE=0
+ *    SEQNUM=5038
+ */ 
+class SwitchHandler : public RefCounted<SwitchHandler>
+{
+public:
+  SwitchHandler(const char* aDevPath, SwitchDevice aDevice)
+    : mDevPath(aDevPath),
+      mState(SWITCH_STATE_UNKNOWN),
+      mDevice(aDevice)
+  {
+    GetInitialState();
+  }
 
-struct {const char* name; SwitchDevice device; } kSwitchNameMap[] = {
-  { "h2w", SWITCH_HEADPHONES },
-  { "usb_configuration", SWITCH_USB },
-  { NULL, SWITCH_DEVICE_UNKNOWN },
+  virtual ~SwitchHandler()
+  {
+  }
+
+  bool CheckEvent(NetlinkEvent* aEvent)
+  {
+    if (strcmp(GetSubsystem(), aEvent->getSubsystem()) ||
+        strcmp(mDevPath, aEvent->findParam("DEVPATH"))) {
+        return false;
+    }
+    
+    mState = ConvertState(GetStateString(aEvent));
+    return mState != SWITCH_STATE_UNKNOWN;
+  }
+
+  SwitchState GetState()
+  { 
+    return mState;
+  }
+
+  SwitchDevice GetType()
+  {
+    return mDevice;
+  }
+protected:
+  virtual const char* GetSubsystem()
+  {
+    return "switch";
+  }
+
+  virtual const char* GetStateString(NetlinkEvent* aEvent)
+  {
+    return aEvent->findParam("SWITCH_STATE");
+  }
+
+  void GetInitialState()
+  {
+    nsPrintfCString statePath("/sys%s/state", mDevPath);
+    int fd = open(statePath.get(), O_RDONLY);
+    if (fd <= 0) {
+      return;
+    }
+
+    ScopedClose autoClose(fd);
+    char state[16];
+    ssize_t bytesRead = read(fd, state, sizeof(state));
+    if (bytesRead < 0) {
+      LOG("Read data from %s fails", statePath.get());
+      return;
+    }
+
+    if (state[bytesRead - 1] == '\n') {
+      bytesRead--;
+    }
+    
+    state[bytesRead] = '\0';
+    mState = ConvertState(state);
+  }
+
+  virtual SwitchState ConvertState(const char* aState)
+  {
+    MOZ_ASSERT(aState);
+    return aState[0] == '0' ? SWITCH_STATE_OFF : SWITCH_STATE_ON;
+  }
+
+  const char* mDevPath;
+  SwitchState mState;
+  SwitchDevice mDevice;
 };
 
-static SwitchDevice
-NameToDevice(const char* name) {
-  for (int i = 0; kSwitchNameMap[i].device != SWITCH_DEVICE_UNKNOWN; i++) {
-    if (strcmp(name, kSwitchNameMap[i].name) == 0) {
-      return kSwitchNameMap[i].device;
-    }
+/**
+ * The uevent delivered for the USB configuration under ICS looks like,
+ *
+ *  change@/devices/virtual/android_usb/android0
+ *    ACTION=change
+ *    DEVPATH=/devices/virtual/android_usb/android0
+ *    SUBSYSTEM=android_usb
+ *    USB_STATE=CONFIGURED
+ *    SEQNUM=1802
+ */
+class SwitchHandlerUsbIcs: public SwitchHandler
+{
+public:
+  SwitchHandlerUsbIcs(const char* aDevPath) : SwitchHandler(aDevPath, SWITCH_USB)
+  {
+    SwitchHandler::GetInitialState();
   }
-  return SWITCH_DEVICE_UNKNOWN;
-}
+
+  virtual ~SwitchHandlerUsbIcs() { }
+
+protected:
+  virtual const char* GetSubsystem()
+  {
+    return "android_usb";
+  }
+
+  virtual const char* GetStateString(NetlinkEvent* aEvent)
+  {
+    return aEvent->findParam("USB_STATE");
+  }
+
+  SwitchState ConvertState(const char* aState)
+  {
+    MOZ_ASSERT(aState);
+    return strcmp(aState, "CONFIGURED") == 0 ? SWITCH_STATE_ON : SWITCH_STATE_OFF;
+  }
+};
+
+typedef nsTArray<RefPtr<SwitchHandler> > SwitchHandlerArray;
 
 class SwitchEventRunnable : public nsRunnable
 {
 public:
-  SwitchEventRunnable(SwitchEvent& event) : mEvent(event) {}
+  SwitchEventRunnable(SwitchEvent& aEvent) : mEvent(aEvent)
+  {
+  }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run()
+  {
     NotifySwitchChange(mEvent);
     return NS_OK;
   }
@@ -60,109 +202,124 @@ private:
   SwitchEvent mEvent;
 };
 
-class SwitchEventObserver : public IUeventObserver
+class SwitchEventObserver : public IUeventObserver,
+                            public RefCounted<SwitchEventObserver>
 {
 public:
-  SwitchEventObserver() : mEnableNum(0) {
-   InternalInit();
-  }
-  ~SwitchEventObserver() {}
-
-  int GetEnableCount() {
-    return mEnableNum;
+  SwitchEventObserver() : mEnableCount(0)
+  {
+    Init();
   }
 
-  void EnableSwitch(SwitchDevice aDevice) {
-    mEventInfo[aDevice].mEnable = true;
-    mEnableNum++;
+  ~SwitchEventObserver()
+  {
+    mHandler.Clear();
   }
 
-  void DisableSwitch(SwitchDevice aDevice) {
-    mEventInfo[aDevice].mEnable = false;
-    mEnableNum--;
+  int GetEnableCount()
+  {
+    return mEnableCount;
   }
 
-  void Notify(const NetlinkEvent& event) {
-    const char* name;
-    const char* state;
-   
-    SwitchDevice device = ProcessEvent(event, &name, &state);
-    if (device == SWITCH_DEVICE_UNKNOWN) { 
+  void EnableSwitch(SwitchDevice aDevice)
+  {
+    mEventInfo[aDevice].mEnabled = true;
+    mEnableCount++;
+  }
+
+  void DisableSwitch(SwitchDevice aDevice)
+  {
+    mEventInfo[aDevice].mEnabled = false;
+    mEnableCount--;
+  }
+
+  void Notify(const NetlinkEvent& aEvent)
+  {
+    SwitchState currState;
+    
+    SwitchDevice device = GetEventInfo(aEvent, currState);
+    if (device == SWITCH_DEVICE_UNKNOWN) {
       return; 
-    } 
+    }
 
-    EventInfo& info = mEventInfo[device]; 
-    info.mEvent.status() = atoi(state) == 0 ? SWITCH_STATE_OFF : SWITCH_STATE_ON; 
-    if (info.mEnable) { 
-      NS_DispatchToMainThread(new SwitchEventRunnable(info.mEvent)); 
-    } 
+    EventInfo& info = mEventInfo[device];
+    if (currState == info.mEvent.status()) {
+      return;
+    }
+
+    info.mEvent.status() = currState;
+
+    if (info.mEnabled) {
+      NS_DispatchToMainThread(new SwitchEventRunnable(info.mEvent));
+    }
   }
 
-  SwitchState GetCurrentInformation(SwitchDevice aDevice) {
+  SwitchState GetCurrentInformation(SwitchDevice aDevice)
+  {
     return mEventInfo[aDevice].mEvent.status();
   }
 
+  void NotifyAnEvent(SwitchDevice aDevice)
+  {
+    EventInfo& info = mEventInfo[aDevice];
+    if (info.mEvent.status() != SWITCH_STATE_UNKNOWN) {
+      NS_DispatchToMainThread(new SwitchEventRunnable(info.mEvent));
+    }
+  }
 private:
-  class EventInfo {
+  class EventInfo
+  {
   public:
-    EventInfo() : mEnable(false) {}
+    EventInfo() : mEnabled(false)
+    {
+      mEvent.status() = SWITCH_STATE_UNKNOWN;
+      mEvent.device() = SWITCH_DEVICE_UNKNOWN;
+    }
     SwitchEvent mEvent;
-    bool mEnable;
+    bool mEnabled;
   };
 
   EventInfo mEventInfo[NUM_SWITCH_DEVICE];
-  size_t mEnableNum;
+  size_t mEnableCount;
+  SwitchHandlerArray mHandler;
 
-  void InternalInit() {
-    for (int i = 0; i < NUM_SWITCH_DEVICE; i++) {
-      mEventInfo[i].mEvent.device() = kSwitchNameMap[i].device;
-      mEventInfo[i].mEvent.status() = SWITCH_STATE_UNKNOWN;
+  void Init()
+  {
+    mHandler.AppendElement(new SwitchHandler(SWITCH_HEADSET_DEVPATH, SWITCH_HEADPHONES));
+    mHandler.AppendElement(new SwitchHandler(SWITCH_USB_DEVPATH_GB, SWITCH_USB));
+    mHandler.AppendElement(new SwitchHandlerUsbIcs(SWITCH_USB_DEVPATH_ICS));
+    
+    SwitchHandlerArray::index_type handlerIndex;
+    SwitchHandlerArray::size_type numHandlers = mHandler.Length();
+
+    for (handlerIndex = 0; handlerIndex < numHandlers; handlerIndex++) {
+      SwitchState state = mHandler[handlerIndex]->GetState();
+      if (state == SWITCH_STATE_UNKNOWN) {
+        continue;
+      }
+
+      SwitchDevice device = mHandler[handlerIndex]->GetType();
+      mEventInfo[device].mEvent.device() = device;
+      mEventInfo[device].mEvent.status() = state;
     }
   }
 
-  bool GetEventInfo(const NetlinkEvent& event, const char** name, const char** state) {
+  SwitchDevice GetEventInfo(const NetlinkEvent& aEvent, SwitchState& aState)
+  {
     //working around the android code not being const-correct
-    NetlinkEvent *e = const_cast<NetlinkEvent*>(&event);
-    const char* subsystem = e->getSubsystem();
-
-    if (subsystem && (strcmp(subsystem, "android_usb") == 0)) {
-      // Under GB, usb cable plugin was done using a virtual switch
-      // (usb_configuration). Under ICS, they changed to using the
-      // android_usb device, so we emulate the usb_configuration switch.
-
-      *name = "usb_configuration";
-      const char *usb_state = e->findParam("USB_STATE");
-      if (!usb_state) {
-        return false;
+    NetlinkEvent *e = const_cast<NetlinkEvent*>(&aEvent);
+    
+    for (size_t i = 0; i < mHandler.Length(); i++) {
+      if (mHandler[i]->CheckEvent(e)) {
+        aState = mHandler[i]->GetState();
+        return mHandler[i]->GetType();
       }
-      if (strcmp(usb_state, "CONFIGURED") == 0) {
-        *state = "1";
-        return true;
-      }
-      *state = "0";
-      return true;
     }
-
-    if (!subsystem || strcmp(subsystem, "switch")) {
-      return false;
-    }
-
-    *name = e->findParam("SWITCH_NAME");
-    *state = e->findParam("SWITCH_STATE");
-
-    if (!*name || !*state) {
-      return false;
-    }
-    return true;
-  }
-
-  SwitchDevice ProcessEvent(const NetlinkEvent& event, const char** name, const char** state) {
-    return GetEventInfo(event, name, state) ?
-      NameToDevice(*name) : SWITCH_DEVICE_UNKNOWN;
+    return SWITCH_DEVICE_UNKNOWN;
   }
 };
 
-SwitchEventObserver* sSwitchObserver;
+static RefPtr<SwitchEventObserver> sSwitchObserver;
 
 static void
 InitializeResourceIfNeed()
@@ -178,7 +335,6 @@ ReleaseResourceIfNeed()
 {
   if (sSwitchObserver->GetEnableCount() == 0) {
     UnregisterUeventListener(sSwitchObserver);
-    delete sSwitchObserver;
     sSwitchObserver = NULL;
   }
 }
@@ -191,6 +347,11 @@ EnableSwitchNotificationsIOThread(SwitchDevice aDevice, Monitor *aMonitor)
   {
     MonitorAutoLock lock(*aMonitor);
     lock.Notify();
+  }
+
+  // Notify the latest state if IO thread has the information. 
+  if (sSwitchObserver->GetEnableCount() > 1) {
+    sSwitchObserver->NotifyAnEvent(aDevice);
   }
 }
 

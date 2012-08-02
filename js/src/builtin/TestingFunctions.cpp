@@ -257,7 +257,8 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
 
     if (argc == 1) {
         uint32_t value = JS_GetGCParameter(cx->runtime, param);
-        return JS_NewNumberValue(cx, value, &vp[0]);
+        vp[0] = JS_NumberValue(value);
+        return true;
     }
 
     if (param == JSGC_NUMBER ||
@@ -336,15 +337,17 @@ static JSBool
 GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
     if (argc > 2) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Too many arguments");
         return JS_FALSE;
     }
-    if (!JS_ValueToECMAUint32(cx, argc < 1 ? JSVAL_VOID : vp[2], &zeal))
+    if (!JS_ValueToECMAUint32(cx, argc < 1 ? JSVAL_VOID : args[0], &zeal))
         return JS_FALSE;
     if (argc >= 2)
-        if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
+        if (!JS_ValueToECMAUint32(cx, args[1], &frequency))
             return JS_FALSE;
 
     JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
@@ -355,22 +358,24 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc != 1) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
         return JS_FALSE;
     }
 
-    Value arg(vp[2]);
-    if (arg.isInt32()) {
+    if (args[0].isInt32()) {
         /* Schedule a GC to happen after |arg| allocations. */
-        JS_ScheduleGC(cx, arg.toInt32());
-    } else if (arg.isObject()) {
+        JS_ScheduleGC(cx, args[0].toInt32());
+    } else if (args[0].isObject()) {
         /* Ensure that |comp| is collected during the next GC. */
-        JSCompartment *comp = UnwrapObject(&arg.toObject())->compartment();
+        JSCompartment *comp = UnwrapObject(&args[0].toObject())->compartment();
         PrepareCompartmentForGC(comp);
-    } else if (arg.isString()) {
+    } else if (args[0].isString()) {
         /* This allows us to schedule atomsCompartment for GC. */
-        PrepareCompartmentForGC(arg.toString()->compartment());
+        PrepareCompartmentForGC(args[0].toString()->compartment());
     }
 
     *vp = JSVAL_VOID;
@@ -397,8 +402,11 @@ SelectForGC(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 VerifyPreBarriers(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Too many arguments");
         return JS_FALSE;
     }
     gc::VerifyBarriers(cx->runtime, gc::PreBarrierVerifier);
@@ -410,7 +418,8 @@ static JSBool
 VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Too many arguments");
+        RootedObject callee(cx, &JS_CALLEE(cx, vp).toObject());
+        ReportUsageError(cx, callee, "Too many arguments");
         return JS_FALSE;
     }
     gc::VerifyBarriers(cx->runtime, gc::PostBarrierVerifier);
@@ -423,14 +432,16 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
 {
     bool limit = true;
     uint32_t budget = 0;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
     if (argc > 1) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
         return JS_FALSE;
     }
 
     if (argc == 1) {
-        if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
+        if (!JS_ValueToECMAUint32(cx, args[0], &budget))
             return false;
     } else {
         limit = false;
@@ -444,8 +455,11 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc != 0) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
         return JS_FALSE;
     }
 
@@ -458,8 +472,11 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc != 1) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
         return JS_FALSE;
     }
 
@@ -616,7 +633,8 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    return JS_NewNumberValue(cx, (double) counter, vp);
+    *vp = JS_NumberValue((double) counter);
+    return true;
 }
 
 static unsigned finalizeCount = 0;
@@ -642,7 +660,7 @@ static JSClass FinalizeCounterClass = {
 static JSBool
 MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *scope = JS_GetGlobalForScopeChain(cx);
+    RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
     if (!scope)
         return false;
 
@@ -664,8 +682,11 @@ FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
 JSBool
 MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc != 1) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
         return JS_FALSE;
     }
 
@@ -675,7 +696,7 @@ MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     double t;
-    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
+    if (!JS_ValueToNumber(cx, args[0], &t))
         return JS_FALSE;
 
 #ifdef JS_METHODJIT
@@ -700,21 +721,21 @@ Terminate(JSContext *cx, unsigned arg, jsval *vp)
 static JSBool
 EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
 {
-    jsval arg = JS_ARGV(cx, vp)[0];
-    if (argc == 0 || !JSVAL_IS_BOOLEAN(arg)) {
-        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(),
-                         "Must have one boolean argument");
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc == 0 || !args[0].isBoolean()) {
+        RootedObject arg(cx, &args.callee());
+        ReportUsageError(cx, arg, "Must have one boolean argument");
         return false;
     }
 
     static ProfileEntry stack[1000];
     static uint32_t stack_size = 0;
 
-    if (JSVAL_TO_BOOLEAN(arg))
+    if (args[0].toBoolean())
         SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
     else
         SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 0);
-    cx->runtime->spsProfiler.enableSlowAssertions(JSVAL_TO_BOOLEAN(arg));
+    cx->runtime->spsProfiler.enableSlowAssertions(args[0].toBoolean());
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -832,7 +853,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 namespace js {
 
 bool
-DefineTestingFunctions(JSContext *cx, JSObject *obj)
+DefineTestingFunctions(JSContext *cx, HandleObject obj)
 {
     return JS_DefineFunctionsWithHelp(cx, obj, TestingFunctions);
 }

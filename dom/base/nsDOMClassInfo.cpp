@@ -140,6 +140,7 @@
 #include "nsIDOMEventTarget.h"
 
 // CSS related includes
+#include "nsCSSRules.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -289,6 +290,7 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
+#include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -418,6 +420,7 @@
 
 // Device Storage
 #include "nsIDOMDeviceStorage.h"
+#include "nsIDOMDeviceStorageChangeEvent.h"
 #include "nsIDOMDeviceStorageCursor.h"
 
 // Drag and drop
@@ -1088,6 +1091,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(CSSSupportsRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(BeforeUnloadEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1431,7 +1437,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(DeviceStorageChangeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DeviceStorageCursor, nsDOMGenericSH,
@@ -3171,6 +3180,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(CSSSupportsRule, nsIDOMCSSSupportsRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSSupportsRule)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(BeforeUnloadEvent, nsIDOMBeforeUnloadEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBeforeUnloadEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
@@ -4027,6 +4040,12 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceStorage, nsIDOMDeviceStorage)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorage)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DeviceStorageChangeEvent, nsIDOMDeviceStorageChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorageChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceStorageCursor, nsIDOMDeviceStorageCursor)
@@ -5815,16 +5834,12 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
       }
       case nsXPTType::T_I32:
       {
-        if (!JS_NewNumberValue(cx, c->GetValue()->val.i32, &v)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+        v = JS_NumberValue(c->GetValue()->val.i32);
         break;
       }
       case nsXPTType::T_U32:
       {
-        if (!JS_NewNumberValue(cx, c->GetValue()->val.u32, &v)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+        v = JS_NumberValue(c->GetValue()->val.u32);
         break;
       }
       default:
@@ -6693,6 +6708,13 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
   // For now don't expose server events unless user has explicitly enabled them
   if (aStruct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
     if (!nsEventSource::PrefEnabled()) {
+      return false;
+    }
+  }
+
+  // Don't expose CSSSupportsRule unless @supports processing is enabled.
+  if (aStruct->mDOMClassInfoID == eDOMClassInfo_CSSSupportsRule_id) {
+    if (!CSSSupportsRule::PrefEnabled()) {
       return false;
     }
   }

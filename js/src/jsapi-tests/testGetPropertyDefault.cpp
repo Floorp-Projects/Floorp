@@ -26,7 +26,7 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
     {
         // Check JS_GetPropertyDefault
 
-        JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
+        JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
         CHECK(obj);
 
         jsval v0 = JSVAL_TRUE;
@@ -44,7 +44,7 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
     {
         // Check JS_GetPropertyByIdDefault
 
-        JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
+        JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
         CHECK(obj);
 
         jsid hereid;

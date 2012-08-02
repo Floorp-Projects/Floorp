@@ -43,30 +43,15 @@ static void            gtk_xtbin_destroy    (GtkObject      *object);
 static void            gtk_xtbin_shutdown   (GtkObject      *object);
 
 /* Xt aware XEmbed */
-static void       xt_client_init      (XtClient * xtclient, 
-                                       Visual *xtvisual, 
-                                       Colormap xtcolormap, 
-                                       int xtdepth);
-static void       xt_client_create    (XtClient * xtclient, 
-                                       Window embeder, 
-                                       int height, 
-                                       int width );
-static void       xt_client_unrealize (XtClient* xtclient);
-static void       xt_client_destroy   (XtClient* xtclient);
-static void       xt_client_set_info  (Widget xtplug, 
-                                       unsigned long flags);
-static void       xt_client_event_handler (Widget w, 
-                                           XtPointer client_data, 
-                                           XEvent *event);
 static void       xt_client_handle_xembed_message (Widget w, 
                                                    XtPointer client_data, 
-                                                   XEvent *event);
-static void       xt_client_focus_listener       (Widget w, 
-                                                   XtPointer user_data, 
                                                    XEvent *event);
 static void       xt_add_focus_listener( Widget w, XtPointer user_data );
 static void       xt_add_focus_listener_tree ( Widget treeroot, XtPointer user_data); 
 static void       xt_remove_focus_listener(Widget w, XtPointer user_data);
+static void       xt_client_event_handler (Widget w, XtPointer client_data, XEvent *event);
+static void       xt_client_focus_listener (Widget w, XtPointer user_data, XEvent *event);
+static void       xt_client_set_info (Widget xtplug, unsigned long flags);
 static void       send_xembed_message (XtClient *xtclient,
                                        long message, 
                                        long detail, 
@@ -309,44 +294,8 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
     return (GtkWidget *)NULL;
   }
 
-  /* If this is the first running widget, hook this display into the
-     mainloop */
-  if (0 == num_widgets) {
-    int           cnumber;
-    /*
-     * hook Xt event loop into the glib event loop.
-     */
-
-    /* the assumption is that gtk_init has already been called */
-    GSource* gs = g_source_new(&xt_event_funcs, sizeof(GSource));
-      if (!gs) {
-       return NULL;
-      }
-    
-    g_source_set_priority(gs, GDK_PRIORITY_EVENTS);
-    g_source_set_can_recurse(gs, TRUE);
-    tag = g_source_attach(gs, (GMainContext*)NULL);
-#ifdef VMS
-    cnumber = XConnectionNumber(xtdisplay);
-#else
-    cnumber = ConnectionNumber(xtdisplay);
-#endif
-    xt_event_poll_fd.fd = cnumber;
-    xt_event_poll_fd.events = G_IO_IN; 
-    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
-
-    g_main_context_add_poll ((GMainContext*)NULL, 
-                             &xt_event_poll_fd, 
-                             G_PRIORITY_LOW);
-    /* add a timer so that we can poll and process Xt timers */
-    xt_polling_timer_id =
-      g_timeout_add(25,
-                    (GtkFunction)xt_event_polling_timer_callback,
-                    xtdisplay);
-  }
-
-  /* Bump up our usage count */
-  num_widgets++;
+  /* Launch X event loop */
+  xt_client_xloop_create();
 
   /* Build the hierachy */
   xtbin->xtdisplay = xtbin->xtclient.xtdisplay;
@@ -457,20 +406,8 @@ gtk_xtbin_destroy (GtkObject *object)
     xt_client_destroy(&(xtbin->xtclient));
     xtbin->xtwindow = 0;
 
-    num_widgets--; /* reduce our usage count */
-
-    /* If this is the last running widget, remove the Xt display
-       connection from the mainloop */
-    if (0 == num_widgets) {
-#ifdef DEBUG_XTBIN
-      printf("removing the Xt connection from the main loop\n");
-#endif
-      g_main_context_remove_poll((GMainContext*)NULL, &xt_event_poll_fd);
-      g_source_remove(tag);
-
-      g_source_remove(xt_polling_timer_id);
-      xt_polling_timer_id = 0;
-    }
+    /* stop X event loop */
+    xt_client_xloop_destroy();
   }
 
   GTK_OBJECT_CLASS(parent_class)->destroy(object);
@@ -481,7 +418,7 @@ gtk_xtbin_destroy (GtkObject *object)
 */
 
 /* Initial Xt plugin */
-static void
+void
 xt_client_init( XtClient * xtclient, 
                 Visual *xtvisual, 
                 Colormap xtcolormap,
@@ -521,9 +458,87 @@ xt_client_init( XtClient * xtclient,
   xtclient->xtdepth    = xtdepth;
 }
 
+void
+xt_client_xloop_create(void)
+{
+  /* If this is the first running widget, hook this display into the
+     mainloop */
+  if (0 == num_widgets) {
+    int           cnumber;
+
+    /* Set up xtdisplay in case we're missing one */
+    if (!xtdisplay) {
+      (void)xt_client_get_display();
+    }
+
+    /*
+     * hook Xt event loop into the glib event loop.
+     */
+    /* the assumption is that gtk_init has already been called */
+    GSource* gs = g_source_new(&xt_event_funcs, sizeof(GSource));
+      if (!gs) {
+       return NULL;
+      }
+    
+    g_source_set_priority(gs, GDK_PRIORITY_EVENTS);
+    g_source_set_can_recurse(gs, TRUE);
+    tag = g_source_attach(gs, (GMainContext*)NULL);
+#ifdef VMS
+    cnumber = XConnectionNumber(xtdisplay);
+#else
+    cnumber = ConnectionNumber(xtdisplay);
+#endif
+    xt_event_poll_fd.fd = cnumber;
+    xt_event_poll_fd.events = G_IO_IN; 
+    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
+
+    g_main_context_add_poll ((GMainContext*)NULL, 
+                             &xt_event_poll_fd, 
+                             G_PRIORITY_LOW);
+    /* add a timer so that we can poll and process Xt timers */
+    xt_polling_timer_id =
+      g_timeout_add(25,
+                    (GtkFunction)xt_event_polling_timer_callback,
+                    xtdisplay);
+  }
+
+  /* Bump up our usage count */
+  num_widgets++;
+}
+
+void
+xt_client_xloop_destroy(void)
+{
+  num_widgets--; /* reduce our usage count */
+
+  /* If this is the last running widget, remove the Xt display
+     connection from the mainloop */
+  if (0 == num_widgets) {
+#ifdef DEBUG_XTBIN
+    printf("removing the Xt connection from the main loop\n");
+#endif
+    g_main_context_remove_poll((GMainContext*)NULL, &xt_event_poll_fd);
+    g_source_remove(tag);
+
+    g_source_remove(xt_polling_timer_id);
+    xt_polling_timer_id = 0;
+  }
+}
+
+/* Get Xt Client display */
+Display	*
+xt_client_get_display(void)
+{
+  if (!xtdisplay) {
+    XtClient tmp;
+    xt_client_init(&tmp,NULL,0,0);
+  }
+  return xtdisplay;
+}
+
 /* Create the Xt client widgets
 *  */
-static void
+void
 xt_client_create ( XtClient* xtclient , 
                    Window embedderid, 
                    int height, 
@@ -599,7 +614,7 @@ xt_client_create ( XtClient* xtclient ,
   XSync(xtclient->xtdisplay, FALSE);
 }
 
-static void
+void
 xt_client_unrealize ( XtClient* xtclient )
 {
 #if XlibSpecificationRelease >= 6
@@ -618,7 +633,7 @@ xt_client_unrealize ( XtClient* xtclient )
   XtUnrealizeWidget(xtclient->top_widget);
 }
 
-static void            
+void            
 xt_client_destroy   (XtClient* xtclient)
 {
   if(xtclient->top_widget) {
@@ -629,7 +644,7 @@ xt_client_destroy   (XtClient* xtclient)
   }
 }
 
-static void         
+void         
 xt_client_set_info (Widget xtplug, unsigned long flags)
 {
   unsigned long buffer[2];
@@ -706,7 +721,7 @@ xt_client_handle_xembed_message(Widget w, XtPointer client_data, XEvent *event)
   } /* End of XEmbed Message */
 }
 
-static void         
+void         
 xt_client_event_handler( Widget w, XtPointer client_data, XEvent *event)
 {
   XtClient *xtplug = (XtClient*)client_data;
@@ -806,7 +821,7 @@ untrap_error(void)
   return trapped_error_code;
 }
 
-static void         
+void         
 xt_client_focus_listener( Widget w, XtPointer user_data, XEvent *event)
 {
   Display *dpy = XtDisplay(w);

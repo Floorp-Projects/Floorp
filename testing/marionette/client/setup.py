@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-version = '0.2'
+version = '0.3'
 
 # get documentation from the README
 try:
@@ -11,7 +11,7 @@ except (OSError, IOError):
     description = ''
 
 # dependencies
-deps = ['manifestdestiny', 'mozhttpd >= 0.3', 'mozrunner', 'datazilla']
+deps = ['manifestdestiny', 'mozhttpd >= 0.3', 'mozrunner', 'datazilla == 0.2.1']
 
 setup(name='marionette',
       version=version,

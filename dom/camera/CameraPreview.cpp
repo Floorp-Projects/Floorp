@@ -62,12 +62,13 @@ protected:
   nsCOMPtr<CameraPreview> mPreview;
 };
 
-CameraPreview::CameraPreview(PRUint32 aWidth, PRUint32 aHeight)
+CameraPreview::CameraPreview(nsIThread* aCameraThread, PRUint32 aWidth, PRUint32 aHeight)
   : nsDOMMediaStream()
   , mWidth(aWidth)
   , mHeight(aHeight)
   , mFramesPerSecond(0)
   , mFrameCount(0)
+  , mCameraThread(aCameraThread)
 {
   DOM_CAMERA_LOGI("%s:%d : mWidth=%d, mHeight=%d : this=%p\n", __func__, __LINE__, mWidth, mHeight, this);
 
@@ -86,13 +87,27 @@ CameraPreview::SetFrameRate(PRUint32 aFramesPerSecond)
   mInput->AdvanceKnownTracksTime(MEDIA_TIME_MAX);
 }
 
+void
+CameraPreview::Start()
+{
+  nsCOMPtr<nsIRunnable> cameraPreviewControl = NS_NewRunnableMethod(this, &CameraPreview::StartImpl);
+  nsresult rv = mCameraThread->Dispatch(cameraPreviewControl, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGE("failed to start camera preview (%d)\n", rv);
+  }
+}
+
+void
+CameraPreview::Stop()
+{
+  nsCOMPtr<nsIRunnable> cameraPreviewControl = NS_NewRunnableMethod(this, &CameraPreview::StopImpl);
+  nsresult rv = mCameraThread->Dispatch(cameraPreviewControl, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGE("failed to stop camera preview (%d)\n", rv);
+  }
+}
+
 CameraPreview::~CameraPreview()
 {
-  DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
-
-  /**
-   * We _must_ remember to call RemoveListener on this before destroying this,
-   * else the media framework will trigger a double-free.
-   */
   DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
 }

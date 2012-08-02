@@ -19,6 +19,15 @@ function debug(msg) {
   //dump("BrowserElementParent - " + msg + "\n");
 }
 
+function getBoolPref(prefName, def) {
+  try {
+    return Services.prefs.getBoolPref(prefName);
+  }
+  catch(err) {
+    return def;
+  }
+}
+
 /**
  * BrowserElementParent implements one half of <iframe mozbrowser>.  (The other
  * half is, unsurprisingly, BrowserElementChild.)
@@ -189,7 +198,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   // Define methods on the frame element.
   defineMethod('setVisible', this._setVisible);
   defineMethod('sendMouseEvent', this._sendMouseEvent);
-  if (Services.prefs.getBoolPref(TOUCH_EVENTS_ENABLED_PREF)) {
+  if (getBoolPref(TOUCH_EVENTS_ENABLED_PREF, false)) {
     defineMethod('sendTouchEvent', this._sendTouchEvent);
   }
   defineMethod('goBack', this._goBack);

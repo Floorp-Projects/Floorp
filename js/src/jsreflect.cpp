@@ -3290,11 +3290,10 @@ static JSFunctionSpec static_methods[] = {
 JS_BEGIN_EXTERN_C
 
 JS_PUBLIC_API(JSObject *)
-JS_InitReflect(JSContext *cx, JSObject *obj_)
+JS_InitReflect(JSContext *cx, JSObject *objArg)
 {
-    RootedObject obj(cx, obj_), Reflect(cx);
-
-    Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
+    RootedObject obj(cx, objArg);
+    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &ObjectClass, NULL, obj));
     if (!Reflect || !Reflect->setSingletonType(cx))
         return NULL;
 

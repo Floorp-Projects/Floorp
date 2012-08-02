@@ -5,11 +5,7 @@
 
 package org.mozilla.gecko;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
-import java.lang.ref.SoftReference;
+import org.mozilla.gecko.db.BrowserDB;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
@@ -17,7 +13,11 @@ import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 
-import org.mozilla.gecko.db.BrowserDB;
+import java.lang.ref.SoftReference;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 class GlobalHistory {
     private static final String LOGTAG = "GeckoGlobalHistory";

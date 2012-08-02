@@ -159,15 +159,18 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 #endif
 
 static bool
-WrapForSameCompartment(JSContext *cx, JSObject *obj, Value *vp)
+WrapForSameCompartment(JSContext *cx, HandleObject obj, Value *vp)
 {
     JS_ASSERT(cx->compartment == obj->compartment());
-    if (cx->runtime->sameCompartmentWrapObjectCallback) {
-        obj = cx->runtime->sameCompartmentWrapObjectCallback(cx, obj);
-        if (!obj)
-            return false;
+    if (!cx->runtime->sameCompartmentWrapObjectCallback) {
+        vp->setObject(*obj);
+        return true;
     }
-    vp->setObject(*obj);
+
+    JSObject *wrapped = cx->runtime->sameCompartmentWrapObjectCallback(cx, obj);
+    if (!wrapped)
+        return false;
+    vp->setObject(*wrapped);
     return true;
 }
 
@@ -219,7 +222,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (cx->hasfp()) {
         global = &cx->fp()->global();
     } else {
-        global = JS_ObjectToInnerObject(cx, cx->globalObject);
+        global = cx->globalObject;
+        global = JS_ObjectToInnerObject(cx, global);
         if (!global)
             return false;
     }

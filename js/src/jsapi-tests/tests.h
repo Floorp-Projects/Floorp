@@ -18,35 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-class jsvalRoot
-{
-  public:
-    explicit jsvalRoot(JSContext *context, jsval value = JSVAL_NULL)
-        : cx(context), v(value)
-    {
-        if (!JS_AddValueRoot(cx, &v)) {
-            fprintf(stderr, "Out of memory in jsvalRoot constructor, aborting\n");
-            abort();
-        }
-    }
-
-    ~jsvalRoot() { JS_RemoveValueRoot(cx, &v); }
-
-    operator jsval() const { return value(); }
-
-    jsvalRoot & operator=(jsval value) {
-        v = value;
-        return *this;
-    }
-
-    jsval * addr() { return &v; }
-    jsval value() const { return v; }
-
-  private:
-    JSContext *cx;
-    jsval v;
-};
-
 /* Note: Aborts on OOM. */
 class JSAPITestString {
     js::Vector<char, 0, js::SystemAllocPolicy> chars;
@@ -95,20 +66,7 @@ class JSAPITest
 
     virtual ~JSAPITest() { uninit(); }
 
-    virtual bool init() {
-        rt = createRuntime();
-        if (!rt)
-            return false;
-        cx = createContext();
-        if (!cx)
-            return false;
-        JS_BeginRequest(cx);
-        global = createGlobal();
-        if (!global)
-            return false;
-        call = JS_EnterCrossCompartmentCall(cx, global);
-        return call != NULL;
-    }
+    virtual bool init();
 
     virtual void uninit() {
         if (call) {
@@ -116,6 +74,7 @@ class JSAPITest
             call = NULL;
         }
         if (cx) {
+            JS_RemoveObjectRoot(cx, &global);
             JS_EndRequest(cx);
             JS_DestroyContext(cx);
             cx = NULL;
@@ -127,22 +86,15 @@ class JSAPITest
     }
 
     virtual const char * name() = 0;
-    virtual bool run() = 0;
+    virtual bool run(JS::HandleObject global) = 0;
 
 #define EXEC(s) do { if (!exec(s, __FILE__, __LINE__)) return false; } while (false)
 
-    bool exec(const char *bytes, const char *filename, int lineno) {
-        jsvalRoot v(cx);
-        return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, v.addr()) ||
-               fail(bytes, filename, lineno);
-    }
+    bool exec(const char *bytes, const char *filename, int lineno);
 
 #define EVAL(s, vp) do { if (!evaluate(s, __FILE__, __LINE__, vp)) return false; } while (false)
 
-    bool evaluate(const char *bytes, const char *filename, int lineno, jsval *vp) {
-        return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, vp) ||
-               fail(bytes, filename, lineno);
-    }
+    bool evaluate(const char *bytes, const char *filename, int lineno, jsval *vp);
 
     JSAPITestString jsvalToSource(jsval v) {
         JSString *str = JS_ValueToSource(cx, v);
@@ -251,8 +203,8 @@ class JSAPITest
 
     bool fail(JSAPITestString msg = JSAPITestString(), const char *filename = "-", int lineno = 0) {
         if (JS_IsExceptionPending(cx)) {
-            jsvalRoot v(cx);
-            JS_GetPendingException(cx, v.addr());
+            JS::RootedValue v(cx);
+            JS_GetPendingException(cx, v.address());
             JS_ClearPendingException(cx);
             JSString *s = JS_ValueToString(cx, v);
             if (s) {
@@ -299,9 +251,7 @@ class JSAPITest
         return JS_TRUE;
     }
 
-    bool definePrint() {
-        return JS_DefineFunction(cx, global, "print", (JSNative) print, 0, 0);
-    }
+    bool definePrint();
 
     virtual JSRuntime * createRuntime() {
         JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024);
@@ -352,29 +302,14 @@ class JSAPITest
         return basicGlobalClass();
     }
 
-    virtual JSObject * createGlobal(JSPrincipals *principals = NULL) {
-        /* Create the global object. */
-        JSObject *global = JS_NewGlobalObject(cx, getGlobalClass(), principals);
-        if (!global)
-            return NULL;
-
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, global))
-            return NULL;
-
-        /* Populate the global object with the standard globals,
-           like Object and Array. */
-        if (!JS_InitStandardClasses(cx, global))
-            return NULL;
-        return global;
-    }
+    virtual JSObject * createGlobal(JSPrincipals *principals = NULL);
 };
 
 #define BEGIN_TEST(testname)                                            \
     class cls_##testname : public JSAPITest {                           \
       public:                                                           \
         virtual const char * name() { return #testname; }               \
-        virtual bool run()
+        virtual bool run(JS::HandleObject global)
 
 #define END_TEST(testname)                                              \
     };                                                                  \
@@ -392,7 +327,7 @@ class JSAPITest
     class cls_##testname : public fixture {                             \
       public:                                                           \
         virtual const char * name() { return #testname; }               \
-        virtual bool run()
+        virtual bool run(JS::HandleObject global)
 
 #define END_FIXTURE_TEST(fixture, testname)                             \
     };                                                                  \

@@ -140,7 +140,7 @@ GetGlobalForScopeChain(JSContext *cx)
     if (cx->hasfp())
         return &cx->fp()->global();
 
-    JSObject *scope = JS_ObjectToInnerObject(cx, cx->globalObject);
+    JSObject *scope = JS_ObjectToInnerObject(cx, HandleObject::fromMarkedLocation(&cx->globalObject));
     if (!scope)
         return NULL;
     return &scope->asGlobal();

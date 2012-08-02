@@ -398,9 +398,7 @@ nsCameraControl::GetPreviewStream(const JS::Value& aOptions, nsICameraPreviewStr
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRunnable> getPreviewStreamTask = new GetPreviewStreamTask(this, size, onSuccess, onError);
-  mCameraThread->Dispatch(getPreviewStreamTask, NS_DISPATCH_NORMAL);
-
-  return NS_OK;
+  return NS_DispatchToMainThread(getPreviewStreamTask);
 }
 
 /* void autoFocus (in nsICameraAutoFocusCallback onSuccess, [optional] in nsICameraErrorCallback onError); */
