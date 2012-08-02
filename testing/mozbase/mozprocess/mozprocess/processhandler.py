@@ -562,6 +562,7 @@ falling back to not using job objects for managing child processes"""
         self.didTimeout = False
         self._ignore_children = ignore_children
         self.keywordargs = kwargs
+        self.outThread = None
 
         if env is None:
             env = os.environ.copy()
@@ -647,7 +648,7 @@ falling back to not using job objects for managing child processes"""
         for handler in self.onFinishHandlers:
             handler()
 
-    def waitForFinish(self, timeout=None, outputTimeout=None):
+    def processOutput(self, timeout=None, outputTimeout=None):
         """
         Handle process output until the process terminates or times out.
 
@@ -658,34 +659,58 @@ falling back to not using job objects for managing child processes"""
         for that number of seconds without producing any output before
         being killed.
         """
+        def _processOutput():
+            if not hasattr(self, 'proc'):
+                self.run()
 
-        if not hasattr(self, 'proc'):
-            self.run()
+            self.didTimeout = False
+            logsource = self.proc.stdout
 
-        self.didTimeout = False
-        logsource = self.proc.stdout
-
-        lineReadTimeout = None
-        if timeout:
-            lineReadTimeout = timeout - (datetime.now() - self.startTime).seconds
-        elif outputTimeout:
-            lineReadTimeout = outputTimeout
-
-        (line, self.didTimeout) = self.readWithTimeout(logsource, lineReadTimeout)
-        while line != "" and not self.didTimeout:
-            self.processOutputLine(line.rstrip())
+            lineReadTimeout = None
             if timeout:
                 lineReadTimeout = timeout - (datetime.now() - self.startTime).seconds
+            elif outputTimeout:
+                lineReadTimeout = outputTimeout
+
             (line, self.didTimeout) = self.readWithTimeout(logsource, lineReadTimeout)
+            while line != "" and not self.didTimeout:
+                self.processOutputLine(line.rstrip())
+                if timeout:
+                    lineReadTimeout = timeout - (datetime.now() - self.startTime).seconds
+                (line, self.didTimeout) = self.readWithTimeout(logsource, lineReadTimeout)
 
-        if self.didTimeout:
-            self.proc.kill()
-            self.onTimeout()
-        else:
-            self.onFinish()
+            if self.didTimeout:
+                self.proc.kill()
+                self.onTimeout()
+            else:
+                self.onFinish()
+        
+        if not self.outThread:
+            self.outThread = threading.Thread(target=_processOutput)
+            self.outThread.daemon = True
+            self.outThread.start()
 
-        status = self.proc.wait()
-        return status
+
+    def waitForFinish(self, timeout=None):
+        """
+        Waits until all output has been read and the process is 
+        terminated.
+
+        If timeout is not None, will return after timeout seconds.
+        This timeout is only for waitForFinish and doesn't affect
+        the didTimeout or onTimeout properties.
+        """
+        if self.outThread:
+            # Thread.join() blocks the main thread until outThread is finished
+            # wake up once a second in case a keyboard interrupt is sent
+            count = 0
+            while self.outThread.isAlive():
+                self.outThread.join(timeout=1)
+                count += 1
+                if timeout and count > timeout:
+                    return
+
+        return self.proc.wait()
 
 
     ### Private methods from here on down. Thar be dragons.
@@ -761,7 +786,6 @@ class LogOutput(object):
     def __del__(self):
         if self.file is not None:
             self.file.close()
-
 
 ### front end class with the default handlers
 
