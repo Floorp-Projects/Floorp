@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
+import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -373,7 +374,7 @@ public final class Tab {
         if (url == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, Void>() {
+        (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
             @Override
             public Void doInBackground(Void... params) {
                 if (url.equals(getURL())) {
