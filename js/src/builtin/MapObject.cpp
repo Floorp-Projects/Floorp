@@ -20,7 +20,7 @@
 
 using namespace js;
 
-
+
 /*** OrderedHashTable ****************************************************************************/
 
 /*
@@ -794,16 +794,16 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data)
     Rooted<GlobalObject *> global(cx, &mapobj->global());
     Rooted<JSObject*> proto(cx, global->getOrCreateMapIteratorPrototype(cx));
     if (!proto)
-        return false;
+        return NULL;
 
     ValueMap::Range *range = cx->new_<ValueMap::Range>(data->all());
     if (!range)
-        return false;
+        return NULL;
 
     JSObject *iterobj = NewObjectWithGivenProto(cx, &MapIteratorClass, proto, global);
     if (!iterobj) {
         cx->delete_(range);
-        return false;
+        return NULL;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
@@ -1223,7 +1223,7 @@ GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
     JSObject *base = global->getOrCreateIteratorPrototype(cx);
     if (!base)
         return false;
-    JSObject *proto = NewObjectWithGivenProto(cx, &SetIteratorClass, base, global);
+    RootedObject proto(cx, NewObjectWithGivenProto(cx, &SetIteratorClass, base, global));
     if (!proto)
         return false;
     proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(NULL));
@@ -1239,16 +1239,16 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data)
     Rooted<GlobalObject *> global(cx, &setobj->global());
     Rooted<JSObject*> proto(cx, global->getOrCreateSetIteratorPrototype(cx));
     if (!proto)
-        return false;
+        return NULL;
 
     ValueSet::Range *range = cx->new_<ValueSet::Range>(data->all());
     if (!range)
-        return false;
+        return NULL;
 
     JSObject *iterobj = NewObjectWithGivenProto(cx, &SetIteratorClass, proto, global);
     if (!iterobj) {
         cx->delete_(range);
-        return false;
+        return NULL;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*setobj));
     iterobj->setSlot(RangeSlot, PrivateValue(range));

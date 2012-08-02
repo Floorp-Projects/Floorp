@@ -546,16 +546,16 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
 
     MakeContextCurrent();
 
-    GLenum error = CheckedBufferData(target, data->mLength, data->mData, usage);
+    GLenum error = CheckedBufferData(target, data->Length(), data->Data(), usage);
 
     if (error) {
         GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
-    boundBuffer->SetByteLength(data->mLength);
+    boundBuffer->SetByteLength(data->Length());
     boundBuffer->InvalidateCachedMaxElements();
-    if (!boundBuffer->CopyDataIfElementArray(data->mData))
+    if (!boundBuffer->CopyDataIfElementArray(data->Data()))
         return ErrorOutOfMemory("bufferData: out of memory");
 }
 
@@ -583,15 +583,15 @@ WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usag
 
     MakeContextCurrent();
 
-    GLenum error = CheckedBufferData(target, data.mLength, data.mData, usage);
+    GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
     if (error) {
         GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
-    boundBuffer->SetByteLength(data.mLength);
+    boundBuffer->SetByteLength(data.Length());
     boundBuffer->InvalidateCachedMaxElements();
-    if (!boundBuffer->CopyDataIfElementArray(data.mData))
+    if (!boundBuffer->CopyDataIfElementArray(data.Data()))
         return ErrorOutOfMemory("bufferData: out of memory");
 }
 
@@ -654,7 +654,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data->mLength;
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data->Length();
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
@@ -664,10 +664,10 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
 
     MakeContextCurrent();
 
-    boundBuffer->CopySubDataIfElementArray(byteOffset, data->mLength, data->mData);
+    boundBuffer->CopySubDataIfElementArray(byteOffset, data->Length(), data->Data());
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferSubData(target, byteOffset, data->mLength, data->mData);
+    gl->fBufferSubData(target, byteOffset, data->Length(), data->Data());
 }
 
 void
@@ -693,7 +693,7 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferSubData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.mLength;
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.Length();
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
@@ -703,10 +703,10 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
 
     MakeContextCurrent();
 
-    boundBuffer->CopySubDataIfElementArray(byteOffset, data.mLength, data.mData);
+    boundBuffer->CopySubDataIfElementArray(byteOffset, data.Length(), data.Data());
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferSubData(target, byteOffset, data.mLength, data.mData);
+    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
 }
 
 NS_IMETHODIMP
@@ -3876,9 +3876,9 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
-    void* data = pixels->mData;
-    uint32_t dataByteLen = JS_GetTypedArrayByteLength(pixels->mObj, NULL);
-    int dataType = JS_GetTypedArrayType(pixels->mObj, NULL);
+    void* data = pixels->Data();
+    uint32_t dataByteLen = JS_GetTypedArrayByteLength(pixels->Obj(), NULL);
+    int dataType = JS_GetTypedArrayType(pixels->Obj(), NULL);
 
     uint32_t channels = 0;
 
@@ -5146,12 +5146,12 @@ WebGLContext::CompressedTexImage2D(WebGLenum target, WebGLint level, WebGLenum i
         return;
     }
 
-    uint32_t byteLength = view.mLength;
+    uint32_t byteLength = view.Length();
     if (!ValidateCompressedTextureSize(level, internalformat, width, height, byteLength, "compressedTexImage2D")) {
         return;
     }
 
-    gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.mData);
+    gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
     tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE);
 }
 
@@ -5207,7 +5207,7 @@ WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint
         return;
     }
 
-    uint32_t byteLength = view.mLength;
+    uint32_t byteLength = view.Length();
     if (!ValidateCompressedTextureSize(level, format, width, height, byteLength, "compressedTexSubImage2D")) {
         return;
     }
@@ -5252,7 +5252,7 @@ WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint
         }
     }
 
-    gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.mData);
+    gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.Data());
 
     return;
 }
@@ -5742,9 +5742,9 @@ WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
         return;
 
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels ? pixels->mData : 0,
-                           pixels ? pixels->mLength : 0,
-                           pixels ? (int)JS_GetTypedArrayType(pixels->mObj, cx) : -1,
+                           pixels ? pixels->Data() : 0,
+                           pixels ? pixels->Length() : 0,
+                           pixels ? (int)JS_GetTypedArrayType(pixels->Obj(), cx) : -1,
                            WebGLTexelConversions::Auto, false);
 }
 
@@ -5783,7 +5783,7 @@ WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
     Uint8ClampedArray arr(cx, pixels->GetDataObject());
     return TexImage2D_base(target, level, internalformat, pixels->GetWidth(),
                            pixels->GetHeight(), 4*pixels->GetWidth(), 0,
-                           format, type, arr.mData, arr.mLength, -1,
+                           format, type, arr.Data(), arr.Length(), -1,
                            WebGLTexelConversions::RGBA8, false);
 }
 
@@ -5948,8 +5948,8 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
 
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
-                              pixels->mData, pixels->mLength,
-                              JS_GetTypedArrayType(pixels->mObj, cx),
+                              pixels->Data(), pixels->Length(),
+                              JS_GetTypedArrayType(pixels->Obj(), cx),
                               WebGLTexelConversions::Auto, false);
 }
 
@@ -5994,7 +5994,7 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               pixels->GetWidth(), pixels->GetHeight(),
                               4*pixels->GetWidth(), format, type,
-                              arr.mData, arr.mLength,
+                              arr.Data(), arr.Length(),
                               -1,
                               WebGLTexelConversions::RGBA8, false);
 }

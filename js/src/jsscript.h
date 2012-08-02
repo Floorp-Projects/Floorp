@@ -997,21 +997,40 @@ struct ScriptSource
 #endif
 
   public:
-    static ScriptSource *createFromSource(JSContext *cx,
-                                          const jschar *src,
-                                          uint32_t length,
-                                          bool argumentsNotIncluded = false,
-                                          SourceCompressionToken *tok = NULL,
-                                          bool ownSource = false);
+    ScriptSource()
+      : next(NULL),
+        length_(0),
+        compressedLength_(0),
+        marked(false),
+        onRuntime_(false),
+        argumentsNotIncluded_(false)
+#ifdef DEBUG
+       ,ready_(true)
+#endif
+    {
+        data.source = NULL;
+    }
+    bool setSourceCopy(JSContext *cx,
+                       const jschar *src,
+                       uint32_t length,
+                       bool argumentsNotIncluded,
+                       SourceCompressionToken *tok);
+    void setSource(const jschar *src, uint32_t length);
     void attachToRuntime(JSRuntime *rt);
     void mark() { marked = true; }
-    void destroy(JSRuntime *rt);
-    uint32_t length() const { return length_; }
     bool onRuntime() const { return onRuntime_; }
-    bool argumentsNotIncluded() const { return argumentsNotIncluded_; }
 #ifdef DEBUG
     bool ready() const { return ready_; }
 #endif
+    bool hasSourceData() const { return !!data.source; }
+    uint32_t length() const {
+        JS_ASSERT(hasSourceData());
+        return length_;
+    }
+    bool argumentsNotIncluded() const {
+        JS_ASSERT(hasSourceData());
+        return argumentsNotIncluded_;
+    }
     JSFixedString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
@@ -1020,9 +1039,10 @@ struct ScriptSource
 
     // XDR handling
     template <XDRMode mode>
-    static bool performXDR(XDRState<mode> *xdr, ScriptSource **ss);
+    bool performXDR(XDRState<mode> *xdr);
 
   private:
+    void destroy(JSRuntime *rt);
     bool compressed() { return compressedLength_ != 0; }
 };
 

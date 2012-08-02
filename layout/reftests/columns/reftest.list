@@ -16,9 +16,12 @@
 == column-balancing-002.html column-balancing-002.ref.html
 == column-balancing-003.html column-balancing-000.ref.html
 == column-balancing-004.html column-balancing-004.ref.html
+HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
+HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
 == columnrule-basic.html columnrule-basic-ref.html
 == columnrule-complex.html columnrule-complex-ref.html
 != columnrule-linestyles.html columnrule-linestyles-notref.html
 == columnrule-padding.html columnrule-padding-ref.html
+== columnfill-overflow.html columnfill-overflow-ref.html
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1-ref.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2-ref.html

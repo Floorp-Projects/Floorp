@@ -13,7 +13,7 @@ interface nsIAlarmFiredCb : nsISupports
 [scriptable, function, uuid(0ca52e84-ba8f-11e1-87e8-63235527db9e)]
 interface nsITimezoneChangedCb : nsISupports 
 {
-  void onTimezoneChanged(in long aTimezoneOffset);
+  void onTimezoneChanged(in PRInt32 aTimezoneOffset);
 };
 
 %{C++
@@ -24,7 +24,7 @@ interface nsITimezoneChangedCb : nsISupports
 [scriptable, builtinclass, uuid(057b1ee4-f696-486d-bd55-205e21e88fab)]
 interface nsIAlarmHalService : nsISupports
 {
-  bool setAlarm(in long aSeconds, in long aNanoseconds);
+  bool setAlarm(in PRInt32 aSeconds, in PRInt32 aNanoseconds);
   void setAlarmFiredCb(in nsIAlarmFiredCb aAlarmFiredCb);
   void setTimezoneChangedCb(in nsITimezoneChangedCb aTimezoneChangedCb);
 };

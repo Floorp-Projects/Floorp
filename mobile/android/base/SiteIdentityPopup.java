@@ -4,19 +4,19 @@
 
 package org.mozilla.gecko;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
-import android.widget.ImageView;
 import android.widget.TextView;
-
-import org.json.JSONObject;
-import org.json.JSONException;
 
 /**
  * SiteIdentityPopup is a singleton class that displays site identity data in

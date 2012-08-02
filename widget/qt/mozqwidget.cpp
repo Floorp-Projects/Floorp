@@ -10,7 +10,8 @@
 #include <QInputContext>
 #endif
 #include <QtCore/QTimer>
-
+// Solve conflict of qgl.h and GLDefs.h
+#define GLdouble_defined 1
 #include "mozqwidget.h"
 #include "nsWindow.h"
 

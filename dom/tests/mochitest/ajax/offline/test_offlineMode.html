@@ -106,20 +106,25 @@ function finalize()
 
 function goOffline()
 {
-  var ioserv = Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService);
+  var listener = {
+    onCacheEntryDoomed: function (status) {
+      OfflineTest.priv(goOfflineContinue)();
+    }
+  };
 
   // Delete HTTP cache to ensure we are going from offline cache
   var sessionServ = Cc["@mozilla.org/network/cache-service;1"]
       .getService(Ci.nsICacheService);
   cacheSession = sessionServ.createSession("HTTP", Ci.nsICache.STORE_ANYWHERE, Ci.nsICache.STREAM_BASED);
-  function doomHTTPCacheEntry(entryKey) {
-    entry = cacheSession.openCacheEntry(entryKey, Ci.nsICache.ACCESS_WRITE, false)
-    entry.doom();
-  }
-  doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
-  doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs");
-  doomHTTPCacheEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+  cacheSession.doomEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", null);
+  cacheSession.doomEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", null);
+  cacheSession.doomEntry("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", listener);
+}
+
+function goOfflineContinue()
+{
+  var ioserv = Cc["@mozilla.org/network/io-service;1"]
+      .getService(Ci.nsIIOService);
 
   ioserv.offline = true;
 

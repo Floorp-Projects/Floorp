@@ -1094,6 +1094,13 @@ nsPrincipal::GetAppId(PRUint32* aAppId)
 }
 
 NS_IMETHODIMP
+nsPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  *aIsInBrowserElement = mInMozBrowser;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
   bool hasCapabilities;
@@ -1472,6 +1479,12 @@ nsExpandedPrincipal::GetAppStatus(PRUint16* aAppStatus)
 
 NS_IMETHODIMP
 nsExpandedPrincipal::GetAppId(PRUint32* aAppId)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }

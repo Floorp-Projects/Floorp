@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -34,7 +34,7 @@ public class TextLayer extends SingleTileLayer {
     }
 
     public static TextLayer create(IntSize size, String text) {
-        ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(size.width * size.height * 4);
+        ByteBuffer buffer = DirectBufferAllocator.allocate(size.width * size.height * 4);
         BufferedCairoImage image = new BufferedCairoImage(buffer, size.width, size.height,
                                                           CairoImage.FORMAT_ARGB32);
         return new TextLayer(buffer, image, size, text);

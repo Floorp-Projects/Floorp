@@ -2603,8 +2603,8 @@ GetRequestBody(ArrayBuffer* aArrayBuffer, nsIInputStream** aResult,
   aContentType.SetIsVoid(true);
   aCharset.Truncate();
 
-  PRInt32 length = aArrayBuffer->mLength;
-  char* data = reinterpret_cast<char*>(aArrayBuffer->mData);
+  PRInt32 length = aArrayBuffer->Length();
+  char* data = reinterpret_cast<char*>(aArrayBuffer->Data());
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), data, length,

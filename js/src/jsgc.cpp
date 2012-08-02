@@ -2631,8 +2631,8 @@ MaybeGC(JSContext *cx)
         GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
-    double factor = rt->gcHighFrequencyGC ? 0.75 : 0.9;
 
+    double factor = rt->gcHighFrequencyGC ? 0.75 : 0.9;
     JSCompartment *comp = cx->compartment;
     if (comp->gcBytes > 1024 * 1024 &&
         comp->gcBytes >= factor * comp->gcTriggerBytes &&
@@ -4251,11 +4251,16 @@ GC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 }
 
 void
-GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
 {
-    int sliceBudget = rt->gcHighFrequencyGC && rt->gcDynamicMarkSlice
-                      ? rt->gcSliceBudget * IGC_MARK_SLICE_MULTIPLIER
-                      : rt->gcSliceBudget;
+    int64_t sliceBudget;
+    if (millis)
+        sliceBudget = SliceBudget::TimeBudget(millis);
+    else if (rt->gcHighFrequencyGC && rt->gcDynamicMarkSlice)
+        sliceBudget = rt->gcSliceBudget * IGC_MARK_SLICE_MULTIPLIER;
+    else
+        sliceBudget = rt->gcSliceBudget;
+
     Collect(rt, true, sliceBudget, gckind, reason);
 }
 
@@ -4264,7 +4269,6 @@ GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
 }
-
 
 void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)

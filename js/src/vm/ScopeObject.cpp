@@ -1363,7 +1363,8 @@ class DebugScopeProxy : public BaseProxyHandler
             return false;
         }
 
-        return GetPropertyNames(cx, &scope, JSITER_OWNONLY, &props);
+        RootedObject scopeObj(cx, &scope);
+        return GetPropertyNames(cx, scopeObj, JSITER_OWNONLY, &props);
     }
 
     bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
@@ -1383,7 +1384,8 @@ class DebugScopeProxy : public BaseProxyHandler
             return false;
         }
 
-        return GetPropertyNames(cx, &scope, 0, &props);
+        RootedObject scopeObj(cx, &scope);
+        return GetPropertyNames(cx, scopeObj, 0, &props);
     }
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
@@ -1396,7 +1398,8 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         JSBool found;
-        if (!JS_HasPropertyById(cx, &scope, id, &found))
+        RootedObject scopeObj(cx, &scope);
+        if (!JS_HasPropertyById(cx, scopeObj, id, &found))
             return false;
 
         *bp = found;
@@ -1427,13 +1430,13 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
 ScopeObject &
 DebugScopeObject::scope() const
 {
-    return GetProxyTargetObject(this)->asScope();
+    return GetProxyTargetObject(const_cast<DebugScopeObject*>(this))->asScope();
 }
 
 JSObject &
 DebugScopeObject::enclosingScope() const
 {
-    return GetProxyExtra(this, ENCLOSING_EXTRA).toObject();
+    return GetProxyExtra(const_cast<DebugScopeObject*>(this), ENCLOSING_EXTRA).toObject();
 }
 
 bool
@@ -1444,7 +1447,7 @@ DebugScopeObject::isForDeclarative() const
 }
 
 bool
-js_IsDebugScopeSlow(const JSObject *obj)
+js_IsDebugScopeSlow(RawObject obj)
 {
     return obj->getClass() == &ObjectProxyClass &&
            GetProxyHandler(obj) == &DebugScopeProxy::singleton;

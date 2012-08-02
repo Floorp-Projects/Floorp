@@ -2645,6 +2645,15 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_NAME)
 
+          BEGIN_CASE(JSOP_INTRINSICNAME)
+          BEGIN_CASE(JSOP_CALLINTRINSIC)
+          {
+            PropertyName *name = script->getName(GET_UINT32_INDEX(PC));
+            jsop_intrinsicname(name, knownPushedType(0));
+            frame.extra(frame.peek(-1)).name = name;
+          }
+          END_CASE(JSOP_INTRINSICNAME)
+
           BEGIN_CASE(JSOP_IMPLICITTHIS)
           {
             prepareStubCall(Uses(0));
@@ -5550,6 +5559,13 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 
     pics.append(pic);
     return true;
+}
+
+void
+mjit::Compiler::jsop_intrinsicname(PropertyName *name, JSValueType type)
+{
+    JSFunction *fun = cx->global().get()->getIntrinsicFunction(cx, name);
+    frame.push(ObjectValue(*fun));
 }
 
 void

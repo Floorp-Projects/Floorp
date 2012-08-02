@@ -7,8 +7,6 @@
 #include "base/basictypes.h"
 #include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
-#include "nsIDOMDOMRequest.h"
-#include "jsapi.h"
 
 USING_BLUETOOTH_NAMESPACE
 

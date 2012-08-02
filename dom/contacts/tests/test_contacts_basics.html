@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 var comp = SpecialPowers.wrap(Components);
 comp.utils.import("resource://gre/modules/ContactService.jsm");
 SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
-SpecialPowers.addPermission("webcontacts-manage", true, document);
+SpecialPowers.addPermission("contacts", true, document);
 
 // For Sorting
 var c1 = {

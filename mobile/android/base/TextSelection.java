@@ -4,12 +4,15 @@
 
 package org.mozilla.gecko;
 
-import android.util.Log;
-import android.view.View;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.util.FloatUtils;
+
 import org.json.JSONObject;
+
+import android.util.Log;
+import android.view.View;
 
 class TextSelection extends Layer implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTextSelection";

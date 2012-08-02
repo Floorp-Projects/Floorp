@@ -5,21 +5,17 @@
 
 package org.mozilla.gecko.db;
 
-import java.io.ByteArrayOutputStream;
-import java.util.HashMap;
-import java.util.Collection;
-
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.ContentProviderOperation;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -29,6 +25,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.Browser;
 import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Collection;
+import java.util.HashMap;
 
 public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     // Calculate these once, at initialization. isLoggable is too expensive to

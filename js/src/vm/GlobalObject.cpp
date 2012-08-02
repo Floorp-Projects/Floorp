@@ -173,6 +173,10 @@ ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod(cx, TestProtoSetterThis, ProtoSetterImpl, args);
 }
 
+JSFunctionSpec intrinsic_functions[] = {
+    JS_FN("ThrowTypeError",      ThrowTypeError,     0,0),
+    JS_FS_END
+};
 JSObject *
 GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
@@ -234,10 +238,12 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         jschar *source = InflateString(cx, rawSource, &sourceLen);
         if (!source)
             return NULL;
-        ScriptSource *ss = ScriptSource::createFromSource(cx, source, sourceLen);
-        cx->free_(source);
-        if (!ss)
+        ScriptSource *ss = cx->new_<ScriptSource>();
+        if (!ss) {
+            cx->free_(source);
             return NULL;
+        }
+        ss->setSource(source, sourceLen);
 
         CompileOptions options(cx);
         options.setNoScriptRval(true)
@@ -369,13 +375,19 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     self->setOriginalEval(evalobj);
 
     /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-    RootedFunction throwTypeError(cx);
-    throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, self, NULL);
+    RootedFunction throwTypeError(cx, js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, self, NULL));
     if (!throwTypeError)
         return NULL;
     if (!throwTypeError->preventExtensions(cx))
         return NULL;
     self->setThrowTypeError(throwTypeError);
+
+    RootedObject intrinsicsHolder(cx, JS_NewObject(cx, NULL, NULL, self));
+    if (!intrinsicsHolder)
+        return NULL;
+    self->setIntrinsicsHolder(intrinsicsHolder);
+    if (!JS_DefineFunctions(cx, intrinsicsHolder, intrinsic_functions))
+        return NULL;
 
     /*
      * The global object should have |Object.prototype| as its [[Prototype]].
@@ -482,6 +494,7 @@ GlobalObject::clear(JSContext *cx)
     setSlot(EVAL, UndefinedValue());
     setSlot(CREATE_DATAVIEW_FOR_THIS, UndefinedValue());
     setSlot(THROWTYPEERROR, UndefinedValue());
+    setSlot(INTRINSICS, UndefinedValue());
     setSlot(PROTO_GETTER, UndefinedValue());
 
     /*
