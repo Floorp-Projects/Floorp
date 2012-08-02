@@ -1291,6 +1291,8 @@ private:
     NodeMayHaveDOMMutationObserver,
     // Set if node is Content
     NodeIsContent,
+    // Set if the node has animations or transitions
+    ElementHasAnimations,
     // Guard value
     BooleanFlagCount
   };
@@ -1356,13 +1358,14 @@ public:
   bool HasPointerLock() const { return GetBoolFlag(ElementHasPointerLock); }
   void SetPointerLock() { SetBoolFlag(ElementHasPointerLock); }
   void ClearPointerLock() { ClearBoolFlag(ElementHasPointerLock); }
+  bool MayHaveAnimations() { return GetBoolFlag(ElementHasAnimations); }
+  void SetMayHaveAnimations() { SetBoolFlag(ElementHasAnimations); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
   void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
-  void ClearIsElement() { ClearBoolFlag(NodeIsElement); }
   void SetHasID() { SetBoolFlag(ElementHasID); }
   void ClearHasID() { ClearBoolFlag(ElementHasID); }
   void SetMayHaveStyle() { SetBoolFlag(ElementMayHaveStyle); }

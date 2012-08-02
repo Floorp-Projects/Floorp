@@ -5431,8 +5431,10 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
                 else 
 #endif
                 if(GTK_IS_SOCKET(widget)) {
-                    nswindow->SetPluginType(nsWindow::PluginType_XEMBED);
-                    break;
+                    if (!g_object_get_data(G_OBJECT(widget), "enable-xt-focus")) {
+                        nswindow->SetPluginType(nsWindow::PluginType_XEMBED);
+                        break;
+                    }
                 }
             }
             nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);

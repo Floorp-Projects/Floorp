@@ -17,7 +17,7 @@
 extern "C" {
 
 extern JSBool
-C_ValueToObject(JSContext *cx, jsval v, JSObject **obj);
+C_ValueToObject(JSContext *cx, jsval v, JSMutableHandleObject obj);
 
 extern jsval
 C_GetEmptyStringValue(JSContext *cx);
@@ -29,7 +29,7 @@ C_jsvalAlignmentTest();
 
 BEGIN_TEST(testValueABI_retparam)
 {
-    JSObject* obj = JS_GetGlobalObject(cx);
+    JS::RootedObject obj(cx, JS_GetGlobalObject(cx));
     jsval v = OBJECT_TO_JSVAL(obj);
     obj = NULL;
     CHECK(C_ValueToObject(cx, v, &obj));

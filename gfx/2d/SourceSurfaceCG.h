@@ -9,6 +9,8 @@
 
 #include "2D.h"
 
+class MacIOSurface;
+
 namespace mozilla {
 namespace gfx {
 
@@ -75,7 +77,14 @@ private:
    * for now we just store it in mFormat */
 };
 
-class SourceSurfaceCGBitmapContext : public DataSourceSurface
+class SourceSurfaceCGContext : public DataSourceSurface
+{
+public:
+  virtual void DrawTargetWillChange() = 0;
+  virtual CGImageRef GetImage() = 0;
+};
+
+class SourceSurfaceCGBitmapContext : public SourceSurfaceCGContext
 {
 public:
   SourceSurfaceCGBitmapContext(DrawTargetCG *);
@@ -94,7 +103,7 @@ public:
 private:
   //XXX: do the other backends friend their DrawTarget?
   friend class DrawTargetCG;
-  void DrawTargetWillChange();
+  virtual void DrawTargetWillChange();
   void EnsureImage() const;
 
   // We hold a weak reference to these two objects.
@@ -109,6 +118,37 @@ private:
   void *mData;
 
   int32_t mStride;
+  IntSize mSize;
+};
+
+class SourceSurfaceCGIOSurfaceContext : public SourceSurfaceCGContext
+{
+public:
+  SourceSurfaceCGIOSurfaceContext(DrawTargetCG *);
+  ~SourceSurfaceCGIOSurfaceContext();
+
+  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
+  virtual IntSize GetSize() const;
+  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+
+  CGImageRef GetImage() { EnsureImage(); return mImage; }
+
+  virtual unsigned char *GetData();
+
+  virtual int32_t Stride() { return mStride; }
+
+private:
+  //XXX: do the other backends friend their DrawTarget?
+  friend class DrawTargetCG;
+  virtual void DrawTargetWillChange();
+  void EnsureImage() const;
+
+  mutable CGImageRef mImage;
+  MacIOSurface* mIOSurface;
+
+  void *mData;
+  int32_t mStride;
+
   IntSize mSize;
 };
 

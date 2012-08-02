@@ -16,6 +16,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"

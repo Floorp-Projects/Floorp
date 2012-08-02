@@ -143,6 +143,50 @@ public:
    */
   virtual nsresult StopInternal() = 0;
 
+  /** 
+   * Fetches the propertes for the specified object
+   *
+   * @param aType Type of the object (see BluetoothObjectType in BluetoothCommon.h)
+   * @param aPath Path of the object
+   * @param aRunnable Runnable to return to after receiving callback
+   *
+   * @return NS_OK on function run, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult
+  GetProperties(BluetoothObjectType aType,
+                const nsAString& aPath,
+                BluetoothReplyRunnable* aRunnable) = 0;
+
+  /** 
+   * Set a property for the specified object
+   *
+   * @param aPath Path to the object
+   * @param aPropName Name of the property
+   * @param aValue Boolean value
+   * @param aRunnable Runnable to run on async reply
+   *
+   * @return NS_OK if property is set correctly, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult
+  SetProperty(BluetoothObjectType aType,
+              const nsAString& aPath,
+              const BluetoothNamedValue& aValue,
+              BluetoothReplyRunnable* aRunnable) = 0;
+
+  /** 
+   * Get the path of a device
+   *
+   * @param aAdapterPath Path to the Adapter that's communicating with the device
+   * @param aDeviceAddress Device address (XX:XX:XX:XX:XX:XX format)
+   * @param aDevicePath Return value of path
+   *
+   * @return True if path set correctly, false otherwise
+   */
+  virtual bool
+  GetDevicePath(const nsAString& aAdapterPath,
+                const nsAString& aDeviceAddress,
+                nsAString& aDevicePath) = 0;
+
 protected:
   BluetoothService()
   {

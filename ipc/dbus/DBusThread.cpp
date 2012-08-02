@@ -82,7 +82,6 @@ enum {
 
 static const char* DBUS_SIGNALS[] =
 {
-  "type='signal',interface='org.freedesktop.DBus'",
   "type='signal',interface='org.bluez.Adapter'",
   "type='signal',interface='org.bluez.Manager'",
   "type='signal',interface='org.bluez.Device'",

@@ -26,6 +26,8 @@ class nsCommandManager :  public nsICommandManager,
 
 {
 public:
+  typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
+
                         nsCommandManager();
   virtual               ~nsCommandManager();
 
@@ -50,8 +52,7 @@ protected:
 
 
 protected:
-
-  nsClassHashtable<nsCharPtrHashKey, nsCOMArray<nsIObserver> > mObserversTable;
+  nsClassHashtable<nsCharPtrHashKey, ObserverList> mObserversTable;
 
   nsIDOMWindow*         mWindow;      // weak ptr. The window should always outlive us
 };

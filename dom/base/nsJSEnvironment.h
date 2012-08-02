@@ -164,7 +164,8 @@ public:
   static void GarbageCollectNow(js::gcreason::Reason reason,
                                 IsIncremental aIncremental = NonIncrementalGC,
                                 IsCompartment aCompartment = NonCompartmentGC,
-                                IsShrinking aShrinking = NonShrinkingGC);
+                                IsShrinking aShrinking = NonShrinkingGC,
+                                int64_t aSliceMillis = 0);
   static void ShrinkGCBuffersNow();
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.

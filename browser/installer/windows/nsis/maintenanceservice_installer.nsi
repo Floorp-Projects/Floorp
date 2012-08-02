@@ -197,6 +197,7 @@ Section "MaintenanceService"
   ${EndIf}
   WriteRegDWORD HKLM "Software\Mozilla\MaintenanceService" "Attempted" 1
   WriteRegDWORD HKLM "Software\Mozilla\MaintenanceService" "Installed" 1
+  DeleteRegValue HKLM "Software\Mozilla\MaintenanceService" "FFPrefetchDisabled"
 
   ; Included here for debug purposes only.  
   ; These keys are used to bypass the installation dir is a valid installation
@@ -248,6 +249,7 @@ Section "Uninstall"
     SetRegView 64
   ${EndIf}
   DeleteRegValue HKLM "Software\Mozilla\MaintenanceService" "Installed"
+  DeleteRegValue HKLM "Software\Mozilla\MaintenanceService" "FFPrefetchDisabled"
   DeleteRegKey HKLM "${FallbackKey}\"
   ${If} ${RunningX64}
     SetRegView lastused

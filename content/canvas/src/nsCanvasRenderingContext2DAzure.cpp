@@ -552,8 +552,7 @@ namespace dom {
 bool
 AzureCanvasEnabled()
 {
-  BackendType dontCare;
-  return gfxPlatform::GetPlatform()->SupportsAzureCanvas(dontCare);
+  return gfxPlatform::GetPlatform()->SupportsAzureCanvas();
 }
 
 }
@@ -4352,7 +4351,7 @@ nsCanvasRenderingContext2DAzure::PutImageData(JSContext* cx,
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData->GetWidth(), imageData->GetHeight(),
-                                arr.mData, arr.mLength, false, 0, 0, 0, 0);
+                                arr.Data(), arr.Length(), false, 0, 0, 0, 0);
 }
 
 void
@@ -4372,7 +4371,7 @@ nsCanvasRenderingContext2DAzure::PutImageData(JSContext* cx,
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
                                 imageData->GetWidth(), imageData->GetHeight(),
-                                arr.mData, arr.mLength, true,
+                                arr.Data(), arr.Length(), true,
                                 JS_DoubleToInt32(dirtyX),
                                 JS_DoubleToInt32(dirtyY),
                                 JS_DoubleToInt32(dirtyWidth),
@@ -4380,10 +4379,14 @@ nsCanvasRenderingContext2DAzure::PutImageData(JSContext* cx,
 }
 
 // void putImageData (in ImageData d, in float x, in float y);
+// void putImageData (in ImageData d, in double x, in double y, in double dirtyX, in double dirtyY, in double dirtyWidth, in double dirtyHeight);
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::PutImageData()
+nsCanvasRenderingContext2DAzure::PutImageData(const JS::Value&, double, double,
+                                              double, double, double, double,
+                                              JSContext*, PRUint8)
 {
-  /* Should never be called -- PutImageData_explicit is the QS entry point */
+  /* Should never be called -- the new binding code handles it, and
+     C++ callers should call PutImageData_explicit */
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -4587,9 +4590,13 @@ nsCanvasRenderingContext2DAzure::CreateImageData(JSContext* cx,
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::CreateImageData()
+nsCanvasRenderingContext2DAzure::CreateImageData(const JS::Value &arg1,
+                                                 const JS::Value &arg2,
+                                                 JSContext* cx,
+                                                 PRUint8 optional_argc,
+                                                 nsIDOMImageData** retval)
 {
-  /* Should never be called; handled entirely in the quickstub */
+  /* Should never be called; handled entirely in new bindings */
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

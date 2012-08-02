@@ -5,31 +5,31 @@
 
 package org.mozilla.gecko;
 
-import android.widget.AdapterView;
-import android.os.AsyncTask;
-import android.content.Context;
-import android.widget.ListView;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.view.View;
-import android.app.Activity;
-import android.database.Cursor;
-import android.util.Log;
-import android.widget.SimpleCursorAdapter;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.util.Pair;
-import android.widget.TabHost.TabContentFactory;
-import android.view.MenuInflater;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-
-import java.util.LinkedList;
-
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
+import android.app.Activity;
+import android.content.Context;
+import android.database.Cursor;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.util.Pair;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.TabHost.TabContentFactory;
+import android.widget.TextView;
+
+import java.util.LinkedList;
 
 public class BookmarksTab extends AwesomeBarTab {
     public static final String LOGTAG = "BOOKMARKS_TAB";

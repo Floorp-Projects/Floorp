@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
+
 import android.graphics.Bitmap;
+
 import java.nio.ByteBuffer;
 
 /** A Cairo image that simply saves a buffer of pixel data. */
@@ -27,8 +29,8 @@ public class BufferedCairoImage extends CairoImage {
     }
 
     private void freeBuffer() {
-        if (mNeedToFreeBuffer && mBuffer != null)
-            GeckoAppShell.freeDirectBuffer(mBuffer);
+        if (mNeedToFreeBuffer)
+            DirectBufferAllocator.free(mBuffer);
         mNeedToFreeBuffer = false;
         mBuffer = null;
     }
@@ -62,8 +64,7 @@ public class BufferedCairoImage extends CairoImage {
         mNeedToFreeBuffer = true;
 
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat);
-        mBuffer = GeckoAppShell.allocateDirectBuffer(mSize.getArea() * bpp);
+        mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 }
-

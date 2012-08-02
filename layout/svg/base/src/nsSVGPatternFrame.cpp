@@ -141,6 +141,77 @@ nsSVGPatternFrame::GetCanvasTM(PRUint32 aFor)
   return gfxMatrix();
 }
 
+// -------------------------------------------------------------------------
+// Helper functions
+// -------------------------------------------------------------------------
+
+// The SVG specification says that the 'patternContentUnits' attribute "has no effect if
+// attribute ‘viewBox’ is specified". We still need to include a bbox scale
+// if the viewBox is specified and _patternUnits_ is set to or defaults to
+// objectBoundingBox though, since in that case the viewBox is relative to the bbox
+static bool
+IncludeBBoxScale(const nsSVGViewBox& aViewBox,
+                 PRUint32 aPatternContentUnits, PRUint32 aPatternUnits)
+{
+  return (!aViewBox.IsExplicitlySet() &&
+          aPatternContentUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) ||
+         (aViewBox.IsExplicitlySet() &&
+          aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
+}
+
+// Given the matrix for the pattern element's own transform, this returns a
+// combined matrix including the transforms applicable to its target.
+static gfxMatrix
+GetPatternMatrix(PRUint16 aPatternUnits,
+                 const gfxMatrix &patternTransform,
+                 const gfxRect &bbox,
+                 const gfxRect &callerBBox,
+                 const gfxMatrix &callerCTM)
+{
+  // We really want the pattern matrix to handle translations
+  gfxFloat minx = bbox.X();
+  gfxFloat miny = bbox.Y();
+
+  if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+    minx += callerBBox.X();
+    miny += callerBBox.Y();
+  }
+
+  float scale = 1.0f / nsSVGUtils::MaxExpansion(callerCTM);
+  gfxMatrix patternMatrix = patternTransform;
+  patternMatrix.Scale(scale, scale);
+  patternMatrix.Translate(gfxPoint(minx, miny));
+
+  return patternMatrix;
+}
+
+static nsresult
+GetTargetGeometry(gfxRect *aBBox,
+                  const nsSVGViewBox &aViewBox,
+                  PRUint16 aPatternContentUnits,
+                  PRUint16 aPatternUnits,
+                  nsIFrame *aTarget,
+                  const gfxMatrix &aContextMatrix,
+                  const gfxRect *aOverrideBounds)
+{
+  *aBBox = aOverrideBounds ? *aOverrideBounds : nsSVGUtils::GetBBox(aTarget);
+
+  // Sanity check
+  if (IncludeBBoxScale(aViewBox, aPatternContentUnits, aPatternUnits) &&
+      (aBBox->Width() <= 0 || aBBox->Height() <= 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // OK, now fix up the bounding box to reflect user coordinates
+  // We handle device unit scaling in pattern matrix
+  float scale = nsSVGUtils::MaxExpansion(aContextMatrix);
+  if (scale <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+  aBBox->Scale(scale);
+  return NS_OK;
+}
+
 nsresult
 nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
                                 gfxMatrix* patternMatrix,
@@ -168,6 +239,13 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (!firstKid)
     return NS_ERROR_FAILURE; // Either no kids or a bad reference
 
+  const nsSVGViewBox& viewBox = GetViewBox();
+
+  PRUint16 patternContentUnits =
+    GetEnumValue(nsSVGPatternElement::PATTERNCONTENTUNITS);
+  PRUint16 patternUnits =
+    GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
+
   /*
    * Get the content geometry information.  This is a little tricky --
    * our parent is probably a <defs>, but we are rendering in the context
@@ -191,6 +269,8 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // the geometry that is being rendered with a pattern
   gfxRect callerBBox;
   if (NS_FAILED(GetTargetGeometry(&callerBBox,
+                                  viewBox,
+                                  patternContentUnits, patternUnits,
                                   aSource,
                                   aContextMatrix,
                                   aOverrideBounds)))
@@ -198,7 +278,8 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   // Construct the CTM that we will provide to our children when we
   // render them into the tile.
-  gfxMatrix ctm = ConstructCTM(callerBBox, aContextMatrix, aSource);
+  gfxMatrix ctm = ConstructCTM(viewBox, patternContentUnits, patternUnits,
+                               callerBBox, aContextMatrix, aSource);
   if (ctm.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
@@ -215,7 +296,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // Get the bounding box of the pattern.  This will be used to determine
   // the size of the surface, and will also be used to define the bounding
   // box for the pattern tile.
-  gfxRect bbox = GetPatternRect(callerBBox, aContextMatrix, aSource);
+  gfxRect bbox = GetPatternRect(patternUnits, callerBBox, aContextMatrix, aSource);
 
   // Get the pattern transform
   gfxMatrix patternTransform = GetPatternTransform();
@@ -227,7 +308,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
-  *patternMatrix = GetPatternMatrix(patternTransform,
+  *patternMatrix = GetPatternMatrix(patternUnits, patternTransform,
                                     bbox, callerBBox, aContextMatrix);
 
   // Now that we have all of the necessary geometries, we can
@@ -492,18 +573,12 @@ nsSVGPatternFrame::GetReferencedPatternIfNotInUse()
   return referenced;
 }
 
-// -------------------------------------------------------------------------
-// Helper functions
-// -------------------------------------------------------------------------
-
 gfxRect
-nsSVGPatternFrame::GetPatternRect(const gfxRect &aTargetBBox,
+nsSVGPatternFrame::GetPatternRect(PRUint16 aPatternUnits,
+                                  const gfxRect &aTargetBBox,
                                   const gfxMatrix &aTargetCTM,
                                   nsIFrame *aTarget)
 {
-  // Get our type
-  PRUint16 type = GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
-
   // We need to initialize our box
   float x,y,width,height;
 
@@ -514,7 +589,7 @@ nsSVGPatternFrame::GetPatternRect(const gfxRect &aTargetBBox,
   tmpHeight = GetLengthValue(nsSVGPatternElement::HEIGHT);
   tmpWidth = GetLengthValue(nsSVGPatternElement::WIDTH);
 
-  if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     x = nsSVGUtils::ObjectSpace(aTargetBBox, tmpX);
     y = nsSVGUtils::ObjectSpace(aTargetBBox, tmpY);
     width = nsSVGUtils::ObjectSpace(aTargetBBox, tmpWidth);
@@ -531,7 +606,10 @@ nsSVGPatternFrame::GetPatternRect(const gfxRect &aTargetBBox,
 }
 
 gfxMatrix
-nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
+nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
+                                PRUint16 aPatternContentUnits,
+                                PRUint16 aPatternUnits,
+                                const gfxRect &callerBBox,
                                 const gfxMatrix &callerCTM,
                                 nsIFrame *aTarget)
 {
@@ -540,8 +618,7 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
   nsIContent* targetContent = aTarget->GetContent();
 
   // The objectBoundingBox conversion must be handled in the CTM:
-  if (GetEnumValue(nsSVGPatternElement::PATTERNCONTENTUNITS) ==
-      nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (IncludeBBoxScale(aViewBox, aPatternContentUnits, aPatternUnits)) {
     tCTM.Scale(callerBBox.Width(), callerBBox.Height());
   } else {
     if (targetContent->IsSVG()) {
@@ -551,11 +628,10 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
     tCTM.Scale(scale, scale);
   }
 
-  const nsSVGViewBox& viewBox = GetViewBox();
-  if (!viewBox.IsExplicitlySet()) {
+  if (!aViewBox.IsExplicitlySet()) {
     return tCTM;
   }
-  const nsSVGViewBoxRect viewBoxRect = GetViewBox().GetAnimValue();
+  const nsSVGViewBoxRect viewBoxRect = aViewBox.GetAnimValue();
 
   if (viewBoxRect.height <= 0.0f || viewBoxRect.width <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
@@ -590,59 +666,6 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
     GetPreserveAspectRatio());
 
   return tm * tCTM;
-}
-
-// Given the matrix for the pattern element's own transform, this returns a
-// combined matrix including the transforms applicable to its target.
-gfxMatrix
-nsSVGPatternFrame::GetPatternMatrix(const gfxMatrix &patternTransform,
-                                    const gfxRect &bbox,
-                                    const gfxRect &callerBBox,
-                                    const gfxMatrix &callerCTM)
-{
-  // We really want the pattern matrix to handle translations
-  gfxFloat minx = bbox.X();
-  gfxFloat miny = bbox.Y();
-
-  PRUint16 type = GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
-  if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    minx += callerBBox.X();
-    miny += callerBBox.Y();
-  }
-
-  float scale = 1.0f / nsSVGUtils::MaxExpansion(callerCTM);
-  gfxMatrix patternMatrix = patternTransform;
-  patternMatrix.Scale(scale, scale);
-  patternMatrix.Translate(gfxPoint(minx, miny));
-
-  return patternMatrix;
-}
-
-nsresult
-nsSVGPatternFrame::GetTargetGeometry(gfxRect *aBBox,
-                                     nsIFrame *aTarget,
-                                     const gfxMatrix &aContextMatrix,
-                                     const gfxRect *aOverrideBounds)
-{
-  *aBBox = aOverrideBounds ? *aOverrideBounds : nsSVGUtils::GetBBox(aTarget);
-
-  // Sanity check
-  PRUint16 type = GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
-  if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    if (aBBox->Width() <= 0 || aBBox->Height() <= 0) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  // OK, now fix up the bounding box to reflect user coordinates
-  // We handle device unit scaling in pattern matrix
-  {
-    float scale = nsSVGUtils::MaxExpansion(aContextMatrix);
-    if (scale <= 0) {
-      return NS_ERROR_FAILURE;
-    }
-    aBBox->Scale(scale);
-  }
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

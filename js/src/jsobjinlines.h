@@ -809,8 +809,8 @@ inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool
 JSObject::isDebugScope() const
 {
-    extern bool js_IsDebugScopeSlow(const JSObject *obj);
-    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(this);
+    extern bool js_IsDebugScopeSlow(JS::RawObject obj);
+    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -1214,19 +1214,19 @@ JSObject::getSpecialAttributes(JSContext *cx, js::SpecialId sid, unsigned *attrs
 inline bool
 JSObject::isProxy() const
 {
-    return js::IsProxy(this);
+    return js::IsProxy(const_cast<JSObject*>(this));
 }
 
 inline bool
 JSObject::isCrossCompartmentWrapper() const
 {
-    return js::IsCrossCompartmentWrapper(this);
+    return js::IsCrossCompartmentWrapper(const_cast<JSObject*>(this));
 }
 
 inline bool
 JSObject::isWrapper() const
 {
-    return js::IsWrapper(this);
+    return js::IsWrapper(const_cast<JSObject*>(this));
 }
 
 inline js::GlobalObject &

@@ -26,7 +26,7 @@
 #endif
 
 #ifdef XP_MACOSX
-#include "nsCoreAnimationSupport.h"
+#include "mozilla/gfx/QuartzSupport.h"
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
@@ -305,8 +305,8 @@ private:
   NP_Port                                   mQDPluginPortCopy;
 #endif
   PRInt32                                   mInCGPaintLevel;
-  nsRefPtr<nsIOSurface>                     mIOSurface;
-  nsCARenderer                              mCARenderer;
+  mozilla::RefPtr<MacIOSurface>             mIOSurface;
+  mozilla::RefPtr<nsCARenderer>             mCARenderer;
   CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;

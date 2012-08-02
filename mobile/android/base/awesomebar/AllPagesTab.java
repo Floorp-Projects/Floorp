@@ -5,42 +5,42 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
+import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.content.Context;
-import android.widget.ListView;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.view.View;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
-import android.widget.AdapterView;
 import android.database.Cursor;
-import android.util.Log;
-import android.widget.SimpleCursorAdapter;
-import android.widget.LinearLayout;
-import android.widget.TabHost.TabContentFactory;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
-import android.widget.FilterQueryProvider;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.FilterQueryProvider;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.TabHost.TabContentFactory;
+import android.widget.TextView;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONException;
-
-import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.db.BrowserContract.Combined;
 
 public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     public static final String LOGTAG = "ALL_PAGES";

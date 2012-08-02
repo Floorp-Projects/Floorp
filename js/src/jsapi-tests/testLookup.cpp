@@ -14,22 +14,22 @@
 BEGIN_TEST(testLookup_bug522590)
 {
     // Define a function that makes method-bearing objects.
-    jsvalRoot x(cx);
+    JS::RootedValue x(cx);
     EXEC("function mkobj() { return {f: function () {return 2;}} }");
 
     // Calling mkobj() multiple times must create multiple functions in ES5.
-    EVAL("mkobj().f !== mkobj().f", x.addr());
+    EVAL("mkobj().f !== mkobj().f", x.address());
     CHECK_SAME(x, JSVAL_TRUE);
 
     // Now make x.f a method.
-    EVAL("mkobj()", x.addr());
-    JSObject *xobj = JSVAL_TO_OBJECT(x);
+    EVAL("mkobj()", x.address());
+    JS::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
 
     // This lookup must not return an internal function object.
-    jsvalRoot r(cx);
-    CHECK(JS_LookupProperty(cx, xobj, "f", r.addr()));
-    CHECK(r.value().isObject());
-    JSObject *funobj = &r.value().toObject();
+    JS::RootedValue r(cx);
+    CHECK(JS_LookupProperty(cx, xobj, "f", r.address()));
+    CHECK(r.isObject());
+    JSObject *funobj = &r.toObject();
     CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
 
@@ -42,11 +42,11 @@ document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flag
                  JSMutableHandleObject objp)
 {
     // If id is "all", and we're not detecting, resolve document.all=true.
-    jsvalRoot v(cx);
-    if (!JS_IdToValue(cx, id, v.addr()))
+    JS::RootedValue v(cx);
+    if (!JS_IdToValue(cx, id, v.address()))
         return false;
-    if (JSVAL_IS_STRING(v.value())) {
-        JSString *str = JSVAL_TO_STRING(v.value());
+    if (JSVAL_IS_STRING(v)) {
+        JSString *str = JSVAL_TO_STRING(v);
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return false;
@@ -68,14 +68,14 @@ static JSClass document_class = {
 
 BEGIN_TEST(testLookup_bug570195)
 {
-    JSObject *obj = JS_NewObject(cx, &document_class, NULL, NULL);
+    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, NULL, NULL));
     CHECK(obj);
     CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), NULL, NULL, 0));
-    jsvalRoot v(cx);
-    EVAL("document.all ? true : false", v.addr());
-    CHECK_SAME(v.value(), JSVAL_FALSE);
-    EVAL("document.hasOwnProperty('all')", v.addr());
-    CHECK_SAME(v.value(), JSVAL_FALSE);
+    JS::RootedValue v(cx);
+    EVAL("document.all ? true : false", v.address());
+    CHECK_SAME(v, JSVAL_FALSE);
+    EVAL("document.hasOwnProperty('all')", v.address());
+    CHECK_SAME(v, JSVAL_FALSE);
     return true;
 }
 END_TEST(testLookup_bug570195)

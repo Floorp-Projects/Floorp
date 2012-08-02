@@ -1387,6 +1387,7 @@ nsDocLoader::FireOnLocationChange(nsIWebProgress* aWebProgress,
       continue;
     }
 
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, ("DocLoader [%p] calling %p->OnLocationChange", this, listener.get()));
     listener->OnLocationChange(aWebProgress, aRequest, aUri, aFlags);
   }
 

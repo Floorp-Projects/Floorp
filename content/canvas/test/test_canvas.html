@@ -44,7 +44,7 @@ function IsAzureEnabled() {
 
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend != "none");
   } catch (e) { }
 
@@ -56,7 +56,7 @@ function IsAzureSkia() {
   
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "skia");
   } catch (e) { }
 
@@ -68,7 +68,7 @@ function IsAzureCairo() {
   
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "cairo");
   } catch (e) { }
 
@@ -3538,8 +3538,13 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(null, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
 
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 }
 </script>
@@ -3715,17 +3720,39 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e }; 
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 var _thrown = undefined; try {
   ctx.drawImage(0, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 var _thrown = undefined; try {
   ctx.drawImage("", 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 var _thrown = undefined; try {
   ctx.drawImage(document.createElement('p'), 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 }
 </script>
@@ -7696,7 +7723,12 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createImageData(null);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown instanceof TypeError, "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 
 }
@@ -9207,8 +9239,12 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.putImageData(null, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 }
 </script>
@@ -9319,13 +9355,31 @@ var ctx = canvas.getContext('2d');
 var imgdata = { width: 1, height: 1, data: [255, 0, 0, 255] };
 var _thrown = undefined; try {
   ctx.putImageData(imgdata, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e }; 
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 var _thrown = undefined; try {
   ctx.putImageData("cheese", 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 var _thrown = undefined; try {
   ctx.putImageData(42, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
+
 
 
 }
@@ -15131,7 +15185,12 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(null, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 
 }
@@ -15150,7 +15209,12 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern('image_red.png', 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 
 }
@@ -15169,7 +15233,12 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(undefined, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} catch (e) { _thrown = e };
+if (IsAzureEnabled()) {
+  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+} else {
+  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
+}
 
 
 }
