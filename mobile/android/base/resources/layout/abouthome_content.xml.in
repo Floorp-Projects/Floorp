@@ -8,7 +8,9 @@
        xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
     <RelativeLayout android:layout_width="fill_parent"
-                    android:layout_height="fill_parent">
+                    android:layout_height="fill_parent"
+                    android:paddingLeft="@dimen/abouthome_gutter_large"
+                    android:paddingRight="@dimen/abouthome_gutter_large">
 
         <ImageView android:src="@drawable/abouthome_icon"
                    android:layout_width="wrap_content"
