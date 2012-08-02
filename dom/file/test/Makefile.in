@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 
 MOCHITEST_FILES = \
+  dummy_worker.js \
   helpers.js \
   test_append_read_data.html \
   test_getFileId.html \
@@ -27,6 +28,7 @@ MOCHITEST_FILES = \
   test_success_events_after_abort.html \
   test_truncate.html \
   test_write_read_data.html \
+  test_workers.html \
   test_archivereader.html \
   $(NULL)
 
