@@ -17,15 +17,19 @@ interface nsIFrameMessageListener : nsISupports
    * receiveMessage is called with one parameter, which has the following
    * properties:
    *   {
+   *     target:  %the target of the message. Either an element owning
+   *               the message manager, or message manager itself if no
+   *               element owns it%
    *     name:    %message name%,
    *     sync:    %true or false%.
-   *     json:    %json object or null%,
+   *     json:    %structured clone of the sent message data%,
+   *     json:    %same as .data, deprecated%,
    *     objects: %array of handles or null, always null if sync is false%
    *   }
    * @note objects property isn't implemented yet.
    *
    * if the message is synchronous, possible return value is sent back
-   * as JSON.
+   * as JSON (will be changed to use structured clones).
    *
    * When the listener is called, 'this' value is the target of the message.
    */

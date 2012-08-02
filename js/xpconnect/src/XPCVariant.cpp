@@ -449,7 +449,8 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
             // Easy. Handle inline.
             if (NS_FAILED(variant->GetAsDouble(&xpctvar.val.d)))
                 return false;
-            return JS_NewNumberValue(cx, xpctvar.val.d, pJSVal);
+            *pJSVal = JS_NumberValue(xpctvar.val.d);
+            return true;
         }
         case nsIDataType::VTYPE_BOOL:
         {

@@ -7,39 +7,46 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
-    <LinearLayout android:layout_width="fill_parent"
-                  android:orientation="vertical"
-                  android:layout_height="fill_parent">
+    <RelativeLayout android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:paddingLeft="@dimen/abouthome_gutter_large"
+                    android:paddingRight="@dimen/abouthome_gutter_large">
 
-        <RelativeLayout android:id="@+id/top_sites"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentTop="true"
-                        android:layout_alignParentLeft="true"
-                        android:isScrollContainer="false">
+        <ImageView android:src="@drawable/abouthome_icon"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:layout_marginTop="4dp"
+                   android:layout_alignParentTop="true"
+                   android:layout_alignParentRight="true"/>
 
-            <ImageView android:id="@+id/top_sites_top"
-                       android:layout_width="fill_parent"
-                       android:layout_height="50dip"
-                       android:gravity="fill"
-                       android:background="@drawable/abouthome_bg_repeat"/>
+        <LinearLayout android:orientation="vertical"
+                      android:layout_width="fill_parent"
+                      android:layout_height="fill_parent"
+                      android:layout_alignParentTop="true"
+                      android:layout_alignParentLeft="true">
+
+            <ImageView android:src="@drawable/abouthome_logo"
+                       android:layout_width="wrap_content"
+                       android:layout_height="24dip"
+                       android:layout_marginTop="16dip"
+                       android:layout_marginBottom="10dip"
+                       android:layout_marginLeft="12dip"/>
 
             <TextView android:id="@+id/top_sites_title"
+                      android:text="@string/abouthome_top_sites_title"
                       android:layout_width="fill_parent"
                       android:layout_height="26dip"
-                      android:layout_below="@id/top_sites_top"
                       android:background="#34FFFFFF"
                       android:paddingLeft="12dip"
                       android:textSize="12sp"
                       android:textColor="#000000"
                       android:textStyle="bold"
-                      android:gravity="left|center_vertical"
-                      android:text="@string/abouthome_top_sites_title"/>
+                      android:gravity="left|center_vertical"/>
 
             <TextView android:id="@+id/no_top_sites_text"
+                      android:text="@string/abouthome_no_top_sites"
                       android:layout_width="fill_parent"
                       android:layout_height="wrap_content"
-                      android:layout_below="@id/top_sites_title"
                       android:paddingTop="47dp"
                       android:paddingBottom="47dp"
                       android:paddingLeft="60dp"
@@ -47,22 +54,13 @@
                       android:gravity="center"
                       android:textSize="12sp"
                       android:textColor="#666666"
-                      android:text="@string/abouthome_no_top_sites"
                       android:visibility="gone"/>
-
-            <ImageView android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:layout_marginTop="4dp"
-                       android:layout_alignParentTop="true"
-                       android:layout_alignParentRight="true"
-                       android:src="@drawable/abouthome_icon"/>
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:layout_marginTop="12dp"
-                  android:layout_below="@id/top_sites_title"
                   android:verticalSpacing="8dip"
                   android:horizontalSpacing="0dip"
                   android:isScrollContainer="false"
@@ -70,87 +68,69 @@
                   android:listSelector="@drawable/action_bar_button"/>
 
             <org.mozilla.gecko.LinkTextView android:id="@+id/all_top_sites_text"
+                                            android:text="@string/abouthome_top_sites_browse"
                                             android:layout_width="fill_parent"
                                             android:layout_height="30dip"
-                                            android:layout_below="@id/top_sites_grid"
                                             android:layout_marginTop="7dip"
                                             android:textColor="#22629e"
                                             android:textSize="12sp"
-                                            android:gravity="top|center_horizontal"
-                                            android:text="@string/abouthome_top_sites_browse"/>
+                                            android:gravity="top|center_horizontal"/>
 
-            <RelativeLayout android:id="@+id/sync_box_container"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/all_top_sites_text"
-                            android:gravity="center"
-                            android:paddingLeft="12dp"
-                            android:paddingRight="12dp"
-                            android:paddingTop="17dp"
-                            android:paddingBottom="14dp"
-                            android:visibility="gone">
+            <LinearLayout android:id="@+id/sync_box"
+                          android:background="@drawable/abouthome_sync_box"
+                          android:orientation="horizontal"
+                          android:layout_width="fill_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginLeft="12dp"
+                          android:layout_marginRight="12dp"
+                          android:layout_marginTop="17dp"
+                          android:layout_marginBottom="14dp"
+                          android:gravity="center"
+                          android:clickable="true"
+                          android:visibility="gone">
 
-                <RelativeLayout android:id="@+id/sync_box"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:clickable="true"
-                                android:background="@drawable/abouthome_sync_box">
+                <ImageView android:id="@+id/sync_logo"
+                           android:src="@drawable/abouthome_sync_logo"
+                           android:layout_width="wrap_content"
+                           android:layout_height="wrap_content"
+                           android:layout_weight="0"
+                           android:gravity="left|center_vertical"/>
 
-                    <ImageView android:id="@+id/sync_logo"
-                               android:layout_width="wrap_content"
-                               android:layout_height="wrap_content"
-                               android:layout_centerVertical="true"
-                               android:src="@drawable/abouthome_sync_logo"/>
+                <TextView android:id="@+id/sync_text"
+                          android:text="@string/abouthome_about_sync"
+                          android:layout_width="0dp"
+                          android:layout_height="wrap_content"
+                          android:layout_weight="1"
+                          android:layout_marginLeft="7dp"
+                          android:gravity="center"
+                          android:textSize="15sp"
+                          android:textColor="#FFFFFF"/>
 
-                    <TextView android:id="@+id/sync_text"
-                              android:layout_width="fill_parent"
-                              android:layout_height="wrap_content"
-                              android:layout_centerVertical="true"
-                              android:layout_toRightOf="@id/sync_logo"
-                              android:layout_marginLeft="7dp"
-                              android:gravity="center"
-                              android:textSize="15sp"
-                              android:textColor="#FFFFFF"
-                              android:text="@string/abouthome_about_sync"/>
+            </LinearLayout>
 
-                </RelativeLayout>
+            <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="wrap_content"
+                                                android:visibility="gone"
+                                                gecko:title="@string/abouthome_last_tabs_title"
+                                                gecko:more_text="@string/abouthome_last_tabs_open"/>
 
-            </RelativeLayout>
+            <org.mozilla.gecko.AboutHomeSection android:id="@+id/recommended_addons"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="wrap_content"
+                                                android:visibility="gone"
+                                                gecko:title="@string/abouthome_addons_title"
+                                                gecko:more_text="@string/abouthome_addons_browse"/>
 
-            <ImageView android:id="@+id/logo"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:layout_marginTop="16dip"
-                       android:layout_marginBottom="10dip"
-                       android:layout_marginLeft="12dip"
-                       android:layout_alignParentTop="true"
-                       android:layout_alignParentLeft="true"
-                       android:src="@drawable/abouthome_logo"/>
+            <org.mozilla.gecko.AboutHomeSection android:id="@+id/remote_tabs"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="wrap_content"
+                                                android:visibility="gone"
+                                                gecko:title="@string/remote_tabs"
+                                                gecko:more_text="@string/remote_tabs_show_all"/>
 
-        </RelativeLayout>
+        </LinearLayout>
 
-        <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="wrap_content"
-                                            android:visibility="gone"
-                                            gecko:title="@string/abouthome_last_tabs_title"
-                                            gecko:more_text="@string/abouthome_last_tabs_open"/>
-
-        <org.mozilla.gecko.AboutHomeSection android:id="@+id/recommended_addons"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="wrap_content"
-                                            android:visibility="gone"
-                                            gecko:title="@string/abouthome_addons_title"
-                                            gecko:more_text="@string/abouthome_addons_browse"/>
-
-        <org.mozilla.gecko.AboutHomeSection android:id="@+id/remote_tabs"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="wrap_content"
-                                            android:visibility="gone"
-                                            gecko:title="@string/remote_tabs"
-                                            gecko:more_text="@string/remote_tabs_show_all"/>
-
-    </LinearLayout>
+    </RelativeLayout>
 
 </merge>

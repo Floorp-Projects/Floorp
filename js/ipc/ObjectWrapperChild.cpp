@@ -233,7 +233,8 @@ ObjectWrapperChild::jsval_from_JSVariant(JSContext* cx, const JSVariant& from,
         *to = INT_TO_JSVAL(from.get_int());
         return true;
     case JSVariant::Tdouble:
-        return !!JS_NewNumberValue(cx, from.get_double(), to);
+        *to = JS_NumberValue(from.get_double());
+        return true;
     case JSVariant::Tbool:
         *to = BOOLEAN_TO_JSVAL(from.get_bool());
         return true;

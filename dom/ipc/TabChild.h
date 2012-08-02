@@ -59,6 +59,7 @@ namespace dom {
 
 class TabChild;
 class PContentDialogChild;
+class ClonedMessageData;
 
 class TabChildGlobal : public nsDOMEventTargetHelper,
                        public nsIContentFrameMessageManager,
@@ -142,6 +143,7 @@ class TabChild : public PBrowserChild,
                  public nsITabChild
 {
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
+    typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
     /**
@@ -196,7 +198,7 @@ public:
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
-                                  const nsString& aJSON);
+                                  const ClonedMessageData& aData);
 
     virtual PDocumentRendererChild*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,

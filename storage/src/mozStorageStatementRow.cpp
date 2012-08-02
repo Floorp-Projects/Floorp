@@ -66,10 +66,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       double dval;
       rv = mStatement->GetDouble(idx, &dval);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (!::JS_NewNumberValue(aCtx, dval, _vp)) {
-        *_retval = false;
-        return NS_OK;
-      }
+      *_vp = ::JS_NumberValue(dval);
     }
     else if (type == mozIStorageValueArray::VALUE_TYPE_TEXT) {
       PRUint32 bytes;

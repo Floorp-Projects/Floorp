@@ -347,6 +347,7 @@ nsCSSScanner::Init(const nsAString& aBuffer,
   // Reset variables that we use to keep track of our progress through the input
   mOffset = 0;
   mPushbackCount = 0;
+  mRecording = false;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   mColNumber = 0;
@@ -639,6 +640,30 @@ nsCSSScanner::Pushback(PRUnichar aChar)
     mPushback = newPushback;
   }
   mPushback[mPushbackCount++] = aChar;
+}
+
+void
+nsCSSScanner::StartRecording()
+{
+  NS_ASSERTION(!mRecording, "already started recording");
+  mRecording = true;
+  mRecordStartOffset = mOffset - mPushbackCount;
+}
+
+void
+nsCSSScanner::StopRecording()
+{
+  NS_ASSERTION(mRecording, "haven't started recording");
+  mRecording = false;
+}
+
+void
+nsCSSScanner::StopRecording(nsString& aBuffer)
+{
+  NS_ASSERTION(mRecording, "haven't started recording");
+  mRecording = false;
+  aBuffer.Append(mReadPointer + mRecordStartOffset,
+                 mOffset - mPushbackCount - mRecordStartOffset);
 }
 
 bool

@@ -8349,7 +8349,8 @@ nsGlobalWindow::GetIndexedDB(nsIIDBFactory** _retval)
     }
 
     // This may be null if being created from a file.
-    rv = indexedDB::IDBFactory::Create(this, getter_AddRefs(mIndexedDB));
+    rv = indexedDB::IDBFactory::Create(this, nullptr,
+                                       getter_AddRefs(mIndexedDB));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
