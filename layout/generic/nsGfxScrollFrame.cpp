@@ -2116,7 +2116,7 @@ nsGfxScrollFrameInner::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
 {
   for (nsIFrame* kid = mOuter->GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
     if (kid == mScrolledFrame ||
-        (kid->GetStyleDisplay()->IsPositioned() != aPositioned))
+        (kid->IsPositioned() != aPositioned))
       continue;
 
     nsDisplayListCollection partList;

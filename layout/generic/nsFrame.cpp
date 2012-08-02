@@ -522,7 +522,7 @@ nsFrame::Init(nsIContent*      aContent,
       AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
       if (!GetParent() ||
           // I'd use NS_FRAME_OUT_OF_FLOW, but it's not set yet.
-          disp->IsFloating(this) || disp->IsAbsolutelyPositioned()) {
+          disp->IsFloating(this) || disp->IsAbsolutelyPositioned(this)) {
         AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
       }
     }
@@ -1496,7 +1496,7 @@ nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
   NS_PRECONDITION(aRect, "Must have aRect out parameter");
 
   if (!(aDisp->mClipFlags & NS_STYLE_CLIP_RECT) ||
-      !(aDisp->IsAbsolutelyPositioned() || IsSVGContentWithCSSClip(this))) {
+      !(aDisp->IsAbsolutelyPositioned(this) || IsSVGContentWithCSSClip(this))) {
     return false;
   }
 
@@ -2104,7 +2104,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     || child->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
-  bool isPositioned = !isSVG && disp->IsPositioned();
+  bool isPositioned = !isSVG && disp->IsPositioned(child);
   if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating(child)) ||
       ((disp->mClipFlags & NS_STYLE_CLIP_RECT) &&
        IsSVGContentWithCSSClip(child)) ||
@@ -5018,7 +5018,8 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
 nsPoint
 nsIFrame::GetRelativeOffset(const nsStyleDisplay* aDisplay) const
 {
-  if (!aDisplay || NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition) {
+  if (!aDisplay ||
+      aDisplay->IsRelativelyPositioned(this)) {
     nsPoint *offsets = static_cast<nsPoint*>
       (Properties().Get(ComputedOffsetProperty()));
     if (offsets) {
@@ -5294,7 +5295,7 @@ nsIFrame::GetContainingBlock() const
   // MathML frames might have absolute positioning style, but they would
   // still be in-flow.  So we have to check to make sure that the frame
   // is really out-of-flow too.
-  if (GetStyleDisplay()->IsAbsolutelyPositioned() &&
+  if (IsAbsolutelyPositioned() &&
       (GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     return GetParent(); // the parent is always the containing block
   }
@@ -9363,7 +9364,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
       printf(" out-of-flow");
     if (aFrame->GetPrevInFlow())
       printf(" prev-in-flow");
-    if (disp->IsAbsolutelyPositioned())
+    if (aFrame->IsAbsolutelyPositioned())
       printf(" abspos");
     if (aFrame->IsFloating())
       printf(" float");

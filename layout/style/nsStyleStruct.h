@@ -1642,13 +1642,20 @@ struct nsStyleDisplay {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
 
-  bool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
-                                                (NS_STYLE_POSITION_FIXED == mPosition);}
+  bool IsAbsolutelyPositionedStyle() const {
+    return NS_STYLE_POSITION_ABSOLUTE == mPosition ||
+           NS_STYLE_POSITION_FIXED == mPosition;
+  }
 
   /* Returns true if we're positioned or there's a transform in effect. */
-  bool IsPositioned() const {
-    return IsAbsolutelyPositioned() ||
-      NS_STYLE_POSITION_RELATIVE == mPosition || HasTransform();
+  bool IsPositionedStyle() const {
+    return IsAbsolutelyPositionedStyle() ||
+           IsRelativelyPositionedStyle() ||
+           HasTransform();
+  }
+
+  bool IsRelativelyPositionedStyle() const {
+    return mPosition == NS_STYLE_POSITION_RELATIVE;
   }
 
   bool IsScrollableOverflow() const {
@@ -1667,6 +1674,9 @@ struct nsStyleDisplay {
 
   // These are defined in nsStyleStructInlines.h.
   inline bool IsFloating(const nsIFrame* aFrame) const;
+  inline bool IsPositioned(const nsIFrame* aFrame) const;
+  inline bool IsRelativelyPositioned(const nsIFrame* aFrame) const;
+  inline bool IsAbsolutelyPositioned(const nsIFrame* aFrame) const;
 };
 
 struct nsStyleTable {
