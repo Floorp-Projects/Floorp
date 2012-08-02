@@ -15,14 +15,9 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(f57450db-07df-44ac-bf34-7ee65fe17b26), builtinclass]
+[scriptable, uuid(3dbe0137-ca73-44c5-bcde-25c297bf7c65), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
-    /*
-     * Hint as to what kind of storage this object is.
-     * May be "external", "shared", or "default".
-     */
-    readonly attribute DOMString type;
     attribute nsIDOMEventListener onchange;
     nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
     nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);

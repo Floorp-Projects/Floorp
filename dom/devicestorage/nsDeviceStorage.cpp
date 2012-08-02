@@ -279,14 +279,9 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
 
-// TODO - eventually, we will want to factor this method
-// out into different system specific subclasses (or
-// something)
-PRInt32
+void
 nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIndex)
 {
-  PRInt32 typeResult = DEVICE_STORAGE_TYPE_DEFAULT;
-
   nsCOMPtr<nsIFile> f;
   nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   NS_ASSERTION(dirService, "Must have directory service");
@@ -296,21 +291,21 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
 
   nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   if (!vs) {
-    return typeResult;
+    return;
   }
 
   nsCOMPtr<nsIVolume> v;
   vs->GetVolumeByPath(NS_LITERAL_STRING("/sdcard"), getter_AddRefs(v));
   
   if (!v) {
-    return typeResult;
+    return;
   }
 
   PRInt32 state;
   v->GetState(&state);
 
   if (state != nsIVolume::STATE_MOUNTED) {
-    return typeResult;
+    return;
   }
 #endif
 
@@ -380,7 +375,6 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   } 
 
   mFile = f;
-  return typeResult;
 }
 
 static jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
@@ -1320,8 +1314,7 @@ NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage()
- : mStorageType(DEVICE_STORAGE_TYPE_DEFAULT)
- , mIsWatchingFile(false)
+  : mIsWatchingFile(false)
 { }
 
 nsresult
@@ -1329,7 +1322,7 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType, const P
 {
   NS_ASSERTION(aWindow, "Must have a content dom");
 
-  mStorageType = SetRootFileForType(aType, aIndex);
+  SetRootFileForType(aType, aIndex);
   if (!mFile) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1385,24 +1378,6 @@ nsDOMDeviceStorage::CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
       break;
     aStores.AppendElement(storage);
   }
-}
-
-NS_IMETHODIMP
-nsDOMDeviceStorage::GetType(nsAString & aType)
-{
-  switch(mStorageType) {
-    case DEVICE_STORAGE_TYPE_EXTERNAL:
-      aType.AssignLiteral("external");
-      break;
-    case DEVICE_STORAGE_TYPE_SHARED:
-      aType.AssignLiteral("shared");
-      break;
-    case DEVICE_STORAGE_TYPE_DEFAULT:
-    default:
-      aType.AssignLiteral("default");
-      break;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
