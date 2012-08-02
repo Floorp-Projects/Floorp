@@ -292,6 +292,10 @@ public:
   const nsStylePadding*    mStylePadding;
   const nsStyleText*       mStyleText;
 
+  bool IsFloating() const {
+    return mStyleDisplay->IsFloating(frame);
+  }
+
   // a frame (e.g. nsTableCellFrame) which may need to generate a special 
   // reflow for percent height calculations 
   nsIPercentHeightObserver* mPercentHeightObserver;

@@ -977,8 +977,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // return now.
     bool optionalBreakAfterFits;
     NS_ASSERTION(isText ||
-                 reflowStateHolder.ref().mStyleDisplay->mFloats ==
-                   NS_STYLE_FLOAT_NONE,
+                 !reflowStateHolder.ref().IsFloating(),
                  "How'd we get a floated inline frame? "
                  "The frame ctor should've dealt with this.");
     // Direction is inherited, so using the psd direction is fine.
@@ -1051,7 +1050,7 @@ void
 nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
                                nsHTMLReflowState& aReflowState)
 {
-  NS_ASSERTION(aReflowState.mStyleDisplay->mFloats == NS_STYLE_FLOAT_NONE,
+  NS_ASSERTION(!aReflowState.IsFloating(),
                "How'd we get a floated inline frame? "
                "The frame ctor should've dealt with this.");
 

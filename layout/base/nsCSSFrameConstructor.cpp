@@ -1068,7 +1068,11 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   // XXXbz couldn't we just force position to "static" on roots and
   // float to "none"?  That's OK per CSS 2.1, as far as I can tell.
   
-  if (aStyleDisplay->IsFloating() && mFloatedItems.containingBlock) {
+  if (aContentParentFrame && aContentParentFrame->IsSVGText()) {
+    return aContentParentFrame;
+  }
+
+  if (aStyleDisplay->IsFloatingStyle() && mFloatedItems.containingBlock) {
     NS_ASSERTION(!aStyleDisplay->IsAbsolutelyPositioned(),
                  "Absolutely positioned _and_ floating?");
     return mFloatedItems.containingBlock;
@@ -1120,7 +1124,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   }
   else
 #endif // MOZ_XUL
-  if (aCanBeFloated && disp->IsFloating() &&
+  if (aCanBeFloated && aNewFrame->IsFloating() &&
       mFloatedItems.containingBlock) {
     NS_ASSERTION(aNewFrame->GetParent() == mFloatedItems.containingBlock,
                  "Float whose parent is not the float containing block?");
@@ -2975,7 +2979,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
       NS_ASSERTION(!listStyle->GetStyleDisplay()->IsPositioned(),
                    "Ended up with positioned dropdown list somehow.");
-      NS_ASSERTION(!listStyle->GetStyleDisplay()->IsFloating(),
+      NS_ASSERTION(!listFrame->IsFloating(),
                    "Ended up with floating dropdown list somehow.");
       
       // Initialize the scroll frame positioned. Note that it is NOT
@@ -3356,7 +3360,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
           nsCSSAnonBoxes::fieldsetContent) ||
        !aElement->GetParent() ||
        !aElement->GetParent()->IsHTML(nsGkAtoms::fieldset) ||
-       aStyleContext->GetStyleDisplay()->IsFloating() ||
+       aStyleContext->GetStyleDisplay()->IsFloatingStyle() ||
        aStyleContext->GetStyleDisplay()->IsAbsolutelyPositioned())) {
     // <legend> is only special inside fieldset, check both the frame tree
     // parent and content tree parent due to XBL issues. For floated or
@@ -4314,7 +4318,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
 
   // The style system ensures that floated and positioned frames are
   // block-level.
-  NS_ASSERTION(!(aDisplay->IsFloating() ||
+  NS_ASSERTION(!(aDisplay->IsFloatingStyle() ||
                  aDisplay->IsAbsolutelyPositioned()) ||
                aDisplay->IsBlockOutside(),
                "Style system did not apply CSS2.1 section 9.7 fixups");
@@ -4487,10 +4491,11 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
   // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
   bool clipPaginatedOverflow =
     (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
-  if (aDisplay->IsAbsolutelyPositioned() ||
-      aDisplay->IsFloating() ||
-      NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
-      clipPaginatedOverflow) {
+  if ((aDisplay->IsAbsolutelyPositioned() ||
+       aDisplay->IsFloatingStyle() ||
+       NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
+       clipPaginatedOverflow) &&
+      !aParentFrame->IsSVGText()) {
     *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
     if (clipPaginatedOverflow) {
       (*aNewFrame)->AddStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW);
@@ -5376,8 +5381,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     // isOutOfFlow might be false even in cases when the frame will end up
     // out-of-flow, we can't use it here.  But we _can_ say that the frame will
     // for sure end up in-flow if it's not floated or absolutely positioned.
-    item->mIsBlock =
-      !isInline && !display->IsAbsolutelyPositioned() && !display->IsFloating();
+    item->mIsBlock = !isInline &&
+                     !display->IsAbsolutelyPositioned() &&
+                     !display->IsFloatingStyle();
   }
 
   if (item->mIsAllInline) {
@@ -10427,7 +10433,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->GetStyleDisplay();
-    if (display->IsFloating()) {
+    if (display->IsFloating(aParentFrame)) {
       // Make a floating first-letter frame
       CreateFloatingLetterFrame(state, aBlockFrame, aTextContent, textFrame,
                                 blockContent, aParentFrame, sc, aResult);

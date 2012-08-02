@@ -421,7 +421,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
       return nsIFrame::kPopupList;
 #endif // MOZ_XUL
     } else {
-      NS_ASSERTION(aChildFrame->GetStyleDisplay()->IsFloating(),
+      NS_ASSERTION(aChildFrame->IsFloating(),
                    "not a floated frame");
       id = nsIFrame::kFloatList;
     }
@@ -457,7 +457,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
       found = parent->GetChildList(nsIFrame::kOverflowList)
                 .ContainsFrame(aChildFrame);
     }
-    else if (aChildFrame->GetStyleDisplay()->IsFloating()) {
+    else if (aChildFrame->IsFloating()) {
       found = parent->GetChildList(nsIFrame::kOverflowOutOfFlowList)
                 .ContainsFrame(aChildFrame);
     }
@@ -535,7 +535,7 @@ nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   if (aFrame->GetStateBits() & PLACEHOLDER_FOR_FLOAT) {
     nsIFrame *outOfFlowFrame =
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
-    NS_ASSERTION(outOfFlowFrame->GetStyleDisplay()->IsFloating(),
+    NS_ASSERTION(outOfFlowFrame->IsFloating(),
                  "How did that happen?");
     return outOfFlowFrame;
   }

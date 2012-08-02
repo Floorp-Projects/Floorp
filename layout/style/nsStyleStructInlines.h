@@ -11,6 +11,7 @@
 #ifndef nsStyleStructInlines_h_
 #define nsStyleStructInlines_h_
 
+#include "nsIFrame.h"
 #include "nsStyleStruct.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -52,6 +53,12 @@ nsStyleBorder::GetSubImage(PRUint8 aIndex) const
   if (aIndex < mSubImages.Count())
     subImage = mSubImages[aIndex];
   return subImage;
+}
+
+bool
+nsStyleDisplay::IsFloating(const nsIFrame* aFrame) const
+{
+  return IsFloatingStyle() && !aFrame->IsSVGText();
 }
 
 #endif /* !defined(nsStyleStructInlines_h_) */
