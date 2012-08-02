@@ -7,18 +7,21 @@
 
 #include "nsIDOMDeviceStorage.h"
 #include "nsIFile.h"
+#include "nsIObserver.h"
 #include "nsDOMEventTargetHelper.h"
 
 class nsDOMDeviceStorage MOZ_FINAL
   : public nsIDOMDeviceStorage
   , public nsIFileUpdateListener
   , public nsDOMEventTargetHelper
+  , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDEVICESTORAGE
 
   NS_DECL_NSIFILEUPDATELISTENER
+  NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
   NS_DECL_EVENT_HANDLER(change)

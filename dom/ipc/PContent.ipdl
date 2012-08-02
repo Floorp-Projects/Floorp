@@ -199,6 +199,8 @@ child:
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();
 
+    FilePathUpdate(nsString filepath, nsCString reasons);
+
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 
@@ -280,6 +282,9 @@ parent:
 
     // Notify the parent of the presence or absence of private docshells
     PrivateDocShellsExist(bool aExist);
+
+    AddFileWatch(nsString filepath);
+    RemoveFileWatch(nsString filepath);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);

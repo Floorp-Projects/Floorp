@@ -22,6 +22,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 
 class nsFrameMessageManager;
@@ -256,6 +257,10 @@ private:
                                  const nsCString& aCategory);
 
     virtual bool RecvPrivateDocShellsExist(const bool& aExist);
+
+    virtual bool RecvAddFileWatch(const nsString& root);
+    virtual bool RecvRemoveFileWatch(const nsString& root);
+
     GeckoChildProcessHost* mSubprocess;
 
     PRInt32 mGeolocationWatchID;
@@ -273,6 +278,34 @@ private:
 
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
+
+    class WatchedFile : public nsIFileUpdateListener {
+      public:
+        WatchedFile(ContentParent* aParent, const nsString& aPath)
+          : mParent(aParent)
+          , mUsageCount(1)
+        {
+          NS_NewLocalFile(aPath, false, getter_AddRefs(mFile));
+        }
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIFILEUPDATELISTENER
+
+        void Watch() {
+          mFile->Watch(this);
+        }
+
+        void Unwatch() {
+          mFile->Watch(this);
+        }
+
+        nsRefPtr<ContentParent> mParent;
+        PRInt32 mUsageCount;
+        nsCOMPtr<nsIFile> mFile;
+    };
+
+    // This is a cache of all of the registered file watchers.
+    nsInterfaceHashtable<nsStringHashKey, WatchedFile> mFileWatchers;
 
     friend class CrashReporterParent;
 };
