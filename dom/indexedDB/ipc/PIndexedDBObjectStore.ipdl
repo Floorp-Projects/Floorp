@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBlob;
 include protocol PIndexedDBCursor;
 include protocol PIndexedDBIndex;
 include protocol PIndexedDBRequest;
@@ -70,6 +71,7 @@ struct AddPutParams
   SerializedStructuredCloneWriteInfo cloneInfo;
   Key key;
   IndexUpdateInfo[] indexUpdateInfos;
+  PBlob[] blobs;
 };
 
 struct AddParams
@@ -126,6 +128,7 @@ struct ObjectStoreCursorConstructorParams
   Direction direction;
   Key key;
   SerializedStructuredCloneReadInfo cloneInfo;
+  PBlob[] blobs;
 };
 
 } // namespace ipc

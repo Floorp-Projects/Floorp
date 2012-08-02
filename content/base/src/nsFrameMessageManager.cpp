@@ -3,9 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/basictypes.h"
+
+#include "nsFrameMessageManager.h"
+
 #include "ContentChild.h"
 #include "ContentParent.h"
-#include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
@@ -20,14 +23,17 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSRuntimeService.h"
+#include "nsIDOMFile.h"
 #include "xpcpublic.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/StructuredCloneUtils.h"
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static bool
 IsChromeProcess()
@@ -170,15 +176,32 @@ JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
   return true;
 }
 
-void
-nsFrameMessageManager::GetParamsForMessage(const jsval& aObject,
-                                           JSContext* aCx,
-                                           nsAString& aJSON)
+static bool
+GetParamsForMessage(JSContext* aCx,
+                    const jsval& aObject,
+                    JSAutoStructuredCloneBuffer& aBuffer,
+                    StructuredCloneClosure& aClosure)
 {
-  aJSON.Truncate();
+  if (WriteStructuredClone(aCx, aObject, aBuffer, aClosure)) {
+    return true;
+  }
+  JS_ClearPendingException(aCx);
+
+  // Not clonable, try JSON
+  //XXX This is ugly but currently structured cloning doesn't handle
+  //    properly cases when interface is implemented in JS and used
+  //    as a dictionary.
+  nsAutoString json;
   JSAutoRequest ar(aCx);
   jsval v = aObject;
-  JS_Stringify(aCx, &v, nullptr, JSVAL_NULL, JSONCreator, &aJSON);
+  NS_ENSURE_TRUE(JS_Stringify(aCx, &v, nullptr, JSVAL_NULL, JSONCreator, &json), false);
+  NS_ENSURE_TRUE(!json.IsEmpty(), false);
+
+  jsval val = JSVAL_NULL;
+  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(PromiseFlatString(json).get()),
+                              json.Length(), &val), false);
+
+  return WriteStructuredClone(aCx, val, aBuffer, aClosure);
 }
 
 NS_IMETHODIMP
@@ -194,12 +217,17 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
   *aRetval = JSVAL_VOID;
   if (mSyncCallback) {
     NS_ENSURE_TRUE(mCallbackData, NS_ERROR_NOT_INITIALIZED);
-    nsString json;
-    if (aArgc >= 2) {
-      GetParamsForMessage(aObject, aCx, json);
+    StructuredCloneData data;
+    JSAutoStructuredCloneBuffer buffer;
+    if (aArgc >= 2 &&
+        !GetParamsForMessage(aCx, aObject, buffer, data.mClosure)) {
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
+    data.mData = buffer.data();
+    data.mDataLength = buffer.nbytes();
+
     InfallibleTArray<nsString> retval;
-    if (mSyncCallback(mCallbackData, aMessageName, json, &retval)) {
+    if (mSyncCallback(mCallbackData, aMessageName, data, &retval)) {
       JSAutoRequest ar(aCx);
       PRUint32 len = retval.Length();
       JSObject* dataArray = JS_NewArrayObject(aCx, len, NULL);
@@ -226,16 +254,16 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
 
 nsresult
 nsFrameMessageManager::SendAsyncMessageInternal(const nsAString& aMessage,
-                                                const nsAString& aJSON)
+                                                const StructuredCloneData& aData)
 {
   if (mAsyncCallback) {
     NS_ENSURE_TRUE(mCallbackData, NS_ERROR_NOT_INITIALIZED);
-    mAsyncCallback(mCallbackData, aMessage, aJSON);
+    mAsyncCallback(mCallbackData, aMessage, aData);
   }
   PRInt32 len = mChildManagers.Count();
   for (PRInt32 i = 0; i < len; ++i) {
     static_cast<nsFrameMessageManager*>(mChildManagers[i])->
-      SendAsyncMessageInternal(aMessage, aJSON);
+      SendAsyncMessageInternal(aMessage, aData);
   }
   return NS_OK;
 }
@@ -246,11 +274,18 @@ nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
                                         JSContext* aCx,
                                         PRUint8 aArgc)
 {
-  nsString json;
-  if (aArgc >= 2) {
-    GetParamsForMessage(aObject, aCx, json);
+  StructuredCloneData data;
+  JSAutoStructuredCloneBuffer buffer;
+
+  if (aArgc >= 2 &&
+      !GetParamsForMessage(aCx, aObject, buffer, data.mClosure)) {
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
-  return SendAsyncMessageInternal(aMessageName, json);
+
+  data.mData = buffer.data();
+  data.mDataLength = buffer.nbytes();
+
+  return SendAsyncMessageInternal(aMessageName, data);
 }
 
 NS_IMETHODIMP
@@ -342,7 +377,8 @@ public:
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
-                                      bool aSync, const nsAString& aJSON,
+                                      bool aSync,
+                                      const StructuredCloneData* aCloneData,
                                       JSObject* aObjectsArray,
                                       InfallibleTArray<nsString>* aJSONRetVal,
                                       JSContext* aContext)
@@ -402,11 +438,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             return NS_ERROR_UNEXPECTED;
 
         jsval json = JSVAL_NULL;
-        if (!aJSON.IsEmpty()) {
-          if (!JS_ParseJSON(ctx, static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                            aJSON.Length(), &json)) {
-            json = JSVAL_NULL;
-          }
+        if (aCloneData && aCloneData->mDataLength &&
+            !ReadStructuredClone(ctx, *aCloneData, &json)) {
+          JS_ClearPendingException(ctx);
+          return NS_OK;
         }
         JSString* jsMessage =
           JS_NewUCStringCopyN(ctx,
@@ -418,7 +453,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                           STRING_TO_JSVAL(jsMessage), NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "sync",
                           BOOLEAN_TO_JSVAL(aSync), NULL, NULL, JSPROP_ENUMERATE);
-        JS_DefineProperty(ctx, param, "json", json, NULL, NULL, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "json", json, NULL, NULL, JSPROP_ENUMERATE); // deprecated
+        JS_DefineProperty(ctx, param, "data", json, NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "objects", objectsv.jsval_value(), NULL, NULL, JSPROP_ENUMERATE);
 
         jsval thisValue = JSVAL_VOID;
@@ -479,7 +515,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
   }
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
   return mParentManager ? mParentManager->ReceiveMessage(aTarget, aMessage,
-                                                         aSync, aJSON, aObjectsArray,
+                                                         aSync, aCloneData,
+                                                         aObjectsArray,
                                                          aJSONRetVal, mContext) : NS_OK;
 }
 
@@ -888,13 +925,31 @@ nsTArray<nsCOMPtr<nsIRunnable> >* nsFrameMessageManager::sPendingSameProcessAsyn
 
 bool SendAsyncMessageToChildProcess(void* aCallbackData,
                                     const nsAString& aMessage,
-                                    const nsAString& aJSON)
+                                    const StructuredCloneData& aData)
 {
   mozilla::dom::ContentParent* cp =
     static_cast<mozilla::dom::ContentParent*>(aCallbackData);
   NS_WARN_IF_FALSE(cp, "No child process!");
   if (cp) {
-    return cp->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+    ClonedMessageData data;
+    SerializedStructuredCloneBuffer& buffer = data.data();
+    buffer.data = aData.mData;
+    buffer.dataLength = aData.mDataLength;
+    const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
+    if (!blobs.IsEmpty()) {
+      InfallibleTArray<PBlobParent*>& blobParents = data.blobsParent();
+      PRUint32 length = blobs.Length();
+      blobParents.SetCapacity(length);
+      for (PRUint32 i = 0; i < length; ++i) {
+        BlobParent* blobParent = cp->GetOrCreateActorForBlob(blobs[i]);
+        if (!blobParent) {
+          return false;
+  }
+        blobParents.AppendElement(blobParent);
+      }
+    }
+
+    return cp->SendAsyncMessage(nsString(aMessage), data);
   }
   return true;
 }
@@ -902,49 +957,79 @@ bool SendAsyncMessageToChildProcess(void* aCallbackData,
 class nsAsyncMessageToSameProcessChild : public nsRunnable
 {
 public:
-  nsAsyncMessageToSameProcessChild(const nsAString& aMessage, const nsAString& aJSON)
-    : mMessage(aMessage), mJSON(aJSON) {}
+  nsAsyncMessageToSameProcessChild(const nsAString& aMessage,
+                                   const StructuredCloneData& aData)
+    : mMessage(aMessage)
+  {
+    if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
+      NS_RUNTIMEABORT("OOM");
+    }
+    mClosure = aData.mClosure;
+  }
 
   NS_IMETHOD Run()
   {
     if (nsFrameMessageManager::sChildProcessManager) {
+      StructuredCloneData data;
+      data.mData = mData.data();
+      data.mDataLength = mData.nbytes();
+      data.mClosure = mClosure;
+
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sChildProcessManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), mMessage,
-                          false, mJSON, nullptr, nullptr);
+                          false, &data, nullptr, nullptr, nullptr);
     }
     return NS_OK;
   }
   nsString mMessage;
-  nsString mJSON;
+  JSAutoStructuredCloneBuffer mData;
+  StructuredCloneClosure mClosure;
 };
 
 bool SendAsyncMessageToSameProcessChild(void* aCallbackData,
                                         const nsAString& aMessage,
-                                        const nsAString& aJSON)
+                                        const StructuredCloneData& aData)
 {
   nsRefPtr<nsIRunnable> ev =
-    new nsAsyncMessageToSameProcessChild(aMessage, aJSON);
+    new nsAsyncMessageToSameProcessChild(aMessage, aData);
   NS_DispatchToCurrentThread(ev);
   return true;
 }
 
 bool SendSyncMessageToParentProcess(void* aCallbackData,
                                     const nsAString& aMessage,
-                                    const nsAString& aJSON,
+                                    const StructuredCloneData& aData,
                                     InfallibleTArray<nsString>* aJSONRetVal)
 {
   mozilla::dom::ContentChild* cc =
     mozilla::dom::ContentChild::GetSingleton();
   if (cc) {
+    ClonedMessageData data;
+    SerializedStructuredCloneBuffer& buffer = data.data();
+    buffer.data = aData.mData;
+    buffer.dataLength = aData.mDataLength;
+    const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
+    if (!blobs.IsEmpty()) {
+      InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
+      PRUint32 length = blobs.Length();
+      blobChildList.SetCapacity(length);
+      for (PRUint32 i = 0; i < length; ++i) {
+        BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
+        if (!blobChild) {
+          return false;
+        }
+        blobChildList.AppendElement(blobChild);
+      }
+    }
     return
-      cc->SendSyncMessage(nsString(aMessage), nsString(aJSON), aJSONRetVal);
+      cc->SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
   }
   return true;
 }
 
 bool SendSyncMessageToSameProcessParent(void* aCallbackData,
                                         const nsAString& aMessage,
-                                        const nsAString& aJSON,
+                                        const StructuredCloneData& aData,
                                         InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
@@ -959,19 +1044,36 @@ bool SendSyncMessageToSameProcessParent(void* aCallbackData,
   if (nsFrameMessageManager::sSameProcessParentManager) {
     nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), aMessage,
-                        true, aJSON, nullptr, aJSONRetVal);
+                        true, &aData, nullptr, aJSONRetVal);
   }
   return true;
 }
 
 bool SendAsyncMessageToParentProcess(void* aCallbackData,
                                      const nsAString& aMessage,
-                                     const nsAString& aJSON)
+                                          const StructuredCloneData& aData)
 {
   mozilla::dom::ContentChild* cc =
     mozilla::dom::ContentChild::GetSingleton();
   if (cc) {
-    return cc->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+    ClonedMessageData data;
+    SerializedStructuredCloneBuffer& buffer = data.data();
+    buffer.data = aData.mData;
+    buffer.dataLength = aData.mDataLength;
+    const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
+    if (!blobs.IsEmpty()) {
+      InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
+      PRUint32 length = blobs.Length();
+      blobChildList.SetCapacity(length);
+      for (PRUint32 i = 0; i < length; ++i) {
+        BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
+        if (!blobChild) {
+          return false;
+        }
+        blobChildList.AppendElement(blobChild);
+      }
+    }
+    return cc->SendAsyncMessage(nsString(aMessage), data);
   }
   return true;
 }
@@ -979,8 +1081,15 @@ bool SendAsyncMessageToParentProcess(void* aCallbackData,
 class nsAsyncMessageToSameProcessParent : public nsRunnable
 {
 public:
-  nsAsyncMessageToSameProcessParent(const nsAString& aMessage, const nsAString& aJSON)
-    : mMessage(aMessage), mJSON(aJSON) {}
+  nsAsyncMessageToSameProcessParent(const nsAString& aMessage,
+                                         const StructuredCloneData& aData)
+    : mMessage(aMessage)
+  {
+    if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
+      NS_RUNTIMEABORT("OOM");
+    }
+    mClosure = aData.mClosure;
+  }
 
   NS_IMETHOD Run()
   {
@@ -988,25 +1097,32 @@ public:
       nsFrameMessageManager::sPendingSameProcessAsyncMessages->RemoveElement(this);
     }
     if (nsFrameMessageManager::sSameProcessParentManager) {
-      nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
-      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), mMessage, false,
-                          mJSON, nullptr, nullptr);
-    }
-    return NS_OK;
+      StructuredCloneData data;
+      data.mData = mData.data();
+      data.mDataLength = mData.nbytes();
+      data.mClosure = mClosure;
+
+      nsRefPtr<nsFrameMessageManager> ppm =
+        nsFrameMessageManager::sSameProcessParentManager;
+      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+                          mMessage, false, &data, nullptr, nullptr, nullptr);
+     }
+     return NS_OK;
   }
   nsString mMessage;
-  nsString mJSON;
+  JSAutoStructuredCloneBuffer mData;
+  StructuredCloneClosure mClosure;
 };
 
 bool SendAsyncMessageToSameProcessParent(void* aCallbackData,
-                                         const nsAString& aMessage,
-                                         const nsAString& aJSON)
+                                              const nsAString& aMessage,
+                                              const StructuredCloneData& aData)
 {
   if (!nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
     nsFrameMessageManager::sPendingSameProcessAsyncMessages = new nsTArray<nsCOMPtr<nsIRunnable> >;
   }
   nsCOMPtr<nsIRunnable> ev =
-    new nsAsyncMessageToSameProcessParent(aMessage, aJSON);
+    new nsAsyncMessageToSameProcessParent(aMessage, aData);
   nsFrameMessageManager::sPendingSameProcessAsyncMessages->AppendElement(ev);
   NS_DispatchToCurrentThread(ev);
   return true;

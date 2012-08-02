@@ -6,12 +6,13 @@
 
 #include "base/basictypes.h"
 
+#include "ContentParent.h"
+
 #if defined(ANDROID) || defined(LINUX)
 # include <sys/time.h>
 # include <sys/resource.h>
 #endif
 
-#include "ContentParent.h"
 #include "CrashReporterParent.h"
 #include "History.h"
 #include "IDBFactory.h"
@@ -47,12 +48,14 @@
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
 #include "nsIConsoleService.h"
+#include "nsIDOMFile.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMWindow.h"
 #include "nsIFilePicker.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
+#include "nsIRemoteBlob.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
@@ -63,6 +66,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsWidgetsCID.h"
 #include "SandboxHal.h"
+#include "StructuredCloneUtils.h"
 #include "TabParent.h"
 
 #ifdef ANDROID
@@ -827,7 +831,7 @@ ContentParent::Observe(nsISupports* aSubject,
 }
 
 PCompositorParent*
-ContentParent::AllocPCompositor(ipc::Transport* aTransport,
+ContentParent::AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                 base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
@@ -864,6 +868,72 @@ ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
 {
   delete doomed;
   return true;
+}
+
+PBlobParent*
+ContentParent::AllocPBlob(const BlobConstructorParams& aParams)
+{
+  return BlobParent::Create(aParams);
+}
+
+bool
+ContentParent::DeallocPBlob(PBlobParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+BlobParent*
+ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+{
+  NS_ASSERTION(aBlob, "Null pointer!");
+
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
+  if (remoteBlob) {
+    BlobParent* actor =
+      static_cast<BlobParent*>(
+        static_cast<PBlobParent*>(remoteBlob->GetPBlob()));
+    NS_ASSERTION(actor, "Null actor?!");
+
+    return actor;
+  }
+
+  BlobConstructorParams params;
+
+  nsString contentType;
+  nsresult rv = aBlob->GetType(contentType);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  PRUint64 length;
+  rv = aBlob->GetSize(&length);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+  if (file) {
+    FileBlobConstructorParams fileParams;
+
+    rv = file->GetName(fileParams.name());
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    fileParams.contentType() = contentType;
+    fileParams.length() = length;
+
+    params = fileParams;
+  } else {
+    NormalBlobConstructorParams blobParams;
+    blobParams.contentType() = contentType;
+    blobParams.length() = length;
+    params = blobParams;
+  }
+
+  BlobParent* actor = BlobParent::Create(aBlob);
+  NS_ENSURE_TRUE(actor, nullptr);
+
+  if (!SendPBlobConstructor(actor, params)) {
+    return nullptr;
+  }
+
+  return actor;
 }
 
 PCrashReporterParent*
@@ -930,7 +1000,7 @@ ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
   }
 
   nsRefPtr<IDBFactory> factory;
-  nsresult rv = IDBFactory::Create(getter_AddRefs(factory));
+  nsresult rv = IDBFactory::Create(this, getter_AddRefs(factory));
   NS_ENSURE_SUCCESS(rv, false);
 
   NS_ASSERTION(factory, "This should never be null!");
@@ -1291,24 +1361,59 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
 }
 
 bool
-ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
+ContentParent::RecvSyncMessage(const nsString& aMsg,
+                               const ClonedMessageData& aData,
                                InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
+    const SerializedStructuredCloneBuffer& buffer = aData.data();
+    const InfallibleTArray<PBlobParent*>& blobParents = aData.blobsParent();
+    StructuredCloneData cloneData;
+    cloneData.mData = buffer.data;
+    cloneData.mDataLength = buffer.dataLength;
+    if (!blobParents.IsEmpty()) {
+      PRUint32 length = blobParents.Length();
+      cloneData.mClosure.mBlobs.SetCapacity(length);
+      for (PRUint32 index = 0; index < length; index++) {
+        BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
+        MOZ_ASSERT(blobParent);
+        nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
+        MOZ_ASSERT(blob);
+        cloneData.mClosure.mBlobs.AppendElement(blob);
+  }
+    }
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg,true, aJSON, nullptr, aRetvals);
+                        aMsg, true, &cloneData, nullptr, aRetvals);
   }
   return true;
 }
 
 bool
-ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
+ContentParent::RecvAsyncMessage(const nsString& aMsg,
+                                      const ClonedMessageData& aData)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
+    const SerializedStructuredCloneBuffer& buffer = aData.data();
+    const InfallibleTArray<PBlobParent*>& blobParents = aData.blobsParent();
+    StructuredCloneData cloneData;
+    cloneData.mData = buffer.data;
+    cloneData.mDataLength = buffer.dataLength;
+    if (!blobParents.IsEmpty()) {
+      PRUint32 length = blobParents.Length();
+      cloneData.mClosure.mBlobs.SetCapacity(length);
+      for (PRUint32 index = 0; index < length; index++) {
+        BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
+        MOZ_ASSERT(blobParent);
+        nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
+        MOZ_ASSERT(blob);
+        cloneData.mClosure.mBlobs.AppendElement(blob);
+      }
+    }
+
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, aJSON, nullptr, nullptr);
+                        aMsg, false, &cloneData, nullptr, nullptr);
   }
   return true;
 }
