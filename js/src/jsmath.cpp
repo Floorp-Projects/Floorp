@@ -692,7 +692,6 @@ JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj_)
 {
     RootedObject obj(cx, obj_);
-
     RootedObject Math(cx, NewObjectWithClassProto(cx, &MathClass, NULL, obj));
     if (!Math || !Math->setSingletonType(cx))
         return NULL;

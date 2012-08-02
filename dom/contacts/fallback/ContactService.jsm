@@ -40,16 +40,6 @@ let DOMContactManager = {
     this._db.init(myGlobal);
 
     Services.obs.addObserver(this, "profile-before-change", false);
-
-    try {
-      let hosts = Services.prefs.getCharPref("dom.mozContacts.whitelist")
-      hosts.split(",").forEach(function(aHost) {
-        debug("Add host: " + JSON.stringify(aHost));
-        if (aHost.length > 0)
-          Services.perms.add(Services.io.newURI(aHost, null, null), "webcontacts-manage",
-                             Ci.nsIPermissionManager.ALLOW_ACTION);
-      });
-    } catch(e) { debug(e); }
   },
 
   observe: function(aSubject, aTopic, aData) {

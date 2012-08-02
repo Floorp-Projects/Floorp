@@ -13,10 +13,11 @@
 
 BEGIN_TEST(test_cloneScript)
 {
-    JSObject *A, *B;
+    JS::RootedObject A(cx, createGlobal());
+    JS::RootedObject B(cx, createGlobal());
 
-    CHECK(A = createGlobal());
-    CHECK(B = createGlobal());
+    CHECK(A);
+    CHECK(B);
 
     const char *source =
         "var i = 0;\n"
@@ -27,7 +28,7 @@ BEGIN_TEST(test_cloneScript)
         "}\n"
         "(sum);\n";
 
-    JSObject *obj;
+    JS::RootedObject obj(cx);
 
     // compile for A
     {
@@ -95,15 +96,16 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     JSPrincipals *principalsB = new Principals();
     AutoDropPrincipals dropB(rt, principalsB);
 
-    JSObject *A, *B;
+    JS::RootedObject A(cx, createGlobal(principalsA));
+    JS::RootedObject B(cx, createGlobal(principalsB));
 
-    CHECK(A = createGlobal(principalsA));
-    CHECK(B = createGlobal(principalsB));
+    CHECK(A);
+    CHECK(B);
 
     const char *argnames[] = { "arg" };
     const char *source = "return function() { return arg; }";
 
-    JSObject *obj;
+    JS::RootedObject obj(cx);
 
     // Compile in A
     {
@@ -129,7 +131,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         if (!b.enter(cx, B))
             return false;
 
-        JSObject *cloned;
+        JS::RootedObject cloned(cx);
         CHECK(cloned = JS_CloneFunctionObject(cx, obj, B));
 
         JSFunction *fun;

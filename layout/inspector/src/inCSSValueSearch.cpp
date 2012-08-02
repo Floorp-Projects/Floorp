@@ -16,6 +16,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
+#include "nsIDOMCSSSupportsRule.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
@@ -315,6 +316,12 @@ inCSSValueSearch::SearchRuleList(nsIDOMCSSRuleList* aRuleList, nsIURI* aBaseURL)
         nsCOMPtr<nsIDOMCSSMediaRule> mediaRule = do_QueryInterface(rule);
         nsCOMPtr<nsIDOMCSSRuleList> childRules;
         mediaRule->GetCssRules(getter_AddRefs(childRules));
+        SearchRuleList(childRules, aBaseURL);
+      } break;
+      case nsIDOMCSSRule::SUPPORTS_RULE: {
+        nsCOMPtr<nsIDOMCSSSupportsRule> supportsRule = do_QueryInterface(rule);
+        nsCOMPtr<nsIDOMCSSRuleList> childRules;
+        supportsRule->GetCssRules(getter_AddRefs(childRules));
         SearchRuleList(childRules, aBaseURL);
       } break;
       default:

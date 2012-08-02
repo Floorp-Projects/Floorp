@@ -131,7 +131,7 @@ class EvalScriptGuard
         return !!script_;
     }
 
-    JSScript *script() const {
+    HandleScript script() {
         JS_ASSERT(script_);
         return script_;
     }

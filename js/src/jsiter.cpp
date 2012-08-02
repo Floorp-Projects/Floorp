@@ -205,7 +205,7 @@ struct SortComparatorIds
 #endif /* JS_MORE_DETERMINISTIC */
 
 static bool
-Snapshot(JSContext *cx, JSObject *obj_, unsigned flags, AutoIdVector *props)
+Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
 {
     IdSet ht(cx);
     if (!ht.init(32))
@@ -298,7 +298,7 @@ Snapshot(JSContext *cx, JSObject *obj_, unsigned flags, AutoIdVector *props)
     size_t n = props->length();
 
     AutoIdVector tmp(cx);
-    if (!tmp.resizeUninitialized(n))
+    if (!tmp.resize(n))
         return false;
 
     if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx)))
@@ -979,7 +979,7 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
          * standard.
          */
         if (flags & JSITER_ENUMERATE) {
-            if (!js_ValueToObjectOrNull(cx, vp, obj.address()))
+            if (!js_ValueToObjectOrNull(cx, vp, &obj))
                 return false;
             /* fall through */
         } else {

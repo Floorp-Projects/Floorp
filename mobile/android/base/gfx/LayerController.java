@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -14,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 
 /**
@@ -64,9 +66,9 @@ public class LayerController {
 
     public LayerController(Context context) {
         mContext = context;
-
         mForceRedraw = true;
-        mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics());
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics(displayMetrics));
         mPanZoomController = new PanZoomController(this);
         mCheckerboardShouldShowChecks = true;
     }

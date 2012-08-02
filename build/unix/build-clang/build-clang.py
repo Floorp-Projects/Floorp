@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "160364"
+llvm_revision = "161022"
 moz_version = "moz0"
 
 ##############################################
@@ -86,6 +86,8 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     build_package(llvm_source_dir, build_dir, configure_opts)
 
 isDarwin = platform.system() == "Darwin"
+if isDarwin:
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
 
 if not os.path.exists(source_dir):
     os.makedirs(source_dir)

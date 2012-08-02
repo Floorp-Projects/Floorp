@@ -122,13 +122,15 @@ xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, J
 inline JSBool
 xpc_qsInt64ToJsval(JSContext *cx, PRInt64 i, jsval *rv)
 {
-    return JS_NewNumberValue(cx, static_cast<double>(i), rv);
+    *rv = JS_NumberValue(static_cast<double>(i));
+    return true;
 }
 
 inline JSBool
 xpc_qsUint64ToJsval(JSContext *cx, PRUint64 u, jsval *rv)
 {
-    return JS_NewNumberValue(cx, static_cast<double>(u), rv);
+    *rv = JS_NumberValue(static_cast<double>(u));
+    return true;
 }
 
 

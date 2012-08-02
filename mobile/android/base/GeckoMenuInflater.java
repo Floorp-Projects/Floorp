@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.IOException;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -19,6 +17,8 @@ import android.view.InflateException;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import java.io.IOException;
 
 public class GeckoMenuInflater extends MenuInflater 
                                implements MenuItem.OnMenuItemClickListener {

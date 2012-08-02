@@ -19,6 +19,7 @@
 #include "nsTraceRefcntImpl.h"
 #include "nsIWebProgress.h"
 #include "prenv.h"
+#include "nsIDocShellTreeItem.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
