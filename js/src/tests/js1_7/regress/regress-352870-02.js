@@ -21,7 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = /TypeError: \[1, 2, 3, 4\].g (has no properties|is undefined)/;
+  expect = /TypeError: .+\.g (has no properties|is undefined)/;
   actual = '';
   try
   {

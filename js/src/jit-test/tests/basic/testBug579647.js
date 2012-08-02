@@ -5,7 +5,7 @@ try {
     a = ""
     for each(x in [0, 0, 0, 0]) {
         a %= x
-    } ( - a)()
+    } ( let (a=-a) a)()
 } catch (e) {
     actual = '' + e;
 }
