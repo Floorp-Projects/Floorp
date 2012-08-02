@@ -23,6 +23,7 @@ MOZGLUE_JAVA_FILES := \
 UTIL_JAVA_FILES := \
   ActivityResultHandler.java \
   ActivityResultHandlerMap.java \
+  GeckoBackgroundThread.java \
   GeckoJarReader.java \
   INIParser.java \
   INISection.java \
@@ -66,7 +67,6 @@ FENNEC_JAVA_FILES = \
   GeckoAppShell.java \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
-  GeckoBackgroundThread.java \
   GeckoConnectivityReceiver.java \
   GeckoEvent.java \
   GeckoEventListener.java \
