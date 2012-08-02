@@ -30,43 +30,43 @@ storage = navigator.getDeviceStorage("testing");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate();
+var cursor = storage.enumerate();
 } catch(e) {throws = true}
 ok(!throws, "enumerate no parameter");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate("string");
+var cursor = storage.enumerate("string");
 } catch(e) {throws = true}
 ok(!throws, "enumerate one string parameter");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate("string", "string2");
+var cursor = storage.enumerate("string", "string2");
 } catch(e) {throws = true}
 ok(throws, "enumerate two string parameter");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate("string", {"since": 1});
+var cursor = storage.enumerate("string", {"since": 1});
 } catch(e) {throws = true}
 ok(!throws, "enumerate a string and object parameter");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate({"path": "a"});
+var cursor = storage.enumerate({"path": "a"});
 } catch(e) {throws = true}
 ok(!throws, "enumerate object parameter with path");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate({}, "string");
+var cursor = storage.enumerate({}, "string");
 } catch(e) {throws = true}
 ok(throws, "enumerate object then a string");
 
 throws = false;
 try {
-var cursor = storage[0].enumerate({"path": "a", "since": 0});
+var cursor = storage.enumerate({"path": "a", "since": 0});
 } catch(e) {throws = true}
 ok(!throws, "enumerate object parameter with path");
 

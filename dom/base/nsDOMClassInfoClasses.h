@@ -193,6 +193,7 @@ DOMCI_CLASS(TreeColumns)
 #endif
 
 DOMCI_CLASS(CSSMozDocumentRule)
+DOMCI_CLASS(CSSSupportsRule)
 
 DOMCI_CLASS(BeforeUnloadEvent)
 
@@ -384,6 +385,7 @@ DOMCI_CLASS(DataContainerEvent)
 DOMCI_CLASS(MessageEvent)
 
 DOMCI_CLASS(DeviceStorage)
+DOMCI_CLASS(DeviceStorageChangeEvent)
 DOMCI_CLASS(DeviceStorageCursor)
 
 // Geolocation

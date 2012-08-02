@@ -12,6 +12,7 @@
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
@@ -21,8 +22,12 @@
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
 
 class nsFrameMessageManager;
+class nsIDOMBlob;
+
 namespace mozilla {
 
 namespace ipc {
@@ -37,6 +42,7 @@ namespace dom {
 
 class TabParent;
 class PStorageParent;
+class ClonedMessageData;
 
 class ContentParent : public PContentParent
                     , public nsIObserver
@@ -47,6 +53,7 @@ private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::layers::PCompositorParent PCompositorParent;
+    typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
     static ContentParent* GetNewOrUsed();
@@ -97,6 +104,8 @@ public:
         return mSendPermissionUpdates;
     }
 
+    BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
+
 protected:
     void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -130,7 +139,7 @@ private:
      */
     void ShutDown();
 
-    PCompositorParent* AllocPCompositor(ipc::Transport* aTransport,
+    PCompositorParent* AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                         base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserElement, const PRUint32& aAppId);
@@ -138,6 +147,9 @@ private:
 
     virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);
     virtual bool DeallocPDeviceStorageRequest(PDeviceStorageRequestParent*);
+
+    virtual PBlobParent* AllocPBlob(const BlobConstructorParams& aParams);
+    virtual bool DeallocPBlob(PBlobParent*);
 
     virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
                                                       const PRUint32& processType);
@@ -226,9 +238,11 @@ private:
 
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);
 
-    virtual bool RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
+    virtual bool RecvSyncMessage(const nsString& aMsg,
+                                 const ClonedMessageData& aData,
                                  InfallibleTArray<nsString>* aRetvals);
-    virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
+    virtual bool RecvAsyncMessage(const nsString& aMsg,
+                                  const ClonedMessageData& aData);
 
     virtual bool RecvAddGeolocationListener();
     virtual bool RecvRemoveGeolocationListener();
@@ -243,6 +257,10 @@ private:
                                  const nsCString& aCategory);
 
     virtual bool RecvPrivateDocShellsExist(const bool& aExist);
+
+    virtual bool RecvAddFileWatch(const nsString& root);
+    virtual bool RecvRemoveFileWatch(const nsString& root);
+
     GeckoChildProcessHost* mSubprocess;
 
     PRInt32 mGeolocationWatchID;
@@ -260,6 +278,34 @@ private:
 
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
+
+    class WatchedFile : public nsIFileUpdateListener {
+      public:
+        WatchedFile(ContentParent* aParent, const nsString& aPath)
+          : mParent(aParent)
+          , mUsageCount(1)
+        {
+          NS_NewLocalFile(aPath, false, getter_AddRefs(mFile));
+        }
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIFILEUPDATELISTENER
+
+        void Watch() {
+          mFile->Watch(this);
+        }
+
+        void Unwatch() {
+          mFile->Watch(this);
+        }
+
+        nsRefPtr<ContentParent> mParent;
+        PRInt32 mUsageCount;
+        nsCOMPtr<nsIFile> mFile;
+    };
+
+    // This is a cache of all of the registered file watchers.
+    nsInterfaceHashtable<nsStringHashKey, WatchedFile> mFileWatchers;
 
     friend class CrashReporterParent;
 };

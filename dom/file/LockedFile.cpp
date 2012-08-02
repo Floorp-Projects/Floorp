@@ -516,10 +516,9 @@ LockedFile::GetLocation(JSContext* aCx,
   if (mLocation == LL_MAXUINT) {
     *aLocation = JSVAL_NULL;
   }
-  else if (!JS_NewNumberValue(aCx, double(mLocation), aLocation)) {
-    return NS_ERROR_FAILURE;
+  else {
+    *aLocation = JS_NumberValue(double(mLocation));
   }
-
   return NS_OK;
 }
 

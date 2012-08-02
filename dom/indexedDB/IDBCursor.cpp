@@ -749,7 +749,7 @@ IDBCursor::Advance(PRInt64 aCount)
   }
 
   Key key;
-  return ContinueInternal(key, aCount);
+  return ContinueInternal(key, PRInt32(aCount));
 }
 
 void
@@ -876,9 +876,26 @@ ContinueHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Success_NotSent;
   }
 
-  if (!mCloneReadInfo.mFileInfos.IsEmpty()) {
-    NS_WARNING("No support for transferring blobs across processes yet!");
-    return Error;
+  InfallibleTArray<PBlobParent*> blobsParent;
+
+  if (NS_SUCCEEDED(aResultCode)) {
+    IDBDatabase* database = mTransaction->Database();
+    NS_ASSERTION(database, "This should never be null!");
+
+    ContentParent* contentParent = database->GetContentParent();
+    NS_ASSERTION(contentParent, "This should never be null!");
+
+    FileManager* fileManager = database->Manager();
+    NS_ASSERTION(fileManager, "This should never be null!");
+
+    const nsTArray<StructuredCloneFile>& files = mCloneReadInfo.mFiles;
+
+    aResultCode =
+      IDBObjectStore::ConvertBlobsToActors(contentParent, fileManager, files,
+                                           blobsParent);
+    if (NS_FAILED(aResultCode)) {
+      NS_WARNING("ConvertBlobsToActors failed!");
+    }
   }
 
   ResponseValue response;
@@ -890,6 +907,7 @@ ContinueHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     continueResponse.key() = mKey;
     continueResponse.objectKey() = mObjectKey;
     continueResponse.cloneInfo() = mCloneReadInfo;
+    continueResponse.blobsParent().SwapElements(blobsParent);
     response = continueResponse;
   }
 
@@ -925,6 +943,8 @@ ContinueHelper::UnpackResponseFromParentProcess(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  IDBObjectStore::ConvertActorsToBlobs(response.blobsChild(),
+                                       mCloneReadInfo.mFiles);
   return NS_OK;
 }
 

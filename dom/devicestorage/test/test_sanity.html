@@ -41,7 +41,7 @@ ok(!storage, "kilimanjaro - Should not have this type of storage");
 storage = navigator.getDeviceStorage("testing");
 ok(storage, "testing - Should have getDeviceStorage");
 
-var cursor = storage[0].enumerate();
+var cursor = storage.enumerate();
 ok(cursor, "Should have a non-null cursor");
 
 devicestorage_cleanup();

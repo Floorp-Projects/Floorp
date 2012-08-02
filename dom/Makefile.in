@@ -16,9 +16,9 @@ DIRS = \
   interfaces/base \
   interfaces/canvas \
   interfaces/core \
-  interfaces/devicestorage \
   interfaces/html \
   interfaces/events \
+  interfaces/devicestorage \
   interfaces/contacts \
   interfaces/settings \
   interfaces/stylesheets \
