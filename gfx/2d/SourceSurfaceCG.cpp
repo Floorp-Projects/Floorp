@@ -6,6 +6,8 @@
 #include "SourceSurfaceCG.h"
 #include "DrawTargetCG.h"
 
+#include "QuartzSupport.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -285,6 +287,8 @@ SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTa
 {
   mDrawTarget = aDrawTarget;
   mCg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT);
+  if (!mCg)
+    abort();
 
   mSize.width = CGBitmapContextGetWidth(mCg);
   mSize.height = CGBitmapContextGetHeight(mCg);
@@ -296,7 +300,7 @@ SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTa
 
 void SourceSurfaceCGBitmapContext::EnsureImage() const
 {
-  // Instaed of using CGBitmapContextCreateImage we create
+  // Instead of using CGBitmapContextCreateImage we create
   // a CGImage around the data associated with the CGBitmapContext
   // we do this to avoid the vm_copy that CGBitmapContextCreateImage.
   // vm_copy tends to cause all sorts of unexpected performance problems
@@ -325,6 +329,8 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
           // the dataProvider
           info = mData;
       }
+
+      if (!mData) abort();
 
       dataProvider = CGDataProviderCreateWithData (info,
                                                    mData,
@@ -387,6 +393,103 @@ SourceSurfaceCGBitmapContext::~SourceSurfaceCGBitmapContext()
   }
   if (mImage)
     CGImageRelease(mImage);
+}
+
+SourceSurfaceCGIOSurfaceContext::SourceSurfaceCGIOSurfaceContext(DrawTargetCG *aDrawTarget)
+{
+  CGContextRef cg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT_ACCELERATED);
+
+  RefPtr<MacIOSurface> surf = MacIOSurface::IOSurfaceContextGetSurface(cg);
+
+  mSize.width = surf->GetWidth();
+  mSize.height = surf->GetHeight();
+
+  // TODO use CreateImageFromIOSurfaceContext instead of reading back the surface
+  //mImage = MacIOSurface::CreateImageFromIOSurfaceContext(cg);
+  mImage = NULL;
+
+  aDrawTarget->Flush();
+  surf->Lock();
+  size_t bytesPerRow = surf->GetBytesPerRow();
+  size_t ioHeight = surf->GetHeight();
+  void* ioData = surf->GetBaseAddress();
+  // XXX If the width is much less then the stride maybe
+  //     we should repack the image?
+  mData = malloc(ioHeight*bytesPerRow);
+  memcpy(mData, ioData, ioHeight*(bytesPerRow));
+  mStride = bytesPerRow;
+  surf->Unlock();
+}
+
+void SourceSurfaceCGIOSurfaceContext::EnsureImage() const
+{
+  // TODO Use CreateImageFromIOSurfaceContext and remove this
+
+  // Instead of using CGBitmapContextCreateImage we create
+  // a CGImage around the data associated with the CGBitmapContext
+  // we do this to avoid the vm_copy that CGBitmapContextCreateImage.
+  // vm_copy tends to cause all sorts of unexpected performance problems
+  // because of the mm tricks that vm_copy does. Using a regular
+  // memcpy when the bitmap context is modified gives us more predictable
+  // performance characteristics.
+  if (!mImage) {
+      //XXX: we should avoid creating this colorspace everytime
+      CGColorSpaceRef colorSpace = NULL;
+      CGBitmapInfo bitinfo = 0;
+      CGDataProviderRef dataProvider = NULL;
+      int bitsPerComponent = 8;
+      int bitsPerPixel = 32;
+
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+
+      void *info = mData;
+
+      dataProvider = CGDataProviderCreateWithData (info,
+                                                   mData,
+                                                   mSize.height * mStride,
+                                                   releaseCallback);
+
+      mImage = CGImageCreate (mSize.width, mSize.height,
+                              bitsPerComponent,
+                              bitsPerPixel,
+                              mStride,
+                              colorSpace,
+                              bitinfo,
+                              dataProvider,
+                              NULL,
+                              true,
+                              kCGRenderingIntentDefault);
+
+      CGDataProviderRelease(dataProvider);
+      CGColorSpaceRelease (colorSpace);
+  }
+
+}
+
+IntSize
+SourceSurfaceCGIOSurfaceContext::GetSize() const
+{
+  return mSize;
+}
+
+void
+SourceSurfaceCGIOSurfaceContext::DrawTargetWillChange()
+{
+}
+
+SourceSurfaceCGIOSurfaceContext::~SourceSurfaceCGIOSurfaceContext()
+{
+  if (mImage)
+    CGImageRelease(mImage);
+  else
+    free(mData);
+}
+
+unsigned char*
+SourceSurfaceCGIOSurfaceContext::GetData()
+{
+  return (unsigned char*)mData;
 }
 
 }

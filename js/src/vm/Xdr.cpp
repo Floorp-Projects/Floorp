@@ -118,10 +118,10 @@ VersionCheck(XDRState<mode> *xdr)
 
 template<XDRMode mode>
 bool
-XDRState<mode>::codeFunction(JSObject **objp)
+XDRState<mode>::codeFunction(JSMutableHandleObject objp)
 {
     if (mode == XDR_DECODE)
-        *objp = NULL;
+        objp.set(NULL);
 
     if (!VersionCheck(this))
         return false;

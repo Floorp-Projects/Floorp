@@ -100,9 +100,10 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
     static const unsigned FLAGS                   = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned DEBUGGERS               = FLAGS + 1;
+    static const unsigned INTRINSICS              = DEBUGGERS + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = DEBUGGERS + 1;
+    static const unsigned RESERVED_SLOTS = INTRINSICS + 1;
 
     void staticAsserts() {
         /*
@@ -134,6 +135,8 @@ class GlobalObject : public JSObject
     inline void setThrowTypeError(JSFunction *fun);
     inline void setOriginalEval(JSObject *evalobj);
     inline void setProtoGetter(JSFunction *protoGetter);
+
+    inline void setIntrinsicsHolder(JSObject *obj);
 
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
@@ -253,7 +256,7 @@ class GlobalObject : public JSObject
         if (arrayClassInitialized())
             return &getPrototype(JSProto_Array).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitArrayClass(cx, this))
+        if (!js_InitArrayClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Array).toObject();
     }
@@ -262,7 +265,7 @@ class GlobalObject : public JSObject
         if (booleanClassInitialized())
             return &getPrototype(JSProto_Boolean).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitBooleanClass(cx, this))
+        if (!js_InitBooleanClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Boolean).toObject();
     }
@@ -271,7 +274,7 @@ class GlobalObject : public JSObject
         if (numberClassInitialized())
             return &getPrototype(JSProto_Number).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitNumberClass(cx, this))
+        if (!js_InitNumberClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Number).toObject();
     }
@@ -280,7 +283,7 @@ class GlobalObject : public JSObject
         if (stringClassInitialized())
             return &getPrototype(JSProto_String).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitStringClass(cx, this))
+        if (!js_InitStringClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_String).toObject();
     }
@@ -289,7 +292,7 @@ class GlobalObject : public JSObject
         if (regexpClassInitialized())
             return &getPrototype(JSProto_RegExp).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitRegExpClass(cx, this))
+        if (!js_InitRegExpClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_RegExp).toObject();
     }
@@ -298,7 +301,7 @@ class GlobalObject : public JSObject
         if (arrayBufferClassInitialized())
             return &getPrototype(JSProto_ArrayBuffer).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, this))
+        if (!js_InitTypedArrayClasses(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
@@ -308,7 +311,7 @@ class GlobalObject : public JSObject
         if (errorClassesInitialized())
             return &getPrototype(key).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitExceptionClasses(cx, this))
+        if (!js_InitExceptionClasses(cx, self))
             return NULL;
         return &self->getPrototype(key).toObject();
     }
@@ -355,9 +358,23 @@ class GlobalObject : public JSObject
         if (dataViewClassInitialized())
             return &getPrototype(JSProto_DataView).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, this))
+        if (!js_InitTypedArrayClasses(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_DataView).toObject();
+    }
+
+    bool hasIntrinsicFunction(JSContext *cx, PropertyName *name) {
+        RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
+        Value fun = NullValue();
+        return HasDataProperty(cx, holder, NameToId(name), &fun);
+    }
+
+    JSFunction *getIntrinsicFunction(JSContext *cx, PropertyName *name) {
+        RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
+        Value fun = NullValue();
+        DebugOnly<bool> ok = HasDataProperty(cx, holder, NameToId(name), &fun);
+        JS_ASSERT(ok);
+        return fun.toObject().toFunction();
     }
 
     inline RegExpStatics *getRegExpStatics() const;
@@ -449,7 +466,7 @@ typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy
 inline bool
 JSObject::isGlobal() const
 {
-    return !!(js::GetObjectClass(this)->flags & JSCLASS_IS_GLOBAL);
+    return !!(js::GetObjectClass(const_cast<JSObject*>(this))->flags & JSCLASS_IS_GLOBAL);
 }
 
 js::GlobalObject &

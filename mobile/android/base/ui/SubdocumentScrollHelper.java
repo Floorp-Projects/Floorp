@@ -8,8 +8,10 @@ package org.mozilla.gecko.ui;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventListener;
-import org.json.JSONObject;
+
 import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.graphics.PointF;
 import android.os.Handler;
 import android.util.Log;

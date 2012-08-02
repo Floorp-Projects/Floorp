@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.view.SurfaceHolder;
-
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGL11;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -169,8 +167,8 @@ public class GLController {
             initEGL();
         }
 
-        SurfaceHolder surfaceHolder = mView.getHolder();
-        EGLSurface surface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, surfaceHolder, null);
+        Object window = mView.getNativeWindow();
+        EGLSurface surface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, window, null);
         if (surface == null || surface == EGL10.EGL_NO_SURFACE) {
             throw new GLControllerException("EGL window surface could not be created! " +
                                             getEGLError());

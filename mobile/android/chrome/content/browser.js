@@ -3226,8 +3226,6 @@ Tab.prototype = {
   ])
 };
 
-const kTapHighlightDelay = 50; // milliseconds
-
 var BrowserEventHandler = {
   init: function init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
@@ -3465,42 +3463,22 @@ var BrowserEventHandler = {
 
   _highlightElement: null,
 
-  _highlightTimeout: null,
-
   _doTapHighlight: function _doTapHighlight(aElement) {
-    this._cancelTapHighlight();
-    this._highlightTimeout = setTimeout(function(self) {
-      // If aElement is from a dead window, defaultView will be null.
-      if (!aElement.ownerDocument.defaultView)
-        return;
-
-      DOMUtils.setContentState(aElement, kStateActive);
-      self._highlightElement = aElement;
-    }, kTapHighlightDelay, this);
+    DOMUtils.setContentState(aElement, kStateActive);
+    this._highlightElement = aElement;
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
-    if (this._highlightTimeout) {
-      clearTimeout(this._highlightTimeout);
-      this._highlightTimeout = null;
-    }
-
     if (!this._highlightElement)
-      return;
-
-    let ownerDocument = this._highlightElement.ownerDocument;
-    this._highlightElement = null;
-
-    // If _highlightElement is from a dead window, defaultView will be null.
-    if (!ownerDocument.defaultView)
       return;
 
     // If the active element is in a sub-frame, we need to make that frame's document
     // active to remove the element's active state.
-    if (ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
-      DOMUtils.setContentState(ownerDocument.documentElement, kStateActive);
+    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
 
     DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+    this._highlightElement = null;
   },
 
   _updateLastPosition: function(x, y, dx, dy) {
@@ -5912,6 +5890,12 @@ var WebappsUI = {
             return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
+          // The manifest is stored as UTF-8, sendMessageToJava expects UTF-16. Convert before sending
+          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+          converter.charset = "UTF-8";
+          let name = manifest.name ? converter.ConvertToUnicode(manifest.name) :
+                                     converter.ConvertToUnicode(manifest.fullLaunchPath());
+
           // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
           // a unique ID for Android webapp allocation
           this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(data.origin, null, null)),
@@ -5919,7 +5903,7 @@ var WebappsUI = {
                                 sendMessageToJava({
                                   gecko: {
                                     type: "WebApps:Install",
-                                    name: manifest.name,
+                                    name: name,
                                     launchPath: manifest.fullLaunchPath(),
                                     iconURL: icon,
                                     uniqueURI: data.origin

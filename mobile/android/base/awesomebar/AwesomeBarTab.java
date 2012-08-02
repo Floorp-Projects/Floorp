@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
@@ -13,17 +16,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.ImageView;
-import android.widget.TabHost.TabContentFactory;
-import android.view.inputmethod.InputMethodManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
+import android.widget.TabHost.TabContentFactory;
+import android.widget.TextView;
 
 abstract public class AwesomeBarTab {
     abstract public String getTag();

@@ -25,6 +25,15 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothSignal;
 typedef mozilla::Observer<BluetoothSignal> BluetoothSignalObserver;
 
+// Enums for object types, currently used for shared function lookups
+// (get/setproperty, etc...). Possibly discernable via dbus paths, but this
+// method is future-proofed for platform independence.
+enum BluetoothObjectType {
+  TYPE_MANAGER = 0,
+  TYPE_ADAPTER = 1,
+  TYPE_DEVICE = 2 
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_bluetoothcommon_h__

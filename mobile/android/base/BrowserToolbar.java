@@ -5,10 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
@@ -19,23 +15,27 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.animation.TranslateAnimation;
-import android.view.inputmethod.InputMethodManager;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.TranslateAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.TextSwitcher;
+import android.widget.TextView;
 import android.widget.ViewSwitcher;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Tabs.OnTabsChangedListener,

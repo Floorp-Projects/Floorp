@@ -5,10 +5,13 @@
 
 package org.mozilla.gecko.ui;
 
-import java.util.Map;
-import android.util.Log;
+import org.mozilla.gecko.util.FloatUtils;
+
 import org.json.JSONArray;
-import org.mozilla.gecko.FloatUtils;
+
+import android.util.Log;
+
+import java.util.Map;
 
 /**
  * This class represents the physics for one axis of movement (i.e. either

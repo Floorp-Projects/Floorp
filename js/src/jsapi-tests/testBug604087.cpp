@@ -27,60 +27,66 @@ OuterWrapper
 OuterWrapper::singleton;
 
 static JSObject *
-wrap(JSContext *cx, JSObject *toWrap, JSObject *target)
+wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
 {
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, target))
         return NULL;
 
-    JSObject *wrapper = toWrap;
-    if (!JS_WrapObject(cx, &wrapper))
+    JS::RootedObject wrapper(cx, toWrap);
+    if (!JS_WrapObject(cx, wrapper.address()))
         return NULL;
     return wrapper;
 }
 
 static JSObject *
-SameCompartmentWrap(JSContext *cx, JSObject *obj)
+SameCompartmentWrap(JSContext *cx, JSObject *objArg)
 {
+    JS::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
 
 static JSObject *
-PreWrap(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags)
+PreWrap(JSContext *cx, JSObject *scopeArg, JSObject *objArg, unsigned flags)
 {
+    JS::RootedObject scope(cx, scopeArg);
+    JS::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
 
 static JSObject *
-Wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, unsigned flags)
+Wrap(JSContext *cx, JSObject *objArg, JSObject *protoArg, JSObject *parentArg, unsigned flags)
 {
+    JS::RootedObject obj(cx, objArg);
+    JS::RootedObject proto(cx, protoArg);
+    JS::RootedObject parent(cx, parentArg);
     return js::Wrapper::New(cx, obj, proto, parent, &js::CrossCompartmentWrapper::singleton);
 }
 
 BEGIN_TEST(testBug604087)
 {
-    JSObject *outerObj = js::Wrapper::New(cx, global, global->getProto(), global,
-                                          &OuterWrapper::singleton);
-    JSObject *compartment2 = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
-    JSObject *compartment3 = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
-    JSObject *compartment4 = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
+    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
+                                               &OuterWrapper::singleton));
+    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
 
-    JSObject *c2wrapper = wrap(cx, outerObj, compartment2);
+    JS::RootedObject c2wrapper(cx, wrap(cx, outerObj, compartment2));
     CHECK(c2wrapper);
     js::SetProxyExtra(c2wrapper, 0, js::Int32Value(2));
 
-    JSObject *c3wrapper = wrap(cx, outerObj, compartment3);
+    JS::RootedObject c3wrapper(cx, wrap(cx, outerObj, compartment3));
     CHECK(c3wrapper);
     js::SetProxyExtra(c3wrapper, 0, js::Int32Value(3));
 
-    JSObject *c4wrapper = wrap(cx, outerObj, compartment4);
+    JS::RootedObject c4wrapper(cx, wrap(cx, outerObj, compartment4));
     CHECK(c4wrapper);
     js::SetProxyExtra(c4wrapper, 0, js::Int32Value(4));
     compartment4 = c4wrapper = NULL;
 
-    JSObject *next;
+    JS::RootedObject next(cx);
     {
         JSAutoEnterCompartment ac;
         CHECK(ac.enter(cx, compartment2));

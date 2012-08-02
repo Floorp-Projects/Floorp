@@ -231,7 +231,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
                              "WeakMap.set", "0", "s");
         return false;
     }
-    JSObject *key = GetKeyArg(cx, args);
+    RootedObject key(cx, GetKeyArg(cx, args));
     if (!key)
         return false;
 
@@ -286,9 +286,9 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
     ObjectValueMap *map = GetObjectMap(obj);
     if (map) {
         for (ObjectValueMap::Range r = map->nondeterministicAll(); !r.empty(); r.popFront()) {
-            JSObject *key = r.front().key;
+            RootedObject key(cx, r.front().key);
             // Re-wrapping the key (see comment of GetKeyArg)
-            if (!JS_WrapObject(cx, &key))
+            if (!JS_WrapObject(cx, key.address()))
                 return false;
 
             if (!js_NewbornArrayPush(cx, arr, ObjectValue(*key)))

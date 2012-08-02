@@ -19,5 +19,8 @@
  * be replaced with a string value when the error is reported.
  */
 
-MSG_DEF(MSG_INVALID_ENUM_VALUE, 2, "Value '{0}' is not a valid value for enumeration '{1}'.")
+MSG_DEF(MSG_INVALID_ENUM_VALUE, 2, "Value '{0}' is not a valid value for enumeration {1}.")
 MSG_DEF(MSG_MISSING_ARGUMENTS, 1, "Not enough arguments to {0}.")
+MSG_DEF(MSG_NOT_OBJECT, 0, "Value not an object.")
+MSG_DEF(MSG_DOES_NOT_IMPLEMENT_INTERFACE, 1, "Value does not implement interface {0}.")
+MSG_DEF(MSG_NOT_IN_UNION, 1, "Value could not be converted to any of: {0}.")

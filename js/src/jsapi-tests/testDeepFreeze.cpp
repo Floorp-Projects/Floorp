@@ -12,7 +12,8 @@ BEGIN_TEST(testDeepFreeze_bug535703)
 {
     jsval v;
     EVAL("var x = {}; x;", &v);
-    CHECK(JS_DeepFreezeObject(cx, JSVAL_TO_OBJECT(v)));  // don't crash
+    JS::RootedObject obj(cx, JSVAL_TO_OBJECT(v));
+    CHECK(JS_DeepFreezeObject(cx, obj));  // don't crash
     EVAL("Object.isFrozen(x)", &v);
     CHECK_SAME(v, JSVAL_TRUE);
     return true;
@@ -28,7 +29,8 @@ BEGIN_TEST(testDeepFreeze_deep)
     EVAL("a", &a);
     EVAL("o", &o);
 
-    CHECK(JS_DeepFreezeObject(cx, JSVAL_TO_OBJECT(a)));
+    JS::RootedObject aobj(cx, JSVAL_TO_OBJECT(a));
+    CHECK(JS_DeepFreezeObject(cx, aobj));
 
     jsval b;
     EVAL("Object.isFrozen(a)", &b);
@@ -46,7 +48,8 @@ BEGIN_TEST(testDeepFreeze_loop)
     EVAL("x", &x);
     EVAL("y", &y);
 
-    CHECK(JS_DeepFreezeObject(cx, JSVAL_TO_OBJECT(x)));
+    JS::RootedObject xobj(cx, JSVAL_TO_OBJECT(x));
+    CHECK(JS_DeepFreezeObject(cx, xobj));
 
     jsval b;
     EVAL("Object.isFrozen(x)", &b);

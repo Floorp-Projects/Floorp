@@ -72,7 +72,7 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
         uint8_t* y = aData;
         uint32_t yN = mWidth * mHeight;
 
-        NS_ASSERTION(yN & 0x3 == 0, "Invalid image dimensions!");
+        NS_ASSERTION((yN & 0x3) == 0, "Invalid image dimensions!");
 
         uint32_t uvN = yN / 4;
         uint32_t* src = (uint32_t*)( y + yN );
@@ -81,7 +81,7 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
         uint32_t* v = u + uvN / 4;
 
         // we're handling pairs of 32-bit words, so divide by 8
-        NS_ASSERTION(uvN & 0x7 == 0, "Invalid image dimensions!");
+        NS_ASSERTION((uvN & 0x7) == 0, "Invalid image dimensions!");
         uvN /= 8;
 
         while (uvN--) {
@@ -136,11 +136,11 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
   data.mYSize = gfxIntSize(mWidth, mHeight);
 
   data.mYStride = mWidth * lumaBpp;
-  NS_ASSERTION(data.mYStride & 0x7 == 0, "Invalid image dimensions!");
+  NS_ASSERTION((data.mYStride & 0x7) == 0, "Invalid image dimensions!");
   data.mYStride /= 8;
 
   data.mCbCrStride = mWidth * chromaBpp;
-  NS_ASSERTION(data.mCbCrStride & 0x7 == 0, "Invalid image dimensions!");
+  NS_ASSERTION((data.mCbCrStride & 0x7) == 0, "Invalid image dimensions!");
   data.mCbCrStride /= 8;
 
   data.mCbChannel = aData + mHeight * data.mYStride;
@@ -162,8 +162,8 @@ GonkCameraPreview::ReceiveFrame(PRUint8 *aData, PRUint32 aLength)
   }
 }
 
-void
-GonkCameraPreview::Start()
+nsresult
+GonkCameraPreview::StartImpl()
 {
   DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
 
@@ -177,21 +177,25 @@ GonkCameraPreview::Start()
   GonkCameraHardware::GetPreviewSize(mHwHandle, &mWidth, &mHeight);
   SetFrameRate(GonkCameraHardware::GetFps(mHwHandle));
 
-  if (GonkCameraHardware::StartPreview(mHwHandle) == OK) {
-    // GetPreviewFormat() must be called after StartPreview().
-    mFormat = GonkCameraHardware::GetPreviewFormat(mHwHandle);
-    DOM_CAMERA_LOGI("preview stream is (actually!) %d x %d (w x h), %d frames per second, format %d\n", mWidth, mHeight, mFramesPerSecond, mFormat);
-  } else {
+  if (GonkCameraHardware::StartPreview(mHwHandle) != OK) {
     DOM_CAMERA_LOGE("%s: failed to start preview\n", __func__);
+    return NS_ERROR_FAILURE;
   }
+
+  // GetPreviewFormat() must be called after StartPreview().
+  mFormat = GonkCameraHardware::GetPreviewFormat(mHwHandle);
+  DOM_CAMERA_LOGI("preview stream is (actually!) %d x %d (w x h), %d frames per second, format %d\n", mWidth, mHeight, mFramesPerSecond, mFormat);
+  return NS_OK;
 }
 
-void
-GonkCameraPreview::Stop()
+nsresult
+GonkCameraPreview::StopImpl()
 {
   DOM_CAMERA_LOGI("%s:%d : this=%p\n", __func__, __LINE__, this);
 
   GonkCameraHardware::StopPreview(mHwHandle);
   mInput->EndTrack(TRACK_VIDEO);
   mInput->Finish();
+
+  return NS_OK;
 }

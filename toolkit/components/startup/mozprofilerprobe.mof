@@ -24,6 +24,6 @@ class MozillaEventSessionStoreWindowRestored : MozillaProvider
 [dynamic: ToInstance, Description("Mozilla Event: XPCOM Shutdown."): Amended,
  Guid("{26D1E091-0AE7-4F49-A554-4214445C505C}"),
  EventType(1)]
-class MozillaEventSessionStoreWindowRestored : MozillaProvider
+class MozillaEventXPCOMShutdown : MozillaProvider
 {
 };
