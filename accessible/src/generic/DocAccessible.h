@@ -22,7 +22,6 @@
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
-#include "nsCOMArray.h"
 #include "nsIDocShellTreeNode.h"
 
 template<class Class, class Arg>

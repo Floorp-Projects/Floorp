@@ -453,16 +453,11 @@ ContactManager.prototype = {
                               "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
 
-    let principal = aWindow.document.nodePrincipal;
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
-
-    let perm = principal == secMan.getSystemPrincipal()
-                 ? Ci.nsIPermissionManager.ALLOW_ACTION
-                 : Services.perms.testExactPermissionFromPrincipal(principal, "webcontacts-manage");
+    let perm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "contacts");
  
     //only pages with perm set can use the contacts
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    debug("has privileges :" + this.hasPrivileges);
+    debug("Contacts permission: " + this.hasPrivileges);
   },
 
   // Called from DOMRequestIpcHelper

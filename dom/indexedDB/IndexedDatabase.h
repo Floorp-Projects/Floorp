@@ -36,6 +36,11 @@ class FileInfo;
 class IDBDatabase;
 class IDBTransaction;
 
+enum FactoryPrivilege {
+  Content,
+  Chrome
+};
+
 template <class T>
 void SwapData(T& aData1, T& aData2)
 {

@@ -45,6 +45,7 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <ctime>
 
 #ifdef XP_WIN
 #include <process.h>
@@ -3209,11 +3210,29 @@ hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 {
   mozilla::NoteIntentionalCrash("plugin");
 
+  bool busyHang = false;
+  if ((argCount == 1) && NPVARIANT_IS_BOOLEAN(args[0])) {
+    busyHang = NPVARIANT_TO_BOOLEAN(args[0]);
+  }
+
+  if (busyHang) {    
+    const time_t start = std::time(NULL);
+    while ((std::time(NULL) - start) < 100000) {
+      volatile int dummy = 0;
+      for (int i=0; i<1000; ++i) {
+        dummy++;
+      }
+    }
+  } else {
 #ifdef XP_WIN
   Sleep(100000000);
+    Sleep(100000000);
 #else
   pause();
+    pause();
 #endif
+  }
+
   // NB: returning true here means that we weren't terminated, and
   // thus the hang detection/handling didn't work correctly.  The
   // test harness will succeed in calling this function, and the

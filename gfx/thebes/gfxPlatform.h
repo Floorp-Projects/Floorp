@@ -197,12 +197,16 @@ public:
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
-    // aBackend will be set to the preferred backend for Azure canvas
-    bool SupportsAzureCanvas(mozilla::gfx::BackendType& aBackend);
+    bool SupportsAzureCanvas();
 
-    // aObj will contain the preferred backend for Azure canvas
-    void GetAzureCanvasBackendInfo(mozilla::widget::InfoObject &aObj) {
-      aObj.DefineProperty("AzureBackend", GetBackendName(mPreferredCanvasBackend));
+    void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
+      aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
+      aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
+      aObj.DefineProperty("AzureContentBackend", GetBackendName(GetContentBackend()));
+    }
+
+    mozilla::gfx::BackendType GetPreferredCanvasBackend() {
+      return mPreferredCanvasBackend;
     }
 
     /*
@@ -479,6 +483,11 @@ protected:
      */
     static mozilla::gfx::BackendType GetCanvasBackendPref(PRUint32 aBackendBitmask);
     static mozilla::gfx::BackendType BackendTypeForName(const nsCString& aName);
+
+    virtual mozilla::gfx::BackendType GetContentBackend()
+    {
+      return mozilla::gfx::BACKEND_NONE;
+    }
 
     PRInt8  mAllowDownloadableFonts;
     PRInt8  mDownloadableFontsSanitize;

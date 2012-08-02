@@ -1094,7 +1094,19 @@ _getvalue(NPP aNPP,
             *(NPBool*)aValue = value ? true : false;
             return result;
         }
-
+#if defined(MOZ_WIDGET_GTK)
+        case NPNVxDisplay: {
+            if (aNPP) {
+                return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+            } 
+            else {
+                *(void **)aValue = xt_client_get_display();
+            }          
+            return NPERR_NO_ERROR;
+        }
+        case NPNVxtAppContext:
+            return NPERR_GENERIC_ERROR;
+#endif
         default: {
             if (aNPP) {
                 return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
@@ -1938,13 +1950,7 @@ PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
     }
 #endif
 
-    nsAutoPtr<PluginInstanceChild> childInstance(
-        new PluginInstanceChild(&mFunctions));
-    if (!childInstance->Initialize()) {
-        *rv = NPERR_GENERIC_ERROR;
-        return 0;
-    }
-    return childInstance.forget();
+    return new PluginInstanceChild(&mFunctions);
 }
 
 void
@@ -2036,6 +2042,8 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
     if (NPERR_NO_ERROR != *rv) {
         return true;
     }
+
+    childInstance->Initialize();
 
 #if defined(XP_MACOSX) && defined(__i386__)
     // If an i386 Mac OS X plugin has selected the Carbon event model then

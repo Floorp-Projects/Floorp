@@ -15,7 +15,9 @@
 
 #include "js/Utility.h"
 
+#ifdef USE_ZLIB
 #include "zlib.h"
+#endif
 
 /* Forward declarations. */
 struct JSContext;

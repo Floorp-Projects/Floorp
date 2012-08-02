@@ -7,9 +7,9 @@ package org.mozilla.gecko;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
-import android.content.res.TypedArray;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;

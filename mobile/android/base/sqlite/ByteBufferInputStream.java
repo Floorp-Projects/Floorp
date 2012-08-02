@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.sqlite;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /*

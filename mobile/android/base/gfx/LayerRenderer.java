@@ -5,8 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.gfx.Layer.RenderContext;
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,12 +20,13 @@ import android.opengl.GLES20;
 import android.os.SystemClock;
 import android.util.Log;
 
-import javax.microedition.khronos.egl.EGLConfig;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.microedition.khronos.egl.EGLConfig;
 
 /**
  * The layer renderer implements the rendering logic for a layer view.
@@ -162,7 +164,7 @@ public class LayerRenderer {
 
         // Initialize the FloatBuffer that will be used to store all vertices and texture
         // coordinates in draw() commands.
-        mCoordByteBuffer = GeckoAppShell.allocateDirectBuffer(COORD_BUFFER_SIZE * 4);
+        mCoordByteBuffer = DirectBufferAllocator.allocate(COORD_BUFFER_SIZE * 4);
         mCoordByteBuffer.order(ByteOrder.nativeOrder());
         mCoordBuffer = mCoordByteBuffer.asFloatBuffer();
     }
@@ -170,11 +172,9 @@ public class LayerRenderer {
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (mCoordByteBuffer != null) {
-                GeckoAppShell.freeDirectBuffer(mCoordByteBuffer);
-                mCoordByteBuffer = null;
-                mCoordBuffer = null;
-            }
+            DirectBufferAllocator.free(mCoordByteBuffer);
+            mCoordByteBuffer = null;
+            mCoordBuffer = null;
         } finally {
             super.finalize();
         }

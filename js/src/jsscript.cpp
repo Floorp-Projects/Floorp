@@ -715,7 +715,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 }
             }
 
-            JSObject *tmp = *objp;
+            RootedObject tmp(cx, *objp);
             if (!XDRInterpretedFunction(xdr, funEnclosingScope, script, &tmp))
                 return false;
             *objp = tmp;
@@ -741,8 +741,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 }
             }
 
-            StaticBlockObject *tmp = static_cast<StaticBlockObject *>(objp->get());
-            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, &tmp))
+            Rooted<StaticBlockObject*> tmp(cx, static_cast<StaticBlockObject *>(objp->get()));
+            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, tmp.address()))
                 return false;
             *objp = tmp;
         }
@@ -1151,7 +1151,7 @@ JSScript::loadSource(JSContext *cx, bool *worked)
     if (!src)
         return true;
     ScriptSource *ss = scriptSource();
-    JS_ALWAYS_TRUE(ss->setSource(cx, src, length, false, NULL, true));
+    ss->setSource(src, length);
     *worked = true;
     return true;
 }
@@ -1236,24 +1236,19 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 }
 
 bool
-ScriptSource::setSource(JSContext *cx, const jschar *src, uint32_t length,
-                        bool argumentsNotIncluded, SourceCompressionToken *tok,
-                        bool ownSource)
+ScriptSource::setSourceCopy(JSContext *cx, const jschar *src, uint32_t length,
+                            bool argumentsNotIncluded, SourceCompressionToken *tok)
 {
     JS_ASSERT(!hasSourceData());
-    if (!ownSource) {
-        const size_t nbytes = length * sizeof(jschar);
-        data.compressed = static_cast<unsigned char *>(cx->malloc_(nbytes));
-        if (!data.compressed)
-            return false;
-    }
+    const size_t nbytes = length * sizeof(jschar);
+    data.compressed = static_cast<unsigned char *>(cx->malloc_(nbytes));
+    if (!data.compressed)
+        return false;
     length_ = length;
     argumentsNotIncluded_ = argumentsNotIncluded;
 
-    JS_ASSERT_IF(ownSource, !tok);
-
 #ifdef JS_THREADSAFE
-    if (tok && !ownSource) {
+    if (tok) {
 #ifdef DEBUG
         ready_ = false;  
 #endif
@@ -1263,16 +1258,19 @@ ScriptSource::setSource(JSContext *cx, const jschar *src, uint32_t length,
     } else
 #endif
     {
-        if (ownSource)
-            data.source = const_cast<jschar *>(src);
-        else
-            PodCopy(data.source, src, length_);
-#ifdef DEBUG
-        ready_ = true;
-#endif
+        PodCopy(data.source, src, length_);
     }
 
     return true;
+}
+
+void
+ScriptSource::setSource(const jschar *src, uint32_t length)
+{
+    JS_ASSERT(!hasSourceData());
+    length_ = length;
+    JS_ASSERT(!argumentsNotIncluded_);
+    data.source = const_cast<jschar *>(src);
 }
 
 void

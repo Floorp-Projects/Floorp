@@ -1223,7 +1223,7 @@ GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
     JSObject *base = global->getOrCreateIteratorPrototype(cx);
     if (!base)
         return false;
-    JSObject *proto = NewObjectWithGivenProto(cx, &SetIteratorClass, base, global);
+    RootedObject proto(cx, NewObjectWithGivenProto(cx, &SetIteratorClass, base, global));
     if (!proto)
         return false;
     proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(NULL));

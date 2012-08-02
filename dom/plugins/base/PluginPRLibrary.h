@@ -111,7 +111,7 @@ public:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetImageContainer(NPP instance, ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
-    virtual bool UseAsyncPainting() MOZ_OVERRIDE { return false; }
+    virtual bool IsOOP() MOZ_OVERRIDE { return false; }
 #if defined(XP_MACOSX)
     virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing);
 #endif
