@@ -1643,7 +1643,6 @@ PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
     /*
      * On OSX, pthread_setname_np is only available in 10.6 or later, so test
      * for it at runtime.  It also may not be available on all linux distros.
-     * The name length limit is 16 bytes.
      */
 #if defined(DARWIN)
     int (*dynamic_pthread_setname_np)(const char*);
@@ -1656,6 +1655,12 @@ PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
     if (!dynamic_pthread_setname_np)
         return PR_SUCCESS;
 
+    /*
+     * The 15-character name length limit is an experimentally determined
+     * length of a null-terminated string that most linux distros and OS X
+     * accept as an argument to pthread_setname_np.  Otherwise the E2BIG
+     * error is returned by the function.
+     */
 #define SETNAME_LENGTH_CONSTRAINT 15
 #define SETNAME_FRAGMENT1_LENGTH (SETNAME_LENGTH_CONSTRAINT >> 1)
 #define SETNAME_FRAGMENT2_LENGTH \
@@ -1664,10 +1669,10 @@ PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
     if (nameLen > SETNAME_LENGTH_CONSTRAINT) {
         memcpy(name_dup, name, SETNAME_FRAGMENT1_LENGTH);
         name_dup[SETNAME_FRAGMENT1_LENGTH] = '~';
+        /* Note that this also copies the null terminator. */
         memcpy(name_dup + SETNAME_FRAGMENT1_LENGTH + 1,
                name + nameLen - SETNAME_FRAGMENT2_LENGTH,
-               SETNAME_FRAGMENT2_LENGTH);
-        name_dup[SETNAME_LENGTH_CONSTRAINT] = '\0';
+               SETNAME_FRAGMENT2_LENGTH + 1);
         name = name_dup;
     }
 
