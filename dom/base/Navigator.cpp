@@ -878,7 +878,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
 //    Navigator::nsIDOMNavigatorDeviceStorage
 //*****************************************************************************
 
-NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _retval)
+NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceStorage** _retval)
 {
   if (!Preferences::GetBool("device.storage.enabled", false)) {
     return NS_OK;
@@ -890,19 +890,15 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<nsRefPtr<nsDOMDeviceStorage> > stores;
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, stores);
+  nsRefPtr<nsDOMDeviceStorage> storage;
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, getter_AddRefs(storage));
 
-  nsCOMPtr<nsIWritableVariant> result = do_CreateInstance("@mozilla.org/variant;1");
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  if (!storage) {
+    return NS_OK;
+  }
 
-  result->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                     &NS_GET_IID(nsIDOMDeviceStorage),
-                     stores.Length(),
-                     const_cast<void*>(static_cast<const void*>(stores.Elements())));
-  result.forget(_retval);
-
-  mDeviceStorageStores.AppendElements(stores);
+  NS_ADDREF(*_retval = storage.get());
+  mDeviceStorageStores.AppendElement(storage);                                                                                                                                                                                              
   return NS_OK;
 }
 

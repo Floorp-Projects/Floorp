@@ -46,7 +46,7 @@ function addOverwritingError(e) {
   ok(true, "Adding to the same location should fail");
 
   var storage = navigator.getDeviceStorage("testing");
-  request = storage[0].delete(filename)
+  request = storage.delete(filename)
   request.onsuccess = deleteSuccess;
   request.onerror = deleteError;
 }
@@ -57,7 +57,7 @@ function addSuccess(e) {
   var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-  request = storage[0].addNamed(createRandomBlob(), filename);
+  request = storage.addNamed(createRandomBlob(), filename);
   ok(request, "Should have a non-null request");
 
   request.onsuccess = addOverwritingSuccess;
@@ -67,7 +67,7 @@ function addSuccess(e) {
 function addError(e) {
   // test file is already exists.  clean it up and try again..
   var storage = navigator.getDeviceStorage("testing");
-  request = storage[0].delete(filename)
+  request = storage.delete(filename)
   request.onsuccess = runtest;
 }
 
@@ -75,7 +75,7 @@ function runtest() {
   var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-  request = storage[0].addNamed(createRandomBlob(), filename);
+  request = storage.addNamed(createRandomBlob(), filename);
   ok(request, "Should have a non-null request");
 
   request.onsuccess = addSuccess;
