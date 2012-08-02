@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772966
+-->
+<window title="Mozilla Bug 772966"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest()">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=772966"
+     target="_blank">Mozilla Bug 772966</a>
+  </body>
+
+  <script>
+    function runTest() {
+      is(document.getElementById('b').test(123, 123, 123), 2, "Should have 2 params.");
+    }
+  </script>
+  
+  <box id="b" style="-moz-binding: url(#binding)"/>
+  
+  <xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl">
+    <xbl:binding id="binding">
+      <xbl:implementation>
+        <xbl:method name="test">
+          <xbl:parameter name="p1"/>
+          <xbl:parameter name=""/>
+          <xbl:parameter name="p2"/>
+          <xbl:body><![CDATA[
+            return arguments.callee.length;
+          ]]></xbl:body>
+        </xbl:method>
+      </xbl:implementation>
+    </xbl:binding>
+  </xbl:bindings>
+  
+
+</window>

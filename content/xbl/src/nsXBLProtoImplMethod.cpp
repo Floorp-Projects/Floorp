@@ -58,6 +58,11 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
   NS_PRECONDITION(!IsCompiled(),
                   "Must not be compiled when accessing uncompiled method");
 
+  if (aText.IsEmpty()) {
+    NS_WARNING("Empty name attribute in xbl:parameter!");
+    return;
+  }
+
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
     uncompiledMethod = new nsXBLUncompiledMethod();
