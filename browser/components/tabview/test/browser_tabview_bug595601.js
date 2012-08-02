@@ -20,7 +20,7 @@ let state = {windows:[{tabs:[
   {entries:[{url:"http://example.com#6"}],hidden:true,extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#6\",\"groupID\":1}"}},
   {entries:[{url:"http://example.com#7"}],hidden:true,extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#7\",\"groupID\":1}"}},
   {entries:[{url:"http://example.com#8"}],hidden:true,extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#8\",\"groupID\":1}"}}
-],selected:5,extData:{
+],selected:4,extData:{
   "tabview-groups":"{\"nextID\":8,\"activeGroupId\":1}","tabview-group":"{\"1\":{\"bounds\":{\"left\":15,\"top\":10,\"width\":415,\"height\":367},\"userSize\":{\"x\":415,\"y\":367},\"title\":\"\",\"id\":1},\"2\":{\"bounds\":{\"left\":286,\"top\":488,\"width\":418,\"height\":313},\"title\":\"\",\"id\":2}}",
   "tabview-ui":"{\"pageBounds\":{\"left\":0,\"top\":0,\"width\":940,\"height\":1075}}"
 }}]};
