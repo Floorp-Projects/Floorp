@@ -2472,7 +2472,8 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 #endif
   nscoord dx = 0;
 
-  if (remainingWidth > 0) {
+  if (remainingWidth > 0 &&
+      !(mBlockReflowState->frame->IsSVGText())) {
     PRUint8 textAlign = mStyleText->mTextAlign;
 
     /* 
