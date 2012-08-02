@@ -2586,7 +2586,7 @@ if (!%(resultStr)s) {
                  IDLType.Tags.double]:
         # XXXbz will cast to double do the "even significand" thing that webidl
         # calls for for 64-bit ints?  Do we care?
-        return wrapAndSetPtr("JS_NewNumberValue(cx, double(%s), ${jsvalPtr})" % result)
+        return setValue("JS_NumberValue(double(%s))" % result)
 
     elif tag == IDLType.Tags.uint32:
         return setValue("UINT_TO_JSVAL(%s)" % result)
