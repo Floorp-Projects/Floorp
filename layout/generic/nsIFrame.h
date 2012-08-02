@@ -297,6 +297,10 @@ typedef PRUint64 nsFrameState;
 // nsDisplayBackground display item
 #define NS_FRAME_HAS_CACHED_BACKGROUND              NS_FRAME_STATE_BIT(46)
 
+// The frame is a descendant of nsSVGTextFrame2 and is thus used for SVG
+// text layout.
+#define NS_FRAME_IS_SVG_TEXT                        NS_FRAME_STATE_BIT(47)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
