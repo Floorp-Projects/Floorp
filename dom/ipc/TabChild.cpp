@@ -673,6 +673,7 @@ TabChild::RecvUpdateFrame(const nsIntRect& aDisplayPort,
         data += nsPrintfCString(" }");
     data += nsPrintfCString(" }");
 
+    JSAutoRequest ar(mCx);
     jsval json = JSVAL_NULL;
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
@@ -681,6 +682,8 @@ TabChild::RecvUpdateFrame(const nsIntRect& aDisplayPort,
                       data.Length(),
                       &json)) {
         WriteStructuredClone(mCx, json, buffer, cloneData.mClosure);
+        cloneData.mData = buffer.data();
+        cloneData.mDataLength = buffer.nbytes();
     }
 
     nsFrameScriptCx cx(static_cast<nsIWebBrowserChrome*>(this), this);
