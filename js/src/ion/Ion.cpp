@@ -12,7 +12,6 @@
 #include "IonSpewer.h"
 #include "LIR.h"
 #include "AliasAnalysis.h"
-#include "GreedyAllocator.h"
 #include "LICM.h"
 #include "ValueNumbering.h"
 #include "EdgeCaseAnalysis.h"
@@ -816,11 +815,6 @@ GenerateCode(IonBuilder &builder, MIRGraph &graph)
         if (!regalloc.go())
             return false;
         IonSpewPass("Allocate Registers", &regalloc);
-    } else {
-        GreedyAllocator greedy(&builder, lir);
-        if (!greedy.allocate())
-            return false;
-        IonSpewPass("Allocate Registers");
     }
 
     CodeGenerator codegen(&builder, lir);

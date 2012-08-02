@@ -373,21 +373,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return loopHeader_;
     }
 
-    // Lists all blocks contained within this loop header, but not contained in
-    // a nested loop header.
-    size_t numContainedInLoop() const {
-        JS_ASSERT(isLoopHeader());
-        return containedInLoop_.length();
-    }
-    MBasicBlock *getContainedInLoop(size_t i) const {
-        JS_ASSERT(isLoopHeader());
-        return containedInLoop_[i];
-    }
-    bool addContainedInLoop(MBasicBlock *block) {
-        JS_ASSERT(isLoopHeader());
-        return containedInLoop_.append(block);
-    }
-
     void setLoopDepth(uint32 loopDepth) {
         loopDepth_ = loopDepth;
     }
@@ -433,7 +418,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool mark_;
 
     Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
-    Vector<MBasicBlock *, 1, IonAllocPolicy> containedInLoop_;
     MBasicBlock *immediateDominator_;
     size_t numDominated_;
     MBasicBlock *loopHeader_;
