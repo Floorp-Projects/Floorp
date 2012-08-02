@@ -2366,15 +2366,6 @@ JS_strdup(JSContext *cx, const char *s)
     return (char *)js_memcpy(p, s, n);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, double d, jsval *rval)
-{
-    AssertHeapIsIdle(cx);
-    d = JS_CANONICALIZE_NAN(d);
-    rval->setNumber(d);
-    return JS_TRUE;
-}
-
 #undef JS_AddRoot
 
 JS_PUBLIC_API(JSBool)

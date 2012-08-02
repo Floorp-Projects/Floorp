@@ -2242,6 +2242,16 @@ JSVAL_TO_PRIVATE(jsval v)
     return JSVAL_TO_PRIVATE_PTR_IMPL(JSVAL_TO_IMPL(v));
 }
 
+static JS_ALWAYS_INLINE jsval
+JS_NumberValue(double d)
+{
+    int32_t i;
+    d = JS_CANONICALIZE_NAN(d);
+    if (MOZ_DOUBLE_IS_INT32(d, &i))
+        return INT_TO_JSVAL(i);
+    return DOUBLE_TO_JSVAL(d);
+}
+
 /************************************************************************/
 
 /*
@@ -3475,8 +3485,6 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes);
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
-extern JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, double d, jsval *rval);
 
 /*
  * A GC root is a pointer to a jsval, JSObject * or JSString * that itself
