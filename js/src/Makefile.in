@@ -263,7 +263,6 @@ CPPSRCS +=	MIR.cpp \
 		C1Spewer.cpp \
 		CodeGenerator.cpp \
 		CodeGenerator-shared.cpp \
-		GreedyAllocator.cpp \
 		Ion.cpp \
 		IonAnalysis.cpp \
 		IonBuilder.cpp \

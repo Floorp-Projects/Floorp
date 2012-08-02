@@ -4809,8 +4809,6 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.lsra = true;
-        else if (strcmp(str, "greedy") == 0)
-            ion::js_IonOptions.lsra = false;
         else
             return OptionFailure("ion-regalloc", str);
     }
@@ -5021,7 +5019,6 @@ main(int argc, char **argv, char **envp)
                                "Don't compile very large scripts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
-                               "  greedy: Greedy register allocation\n"
                                "  lsra: Linear Scan register allocation (default)")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
     )
