@@ -38,6 +38,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
@@ -169,7 +170,7 @@ public class AboutHomeContent extends ScrollView
             syncTextView.setText(spannableText, TextView.BufferType.SPANNABLE);
         }
 
-        RelativeLayout syncBox = (RelativeLayout) findViewById(R.id.sync_box);
+        LinearLayout syncBox = (LinearLayout) findViewById(R.id.sync_box);
         syncBox.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Context context = v.getContext();
@@ -229,27 +230,7 @@ public class AboutHomeContent extends ScrollView
 
     private void setSyncVisibility(boolean visible) {
         int visibility = visible ? View.VISIBLE : View.GONE;
-        findViewById(R.id.sync_box_container).setVisibility(visibility);
-    }
-
-    private void updateSyncLayout(boolean isFirstRun, boolean hasTopSites) {
-        RelativeLayout syncContainer = (RelativeLayout) findViewById(R.id.sync_box_container);
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) syncContainer.getLayoutParams();
-
-        int below = R.id.all_top_sites_text;
-        if (isFirstRun && !hasTopSites)
-            below = R.id.top_sites_top;
-        else if (!hasTopSites)
-            below = R.id.no_top_sites_text;
-
-        int background = R.drawable.abouthome_bg_repeat;
-        if (isFirstRun && !hasTopSites)
-            background = 0;
-
-        params.addRule(RelativeLayout.BELOW, below);
-        syncContainer.setLayoutParams(params);
-
-        syncContainer.setBackgroundResource(background);
+        findViewById(R.id.sync_box).setVisibility(visibility);
     }
 
     private void updateLayout(GeckoApp.StartupMode startupMode, boolean syncIsSetup) {
@@ -262,7 +243,6 @@ public class AboutHomeContent extends ScrollView
 
         setTopSitesVisibility(!isFirstRun || hasTopSites, hasTopSites);
         setSyncVisibility(!syncIsSetup);
-        updateSyncLayout(isFirstRun, hasTopSites);
     }
 
     private void updateLayoutForSync() {
