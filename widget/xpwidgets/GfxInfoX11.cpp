@@ -42,6 +42,7 @@ GfxInfo::Init()
     mIsNVIDIA = false;
     mIsFGLRX = false;
     mIsNouveau = false;
+    mIsIntel = false;
     mHasTextureFromPixmap = false;
     return GfxInfoBase::Init();
 }
@@ -209,6 +210,8 @@ GfxInfo::GetData()
         whereToReadVersionNumbers = Mesa_in_version_string + strlen("Mesa");
         if (strcasestr(mVendor.get(), "nouveau"))
             mIsNouveau = true;
+        if (strcasestr(mRenderer.get(), "intel")) // yes, intel is in the renderer string
+            mIsIntel = true;
     } else if (strstr(mVendor.get(), "NVIDIA Corporation")) {
         mIsNVIDIA = true;
         // with the NVIDIA driver, the version string contains "NVIDIA major.minor"
@@ -327,6 +330,13 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
           aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
         }
+        if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA)
+        {
+          if (mIsIntel && version(mMajorVersion, mMinorVersion) < version(8,1))
+            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+            aSuggestedDriverVersion.AssignLiteral("Mesa 8.1");
+        }
+
       } else if (mIsNVIDIA) {
         if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
