@@ -221,6 +221,9 @@ struct CallICInfo {
         JS_REMOVE_LINK(&links);
     }
 
+    bool hasJMStub() const {
+        return !!pools[Pool_ScriptStub];
+    }
     bool hasIonStub() const {
         return hasIonStub_;
     }
@@ -265,6 +268,7 @@ struct CallICInfo {
             releasePool(Pool_ScriptStub);
         }
         hit = false;
+        hasIonStub_ = false;
     }
 };
 
