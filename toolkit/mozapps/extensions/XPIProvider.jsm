@@ -2031,9 +2031,9 @@ var XPIProvider = {
 
               // We'll be replacing a currently active bootstrapped add-on so
               // call its uninstall method
-              let oldVersion = aManifests[aLocation.name][id].version;
-              let newVersion = oldBootstrap.version;
-              let uninstallReason = Services.vc.compare(newVersion, oldVersion) < 0 ?
+              let newVersion = aManifests[aLocation.name][id].version;
+              let oldVersion = oldBootstrap.version;
+              let uninstallReason = Services.vc.compare(oldVersion, newVersion) < 0 ?
                                     BOOTSTRAP_REASONS.ADDON_UPGRADE :
                                     BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
 
