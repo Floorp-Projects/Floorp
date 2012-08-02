@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBlob;
 include protocol PIndexedDBCursor;
 include protocol PIndexedDBIndex;
 include protocol PIndexedDBObjectStore;
@@ -22,6 +23,7 @@ namespace ipc {
 struct GetResponse
 {
   SerializedStructuredCloneReadInfo cloneInfo;
+  PBlob[] blobs;
 };
 
 struct GetKeyResponse
@@ -29,9 +31,15 @@ struct GetKeyResponse
   Key key;
 };
 
+struct BlobArray
+{
+  PBlob[] blobs;
+};
+
 struct GetAllResponse
 {
   SerializedStructuredCloneReadInfo[] cloneInfos;
+  BlobArray[] blobs;
 };
 
 struct GetAllKeysResponse
@@ -75,6 +83,7 @@ struct ContinueResponse
   Key key;
   Key objectKey;
   SerializedStructuredCloneReadInfo cloneInfo;
+  PBlob[] blobs;
 };
 
 union ResponseValue

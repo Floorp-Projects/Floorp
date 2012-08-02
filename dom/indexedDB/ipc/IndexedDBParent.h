@@ -23,10 +23,12 @@
 namespace mozilla {
 namespace dom {
 class ContentParent;
+class PBlobParent;
 class TabParent;
 }
 }
 
+class nsIDOMBlob;
 class nsIDOMEvent;
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -531,6 +533,11 @@ public:
 
   bool
   OpenCursor(const OpenCursorParams& aParams);
+
+protected:
+  void
+  ConvertBlobActors(const InfallibleTArray<PBlobParent*>& aActors,
+                    nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs);
 };
 
 /*******************************************************************************
