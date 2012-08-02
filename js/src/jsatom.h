@@ -364,7 +364,7 @@ js_FinishAtomState(JSRuntime *rt);
 namespace js {
 
 extern void
-MarkAtomState(JSTracer *trc, bool markAll);
+MarkAtomState(JSTracer *trc);
 
 extern void
 SweepAtomState(JSRuntime *rt);

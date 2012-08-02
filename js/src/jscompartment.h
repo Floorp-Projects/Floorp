@@ -234,7 +234,7 @@ struct JSCompartment
     }
 
     bool isGCSweeping() {
-        return wasGCStarted() && rt->gcIncrementalState == js::gc::SWEEP;
+        return wasGCStarted() && rt->gcIncrementalState > js::gc::MARK;
     }
 
     size_t                       gcBytes;
