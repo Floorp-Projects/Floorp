@@ -20,7 +20,8 @@ simple_events = [
     'MozContactChangeEvent',
     'DeviceOrientationEvent',
     'DeviceLightEvent',
-    'MozApplicationEvent'
+    'MozApplicationEvent',
+    'DeviceStorageChangeEvent'
   ]
 
 """ include file names """
