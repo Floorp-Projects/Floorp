@@ -917,6 +917,7 @@ class DeviceManagerSUT(DeviceManager):
   # os - name of the os
   # id - unique id of the device
   # uptime - uptime of the device
+  # uptimemillis - uptime of the device in milliseconds
   # systime - system time of the device
   # screen - screen resolution
   # rotation - rotation of the device (in degrees)
@@ -933,8 +934,8 @@ class DeviceManagerSUT(DeviceManager):
     result = {}
     collapseSpaces = re.compile('  +')
 
-    directives = ['os','id','uptime','systime','screen','rotation','memory','process',
-                  'disk','power']
+    directives = ['os','id','uptime','uptimemillis','systime','screen',
+                  'rotation','memory','process','disk','power']
     if (directive in directives):
       directives = [directive]
 
