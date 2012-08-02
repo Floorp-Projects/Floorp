@@ -2502,8 +2502,13 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->isCollecting())
-        MarkAtomState(trc);
+    /*
+     * Atoms are not in the cross-compartment map. So if there are any
+     * compartments that are not being collected, we are not allowed to collect
+     * atoms. Otherwise, the non-collected compartments could contain pointers
+     * to atoms that we would miss.
+     */
+    MarkAtomState(trc, rt->gcKeepAtoms || (IS_GC_MARKING_TRACER(trc) && !rt->gcIsFull));
     rt->staticStrings.trace(trc);
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
@@ -3211,17 +3216,6 @@ BeginMarkPhase(JSRuntime *rt, bool isIncremental)
         c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
     }
 
-    /*
-     * Atoms are not in the cross-compartment map. So if there are any
-     * compartments that are not being collected, we are not allowed to collect
-     * atoms. Otherwise, the non-collected compartments could contain pointers
-     * to atoms that we would miss.
-     */
-    if (rt->atomsCompartment->isCollecting() && (rt->gcKeepAtoms || !rt->gcIsFull)) {
-        rt->atomsCompartment->setCollecting(false);
-        rt->atomsCompartment->setGCStarted(false);
-    }
-
     rt->gcMarker.start(rt);
     JS_ASSERT(!rt->gcMarker.callback);
     JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
@@ -3494,7 +3488,6 @@ BeginSweepPhase(JSRuntime *rt)
         if (!c->isCollecting())
             isFull = false;
     }
-    JS_ASSERT_IF(isFull, rt->gcIsFull);
 
     rt->gcSweepOnBackgroundThread =
         (rt->hasContexts() && rt->gcHelperThread.prepareForBackgroundSweep());
@@ -3514,6 +3507,11 @@ BeginSweepPhase(JSRuntime *rt)
     /* Finalize unreachable (key,value) pairs in all weak maps. */
     WeakMapBase::sweepAll(&rt->gcMarker);
     rt->debugScopes->sweep();
+
+    {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_ATOMS);
+        SweepAtomState(rt);
+    }
 
     /* Collect watch points associated with unreachable objects. */
     WatchpointMap::sweepAll(rt);
@@ -3758,7 +3756,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         return;
 
-    if (rt->gcIncrementalState == SWEEP || rt->gcIncrementalState == SWEEP_ATOMS) {
+    if (rt->gcIncrementalState == SWEEP) {
         /* If we've finished marking then sweep to completion here. */
         IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -3818,15 +3816,13 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
 
 AutoGCSlice::~AutoGCSlice()
 {
-    JS_ASSERT(runtime->gcIncrementalState == NO_INCREMENTAL ||
-              runtime->gcIncrementalState == MARK ||
-              runtime->gcIncrementalState == SWEEP_ATOMS ||
-              runtime->gcIncrementalState == SWEEP);
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
         if (runtime->gcIncrementalState == MARK) {
             c->setNeedsBarrier(true);
             c->arenas.prepareForIncrementalGC(runtime);
         } else {
+            JS_ASSERT(runtime->gcIncrementalState == NO_INCREMENTAL ||
+                      runtime->gcIncrementalState == SWEEP);
             c->setNeedsBarrier(false);
         }
     }
@@ -3948,48 +3944,26 @@ IncrementalCollectSlice(JSRuntime *rt,
         }
 
         EndMarkPhase(rt, isIncremental);
-        BeginSweepPhase(rt);
-
-        rt->gcIncrementalState = SWEEP_ATOMS;
-
-        /*
-         * We yield here if we are doing an incremental GC and one of the
-         * following holds:
-         *
-         *  - we have exhausted our budget
-         *
-         *  - we need to sweep the atoms (this is not incremental and so gets its
-         *    own slice)
-         *
-         *  - we are in incremental multi-slice zeal mode, to allow RunDebugGC
-         *    to reset the slice buget.
-         */
-        if (budget != SliceBudget::Unlimited &&
-            (sliceBudget.isOverBudget() ||
-             rt->atomsCompartment->isCollecting() ||
-             zeal == ZealIncrementalMultipleSlices))
-        {
-            break;
-        }
-
-        /* fall through */
-      }
-
-      case SWEEP_ATOMS:
 
         rt->gcIncrementalState = SWEEP;
 
-        if (rt->atomsCompartment->isCollecting()) {
-            gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_ATOMS);
-            uint32_t initialCount = rt->atomState.atoms.count();
-            SweepAtomState(rt);
-            sliceBudget.step(initialCount);
+        /*
+         * This runs to completion, but we don't continue if the budget is
+         * now exhasted.
+         */
+        BeginSweepPhase(rt);
+        if (sliceBudget.isOverBudget())
+            break;
 
-            if (sliceBudget.isOverBudget())
-                break;
-        }
+        /*
+         * Always yield here when running in incremental multi-slice zeal
+         * mode, so RunDebugGC can reset the slice buget.
+         */
+        if (budget != SliceBudget::Unlimited && zeal == ZealIncrementalMultipleSlices)
+            break;
 
         /* fall through */
+      }
 
       case SWEEP: {
 #ifdef DEBUG
@@ -4545,7 +4519,7 @@ RunDebugGC(JSContext *cx)
          * phase.
          */
         if (type == ZealIncrementalMultipleSlices &&
-            initialState == MARK && rt->gcIncrementalState == SWEEP_ATOMS)
+            initialState == MARK && rt->gcIncrementalState == SWEEP)
         {
             rt->gcIncrementalLimit = rt->gcZealFrequency / 2;
         }
