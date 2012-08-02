@@ -30,7 +30,7 @@ public:
 
   nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType, const PRInt32 aIndex);
 
-  PRInt32 SetRootFileForType(const nsAString& aType, const PRInt32 aIndex);
+  void SetRootFileForType(const nsAString& aType, const PRInt32 aIndex);
 
   static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                       const nsAString &aType,
