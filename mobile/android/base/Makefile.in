@@ -23,6 +23,8 @@ MOZGLUE_JAVA_FILES := \
 UTIL_JAVA_FILES := \
   ActivityResultHandler.java \
   ActivityResultHandlerMap.java \
+  INIParser.java \
+  INISection.java \
   util/FloatUtils.java \
   $(NULL)
 
@@ -80,8 +82,6 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
-  INIParser.java \
-  INISection.java \
   InputMethods.java \
   LinkPreference.java \
   LinkTextView.java \
