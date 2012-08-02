@@ -644,8 +644,8 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
   NS_ASSERTION(frame->GetStyleDisplay()->IsAbsolutelyPositioned() ==
                  disp->IsAbsolutelyPositioned(),
                "Unexpected position style");
-  NS_ASSERTION(frame->GetStyleDisplay()->IsFloating() ==
-                 disp->IsFloating(), "Unexpected float style");
+  NS_ASSERTION(frame->GetStyleDisplay()->IsFloatingStyle() ==
+                 disp->IsFloatingStyle(), "Unexpected float style");
   if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     if (disp->IsAbsolutelyPositioned()) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
@@ -654,7 +654,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
       if (frame->GetPrevInFlow())
         frameType = NS_CSS_FRAME_TYPE_BLOCK;
     }
-    else if (disp->IsFloating()) {
+    else if (disp->IsFloating(frame)) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     } else {
       NS_ASSERTION(disp->mDisplay == NS_STYLE_DISPLAY_POPUP,

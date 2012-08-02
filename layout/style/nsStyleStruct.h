@@ -1638,7 +1638,7 @@ struct nsStyleDisplay {
     return IsDisplayTypeInlineOutside(mOriginalDisplay);
   }
 
-  bool IsFloating() const {
+  bool IsFloatingStyle() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
 
@@ -1664,6 +1664,9 @@ struct nsStyleDisplay {
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
+
+  // These are defined in nsStyleStructInlines.h.
+  inline bool IsFloating(const nsIFrame* aFrame) const;
 };
 
 struct nsStyleTable {

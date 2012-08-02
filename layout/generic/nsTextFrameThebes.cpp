@@ -1154,7 +1154,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     NS_ASSERTION(!aForFrame ||
                  (aLineContainer == FindLineContainer(aForFrame) ||
                   (aLineContainer->GetType() == nsGkAtoms::letterFrame &&
-                   aLineContainer->GetStyleDisplay()->IsFloating())),
+                   aLineContainer->IsFloating())),
                  "Wrong line container hint");
   }
 
@@ -4619,7 +4619,8 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     } else {
       // In standards/almost-standards mode, if we're on an
       // absolutely-positioned element or a floating element, we're done.
-      if (disp->IsFloating() || disp->IsAbsolutelyPositioned()) {
+      if (f->IsFloating() ||
+          (disp->IsAbsolutelyPositioned() && !f->IsSVGText())) {
         break;
       }
     }
@@ -7180,7 +7181,7 @@ bool
 nsTextFrame::IsFloatingFirstLetterChild() const
 {
   nsIFrame* frame = GetParent();
-  return frame && frame->GetStyleDisplay()->IsFloating() &&
+  return frame && frame->IsFloating() &&
          frame->GetType() == nsGkAtoms::letterFrame;
 }
 
