@@ -1,0 +1,19 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>CSS Test: An @supports rule with invalid syntax must not apply rules inside it</title>
+  <link rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au" />
+  <link rel="help" href="http://www.w3.org/TR/#at-supports" />
+  <meta name="flags" content="" />
+  <meta name="assert" content="A property declaration in an @supports declaration must not omit the colon between the property name and value."/>
+  <link rel="match" href="pass.html" />
+  <style type="text/css"><![CDATA[
+    html { background-color: green }
+    @supports (unknown) or (color: green) {
+      html { background-color: red }
+    }
+  ]]></style>
+ </head>
+ <body>
+ </body>
+</html>
