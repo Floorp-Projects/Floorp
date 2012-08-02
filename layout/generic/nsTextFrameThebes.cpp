@@ -1469,6 +1469,18 @@ LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
   return StyleToCoord(aStyleText->mLetterSpacing);
 }
 
+static nscoord
+WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+  if (!aStyleText) {
+    aStyleText = aFrame->GetStyleText();
+  }
+  return aStyleText->mWordSpacing;
+}
+
 bool
 BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
@@ -1791,7 +1803,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       anyTextTransformStyle = true;
     }
     textFlags |= GetSpacingFlags(LetterSpacing(f));
-    textFlags |= GetSpacingFlags(textStyle->mWordSpacing);
+    textFlags |= GetSpacingFlags(WordSpacing(f));
     nsTextFrameUtils::CompressionMode compression =
       CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
     if (enabledJustification && !textStyle->WhiteSpaceIsSignificant()) {
@@ -2622,7 +2634,7 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
-      mWordSpacing(mTextStyle->mWordSpacing),
+      mWordSpacing(WordSpacing(aFrame, aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
@@ -2647,7 +2659,7 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
-      mWordSpacing(mTextStyle->mWordSpacing),
+      mWordSpacing(WordSpacing(aFrame)),
       mLetterSpacing(LetterSpacing(aFrame)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
