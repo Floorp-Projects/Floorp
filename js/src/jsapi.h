@@ -5012,7 +5012,7 @@ JS_END_EXTERN_C
 namespace JS {
 
 /* Options for JavaScript compilation. */
-struct CompileOptions {
+struct JS_PUBLIC_API(CompileOptions) {
     JSPrincipals *principals;
     JSPrincipals *originPrincipals;
     JSVersion version;
