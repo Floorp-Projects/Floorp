@@ -454,39 +454,39 @@ public final class Tab {
         GeckoApp.mAppContext.loadUrl("about:reader?url=" + Uri.encode(getURL()));
     }
 
-    public boolean doReload() {
+    public void doReload() {
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
-        return true;
     }
 
+    // Our version of nsSHistory::GetCanGoBack
     public boolean canDoBack() {
-        return (mHistoryIndex < 1 ? false : true);
+        return mHistoryIndex > 0;
     }
 
     public boolean doBack() {
-        if (mHistoryIndex < 1) {
+        if (!canDoBack())
             return false;
-        }
+
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Back", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
 
-    public boolean doStop() {
+    public void doStop() {
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Stop", "");
         GeckoAppShell.sendEventToGecko(e);
-        return true;
     }
 
+    // Our version of nsSHistory::GetCanGoForward
     public boolean canDoForward() {
-        return (mHistoryIndex + 1 < mHistorySize);
+        return mHistoryIndex < mHistorySize - 1;
     }
 
     public boolean doForward() {
-        if (mHistoryIndex + 1 >= mHistorySize) {
+        if (!canDoForward())
             return false;
-        }
+
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Forward", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
@@ -531,22 +531,22 @@ public final class Tab {
 
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
         if (event.equals("New")) {
-            final String uri = message.getString("uri");
+            final String url = message.getString("url");
             mHistoryIndex++;
             mHistorySize = mHistoryIndex + 1;
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    GlobalHistory.getInstance().add(uri);
+                    GlobalHistory.getInstance().add(url);
                 }
             });
         } else if (event.equals("Back")) {
-            if (mHistoryIndex - 1 < 0) {
+            if (!canDoBack()) {
                 Log.e(LOGTAG, "Received unexpected back notification");
                 return;
             }
             mHistoryIndex--;
         } else if (event.equals("Forward")) {
-            if (mHistoryIndex + 1 >= mHistorySize) {
+            if (!canDoForward()) {
                 Log.e(LOGTAG, "Received unexpected forward notification");
                 return;
             }
@@ -559,14 +559,20 @@ public final class Tab {
             }
             mHistoryIndex = index;
         } else if (event.equals("Purge")) {
-            int numEntries = message.getInt("index");
+            int numEntries = message.getInt("numEntries");
+            if (numEntries > mHistorySize) {
+                Log.e(LOGTAG, "Received unexpectedly large number of history entries to purge");
+                mHistoryIndex = -1;
+                mHistorySize = 0;
+                return;
+            }
+
             mHistorySize -= numEntries;
             mHistoryIndex -= numEntries;
-            if (mHistorySize < 0 || mHistoryIndex < -1) {
-                Log.e(LOGTAG, "Unexpected history state: index = " + mHistoryIndex + ", size = " + mHistorySize);
-                mHistorySize = 0;
-                mHistoryIndex = -1;
-            }
+
+            // If we weren't at the last history entry, mHistoryIndex may have become too small
+            if (mHistoryIndex < -1)
+                 mHistoryIndex = -1;
         }
     }
 
