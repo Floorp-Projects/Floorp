@@ -43,7 +43,7 @@ let tests = {
 
   testProfile: function(next) {
     let expect = {
-      portrait: "chrome://branding/content/icon48.png",
+      portrait: "https://example.com/portrait.jpg",
       userName: "trickster",
       displayName: "Kuma Lisa",
       profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
