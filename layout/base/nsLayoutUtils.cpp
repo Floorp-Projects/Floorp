@@ -4054,21 +4054,13 @@ nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
   }
 }
 
-static bool
-IsNonzeroCoord(const nsStyleCoord& aCoord)
-{
-  if (eStyleUnit_Coord == aCoord.GetUnit())
-    return aCoord.GetCoordValue() != 0;
-  return false;
-}
-
 /* static */ PRUint32
 nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
-                                       const nsStyleText* aStyleText,
-                                       const nsStyleFont* aStyleFont)
+                                       const nsStyleFont* aStyleFont,
+                                       nscoord aLetterSpacing)
 {
   PRUint32 result = 0;
-  if (IsNonzeroCoord(aStyleText->mLetterSpacing)) {
+  if (aLetterSpacing != 0) {
     result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
   switch (aStyleContext->GetStyleSVG()->mTextRendering) {
