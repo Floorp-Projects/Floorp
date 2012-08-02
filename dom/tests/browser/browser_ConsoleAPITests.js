@@ -207,7 +207,11 @@ function observeConsoleTest() {
 
   expect("error", "arg");
   win.console.error("arg");
+  yield;
 
+  let obj2 = { b: 2 };
+  expect("log", "omg ", obj, " foo ", 4, obj2);
+  win.console.log("omg %o foo %o", obj, 4, obj2);
   yield;
 
   startTraceTest();
