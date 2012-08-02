@@ -38,25 +38,24 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mNeedsYFlip = true;
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    void *texture = mDrawTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE);
-
-    if (!texture) {
-      // XXX - Once we have non-D2D drawtargets we should do something more sensible here.
-      NS_WARNING("Failed to get D3D10 texture from DrawTarget.");
-      return;
-    }
-
-    mTexture = static_cast<ID3D10Texture2D*>(texture);
-
-    NS_ASSERTION(aData.mGLContext == nullptr && aData.mSurface == nullptr,
-                 "CanvasLayer can't have both surface and GLContext/Surface");
-
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
+    void *texture = mDrawTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE);
 
-    mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
-    device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
-    return;
+    if (texture) {
+      mTexture = static_cast<ID3D10Texture2D*>(texture);
+
+      NS_ASSERTION(aData.mGLContext == nullptr && aData.mSurface == nullptr,
+                   "CanvasLayer can't have both surface and GLContext/Surface");
+
+      mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+      device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+      return;
+    } 
+    
+    // XXX we should store mDrawTarget and use it directly in UpdateSurface,
+    // bypassing Thebes
+    mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
   } else {
     NS_ERROR("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
@@ -111,15 +110,10 @@ CanvasLayerD3D10::UpdateSurface()
 
   if (mDrawTarget) {
     mDrawTarget->Flush();
-    return;
-  }
-
-  if (mIsD2DTexture) {
+  } else if (mIsD2DTexture) {
     mSurface->Flush();
     return;
-  }
-
-  if (mUsingSharedTexture) {
+  } else if (mUsingSharedTexture) {
     // need to sync on the d3d9 device
     if (mGLContext) {
       mGLContext->MakeCurrent();
@@ -127,7 +121,6 @@ CanvasLayerD3D10::UpdateSurface()
     }
     return;
   }
-
   if (mGLContext) {
     // WebGL reads entire surface.
     D3D10_MAPPED_TEXTURE2D map;
