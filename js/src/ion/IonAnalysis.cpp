@@ -661,67 +661,6 @@ SkipContainedLoop(MBasicBlock *block, MBasicBlock *header)
     return block;
 }
 
-// Mark every block in a loop body with the closest containing loop header.
-bool
-ion::FindNaturalLoops(MIRGraph &graph)
-{
-    Vector<MBasicBlock *, 8, SystemAllocPolicy> worklist;
-
-    // Our RPO block ordering guarantees we'll see the loop body (and therefore inner
-    // backedges) before outer backedges.
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (!block->isLoopBackedge())
-            continue;
-
-        MBasicBlock *header = block->loopHeaderOfBackedge();
-        JS_ASSERT(!block->loopHeader());
-        JS_ASSERT(!header->loopHeader());
-
-        // The header contains itself.
-        header->setLoopHeader(header);
-        if (!header->addContainedInLoop(header))
-            return false;
-
-        MBasicBlock *current = *block;
-        do {
-            // Find blocks belonging to the loop body by scanning predecessors.
-            for (size_t i = 0; i < current->numPredecessors(); i++) {
-                MBasicBlock *pred = current->getPredecessor(i);
-
-                // If this block was already scanned (diamond in graph), just
-                // ignore it.
-                if (pred->loopHeader() == header)
-                    continue;
-
-                // Assert that all blocks are contained between the loop
-                // header and the backedge.
-                JS_ASSERT_IF(pred != graph.osrBlock(),
-                             header->id() < pred->id() && pred->id() < block->id());
-
-                // If this block belongs to another loop body, skip past that
-                // entire loop (which is contained within this one).
-                pred = SkipContainedLoop(pred, header);
-                if (pred == header)
-                    continue;
-
-                JS_ASSERT(!pred->isLoopBackedge());
-
-                if (!worklist.append(pred))
-                    return false;
-            }
-
-            current->setLoopHeader(header);
-            if (!header->addContainedInLoop(current))
-                return false;
-            if (worklist.empty())
-                break;
-            current = worklist.popCopy();
-        } while (true);
-    }
-
-    return true;
-}
-
 #ifdef DEBUG
 static bool
 CheckSuccessorImpliesPredecessor(MBasicBlock *A, MBasicBlock *B)
