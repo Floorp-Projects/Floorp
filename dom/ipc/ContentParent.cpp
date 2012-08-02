@@ -528,6 +528,8 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
         //Sending all information to content process
         unused << SendAppInfo(version, buildID);
     }
+
+    mFileWatchers.Init();
 }
 
 ContentParent::~ContentParent()
@@ -764,6 +766,9 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
+
+        mFileWatchers.Clear();
+
         Close();
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
@@ -1505,6 +1510,65 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
     }
   }
   return true;
+}
+
+bool
+ContentParent::RecvAddFileWatch(const nsString& root)
+{
+  nsRefPtr<WatchedFile> f;
+  if (mFileWatchers.Get(root, getter_AddRefs(f))) {
+    f->mUsageCount++;
+    return true;
+  }
+  
+  f = new WatchedFile(this, root);
+  mFileWatchers.Put(root, f);
+
+  f->Watch();
+  return true;
+}
+
+bool
+ContentParent::RecvRemoveFileWatch(const nsString& root)
+{
+  nsRefPtr<WatchedFile> f;
+  bool result = mFileWatchers.Get(root, getter_AddRefs(f));
+  if (!result) {
+    return true;
+  }
+
+  if (!f)
+    return true;
+
+  f->mUsageCount--;
+
+  if (f->mUsageCount > 0) {
+    return true;
+  }
+
+  f->Unwatch();
+  mFileWatchers.Remove(root);
+  return true;
+}
+
+NS_IMPL_ISUPPORTS1(ContentParent::WatchedFile, nsIFileUpdateListener)
+
+nsresult
+ContentParent::WatchedFile::Update(const char* aReason, nsIFile* aFile)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsString path;
+  aFile->GetPath(path);
+
+  unused << mParent->SendFilePathUpdate(path, nsDependentCString(aReason));
+
+#ifdef DEBUG
+  nsCString cpath;
+  aFile->GetNativePath(cpath);
+  printf("ContentParent::WatchedFile::Update: %s  -- %s\n", cpath.get(), aReason);
+#endif
+  return NS_OK;
 }
 
 } // namespace dom

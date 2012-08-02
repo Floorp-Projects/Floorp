@@ -1216,10 +1216,21 @@ public:
 
       case DEVICE_STORAGE_REQUEST_WATCH:
       {
-        if (!mDeviceStorage->mIsWatchingFile) {
-          mFile->mFile->Watch(mDeviceStorage);
-          mDeviceStorage->mIsWatchingFile = true;
-        }
+         if (XRE_GetProcessType() != GeckoProcessType_Default) {
+           nsString fullpath;
+           mFile->mFile->GetPath(fullpath);
+           nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+           obs->AddObserver(mDeviceStorage, "file-watcher-update", false);
+           ContentChild::GetSingleton()->SendAddFileWatch(fullpath);
+         } else {
+           if (!mDeviceStorage->mIsWatchingFile) {
+
+             //TODO
+
+             mFile->mFile->Watch(mDeviceStorage);
+             mDeviceStorage->mIsWatchingFile = true;
+           }
+         }
         return NS_OK;
       }
     }
@@ -1301,6 +1312,7 @@ DOMCI_DATA(DeviceStorage, nsDOMDeviceStorage)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIFileUpdateListener)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorage)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -1345,7 +1357,17 @@ nsDOMDeviceStorage::Shutdown()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (mIsWatchingFile) {
-    mFile->Unwatch(this);
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->RemoveObserver(this, "file-watcher-update");
+
+      nsString fullpath;
+      mFile->GetPath(fullpath);
+      ContentChild::GetSingleton()->SendRemoveFileWatch(fullpath);
+    }
+    else {
+      mFile->Unwatch(this);
+    }
   }
 }
 
@@ -1634,6 +1656,42 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
 }
 
 NS_IMETHODIMP
+nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  // data strings will have the format of
+  //  reason:path
+  nsDependentString data(aData);
+
+  nsAString::const_iterator start, end;
+  nsAString::const_iterator colon;
+
+  data.BeginReading(start);
+  data.EndReading(end);
+  colon = end;
+
+  nsString reason;
+  nsString filepath;
+  if (!FindInReadable(NS_LITERAL_STRING(":"), start, colon)) {
+    return NS_OK;
+  }
+   
+  filepath = Substring(colon, end);
+  data.BeginReading(start);
+  reason = Substring(start, --colon);
+
+  nsCOMPtr<nsIFile> f;
+  NS_NewLocalFile(filepath, false, getter_AddRefs(f));
+ 
+  nsCString creason;
+  creason.AssignWithConversion(reason);
+  CopyUTF16toUTF8(reason, creason);
+
+  Update(creason.get(), f);
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDeviceStorage::Update(const char* aReason, nsIFile* aFile)
 {
   nsString rootpath;
@@ -1709,7 +1767,16 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
   nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, false);
 
   if (mIsWatchingFile && !HasListenersFor(NS_LITERAL_STRING("change"))) {
-    mFile->Unwatch(this);
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->RemoveObserver(this, "file-watcher-update");
+
+      nsString fullpath;
+      mFile->GetPath(fullpath);
+      ContentChild::GetSingleton()->SendRemoveFileWatch(fullpath);
+    } else {
+      mFile->Unwatch(this);
+    }
   }
   return NS_OK;
 }
