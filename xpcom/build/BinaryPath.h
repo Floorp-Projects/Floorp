@@ -76,7 +76,7 @@ private:
       return NS_ERROR_FAILURE;
 
     snprintf(aResult, MAXPATHLEN, "%s/%s", greHome, "dummy");
-    aResult[MAXPATHLEN] = '\0';
+    aResult[MAXPATHLEN-1] = '\0';
     return NS_OK;
   }
 
