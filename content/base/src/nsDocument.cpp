@@ -8439,8 +8439,7 @@ NS_IMETHODIMP
 nsDocument::CreateTouchList(nsIVariant* aPoints,
                             nsIDOMTouchList** aRetVal)
 {
-  nsRefPtr<nsDOMTouchList> retval =
-    new nsDOMTouchList(static_cast<nsIDocument*>(this));
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
   if (aPoints) {
     PRUint16 type;
     aPoints->GetDataType(&type);
