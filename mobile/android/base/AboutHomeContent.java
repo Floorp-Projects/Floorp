@@ -626,22 +626,8 @@ public class AboutHomeContent extends ScrollView
     }
 
     public static class TopSitesGridView extends GridView {
-        /** From layout xml:
-         *  80dip image height 
-         * + 2dip image paddingTop
-         * + 1dip image padding (for bottom)
-         * + 3dip marginTop on the TextView
-         * +15dip TextView height
-         * + 8dip vertical spacing in the GridView
-         * ------
-         * 109dip total height per top site grid item
-         */
-        private static final int kTopSiteItemHeight = 109;
-        float mDisplayDensity ;
-
         public TopSitesGridView(Context context, AttributeSet attrs) {
             super(context, attrs);
-            mDisplayDensity = context.getResources().getDisplayMetrics().density;
         }
 
         @Override
@@ -661,9 +647,9 @@ public class AboutHomeContent extends ScrollView
             numRows = (int) Math.round((double) nSites / mNumberOfCols);
             setNumColumns(mNumberOfCols);
 
-            int expandedHeightSpec = 
-                MeasureSpec.makeMeasureSpec((int)(mDisplayDensity * numRows * kTopSiteItemHeight),
-                                            MeasureSpec.EXACTLY);
+            int expandedHeightSpec = MeasureSpec.makeMeasureSpec(numRows * getResources().
+                    getDimensionPixelSize(R.dimen.abouthome_content_top_sites_item_height),
+                    MeasureSpec.EXACTLY);
 
             super.onMeasure(widthMeasureSpec, expandedHeightSpec);
         }
