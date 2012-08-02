@@ -4955,7 +4955,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
     NS_ASSERTION(!aPrevSibling || aPrevSibling->GetNextSibling() == newFrame,
                  "Unexpected aPrevSibling");
     NS_ASSERTION(newFrame->GetType() != nsGkAtoms::placeholderFrame ||
-                 (!newFrame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
+                 (!newFrame->IsAbsolutelyPositioned() &&
                   !newFrame->IsFloating()),
                  "Placeholders should not float or be positioned");
 
@@ -5132,8 +5132,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
   nsBlockFrame* block = (nsBlockFrame*)aFrame->GetParent();
 
   // Remove aFrame from the appropriate list.
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-  if (display->IsAbsolutelyPositioned()) {
+  if (aFrame->IsAbsolutelyPositioned()) {
     // This also deletes the next-in-flows
     block->GetAbsoluteContainingBlock()->RemoveFrame(block,
                                                      kAbsoluteList,
@@ -6479,7 +6478,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
 {
   // See if the child is absolutely positioned
   if (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
-      aChild->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+      aChild->IsAbsolutelyPositioned()) {
     // do nothing
   } else if (aChild == GetOutsideBullet()) {
     // The bullet lives in the first line, unless the first line has

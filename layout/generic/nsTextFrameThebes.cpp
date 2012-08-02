@@ -4619,8 +4619,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     } else {
       // In standards/almost-standards mode, if we're on an
       // absolutely-positioned element or a floating element, we're done.
-      if (f->IsFloating() ||
-          (disp->IsAbsolutelyPositioned() && !f->IsSVGText())) {
+      if (f->IsFloating() || f->IsAbsolutelyPositioned()) {
         break;
       }
     }
