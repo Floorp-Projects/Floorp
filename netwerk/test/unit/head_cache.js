@@ -43,4 +43,15 @@ function asyncOpenCacheEntry(key, sessionName, storagePolicy, access, callback)
   (new CacheListener()).run();
 }
 
-
+function syncWithCacheIOThread(callback)
+{
+  asyncOpenCacheEntry(
+    "nonexistententry",
+    "HTTP",
+    Components.interfaces.nsICache.STORE_ANYWHERE,
+    Components.interfaces.nsICache.ACCESS_READ,
+    function(status, entry) {
+      do_check_eq(status, Components.results.NS_ERROR_CACHE_KEY_NOT_FOUND);
+      callback();
+    });
+}

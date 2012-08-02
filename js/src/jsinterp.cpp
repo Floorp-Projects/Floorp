@@ -481,13 +481,11 @@ js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsign
 }
 
 bool
-js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const Value &thisv,
+js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
                   ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
     JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
-
-    JS::Rooted<JSScript*> script(cx, script_);
 
     if (script->isEmpty()) {
         if (result)
@@ -514,7 +512,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
 }
 
 bool
-js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
+js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
     RootedObject scopeChain(cx, &scopeChainArg);
@@ -1783,12 +1781,10 @@ END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ITERNEXT)
 {
-    JS_ASSERT(regs.stackDepth() >= unsigned(GET_INT8(regs.pc)));
-    Value *itervp = regs.sp - GET_INT8(regs.pc);
-    JS_ASSERT(itervp->isObject());
+    JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-    if (!IteratorNext(cx, &itervp->toObject(), res))
+    if (!IteratorNext(cx, &regs.sp[-2].toObject(), res))
         goto error;
 }
 END_CASE(JSOP_ITERNEXT)

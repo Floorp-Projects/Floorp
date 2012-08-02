@@ -561,7 +561,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   // columns might not fill the frame exactly, we need to account for the
   // slop. Otherwise we'll waste time moving the columns by some tiny
   // amount unnecessarily.
-  nscoord targetX = borderPadding.left;
   if (RTL) {
     nscoord availWidth = aReflowState.availableWidth;
     if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
@@ -569,7 +568,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     }
     if (availWidth != NS_INTRINSICSIZE) {
       childOrigin.x += availWidth - aConfig.mColWidth;
-      targetX += aConfig.mExpectedWidthLeftOver;
 #ifdef DEBUG_roc
       printf("*** childOrigin.x = %d\n", childOrigin.x);
 #endif
@@ -818,20 +816,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     }
   }
   
-  // If we're doing RTL, we need to make sure our last column is at the left-hand side of the frame.
-  if (RTL && childOrigin.x != targetX) {
-    overflowRects.Clear();
-    contentRect = nsRect(0, 0, 0, 0);
-    PRInt32 deltaX = targetX - childOrigin.x;
-#ifdef DEBUG_roc
-    printf("*** CHILDORIGIN.x = %d, targetX = %d, DELTAX = %d\n", childOrigin.x, targetX, deltaX);
-#endif
-    for (child = mFrames.FirstChild(); child; child = child->GetNextSibling()) {
-      MoveChildTo(this, child, child->GetPosition() + nsPoint(deltaX, 0));
-      ConsiderChildOverflow(overflowRects, child);
-      contentRect.UnionRect(contentRect, child->GetRect());
-    }
-  }
   aColData.mMaxHeight = contentBottom;
   contentRect.height = NS_MAX(contentRect.height, contentBottom);
   mLastFrameStatus = aStatus;

@@ -154,9 +154,9 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     if (sc) {
       rv =
         StringArrayToJSArray(sc->GetNativeContext(),
-                             sc->GetNativeGlobal(), mUuids, &mJsDeviceAddresses);
+                             sc->GetNativeGlobal(), mDeviceAddresses, &mJsDeviceAddresses);
       if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot set JS Devices Addresses object!");
+        NS_WARNING("Cannot set JS Device Addresses object!");
         return;
       }
       Root();
@@ -335,7 +335,7 @@ BluetoothAdapter::GetDevices(JSContext* aCx, jsval* aDevices)
     aDevices->setObject(*mJsDeviceAddresses);
   }
   else {
-    NS_WARNING("UUIDs not yet set!\n");
+    NS_WARNING("Devices not yet set!\n");
     return NS_ERROR_FAILURE;
   }    
   return NS_OK;

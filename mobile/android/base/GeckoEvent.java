@@ -5,6 +5,10 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.DisplayPortMetrics;
+import org.mozilla.gecko.gfx.ViewportMetrics;
+
+import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -19,9 +23,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import org.mozilla.gecko.gfx.DisplayPortMetrics;
-import org.mozilla.gecko.gfx.ViewportMetrics;
 
 import java.nio.ByteBuffer;
 
@@ -256,7 +257,8 @@ public class GeckoEvent {
                 }
             } else {
                 float size = event.getSize(eventIndex);
-                DisplayMetrics displaymetrics = GeckoApp.mAppContext.getDisplayMetrics();
+                Resources resources = GeckoApp.mAppContext.getResources();
+                DisplayMetrics displaymetrics = resources.getDisplayMetrics();
                 size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
                 mPointRadii[index] = new Point((int)size,(int)size);
                 mOrientations[index] = 0;

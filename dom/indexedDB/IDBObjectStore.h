@@ -17,12 +17,22 @@
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/KeyPath.h"
 
+class nsIDOMBlob;
 class nsIScriptContext;
 class nsPIDOMWindow;
+
+namespace mozilla {
+namespace dom {
+class ContentParent;
+class PBlobChild;
+class PBlobParent;
+}
+}
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
+class FileManager;
 class IDBCursor;
 class IDBKeyRange;
 class IDBRequest;
@@ -33,8 +43,6 @@ class Key;
 struct IndexInfo;
 struct IndexUpdateInfo;
 struct ObjectStoreInfo;
-struct StructuredCloneReadInfo;
-struct StructuredCloneWriteInfo;
 
 class IDBObjectStore MOZ_FINAL : public nsIIDBObjectStore
 {
@@ -102,6 +110,18 @@ public:
   static nsresult
   ConvertFileIdsToArray(const nsAString& aFileIds,
                         nsTArray<PRInt64>& aResult);
+
+  // Called only in the main process.
+  static nsresult
+  ConvertBlobsToActors(ContentParent* aContentParent,
+                       FileManager* aFileManager,
+                       const nsTArray<StructuredCloneFile>& aFiles,
+                       InfallibleTArray<PBlobParent*>& aActors);
+
+  // Called only in the child process.
+  static void
+  ConvertActorsToBlobs(const InfallibleTArray<PBlobChild*>& aActors,
+                       nsTArray<StructuredCloneFile>& aFiles);
 
   const nsString& Name() const
   {
@@ -183,6 +203,7 @@ public:
                       const SerializedStructuredCloneWriteInfo& aCloneWriteInfo,
                       const Key& aKey,
                       const InfallibleTArray<IndexUpdateInfo>& aUpdateInfoArray,
+                      const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs,
                       bool aOverwrite,
                       IDBRequest** _retval);
 
@@ -216,6 +237,7 @@ public:
                             size_t aDirection,
                             const Key& aKey,
                             const SerializedStructuredCloneReadInfo& aCloneInfo,
+                            nsTArray<StructuredCloneFile>& aBlobs,
                             IDBCursor** _retval);
 
   void

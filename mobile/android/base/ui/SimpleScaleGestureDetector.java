@@ -6,10 +6,13 @@
 package org.mozilla.gecko.ui;
 
 import org.mozilla.gecko.gfx.PointUtils;
+
 import org.json.JSONException;
+
 import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
+
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Stack;

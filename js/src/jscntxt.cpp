@@ -549,7 +549,7 @@ namespace js {
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 void
-ReportUsageError(JSContext *cx, JSObject *callee, const char *msg)
+ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 {
     const char *usageStr = "usage";
     PropertyName *usageAtom = js_Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();

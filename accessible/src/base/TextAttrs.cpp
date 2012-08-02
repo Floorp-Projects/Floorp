@@ -208,6 +208,9 @@ TextAttrsMgr::LangTextAttr::
   }
 }
 
+TextAttrsMgr::LangTextAttr::
+  ~LangTextAttr() {}
+
 bool
 TextAttrsMgr::LangTextAttr::
   GetValueFor(Accessible* aAccessible, nsString* aValue)

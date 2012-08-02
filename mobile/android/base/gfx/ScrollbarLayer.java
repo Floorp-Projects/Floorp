@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.mozglue.DirectBufferAllocator;
+import org.mozilla.gecko.util.FloatUtils;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,8 +19,6 @@ import android.opengl.GLES20;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import org.mozilla.gecko.FloatUtils;
-import org.mozilla.gecko.GeckoAppShell;
 
 /**
  * Draws a small rect. This is scaled to become a scrollbar.
@@ -129,7 +130,7 @@ public class ScrollbarLayer extends TileLayer {
         // just create an empty image for now, it will get drawn
         // on demand anyway
         int imageSize = IntSize.nextPowerOfTwo(BAR_SIZE);
-        ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(imageSize * imageSize * 4);
+        ByteBuffer buffer = DirectBufferAllocator.allocate(imageSize * imageSize * 4);
         CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize,
                                                   CairoImage.FORMAT_ARGB32);
         return new ScrollbarLayer(renderer, image, vertical, buffer);

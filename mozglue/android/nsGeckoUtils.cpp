@@ -20,7 +20,7 @@ void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)
 {
     const char* str;
-    // XXX: java doesn't give us true UTF8, we should figure out something 
+    // XXX: java doesn't give us true UTF8, we should figure out something
     // better to do here
     str = jenv->GetStringUTFChars(map, NULL);
     if (str == NULL)
@@ -32,7 +32,7 @@ Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)
 extern "C"
 __attribute__ ((visibility("default")))
 jobject JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *jenv, jclass, jlong size)
+Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(JNIEnv *jenv, jclass, jlong size)
 {
     jobject buffer = NULL;
     void* mem = malloc(size);
@@ -47,7 +47,7 @@ Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *jenv, jclass, 
 extern "C"
 __attribute__ ((visibility("default")))
 void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_freeDirectBuffer(JNIEnv *jenv, jclass, jobject buf)
+Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeFreeDirectBuffer(JNIEnv *jenv, jclass, jobject buf)
 {
     free(jenv->GetDirectBufferAddress(buf));
 }

@@ -240,7 +240,7 @@ private:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
-    virtual bool UseAsyncPainting() MOZ_OVERRIDE { return true; }
+    virtual bool IsOOP() MOZ_OVERRIDE { return true; }
     virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect& aRect,
@@ -301,6 +301,9 @@ private:
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
+#ifdef XP_WIN
+    float mPluginCpuUsageOnHang;
+#endif
 
 #ifdef MOZ_X11
     // Dup of plugin's X socket, used to scope its resources to this

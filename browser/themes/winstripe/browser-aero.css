@@ -89,7 +89,7 @@
     border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
   }
 
-  #sidebar-splitter {
+  .sidebar-splitter {
     border: 0;
     -moz-border-end: 1px solid #A9B7C9;
     min-width: 0;
@@ -97,6 +97,13 @@
     background-color: transparent;
     -moz-margin-start: -3px;
     position: relative;
+  }
+
+  #appcontent ~ .sidebar-splitter {
+    -moz-border-start: 1px solid #A9B7C9;
+    -moz-border-end: none;
+    -moz-margin-start: 0;
+    -moz-margin-end: -3px;
   }
 
   .menu-accel,

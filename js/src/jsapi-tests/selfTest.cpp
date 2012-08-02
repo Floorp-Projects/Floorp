@@ -10,11 +10,11 @@
 
 BEGIN_TEST(selfTest_NaNsAreSame)
 {
-    jsvalRoot v1(cx), v2(cx);
-    EVAL("0/0", v1.addr());  // NaN
+    JS::RootedValue v1(cx), v2(cx);
+    EVAL("0/0", v1.address());  // NaN
     CHECK_SAME(v1, v1);
 
-    EVAL("Math.sin('no')", v2.addr());  // also NaN
+    EVAL("Math.sin('no')", v2.address());  // also NaN
     CHECK_SAME(v1, v2);
     return true;
 }

@@ -166,12 +166,12 @@ InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, 
  * stack to simulate executing an eval in that frame.
  */
 extern bool
-ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
               ExecuteType type, StackFrame *evalInFrame, Value *result);
 
 /* Execute a script with the given scopeChain as global code. */
 extern bool
-Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
+Execute(JSContext *cx, HandleScript script, JSObject &scopeChain, Value *rval);
 
 /* Flags to toggle js::Interpret() execution. */
 enum InterpMode
