@@ -13,7 +13,6 @@
 #include "nsMimeTypeArray.h"
 #include "nsDesktopNotification.h"
 #include "nsGeolocation.h"
-#include "nsDeviceStorage.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
 #include "nsIDocShell.h"
@@ -191,6 +190,12 @@ Navigator::Invalidate()
     mMessagesManager = nullptr;
   }
 #endif
+
+  PRUint32 len = mDeviceStorageStores.Length();
+  for (PRUint32 i = 0; i < len; ++i) {
+    mDeviceStorageStores[i]->Shutdown();
+  }
+  mDeviceStorageStores.Clear();
 
 }
 
@@ -885,7 +890,19 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _
     return NS_ERROR_FAILURE;
   }
 
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, _retval);
+  nsTArray<nsRefPtr<nsDOMDeviceStorage> > stores;
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, stores);
+
+  nsCOMPtr<nsIWritableVariant> result = do_CreateInstance("@mozilla.org/variant;1");
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+
+  result->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                     &NS_GET_IID(nsIDOMDeviceStorage),
+                     stores.Length(),
+                     const_cast<void*>(static_cast<const void*>(stores.Elements())));
+  result.forget(_retval);
+
+  mDeviceStorageStores.AppendElements(stores);
   return NS_OK;
 }
 

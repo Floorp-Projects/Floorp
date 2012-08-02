@@ -59,13 +59,13 @@ function createRandomBlob() {
 }
 
 function randomFilename(l) {
-    var set = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZ";
-    var result = "";
-    for (var i=0; i<l; i++) {
-	var r = Math.floor(set.length * Math.random());
-	result += set.substring(r, r + 1);
-    }
-    return result;
+  var set = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZ";
+  var result = "";
+  for (var i=0; i<l; i++) {
+    var r = Math.floor(set.length * Math.random());
+    result += set.substring(r, r + 1);
+  }
+  return result;
 }
 
 function reportErrorAndQuit(e) {
