@@ -949,7 +949,7 @@ class MNewArray : public MNullaryInstruction
     // Number of space to allocate for the array.
     uint32 count_;
     // Template for the created object.
-    HeapPtr<JSObject> templateObject_;
+    CompilerRootObject templateObject_;
     // Allocate space at initialization or not
     AllocatingBehaviour allocating_;
 
@@ -990,8 +990,7 @@ class MNewArray : public MNullaryInstruction
 class MNewObject : public MNullaryInstruction
 {
     CompilerRootObject baseObj_;
-    // Template for the created object.
-    HeapPtr<JSObject> templateObject_;
+    CompilerRootObject templateObject_;
 
     MNewObject(JSObject *templateObject)
       : templateObject_(templateObject)
@@ -2886,8 +2885,8 @@ class MRegExp : public MNullaryInstruction
     };
 
   private:
-    HeapPtr<RegExpObject> source_;
-    HeapPtr<JSObject> prototype_;
+    CompilerRoot<RegExpObject *> source_;
+    CompilerRootObject prototype_;
     CloneBehavior shouldClone_;
 
     MRegExp(RegExpObject *source, JSObject *prototype, CloneBehavior shouldClone)
@@ -2910,7 +2909,7 @@ class MRegExp : public MNullaryInstruction
         return new MRegExp(source, prototype, shouldClone);
     }
 
-    const HeapPtr<RegExpObject> &source() const {
+    RegExpObject *source() const {
         return source_;
     }
     JSObject *getRegExpPrototype() const {
@@ -2928,7 +2927,7 @@ class MLambda
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    HeapPtr<JSFunction> fun_;
+    CompilerRootFunction fun_;
 
     MLambda(MDefinition *scopeChain, JSFunction *fun)
       : MUnaryInstruction(scopeChain), fun_(fun)
@@ -2945,7 +2944,7 @@ class MLambda
     MDefinition *scopeChain() const {
         return getOperand(0);
     }
-    const HeapPtr<JSFunction> &fun() const {
+    JSFunction *fun() const {
         return fun_;
     }
     TypePolicy *typePolicy() {
@@ -3925,8 +3924,8 @@ class MStoreFixedSlot
 class InlinePropertyTable : public TempObject
 {
     struct Entry {
-        HeapPtr<types::TypeObject> typeObj;
-        HeapPtr<JSFunction> func;
+        CompilerRoot<types::TypeObject *> typeObj;
+        CompilerRootFunction func;
 
         Entry(types::TypeObject *typeObj, JSFunction *func)
             : typeObj(typeObj), func(func) {}
