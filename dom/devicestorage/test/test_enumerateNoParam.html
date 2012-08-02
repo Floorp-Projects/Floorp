@@ -45,7 +45,7 @@ function enumerateSuccess(e) {
   ok(index > -1, "filename should be in the enumeration : " + e.target.result.name);
 
   // clean up
-  var cleanup = storage[0].delete(prefix + "/" + filename);
+  var cleanup = storage.delete(prefix + "/" + filename);
   cleanup.onsuccess = function(e) {}  // todo - can i remove this?
 
   e.target.continue();
@@ -60,7 +60,7 @@ function addSuccess(e) {
   addedSoFar = addedSoFar + 1;
   if (addedSoFar == files.length) {
 
-    var cursor = storage[0].enumerate();
+    var cursor = storage.enumerate();
     cursor.onsuccess = enumerateSuccess;
     cursor.onerror = handleError;
   }
@@ -81,7 +81,7 @@ var addedSoFar = 0;
 
 for (var i=0; i<files.length; i++) {
 
- request = storage[0].addNamed(createRandomBlob(), prefix + '/' + files[i]);
+ request = storage.addNamed(createRandomBlob(), prefix + '/' + files[i]);
 
  ok(request, "Should have a non-null request");
  request.onsuccess = addSuccess;

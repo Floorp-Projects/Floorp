@@ -28,13 +28,13 @@ public:
 
   nsDOMDeviceStorage();
 
-  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType, const PRInt32 aIndex);
+  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType);
 
-  void SetRootFileForType(const nsAString& aType, const PRInt32 aIndex);
+  void SetRootFileForType(const nsAString& aType);
 
   static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                       const nsAString &aType,
-                                      nsTArray<nsRefPtr<nsDOMDeviceStorage> > &aStores);
+                                      nsDOMDeviceStorage** aStore);
   void Shutdown();
 
 private:
