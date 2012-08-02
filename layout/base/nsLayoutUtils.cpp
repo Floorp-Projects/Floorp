@@ -1888,7 +1888,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 PRInt32
 nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
-  if (!aFrame->GetStyleDisplay()->IsPositioned())
+  if (!aFrame->IsPositioned())
     return 0;
 
   const nsStylePosition* position =
@@ -3445,7 +3445,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 {
   nsIFrame* layer;
   for (layer = aFrame; layer; layer = layer->GetParent()) {
-    if (layer->GetStyleDisplay()->IsPositioned() ||
+    if (layer->IsPositioned() ||
         (layer->GetParent() &&
           layer->GetParent()->GetType() == nsGkAtoms::scrollFrame))
       break;

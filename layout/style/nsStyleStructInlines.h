@@ -61,4 +61,22 @@ nsStyleDisplay::IsFloating(const nsIFrame* aFrame) const
   return IsFloatingStyle() && !aFrame->IsSVGText();
 }
 
+bool
+nsStyleDisplay::IsPositioned(const nsIFrame* aFrame) const
+{
+  return IsPositionedStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleDisplay::IsRelativelyPositioned(const nsIFrame* aFrame) const
+{
+  return IsRelativelyPositionedStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aFrame) const
+{
+  return IsAbsolutelyPositionedStyle() && !aFrame->IsSVGText();
+}
+
 #endif /* !defined(nsStyleStructInlines_h_) */

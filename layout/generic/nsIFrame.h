@@ -2504,7 +2504,7 @@ public:
   bool IsPseudoStackingContextFromStyle() {
     const nsStyleDisplay* disp = GetStyleDisplay();
     return disp->mOpacity != 1.0f ||
-           disp->IsPositioned() ||
+           disp->IsPositioned(this) ||
            disp->IsFloating(this);
   }
   
@@ -2841,6 +2841,9 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
 
   inline bool IsFloating() const;
+  inline bool IsPositioned() const;
+  inline bool IsRelativelyPositioned() const;
+  inline bool IsAbsolutelyPositioned() const;
 
   /**
    * Returns the vertical-align value to be used for layout, if it is one
@@ -3171,6 +3174,24 @@ bool
 nsIFrame::IsFloating() const
 {
   return GetStyleDisplay()->IsFloating(this);
+}
+
+bool
+nsIFrame::IsPositioned() const
+{
+  return GetStyleDisplay()->IsPositioned(this);
+}
+
+bool
+nsIFrame::IsRelativelyPositioned() const
+{
+  return GetStyleDisplay()->IsRelativelyPositioned(this);
+}
+
+bool
+nsIFrame::IsAbsolutelyPositioned() const
+{
+  return GetStyleDisplay()->IsAbsolutelyPositioned(this);
 }
 
 #endif /* nsIFrame_h___ */
