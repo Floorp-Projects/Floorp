@@ -5824,16 +5824,12 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
       }
       case nsXPTType::T_I32:
       {
-        if (!JS_NewNumberValue(cx, c->GetValue()->val.i32, &v)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+        v = JS_NumberValue(c->GetValue()->val.i32);
         break;
       }
       case nsXPTType::T_U32:
       {
-        if (!JS_NewNumberValue(cx, c->GetValue()->val.u32, &v)) {
-          return NS_ERROR_UNEXPECTED;
-        }
+        v = JS_NumberValue(c->GetValue()->val.u32);
         break;
       }
       default:

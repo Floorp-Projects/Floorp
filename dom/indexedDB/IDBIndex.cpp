@@ -2324,11 +2324,7 @@ nsresult
 CountHelper::GetSuccessResult(JSContext* aCx,
                               jsval* aVal)
 {
-  if (!JS_NewNumberValue(aCx, static_cast<double>(mCount), aVal)) {
-    NS_WARNING("Failed to make number value!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
+  *aVal = JS_NumberValue(static_cast<double>(mCount));
   return NS_OK;
 }
 
