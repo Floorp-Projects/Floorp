@@ -663,6 +663,8 @@ class DeviceManagerADB(DeviceManager):
   # disk - total, free, available bytes on disk
   # power - power status (charge, battery temp)
   # all - all of them - or call it with no parameters to get all the information
+  ### Note that uptimemillis is NOT supported, as there is no way to get this
+  ### data from the shell.
   # returns:
   #   success: dict of info strings by directive name
   #   failure: {}
