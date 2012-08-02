@@ -10,9 +10,11 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -21,11 +23,11 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import java.util.Map;
-import java.util.HashMap;
 
-public class GeckoLayerClient implements GeckoEventResponder,
-                                         LayerView.Listener {
+import java.util.HashMap;
+import java.util.Map;
+
+public class GeckoLayerClient implements GeckoEventResponder, LayerView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
 
     private LayerController mLayerController;
@@ -499,4 +501,3 @@ public class GeckoLayerClient implements GeckoEventResponder,
         public void drawFinished();
     }
 }
-

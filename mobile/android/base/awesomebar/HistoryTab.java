@@ -5,41 +5,41 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
-import android.content.res.Resources;
-import android.os.AsyncTask;
-import android.text.TextUtils;
-import android.database.ContentObserver;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.view.View;
-import android.widget.ListView;
-import android.database.Cursor;
-import android.view.MenuInflater;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.widget.TabHost.TabContentFactory;
-import android.util.Pair;
-import android.widget.ExpandableListView;
-import android.widget.SimpleExpandableListAdapter;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Date;
-
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Pair;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ExpandableListView;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SimpleExpandableListAdapter;
+import android.widget.TabHost.TabContentFactory;
+import android.widget.TextView;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class HistoryTab extends AwesomeBarTab {
     public static final String LOGTAG = "HISTORY_TAB";

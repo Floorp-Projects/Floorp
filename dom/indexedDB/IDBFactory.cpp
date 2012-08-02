@@ -510,14 +510,17 @@ IDBFactory::OpenCommon(const nsAString& aName,
 
   nsCOMPtr<nsPIDOMWindow> window;
   JSObject* scriptOwner = nullptr;
+  FactoryPrivilege privilege;
 
   if (mWindow) {
     window = mWindow;
     scriptOwner =
       static_cast<nsGlobalWindow*>(window.get())->FastGetGlobalJSObject();
+    privilege = Content;
   }
   else {
     scriptOwner = mOwningObject;
+    privilege = Chrome;
   }
 
   nsRefPtr<IDBOpenDBRequest> request =
@@ -526,9 +529,10 @@ IDBFactory::OpenCommon(const nsAString& aName,
 
   nsresult rv;
 
-  if (IndexedDatabaseManager::IsMainProcess()) {
+  if (IndexedDatabaseManager::IsMainProcess()) {                       
     nsRefPtr<OpenDatabaseHelper> openHelper =
-      new OpenDatabaseHelper(request, aName, mASCIIOrigin, aVersion, aDeleting);
+      new OpenDatabaseHelper(request, aName, mASCIIOrigin, aVersion, aDeleting,
+                             privilege);
 
     rv = openHelper->Init();
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

@@ -20,6 +20,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIMutableArray.h"
 
 using namespace mozilla::a11y;
 

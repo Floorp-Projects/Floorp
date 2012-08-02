@@ -73,6 +73,15 @@ NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
     return NS_OK;
 }
 
+WebGLContextOptions::WebGLContextOptions()
+    : depth(true), stencil(false),
+      premultipliedAlpha(true), antialias(true),
+      preserveDrawingBuffer(false)
+{
+    // Set default alpha state based on preference.
+    alpha = Preferences::GetBool("webgl.default-no-alpha", false) ? 0 : 1;
+}
+
 WebGLContext::WebGLContext()
     : gl(nullptr)
 {
@@ -289,9 +298,6 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     if (!aOptions)
         return NS_OK;
 
-    bool defaultNoAlpha =
-        Preferences::GetBool("webgl.default-no-alpha", false);
-
     WebGLContextOptions newOpts;
 
     GetBoolFromPropertyBag(aOptions, "stencil", &newOpts.stencil);
@@ -299,12 +305,7 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     GetBoolFromPropertyBag(aOptions, "premultipliedAlpha", &newOpts.premultipliedAlpha);
     GetBoolFromPropertyBag(aOptions, "antialias", &newOpts.antialias);
     GetBoolFromPropertyBag(aOptions, "preserveDrawingBuffer", &newOpts.preserveDrawingBuffer);
-
-    // alpha defaults to true as per the spec, but we want to evaluate
-    // what will happen if it were to default to false based on a pref
-    if (!GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha) && defaultNoAlpha) {
-        newOpts.alpha = false;
-    }
+    GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha);
 
     // enforce that if stencil is specified, we also give back depth
     newOpts.depth |= newOpts.stencil;

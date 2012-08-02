@@ -1010,12 +1010,12 @@ struct ScriptSource
     {
         data.source = NULL;
     }
-    bool setSource(JSContext *cx,
-                   const jschar *src,
-                   uint32_t length,
-                   bool argumentsNotIncluded = false,
-                   SourceCompressionToken *tok = NULL,
-                   bool ownSource = false);
+    bool setSourceCopy(JSContext *cx,
+                       const jschar *src,
+                       uint32_t length,
+                       bool argumentsNotIncluded,
+                       SourceCompressionToken *tok);
+    void setSource(const jschar *src, uint32_t length);
     void attachToRuntime(JSRuntime *rt);
     void mark() { marked = true; }
     bool onRuntime() const { return onRuntime_; }
