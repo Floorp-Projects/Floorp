@@ -780,6 +780,12 @@ SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
     return old;
 }
 
+JS_FRIEND_API(bool)
+WasIncrementalGC(JSRuntime *rt)
+{
+    return rt->gcIsIncremental;
+}
+
 jschar *
 GCDescription::formatMessage(JSRuntime *rt) const
 {
