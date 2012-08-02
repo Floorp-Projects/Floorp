@@ -18,6 +18,8 @@
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
+#include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
 #include "nsCoord.h"
 #include "nsRenderingContext.h"
 #include "nsIPresShell.h"
@@ -4605,9 +4607,9 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
 
     // In all modes, if we're on an inline-block or inline-table (or
     // inline-stack, inline-box, inline-grid), we're done.
-    const nsStyleDisplay *disp = context->GetStyleDisplay();
-    if (disp->mDisplay != NS_STYLE_DISPLAY_INLINE &&
-        disp->IsInlineOutside()) {
+    PRUint8 display = f->GetDisplay();
+    if (display != NS_STYLE_DISPLAY_INLINE &&
+        nsStyleDisplay::IsDisplayTypeInlineOutside(display)) {
       break;
     }
 

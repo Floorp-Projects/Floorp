@@ -23,8 +23,9 @@
 #include <stdio.h>
 #include "nsQueryFrame.h"
 #include "nsEvent.h"
-#include "nsStyleStruct.h"
 #include "nsStyleContext.h"
+#include "nsStyleStruct.h"
+#include "nsStyleStructFwd.h"
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
 #include "gfxMatrix.h"
@@ -2840,6 +2841,10 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   };
   bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
 
+  inline bool IsBlockInside() const;
+  inline bool IsBlockOutside() const;
+  inline bool IsInlineOutside() const;
+  inline PRUint8 GetDisplay() const;
   inline bool IsFloating() const;
   inline bool IsPositioned() const;
   inline bool IsRelativelyPositioned() const;
@@ -3192,6 +3197,30 @@ bool
 nsIFrame::IsAbsolutelyPositioned() const
 {
   return GetStyleDisplay()->IsAbsolutelyPositioned(this);
+}
+
+bool
+nsIFrame::IsBlockInside() const
+{
+  return GetStyleDisplay()->IsBlockInside(this);
+}
+
+bool
+nsIFrame::IsBlockOutside() const
+{
+  return GetStyleDisplay()->IsBlockOutside(this);
+}
+
+bool
+nsIFrame::IsInlineOutside() const
+{
+  return GetStyleDisplay()->IsInlineOutside(this);
+}
+
+PRUint8
+nsIFrame::GetDisplay() const
+{
+  return GetStyleDisplay()->GetDisplay(this);
 }
 
 #endif /* nsIFrame_h___ */
