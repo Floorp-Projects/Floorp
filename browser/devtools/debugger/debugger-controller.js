@@ -436,6 +436,7 @@ StackFrames.prototype = {
       this.exception = aPacket.why.exception;
     }
     this.activeThread.fillFrames(this.pageSize);
+    DebuggerView.editor.focus();
   },
 
   /**
