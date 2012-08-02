@@ -7410,6 +7410,52 @@ nsIFrame::HasTerminalNewline() const
   return false;
 }
 
+static PRUint8
+ConvertSVGDominantBaselineToVerticalAlign(PRUint8 aDominantBaseline)
+{
+  switch (aDominantBaseline) {
+  case NS_STYLE_DOMINANT_BASELINE_HANGING:
+  case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
+    return NS_STYLE_VERTICAL_ALIGN_TEXT_TOP;
+  case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
+  case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
+    return NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM;
+  case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
+  case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+    return NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+  case NS_STYLE_DOMINANT_BASELINE_AUTO:
+  case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
+    return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+  default:
+    NS_NOTREACHED("unexpected aDominantBaseline value");
+    return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+  }
+}
+
+PRUint8
+nsIFrame::VerticalAlignEnum() const
+{
+  if (mState & NS_FRAME_IS_SVG_TEXT) {
+    PRUint8 dominantBaseline;
+    for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
+      dominantBaseline = frame->GetStyleSVGReset()->mDominantBaseline;
+      if (dominantBaseline != NS_STYLE_DOMINANT_BASELINE_AUTO ||
+          frame->GetType() == nsGkAtoms::svgTextFrame) {
+        break;
+      }
+    }
+    return ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline);
+  }
+
+  const nsStyleCoord& verticalAlign =
+    GetStyleContext()->GetStyleTextReset()->mVerticalAlign;
+  if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    return verticalAlign.GetIntValue();
+  }
+
+  return eInvalidVerticalAlign;
+}
+
 /* static */
 void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                                              nsIFrame::Cursor& aCursor)
