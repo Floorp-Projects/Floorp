@@ -446,7 +446,7 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
 
   nsIContent *content = aFrame->GetContent();
   bool isInline = (aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE ||
-                   (aStyleDisplay->IsFloating() &&
+                   (aFrame->IsFloating() &&
                     aFrame->GetType() == nsGkAtoms::letterFrame) ||
                    // Given multiple frames for the same node, only the
                    // outer one should be considered a container.
@@ -522,7 +522,7 @@ nsFrame::Init(nsIContent*      aContent,
       AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
       if (!GetParent() ||
           // I'd use NS_FRAME_OUT_OF_FLOW, but it's not set yet.
-          disp->IsFloating() || disp->IsAbsolutelyPositioned()) {
+          disp->IsFloating(this) || disp->IsAbsolutelyPositioned()) {
         AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
       }
     }
@@ -2105,7 +2105,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
   bool isPositioned = !isSVG && disp->IsPositioned();
-  if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating()) ||
+  if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating(child)) ||
       ((disp->mClipFlags & NS_STYLE_CLIP_RECT) &&
        IsSVGContentWithCSSClip(child)) ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
@@ -2246,7 +2246,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         }
       }
     }
-  } else if (!isSVG && disp->IsFloating()) {
+  } else if (!isSVG && disp->IsFloating(child)) {
     if (!list.IsEmpty()) {
       rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
           nsDisplayWrapList(aBuilder, child, &list));
@@ -9365,7 +9365,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
       printf(" prev-in-flow");
     if (disp->IsAbsolutelyPositioned())
       printf(" abspos");
-    if (disp->IsFloating())
+    if (aFrame->IsFloating())
       printf(" float");
 
     // This array must exactly match the NS_STYLE_DISPLAY constants.

@@ -4956,7 +4956,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
                  "Unexpected aPrevSibling");
     NS_ASSERTION(newFrame->GetType() != nsGkAtoms::placeholderFrame ||
                  (!newFrame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
-                  !newFrame->GetStyleDisplay()->IsFloating()),
+                  !newFrame->IsFloating()),
                  "Placeholders should not float or be positioned");
 
     bool isBlock = newFrame->GetStyleDisplay()->IsBlockOutside();
@@ -5643,7 +5643,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
   NS_PRECONDITION(aPresContext && aChild, "null pointer");
 
   if ((aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-      aChild->GetStyleDisplay()->IsFloating()) {
+      aChild->IsFloating()) {
     bool removed = mFloats.RemoveFrameIfPresent(aChild);
     if (!removed) {
       nsFrameList* list = GetPushedFloats();

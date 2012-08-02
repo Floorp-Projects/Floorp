@@ -517,7 +517,7 @@ CreateContinuation(nsIFrame*  aFrame,
   // doesn't go in the first letter frame. The continuation goes with the rest
   // of the text that the first letter frame was made out of.
   if (parent->GetType() == nsGkAtoms::letterFrame &&
-      parent->GetStyleDisplay()->IsFloating()) {
+      parent->IsFloating()) {
     nsFirstLetterFrame* letterFrame = do_QueryFrame(parent);
     rv = letterFrame->CreateContinuationForFloatingParent(presContext, aFrame,
                                                           aNewFrame, aIsFluid);

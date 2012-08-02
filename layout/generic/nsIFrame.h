@@ -2503,7 +2503,9 @@ public:
    */
   bool IsPseudoStackingContextFromStyle() {
     const nsStyleDisplay* disp = GetStyleDisplay();
-    return disp->mOpacity != 1.0f || disp->IsPositioned() || disp->IsFloating();
+    return disp->mOpacity != 1.0f ||
+           disp->IsPositioned() ||
+           disp->IsFloating(this);
   }
   
   virtual bool HonorPrintBackgroundSettings() { return true; }
@@ -2838,6 +2840,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   };
   bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
 
+  inline bool IsFloating() const;
+
   /**
    * Returns the vertical-align value to be used for layout, if it is one
    * of the enumerated values.  If this is an SVG text frame, it returns a value
@@ -3160,4 +3164,13 @@ FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame)
   mPrev = aPrevFrame;
   mFrame = aPrevFrame ? aPrevFrame->GetNextSibling() : aList.FirstChild();
 }
+
+#include "nsStyleStructInlines.h"
+
+bool
+nsIFrame::IsFloating() const
+{
+  return GetStyleDisplay()->IsFloating(this);
+}
+
 #endif /* nsIFrame_h___ */
