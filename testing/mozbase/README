@@ -1,4 +1,22 @@
-This is the git repo for the Mozilla mozbase suite of python utilities.
+This is the git repository for the Mozilla mozbase suite of python utilities.
+
+MozBase is composed of several python packages. These packages work
+together to form the basis of a test harness.
+
+* Firefox is launched via [mozrunner](https://github.com/mozilla/mozbase/tree/master/mozrunner)
+** which sets up a profile with preferences and extensions using
+   [mozprofile ](https://github.com/mozilla/mozbase/tree/master/mozprofile)
+** and runs the application under test using [mozprocess](https://github.com/mozilla/mozbase/tree/master/mozprocess)
+* [mozInstall](https://github.com/mozilla/mozbase/tree/master/mozinstall) is used to install the test application
+* A test harness may direct Firefox to load web pages. These may be
+  served using [mozhttpd](https://github.com/mozilla/mozbase/tree/master/mozhttpd) for testing
+* The machine environment is introspected by [mozinfo](https://github.com/mozilla/mozbase/tree/master/mozinfo)
+* A test manifest may be read to determine the tests to be run. These
+  manifests are processed by [ManifestDestiny](https://github.com/mozilla/mozbase/tree/master/manifestdestiny)
+* For mozbile testing, the test runner communicates to the test agent
+  using [mozdevice](https://github.com/mozilla/mozbase/tree/master/mozdevice)
+  (Note that the canonical location of mozdevice is
+  mozilla-central: http://mxr.mozilla.org/mozilla-central/source/build/mobile/)
 
 Learn more about mozbase here:
 https://wiki.mozilla.org/Auto-tools/Projects/MozBase
