@@ -545,11 +545,8 @@ JS_ValueToSource(JSContext *cx, jsval v)
 JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, v);
-
-    return ToNumber(cx, v, dp);
+    RootedValue value(cx, v);
+    return JS::ToNumber(cx, value, dp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -573,22 +570,15 @@ JS_DoubleToUint32(double d)
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, v);
-
     RootedValue value(cx, v);
-    return ToInt32(cx, value, ip);
+    return JS::ToInt32(cx, value, ip);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32_t *ip)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, v);
-
-    return ToUint32(cx, v, (uint32_t *)ip);
+    RootedValue value(cx, v);
+    return JS::ToUint32(cx, value, ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -623,11 +613,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32_t *ip)
 JS_PUBLIC_API(JSBool)
 JS_ValueToUint16(JSContext *cx, jsval v, uint16_t *ip)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, v);
-
-    return ValueToUint16(cx, v, (uint16_t *)ip);
+    return ToUint16(cx, v, ip);
 }
 
 JS_PUBLIC_API(JSBool)
