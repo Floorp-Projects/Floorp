@@ -39,17 +39,17 @@ let modules = {
   },
   blocked: {
     uri: "chrome://browser/content/blockedSite.xhtml",
-    privileged: true,
+    privileged: false,
     hide: true
   },
   certerror: {
     uri: "chrome://browser/content/aboutCertError.xhtml",
-    privileged: true,
+    privileged: false,
     hide: true
   },
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
-    privileged: true
+    privileged: false
   },
   apps: {
     uri: "chrome://browser/content/aboutApps.xhtml",
