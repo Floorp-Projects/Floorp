@@ -3,7 +3,7 @@
 == image-fill-01.svg          ../pass.svg
 == image-filter-01.svg        image-filter-01-ref.svg
 == image-load-01.svg          ../pass.svg
-== image-opacity-01.svg       image-opacity-01-ref.svg
+fuzzy-if(Android&&!browserIsRemote,4,32) == image-opacity-01.svg image-opacity-01-ref.svg # Bug 779514 for Android
 fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02-ref.svg # Bug 776039 for Android
 == image-rotate-01.svg        image-rotate-01-ref.svg
 == image-rotate-02a.svg       image-rotate-02-ref.svg

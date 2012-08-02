@@ -182,6 +182,7 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
+  res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout/gecko_app.xml \
   res/layout-xlarge-v11/gecko_app.xml \
   res/layout/text_selection_handles.xml \
@@ -366,8 +367,13 @@ RES_VALUES = \
   res/values/arrays.xml \
   res/values/colors.xml \
   res/values/dimens.xml \
+  res/values/integers.xml \
   res/values/styles.xml \
   res/values/themes.xml \
+  $(NULL)
+
+RES_VALUES_LAND = \
+  res/values-land/integers.xml \
   $(NULL)
 
 RES_VALUES_V11 = \
@@ -382,6 +388,7 @@ RES_VALUES_LARGE_V11 = \
 
 RES_VALUES_XLARGE_V11 = \
   res/values-xlarge-v11/dimens.xml \
+  res/values-xlarge-v11/integers.xml \
   res/values-xlarge-v11/styles.xml \
   $(NULL)
 
@@ -977,30 +984,31 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
-  res/layout              \
-  res/layout-land-v14     \
-  res/layout-large-v11    \
-  res/layout-xlarge-v11   \
-  res/values              \
-  res/values-v11          \
-  res/values-large-v11    \
-  res/values-xlarge-v11   \
-  res/values-land-v14     \
-  res/xml                 \
-  res/anim                \
-  res/drawable-nodpi      \
-  res/drawable-ldpi       \
-  res/drawable-mdpi       \
-  res/drawable-hdpi       \
-  res/drawable-xhdpi      \
-  res/drawable            \
-  res/drawable-mdpi-v11   \
-  res/drawable-hdpi-v11   \
-  res/drawable-xhdpi-v11  \
-  res/drawable-land-v14   \
+  res/layout                    \
+  res/layout-land-v14           \
+  res/layout-large-v11          \
+  res/layout-xlarge-v11         \
+  res/layout-xlarge-land-v11    \
+  res/values                    \
+  res/values-v11                \
+  res/values-large-v11          \
+  res/values-xlarge-v11         \
+  res/values-land-v14           \
+  res/xml                       \
+  res/anim                      \
+  res/drawable-nodpi            \
+  res/drawable-ldpi             \
+  res/drawable-mdpi             \
+  res/drawable-hdpi             \
+  res/drawable-xhdpi            \
+  res/drawable                  \
+  res/drawable-mdpi-v11         \
+  res/drawable-hdpi-v11         \
+  res/drawable-xhdpi-v11        \
+  res/drawable-land-v14         \
   res/drawable-land-mdpi-v14    \
   res/drawable-land-hdpi-v14    \
   res/drawable-land-xhdpi-v14   \

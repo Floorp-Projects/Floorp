@@ -74,12 +74,13 @@ NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
 }
 
 WebGLContextOptions::WebGLContextOptions()
-    : depth(true), stencil(false),
+    : alpha(true), depth(true), stencil(false),
       premultipliedAlpha(true), antialias(true),
       preserveDrawingBuffer(false)
 {
     // Set default alpha state based on preference.
-    alpha = Preferences::GetBool("webgl.default-no-alpha", false) ? 0 : 1;
+    if (Preferences::GetBool("webgl.default-no-alpha", false))
+        alpha = false;
 }
 
 WebGLContext::WebGLContext()

@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBlob;
 include protocol PContent;
 include protocol PContentDialog;
 include protocol PDocumentRenderer;
@@ -18,6 +19,8 @@ include "IPC/nsGUIEventIPC.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+
+include DOMTypes;
 
 using IPC::URI;
 using gfxMatrix;
@@ -56,7 +59,7 @@ rpc protocol PBrowser
     manages PIndexedDB;
 
 both:
-    AsyncMessage(nsString aMessage, nsString aJSON);
+    AsyncMessage(nsString aMessage, ClonedMessageData aData);
 
 parent:
     /**
@@ -69,7 +72,7 @@ parent:
 
     rpc CreateWindow() returns (PBrowser window);
 
-    sync SyncMessage(nsString aMessage, nsString aJSON)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (nsString[] retval);
 
     /**

@@ -257,7 +257,8 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
 
     if (argc == 1) {
         uint32_t value = JS_GetGCParameter(cx->runtime, param);
-        return JS_NewNumberValue(cx, value, &vp[0]);
+        vp[0] = JS_NumberValue(value);
+        return true;
     }
 
     if (param == JSGC_NUMBER ||
@@ -632,7 +633,8 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    return JS_NewNumberValue(cx, (double) counter, vp);
+    *vp = JS_NumberValue((double) counter);
+    return true;
 }
 
 static unsigned finalizeCount = 0;

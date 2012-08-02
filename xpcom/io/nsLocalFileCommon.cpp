@@ -13,11 +13,11 @@
 #include "nsCRT.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsUTF8Utils.h"
+#include "nsThreadUtils.h"
 
 #ifdef XP_WIN
 #include <string.h>
 #endif
-
 
 void NS_StartupLocalFile()
 {
@@ -287,4 +287,18 @@ nsLocalFile::SetRelativeDescriptor(nsIFile *fromFile, const nsACString& relative
     }
 
     return InitWithFile(targetFile);
+}
+
+NS_IMETHODIMP
+nsLocalFile::Watch(nsIFileUpdateListener *listener)
+{
+    NS_ASSERTION(NS_IsMainThread(), "Watch must be called from main thread!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsLocalFile::Unwatch(nsIFileUpdateListener *listener)
+{
+    NS_ASSERTION(NS_IsMainThread(), "Unwatch must be called from main thread!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

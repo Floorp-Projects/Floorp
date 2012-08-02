@@ -2181,10 +2181,8 @@ ZZ_formatter(JSContext *cx, const char *format, bool fromJS, jsval **vpp,
     } else {
         re = va_arg(ap, double);
         im = va_arg(ap, double);
-        if (!JS_NewNumberValue(cx, re, &vp[0]))
-            return false;
-        if (!JS_NewNumberValue(cx, im, &vp[1]))
-            return false;
+        vp[0] = JS_NumberValue(re);
+        vp[1] = JS_NumberValue(im);
     }
     *vpp = vp + 2;
     *app = ap;
@@ -2394,7 +2392,8 @@ ToInt32(JSContext *cx, unsigned argc, jsval *vp)
 
     if (!JS_ValueToInt32(cx, argc == 0 ? JSVAL_VOID : vp[2], &i))
         return false;
-    return JS_NewNumberValue(cx, i, vp);
+    *vp = JS_NumberValue(i);
+    return true;
 }
 
 static JSBool
@@ -2665,7 +2664,8 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
         return false;
     }
     JSObject *obj = &v.toObject();
-    return JS_NewNumberValue(cx, (double) ((uintptr_t)obj->lastProperty() >> 3), vp);
+    *vp = JS_NumberValue((double) ((uintptr_t)obj->lastProperty() >> 3));
+    return true;
 }
 
 /*
@@ -3059,8 +3059,10 @@ SetTimeoutValue(JSContext *cx, double t)
 static JSBool
 Timeout(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (argc == 0)
-        return JS_NewNumberValue(cx, gTimeoutInterval, vp);
+    if (argc == 0) {
+        *vp = JS_NumberValue(gTimeoutInterval);
+        return true;
+    }
 
     if (argc > 1) {
         JS_ReportError(cx, "Wrong number of arguments");
@@ -3083,7 +3085,8 @@ Elapsed(JSContext *cx, unsigned argc, jsval *vp)
         JSShellContextData *data = GetContextData(cx);
         if (data)
             d = PRMJ_Now() - data->startTime;
-        return JS_NewNumberValue(cx, d, vp);
+        *vp = JS_NumberValue(d);
+        return true;
     }
     JS_ReportError(cx, "Wrong number of arguments");
     return false;

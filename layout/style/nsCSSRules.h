@@ -12,9 +12,11 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/Preferences.h"
+#include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
-#include "nsIDOMCSSFontFaceRule.h"
+#include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -409,5 +411,51 @@ private:
 
   nsString                                   mName;
 };
+
+namespace mozilla {
+
+class CSSSupportsRule : public css::GroupRule,
+                        public nsIDOMCSSSupportsRule
+{
+public:
+  CSSSupportsRule(bool aConditionMet, const nsString& aCondition);
+  CSSSupportsRule(const CSSSupportsRule& aCopy);
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // Rule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual bool UseForPresentation(nsPresContext* aPresContext,
+                                  nsMediaQueryResultCacheKey& aKey);
+  virtual nsIDOMCSSRule* GetDOMRule()
+  {
+    return this;
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMCSSSupportsRule interface
+  NS_DECL_NSIDOMCSSSUPPORTSRULE
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
+  static bool PrefEnabled()
+  {
+    return Preferences::GetBool("layout.css.supports-rule.enabled");
+  }
+
+protected:
+  bool mUseGroup;
+  nsString mCondition;
+};
+
+} // namespace mozilla
 
 #endif /* !defined(nsCSSRules_h_) */

@@ -20,10 +20,14 @@
 #include "xpcpublic.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsDOMClassInfoID.h"
+#include "mozilla/dom/StructuredCloneUtils.h"
+
+using mozilla::dom::StructuredCloneData;
+using mozilla::dom::StructuredCloneClosure;
 
 bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aMessage,
-                             const nsAString& aJSON,
+                             const StructuredCloneData& aData,
                              InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsInProcessTabChildGlobal* tabChild =
@@ -38,7 +42,7 @@ bool SendSyncMessageToParent(void* aCallbackData,
   }
   if (tabChild->mChromeMessageManager) {
     nsRefPtr<nsFrameMessageManager> mm = tabChild->mChromeMessageManager;
-    mm->ReceiveMessage(owner, aMessage, true, aJSON, nullptr, aJSONRetVal);
+    mm->ReceiveMessage(owner, aMessage, true, &aData, nullptr, aJSONRetVal);
   }
   return true;
 }
@@ -47,32 +51,45 @@ class nsAsyncMessageToParent : public nsRunnable
 {
 public:
   nsAsyncMessageToParent(nsInProcessTabChildGlobal* aTabChild,
-                         const nsAString& aMessage, const nsAString& aJSON)
-    : mTabChild(aTabChild), mMessage(aMessage), mJSON(aJSON) {}
+                         const nsAString& aMessage,
+                         const StructuredCloneData& aData)
+    : mTabChild(aTabChild), mMessage(aMessage)
+  {
+    if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
+      NS_RUNTIMEABORT("OOM");
+    }
+    mClosure = aData.mClosure;
+  }
 
   NS_IMETHOD Run()
   {
     mTabChild->mASyncMessages.RemoveElement(this);
     if (mTabChild->mChromeMessageManager) {
+      StructuredCloneData data;
+      data.mData = mData.data();
+      data.mDataLength = mData.nbytes();
+      data.mClosure = mClosure;
+
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
-      mm->ReceiveMessage(mTabChild->mOwner, mMessage, false,
-                         mJSON, nullptr, nullptr);
+      mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data,
+                         nullptr, nullptr, nullptr);
     }
     return NS_OK;
   }
   nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
   nsString mMessage;
-  nsString mJSON;
+  JSAutoStructuredCloneBuffer mData;
+  StructuredCloneClosure mClosure;
 };
 
 bool SendAsyncMessageToParent(void* aCallbackData,
                               const nsAString& aMessage,
-                              const nsAString& aJSON)
+                              const StructuredCloneData& aData)
 {
   nsInProcessTabChildGlobal* tabChild =
     static_cast<nsInProcessTabChildGlobal*>(aCallbackData);
   nsCOMPtr<nsIRunnable> ev =
-    new nsAsyncMessageToParent(tabChild, aMessage, aJSON);
+    new nsAsyncMessageToParent(tabChild, aMessage, aData);
   tabChild->mASyncMessages.AppendElement(ev);
   NS_DispatchToCurrentThread(ev);
   return true;
