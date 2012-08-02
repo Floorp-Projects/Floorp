@@ -16,6 +16,7 @@ import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.GeckoBackgroundThread;
 
 import org.json.JSONObject;
 
