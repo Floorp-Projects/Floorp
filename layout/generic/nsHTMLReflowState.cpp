@@ -663,7 +663,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     }
   }
   else {
-    switch (disp->mDisplay) {
+    switch (GetDisplay()) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
@@ -1088,7 +1088,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
-      if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+      if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the top of the inline box which the placeholder lives in
         // as the hypothetical box's top.
         aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
@@ -1140,7 +1140,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
     // How we determine the hypothetical box depends on whether the element
     // would have been inline-level or block-level
-    if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
       // The placeholder represents the left edge of the hypothetical box
       aHypotheticalBox.mLeft = placeholderOffset.x;
     } else {
@@ -1167,7 +1167,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   } else {
     // The placeholder represents the right edge of the hypothetical box
-    if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
       aHypotheticalBox.mRight = placeholderOffset.x;
     } else {
       aHypotheticalBox.mRight = aBlockLeftContentEdge + aBlockContentWidth;
