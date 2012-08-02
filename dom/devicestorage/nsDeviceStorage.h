@@ -6,28 +6,25 @@
 #define nsDeviceStorage_h
 
 class nsPIDOMWindow;
-
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/PBrowserChild.h"
-#include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
-
+#include "PCOMContentPermissionRequestChild.h"
 
 #include "DOMRequest.h"
-#include "PCOMContentPermissionRequestChild.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIContentPermissionPrompt.h"
-#include "nsIDOMDeviceStorage.h"
 #include "nsIDOMDeviceStorageCursor.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIObserver.h"
+#include "mozilla/Mutex.h"
+#include "DeviceStorage.h"
 
 
 #define POST_ERROR_EVENT_FILE_DOES_NOT_EXIST         "File location doesn't exists"
@@ -64,41 +61,6 @@ public:
 private:
   void NormalizeFilePath();
   void AppendRelativePath();
-};
-
-class nsDOMDeviceStorage MOZ_FINAL : public nsIDOMDeviceStorage
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDEVICESTORAGE
-
-  nsDOMDeviceStorage();
-
-  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType, const PRInt32 aIndex);
-
-  PRInt32 SetRootFileForType(const nsAString& aType, const PRInt32 aIndex);
-
-  static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin, const nsAString &aType, nsIVariant** _retval);
-
-private:
-  ~nsDOMDeviceStorage();
-
-  nsresult GetInternal(const JS::Value & aName, JSContext* aCx, nsIDOMDOMRequest * *_retval, bool aEditable);
-
-  nsresult EnumerateInternal(const JS::Value & aName, const JS::Value & aOptions, JSContext* aCx, PRUint8 aArgc, bool aEditable, nsIDOMDeviceStorageCursor** aRetval);
-
-  PRInt32 mStorageType;
-  nsCOMPtr<nsIFile> mFile;
-
-  nsWeakPtr mOwner;
-  nsCOMPtr<nsIURI> mURI;
-
-  // nsIDOMDeviceStorage.type
-  enum {
-      DEVICE_STORAGE_TYPE_DEFAULT = 0,
-      DEVICE_STORAGE_TYPE_SHARED,
-      DEVICE_STORAGE_TYPE_EXTERNAL,
-  };
 };
 
 class ContinueCursorEvent MOZ_FINAL: public nsRunnable
