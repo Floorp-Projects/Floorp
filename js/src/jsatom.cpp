@@ -182,8 +182,11 @@ js_FinishAtomState(JSRuntime *rt)
     }
 
     FreeOp fop(rt, false, false);
-    for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
-        r.front().asPtr()->finalize(&fop);
+    for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
+        JSAtom *atom = r.front().asPtr();
+        JS_ASSERT(atom);  /* Can never be called during a GC. */
+        atom->finalize(&fop);
+    }
 }
 
 bool
@@ -211,27 +214,20 @@ js::FinishCommonAtoms(JSRuntime *rt)
 }
 
 void
-js::MarkAtomState(JSTracer *trc, bool markAll)
+js::MarkAtomState(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
     JSAtomState *state = &rt->atomState;
 
-    if (markAll) {
-        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            JSAtom *tmp = r.front().asPtr();
-            MarkStringRoot(trc, &tmp, "locked_atom");
-            JS_ASSERT(tmp == r.front().asPtr());
-        }
-    } else {
-        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            AtomStateEntry entry = r.front();
-            if (!entry.isTagged())
-                continue;
+    for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
+        AtomStateEntry entry = r.front();
+        if (!entry.isTagged())
+            continue;
 
-            JSAtom *tmp = entry.asPtr();
-            MarkStringRoot(trc, &tmp, "interned_atom");
-            JS_ASSERT(tmp == entry.asPtr());
-        }
+        JSAtom *tmp = entry.asPtr();
+        JS_ASSERT(tmp);
+        MarkStringRoot(trc, &tmp, "interned_atom");
+        JS_ASSERT(tmp == entry.asPtr());
     }
 }
 
@@ -242,16 +238,13 @@ js::SweepAtomState(JSRuntime *rt)
 
     for (AtomSet::Enum e(state->atoms); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
-        JSAtom *atom = entry.asPtr();
-        bool isMarked = IsStringMarked(&atom);
+        JSAtom *atom = entry.asPtr();  /* Returns NULL if the atom was umarked. */
 
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT_IF(entry.isTagged(), isMarked);
+        JS_ASSERT_IF(entry.isTagged(), atom);
 
-        if (!isMarked)
+        if (!atom)
             e.removeFront();
-        else
-            e.rekeyFront(AtomHasher::Lookup(atom), AtomStateEntry(atom, entry.isTagged()));
     }
 }
 
@@ -441,12 +434,14 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
     unsigned number = 0;
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
         AtomStateEntry entry = r.front();
-        fprintf(fp, "%3u ", number++);
         JSAtom *key = entry.asPtr();
-        FileEscapedString(fp, key, '"');
-        if (entry.isTagged())
-            fputs(" interned", fp);
-        putc('\n', fp);
+        if (key) {
+            fprintf(fp, "%3u ", number++);
+            FileEscapedString(fp, key, '"');
+            if (entry.isTagged())
+                fputs(" interned", fp);
+            putc('\n', fp);
+        }
     }
     putc('\n', fp);
 }
