@@ -812,7 +812,8 @@ nsIFrame::GetUsedMargin() const
 {
   nsMargin margin(0, 0, 0, 0);
   if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW))
+      !(mState & NS_FRAME_IN_REFLOW) ||
+      (mState & NS_FRAME_IS_SVG_TEXT))
     return margin;
 
   nsMargin *m = static_cast<nsMargin*>
@@ -834,7 +835,8 @@ nsIFrame::GetUsedBorder() const
 {
   nsMargin border(0, 0, 0, 0);
   if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW))
+      !(mState & NS_FRAME_IN_REFLOW) ||
+      (mState & NS_FRAME_IS_SVG_TEXT))
     return border;
 
   // Theme methods don't use const-ness.
@@ -869,7 +871,8 @@ nsIFrame::GetUsedPadding() const
 {
   nsMargin padding(0, 0, 0, 0);
   if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW))
+      !(mState & NS_FRAME_IN_REFLOW) ||
+      (mState & NS_FRAME_IS_SVG_TEXT))
     return padding;
 
   // Theme methods don't use const-ness.
