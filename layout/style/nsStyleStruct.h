@@ -1600,7 +1600,7 @@ struct nsStyleDisplay {
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
-  bool IsBlockInside() const {
+  bool IsBlockInsideStyle() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
            NS_STYLE_DISPLAY_INLINE_BLOCK == mDisplay;
@@ -1609,7 +1609,7 @@ struct nsStyleDisplay {
     // (But please audit all callers before changing.)
   }
 
-  bool IsBlockOutside() const {
+  bool IsBlockOutsideStyle() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
 #ifdef MOZ_FLEXBOX
            NS_STYLE_DISPLAY_FLEX == mDisplay ||
@@ -1630,11 +1630,11 @@ struct nsStyleDisplay {
            NS_STYLE_DISPLAY_INLINE_STACK == aDisplay;
   }
 
-  bool IsInlineOutside() const {
+  bool IsInlineOutsideStyle() const {
     return IsDisplayTypeInlineOutside(mDisplay);
   }
 
-  bool IsOriginalDisplayInlineOutside() const {
+  bool IsOriginalDisplayInlineOutsideStyle() const {
     return IsDisplayTypeInlineOutside(mOriginalDisplay);
   }
 
@@ -1673,6 +1673,11 @@ struct nsStyleDisplay {
   }
 
   // These are defined in nsStyleStructInlines.h.
+  inline bool IsBlockInside(const nsIFrame* aFrame) const;
+  inline bool IsBlockOutside(const nsIFrame* aFrame) const;
+  inline bool IsInlineOutside(const nsIFrame* aFrame) const;
+  inline bool IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const;
+  inline PRUint8 GetDisplay(const nsIFrame* aFrame) const;
   inline bool IsFloating(const nsIFrame* aFrame) const;
   inline bool IsPositioned(const nsIFrame* aFrame) const;
   inline bool IsRelativelyPositioned(const nsIFrame* aFrame) const;

@@ -56,6 +56,54 @@ nsStyleBorder::GetSubImage(PRUint8 aIndex) const
 }
 
 bool
+nsStyleDisplay::IsBlockInside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  }
+  return IsBlockInsideStyle();
+}
+
+bool
+nsStyleDisplay::IsBlockOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  }
+  return IsBlockOutsideStyle();
+}
+
+bool
+nsStyleDisplay::IsInlineOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  }
+  return IsInlineOutsideStyle();
+}
+
+bool
+nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  }
+  return IsOriginalDisplayInlineOutsideStyle();
+}
+
+PRUint8
+nsStyleDisplay::GetDisplay(const nsIFrame* aFrame) const
+{
+  if ((aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) &&
+      mDisplay != NS_STYLE_DISPLAY_NONE) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame ?
+             NS_STYLE_DISPLAY_BLOCK :
+             NS_STYLE_DISPLAY_INLINE;
+  }
+  return mDisplay;
+}
+
+bool
 nsStyleDisplay::IsFloating(const nsIFrame* aFrame) const
 {
   return IsFloatingStyle() && !aFrame->IsSVGText();

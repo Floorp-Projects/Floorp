@@ -1376,7 +1376,7 @@ private:
      changes, make this static */
   const FrameConstructionData*
     FindDisplayData(const nsStyleDisplay* aDisplay, Element* aElement,
-                    nsStyleContext* aStyleContext);
+                    nsIFrame* aParentFrame, nsStyleContext* aStyleContext);
 
   /**
    * Construct a scrollable block frame
