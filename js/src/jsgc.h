@@ -49,7 +49,6 @@ enum State {
     NO_INCREMENTAL,
     MARK_ROOTS,
     MARK,
-    SWEEP_ATOMS,
     SWEEP,
     INVALID
 };
