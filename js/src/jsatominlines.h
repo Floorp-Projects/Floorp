@@ -11,7 +11,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
-#include "jscompartment.h"
 
 #include "mozilla/RangedPtr.h"
 #include "vm/String.h"
@@ -21,15 +20,6 @@ js::AtomStateEntry::asPtr() const
 {
     JS_ASSERT(bits != 0);
     JSAtom *atom = reinterpret_cast<JSAtom *>(bits & NO_TAG_MASK);
-    if (atom->compartment()->isGCSweeping() && !atom->isMarked() &&
-        !atom->arenaHeader()->allocatedDuringIncremental)
-    {
-        /*
-         * We are in the sweep phase of garbage collecting, and the atom's data
-         * has been freed but it has not yet been removed from the atom set.
-         */
-        return NULL;
-    }
     JSString::readBarrier(atom);
     return atom;
 }
@@ -153,8 +143,6 @@ inline bool
 AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
 {
     JSAtom *key = entry.asPtr();
-    if (!key)
-        return false;
     if (lookup.atom)
         return lookup.atom == key;
     if (key->length() != lookup.length)
