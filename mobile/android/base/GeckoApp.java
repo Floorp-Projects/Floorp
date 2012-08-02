@@ -1654,7 +1654,7 @@ abstract public class GeckoApp
         }
 
         if (mLayerClient == null) {
-            mLayerClient = new GeckoLayerClient(this);
+            mLayerClient = new GeckoLayerClient(this, GeckoAppShell.getEventDispatcher());
             mLayerClient.setView((LayerView)findViewById(R.id.layer_view));
         }
 
