@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.ActivityResultHandlerMap;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
