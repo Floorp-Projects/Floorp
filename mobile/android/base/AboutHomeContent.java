@@ -108,8 +108,7 @@ public class AboutHomeContent extends ScrollView
     }
 
     public void init() {
-        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mInflater.inflate(R.layout.abouthome_content, this);
+        inflate();
 
         mAccountManager = AccountManager.get(mContext);
 
@@ -119,6 +118,29 @@ public class AboutHomeContent extends ScrollView
                 updateLayoutForSync();
             }
         }, GeckoAppShell.getHandler(), false);
+
+        mRemoteTabClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = ((String) v.getTag());
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("url", url);
+                    args.put("engine", null);
+                    args.put("userEntered", false);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "error building JSON arguments");
+                }
+    
+                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+            }
+        };
+    }
+
+    private void inflate() {
+        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater.inflate(R.layout.abouthome_content, this);
 
         mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -178,24 +200,6 @@ public class AboutHomeContent extends ScrollView
                 context.startActivity(intent);
             }
         });
-
-        mRemoteTabClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String url = ((String) v.getTag());
-                JSONObject args = new JSONObject();
-                try {
-                    args.put("url", url);
-                    args.put("engine", null);
-                    args.put("userEntered", false);
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "error building JSON arguments");
-                }
-    
-                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
-            }
-        };
 
         setTopSitesConstants();
     }
@@ -335,7 +339,11 @@ public class AboutHomeContent extends ScrollView
     public void onConfigurationChanged(Configuration newConfig) {
         if (mTopSitesAdapter != null)
             mTopSitesAdapter.notifyDataSetChanged();
-        setTopSitesConstants();
+
+        removeAllViews(); // We must remove the currently inflated view to allow for reinflation.
+        inflate();
+        mTopSitesGrid.setAdapter(mTopSitesAdapter); // mTopSitesGrid is a new instance (from loadTopSites()).
+        update(AboutHomeContent.UpdateFlags.ALL); // Refresh all elements.
 
         super.onConfigurationChanged(newConfig);
     }
