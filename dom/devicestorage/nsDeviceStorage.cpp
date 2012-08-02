@@ -280,7 +280,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
 
 void
-nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIndex)
+nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
 {
   nsCOMPtr<nsIFile> f;
   nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
@@ -312,51 +312,33 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   // Picture directory
   if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
 #ifdef MOZ_WIDGET_GONK
-    if (aIndex == 0) {
-      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/DCIM"), false, getter_AddRefs(f));
-    }
+    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/DCIM"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
-    if (aIndex == 0) {
-      dirService->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
-    if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_PICTURES_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_UNIX_XDG_PICTURES_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #endif
   }
 
   // Video directory
   if (aType.Equals(NS_LITERAL_STRING("videos"))) {
 #ifdef MOZ_WIDGET_GONK
-    if (aIndex == 0) {
-      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Movies"), false, getter_AddRefs(f));
-    }
+    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Movies"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
-    if (aIndex == 0) {
-      dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
-    if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_VIDEOS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_UNIX_XDG_VIDEOS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #endif
   }
 
   // Music directory
   if (aType.Equals(NS_LITERAL_STRING("music"))) {
 #ifdef MOZ_WIDGET_GONK
-    if (aIndex == 0) {
-      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Music"), false, getter_AddRefs(f));
-    }
+    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Music"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
-    if (aIndex == 0) {
-      dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
-    if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
+    dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #endif
   }
 
@@ -364,7 +346,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
 
     // testing directory
-    if (aType.Equals(NS_LITERAL_STRING("testing")) && aIndex == 0) {
+    if (aType.Equals(NS_LITERAL_STRING("testing"))) {
       dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
       if (f) {
 	f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
@@ -1318,11 +1300,11 @@ nsDOMDeviceStorage::nsDOMDeviceStorage()
 { }
 
 nsresult
-nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType, const PRInt32 aIndex)
+nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType)
 {
   NS_ASSERTION(aWindow, "Must have a content dom");
 
-  SetRootFileForType(aType, aIndex);
+  SetRootFileForType(aType);
   if (!mFile) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1367,16 +1349,11 @@ nsDOMDeviceStorage::Shutdown()
 void
 nsDOMDeviceStorage::CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                             const nsAString &aType,
-                                            nsTArray<nsRefPtr<nsDOMDeviceStorage> > &aStores)
+                                            nsDOMDeviceStorage** aStore)
 {
-  PRInt32 index = 0;
-  while (1) {
-    nsresult rv;
-    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
-    rv = storage->Init(aWin, aType, index++);
-    if (NS_FAILED(rv))
-      break;
-    aStores.AppendElement(storage);
+  nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
+  if (NS_SUCCEEDED(storage->Init(aWin, aType))) {
+    NS_ADDREF(*aStore = storage);
   }
 }
 
