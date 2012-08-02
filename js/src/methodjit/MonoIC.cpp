@@ -1215,6 +1215,7 @@ class CallCompiler : public BaseCompiler
             // an IonMonkey JIT'd function.
             if (!callingNew &&
                 fun &&
+                !ic.hasJMStub() &&
                 !ic.hasIonStub() &&
                 ic.frameSize.isStatic() &&
                 ic.frameSize.staticArgc() <= ion::SNAPSHOT_MAX_NARGS &&
