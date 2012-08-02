@@ -8,6 +8,7 @@
 
 #include "IDBObjectStore.h"
 
+#include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "nsIJSContextStack.h"
 #include "nsIOutputStream.h"
 
@@ -585,6 +586,47 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
   return NS_OK;
 }
 
+inline
+BlobChild*
+ActorFromRemoteBlob(nsIDOMBlob* aBlob)
+{
+  NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
+  if (remoteBlob) {
+    BlobChild* actor =
+      static_cast<BlobChild*>(static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
+    NS_ASSERTION(actor, "Null actor?!");
+    return actor;
+  }
+  return nullptr;
+}
+
+inline
+bool
+ResolveMysteryBlob(nsIDOMBlob* aBlob, const nsString& aName,
+                   const nsString& aContentType, PRUint64 aSize)
+{
+  BlobChild* actor = ActorFromRemoteBlob(aBlob);
+  if (actor) {
+    return actor->SetMysteryBlobInfo(aName, aContentType, aSize);
+  }
+  return true;
+}
+
+inline
+bool
+ResolveMysteryBlob(nsIDOMBlob* aBlob, const nsString& aContentType,
+                   PRUint64 aSize)
+{
+  BlobChild* actor = ActorFromRemoteBlob(aBlob);
+  if (actor) {
+    return actor->SetMysteryBlobInfo(aContentType, aSize);
+  }
+  return true;
+}
+
 } // anonymous namespace
 
 JSClass IDBObjectStore::sDummyPropJSClass = {
@@ -1098,6 +1140,9 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
     if (aTag == SCTAG_DOM_BLOB) {
       nsCOMPtr<nsIDOMBlob> domBlob;
       if (file.mFile) {
+        if (!ResolveMysteryBlob(file.mFile, convType, size)) {
+          return nullptr;
+        }
         domBlob = file.mFile;
       }
       else {
@@ -1126,6 +1171,9 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
 
     nsCOMPtr<nsIDOMFile> domFile;
     if (file.mFile) {
+      if (!ResolveMysteryBlob(file.mFile, convName, convType, size)) {
+        return nullptr;
+      }
       domFile = do_QueryInterface(file.mFile);
       NS_ASSERTION(domFile, "This should never fail!");
     }
