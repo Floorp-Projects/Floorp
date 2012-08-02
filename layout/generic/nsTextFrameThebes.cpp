@@ -1457,6 +1457,18 @@ HasTerminalNewline(const nsTextFrame* aFrame)
   return frag->CharAt(aFrame->GetContentEnd() - 1) == '\n';
 }
 
+static nscoord
+LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+  if (!aStyleText) {
+    aStyleText = aFrame->GetStyleText();
+  }
+  return StyleToCoord(aStyleText->mLetterSpacing);
+}
+
 bool
 BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
@@ -1496,13 +1508,15 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return true;
+
   const nsStyleFont* fontStyle1 = sc1->GetStyleFont();
   const nsStyleFont* fontStyle2 = sc2->GetStyleFont();
-  const nsStyleText* textStyle2 = sc2->GetStyleText();
+  nscoord letterSpacing1 = LetterSpacing(aFrame1);
+  nscoord letterSpacing2 = LetterSpacing(aFrame2);
   return fontStyle1->mFont.BaseEquals(fontStyle2->mFont) &&
     sc1->GetStyleFont()->mLanguage == sc2->GetStyleFont()->mLanguage &&
-    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, textStyle1, fontStyle1) ==
-      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, textStyle2, fontStyle2);
+    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, fontStyle1, letterSpacing1) ==
+      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, fontStyle2, letterSpacing2);
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1776,7 +1790,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = true;
     }
-    textFlags |= GetSpacingFlags(StyleToCoord(textStyle->mLetterSpacing));
+    textFlags |= GetSpacingFlags(LetterSpacing(f));
     textFlags |= GetSpacingFlags(textStyle->mWordSpacing);
     nsTextFrameUtils::CompressionMode compression =
       CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
@@ -1892,9 +1906,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= gfxTextRunFactory::TEXT_TRAILING_ARABICCHAR;
   }
   // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
-  // frame's style is used, so use the last frame's
+  // frame's style is used, so we use a mixture of the first frame and
+  // last frame's style
   textFlags |= nsLayoutUtils::GetTextRunFlagsForStyle(lastStyleContext,
-      textStyle, fontStyle);
+      fontStyle, LetterSpacing(firstFrame, textStyle));
   // XXX this is a bit of a hack. For performance reasons, if we're favouring
   // performance over quality, don't try to get accurate glyph extents.
   if (!(textFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED)) {
@@ -2608,7 +2623,7 @@ public:
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
       mWordSpacing(mTextStyle->mWordSpacing),
-      mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
+      mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
@@ -2633,7 +2648,7 @@ public:
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
       mWordSpacing(mTextStyle->mWordSpacing),
-      mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
+      mLetterSpacing(LetterSpacing(aFrame)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
