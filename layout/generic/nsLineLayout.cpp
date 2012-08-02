@@ -1452,11 +1452,7 @@ nsLineLayout::VerticalAlignLine()
   if (rootPFD.mFrame->GetStyleContext()->HasTextDecorationLines()) {
     for (const PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
       const nsIFrame *const f = pfd->mFrame;
-      const nsStyleCoord& vAlign =
-          f->GetStyleContext()->GetStyleTextReset()->mVerticalAlign;
-
-      if (vAlign.GetUnit() != eStyleUnit_Enumerated ||
-          vAlign.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
+      if (f->VerticalAlignEnum() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
         const nscoord offset = baselineY - pfd->mBounds.y;
         f->Properties().Set(nsIFrame::LineBaselineOffset(),
                             NS_INT32_TO_PTR(offset));
@@ -1776,18 +1772,24 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Get vertical-align property
     const nsStyleCoord& verticalAlign =
       frame->GetStyleTextReset()->mVerticalAlign;
+    PRUint8 verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [frame]");
     nsFrame::ListTag(stdout, frame);
-    printf(": verticalAlignUnit=%d (enum == %d)\n",
+    printf(": verticalAlignUnit=%d (enum == %d",
            verticalAlign.GetUnit(),
            ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
             ? verticalAlign.GetIntValue()
             : -1));
+    if (verticalAlignEnum != nsIFrame::eInvalidVerticalAlign) {
+      printf(", after SVG dominant-baseline conversion == %d",
+             verticalAlignEnum);
+    }
+    printf(")\n");
 #endif
 
-    if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-      switch (verticalAlign.GetIntValue()) {
+    if (verticalAlignEnum != nsIFrame::eInvalidVerticalAlign) {
+      switch (verticalAlignEnum) {
         default:
         case NS_STYLE_VERTICAL_ALIGN_BASELINE:
         {
