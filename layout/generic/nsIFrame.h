@@ -2838,6 +2838,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   };
   bool IsVisibleConsideringAncestors(PRUint32 aFlags = 0) const;
 
+  bool IsSVGText() const { return mState & NS_FRAME_IS_SVG_TEXT; }
+
 protected:
   // Members
   nsRect           mRect;
