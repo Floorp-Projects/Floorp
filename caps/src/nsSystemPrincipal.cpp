@@ -265,6 +265,13 @@ nsSystemPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSystemPrincipal::GetUnknownAppId(bool* aUnknownAppId)
+{
+  *aUnknownAppId = false;
+  return NS_OK;
+}
+
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
 //////////////////////////////////////////

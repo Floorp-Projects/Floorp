@@ -367,6 +367,8 @@ MOCHITEST_FILES_B = \
 		file_CSP_evalscript_main.html \
 		file_CSP_evalscript_main.html^headers^ \
 		file_CSP_evalscript_main.js \
+		file_csp_bug768029.html \
+		file_csp_bug768029.sjs \
 		test_bug540854.html \
 		bug540854.sjs \
 		test_bug548463.html \
