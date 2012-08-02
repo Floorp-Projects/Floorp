@@ -3004,7 +3004,8 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
     }
   }
   else if (css::Rule::MEDIA_RULE == type ||
-           css::Rule::DOCUMENT_RULE == type) {
+           css::Rule::DOCUMENT_RULE == type ||
+           css::Rule::SUPPORTS_RULE == type) {
     css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
       if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
