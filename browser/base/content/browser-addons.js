@@ -77,14 +77,17 @@ const gXPInstallObserver = {
       messageString = gNavigatorBundle.getFormattedString("xpinstallPromptWarning",
                         [brandShortName, installInfo.originatingURI.host]);
 
+      let secHistogram = Components.classes["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry).getHistogramById("SECURITY_UI");
       action = {
         label: gNavigatorBundle.getString("xpinstallPromptAllowButton"),
         accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
         callback: function() {
+          secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH);
           installInfo.install();
         }
       };
 
+      secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
                               action, null, options);
       break;
