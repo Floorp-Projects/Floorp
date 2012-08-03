@@ -2590,7 +2590,7 @@ static JSBool
 date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Step 1. */
-    JSObject *obj = ToObject(cx, &vp[1]);
+    RootedObject obj(cx, ToObject(cx, &vp[1]));
     if (!obj)
         return false;
 
