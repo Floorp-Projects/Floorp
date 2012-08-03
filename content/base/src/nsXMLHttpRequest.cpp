@@ -977,6 +977,8 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
   if (!aCx) {
     return NS_ERROR_FAILURE;
   }
+  RootResultArrayBuffer();
+
   // The Unicode converter has already zapped the BOM if there was one
   if (!JS_ParseJSON(aCx,
                     static_cast<const jschar*>(mResponseText.get()),
