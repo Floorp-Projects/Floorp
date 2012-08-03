@@ -53,6 +53,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "mozilla/Attributes.h"
+#include "ScrollbarActivity.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1609,6 +1610,10 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mShouldBuildLayer(false)
 {
   mScrollingActive = IsAlwaysActive();
+
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) != 0) {
+    mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
+  }
 }
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
@@ -2849,6 +2854,10 @@ nsGfxScrollFrameInner::AppendAnonymousContentTo(nsBaseContentList& aElements,
 void
 nsGfxScrollFrameInner::Destroy()
 {
+  if (mScrollbarActivity) {
+    mScrollbarActivity = nsnull;
+  }
+
   // Unbind any content created in CreateAnonymousContent from the tree
   nsContentUtils::DestroyAnonymousContent(&mHScrollbarContent);
   nsContentUtils::DestroyAnonymousContent(&mVScrollbarContent);
@@ -2891,6 +2900,10 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
   NS_ASSERTION((mHScrollbarBox && mHScrollbarBox->GetContent() == aContent) ||
                (mVScrollbarBox && mVScrollbarBox->GetContent() == aContent),
                "unexpected child");
+
+  if (mScrollbarActivity) {
+    mScrollbarActivity->ActivityOccurred();
+  }
 
   // Attribute changes on the scrollbars happen in one of three ways:
   // 1) The scrollbar changed the attribute in response to some user event
@@ -3817,6 +3830,10 @@ nsGfxScrollFrameInner::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
     return;
 
   aContent->SetAttr(kNameSpaceID_None, aAtom, newValue, true);
+
+  if (mScrollbarActivity) {
+    mScrollbarActivity->ActivityOccurred();
+  }
 }
 
 static void

@@ -481,3 +481,6 @@ pref("javascript.options.mem.log", true);
 
 // Increase mark slice time from 10ms to 30ms
 pref("javascript.options.mem.gc_incremental_slice_ms", 30);
+
+// Show/Hide scrollbars when active/inactive
+pref("ui.showHideScrollbars", 1);
