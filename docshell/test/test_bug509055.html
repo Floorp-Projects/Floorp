@@ -41,8 +41,6 @@ function onChildLoad(e) {
 }
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var popup = window.open("file_bug509055.html", "popup 0",
                            "height=200,width=200,location=yes," +
                            "menubar=yes,status=yes,toolbar=yes,dependent=yes");
@@ -72,9 +70,10 @@ function runTest() {
   dump('Got second hashchange.  Spinning event loop.\n');
   yield;
 
-  var sh = popup.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebNavigation)
-                .sessionHistory;
+  var sh = SpecialPowers.wrap(popup)
+                        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIWebNavigation)
+                        .sessionHistory;
 
   // Get the title of the inner popup's current SHEntry 
   var sheTitle = sh.getEntryAtIndex(sh.index, false).title;
