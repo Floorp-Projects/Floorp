@@ -290,7 +290,9 @@ DOMWifiManager.prototype = {
   get connectionInformation() {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
-    return exposeReadOnly(this._lastConnectionInfo);
+    return this._lastConnectionInfo
+           ? exposeReadOnly(this._lastConnectionInfo)
+           : null;
   },
 
   set onstatuschange(callback) {

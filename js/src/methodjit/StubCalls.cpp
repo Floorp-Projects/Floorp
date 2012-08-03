@@ -1051,12 +1051,12 @@ stubs::InitProp(VMFrame &f, PropertyName *name)
 }
 
 void JS_FASTCALL
-stubs::IterNext(VMFrame &f, int32_t offset)
+stubs::IterNext(VMFrame &f)
 {
-    JS_ASSERT(f.regs.stackDepth() >= unsigned(offset));
-    JS_ASSERT(f.regs.sp[-offset].isObject());
+    JS_ASSERT(f.regs.stackDepth() >= 1);
+    JS_ASSERT(f.regs.sp[-1].isObject());
 
-    JSObject *iterobj = &f.regs.sp[-offset].toObject();
+    JSObject *iterobj = &f.regs.sp[-1].toObject();
     f.regs.sp[0].setNull();
     f.regs.sp++;
     if (!js_IteratorNext(f.cx, iterobj, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))

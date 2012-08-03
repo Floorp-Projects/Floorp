@@ -6,12 +6,13 @@
 
 #include "base/basictypes.h"
 
+#include "ContentParent.h"
+
 #if defined(ANDROID) || defined(LINUX)
 # include <sys/time.h>
 # include <sys/resource.h>
 #endif
 
-#include "ContentParent.h"
 #include "CrashReporterParent.h"
 #include "History.h"
 #include "IDBFactory.h"
@@ -41,6 +42,7 @@
 #include "nsConsoleMessage.h"
 #include "nsDebugImpl.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDOMFile.h"
 #include "nsExternalHelperAppService.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
@@ -53,6 +55,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
+#include "nsIRemoteBlob.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
@@ -63,6 +66,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsWidgetsCID.h"
 #include "SandboxHal.h"
+#include "StructuredCloneUtils.h"
 #include "TabParent.h"
 
 #ifdef ANDROID
@@ -524,6 +528,8 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
         //Sending all information to content process
         unused << SendAppInfo(version, buildID);
     }
+
+    mFileWatchers.Init();
 }
 
 ContentParent::~ContentParent()
@@ -760,6 +766,9 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
+
+        mFileWatchers.Clear();
+
         Close();
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
@@ -827,7 +836,7 @@ ContentParent::Observe(nsISupports* aSubject,
 }
 
 PCompositorParent*
-ContentParent::AllocPCompositor(ipc::Transport* aTransport,
+ContentParent::AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                 base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
@@ -864,6 +873,85 @@ ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
 {
   delete doomed;
   return true;
+}
+
+PBlobParent*
+ContentParent::AllocPBlob(const BlobConstructorParams& aParams)
+{
+  return BlobParent::Create(aParams);
+}
+
+bool
+ContentParent::DeallocPBlob(PBlobParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+BlobParent*
+ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aBlob, "Null pointer!");
+
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
+  if (remoteBlob) {
+    BlobParent* actor =
+      static_cast<BlobParent*>(
+        static_cast<PBlobParent*>(remoteBlob->GetPBlob()));
+    NS_ASSERTION(actor, "Null actor?!");
+
+    return actor;
+  }
+
+  // XXX This is only safe so long as all blob implementations in our tree
+  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
+  //     a real interface or something.
+  const nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
+
+  BlobConstructorParams params;
+
+  if (blob->IsSizeUnknown()) {
+    // We don't want to call GetSize yet since that may stat a file on the main
+    // thread here. Instead we'll learn the size lazily from the other process.
+    params = MysteryBlobConstructorParams();
+  }
+  else {
+    nsString contentType;
+    nsresult rv = aBlob->GetType(contentType);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    PRUint64 length;
+    rv = aBlob->GetSize(&length);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+    if (file) {
+      FileBlobConstructorParams fileParams;
+
+      rv = file->GetName(fileParams.name());
+      NS_ENSURE_SUCCESS(rv, nullptr);
+
+      fileParams.contentType() = contentType;
+      fileParams.length() = length;
+
+      params = fileParams;
+    } else {
+      NormalBlobConstructorParams blobParams;
+      blobParams.contentType() = contentType;
+      blobParams.length() = length;
+      params = blobParams;
+    }
+  }
+
+  BlobParent* actor = BlobParent::Create(aBlob);
+  NS_ENSURE_TRUE(actor, nullptr);
+
+  if (!SendPBlobConstructor(actor, params)) {
+    return nullptr;
+  }
+
+  return actor;
 }
 
 PCrashReporterParent*
@@ -930,7 +1018,7 @@ ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
   }
 
   nsRefPtr<IDBFactory> factory;
-  nsresult rv = IDBFactory::Create(getter_AddRefs(factory));
+  nsresult rv = IDBFactory::Create(this, getter_AddRefs(factory));
   NS_ENSURE_SUCCESS(rv, false);
 
   NS_ASSERTION(factory, "This should never be null!");
@@ -1291,24 +1379,59 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
 }
 
 bool
-ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
+ContentParent::RecvSyncMessage(const nsString& aMsg,
+                               const ClonedMessageData& aData,
                                InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
+    const SerializedStructuredCloneBuffer& buffer = aData.data();
+    const InfallibleTArray<PBlobParent*>& blobParents = aData.blobsParent();
+    StructuredCloneData cloneData;
+    cloneData.mData = buffer.data;
+    cloneData.mDataLength = buffer.dataLength;
+    if (!blobParents.IsEmpty()) {
+      PRUint32 length = blobParents.Length();
+      cloneData.mClosure.mBlobs.SetCapacity(length);
+      for (PRUint32 index = 0; index < length; index++) {
+        BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
+        MOZ_ASSERT(blobParent);
+        nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
+        MOZ_ASSERT(blob);
+        cloneData.mClosure.mBlobs.AppendElement(blob);
+  }
+    }
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg,true, aJSON, nullptr, aRetvals);
+                        aMsg, true, &cloneData, nullptr, aRetvals);
   }
   return true;
 }
 
 bool
-ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
+ContentParent::RecvAsyncMessage(const nsString& aMsg,
+                                      const ClonedMessageData& aData)
 {
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
+    const SerializedStructuredCloneBuffer& buffer = aData.data();
+    const InfallibleTArray<PBlobParent*>& blobParents = aData.blobsParent();
+    StructuredCloneData cloneData;
+    cloneData.mData = buffer.data;
+    cloneData.mDataLength = buffer.dataLength;
+    if (!blobParents.IsEmpty()) {
+      PRUint32 length = blobParents.Length();
+      cloneData.mClosure.mBlobs.SetCapacity(length);
+      for (PRUint32 index = 0; index < length; index++) {
+        BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
+        MOZ_ASSERT(blobParent);
+        nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
+        MOZ_ASSERT(blob);
+        cloneData.mClosure.mBlobs.AppendElement(blob);
+      }
+    }
+
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, aJSON, nullptr, nullptr);
+                        aMsg, false, &cloneData, nullptr, nullptr);
   }
   return true;
 }
@@ -1400,6 +1523,65 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
     }
   }
   return true;
+}
+
+bool
+ContentParent::RecvAddFileWatch(const nsString& root)
+{
+  nsRefPtr<WatchedFile> f;
+  if (mFileWatchers.Get(root, getter_AddRefs(f))) {
+    f->mUsageCount++;
+    return true;
+  }
+  
+  f = new WatchedFile(this, root);
+  mFileWatchers.Put(root, f);
+
+  f->Watch();
+  return true;
+}
+
+bool
+ContentParent::RecvRemoveFileWatch(const nsString& root)
+{
+  nsRefPtr<WatchedFile> f;
+  bool result = mFileWatchers.Get(root, getter_AddRefs(f));
+  if (!result) {
+    return true;
+  }
+
+  if (!f)
+    return true;
+
+  f->mUsageCount--;
+
+  if (f->mUsageCount > 0) {
+    return true;
+  }
+
+  f->Unwatch();
+  mFileWatchers.Remove(root);
+  return true;
+}
+
+NS_IMPL_ISUPPORTS1(ContentParent::WatchedFile, nsIFileUpdateListener)
+
+nsresult
+ContentParent::WatchedFile::Update(const char* aReason, nsIFile* aFile)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsString path;
+  aFile->GetPath(path);
+
+  unused << mParent->SendFilePathUpdate(path, nsDependentCString(aReason));
+
+#ifdef DEBUG
+  nsCString cpath;
+  aFile->GetNativePath(cpath);
+  printf("ContentParent::WatchedFile::Update: %s  -- %s\n", cpath.get(), aReason);
+#endif
+  return NS_OK;
 }
 
 } // namespace dom

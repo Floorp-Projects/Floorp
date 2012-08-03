@@ -40,6 +40,9 @@ class RenderFrameParent;
 
 namespace dom {
 
+class ClonedMessageData;
+struct StructuredCloneData;
+
 class ContentDialogParent : public PContentDialogParent {};
 
 class TabParent : public PBrowserParent 
@@ -47,6 +50,8 @@ class TabParent : public PBrowserParent
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
 {
+    typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+
 public:
     TabParent();
     virtual ~TabParent();
@@ -68,10 +73,10 @@ public:
                                             bool* aOutWindowOpened);
     virtual bool AnswerCreateWindow(PBrowserParent** retval);
     virtual bool RecvSyncMessage(const nsString& aMessage,
-                                 const nsString& aJSON,
+                                 const ClonedMessageData& aData,
                                  InfallibleTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
-                                  const nsString& aJSON);
+                                  const ClonedMessageData& aData);
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
                                     nsIMEUpdatePreference* aPreference,
                                     PRUint32* aSeqno);
@@ -172,7 +177,7 @@ public:
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
-                        const nsString& aJSON,
+                        const StructuredCloneData* aCloneData,
                         InfallibleTArray<nsString>* aJSONRetVal = nullptr);
 
     virtual bool Recv__delete__() MOZ_OVERRIDE;

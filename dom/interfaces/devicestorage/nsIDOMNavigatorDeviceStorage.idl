@@ -3,15 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-interface nsIVariant;
+interface nsIDOMDeviceStorage;
 
 /**
  * Property that extends the navigator object.
  */
-[scriptable, uuid(A4B2831D-6065-472F-8A6D-2C9085C74C15)]
+[scriptable, uuid(da1fbf6e-259c-40bc-ba8c-4ae81748dca3)]
 interface nsIDOMNavigatorDeviceStorage : nsISupports
 {
-    // returns an array of nsIDOMDeviceStorage
-    nsIVariant getDeviceStorage(in DOMString type);
+  nsIDOMDeviceStorage getDeviceStorage(in DOMString type);
 };
-

@@ -21,7 +21,10 @@ endif
 
 EXPORTS = PCOMContentPermissionRequestChild.h
 
-EXPORTS_NAMESPACES = mozilla/dom
+EXPORTS_NAMESPACES = \
+  mozilla/dom \
+  mozilla/dom/ipc \
+  $(NULL)
 
 EXPORTS_mozilla/dom = \
   ContentChild.h \
@@ -29,17 +32,25 @@ EXPORTS_mozilla/dom = \
   ContentProcess.h \
   CrashReporterChild.h \
   CrashReporterParent.h \
+  StructuredCloneUtils.h \
   TabParent.h \
   TabChild.h \
   TabMessageUtils.h \
   $(NULL)
 
+EXPORTS_mozilla/dom/ipc = \
+  Blob.h \
+  nsIRemoteBlob.h \
+  $(NULL)
+
 CPPSRCS = \
+  Blob.cpp \
   ContentProcess.cpp \
   ContentParent.cpp \
   ContentChild.cpp \
   CrashReporterParent.cpp \
   CrashReporterChild.cpp \
+  StructuredCloneUtils.cpp \
   TabParent.cpp \
   TabChild.cpp \
   TabMessageUtils.cpp \

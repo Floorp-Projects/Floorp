@@ -32,17 +32,7 @@ MetadataHelper::GetSuccessResult(JSContext* aCx,
   NS_ENSURE_TRUE(obj, NS_ERROR_OUT_OF_MEMORY);
 
   if (mParams->SizeRequested()) {
-    jsval val;
-
-    if (mParams->Size() <= JSVAL_INT_MAX) {
-      val = INT_TO_JSVAL(mParams->Size());
-    }
-    else {
-      double size = mParams->Size();
-      if (!JS_NewNumberValue(aCx, size, &val)) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+    jsval val = JS_NumberValue(mParams->Size());
 
     if (!JS_DefineProperty(aCx, obj, "size", val, nullptr, nullptr,
                            JSPROP_ENUMERATE)) {

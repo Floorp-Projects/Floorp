@@ -748,7 +748,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     PRUint64 prog = PRUint64(offset) + count;
     PRUint64 progMax = ContentLength64();
-    OnTransportStatus(nullptr, nsITransport::STATUS_READING, prog, progMax);
+    OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, progMax);
   }
 
   return rv;
