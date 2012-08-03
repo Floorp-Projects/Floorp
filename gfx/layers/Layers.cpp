@@ -228,8 +228,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mPrevSibling(nullptr),
   mImplData(aImplData),
   mMaskLayer(nullptr),
-  mXScale(1.0f),
-  mYScale(1.0f),
+  mPostXScale(1.0f),
+  mPostYScale(1.0f),
   mOpacity(1.0),
   mContentFlags(0),
   mUseClipRect(false),
@@ -605,7 +605,10 @@ const gfx3DMatrix
 Layer::GetTransform()
 {
   gfx3DMatrix transform = mTransform;
-  transform.Scale(mXScale, mYScale, 1);
+  if (ContainerLayer* c = AsContainerLayer()) {
+    transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
+  }
+  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
   return transform;
 }
 
@@ -617,7 +620,10 @@ Layer::GetLocalTransform()
     transform = shadow->GetShadowTransform();
   else
     transform = mTransform;
-  transform.Scale(mXScale, mYScale, 1);
+  if (ContainerLayer* c = AsContainerLayer()) {
+    transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
+  }
+  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
   return transform;
 }
 
@@ -658,7 +664,7 @@ Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurf
 void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
-  aAttrs = ContainerLayerAttributes(GetFrameMetrics());
+  aAttrs = ContainerLayerAttributes(GetFrameMetrics(), mPreXScale, mPreYScale);
 }
 
 bool
@@ -944,6 +950,9 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
   }
+  if (1.0 != mPostXScale || 1.0 != mPostYScale) {
+    aTo.AppendPrintf(" [postScale=%g, %g]", mPostXScale, mPostYScale);
+  }
   if (!mTransform.IsIdentity()) {
     AppendToString(aTo, mTransform, " [transform=", "]");
   }
@@ -985,6 +994,9 @@ ContainerLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   if (UseIntermediateSurface()) {
     aTo += " [usesTmpSurf]";
+  }
+  if (1.0 != mPreXScale || 1.0 != mPreYScale) {
+    aTo.AppendPrintf(" [preScale=%g, %g]", mPreXScale, mPreYScale);
   }
   return aTo;
 }
