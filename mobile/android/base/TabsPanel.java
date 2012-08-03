@@ -109,7 +109,7 @@ public class TabsPanel extends LinearLayout {
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             if (!GeckoApp.mAppContext.hasTabsSideBar()) {
-                int heightSpec = MeasureSpec.makeMeasureSpec(mContext.getResources().getDisplayMetrics().heightPixels, MeasureSpec.EXACTLY);
+                int heightSpec = MeasureSpec.makeMeasureSpec((int) (0.5 * mContext.getResources().getDisplayMetrics().heightPixels), MeasureSpec.EXACTLY);
                 super.onMeasure(widthMeasureSpec, heightSpec);
             } else {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
