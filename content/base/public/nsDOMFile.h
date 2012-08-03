@@ -55,6 +55,24 @@ public:
   NS_DECL_NSIXHRSENDABLE
   NS_DECL_NSIMUTABLE
 
+  void
+  SetLazyData(const nsAString& aName, const nsAString& aContentType,
+              PRUint64 aLength)
+  {
+    NS_ASSERTION(aLength, "must have length");
+
+    mName = aName;
+    mContentType = aContentType;
+    mLength = aLength;
+
+    mIsFile = !aName.IsVoid();
+  }
+
+  bool IsSizeUnknown() const
+  {
+    return mLength == UINT64_MAX;
+  }
+
 protected:
   nsDOMFileBase(const nsAString& aName, const nsAString& aContentType,
                 PRUint64 aLength)
@@ -85,11 +103,6 @@ protected:
   }
 
   virtual ~nsDOMFileBase() {}
-
-  bool IsSizeUnknown() const
-  {
-    return mLength == UINT64_MAX;
-  }
 
   virtual bool IsStoredFile() const
   {

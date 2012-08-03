@@ -151,8 +151,11 @@ function test2() {
           ok(box.mozMatchesSelector(":hover"), "Box should be hovered");
           // Unhover box and iframe by moving the mouse outside the window.
           moveMouseTo(0, 150, function () {
-            ok(!gIFrame.mozMatchesSelector(":hover"), "iframe shouldn't be hovered");
-            ok(!box.mozMatchesSelector(":hover"), "box shouldn't be hovered");
+            const isOSXSnowLeopard = navigator.userAgent.indexOf("Mac OS X 10.6") != -1;
+            if (!isOSXSnowLeopard) {
+              ok(!gIFrame.mozMatchesSelector(":hover"), "iframe shouldn't be hovered");
+              ok(!box.mozMatchesSelector(":hover"), "box shouldn't be hovered");
+            }
             finalize();
           });
         }, gLeftWindow, box);
