@@ -83,7 +83,8 @@ class Pickle {
   bool ReadWString(void** iter, std::wstring* result) const;
   bool ReadString16(void** iter, string16* result) const;
   bool ReadData(void** iter, const char** data, int* length) const;
-  bool ReadBytes(void** iter, const char** data, int length) const;
+  bool ReadBytes(void** iter, const char** data, int length,
+                 uint32 alignment = sizeof(uint32)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
@@ -147,7 +148,8 @@ class Pickle {
   bool WriteWString(const std::wstring& value);
   bool WriteString16(const string16& value);
   bool WriteData(const char* data, int length);
-  bool WriteBytes(const void* data, int data_len);
+  bool WriteBytes(const void* data, int data_len,
+                  uint32 alignment = sizeof(uint32));
 
   // Same as WriteData, but allows the caller to write directly into the
   // Pickle. This saves a copy in cases where the data is not already
@@ -231,7 +233,7 @@ class Pickle {
   // location that the data should be written at is returned, or NULL if there
   // was an error. Call EndWrite with the returned offset and the given length
   // to pad out for the next write.
-  char* BeginWrite(uint32 length);
+  char* BeginWrite(uint32 length, uint32 alignment);
 
   // Completes the write operation by padding the data with NULL bytes until it
   // is padded. Should be paired with BeginWrite, but it does not necessarily

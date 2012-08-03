@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIDOMEvent.idl"
+
+[scriptable, uuid(468304d6-aab6-4e1e-8ab2-569d9e703431), builtinclass]
+interface nsIDOMDeviceStorageChangeEvent : nsIDOMEvent
+{
+
+  [noscript] void initDeviceStorageChangeEvent(in DOMString eventTypeArg,
+                                               in boolean canBubbleArg,
+                                               in boolean cancelableArg,
+                                               in DOMString path,
+                                               in DOMString reason);
+  
+  readonly attribute DOMString path;
+  readonly attribute DOMString reason;
+};
+
+dictionary DeviceStorageChangeEventInit : EventInit
+{
+  DOMString path;
+  DOMString reason;
+};

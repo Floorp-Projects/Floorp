@@ -68,7 +68,8 @@ public:
     PAGE_RULE,
     KEYFRAME_RULE,
     KEYFRAMES_RULE,
-    DOCUMENT_RULE
+    DOCUMENT_RULE,
+    SUPPORTS_RULE
   };
 
   virtual PRInt32 GetType() const = 0;

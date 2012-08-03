@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PAudio;
+include protocol PBlob;
 include protocol PBrowser;
 include protocol PCompositor;
 include protocol PCrashReporter;
@@ -25,6 +26,8 @@ include "mozilla/dom/TabMessageUtils.h";
 include "nsGeoPositionIPCSerialiser.h";
 include "PPrefTuple.h";
 
+include DOMTypes;
+
 using GeoPosition;
 using PrefTuple;
 
@@ -34,6 +37,7 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
+using mozilla::void_t;
 using mozilla::dom::NativeThreadId;
 using gfxIntSize;
 
@@ -96,11 +100,34 @@ union DeviceStorageParams
   DeviceStorageDeleteParams;
   DeviceStorageEnumerationParams;
 };
+
+struct SlicedBlobConstructorParams
+{
+  PBlob source;
+  uint64_t begin;
+  uint64_t end;
+  nsString contentType;
+};
+
+struct MysteryBlobConstructorParams
+{
+  // Nothing is known about this type of blob.
+};
+
+union BlobConstructorParams
+{
+  NormalBlobConstructorParams;
+  FileBlobConstructorParams;
+  SlicedBlobConstructorParams;
+  MysteryBlobConstructorParams;
+};
+
 rpc protocol PContent
 {
     parent opens PCompositor;
 
     manages PAudio;
+    manages PBlob;
     manages PBrowser;
     manages PCrashReporter;
     manages PDeviceStorageRequest;
@@ -121,6 +148,8 @@ both:
     // TabChild::BrowserFrameProvideWindow, and the parent creates the PBrowser
     // as part of ContentParent::CreateTab.
     async PBrowser(PRUint32 chromeFlags, bool isBrowserElement, PRUint32 appId);
+
+    async PBlob(BlobConstructorParams params);
 
 child:
     PMemoryReportRequest();
@@ -163,6 +192,8 @@ child:
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();
 
+    FilePathUpdate(nsString filepath, nsCString reasons);
+
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 
@@ -199,7 +230,7 @@ parent:
 
     sync ReadFontList() returns (FontListEntry[] retValue);
 
-    sync SyncMessage(nsString aMessage, nsString aJSON)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (nsString[] retval);
 
     ShowAlertNotification(nsString imageUrl, 
@@ -245,9 +276,11 @@ parent:
     // Notify the parent of the presence or absence of private docshells
     PrivateDocShellsExist(bool aExist);
 
-both:
-     AsyncMessage(nsString aMessage, nsString aJSON);
+    AddFileWatch(nsString filepath);
+    RemoveFileWatch(nsString filepath);
 
+both:
+     AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };
 
 }

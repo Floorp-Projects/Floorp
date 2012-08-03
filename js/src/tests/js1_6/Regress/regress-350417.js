@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'TypeError: y.a = [2 for each (p in [])] is not a function';
+  expect = 'TypeError: [] is not a function';
   try
   {
     eval('y = {}; (y.a = [2 for each (p in [])])();');

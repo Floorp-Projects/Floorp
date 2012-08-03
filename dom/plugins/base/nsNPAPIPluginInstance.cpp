@@ -96,7 +96,7 @@ public:
   ~SharedPluginTexture()
   {
     // This will be destroyed in the compositor (as it normally is)
-    mCurrentHandle = nullptr;
+    mCurrentHandle = 0;
   }
 
   TextureInfo Lock()
@@ -130,12 +130,12 @@ public:
       return mCurrentHandle;
 
     if (!EnsureGLContext())
-      return nullptr;
+      return 0;
 
     mNeedNewImage = false;
 
     if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
-      return nullptr;
+      return 0;
 
     mCurrentHandle = sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, (void*)mTextureInfo.mTexture, GLContext::TextureID);
 
@@ -1022,7 +1022,7 @@ SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
   } else if (mContentSurface) {
     EnsureGLContext();
     return sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, mContentSurface, GLContext::SurfaceTexture);
-  } else return nullptr;
+  } else return 0;
 }
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()

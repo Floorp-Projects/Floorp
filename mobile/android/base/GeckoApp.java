@@ -476,10 +476,8 @@ abstract public class GeckoApp
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-            DisplayMetrics metrics = new DisplayMetrics();
-            ((Activity) GeckoApp.mAppContext).getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
             // heightPixels changes during rotation.
+            DisplayMetrics metrics = GeckoApp.mAppContext.getResources().getDisplayMetrics();
             int restrictedHeightSpec = MeasureSpec.makeMeasureSpec((int) (0.75 * metrics.heightPixels), MeasureSpec.AT_MOST);
 
             super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
@@ -605,16 +603,10 @@ abstract public class GeckoApp
             outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
     }
 
-    public DisplayMetrics getDisplayMetrics() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        return metrics;
-    }
-
     public void getAndProcessThumbnailForTab(final Tab tab) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
-        
+
         if ("about:home".equals(tab.getURL())) {
             tab.updateThumbnail(null);
             return;

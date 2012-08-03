@@ -6,12 +6,15 @@
 
 #include "IndexedDBParent.h"
 
+#include "nsIDOMFile.h"
 #include "nsIDOMEvent.h"
 #include "nsIIDBVersionChangeEvent.h"
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "nsContentUtils.h"
 
 #include "AsyncConnectionHelper.h"
@@ -25,6 +28,8 @@
 #include "IDBTransaction.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+using namespace mozilla::dom;
 
 /*******************************************************************************
  * AutoSetCurrentTransaction
@@ -1183,6 +1188,29 @@ IndexedDBObjectStoreRequestParent::~IndexedDBObjectStoreRequestParent()
   MOZ_COUNT_DTOR(IndexedDBObjectStoreRequestParent);
 }
 
+void
+IndexedDBObjectStoreRequestParent::ConvertBlobActors(
+                                  const InfallibleTArray<PBlobParent*>& aActors,
+                                  nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs)
+{
+  MOZ_ASSERT(aBlobs.IsEmpty());
+
+  if (!aActors.IsEmpty()) {
+    // Walk the chain to get to ContentParent.
+    ContentParent* contentParent =
+      mObjectStore->Transaction()->Database()->GetContentParent();
+    MOZ_ASSERT(contentParent);
+
+    uint32_t length = aActors.Length();
+    aBlobs.SetCapacity(length);
+
+    for (uint32_t index = 0; index < length; index++) {
+      BlobParent* actor = static_cast<BlobParent*>(aActors[index]);
+      aBlobs.AppendElement(actor->GetBlob());
+    }
+  }
+}
+
 bool
 IndexedDBObjectStoreRequestParent::Get(const GetParams& aParams)
 {
@@ -1254,6 +1282,9 @@ IndexedDBObjectStoreRequestParent::Add(const AddParams& aParams)
 
   ipc::AddPutParams params = aParams.commonParams();
 
+  nsTArray<nsCOMPtr<nsIDOMBlob> > blobs;
+  ConvertBlobActors(params.blobsParent(), blobs);
+
   nsRefPtr<IDBRequest> request;
 
   {
@@ -1261,7 +1292,7 @@ IndexedDBObjectStoreRequestParent::Add(const AddParams& aParams)
 
     nsresult rv =
       mObjectStore->AddOrPutInternal(params.cloneInfo(), params.key(),
-                                     params.indexUpdateInfos(), false,
+                                     params.indexUpdateInfos(), blobs, false,
                                      getter_AddRefs(request));
     NS_ENSURE_SUCCESS(rv, false);
   }
@@ -1278,6 +1309,9 @@ IndexedDBObjectStoreRequestParent::Put(const PutParams& aParams)
 
   ipc::AddPutParams params = aParams.commonParams();
 
+  nsTArray<nsCOMPtr<nsIDOMBlob> > blobs;
+  ConvertBlobActors(params.blobsParent(), blobs);
+
   nsRefPtr<IDBRequest> request;
 
   {
@@ -1285,7 +1319,7 @@ IndexedDBObjectStoreRequestParent::Put(const PutParams& aParams)
 
     nsresult rv =
       mObjectStore->AddOrPutInternal(params.cloneInfo(), params.key(),
-                                     params.indexUpdateInfos(), true,
+                                     params.indexUpdateInfos(), blobs, true,
                                      getter_AddRefs(request));
     NS_ENSURE_SUCCESS(rv, false);
   }

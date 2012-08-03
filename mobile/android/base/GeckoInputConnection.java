@@ -840,7 +840,7 @@ public class GeckoInputConnection
             outAttrs.actionLabel = mIMEActionHint;
 
         GeckoApp app = GeckoApp.mAppContext;
-        DisplayMetrics metrics = app.getDisplayMetrics();
+        DisplayMetrics metrics = app.getResources().getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
             // prevent showing full-screen keyboard only when the screen is tall enough
             // to show some reasonable amount of the page (see bug 752709)
