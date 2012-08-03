@@ -673,7 +673,7 @@ class CallCompiler : public BaseCompiler
             Label loop = masm.label();
             masm.subPtr(Imm32(sizeof(Value)), Registers::StackPointer);
             masm.storeValue(UndefinedValue(), Address(Registers::StackPointer, 0));
-            Jump test = masm.branchSub32(Assembler::NonZero, Imm32(t1), t0);
+            Jump test = masm.branchSub32(Assembler::NonZero, Imm32(1), t0);
             test.linkTo(loop, &masm);
         }
         noPadding.linkTo(masm.label(), &masm);
