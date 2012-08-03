@@ -552,6 +552,7 @@ MOCHITEST_FILES_B = \
 		file_XHR_anon.sjs \
 		test_XHR_system.html \
 		test_XHR_parameters.html \
+		test_ipc_messagemanager_blob.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES =	\

@@ -1556,6 +1556,9 @@ pref("layout.css.dpi", -1);
 // we have to get this feature working on all platforms.
 pref("layout.css.devPixelsPerPx", "1.0");
 
+// Is support for the the @supports rule enabled?
+pref("layout.css.supports-rule.enabled", true);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
@@ -1667,6 +1670,10 @@ pref("dom.ipc.plugins.enabled.602plugin.so", false);
 pref("dom.ipc.processCount", 1);
 
 pref("svg.smil.enabled", true);
+
+// Enable the use of display-lists for SVG hit-testing and painting.
+pref("svg.display-lists.hit-testing.enabled", true);
+pref("svg.display-lists.painting.enabled", true);
 
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);

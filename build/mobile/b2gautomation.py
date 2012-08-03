@@ -211,8 +211,11 @@ class B2GRemoteAutomation(Automation):
         if 'b2g' not in session:
             raise Exception("bad session value %s returned by start_session" % session)
 
-        # start the tests by navigating to the mochitest url
-        self.marionette.execute_script("window.location.href='%s';" % self.testURL)
+        # Start the tests by navigating to the mochitest url, by setting it
+        # as the 'src' attribute to the homescreen mozbrowser element
+        # provided by B2G's shell.js.
+        self.marionette.set_context("chrome")
+        self.marionette.execute_script("document.getElementById('homescreen').src='%s';" % self.testURL)
 
         return instance
 

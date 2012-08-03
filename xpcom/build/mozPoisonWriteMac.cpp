@@ -31,8 +31,71 @@ struct FuncData {
                            // 'Function' after it has been replaced.
 };
 
-typedef ssize_t (*write_t)(int fd, const void *buf, size_t count);
+// Wrap aio_write. We have not seen it before, so just assert/report it.
+typedef ssize_t (*aio_write_t)(struct aiocb *aiocbp);
+ssize_t wrap_aio_write(struct aiocb *aiocbp);
+FuncData aio_write_data = { 0, (void*) wrap_aio_write, (void*) aio_write };
+ssize_t wrap_aio_write(struct aiocb *aiocbp) {
+    MOZ_ASSERT(0);
+    aio_write_t old_write = (aio_write_t) aio_write_data.Buffer;
+    return old_write(aiocbp);
+}
+
+// Wrap pwrite-like functions.
+// We have not seen them before, so just assert/report it.
+typedef ssize_t (*pwrite_t)(int fd, const void *buf, size_t nbyte, off_t offset);
+template<FuncData &foo>
+ssize_t wrap_pwrite_temp(int fd, const void *buf, size_t nbyte, off_t offset) {
+    MOZ_ASSERT(0);
+    pwrite_t old_write = (pwrite_t) foo.Buffer;
+    return old_write(fd, buf, nbyte, offset);
+}
+
+// Define a FuncData for a pwrite-like functions.
+// FIXME: clang accepts usinging wrap_pwrite_temp<X ## _data> in the struct
+// initialization. Is this a gcc 4.2 bug?
+#define DEFINE_PWRITE_DATA(X, NAME)                                        \
+ssize_t wrap_ ## X (int fd, const void *buf, size_t nbyte, off_t offset);  \
+FuncData X ## _data = { NAME, (void*) wrap_ ## X };                        \
+ssize_t wrap_ ## X (int fd, const void *buf, size_t nbyte, off_t offset) { \
+    return wrap_pwrite_temp<X ## _data>(fd, buf, nbyte, offset);           \
+}
+
+// This exists everywhere.
+DEFINE_PWRITE_DATA(pwrite, "pwrite")
+// These exist on 32 bit OS X
+DEFINE_PWRITE_DATA(pwrite_NOCANCEL_UNIX2003, "pwrite$NOCANCEL$UNIX2003");
+DEFINE_PWRITE_DATA(pwrite_UNIX2003, "pwrite$UNIX2003");
+// This exists on 64 bit OS X
+DEFINE_PWRITE_DATA(pwrite_NOCANCEL, "pwrite$NOCANCEL");
+
 void AbortOnBadWrite(int fd, const void *wbuf, size_t count);
+
+typedef ssize_t (*writev_t)(int fd, const struct iovec *iov, int iovcnt);
+template<FuncData &foo>
+ssize_t wrap_writev_temp(int fd, const struct iovec *iov, int iovcnt) {
+    AbortOnBadWrite(fd, 0, iovcnt);
+    writev_t old_write = (writev_t) foo.Buffer;
+    return old_write(fd, iov, iovcnt);
+}
+
+// Define a FuncData for a writev-like functions.
+#define DEFINE_WRITEV_DATA(X, NAME)                                  \
+ssize_t wrap_ ## X (int fd, const struct iovec *iov, int iovcnt);    \
+FuncData X ## _data = { NAME, (void*) wrap_ ## X };                  \
+ssize_t wrap_ ## X (int fd, const struct iovec *iov, int iovcnt) {   \
+    return wrap_writev_temp<X ## _data>(fd, iov, iovcnt);            \
+}
+
+// This exists everywhere.
+DEFINE_WRITEV_DATA(writev, "writev");
+// These exist on 32 bit OS X
+DEFINE_WRITEV_DATA(writev_NOCANCEL_UNIX2003, "writev$NOCANCEL$UNIX2003");
+DEFINE_WRITEV_DATA(writev_UNIX2003, "writev$UNIX2003");
+// This exists on 64 bit OS X
+DEFINE_WRITEV_DATA(writev_NOCANCEL, "writev$NOCANCEL");
+
+typedef ssize_t (*write_t)(int fd, const void *buf, size_t count);
 template<FuncData &foo>
 ssize_t wrap_write_temp(int fd, const void *buf, size_t count) {
     AbortOnBadWrite(fd, buf, count);
@@ -40,65 +103,21 @@ ssize_t wrap_write_temp(int fd, const void *buf, size_t count) {
     return old_write(fd, buf, count);
 }
 
-// FIXME: clang accepts usinging wrap_data_temp<X ## _data> in the struct
-// initialization. Is this a gcc 4.2 bug?
-
-// Define a FuncData for a function that can be found without dlsym.
-#define DEFINE_F_DATA(X)                                             \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t count);          \
-FuncData X ## _data = { 0, (void*) wrap_ ## X, (void*) X };          \
-ssize_t wrap_ ## X (int fd, const void *buf, size_t count) {         \
-    return wrap_write_temp<X ## _data>(fd, buf, count);              \
-}
-
-// Define a FuncData for a function that can only be found with dlsym.
-#define DEFINE_F_DATA_DYN(X, NAME)                                   \
+// Define a FuncData for a write-like functions.
+#define DEFINE_WRITE_DATA(X, NAME)                                   \
 ssize_t wrap_ ## X (int fd, const void *buf, size_t count);          \
 FuncData X ## _data = { NAME, (void*) wrap_ ## X };                  \
 ssize_t wrap_ ## X (int fd, const void *buf, size_t count) {         \
     return wrap_write_temp<X ## _data>(fd, buf, count);              \
 }
 
-// Define a simple FuncData that just aborts.
-#define DEFINE_F_DATA_ABORT(X)                                       \
-void wrap_ ## X() { abort(); }                                       \
-FuncData X ## _data = { 0, (void*) wrap_ ## X, (void*) X }
-
-// Define a simple FuncData that just aborts for a function that needs dlsym.
-#define DEFINE_F_DATA_ABORT_DYN(X, NAME)                             \
-void wrap_ ## X() { abort(); }                                       \
-FuncData X ## _data = { NAME, (void*) wrap_ ## X }
-
-DEFINE_F_DATA_ABORT(aio_write);
-DEFINE_F_DATA_ABORT(pwrite);
-
+// This exists everywhere.
+DEFINE_WRITE_DATA(write, "write");
 // These exist on 32 bit OS X
-DEFINE_F_DATA_ABORT_DYN(writev_NOCANCEL_UNIX2003, "writev$NOCANCEL$UNIX2003");
-DEFINE_F_DATA_ABORT_DYN(writev_UNIX2003, "writev$UNIX2003");
-DEFINE_F_DATA_ABORT_DYN(pwrite_NOCANCEL_UNIX2003, "pwrite$NOCANCEL$UNIX2003");
-DEFINE_F_DATA_ABORT_DYN(pwrite_UNIX2003, "pwrite$UNIX2003");
-
-// These exist on 64 bit OS X
-DEFINE_F_DATA_ABORT_DYN(writev_NOCANCEL, "writev$NOCANCEL");
-DEFINE_F_DATA_ABORT_DYN(pwrite_NOCANCEL, "pwrite$NOCANCEL");
-
-DEFINE_F_DATA(write);
-
-typedef ssize_t (*writev_t)(int fd, const struct iovec *iov, int iovcnt);
-ssize_t wrap_writev(int fd, const struct iovec *iov, int iovcnt);
-FuncData writev_data = { 0, (void*) wrap_writev, (void*) writev };
-ssize_t wrap_writev(int fd, const struct iovec *iov, int iovcnt) {
-    AbortOnBadWrite(fd, 0, iovcnt);
-    writev_t old_write = (writev_t) writev_data.Buffer;
-    return old_write(fd, iov, iovcnt);
-}
-
-// These exist on 32 bit OS X
-DEFINE_F_DATA_DYN(write_NOCANCEL_UNIX2003, "write$NOCANCEL$UNIX2003");
-DEFINE_F_DATA_DYN(write_UNIX2003, "write$UNIX2003");
-
-// These exist on 64 bit OS X
-DEFINE_F_DATA_DYN(write_NOCANCEL, "write$NOCANCEL");
+DEFINE_WRITE_DATA(write_NOCANCEL_UNIX2003, "write$NOCANCEL$UNIX2003");
+DEFINE_WRITE_DATA(write_UNIX2003, "write$UNIX2003");
+// This exists on 64 bit OS X
+DEFINE_WRITE_DATA(write_NOCANCEL, "write$NOCANCEL");
 
 FuncData *Functions[] = { &aio_write_data,
 

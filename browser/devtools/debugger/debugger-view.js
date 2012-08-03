@@ -81,6 +81,7 @@ let DebuggerView = {
    */
   _onEditorLoad: function DV__onEditorLoad() {
     DebuggerController.Breakpoints.initialize();
+    this.editor.focus();
   },
 
   /**
@@ -526,6 +527,22 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Called when the scripts filter key sequence was pressed.
+   */
+  _onSearch: function DVS__onSearch() {
+    this._searchbox.focus();
+    this._searchbox.value = "";
+  },
+
+  /**
+   * Called when the scripts token filter key sequence was pressed.
+   */
+  _onTokenSearch: function DVS__onTokenSearch() {
+    this._searchbox.focus();
+    this._searchbox.value = "#";
+  },
+
+  /**
    * The cached scripts container and search box.
    */
   _scripts: null,
@@ -566,10 +583,10 @@ function StackFramesView() {
   this._onFramesScroll = this._onFramesScroll.bind(this);
   this._onPauseExceptionsClick = this._onPauseExceptionsClick.bind(this);
   this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
-  this._onResumeButtonClick = this._onResumeButtonClick.bind(this);
-  this._onStepOverClick = this._onStepOverClick.bind(this);
-  this._onStepInClick = this._onStepInClick.bind(this);
-  this._onStepOutClick = this._onStepOutClick.bind(this);
+  this._onResume = this._onResume.bind(this);
+  this._onStepOver = this._onStepOver.bind(this);
+  this._onStepIn = this._onStepIn.bind(this);
+  this._onStepOut = this._onStepOut.bind(this);
 }
 
 StackFramesView.prototype = {
@@ -777,7 +794,7 @@ StackFramesView.prototype = {
   /**
    * Listener handling the pause/resume button click event.
    */
-  _onResumeButtonClick: function DVF__onResumeButtonClick() {
+  _onResume: function DVF__onResume(e) {
     if (DebuggerController.activeThread.paused) {
       DebuggerController.activeThread.resume();
     } else {
@@ -788,22 +805,28 @@ StackFramesView.prototype = {
   /**
    * Listener handling the step over button click event.
    */
-  _onStepOverClick: function DVF__onStepOverClick() {
-    DebuggerController.activeThread.stepOver();
+  _onStepOver: function DVF__onStepOver(e) {
+    if (DebuggerController.activeThread.paused) {
+      DebuggerController.activeThread.stepOver();
+    }
   },
 
   /**
    * Listener handling the step in button click event.
    */
-  _onStepInClick: function DVF__onStepInClick() {
-    DebuggerController.activeThread.stepIn();
+  _onStepIn: function DVF__onStepIn(e) {
+    if (DebuggerController.activeThread.paused) {
+      DebuggerController.activeThread.stepIn();
+    }
   },
 
   /**
    * Listener handling the step out button click event.
    */
-  _onStepOutClick: function DVF__onStepOutClick() {
-    DebuggerController.activeThread.stepOut();
+  _onStepOut: function DVF__onStepOut(e) {
+    if (DebuggerController.activeThread.paused) {
+      DebuggerController.activeThread.stepOut();
+    }
   },
 
   /**
@@ -830,13 +853,11 @@ StackFramesView.prototype = {
 
     close.addEventListener("click", this._onCloseButtonClick, false);
     pauseOnExceptions.checked = DebuggerController.StackFrames.pauseOnExceptions;
-    pauseOnExceptions.addEventListener("click",
-                                        this._onPauseExceptionsClick,
-                                        false);
-    resume.addEventListener("click", this._onResumeButtonClick, false);
-    stepOver.addEventListener("click", this._onStepOverClick, false);
-    stepIn.addEventListener("click", this._onStepInClick, false);
-    stepOut.addEventListener("click", this._onStepOutClick, false);
+    pauseOnExceptions.addEventListener("click", this._onPauseExceptionsClick, false);
+    resume.addEventListener("click", this._onResume, false);
+    stepOver.addEventListener("click", this._onStepOver, false);
+    stepIn.addEventListener("click", this._onStepIn, false);
+    stepOut.addEventListener("click", this._onStepOut, false);
     frames.addEventListener("click", this._onFramesClick, false);
     frames.addEventListener("scroll", this._onFramesScroll, false);
     window.addEventListener("resize", this._onFramesScroll, false);
@@ -858,13 +879,11 @@ StackFramesView.prototype = {
     let frames = this._frames;
 
     close.removeEventListener("click", this._onCloseButtonClick, false);
-    pauseOnExceptions.removeEventListener("click",
-                                          this._onPauseExceptionsClick,
-                                          false);
-    resume.removeEventListener("click", this._onResumeButtonClick, false);
-    stepOver.removeEventListener("click", this._onStepOverClick, false);
-    stepIn.removeEventListener("click", this._onStepInClick, false);
-    stepOut.removeEventListener("click", this._onStepOutClick, false);
+    pauseOnExceptions.removeEventListener("click", this._onPauseExceptionsClick, false);
+    resume.removeEventListener("click", this._onResume, false);
+    stepOver.removeEventListener("click", this._onStepOver, false);
+    stepIn.removeEventListener("click", this._onStepIn, false);
+    stepOut.removeEventListener("click", this._onStepOut, false);
     frames.removeEventListener("click", this._onFramesClick, false);
     frames.removeEventListener("scroll", this._onFramesScroll, false);
     window.removeEventListener("resize", this._onFramesScroll, false);

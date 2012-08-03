@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=649740
+-->
+<head>
+  <title>Test for Bug 649740</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+    @supports(color: green){ }
+    @supports (color: green) { }
+    @supports ((color: green)) { }
+    @supports (color: green) and (color: blue) { }
+    @supports ( Font:  20px serif ! Important)  { }
+    @supports(a:) { }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=649740">Mozilla Bug 649740</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 649740 **/
+
+function condition(s) {
+  return s.replace(/^@supports\s*/, '').replace(/ \s*{\s*}\s*$/, '');
+}
+
+var sheet = document.getElementById("style").sheet;
+
+is(condition(sheet.cssRules[0].cssText), "(color: green)");
+is(condition(sheet.cssRules[1].cssText), "(color: green)");
+is(condition(sheet.cssRules[2].cssText), "((color: green))");
+is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
+is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+is(condition(sheet.cssRules[5].cssText), "(a:)");
+</script>
+</pre>
+</body>
+</html>

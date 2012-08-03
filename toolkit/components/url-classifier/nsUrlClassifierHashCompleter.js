@@ -226,7 +226,7 @@ function HashCompleterRequest(aCompleter) {
   // The internal set of hashes and callbacks that this request corresponds to.
   this._requests = [];
   // URI to query for hash completions. Largely comes from the
-  // browser.safebrowsing.provider.#.gethashURL pref.
+  // browser.safebrowsing.gethashURL pref.
   this._uri = null;
   // nsIChannel that the hash completion query is transmitted over.
   this._channel = null;

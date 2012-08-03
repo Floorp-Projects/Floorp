@@ -2166,4 +2166,132 @@ nsCSSKeyframesRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   return n;
 }
 
+namespace mozilla {
 
+CSSSupportsRule::CSSSupportsRule(bool aConditionMet,
+                                 const nsString& aCondition)
+  : mUseGroup(aConditionMet),
+    mCondition(aCondition)
+{
+}
+
+CSSSupportsRule::CSSSupportsRule(const CSSSupportsRule& aCopy)
+  : css::GroupRule(aCopy),
+    mUseGroup(aCopy.mUseGroup),
+    mCondition(aCopy.mCondition)
+{
+}
+
+#ifdef DEBUG
+/* virtual */ void
+CSSSupportsRule::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  fputs("@supports ", out);
+
+  fputs(NS_LossyConvertUTF16toASCII(mCondition).get(), out);
+
+  css::GroupRule::List(out, aIndent);
+}
+#endif
+
+/* virtual */ PRInt32
+CSSSupportsRule::GetType() const
+{
+  return Rule::SUPPORTS_RULE;
+}
+
+/* virtual */ already_AddRefed<mozilla::css::Rule>
+CSSSupportsRule::Clone() const
+{
+  nsRefPtr<css::Rule> clone = new CSSSupportsRule(*this);
+  return clone.forget();
+}
+
+/* virtual */ bool
+CSSSupportsRule::UseForPresentation(nsPresContext* aPresContext,
+                                   nsMediaQueryResultCacheKey& aKey)
+{
+  return mUseGroup;
+}
+
+NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, css::GroupRule)
+NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::GroupRule)
+
+// QueryInterface implementation for CSSSupportsRule
+NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
+NS_INTERFACE_MAP_END
+
+// nsIDOMCSSRule methods
+NS_IMETHODIMP
+CSSSupportsRule::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::SUPPORTS_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::GetCssText(nsAString& aCssText)
+{
+  aCssText.AssignLiteral("@supports ");
+  aCssText.Append(mCondition);
+  return css::GroupRule::AppendRulesToCssText(aCssText);
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::SetCssText(const nsAString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  return css::GroupRule::GetParentStyleSheet(aSheet);
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return css::GroupRule::GetParentRule(aParentRule);
+}
+
+/* virtual */ size_t
+CSSSupportsRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += css::GroupRule::SizeOfExcludingThis(aMallocSizeOf);
+  n += mCondition.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return n;
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+{
+  return css::GroupRule::GetCssRules(aRuleList);
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
+{
+  return css::GroupRule::InsertRule(aRule, aIndex, _retval);
+}
+
+NS_IMETHODIMP
+CSSSupportsRule::DeleteRule(PRUint32 aIndex)
+{
+  return css::GroupRule::DeleteRule(aIndex);
+}
+
+} // namespace mozilla
+
+// Must be outside namespace
+DOMCI_DATA(CSSSupportsRule, mozilla::CSSSupportsRule)

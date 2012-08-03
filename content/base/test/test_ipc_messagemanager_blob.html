@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for OOP Blobs in MessageManager</title>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <script type="application/javascript;version=1.7">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    const childFrameURL =
+      "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+
+    function childFrameScript() {
+      "use strict";
+
+      addMessageListener("test:ipcClonedMessage", function(message) {
+        if (!(message.json instanceof Components.interfaces.nsIDOMBlob)) {
+          sendAsyncMessage(message.name, message.json);
+          return;
+        }
+
+        let reader =
+          Components.classes["@mozilla.org/files/filereader;1"]
+                    .createInstance(Components.interfaces.nsIDOMFileReader);
+        reader.addEventListener("load", function() {
+          let response = reader.result == "this is a great success!" ?
+                         message.json :
+                         "error";
+          sendAsyncMessage(message.name, response);
+        });
+        reader.readAsText(message.json);
+      });
+    }
+
+    function runTests() {
+      ok("Browser prefs set.");
+
+      let iframe = document.createElement("iframe");
+      iframe.mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.src = childFrameURL;
+
+      iframe.addEventListener("mozbrowserloadend", function() {
+        ok(true, "Got iframe load event.");
+
+        const messages = [
+          "hi!",
+          "",
+          2,
+          -.04,
+          3432987324987239872948732982,
+          true,
+          false,
+          null,
+          0,
+          new Blob(["this ", "is ", "a ", "great ", "success!"],
+                   {"type" : "text\/plain"}),
+        ];
+        let receivedMessageIndex = 0;
+
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.addMessageListener("test:ipcClonedMessage", function(message) {
+          is(message.json, messages[receivedMessageIndex++],
+             "Got correct round-tripped response");
+          if (receivedMessageIndex == messages.length) {
+            SimpleTest.finish();
+          }
+        });
+        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+                           false);
+
+        for each (let message in messages) {
+          mm.sendAsyncMessage("test:ipcClonedMessage", message);
+        }
+      });
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+      info("Got load event.");
+
+      let whitelist;
+      try {
+        whitelist =
+          SpecialPowers.getCharPref("dom.mozBrowserFramesWhitelist") + ", ";
+      } catch (e) {
+        whitelist = "";
+      }
+
+      whitelist += window.location.protocol + "//" + window.location.host;
+
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["dom.mozBrowserFramesWhitelist", whitelist],
+          ["browser.pageThumbs.enabled", false]
+        ]
+      }, runTests);
+    });
+  </script>
+</body>
+</html>

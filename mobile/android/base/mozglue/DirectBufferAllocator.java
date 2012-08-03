@@ -17,7 +17,7 @@ public final class DirectBufferAllocator {
     private DirectBufferAllocator() {}
 
     public static ByteBuffer allocate(int size) {
-        if (size <= 0 || (size % 4) != 0) {
+        if (size <= 0) {
             throw new IllegalArgumentException("Invalid size " + size);
         }
 
