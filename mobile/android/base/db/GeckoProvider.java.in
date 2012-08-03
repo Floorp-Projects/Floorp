@@ -18,7 +18,6 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoEventListener;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
@@ -28,6 +27,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;

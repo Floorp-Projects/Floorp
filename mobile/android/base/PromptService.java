@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoLayerClient;
+import org.mozilla.gecko.util.GeckoEventResponder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
