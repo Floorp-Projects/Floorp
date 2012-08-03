@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+[function, scriptable, uuid(e4089e21-71b6-40af-b546-33c21b90e874)]
+interface mozIRepresentativeColorCallback : nsISupports
+{
+  /**
+   * Will be called when color analysis finishes.
+   *
+   * @param success
+   *        True if analysis was successful, false otherwise.
+   *        Analysis can fail if the image is transparent, imageURI doesn't
+   *        resolve to a valid image, or the image is too big.
+   *
+   * @param color
+   *        The representative color as an integer in RGB form.
+   *        e.g. 0xFF0102 == rgb(255,1,2)
+   *        If success is false, color is not provided.
+   */
+  void onComplete(in boolean success, [optional] in unsigned long color);
+};
+
+[scriptable, uuid(d056186c-28a0-494e-aacc-9e433772b143)]
+interface mozIColorAnalyzer : nsISupports
+{
+  /**
+   * Given an image URI, find the most representative color for that image
+   * based on the frequency of each color.  Preference is given to colors that
+   * are more interesting.  Avoids the background color if it can be
+   * discerned.  Ignores sufficiently transparent colors.
+   *
+   * This is intended to be used on favicon images.  Larger images take longer
+   * to process, especially those with a larger number of unique colors.  If
+   * imageURI points to an image that has more than 128^2 pixels, this method
+   * will fail before analyzing it for performance reasons.
+   *
+   * @param imageURI
+   *        A URI pointing to the image - ideally a data: URI, but any scheme
+   *        that will load when setting the src attribute of a DOM img element
+   *        should work.
+   * @param callback
+   *        Function to call when the representative color is found or an
+   *        error occurs.
+   */
+  void findRepresentativeColor(in nsIURI imageURI,
+                               in mozIRepresentativeColorCallback callback);
+};
