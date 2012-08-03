@@ -22,6 +22,8 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
 function runDesignModeTest(aDoc, aFocus, aNewSource)
 {
   aDoc.designMode = "on";
@@ -81,9 +83,11 @@ var gSetFocusToIFrame = false;
 
 function onLoadIFrame()
 {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
   var frameDoc = gIFrame.contentWindow.document;
 
-  var selCon = SpecialPowers.wrap(gIFrame).contentWindow.
+  var selCon = gIFrame.contentWindow.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIWebNavigation).
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
