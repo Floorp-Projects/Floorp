@@ -444,7 +444,7 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
         }
     }
     while(remaining && jsdsrc) {
-        int bytes = JS_MIN(remaining, UNICODE_TRUNCATE_BUF_SIZE);
+        int bytes = (remaining < UNICODE_TRUNCATE_BUF_SIZE) ? remaining : UNICODE_TRUNCATE_BUF_SIZE;
         int i;
         for(i = 0; i < bytes; i++)
             buf[i] = (const char) *(text++);
