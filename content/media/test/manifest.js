@@ -159,9 +159,10 @@ function fileUriToSrc(path, mustExist) {
   if (navigator.appVersion.indexOf("Android") != -1)
     return path;
 
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   const Ci = Components.interfaces;
-  const Cc = SpecialPowers.wrap(Components).classes;
-  const Cr = SpecialPowers.wrap(Components).results;
+  const Cc = Components.classes;
+  const Cr = Components.results;
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   var f = dirSvc.get("CurWorkD", Ci.nsILocalFile);
@@ -443,7 +444,8 @@ function MediaTestManager() {
     // Force a GC after every completed testcase. This ensures that any decoders
     // with live threads waiting for the GC are killed promptly, to free up the
     // thread stacks' address space.
-    SpecialPowers.forceGC();
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    Components.utils.forceGC();
     
     while (this.testNum < this.tests.length && this.tokens.length < PARALLEL_TESTS) {
       var test = this.tests[this.testNum];
@@ -495,14 +497,15 @@ function mediaTestCleanup() {
       A[i].parentNode.removeChild(A[i]);
       A[i] = null;
     }
-    SpecialPowers.forceGC();
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    Components.utils.forceGC();
 }
 
 (function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   // Ensure that preload preferences are comsistent
-  var prefService = SpecialPowers.wrap(Components)
-                                 .classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefService);
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
@@ -519,6 +522,7 @@ function mediaTestCleanup() {
     branch.setBoolPref("opus.enabled", true);
 
   window.addEventListener("unload", function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     branch.setIntPref("preload.default", oldDefault);
     branch.setIntPref("preload.auto", oldAuto);
     if (oldOpus !== undefined)
