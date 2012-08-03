@@ -110,7 +110,7 @@ SkipSpace(const jschar *s, const jschar *end)
 inline bool
 CompareChars(const jschar *s1, size_t l1, const jschar *s2, size_t l2, int32_t *result)
 {
-    size_t n = JS_MIN(l1, l2);
+    size_t n = Min(l1, l2);
     for (size_t i = 0; i < n; i++) {
         if (int32_t cmp = s1[i] - s2[i]) {
             *result = cmp;
