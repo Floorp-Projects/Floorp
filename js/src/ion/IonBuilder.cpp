@@ -1045,7 +1045,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_iter(GET_INT8(pc));
 
       case JSOP_ITERNEXT:
-        return jsop_iternext(GET_INT8(pc));
+        return jsop_iternext();
 
       case JSOP_MOREITER:
         return jsop_itermore();
@@ -5902,9 +5902,9 @@ IonBuilder::jsop_iter(uint8 flags)
 }
 
 bool
-IonBuilder::jsop_iternext(uint8 depth)
+IonBuilder::jsop_iternext()
 {
-    MDefinition *iter = current->peek(-depth);
+    MDefinition *iter = current->peek(-1);
     MInstruction *ins = MIteratorNext::New(iter);
 
     current->add(ins);
