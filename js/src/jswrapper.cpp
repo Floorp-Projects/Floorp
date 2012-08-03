@@ -581,10 +581,14 @@ CrossCompartmentWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool 
 }
 
 bool
-CrossCompartmentWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
+CrossCompartmentWrapper::get(JSContext *cx, JSObject *wrapperArg, JSObject *receiverArg,
+                             jsid idArg, Value *vp)
 {
+    RootedObject wrapper(cx, wrapperArg);
+    RootedObject receiver(cx, receiverArg);
+    RootedId id(cx, idArg);
     PIERCE(cx, wrapper, GET,
-           call.destination->wrap(cx, &receiver) && call.destination->wrapId(cx, &id),
+           call.destination->wrap(cx, receiver.address()) && call.destination->wrapId(cx, id.address()),
            DirectWrapper::get(cx, wrapper, receiver, id, vp),
            cx->compartment->wrap(cx, vp));
 }
