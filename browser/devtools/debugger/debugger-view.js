@@ -240,6 +240,16 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Selects the script with the specified index from the list.
+   *
+   * @param number aIndex
+   *        The script index.
+   */
+  selectIndex: function DVS_selectIndex(aIndex) {
+    this._scripts.selectedIndex = aIndex;
+  },
+
+  /**
    * Selects the script with the specified URL from the list.
    *
    * @param string aUrl
@@ -276,6 +286,13 @@ ScriptsView.prototype = {
     return this._scripts.selectedItem ?
            this._scripts.selectedItem.value : null;
   },
+
+  /**
+   * Gets the most recently selected script url.
+   * @return string | null
+   */
+  get preferredScriptUrl()
+    this._preferredScriptUrl ? this._preferredScriptUrl : null,
 
   /**
    * Returns the list of labels in the scripts container.
@@ -345,7 +362,7 @@ ScriptsView.prototype = {
       }
     }
     // The script is alphabetically the last one.
-    this._createScriptElement(aLabel, aScript, -1, true);
+    this._createScriptElement(aLabel, aScript, -1);
   },
 
   /**
@@ -365,7 +382,7 @@ ScriptsView.prototype = {
 
     for (let i = 0, l = newScripts.length; i < l; i++) {
       let item = newScripts[i];
-      this._createScriptElement(item.label, item.script, -1, true);
+      this._createScriptElement(item.label, item.script, -1);
     }
   },
 
@@ -380,12 +397,8 @@ ScriptsView.prototype = {
    * @param number aIndex
    *        The index where to insert to new script in the container.
    *        Pass -1 to append the script at the end.
-   * @param boolean aSelectIfEmptyFlag
-   *        True to set the newly created script as the currently selected item
-   *        if there are no other existing scripts in the container.
    */
-  _createScriptElement: function DVS__createScriptElement(
-    aLabel, aScript, aIndex, aSelectIfEmptyFlag)
+  _createScriptElement: function DVS__createScriptElement(aLabel, aScript, aIndex)
   {
     // Make sure we don't duplicate anything.
     if (aLabel == "null" || this.containsLabel(aLabel) || this.contains(aScript.url)) {
@@ -398,10 +411,6 @@ ScriptsView.prototype = {
 
     scriptItem.setAttribute("tooltiptext", aScript.url);
     scriptItem.setUserData("sourceScript", aScript, null);
-
-    if (this._scripts.itemCount == 1 && aSelectIfEmptyFlag) {
-      this._scripts.selectedItem = scriptItem;
-    }
   },
 
   /**
@@ -437,6 +446,7 @@ ScriptsView.prototype = {
     }
 
     this._preferredScript = selectedItem;
+    this._preferredScriptUrl = selectedItem.value;
     this._scripts.setAttribute("tooltiptext", selectedItem.value);
     DebuggerController.SourceScripts.showScript(selectedItem.getUserData("sourceScript"));
   },
