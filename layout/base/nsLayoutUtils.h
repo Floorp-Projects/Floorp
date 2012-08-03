@@ -1311,8 +1311,8 @@ public:
    * and prefs indicate we should be optimizing for speed over quality
    */
   static PRUint32 GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
-                                          const nsStyleText* aStyleText,
-                                          const nsStyleFont* aStyleFont);
+                                          const nsStyleFont* aStyleFont,
+                                          nscoord aLetterSpacing);
 
   /**
    * Takes two rectangles whose origins must be the same, and computes

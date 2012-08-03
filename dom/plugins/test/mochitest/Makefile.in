@@ -56,9 +56,6 @@ MOCHITEST_FILES = \
   test_streamatclose.html \
   neverending.sjs \
   test_newstreamondestroy.html \
-  test_crashing.html \
-  $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
-  test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
   test_propertyAndMethod.html \
@@ -121,6 +118,12 @@ endif
 endif
 
 ifdef MOZ_CRASHREPORTER
+MOCHITEST_FILES += \
+  test_crashing.html \
+  $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
+  test_hanging.html \
+  $(NULL)
+
 MOCHITEST_CHROME_FILES += \
   test_crash_notify.xul \
   test_crash_notify_no_report.xul \

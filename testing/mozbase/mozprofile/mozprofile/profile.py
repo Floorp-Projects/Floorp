@@ -27,7 +27,7 @@ class Profile(object):
                  addon_manifests=None,  # Manifest for addons, see http://ahal.ca/blog/2011/bulk-installing-fx-addons/
                  preferences=None, # Dictionary or class of preferences
                  locations=None, # locations to proxy
-                 proxy=False, # setup a proxy
+                 proxy=None, # setup a proxy - dict of server-loc,server-port,ssl-port
                  restore=True # If true remove all installed addons preferences when cleaning up
                  ):
 

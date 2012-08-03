@@ -998,8 +998,11 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 #endif /* JS_THREADSAFE && DEBUG */
 
 #ifdef DEBUG
-/* Assert that we're not doing GC on cx, that we're in a request as
-   needed, and that the compartments for cx and v are correct. */
+/*
+ * Assert that we're not doing GC on cx, that we're in a request as
+ * needed, and that the compartments for cx and v are correct.
+ * Also check that GC would be safe at this point.
+ */
 JS_PUBLIC_API(void)
 AssertArgumentsAreSane(JSContext *cx, const Value &v);
 #else
@@ -2700,10 +2703,13 @@ JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, const Value &v, double *out)
 {
     AssertArgumentsAreSane(cx, v);
+    {
+        JS::SkipRoot root(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
 
     if (v.isNumber()) {
         *out = v.toNumber();
-        MaybeCheckStackRoots(cx);
         return true;
     }
     return js::ToNumberSlow(cx, v, out);
@@ -2750,24 +2756,67 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
 
 #ifdef __cplusplus
 namespace js {
-/*
- * DO NOT CALL THIS.  Use JS::ToInt32
- */
+/* DO NOT CALL THIS.  Use JS::ToInt16. */
+extern JS_PUBLIC_API(bool)
+ToUint16Slow(JSContext *cx, const JS::Value &v, uint16_t *out);
+
+/* DO NOT CALL THIS.  Use JS::ToInt32. */
 extern JS_PUBLIC_API(bool)
 ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
+
+/* DO NOT CALL THIS.  Use JS::ToUint32. */
+extern JS_PUBLIC_API(bool)
+ToUint32Slow(JSContext *cx, const JS::Value &v, uint32_t *out);
 } /* namespace js */
 
 namespace JS {
 
 JS_ALWAYS_INLINE bool
+ToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    {
+        SkipRoot skip(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+
+    if (v.isInt32()) {
+        *out = uint16_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint16Slow(cx, v, out);
+}
+
+JS_ALWAYS_INLINE bool
 ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
     AssertArgumentsAreSane(cx, v);
+    {
+        JS::SkipRoot root(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+
     if (v.isInt32()) {
         *out = v.toInt32();
         return true;
     }
     return js::ToInt32Slow(cx, v, out);
+}
+
+JS_ALWAYS_INLINE bool
+ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    {
+        JS::SkipRoot root(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+
+    if (v.isInt32()) {
+        *out = uint32_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint32Slow(cx, v, out);
 }
 
 } /* namespace JS */
@@ -4963,7 +5012,7 @@ JS_END_EXTERN_C
 namespace JS {
 
 /* Options for JavaScript compilation. */
-struct CompileOptions {
+struct JS_PUBLIC_API(CompileOptions) {
     JSPrincipals *principals;
     JSPrincipals *originPrincipals;
     JSVersion version;

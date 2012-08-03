@@ -18,6 +18,8 @@
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
+#include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
 #include "nsCoord.h"
 #include "nsRenderingContext.h"
 #include "nsIPresShell.h"
@@ -1154,7 +1156,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     NS_ASSERTION(!aForFrame ||
                  (aLineContainer == FindLineContainer(aForFrame) ||
                   (aLineContainer->GetType() == nsGkAtoms::letterFrame &&
-                   aLineContainer->GetStyleDisplay()->IsFloating())),
+                   aLineContainer->IsFloating())),
                  "Wrong line container hint");
   }
 
@@ -1457,6 +1459,30 @@ HasTerminalNewline(const nsTextFrame* aFrame)
   return frag->CharAt(aFrame->GetContentEnd() - 1) == '\n';
 }
 
+static nscoord
+LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+  if (!aStyleText) {
+    aStyleText = aFrame->GetStyleText();
+  }
+  return StyleToCoord(aStyleText->mLetterSpacing);
+}
+
+static nscoord
+WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+  if (!aStyleText) {
+    aStyleText = aFrame->GetStyleText();
+  }
+  return aStyleText->mWordSpacing;
+}
+
 bool
 BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
@@ -1496,13 +1522,15 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return true;
+
   const nsStyleFont* fontStyle1 = sc1->GetStyleFont();
   const nsStyleFont* fontStyle2 = sc2->GetStyleFont();
-  const nsStyleText* textStyle2 = sc2->GetStyleText();
+  nscoord letterSpacing1 = LetterSpacing(aFrame1);
+  nscoord letterSpacing2 = LetterSpacing(aFrame2);
   return fontStyle1->mFont.BaseEquals(fontStyle2->mFont) &&
     sc1->GetStyleFont()->mLanguage == sc2->GetStyleFont()->mLanguage &&
-    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, textStyle1, fontStyle1) ==
-      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, textStyle2, fontStyle2);
+    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, fontStyle1, letterSpacing1) ==
+      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, fontStyle2, letterSpacing2);
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1747,7 +1775,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
   bool enabledJustification = mLineContainer &&
     (mLineContainer->GetStyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
-     mLineContainer->GetStyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY);
+     mLineContainer->GetStyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY) &&
+    !mLineContainer->IsSVGText();
 
   // for word-break style
   switch (mLineContainer->GetStyleText()->mWordBreak) {
@@ -1776,8 +1805,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = true;
     }
-    textFlags |= GetSpacingFlags(StyleToCoord(textStyle->mLetterSpacing));
-    textFlags |= GetSpacingFlags(textStyle->mWordSpacing);
+    textFlags |= GetSpacingFlags(LetterSpacing(f));
+    textFlags |= GetSpacingFlags(WordSpacing(f));
     nsTextFrameUtils::CompressionMode compression =
       CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
     if (enabledJustification && !textStyle->WhiteSpaceIsSignificant()) {
@@ -1892,9 +1921,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= gfxTextRunFactory::TEXT_TRAILING_ARABICCHAR;
   }
   // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
-  // frame's style is used, so use the last frame's
+  // frame's style is used, so we use a mixture of the first frame and
+  // last frame's style
   textFlags |= nsLayoutUtils::GetTextRunFlagsForStyle(lastStyleContext,
-      textStyle, fontStyle);
+      fontStyle, LetterSpacing(firstFrame, textStyle));
   // XXX this is a bit of a hack. For performance reasons, if we're favouring
   // performance over quality, don't try to get accurate glyph extents.
   if (!(textFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED)) {
@@ -2607,8 +2637,8 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
-      mWordSpacing(mTextStyle->mWordSpacing),
-      mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
+      mWordSpacing(WordSpacing(aFrame, aTextStyle)),
+      mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
@@ -2632,8 +2662,8 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
-      mWordSpacing(mTextStyle->mWordSpacing),
-      mLetterSpacing(StyleToCoord(mTextStyle->mLetterSpacing)),
+      mWordSpacing(WordSpacing(aFrame)),
+      mLetterSpacing(LetterSpacing(aFrame)),
       mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
@@ -4538,11 +4568,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     // that should be set (see nsLineLayout::VerticalAlignLine).
     if (firstBlock) {
       // At this point, fChild can't be null since TextFrames can't be blocks
-      const nsStyleCoord& vAlign =
-        fChild->GetStyleContext()->GetStyleTextReset()->mVerticalAlign;
-      if (vAlign.GetUnit() != eStyleUnit_Enumerated ||
-          vAlign.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE)
-      {
+      if (fChild->VerticalAlignEnum() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
         // Since offset is the offset in the child's coordinate space, we have
         // to undo the accumulation to bring the transform out of the block's
         // coordinate space
@@ -4581,9 +4607,9 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
 
     // In all modes, if we're on an inline-block or inline-table (or
     // inline-stack, inline-box, inline-grid), we're done.
-    const nsStyleDisplay *disp = context->GetStyleDisplay();
-    if (disp->mDisplay != NS_STYLE_DISPLAY_INLINE &&
-        disp->IsInlineOutside()) {
+    PRUint8 display = f->GetDisplay();
+    if (display != NS_STYLE_DISPLAY_INLINE &&
+        nsStyleDisplay::IsDisplayTypeInlineOutside(display)) {
       break;
     }
 
@@ -4595,7 +4621,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     } else {
       // In standards/almost-standards mode, if we're on an
       // absolutely-positioned element or a floating element, we're done.
-      if (disp->IsFloating() || disp->IsAbsolutelyPositioned()) {
+      if (f->IsFloating() || f->IsAbsolutelyPositioned()) {
         break;
       }
     }
@@ -7156,7 +7182,7 @@ bool
 nsTextFrame::IsFloatingFirstLetterChild() const
 {
   nsIFrame* frame = GetParent();
-  return frame && frame->GetStyleDisplay()->IsFloating() &&
+  return frame && frame->IsFloating() &&
          frame->GetType() == nsGkAtoms::letterFrame;
 }
 
@@ -7722,7 +7748,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Compute space and letter counts for justification, if required
   if (!textStyle->WhiteSpaceIsSignificant() &&
       (lineContainer->GetStyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
-       lineContainer->GetStyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY)) {
+       lineContainer->GetStyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY) &&
+      !lineContainer->IsSVGText()) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);    // This will include a space for trailing whitespace, if any is present.
     // This is corrected for in nsLineLayout::TrimWhiteSpaceIn.
     PRInt32 numJustifiableCharacters =

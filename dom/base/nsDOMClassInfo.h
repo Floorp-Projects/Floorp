@@ -1216,6 +1216,27 @@ public:
   }
 };
 
+class nsDOMTouchListSH : public nsArraySH
+{
+  protected:
+  nsDOMTouchListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsDOMTouchListSH()
+  {
+  }
+
+  virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                 nsWrapperCache **aCache, nsresult *aResult);
+
+  public:
+  static nsIClassInfo* doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMTouchListSH(aData);
+  }
+};
+
 #ifdef MOZ_XUL
 // TreeColumns helper
 

@@ -1038,13 +1038,15 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
     NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-  } else if (mStopColor        != aOther.mStopColor     ||
-             mFloodColor       != aOther.mFloodColor    ||
-             mLightingColor    != aOther.mLightingColor ||
-             mStopOpacity      != aOther.mStopOpacity   ||
-             mFloodOpacity     != aOther.mFloodOpacity  ||
-             mDominantBaseline != aOther.mDominantBaseline ||
-             mVectorEffect     != aOther.mVectorEffect)
+  } else if (mDominantBaseline != aOther.mDominantBaseline) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+    NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow);
+  } else if (mStopColor     != aOther.mStopColor     ||
+             mFloodColor    != aOther.mFloodColor    ||
+             mLightingColor != aOther.mLightingColor ||
+             mStopOpacity   != aOther.mStopOpacity   ||
+             mFloodOpacity  != aOther.mFloodOpacity  ||
+             mVectorEffect  != aOther.mVectorEffect)
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
   return hint;

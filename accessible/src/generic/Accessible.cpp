@@ -195,10 +195,9 @@ Accessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
   mRoleMapEntry = aRoleMapEntry;
 }
 
-bool
+void
 Accessible::Init()
 {
-  return true;
 }
 
 NS_IMETHODIMP

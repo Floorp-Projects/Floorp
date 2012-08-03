@@ -45,6 +45,11 @@ var WebAppRT = {
             break;
         }
       });
+
+      // update the blocklist url to use a different app id
+      var blocklist = Services.prefs.getCharPref("extensions.blocklist.url");
+      blocklist = blocklist.replace(/%APP_ID%/g, "webapprt-mobile@mozilla.org");
+      Services.prefs.setCharPref("extensions.blocklist.url", blocklist);
     }
   },
 

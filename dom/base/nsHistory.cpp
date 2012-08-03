@@ -239,8 +239,8 @@ nsHistory::Go(PRInt32 aDelta)
 
   PRInt32 curIndex=-1;
   PRInt32 len = 0;
-  nsresult rv = session_history->GetIndex(&curIndex);
-  rv = session_history->GetCount(&len);
+  session_history->GetIndex(&curIndex);
+  session_history->GetCount(&len);
 
   PRInt32 index = curIndex + aDelta;
   if (index > -1  &&  index < len)
