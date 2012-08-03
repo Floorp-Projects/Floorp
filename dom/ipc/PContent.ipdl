@@ -101,6 +101,19 @@ union DeviceStorageParams
   DeviceStorageEnumerationParams;
 };
 
+struct NormalBlobConstructorParams
+{
+  nsString contentType;
+  uint64_t length;
+};
+
+struct FileBlobConstructorParams
+{
+  nsString name;
+  nsString contentType;
+  uint64_t length;
+};
+
 struct SlicedBlobConstructorParams
 {
   PBlob source;
@@ -109,17 +122,11 @@ struct SlicedBlobConstructorParams
   nsString contentType;
 };
 
-struct MysteryBlobConstructorParams
-{
-  // Nothing is known about this type of blob.
-};
-
 union BlobConstructorParams
 {
   NormalBlobConstructorParams;
   FileBlobConstructorParams;
   SlicedBlobConstructorParams;
-  MysteryBlobConstructorParams;
 };
 
 rpc protocol PContent
