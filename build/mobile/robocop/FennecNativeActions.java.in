@@ -59,7 +59,7 @@ public class FennecNativeActions implements Actions {
         // Set up reflexive access of java classes and methods.
         try {
             mClassLoader = activity.getClassLoader();
-            mGel = mClassLoader.loadClass("org.mozilla.gecko.GeckoEventListener");
+            mGel = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
             mGe = mClassLoader.loadClass("org.mozilla.gecko.GeckoEvent");
             mGas = mClassLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
             Class [] parameters = new Class[2];
