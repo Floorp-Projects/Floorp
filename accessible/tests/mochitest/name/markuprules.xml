@@ -202,6 +202,7 @@
       </html:select>
     </markup>
 
+<!-- Temporarily disabled for causing bug 733848
     <markup ref="html:img" ruleset="htmlimage">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
@@ -223,6 +224,7 @@
                  alt=""
                  src="../moz.png"/>
     </markup>
+-->
 
     <markup ref="html:table/html:tr/html:td" ruleset="htmlelm"
             id="markup4test">
