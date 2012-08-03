@@ -8,6 +8,8 @@ build system.
 Modules Overview
 ================
 
+* mozbuild.compilation -- Functionality related to compiling. This
+  includes managing compiler warnings.
 * mozbuild.logging -- Defines mozbuild's logging infrastructure.
   mozbuild uses a structured logging backend.
 
