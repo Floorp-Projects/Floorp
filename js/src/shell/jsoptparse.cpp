@@ -178,7 +178,7 @@ OptionParser::printHelp(const char *progname)
         size_t fmtChars = sizeof(fmt) - 2;
         size_t lhsLen = 0;
         for (Option **it = arguments.begin(), **end = arguments.end(); it != end; ++it)
-            lhsLen = JS_MAX(lhsLen, strlen((*it)->longflag) + fmtChars);
+            lhsLen = Max(lhsLen, strlen((*it)->longflag) + fmtChars);
 
         for (Option **it = arguments.begin(), **end = arguments.end(); it != end; ++it) {
             Option *arg = *it;
@@ -206,7 +206,7 @@ OptionParser::printHelp(const char *progname)
             size_t len = fmtLen + longflagLen;
             if (opt->isValued())
                 len += strlen(opt->asValued()->metavar);
-            lhsLen = JS_MAX(lhsLen, len);
+            lhsLen = Max(lhsLen, len);
         }
 
         /* Print option help text. */

@@ -301,6 +301,23 @@ struct RemoteImageData {
  * (because layers can only be used on the main thread) and we want to
  * be able to set the current Image from any thread, to facilitate
  * video playback without involving the main thread, for example.
+ *
+ * An ImageContainer can operate in one of three modes:
+ * 1) Normal. Triggered by constructing the ImageContainer with
+ * DISABLE_ASYNC or when compositing is happening on the main thread.
+ * SetCurrentImage changes ImageContainer state but nothing is sent to the
+ * compositor until the next layer transaction.
+ * 2) Asynchronous. Initiated by constructing the ImageContainer with
+ * ENABLE_ASYNC when compositing is happening on the main thread.
+ * SetCurrentImage sends a message through the ImageBridge to the compositor
+ * thread to update the image, without going through the main thread or
+ * a layer transaction.
+ * 3) Remote. Initiated by calling SetRemoteImageData on the ImageContainer
+ * before any other activity.
+ * The ImageContainer uses a shared memory block containing a cross-process mutex
+ * to communicate with the compositor thread. SetCurrentImage synchronously
+ * updates the shared state to point to the new image and the old image
+ * is immediately released (not true in Normal or Asynchronous modes).
  */
 class THEBES_API ImageContainer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)

@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(454b5cbb-fd18-4f34-a616-4d543f68717d)]
+
+interface nsISecurityUITelemetry : nsISupports {
+
+/*
+ * Addon installation warnings
+ */
+
+// Firefox prevented this site from asking you to install addon
+const PRUint32 WARNING_ADDON_ASKING_PREVENTED = 1;
+// User clicks through and allows site to ask to install addons
+const PRUint32 WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH = 2;
+// Are you sure you want to install this addon? Only install addons you trust
+const PRUint32 WARNING_CONFIRM_ADDON_INSTALL = 3;
+// User clicked she is sure after waiting 3secs
+const PRUint32 WARNING_CONFIRM_ADDON_INSTALL_CLICK_THROUGH  = 4;
+
+
+/*
+ * modal dialogs/warnings 
+ */
+
+const PRUint32 WARNING_ENTERING_SECURE_SITE = 5;
+const PRUint32 WARNING_ENTERING_WEAK_SITE = 6;
+const PRUint32 WARNING_LEAVING_SECURE_SITE = 7;
+const PRUint32 WARNING_MIXED_CONTENT  = 8;
+
+// For confirmation dialogs, the clickthrough constant needs to be 1
+// more than the dialog constant so that
+// WARNING_CONFIRM_<X> + 1 == WARNING_CONFIRM_<X>_CLICK_THROUGH
+const PRUint32 WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE = 9;
+const PRUint32 WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE_CLICK_THROUGH = 10;
+const PRUint32 WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE = 11;
+const PRUint32 WARNING_CONFIRM_POST_TO_INSECURE_FROM_INSECURE_CLICK_THROUGH = 12;
+
+/*
+ * Phishing / Malware page warnings
+ */
+
+const PRUint32 WARNING_MALWARE_PAGE = 13;
+const PRUint32 WARNING_MALWARE_PAGE_WHY_BLOCKED = 14;
+const PRUint32 WARNING_MALWARE_PAGE_GET_ME_OUT_OF_HERE = 15;
+const PRUint32 WARNING_MALWARE_PAGE_IGNORE_WARNING = 16;
+
+const PRUint32 WARNING_PHISHING_PAGE = 17;
+const PRUint32 WARNING_PHISHING_PAGE_WHY_BLOCKED = 18;
+const PRUint32 WARNING_PHISHING_PAGE_GET_ME_OUT_OF_HERE = 19;
+const PRUint32 WARNING_PHISHING_PAGE_IGNORE_WARNING = 20;
+
+/* 
+ * SSL Error dialogs
+ */
+
+const PRUint32 WARNING_BAD_CERT = 21;
+const PRUint32 WARNING_BAD_CERT_STS = 22;
+const PRUint32 WARNING_BAD_CERT_CLICK_ADD_EXCEPTION = 23;
+const PRUint32 WARNING_BAD_CERT_CLICK_VIEW_CERT = 24;
+const PRUint32 WARNING_BAD_CERT_DONT_REMEMBER_EXCEPTION = 25;
+const PRUint32 WARNING_BAD_CERT_GET_ME_OUT_OF_HERE = 27;
+const PRUint32 WARNING_BAD_CERT_UNDERSTAND_RISKS = 28;
+const PRUint32 WARNING_BAD_CERT_TECHINICAL_DETAILS = 29;
+
+/*
+ * Note that if we add more possibilities in the warning dialogs,
+ * it is a new experiment and we shouldn't reuse these buckets.
+ */
+const PRUint32 WARNING_BAD_CERT_ADD_EXCEPTION_BASE = 30;
+const PRUint32 WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_UNTRUSTED = 1;
+const PRUint32 WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_DOMAIN = 2;
+const PRUint32 WARNING_BAD_CERT_ADD_EXCEPTION_FLAG_TIME = 4;
+
+const PRUint32 WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_BASE = 38;
+const PRUint32 WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED = 1;
+const PRUint32 WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN = 2;
+const PRUint32 WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_TIME = 4;
+// This uses up buckets till 45
+
+};
