@@ -323,7 +323,7 @@ MapAlignedPages(size_t size, size_t alignment)
     }
 
     /* Overallocate and unmap the region's edges. */
-    size_t reqSize = JS_MIN(size + 2 * alignment, 2 * size);
+    size_t reqSize = Min(size + 2 * alignment, 2 * size);
     void *region = mmap(NULL, reqSize, prot, flags, -1, 0);
     if (region == MAP_FAILED)
         return NULL;

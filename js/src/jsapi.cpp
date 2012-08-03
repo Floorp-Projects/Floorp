@@ -2111,7 +2111,7 @@ AddNameToArray(JSContext *cx, PropertyName *name, JSIdArray *ida, int *ip)
     int i = *ip;
     int length = ida->length;
     if (i >= length) {
-        ida = SetIdArrayLength(cx, ida, JS_MAX(length * 2, 8));
+        ida = SetIdArrayLength(cx, ida, Max(length * 2, 8));
         if (!ida)
             return NULL;
         JS_ASSERT(i < ida->length);

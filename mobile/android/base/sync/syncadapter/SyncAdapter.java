@@ -227,6 +227,21 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   }
 
   /**
+   * Request that no sync start right away.  A new sync won't start until
+   * at least <code>backoff</code> milliseconds from now.
+   *
+   * @param backoff time to wait in milliseconds.
+   */
+  @Override
+  public void requestBackoff(long backoff) {
+    if (backoff > 0) {
+      // Fuzz the backoff time (up to 25% more) to prevent client lock-stepping; agrees with desktop.
+      backoff = backoff + Math.round((double) backoff * 0.25d * Math.random());
+      this.extendEarliestNextSync(System.currentTimeMillis() + backoff);
+    }
+  }
+
+  /**
    * Asynchronously request an immediate sync, optionally syncing only the given
    * named stages.
    * <p>
@@ -528,13 +543,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   public void handleStageCompleted(Stage currentState,
                                    GlobalSession globalSession) {
     Logger.trace(LOG_TAG, "Stage completed: " + currentState);
-  }
-
-  @Override
-  public void requestBackoff(long backoff) {
-    if (backoff > 0) {
-      this.extendEarliestNextSync(System.currentTimeMillis() + backoff);
-    }
   }
 
   @Override
