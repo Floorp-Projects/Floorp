@@ -55,6 +55,8 @@ class RemoteBlob;
 template <ActorFlavorEnum ActorFlavor>
 class Blob : public BlobTraits<ActorFlavor>::BaseType
 {
+  friend class RemoteBlob<ActorFlavor>;
+
 public:
   typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
   typedef typename BlobTraits<ActorFlavor>::StreamType StreamType;
@@ -69,6 +71,7 @@ protected:
   nsIDOMBlob* mBlob;
   RemoteBlobType* mRemoteBlob;
   bool mOwnsBlob;
+  bool mBlobIsFile;
 
 public:
   // This create function is called on the sending side.
@@ -82,11 +85,20 @@ public:
   static Blob*
   Create(const BlobConstructorParams& aParams);
 
+  // Get the blob associated with this actor. This may always be called on the
+  // sending side. It may also be called on the receiving side unless this is a
+  // "mystery" blob that has not yet received a SetMysteryBlobInfo() call.
   already_AddRefed<nsIDOMBlob>
   GetBlob();
 
-  void
-  NoteDyingRemoteBlob();
+  // Use this for files.
+  bool
+  SetMysteryBlobInfo(const nsString& aName, const nsString& aContentType,
+                     PRUint64 aLength);
+
+  // Use this for non-file blobs.
+  bool
+  SetMysteryBlobInfo(const nsString& aContentType, PRUint64 aLength);
 
 private:
   // This constructor is called on the sending side.
@@ -95,9 +107,18 @@ private:
   // This constructor is called on the receiving side.
   Blob(const BlobConstructorParams& aParams);
 
+  void
+  SetRemoteBlob(nsRefPtr<RemoteBlobType>& aRemoteBlob);
+
+  void
+  NoteDyingRemoteBlob();
+
   // These methods are only called by the IPDL message machinery.
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvResolveMystery(const ResolveMysteryParams& aParams) MOZ_OVERRIDE;
 
   virtual bool
   RecvPBlobStreamConstructor(StreamType* aActor) MOZ_OVERRIDE;
