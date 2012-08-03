@@ -54,7 +54,11 @@ var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmeta
   "waiting", "pause"];
 function logEvent(event) {
   if (event.target.gotEnded > (event.type == "ended" ? 1 : 0)) {
-    ok(false, event.target.currentSrc + " got unexpected " + event.type + " after ended");
+    if (event.target.currentSrc.slice(-9) == "seek.webm" && event.type == "stalled") {
+      todo(false, event.target.currentSrc + " got unexpected stalled after ended (bug 760770)");
+    } else {
+      ok(false, event.target.currentSrc + " got unexpected " + event.type + " after ended");
+    }
   } else {
     info(event.target.currentSrc + " got " + event.type);
   }

@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
+#include "nsLayoutStatics.h"
 #include "nsContentUtils.h"
 #include "nsCCUncollectableMarker.h"
 #include "jsfriendapi.h"
@@ -564,6 +565,103 @@ DoDeferredRelease(nsTArray<T> &array)
     }
 }
 
+class XPCIncrementalReleaseRunnable : public nsRunnable
+{
+    XPCJSRuntime *runtime;
+    nsTArray<nsISupports *> items;
+
+    static const PRTime SliceMillis = 10; /* ms */
+
+  public:
+    XPCIncrementalReleaseRunnable(XPCJSRuntime *rt, nsTArray<nsISupports *> &items);
+    virtual ~XPCIncrementalReleaseRunnable();
+
+    void ReleaseNow(bool limited);
+
+    NS_DECL_NSIRUNNABLE
+};
+
+XPCIncrementalReleaseRunnable::XPCIncrementalReleaseRunnable(XPCJSRuntime *rt,
+                                                             nsTArray<nsISupports *> &items)
+  : runtime(rt)
+{
+    nsLayoutStatics::AddRef();
+    this->items.SwapElements(items);
+}
+
+XPCIncrementalReleaseRunnable::~XPCIncrementalReleaseRunnable()
+{
+    MOZ_ASSERT(this != runtime->mReleaseRunnable);
+    nsLayoutStatics::Release();
+}
+
+void
+XPCIncrementalReleaseRunnable::ReleaseNow(bool limited)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
+    TimeStamp started = TimeStamp::Now();
+    PRUint32 counter = 0;
+    while (1) {
+        PRUint32 count = items.Length();
+        if (!count)
+            break;
+
+        nsISupports *wrapper = items[count - 1];
+        items.RemoveElementAt(count - 1);
+        NS_RELEASE(wrapper);
+
+        if (limited) {
+            /* We don't want to read the clock too often. */
+            counter++;
+            if (counter == 100) {
+                counter = 0;
+                if (TimeStamp::Now() - started >= sliceTime)
+                    break;
+            }
+        }
+    }
+
+    MOZ_ASSERT_IF(items.Length(), limited);
+
+    if (!items.Length()) {
+        MOZ_ASSERT(runtime->mReleaseRunnable == this);
+        runtime->mReleaseRunnable = nullptr;
+    }
+}
+
+NS_IMETHODIMP
+XPCIncrementalReleaseRunnable::Run()
+{
+    if (runtime->mReleaseRunnable != this) {
+        /* These items were already processed synchronously in JSGC_BEGIN. */
+        MOZ_ASSERT(!items.Length());
+        return NS_OK;
+    }
+
+    ReleaseNow(true);
+
+    if (items.Length()) {
+        nsresult rv = NS_DispatchToMainThread(this);
+        if (NS_FAILED(rv))
+            ReleaseNow(false);
+    }
+
+    return NS_OK;
+}
+
+void
+XPCJSRuntime::ReleaseIncrementally(nsTArray<nsISupports *> &array)
+{
+    MOZ_ASSERT(!mReleaseRunnable);
+    mReleaseRunnable = new XPCIncrementalReleaseRunnable(this, array);
+
+    nsresult rv = NS_DispatchToMainThread(mReleaseRunnable);
+    if (NS_FAILED(rv))
+        mReleaseRunnable->ReleaseNow(false);
+}
+
 /* static */ void
 XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
 {
@@ -585,15 +683,21 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
         }
         case JSGC_END:
         {
+            /*
+             * If the previous GC created a runnable to release objects
+             * incrementally, and if it hasn't finished yet, finish it now. We
+             * don't want these to build up. We also don't want to allow any
+             * existing incremental release runnables to run after a
+             * non-incremental GC, since they are often used to detect leaks.
+             */
+            if (self->mReleaseRunnable)
+                self->mReleaseRunnable->ReleaseNow(false);
+
             // Do any deferred releases of native objects.
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-            printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
-                   self->mNativesToReleaseArray.Length());
-#endif
-            DoDeferredRelease(self->mNativesToReleaseArray);
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-            printf("XPC - End deferred Releases\n");
-#endif
+            if (js::WasIncrementalGC(rt))
+                self->ReleaseIncrementally(self->mNativesToReleaseArray);
+            else
+                DoDeferredRelease(self->mNativesToReleaseArray);
 
             self->GetXPConnect()->ClearGCBeforeCC();
             break;
@@ -964,6 +1068,8 @@ XPCJSRuntime::GetJSCycleCollectionContext()
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+    MOZ_ASSERT(!mReleaseRunnable);
+
     if (mWatchdogWakeup) {
         // If the watchdog thread is running, tell it to terminate waking it
         // up if necessary and wait until it signals that it finished. As we
@@ -2000,6 +2106,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogThread(nullptr),
    mWatchdogHibernating(false),
    mLastActiveTime(-1),
+   mReleaseRunnable(nullptr),
    mExceptionManagerNotAvailable(false)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN

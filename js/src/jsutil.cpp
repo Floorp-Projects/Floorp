@@ -177,7 +177,7 @@ ValToBin(unsigned logscale, uint32_t val)
         : (logscale == 2)
         ? (unsigned) JS_CEILING_LOG2W(val)
         : val;
-    return JS_MIN(bin, 10);
+    return Min(bin, 10U);
 }
 
 void

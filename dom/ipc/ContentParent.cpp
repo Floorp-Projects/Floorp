@@ -42,13 +42,13 @@
 #include "nsConsoleMessage.h"
 #include "nsDebugImpl.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDOMFile.h"
 #include "nsExternalHelperAppService.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
 #include "nsIConsoleService.h"
-#include "nsIDOMFile.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMWindow.h"
 #include "nsIFilePicker.h"
@@ -891,6 +891,7 @@ ContentParent::DeallocPBlob(PBlobParent* aActor)
 BlobParent*
 ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aBlob, "Null pointer!");
 
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
@@ -903,32 +904,44 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     return actor;
   }
 
+  // XXX This is only safe so long as all blob implementations in our tree
+  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
+  //     a real interface or something.
+  const nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
+
   BlobConstructorParams params;
 
-  nsString contentType;
-  nsresult rv = aBlob->GetType(contentType);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  PRUint64 length;
-  rv = aBlob->GetSize(&length);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-  if (file) {
-    FileBlobConstructorParams fileParams;
-
-    rv = file->GetName(fileParams.name());
+  if (blob->IsSizeUnknown()) {
+    // We don't want to call GetSize yet since that may stat a file on the main
+    // thread here. Instead we'll learn the size lazily from the other process.
+    params = MysteryBlobConstructorParams();
+  }
+  else {
+    nsString contentType;
+    nsresult rv = aBlob->GetType(contentType);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    fileParams.contentType() = contentType;
-    fileParams.length() = length;
+    PRUint64 length;
+    rv = aBlob->GetSize(&length);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
-    params = fileParams;
-  } else {
-    NormalBlobConstructorParams blobParams;
-    blobParams.contentType() = contentType;
-    blobParams.length() = length;
-    params = blobParams;
+    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+    if (file) {
+      FileBlobConstructorParams fileParams;
+
+      rv = file->GetName(fileParams.name());
+      NS_ENSURE_SUCCESS(rv, nullptr);
+
+      fileParams.contentType() = contentType;
+      fileParams.length() = length;
+
+      params = fileParams;
+    } else {
+      NormalBlobConstructorParams blobParams;
+      blobParams.contentType() = contentType;
+      blobParams.length() = length;
+      params = blobParams;
+    }
   }
 
   BlobParent* actor = BlobParent::Create(aBlob);
