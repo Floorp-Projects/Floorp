@@ -60,7 +60,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     }
 
     function beginTest() {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       gTest.window.document.body.focus();
 
       // WARNING: If the following test fails, give the setTimeout() in the onload()
@@ -74,7 +73,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     }
     
     function goBack() {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       gTest.window.history.back();
       setTimeout(function() {
         SimpleTest.waitForFocus(checkStillEditable, gTest.window);
@@ -82,7 +80,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     }
 
     function checkStillEditable() {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
       // Check that the contents are correct.
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Edited contents still correct?");

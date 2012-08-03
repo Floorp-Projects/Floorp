@@ -21,16 +21,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317448
 var x = new XMLHttpRequest();
 x.open("GET", document.location.href);
 x.send("");
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 is(x instanceof Components.interfaces.nsIInterfaceRequestor,
    true, "Must be interface requestor");
 
 var count = {};
-var interfaces = x.
+var interfaces = SpecialPowers.wrap(x).
                  QueryInterface(Components.interfaces.nsIClassInfo).
                  getInterfaces(count).
                  map(function(id) {
-                            return Components.interfacesByID[id].toString();
+                            id = SpecialPowers.wrap(id);
+                            return SpecialPowers.wrap(Components).interfacesByID[id].toString();
                      });
 isnot(interfaces.indexOf("nsIInterfaceRequestor"), "-1",
       "Must have interface requestor classinfo");
