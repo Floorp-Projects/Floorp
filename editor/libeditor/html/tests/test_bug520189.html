@@ -550,7 +550,8 @@ function doNextTest() {
 
 function getLoadContext() {
   const Ci = Components.interfaces;
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+  return SpecialPowers.wrap(window)
+               .QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .QueryInterface(Ci.nsILoadContext);
 }
