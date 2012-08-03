@@ -2754,6 +2754,20 @@ JS_DoubleToUint32(double d);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
 
+/*
+ * Convert a value to a number, then to an int64_t, according to the WebIDL
+ * rules for ToInt64: http://dev.w3.org/2006/webapi/WebIDL/#es-long-long
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ValueToInt64(JSContext *cx, jsval v, int64_t *ip);
+
+/*
+ * Convert a value to a number, then to an uint64_t, according to the WebIDL
+ * rules for ToUint64: http://dev.w3.org/2006/webapi/WebIDL/#es-unsigned-long-long
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ValueToUint64(JSContext *cx, jsval v, uint64_t *ip);
+
 #ifdef __cplusplus
 namespace js {
 /* DO NOT CALL THIS.  Use JS::ToInt16. */
@@ -2767,6 +2781,14 @@ ToInt32Slow(JSContext *cx, const JS::Value &v, int32_t *out);
 /* DO NOT CALL THIS.  Use JS::ToUint32. */
 extern JS_PUBLIC_API(bool)
 ToUint32Slow(JSContext *cx, const JS::Value &v, uint32_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToInt64. */
+extern JS_PUBLIC_API(bool)
+ToInt64Slow(JSContext *cx, const JS::Value &v, int64_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToUint64. */
+extern JS_PUBLIC_API(bool)
+ToUint64Slow(JSContext *cx, const JS::Value &v, uint64_t *out);
 } /* namespace js */
 
 namespace JS {
@@ -2818,6 +2840,42 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
     }
     return js::ToUint32Slow(cx, v, out);
 }
+
+JS_ALWAYS_INLINE bool
+ToInt64(JSContext *cx, const js::Value &v, int64_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    {
+        JS::SkipRoot skip(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+
+    if (v.isInt32()) {
+        *out = int64_t(v.toInt32());
+        return true;
+    }
+
+    return js::ToInt64Slow(cx, v, out);
+}
+
+JS_ALWAYS_INLINE bool
+ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
+{
+    AssertArgumentsAreSane(cx, v);
+    {
+        SkipRoot skip(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+
+    if (v.isInt32()) {
+        // Account for sign extension of negatives into the longer 64bit space.
+        *out = uint64_t(int64_t(v.toInt32()));
+        return true;
+    }
+
+    return js::ToUint64Slow(cx, v, out);
+}
+
 
 } /* namespace JS */
 #endif /* __cplusplus */
