@@ -1807,7 +1807,11 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   if (npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass) {
     // npobj is one of our own, return its existing JSObject.
 
-    return ((nsJSObjWrapper *)npobj)->mJSObj;
+    JSObject *obj = ((nsJSObjWrapper *)npobj)->mJSObj;
+    if (!JS_WrapObject(cx, &obj)) {
+      return NULL;
+    }
+    return obj;
   }
 
   if (!npp) {
