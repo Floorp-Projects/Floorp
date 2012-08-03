@@ -535,7 +535,7 @@ LockedFile::SetLocation(JSContext* aCx,
   }
 
   uint64_t location;
-  if (!xpc::ValueToUint64(aCx, aLocation, &location)) {
+  if (!JS::ToUint64(aCx, aLocation, &location)) {
     return NS_ERROR_TYPE_ERR;
   }
 
