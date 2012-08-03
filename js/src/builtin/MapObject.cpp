@@ -651,9 +651,9 @@ class OrderedHashSet
 bool
 HashableValue::setValue(JSContext *cx, const Value &v)
 {
-    if (v.isString() && v.toString()->isRope()) {
-        // Flatten this rope so that equals() is infallible.
-        JSString *str = v.toString()->ensureLinear(cx);
+    if (v.isString()) {
+        // Atomize so that hash() and equals() are fast and infallible.
+        JSString *str = js_AtomizeString(cx, v.toString(), DoNotInternAtom);
         if (!str)
             return false;
         value = StringValue(str);
@@ -683,28 +683,15 @@ HashableValue::hash() const
 {
     // HashableValue::setValue normalizes values so that the SameValue relation
     // on HashableValues is the same as the == relationship on
-    // value.data.asBits, except for strings.
-    if (value.isString()) {
-        JSLinearString &s = value.toString()->asLinear();
-        return HashChars(s.chars(), s.length());
-    }
-
-    // Having dispensed with strings, we can just hash asBits.
-    uint64_t u = value.asRawBits();
-    return HashNumber((u >> 3) ^
-                      (u >> (HashNumberSizeBits + 3)) ^
-                      (u << (HashNumberSizeBits - 3)));
+    // value.data.asBits.
+    return value.asRawBits();
 }
 
 bool
 HashableValue::equals(const HashableValue &other) const
 {
-    // Two HashableValues are equal if they have equal bits or they're equal strings.
-    bool b = (value.asRawBits() == other.value.asRawBits()) ||
-              (value.isString() &&
-               other.value.isString() &&
-               EqualStrings(&value.toString()->asLinear(),
-                            &other.value.toString()->asLinear()));
+    // Two HashableValues are equal if they have equal bits.
+    bool b = (value.asRawBits() == other.value.asRawBits());
 
 #ifdef DEBUG
     bool same;

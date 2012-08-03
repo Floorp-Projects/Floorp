@@ -477,7 +477,7 @@ xt_client_xloop_create(void)
     /* the assumption is that gtk_init has already been called */
     GSource* gs = g_source_new(&xt_event_funcs, sizeof(GSource));
       if (!gs) {
-       return NULL;
+       return;
       }
     
     g_source_set_priority(gs, GDK_PRIORITY_EVENTS);

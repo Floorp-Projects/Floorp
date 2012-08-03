@@ -11,6 +11,7 @@
 #ifndef nsStyleStructInlines_h_
 #define nsStyleStructInlines_h_
 
+#include "nsIFrame.h"
 #include "nsStyleStruct.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -52,6 +53,78 @@ nsStyleBorder::GetSubImage(PRUint8 aIndex) const
   if (aIndex < mSubImages.Count())
     subImage = mSubImages[aIndex];
   return subImage;
+}
+
+bool
+nsStyleDisplay::IsBlockInside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  }
+  return IsBlockInsideStyle();
+}
+
+bool
+nsStyleDisplay::IsBlockOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  }
+  return IsBlockOutsideStyle();
+}
+
+bool
+nsStyleDisplay::IsInlineOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  }
+  return IsInlineOutsideStyle();
+}
+
+bool
+nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const
+{
+  if (aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  }
+  return IsOriginalDisplayInlineOutsideStyle();
+}
+
+PRUint8
+nsStyleDisplay::GetDisplay(const nsIFrame* aFrame) const
+{
+  if ((aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) &&
+      mDisplay != NS_STYLE_DISPLAY_NONE) {
+    return aFrame->GetType() == nsGkAtoms::blockFrame ?
+             NS_STYLE_DISPLAY_BLOCK :
+             NS_STYLE_DISPLAY_INLINE;
+  }
+  return mDisplay;
+}
+
+bool
+nsStyleDisplay::IsFloating(const nsIFrame* aFrame) const
+{
+  return IsFloatingStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleDisplay::IsPositioned(const nsIFrame* aFrame) const
+{
+  return IsPositionedStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleDisplay::IsRelativelyPositioned(const nsIFrame* aFrame) const
+{
+  return IsRelativelyPositionedStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aFrame) const
+{
+  return IsAbsolutelyPositionedStyle() && !aFrame->IsSVGText();
 }
 
 #endif /* !defined(nsStyleStructInlines_h_) */

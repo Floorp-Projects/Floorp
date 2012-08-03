@@ -5054,9 +5054,9 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         //
         nsresult transportStatus;
         if (request == mCachePump)
-            transportStatus = nsITransport::STATUS_READING;
+            transportStatus = NS_NET_STATUS_READING;
         else
-            transportStatus = nsISocketTransport::STATUS_RECEIVING_FROM;
+            transportStatus = NS_NET_STATUS_RECEIVING_FROM;
 
         // mResponseHead may reference new or cached headers, but either way it
         // holds our best estimate of the total content length.  Even in the case
@@ -5108,8 +5108,8 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     if (!mProgressSink)
         GetCallback(mProgressSink);
 
-    if (status == nsISocketTransport::STATUS_CONNECTED_TO ||
-        status == nsISocketTransport::STATUS_WAITING_FOR) {
+    if (status == NS_NET_STATUS_CONNECTED_TO ||
+        status == NS_NET_STATUS_WAITING_FOR) {
         nsCOMPtr<nsISocketTransport> socketTransport =
             do_QueryInterface(trans);
         if (socketTransport) {

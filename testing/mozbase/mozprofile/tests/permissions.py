@@ -81,19 +81,20 @@ http://127.0.0.1:8888           privileged
         perms = Permissions(self.profile_dir, self.locations_file.name)
 
         prefs, user_prefs = perms.network_prefs(False)
+
         self.assertEqual(len(user_prefs), 0)
         self.assertEqual(len(prefs), 6)
 
         self.assertEqual(prefs[0], ('capability.principal.codebase.p1.granted',
                                     'UniversalXPConnect'))
         self.assertEqual(prefs[1], ('capability.principal.codebase.p1.id',
-                                    'http://mochi.test'))
+                                    'http://mochi.test:8888'))
         self.assertEqual(prefs[2], ('capability.principal.codebase.p1.subjectName', ''))
 
         self.assertEqual(prefs[3], ('capability.principal.codebase.p2.granted',
                                     'UniversalXPConnect'))
         self.assertEqual(prefs[4], ('capability.principal.codebase.p2.id',
-                                    'http://127.0.0.1'))
+                                    'http://127.0.0.1:8888'))
         self.assertEqual(prefs[5], ('capability.principal.codebase.p2.subjectName', ''))
 
 
@@ -102,10 +103,10 @@ http://127.0.0.1:8888           privileged
         self.assertEqual(user_prefs[0], ('network.proxy.type', 2))
         self.assertEqual(user_prefs[1][0], 'network.proxy.autoconfig_url')
 
-        origins_decl = "var origins = ['http://127.0.0.1:80', 'http://127.0.0.1:8888'];"
+        origins_decl = "var origins = ['http://mochi.test:8888', 'http://127.0.0.1:80', 'http://127.0.0.1:8888'];"
         self.assertTrue(origins_decl in user_prefs[1][1])
 
-        proxy_check = "if (isHttp)    return 'PROXY mochi.test:8888';  if (isHttps || isWebSocket || isWebSocketSSL)    return 'PROXY mochi.test:443';"
+        proxy_check = "if (isHttp || isHttps || isWebSocket || isWebSocketSSL)    return 'PROXY mochi.test:8888';"
         self.assertTrue(proxy_check in user_prefs[1][1])
 
 

@@ -29,7 +29,7 @@ namespace net {
 
 HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
   : mIPCClosed(false)
-  , mStoredStatus(0)
+  , mStoredStatus(NS_OK)
   , mStoredProgress(0)
   , mStoredProgressMax(0)
   , mSentRedirect1Begin(false)
@@ -509,15 +509,15 @@ HttpChannelParent::OnProgress(nsIRequest *aRequest,
 {
   // OnStatus has always just set mStoredStatus. If it indicates this precedes
   // OnDataAvailable, store and ODA will send to child.
-  if (mStoredStatus == nsISocketTransport::STATUS_RECEIVING_FROM ||
-      mStoredStatus == nsITransport::STATUS_READING)
+  if (mStoredStatus == NS_NET_STATUS_RECEIVING_FROM ||
+      mStoredStatus == NS_NET_STATUS_READING)
   {
     mStoredProgress = aProgress;
     mStoredProgressMax = aProgressMax;
   } else {
     // Send to child now.  The only case I've observed that this handles (i.e.
     // non-ODA status with progress > 0) is data upload progress notification
-    // (status == nsISocketTransport::STATUS_SENDING_TO)
+    // (status == NS_NET_STATUS_SENDING_TO)
     if (mIPCClosed || !SendOnProgress(aProgress, aProgressMax))
       return NS_ERROR_UNEXPECTED;
   }
@@ -532,8 +532,8 @@ HttpChannelParent::OnStatus(nsIRequest *aRequest,
                             const PRUnichar *aStatusArg)
 {
   // If this precedes OnDataAvailable, store and ODA will send to child.
-  if (aStatus == nsISocketTransport::STATUS_RECEIVING_FROM ||
-      aStatus == nsITransport::STATUS_READING)
+  if (aStatus == NS_NET_STATUS_RECEIVING_FROM ||
+      aStatus == NS_NET_STATUS_READING)
   {
     mStoredStatus = aStatus;
     return NS_OK;
