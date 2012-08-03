@@ -112,13 +112,6 @@ const ContentPanning = {
   },
 
   getPannable: function cp_getPannable(node) {
-debug('getPannable');
-let scrollable = docShell.QueryInterface(Ci.nsIScrollable);
-
-let canHaveHorizontal = {};
-let canHaveVertical = {};
-scrollable.getScrollbarVisibility(canHaveHorizontal, canHaveVertical);
-debug('horizontal: ' + canHaveHorizontal.value + ' vertical: ' + canHaveVertical.value);
     if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
       return [null, null];
 
@@ -136,10 +129,8 @@ debug('horizontal: ' + canHaveHorizontal.value + ' vertical: ' + canHaveVertical
                     rect.width < node.scrollWidth));
 
       let isScroll = (overflow.indexOf('scroll') != -1);
-      if (isScroll || isAuto) {
-        debug(node);
+      if (isScroll || isAuto)
         return [node, this._generateCallback(node)];
-      }
 
       node = node.parentNode;
     }
