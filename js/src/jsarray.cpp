@@ -2653,9 +2653,9 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
     /* Step 6. */
     uint32_t actualStart;
     if (relativeStart < 0)
-        actualStart = JS_MAX(len + relativeStart, 0);
+        actualStart = Max(len + relativeStart, 0.0);
     else
-        actualStart = JS_MIN(relativeStart, len);
+        actualStart = Min(relativeStart, double(len));
 
     /* Step 7. */
     uint32_t actualDeleteCount;
@@ -2663,7 +2663,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
         double deleteCountDouble;
         if (!ToInteger(cx, argc >= 2 ? args[1] : Int32Value(0), &deleteCountDouble))
             return false;
-        actualDeleteCount = JS_MIN(JS_MAX(deleteCountDouble, 0), len - actualStart);
+        actualDeleteCount = Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
     } else {
         /*
          * Non-standard: if start was specified but deleteCount was omitted,

@@ -19,6 +19,7 @@ SDK_XPIDLSRCS = \
 XPIDLSRCS = \
     nsISSLStatusProvider.idl \
     nsIBufEntropyCollector.idl \
+    nsISecurityUITelemetry.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

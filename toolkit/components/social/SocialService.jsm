@@ -201,6 +201,20 @@ SocialProvider.prototype = {
   updateUserProfile: function(profile) {
     this.profile = profile;
 
+    // Sanitize the portrait from any potential script-injection.
+    if (profile.portrait) {
+      try {
+        let portraitUri = Services.io.newURI(profile.portrait, null, null);
+
+        let scheme = portraitUri ? portraitUri.scheme : "";
+        if (scheme != "data" && scheme != "http" && scheme != "https") {
+          profile.portrait = "";
+        }
+      } catch (ex) {
+        profile.portrait = "";
+      }
+    }
+
     if (profile.iconURL)
       this.iconURL = profile.iconURL;
 

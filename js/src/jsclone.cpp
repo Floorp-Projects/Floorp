@@ -379,7 +379,7 @@ JSStructuredCloneWriter::checkStack()
     /* To avoid making serialization O(n^2), limit stack-checking at 10. */
     const size_t MAX = 10;
 
-    size_t limit = JS_MIN(counts.length(), MAX);
+    size_t limit = Min(counts.length(), MAX);
     JS_ASSERT(objs.length() == counts.length());
     size_t total = 0;
     for (size_t i = 0; i < limit; i++) {
