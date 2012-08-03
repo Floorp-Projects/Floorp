@@ -69,6 +69,7 @@ CPPSRCS += \
   $(NULL)
 # for our local copy of AudioSystem.h
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
+EXPORTS = nsVolume.h
 endif
 
 EXTRA_COMPONENTS = \

@@ -206,6 +206,8 @@ child:
 
     FilePathUpdate(nsString filepath, nsCString reasons);
 
+    FileSystemUpdate(nsString fsName, nsString mountPoint, PRInt32 fsState);
+
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 
