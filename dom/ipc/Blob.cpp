@@ -301,16 +301,6 @@ SetBlobOnParams(BlobParent* aActor, SlicedBlobConstructorParams& aParams)
   aParams.sourceParent() = aActor;
 }
 
-inline
-nsDOMFileBase*
-ToConcreteBlob(nsIDOMBlob* aBlob)
-{
-  // XXX This is only safe so long as all blob implementations in our tree
-  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
-  //     a real interface or something.
-  return static_cast<nsDOMFileBase*>(aBlob);
-}
-
 } // anonymous namespace
 
 namespace mozilla {
@@ -540,23 +530,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   RemoteBlob(const nsAString& aName, const nsAString& aContentType,
-             PRUint64 aLength)
+              PRUint64 aLength)
   : nsDOMFile(aName, aContentType, aLength), mActor(nullptr)
-  {
-    mImmutable = true;
-  }
+  { }
 
   RemoteBlob(const nsAString& aContentType, PRUint64 aLength)
   : nsDOMFile(aContentType, aLength), mActor(nullptr)
-  {
-    mImmutable = true;
-  }
-
-  RemoteBlob()
-  : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX), mActor(nullptr)
-  {
-    mImmutable = true;
-  }
+  { }
 
   virtual ~RemoteBlob()
   {
@@ -614,22 +594,16 @@ public:
 
 template <ActorFlavorEnum ActorFlavor>
 Blob<ActorFlavor>::Blob(nsIDOMBlob* aBlob)
-: mBlob(aBlob), mRemoteBlob(nullptr), mOwnsBlob(true), mBlobIsFile(false)
+: mBlob(aBlob), mRemoteBlob(nullptr), mOwnsBlob(true)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
   aBlob->AddRef();
-
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-  mBlobIsFile = !!file;
 }
 
 template <ActorFlavorEnum ActorFlavor>
 Blob<ActorFlavor>::Blob(const BlobConstructorParams& aParams)
-: mBlob(nullptr), mRemoteBlob(nullptr), mOwnsBlob(false), mBlobIsFile(false)
+: mBlob(nullptr), mRemoteBlob(nullptr), mOwnsBlob(true)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsRefPtr<RemoteBlobType> remoteBlob;
 
   switch (aParams.type()) {
@@ -646,13 +620,6 @@ Blob<ActorFlavor>::Blob(const BlobConstructorParams& aParams)
       remoteBlob =
         new RemoteBlobType(params.name(), params.contentType(),
                            params.length());
-      mBlobIsFile = true;
-      break;
-    }
-
-    case BlobConstructorParams::TMysteryBlobConstructorParams: {
-      remoteBlob = new RemoteBlobType();
-      mBlobIsFile = true;
       break;
     }
 
@@ -662,19 +629,23 @@ Blob<ActorFlavor>::Blob(const BlobConstructorParams& aParams)
 
   MOZ_ASSERT(remoteBlob);
 
-  SetRemoteBlob(remoteBlob);
+  if (NS_FAILED(remoteBlob->SetMutable(false))) {
+    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
+  }
+
+  remoteBlob->SetActor(this);
+  remoteBlob.forget(&mRemoteBlob);
+
+  mBlob = mRemoteBlob;
 }
 
 template <ActorFlavorEnum ActorFlavor>
 Blob<ActorFlavor>*
 Blob<ActorFlavor>::Create(const BlobConstructorParams& aParams)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   switch (aParams.type()) {
     case BlobConstructorParams::TNormalBlobConstructorParams:
     case BlobConstructorParams::TFileBlobConstructorParams:
-    case BlobConstructorParams::TMysteryBlobConstructorParams:
       return new Blob<ActorFlavor>(aParams);
 
     case BlobConstructorParams::TSlicedBlobConstructorParams: {
@@ -704,7 +675,6 @@ template <ActorFlavorEnum ActorFlavor>
 already_AddRefed<nsIDOMBlob>
 Blob<ActorFlavor>::GetBlob()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
 
   nsCOMPtr<nsIDOMBlob> blob;
@@ -726,63 +696,6 @@ Blob<ActorFlavor>::GetBlob()
 }
 
 template <ActorFlavorEnum ActorFlavor>
-bool
-Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aName,
-                                      const nsString& aContentType,
-                                      PRUint64 aLength)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mBlob);
-  MOZ_ASSERT(mRemoteBlob);
-  MOZ_ASSERT(aLength);
-
-  ToConcreteBlob(mBlob)->SetLazyData(aName, aContentType, aLength);
-
-  FileBlobConstructorParams params(aName, aContentType, aLength);
-  return SendResolveMystery(params);
-}
-
-template <ActorFlavorEnum ActorFlavor>
-bool
-Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aContentType,
-                                      PRUint64 aLength)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mBlob);
-  MOZ_ASSERT(mRemoteBlob);
-  MOZ_ASSERT(aLength);
-
-  nsString voidString;
-  voidString.SetIsVoid(true);
-
-  ToConcreteBlob(mBlob)->SetLazyData(voidString, aContentType, aLength);
-
-  NormalBlobConstructorParams params(aContentType, aLength);
-  return SendResolveMystery(params);
-}
-
-template <ActorFlavorEnum ActorFlavor>
-void
-Blob<ActorFlavor>::SetRemoteBlob(nsRefPtr<RemoteBlobType>& aRemoteBlob)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mBlob);
-  MOZ_ASSERT(!mRemoteBlob);
-  MOZ_ASSERT(!mOwnsBlob);
-  MOZ_ASSERT(aRemoteBlob);
-
-  if (NS_FAILED(aRemoteBlob->SetMutable(false))) {
-    MOZ_NOT_REACHED("Failed to make remote blob immutable!");
-  }
-
-  aRemoteBlob->SetActor(this);
-  aRemoteBlob.forget(&mRemoteBlob);
-
-  mBlob = mRemoteBlob;
-  mOwnsBlob = true;
-}
-
-template <ActorFlavorEnum ActorFlavor>
 void
 Blob<ActorFlavor>::NoteDyingRemoteBlob()
 {
@@ -790,15 +703,12 @@ Blob<ActorFlavor>::NoteDyingRemoteBlob()
   MOZ_ASSERT(mRemoteBlob);
   MOZ_ASSERT(!mOwnsBlob);
 
-  // This may be called on any thread due to the fact that RemoteBlob is
-  // designed to be passed between threads. We must start the shutdown process
-  // on the main thread, so we proxy here if necessary.
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewNonOwningRunnableMethod(this,
                                     &Blob<ActorFlavor>::NoteDyingRemoteBlob);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      MOZ_ASSERT(false, "Should never fail!");
+      MOZ_NOT_REACHED("Should never fail!");
     }
 
     return;
@@ -815,7 +725,6 @@ template <ActorFlavorEnum ActorFlavor>
 void
 Blob<ActorFlavor>::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
 
   if (mRemoteBlob) {
@@ -829,49 +738,8 @@ Blob<ActorFlavor>::ActorDestroy(ActorDestroyReason aWhy)
 
 template <ActorFlavorEnum ActorFlavor>
 bool
-Blob<ActorFlavor>::RecvResolveMystery(const ResolveMysteryParams& aParams)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mBlob);
-  MOZ_ASSERT(!mRemoteBlob);
-  MOZ_ASSERT(mOwnsBlob);
-
-  if (!mBlobIsFile) {
-    MOZ_ASSERT(false, "Must always be a file!");
-    return false;
-  }
-
-  nsDOMFileBase* blob = ToConcreteBlob(mBlob);
-
-  switch (aParams.type()) {
-    case ResolveMysteryParams::TNormalBlobConstructorParams: {
-      const NormalBlobConstructorParams& params =
-        aParams.get_NormalBlobConstructorParams();
-      nsString voidString;
-      voidString.SetIsVoid(true);
-      blob->SetLazyData(voidString, params.contentType(), params.length());
-      break;
-    }
-
-    case ResolveMysteryParams::TFileBlobConstructorParams: {
-      const FileBlobConstructorParams& params =
-        aParams.get_FileBlobConstructorParams();
-      blob->SetLazyData(params.name(), params.contentType(), params.length());
-      break;
-    }
-
-    default:
-      MOZ_NOT_REACHED("Unknown params!");
-  }
-
-  return true;
-}
-
-template <ActorFlavorEnum ActorFlavor>
-bool
 Blob<ActorFlavor>::RecvPBlobStreamConstructor(StreamType* aActor)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
 
@@ -886,7 +754,6 @@ template <ActorFlavorEnum ActorFlavor>
 typename Blob<ActorFlavor>::StreamType*
 Blob<ActorFlavor>::AllocPBlobStream()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   return new InputStreamActor<ActorFlavor>();
 }
 
@@ -894,7 +761,6 @@ template <ActorFlavorEnum ActorFlavor>
 bool
 Blob<ActorFlavor>::DeallocPBlobStream(StreamType* aActor)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   delete aActor;
   return true;
 }

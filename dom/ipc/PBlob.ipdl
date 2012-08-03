@@ -5,16 +5,8 @@
 include protocol PBlobStream;
 include protocol PContent;
 
-include DOMTypes;
-
 namespace mozilla {
 namespace dom {
-
-union ResolveMysteryParams
-{
-  NormalBlobConstructorParams;
-  FileBlobConstructorParams;
-};
 
 protocol PBlob
 {
@@ -25,8 +17,6 @@ both:
   __delete__();
 
   PBlobStream();
-
-  ResolveMystery(ResolveMysteryParams params);
 };
 
 } // namespace dom
