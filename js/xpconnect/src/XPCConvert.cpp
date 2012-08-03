@@ -397,7 +397,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return false;
         break;
     case nsXPTType::T_I64    :
-        return ValueToInt64(cx, s, (int64_t*)d);
+        return JS::ToInt64(cx, s, (int64_t*)d);
 
     case nsXPTType::T_U8     :
         if (!JS_ValueToECMAUint32(cx, s, &tu))
@@ -414,7 +414,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return false;
         break;
     case nsXPTType::T_U64    :
-        return ValueToUint64(cx, s, (uint64_t*)d);
+        return JS::ToUint64(cx, s, (uint64_t*)d);
 
     case nsXPTType::T_FLOAT  :
         if (!JS_ValueToNumber(cx, s, &td))
