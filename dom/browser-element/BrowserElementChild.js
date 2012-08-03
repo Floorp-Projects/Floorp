@@ -21,7 +21,7 @@ let whitelistedEvents = [
 ];
 
 function debug(msg) {
-  //dump("BrowserElementChild - " + msg + "\n");
+  dump("BrowserElementChild - " + msg + "\n");
 }
 
 function sendAsyncMsg(msg, data) {
