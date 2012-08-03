@@ -3749,9 +3749,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect vRect(mScrollPort);
     vRect.width = aContentArea.width - mScrollPort.width;
     vRect.x = scrollbarOnLeft ? aContentArea.x : mScrollPort.XMost();
-    nsMargin margin;
-    mVScrollbarBox->GetMargin(margin);
-    vRect.Deflate(margin);
+    if (mHasVerticalScrollbar) {
+      nsMargin margin;
+      mVScrollbarBox->GetMargin(margin);
+      vRect.Deflate(margin);
+    }
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, true);
     LayoutAndInvalidate(aState, mVScrollbarBox, vRect, !mHasVerticalScrollbar);
   }
@@ -3761,9 +3763,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect hRect(mScrollPort);
     hRect.height = aContentArea.height - mScrollPort.height;
     hRect.y = true ? mScrollPort.YMost() : aContentArea.y;
-    nsMargin margin;
-    mHScrollbarBox->GetMargin(margin);
-    hRect.Deflate(margin);
+    if (mHasHorizontalScrollbar) {
+      nsMargin margin;
+      mHScrollbarBox->GetMargin(margin);
+      hRect.Deflate(margin);
+    }
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, false);
     LayoutAndInvalidate(aState, mHScrollbarBox, hRect, !mHasHorizontalScrollbar);
   }
