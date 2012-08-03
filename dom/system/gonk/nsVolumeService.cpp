@@ -139,7 +139,7 @@ void nsVolumeService::UpdateVolume(const nsVolume *aVolume)
     return;
   }
   vol->Set(aVolume);
-  nsRefPtr<nsIObserverService> obs = GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = GetObserverService();
   if (!obs) {
     return;
   }
