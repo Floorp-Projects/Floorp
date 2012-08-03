@@ -63,11 +63,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
         mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
 
-        GeckoAppShell.registerGeckoEventListener("Prompt:Show", this);
+        GeckoAppShell.getEventDispatcher().registerEventListener("Prompt:Show", this);
     }
 
     void destroy() {
-        GeckoAppShell.unregisterGeckoEventListener("Prompt:Show", this);
+        GeckoAppShell.getEventDispatcher().unregisterEventListener("Prompt:Show", this);
     }
 
     private class PromptButton {
