@@ -17,18 +17,5 @@ struct ClonedMessageData
   PBlob[] blobs;
 };
 
-struct NormalBlobConstructorParams
-{
-  nsString contentType;
-  uint64_t length;
-};
-
-struct FileBlobConstructorParams
-{
-  nsString name;
-  nsString contentType;
-  uint64_t length;
-};
-
 } // namespace dom
 } // namespace mozilla
