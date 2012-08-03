@@ -944,12 +944,7 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "debug":
-        body = {
-          cacheId: aMessage.objectsCacheId,
-          remoteObjects: args,
-          argsToString: argsToString,
-        };
-        clipboardText = argsToString.join(" ");
+        body = argsToString.join(" ");
         sourceURL = aMessage.apiMessage.filename;
         sourceLine = aMessage.apiMessage.lineNumber;
         break;
@@ -1071,57 +1066,6 @@ WebConsoleFrame.prototype = {
     }
 
     return node;
-  },
-
-  /**
-   * The click event handler for objects shown inline coming from the
-   * window.console API.
-   *
-   * @private
-   * @param nsIDOMNode aMessage
-   *        The message element this handler corresponds to.
-   * @param nsIDOMNode aAnchor
-   *        The object inspector anchor element. This is the clickable element
-   *        in the console.log message we display.
-   * @param array aRemoteObject
-   *        The remote object representation.
-   */
-  _consoleLogClick:
-  function WCF__consoleLogClick(aMessage, aAnchor, aRemoteObject)
-  {
-    if (aAnchor._panelOpen) {
-      return;
-    }
-
-    let options = {
-      title: aAnchor.textContent,
-      anchor: aAnchor,
-
-      // Data to inspect.
-      data: {
-        // This is where the resultObject children are cached.
-        rootCacheId: aMessage._evalCacheId,
-        remoteObject: aRemoteObject,
-        // This is where all objects retrieved by the panel will be cached.
-        panelCacheId: "HUDPanel-" + gSequenceId(),
-        remoteObjectProvider: this.jsterm.remoteObjectProvider.bind(this.jsterm),
-      },
-    };
-
-    let propPanel = this.jsterm.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
-
-    let onPopupHide = function JST__evalInspectPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      this.jsterm.clearObjectCache(options.data.panelCacheId);
-
-      if (!aMessage.parentNode && aMessage._evalCacheId) {
-        this.jsterm.clearObjectCache(aMessage._evalCacheId);
-      }
-    }.bind(this);
-
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
   },
 
   /**
@@ -1884,31 +1828,19 @@ WebConsoleFrame.prototype = {
     aClipboardText = aClipboardText ||
                      (aBody + (aSourceURL ? " @ " + aSourceURL : "") +
                               (aSourceLine ? ":" + aSourceLine : ""));
-
-    // Create the containing node and append all its elements to it.
-    let node = this.document.createElementNS(XUL_NS, "richlistitem");
-
-    if (aBody instanceof Ci.nsIDOMNode) {
-      bodyNode.appendChild(aBody);
+    if (!(aBody instanceof Ci.nsIDOMNode)) {
+      aBody = this.document.createTextNode(aLevel == "dir" ?
+                                           aBody.resultString : aBody);
     }
-    else {
-      let str = undefined;
-      if (aLevel == "dir") {
-        str = aBody.resultString;
-      }
-      else if (["log", "info", "warn", "error", "debug"].indexOf(aLevel) > -1 &&
-               typeof aBody == "object") {
-        this._makeConsoleLogMessageBody(node, bodyNode, aBody);
-      }
-      else {
-        str = aBody;
-      }
 
-      if (str !== undefined) {
-        aBody = this.document.createTextNode(str);
-        bodyNode.appendChild(aBody);
-      }
+    if (!aBody.nodeType) {
+      aBody = this.document.createTextNode(aBody.toString());
     }
+    if (typeof aBody == "string") {
+      aBody = this.document.createTextNode(aBody);
+    }
+
+    bodyNode.appendChild(aBody);
 
     let repeatContainer = this.document.createElementNS(XUL_NS, "hbox");
     repeatContainer.setAttribute("align", "start");
@@ -1931,6 +1863,8 @@ WebConsoleFrame.prototype = {
       locationNode = this.createLocationNode(aSourceURL, aSourceLine);
     }
 
+    // Create the containing node and append all its elements to it.
+    let node = this.document.createElementNS(XUL_NS, "richlistitem");
     node.clipboardText = aClipboardText;
     node.classList.add("hud-msg-node");
 
@@ -1988,58 +1922,6 @@ WebConsoleFrame.prototype = {
     node.setAttribute("id", "console-msg-" + gSequenceId());
 
     return node;
-  },
-
-  /**
-   * Make the message body for console.log() calls.
-   *
-   * @private
-   * @param nsIDOMElement aMessage
-   *        The message element that holds the output for the given call.
-   * @param nsIDOMElement aContainer
-   *        The specific element that will hold each part of the console.log
-   *        output.
-   * @param object aBody
-   *        The object given by this.logConsoleAPIMessage(). This object holds
-   *        the call information that we need to display.
-   */
-  _makeConsoleLogMessageBody:
-  function WCF__makeConsoleLogMessageBody(aMessage, aContainer, aBody)
-  {
-    aMessage._evalCacheId = aBody.cacheId;
-
-    Object.defineProperty(aMessage, "_panelOpen", {
-      get: function() {
-        let nodes = aContainer.querySelectorAll(".hud-clickable");
-        return Array.prototype.some.call(nodes, function(aNode) {
-          return aNode._panelOpen;
-        });
-      },
-      enumerable: true,
-      configurable: false
-    });
-
-    aBody.remoteObjects.forEach(function(aItem, aIndex) {
-      if (aContainer.firstChild) {
-        aContainer.appendChild(this.document.createTextNode(" "));
-      }
-
-      let text = aBody.argsToString[aIndex];
-      if (!Array.isArray(aItem)) {
-        aContainer.appendChild(this.document.createTextNode(text));
-        return;
-      }
-
-      let elem = this.document.createElement("description");
-      elem.classList.add("hud-clickable");
-      elem.setAttribute("aria-haspopup", "true");
-      elem.appendChild(this.document.createTextNode(text));
-
-      this._addMessageLinkCallback(elem,
-        this._consoleLogClick.bind(this, aMessage, elem, aItem));
-
-      aContainer.appendChild(elem);
-    }, this);
   },
 
   /**
@@ -2149,20 +2031,6 @@ WebConsoleFrame.prototype = {
 
     linkNode.setAttribute("aria-haspopup", "true");
 
-    this._addMessageLinkCallback(aNode, aCallback);
-  },
-
-  /**
-   * Add the mouse event handlers needed to make a link.
-   *
-   * @private
-   * @param nsIDOMNode aNode
-   *        The node for which you want to add the event handlers.
-   * @param function aCallback
-   *        The function you want to invoke on click.
-   */
-  _addMessageLinkCallback: function WCF__addMessageLinkCallback(aNode, aCallback)
-  {
     aNode.addEventListener("mousedown", function(aEvent) {
       this._startX = aEvent.clientX;
       this._startY = aEvent.clientY;
