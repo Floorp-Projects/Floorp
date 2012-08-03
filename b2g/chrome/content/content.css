@@ -17,6 +17,7 @@ html xul|scrollbar {
   background-image: none !important;
   border: 0px solid transparent !important;
   z-index: 2147483647;
+  opacity: 1;
 }
 
 xul|scrollbar[orient="vertical"] {
@@ -41,8 +42,10 @@ xul|scrollbar[orient="horizontal"] xul|thumb {
   min-height: 6px !important;
 }
 
+xul|scrollbar:not([active="true"]),
 xul|scrollbar[disabled] {
-  display: none;
+  opacity: 0;
+  -moz-transition: opacity 1s ease;
 }
 
 xul|scrollbarbutton {
