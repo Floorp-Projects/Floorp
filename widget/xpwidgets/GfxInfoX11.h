@@ -67,7 +67,7 @@ private:
   nsCString mAdapterDescription;
   nsCString mOS;
   nsCString mOSRelease;
-  bool mIsMesa, mIsNVIDIA, mIsFGLRX, mIsNouveau;
+  bool mIsMesa, mIsNVIDIA, mIsFGLRX, mIsNouveau, mIsIntel;
   bool mHasTextureFromPixmap;
   int mGLMajorVersion, mMajorVersion, mMinorVersion, mRevisionVersion;
 

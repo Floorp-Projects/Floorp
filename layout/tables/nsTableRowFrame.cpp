@@ -892,7 +892,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
         // if we are in a floated table, our position is not yet established, so we cannot reposition our views
         // the containing block will do this for us after positioning the table
-        if (!aTableFrame.GetStyleDisplay()->IsFloating()) {
+        if (!aTableFrame.IsFloating()) {
           // Because we may have moved the frame we need to make sure any views are
           // positioned properly. We have to do this, because any one of our parent
           // frames could have moved and we have no way of knowing...

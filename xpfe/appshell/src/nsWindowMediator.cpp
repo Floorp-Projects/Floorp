@@ -757,9 +757,19 @@ nsWindowMediator::Observe(nsISupports* aSubject,
                           const PRUnichar* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown") && mReady) {
-    MutexAutoLock lock(mListLock);
-    while (mOldestWindow)
-      UnregisterWindow(mOldestWindow);
+    // Unregistering a window may cause its destructor to run, causing it to
+    // call into the window mediator, try to acquire mListLock, and deadlock.
+    // Our solution is to hold strong refs to all windows until we release
+    // mListLock.
+    nsTArray<nsCOMPtr<nsIXULWindow> > windows;
+
+    {
+      MutexAutoLock lock(mListLock);
+      while (mOldestWindow) {
+        windows.AppendElement(mOldestWindow->mWindow);
+        UnregisterWindow(mOldestWindow);
+      }
+    }
     mReady = false;
   }
   return NS_OK;

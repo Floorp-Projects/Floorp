@@ -14,7 +14,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 START(summary);
 
-expect = 'TypeError: <x/>.hasOwnProperty is not a constructor';
+expect = 'TypeError: (intermediate value).hasOwnProperty is not a constructor';
 actual = '';
 
 try

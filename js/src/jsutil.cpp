@@ -67,7 +67,11 @@ Compressor::compressMore()
     else if (zs.avail_in == 0)
         zs.avail_in = CHUNKSIZE;
     int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
-    if (ret == Z_BUF_ERROR) {
+    if (ret == Z_MEM_ERROR) {
+        zs.avail_out = 0;
+        return false;
+    }
+    if (ret == Z_BUF_ERROR || (done && ret == Z_OK)) {
         JS_ASSERT(zs.avail_out == 0);
         return false;
     }

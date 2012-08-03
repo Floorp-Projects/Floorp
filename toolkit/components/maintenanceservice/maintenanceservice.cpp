@@ -14,7 +14,6 @@
 #include "workmonitor.h"
 #include "uachelper.h"
 #include "updatehelper.h"
-#include "prefetch.h"
 
 SERVICE_STATUS gSvcStatus = { 0 }; 
 SERVICE_STATUS_HANDLE gSvcStatusHandle = NULL; 

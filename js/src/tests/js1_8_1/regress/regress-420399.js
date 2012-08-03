@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = /TypeError: let \(a = undefined\) a (is undefined|has no properties)/;
+  expect = "TypeError: undefined has no properties";
   try
   {
     (let (a=undefined) a).b = 3;
@@ -30,7 +30,7 @@ function test()
     actual = ex + '';
   }
 
-  reportMatch(expect, actual, summary);
+  reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }

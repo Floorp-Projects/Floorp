@@ -80,6 +80,7 @@ let AlarmService = {
     switch (aMessage.name) {
       case "AlarmsManager:GetAll":
         this._db.getAll(
+          json.manifestURL,
           function getAllSuccessCb(aAlarms) {
             debug("Callback after getting alarms from database: " + JSON.stringify(aAlarms));
             this._sendAsyncMessage(mm, "GetAll", true, json.requestId, aAlarms);
@@ -150,6 +151,7 @@ let AlarmService = {
       case "AlarmsManager:Remove":
         this._removeAlarmFromDb(
           json.id,
+          json.manifestURL,
           function removeSuccessCb() {
             debug("Callback after removing alarm from database.");
 
@@ -160,10 +162,13 @@ let AlarmService = {
             }
 
             // check if the alarm to be removed is in the queue
+            // by ID and whether it belongs to the requesting app
             let alarmQueue = this._alarmQueue;
-            if (this._currentAlarm.id != json.id) {
+            if (this._currentAlarm.id != json.id || 
+                this._currentAlarm.manifestURL != json.manifestURL) {
               for (let i = 0; i < alarmQueue.length; i++) {
-                if (alarmQueue[i].id == json.id) {
+                if (alarmQueue[i].id == json.id && 
+                    alarmQueue[i].manifestURL == json.manifestURL) {
                   alarmQueue.splice(i, 1);
                   break;
                 }
@@ -224,7 +229,7 @@ let AlarmService = {
     aMessageManager.sendAsyncMessage("AlarmsManager:" + aMessageName + ":Return:" + (aSuccess ? "OK" : "KO"), json);
   },
 
-  _removeAlarmFromDb: function _removeAlarmFromDb(aId, aRemoveSuccessCb) {
+  _removeAlarmFromDb: function _removeAlarmFromDb(aId, aManifestURL, aRemoveSuccessCb) {
     debug("_removeAlarmFromDb()");
 
     // If the aRemoveSuccessCb is undefined or null, set a 
@@ -237,6 +242,7 @@ let AlarmService = {
 
     this._db.remove(
       aId,
+      aManifestURL,
       aRemoveSuccessCb,
       function removeErrorCb(aErrorMsg) {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -255,7 +261,7 @@ let AlarmService = {
 
     if (this._currentAlarm) {
       this._fireSystemMessage(this._currentAlarm);
-      this._removeAlarmFromDb(this._currentAlarm.id);
+      this._removeAlarmFromDb(this._currentAlarm.id, null);
       this._currentAlarm = null;
     }
 
@@ -269,7 +275,7 @@ let AlarmService = {
       // fire system message for it instead of setting it.
       if (nextAlarmTime <= Date.now()) {
         this._fireSystemMessage(nextAlarm);
-        this._removeAlarmFromDb(nextAlarm.id);
+        this._removeAlarmFromDb(nextAlarm.id, null);
       } else {
         this._currentAlarm = nextAlarm;
         break;
@@ -289,6 +295,7 @@ let AlarmService = {
     debug("_restoreAlarmsFromDb()");
 
     this._db.getAll(
+      null,
       function getAllSuccessCb(aAlarms) {
         debug("Callback after getting alarms from database: " + JSON.stringify(aAlarms));
 

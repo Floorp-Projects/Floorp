@@ -144,53 +144,6 @@ ToNumber(JSContext *cx, Value *vp)
     return true;
 }
 
-/*
- * Convert a value to a uint32_t, according to the ECMA rules for
- * ToUint32. Return converted value in *out on success, !ok on
- * failure.
- */
-
-JS_ALWAYS_INLINE bool
-ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
-{
-#ifdef DEBUG
-    {
-        SkipRoot skip(cx, &v);
-        MaybeCheckStackRoots(cx);
-    }
-#endif
-
-    if (v.isInt32()) {
-        *out = (uint32_t)v.toInt32();
-        return true;
-    }
-    extern bool ToUint32Slow(JSContext *cx, const js::Value &v, uint32_t *ip);
-    return ToUint32Slow(cx, v, out);
-}
-
-/*
- * Convert a value to a number, then to a uint16_t according to the ECMA rules
- * for ToUint16. Return converted value on success, !ok on failure. v must be a
- * copy of a rooted value.
- */
-JS_ALWAYS_INLINE bool
-ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
-{
-#ifdef DEBUG
-    {
-        SkipRoot skip(cx, &v);
-        MaybeCheckStackRoots(cx);
-    }
-#endif
-
-    if (v.isInt32()) {
-        *out = uint16_t(v.toInt32());
-        return true;
-    }
-    extern bool ValueToUint16Slow(JSContext *cx, const js::Value &v, uint16_t *out);
-    return ValueToUint16Slow(cx, v, out);
-}
-
 JSBool
 num_parseInt(JSContext *cx, unsigned argc, Value *vp);
 

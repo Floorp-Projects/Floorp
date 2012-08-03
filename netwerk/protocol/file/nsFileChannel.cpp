@@ -99,7 +99,7 @@ nsFileCopyEvent::DoCopy()
     // Dispatch progress notification
     if (mSink) {
       progress += num;
-      mSink->OnTransportStatus(nullptr, nsITransport::STATUS_WRITING, progress,
+      mSink->OnTransportStatus(nullptr, NS_NET_STATUS_WRITING, progress,
                                mLen);
     }
                                

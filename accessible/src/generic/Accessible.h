@@ -129,7 +129,7 @@ public:
   /**
    * Initialize the accessible.
    */
-  virtual bool Init();
+  virtual void Init();
 
   /**
    * Get the description of this accessible.

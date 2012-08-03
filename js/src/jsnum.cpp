@@ -1415,7 +1415,7 @@ ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
     return true;
 }
 
-bool
+JS_PUBLIC_API(bool)
 ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
 {
     JS_ASSERT(!v.isInt32());
@@ -1430,8 +1430,8 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
     return true;
 }
 
-bool
-ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
+JS_PUBLIC_API(bool)
+ToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
 {
     JS_ASSERT(!v.isInt32());
     double d;

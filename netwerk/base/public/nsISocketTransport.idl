@@ -108,6 +108,10 @@ interface nsISocketTransport : nsITransport
      * order).  STATUS_RESOLVING may be skipped if the host does not need to be
      * resolved.  STATUS_WAITING_FOR is an optional status code, which the impl
      * of this interface may choose not to generate.
+     *
+     * In C++, these constants have a type of PRUint32, so C++ callers must use
+     * the NS_NET_STATUS_* constants defined below, which have a type of
+     * nsresult.
      */
     const unsigned long STATUS_RESOLVING      = 0x804b0003;
     const unsigned long STATUS_RESOLVED       = 0x804b000b;
@@ -160,13 +164,20 @@ interface nsISocketTransport : nsITransport
 
 %{C++
 /**
- * #define's for compatibility
+ * #define's with the correct type, for use by C++ code
  */
-#define NS_NET_STATUS_RESOLVING_HOST nsISocketTransport::STATUS_RESOLVING
-#define NS_NET_STATUS_RESOLVED_HOST  nsISocketTransport::STATUS_RESOLVED
-#define NS_NET_STATUS_CONNECTED_TO   nsISocketTransport::STATUS_CONNECTED_TO
-#define NS_NET_STATUS_SENDING_TO     nsISocketTransport::STATUS_SENDING_TO
-#define NS_NET_STATUS_RECEIVING_FROM nsISocketTransport::STATUS_RECEIVING_FROM
-#define NS_NET_STATUS_CONNECTING_TO  nsISocketTransport::STATUS_CONNECTING_TO
-#define NS_NET_STATUS_WAITING_FOR    nsISocketTransport::STATUS_WAITING_FOR
+#define NS_NET_STATUS_RESOLVING_HOST \
+  static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVING)
+#define NS_NET_STATUS_RESOLVED_HOST \
+  static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVED)
+#define NS_NET_STATUS_CONNECTED_TO \
+  static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTED_TO)
+#define NS_NET_STATUS_SENDING_TO \
+  static_cast<nsresult>(nsISocketTransport::STATUS_SENDING_TO)
+#define NS_NET_STATUS_RECEIVING_FROM \
+  static_cast<nsresult>(nsISocketTransport::STATUS_RECEIVING_FROM)
+#define NS_NET_STATUS_CONNECTING_TO \
+  static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTING_TO)
+#define NS_NET_STATUS_WAITING_FOR \
+  static_cast<nsresult>(nsISocketTransport::STATUS_WAITING_FOR)
 %}

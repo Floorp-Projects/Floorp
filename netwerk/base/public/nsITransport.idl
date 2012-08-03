@@ -128,6 +128,10 @@ interface nsITransport : nsISupports
      * Generic nsITransportEventSink status codes.  nsITransport
      * implementations may override these status codes with their own more
      * specific status codes (e.g., see nsISocketTransport).
+     *
+     * In C++, these constants have a type of PRUint32, so C++ callers must use
+     * the NS_NET_STATUS_* constants defined below, which have a type of
+     * nsresult.
      */
     const unsigned long STATUS_READING = 0x804b0008;
     const unsigned long STATUS_WRITING = 0x804b0009;
@@ -157,3 +161,10 @@ interface nsITransportEventSink : nsISupports
                            in unsigned long long aProgress,
                            in unsigned long long aProgressMax);
 };
+
+%{C++
+#define NS_NET_STATUS_READING \
+  static_cast<nsresult>(nsITransport::STATUS_READING)
+#define NS_NET_STATUS_WRITING \
+  static_cast<nsresult>(nsITransport::STATUS_WRITING)
+%}

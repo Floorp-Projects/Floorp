@@ -1600,7 +1600,7 @@ struct nsStyleDisplay {
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
-  bool IsBlockInside() const {
+  bool IsBlockInsideStyle() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
            NS_STYLE_DISPLAY_INLINE_BLOCK == mDisplay;
@@ -1609,7 +1609,7 @@ struct nsStyleDisplay {
     // (But please audit all callers before changing.)
   }
 
-  bool IsBlockOutside() const {
+  bool IsBlockOutsideStyle() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
 #ifdef MOZ_FLEXBOX
            NS_STYLE_DISPLAY_FLEX == mDisplay ||
@@ -1630,25 +1630,32 @@ struct nsStyleDisplay {
            NS_STYLE_DISPLAY_INLINE_STACK == aDisplay;
   }
 
-  bool IsInlineOutside() const {
+  bool IsInlineOutsideStyle() const {
     return IsDisplayTypeInlineOutside(mDisplay);
   }
 
-  bool IsOriginalDisplayInlineOutside() const {
+  bool IsOriginalDisplayInlineOutsideStyle() const {
     return IsDisplayTypeInlineOutside(mOriginalDisplay);
   }
 
-  bool IsFloating() const {
+  bool IsFloatingStyle() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
 
-  bool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
-                                                (NS_STYLE_POSITION_FIXED == mPosition);}
+  bool IsAbsolutelyPositionedStyle() const {
+    return NS_STYLE_POSITION_ABSOLUTE == mPosition ||
+           NS_STYLE_POSITION_FIXED == mPosition;
+  }
 
   /* Returns true if we're positioned or there's a transform in effect. */
-  bool IsPositioned() const {
-    return IsAbsolutelyPositioned() ||
-      NS_STYLE_POSITION_RELATIVE == mPosition || HasTransform();
+  bool IsPositionedStyle() const {
+    return IsAbsolutelyPositionedStyle() ||
+           IsRelativelyPositionedStyle() ||
+           HasTransform();
+  }
+
+  bool IsRelativelyPositionedStyle() const {
+    return mPosition == NS_STYLE_POSITION_RELATIVE;
   }
 
   bool IsScrollableOverflow() const {
@@ -1664,6 +1671,17 @@ struct nsStyleDisplay {
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
+
+  // These are defined in nsStyleStructInlines.h.
+  inline bool IsBlockInside(const nsIFrame* aFrame) const;
+  inline bool IsBlockOutside(const nsIFrame* aFrame) const;
+  inline bool IsInlineOutside(const nsIFrame* aFrame) const;
+  inline bool IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const;
+  inline PRUint8 GetDisplay(const nsIFrame* aFrame) const;
+  inline bool IsFloating(const nsIFrame* aFrame) const;
+  inline bool IsPositioned(const nsIFrame* aFrame) const;
+  inline bool IsRelativelyPositioned(const nsIFrame* aFrame) const;
+  inline bool IsAbsolutelyPositioned(const nsIFrame* aFrame) const;
 };
 
 struct nsStyleTable {
