@@ -1915,7 +1915,7 @@ public class GeckoAppShell
      *
      * This method is referenced by Robocop via reflection.
      */
-    public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
+    public static void registerEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.registerEventListener(event, listener);
     }
 
@@ -1950,7 +1950,7 @@ public class GeckoAppShell
      *
      * This method is referenced by Robocop via reflection.
      */
-    public static void unregisterGeckoEventListener(String event, GeckoEventListener listener) {
+    public static void unregisterEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.unregisterEventListener(event, listener);
     }
 
