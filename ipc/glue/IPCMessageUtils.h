@@ -26,6 +26,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
+#include "jsapi.h"
 #include "LayersTypes.h"
 
 #ifdef _MSC_VER
@@ -60,6 +61,36 @@ struct void_t {
 };
 struct null_t {
   bool operator==(const null_t&) const { return true; }
+};
+
+struct SerializedStructuredCloneBuffer
+{
+  SerializedStructuredCloneBuffer()
+  : data(nullptr), dataLength(0)
+  { }
+
+  SerializedStructuredCloneBuffer(const JSAutoStructuredCloneBuffer& aOther)
+  {
+    *this = aOther;
+  }
+
+  bool
+  operator==(const SerializedStructuredCloneBuffer& aOther) const
+  {
+    return this->data == aOther.data &&
+           this->dataLength == aOther.dataLength;
+  }
+
+  SerializedStructuredCloneBuffer&
+  operator=(const JSAutoStructuredCloneBuffer& aOther)
+  {
+    data = aOther.data();
+    dataLength = aOther.nbytes();
+    return *this;
+  }
+
+  uint64_t* data;
+  size_t dataLength;
 };
 
 } // namespace mozilla
@@ -828,6 +859,47 @@ struct ParamTraits<mozilla::TimeStamp>
   {
     return ReadParam(aMsg, aIter, &aResult->mValue);
   };
+};
+
+template <>
+struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
+{
+  typedef mozilla::SerializedStructuredCloneBuffer paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.dataLength);
+    if (aParam.dataLength) {
+      // Structured clone data must be 64-bit aligned.
+      aMsg->WriteBytes(aParam.data, aParam.dataLength, sizeof(uint64_t));
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->dataLength)) {
+      return false;
+    }
+
+    if (aResult->dataLength) {
+      const char** buffer =
+        const_cast<const char**>(reinterpret_cast<char**>(&aResult->data));
+      // Structured clone data must be 64-bit aligned.
+      if (!aMsg->ReadBytes(aIter, buffer, aResult->dataLength,
+                           sizeof(uint64_t))) {
+        return false;
+      }
+    } else {
+      aResult->data = NULL;
+    }
+
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    LogParam(aParam.dataLength, aLog);
+  }
 };
 
 } /* namespace IPC */

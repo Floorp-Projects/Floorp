@@ -14,6 +14,12 @@
 
 class mozIStorageConnection;
 
+namespace mozilla {
+namespace dom {
+class ContentParent;
+}
+}
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class OpenDatabaseHelper : public HelperBase
@@ -24,12 +30,14 @@ public:
                      const nsACString& aASCIIOrigin,
                      PRUint64 aRequestedVersion,
                      bool aForDeletion,
+                     mozilla::dom::ContentParent* aContentParent,
                      FactoryPrivilege aPrivilege)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
       mForDeletion(aForDeletion), mPrivilege(aPrivilege), mDatabaseId(nullptr),
-      mCurrentVersion(0), mLastObjectStoreId(0), mLastIndexId(0),
-      mState(eCreated), mResultCode(NS_OK), mLoadDBMetadata(false)
+      mContentParent(aContentParent), mCurrentVersion(0), mLastObjectStoreId(0),
+      mLastIndexId(0), mState(eCreated), mResultCode(NS_OK),
+      mLoadDBMetadata(false)
   {
     NS_ASSERTION(!aForDeletion || !aRequestedVersion,
                  "Can't be for deletion and request a version!");
@@ -103,6 +111,7 @@ protected:
   bool mForDeletion;
   FactoryPrivilege mPrivilege;
   nsCOMPtr<nsIAtom> mDatabaseId;
+  mozilla::dom::ContentParent* mContentParent;
 
   // Out-params.
   nsTArray<nsRefPtr<ObjectStoreInfo> > mObjectStores;

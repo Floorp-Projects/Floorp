@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlobStream;
+include protocol PContent;
+
+include DOMTypes;
+
+namespace mozilla {
+namespace dom {
+
+union ResolveMysteryParams
+{
+  NormalBlobConstructorParams;
+  FileBlobConstructorParams;
+};
+
+protocol PBlob
+{
+  manager PContent;
+  manages PBlobStream;
+
+both:
+  __delete__();
+
+  PBlobStream();
+
+  ResolveMystery(ResolveMysteryParams params);
+};
+
+} // namespace dom
+} // namespace mozilla

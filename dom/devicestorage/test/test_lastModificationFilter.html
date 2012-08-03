@@ -45,7 +45,7 @@ function verifyAndDelete(prefix, files, e) {
 
   // clean up
   var storage = navigator.getDeviceStorage("testing");
-  var cleanup = storage[0].delete(prefix + "/" + filename);
+  var cleanup = storage.delete(prefix + "/" + filename);
   cleanup.onsuccess = function(e) {}
 }
 
@@ -88,7 +88,7 @@ function enumerateNew() {
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
 // 836031600 is a long time ago
-  var cursor = storage[0].enumerate(prefix, {"since": new Date(836031600)});
+  var cursor = storage.enumerate(prefix, {"since": new Date(836031600)});
   cursor.onsuccess = function(e) {
     verifyAndDelete(prefix, newFiles, e);
     if (e.target.result) {

@@ -168,6 +168,16 @@ public:
   // "-1" back so we can read it again as a number.)
   void Pushback(PRUnichar aChar);
 
+  // Starts recording the input stream from the current position.
+  void StartRecording();
+
+  // Abandons recording of the input stream.
+  void StopRecording();
+
+  // Stops recording of the input stream and appends the recorded
+  // input to aBuffer.
+  void StopRecording(nsString& aBuffer);
+
 protected:
   PRInt32 Read();
   PRInt32 Peek();
@@ -197,6 +207,9 @@ protected:
   PRUint32 mLineNumber;
   // True if we are in SVG mode; false in "normal" CSS
   bool mSVGMode;
+  bool mRecording;
+  PRUint32 mRecordStartOffset;
+
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
   nsCOMPtr<nsIURI> mURI;  // Cached so we know to not refetch mFileName

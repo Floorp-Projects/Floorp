@@ -51,20 +51,20 @@ def check_for_process(processName):
         p1 = subprocess.Popen(["tasklist"], stdout=subprocess.PIPE)
         output = p1.communicate()[0]
         detected = False
-        for line in output:
+        for line in output.splitlines():
             if processName in line:
                 detected = True
                 break
     else:
-        p1 = subprocess.Popen(["ps", "-A"], stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(["ps", "-ef"], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["grep", processName], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
         output = p2.communicate()[0]
         detected = False
-        for line in output:
+        for line in output.splitlines():
             if "grep %s" % processName in line:
                 continue
-            elif processName in line:
+            elif processName in line and not 'defunct' in line:
                 detected = True
                 break
 
@@ -79,14 +79,15 @@ class ProcTest2(unittest.TestCase):
         self.proclaunch = make_proclaunch(here)
         unittest.TestCase.__init__(self, *args, **kwargs)
 
-    def test_process_waittimeout(self):
+    def test_process_waitnotimeout(self):
         """ Process is started, runs to completion before our wait times out
         """
         p = processhandler.ProcessHandler([self.proclaunch,
                                           "process_waittimeout_10s.ini"],
                                           cwd=here)
         p.run()
-        p.waitForFinish(timeout=30)
+        p.processOutput(timeout=30)
+        p.waitForFinish()
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -94,7 +95,7 @@ class ProcTest2(unittest.TestCase):
                               p.proc.returncode,
                               p.didTimeout)
 
-    def test_process_waitnotimeout(self):
+    def test_process_wait(self):
         """ Process is started runs to completion while we wait indefinitely
         """
 
@@ -109,6 +110,27 @@ class ProcTest2(unittest.TestCase):
                               output,
                               p.proc.returncode,
                               p.didTimeout)
+
+    def test_process_waittimeout(self):
+        """
+        Process is started, then waitForFinish is called and times out.
+        Process is still running and didn't timeout
+        """
+        p = processhandler.ProcessHandler([self.proclaunch,
+                                          "process_waittimeout_10s.ini"],
+                                          cwd=here)
+
+        p.run()
+        p.processOutput()
+        p.waitForFinish(timeout=5)
+
+        detected, output = check_for_process(self.proclaunch)
+        self.determine_status(detected,
+                              output,
+                              p.proc.returncode,
+                              p.didTimeout,
+                              True,
+                              [])
 
     def determine_status(self,
                          detected=False,
@@ -129,19 +151,19 @@ class ProcTest2(unittest.TestCase):
             expectedfail -- Defaults to [], used to indicate a list of fields that are expected to fail
         """
         if 'returncode' in expectedfail:
-            self.assertTrue(returncode, "Detected an expected non-zero return code")
-        else:
+            self.assertTrue(returncode, "Detected an unexpected return code of: %s" % returncode)
+        elif not isalive:
             self.assertTrue(returncode == 0, "Detected non-zero return code of: %d" % returncode)
 
         if 'didtimeout' in expectedfail:
-            self.assertTrue(didtimeout, "Process timed out as expected")
+            self.assertTrue(didtimeout, "Detected that process didn't time out")
         else:
             self.assertTrue(not didtimeout, "Detected that process timed out")
 
-        if detected:
-            self.assertTrue(isalive, "Detected process is still running, process output: %s" % output)
+        if isalive:
+            self.assertTrue(detected, "Detected process is not running, process output: %s" % output)
         else:
-            self.assertTrue(not isalive, "Process ended")
+            self.assertTrue(not detected, "Detected process is still running, process output: %s" % output)
 
 if __name__ == '__main__':
     unittest.main()
