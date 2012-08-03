@@ -7,14 +7,13 @@
 
 <script class="testbody" type="application/javascript">
 
-  var utils = SpecialPowers.wrap(window)
-                .QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var Cc = SpecialPowers.wrap(Components).classes;
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var Cc = Components.classes;
   var Ci = Components.interfaces;
 
 function getLoadContext() {
-  return SpecialPowers.wrap(window)
-               .QueryInterface(Ci.nsIInterfaceRequestor)
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .QueryInterface(Ci.nsILoadContext);
 }
@@ -30,6 +29,7 @@ function runTest() {
   }
 
   function pasteInto(trans, html, target_id) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var e = document.getElementById('i1');
     var doc = e.contentDocument;
     doc.designMode = "on";
@@ -53,6 +53,7 @@ function runTest() {
   }
 
   function getTransferableFromClipboard(asHTML) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
     trans.init(getLoadContext());
     if (asHTML) {
@@ -66,6 +67,8 @@ function runTest() {
   }
 
   function makeTransferable(s,asHTML,target_id) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
     var e = document.getElementById('i2');
     var doc = e.contentDocument;
     if (asHTML) {
@@ -109,6 +112,7 @@ function runTest() {
   }
 
   function copyToClipBoard(s,asHTML,target_id) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var e = document.getElementById('i2');
     var doc = e.contentDocument;
     if (asHTML) {
@@ -128,7 +132,7 @@ function runTest() {
       range.selectNode(doc.getElementById(target_id));
       selection.addRange(range);
     }
-    SpecialPowers.wrap(doc).execCommand("copy", false, null);
+    doc.execCommand("copy", false, null);
     return e;
   }
 

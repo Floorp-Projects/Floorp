@@ -24,19 +24,21 @@ var frame = document.getElementById("i");
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var viewer =
-    SpecialPowers.wrap(frame.contentWindow
-                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor))
-                 .getInterface(Components.interfaces.nsIWebNavigation)
-                 .QueryInterface(Components.interfaces.nsIDocShell)
-                 .contentViewer
-                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+    frame.contentWindow
+         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+         .getInterface(Components.interfaces.nsIWebNavigation)
+         .QueryInterface(Components.interfaces.nsIDocShell)
+         .contentViewer
+         .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
 
   viewer.fullZoom = 1.5;
 
   setTimeout(function() {
     synthesizeMouse(frame, 30, 30, {});
 
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     is(viewer.fullZoom, 1.5, "Zoom in the image frame should not have been reset");
 
     SimpleTest.finish();
