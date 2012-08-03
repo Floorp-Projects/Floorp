@@ -23,6 +23,12 @@ assertEq(Array.prototype.toLocaleString.call(o), "7,baz");
 o = {};
 assertEq(Array.prototype.toLocaleString.call(o), "");
 
+var log = '';
+arr = {length: {valueOf: function () { log += "L"; return 2; }},
+      0: "x", 1: "z"};
+assertEq(Array.prototype.toLocaleString.call(arr), "x,z");
+assertEq(log, "L");
+
 /******************************************************************************/
 
 reportCompare(true, true);
