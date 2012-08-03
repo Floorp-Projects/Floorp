@@ -1246,6 +1246,12 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
+  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    char name[512];
+    PR_snprintf(name, sizeof(name), "nsGlobalWindow #%ld", tmp->mWindowID);
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGlobalWindow), name);
+  }
+
   if (!cb.WantAllTraces() && tmp->IsBlackForCC()) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }

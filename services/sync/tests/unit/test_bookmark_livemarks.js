@@ -1,11 +1,14 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://testing-common/services-common/utils.js");
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
@@ -56,7 +59,7 @@ store.wipe();
 function makeLivemark(p, mintGUID) {
   let b = new Livemark("bookmarks", p.id);
   // Copy here, because tests mutate the contents.
-  b.cleartext = deepCopy(p);
+  b.cleartext = TestingUtils.deepCopy(p);
   
   if (mintGUID)
     b.id = Utils.makeGUID();

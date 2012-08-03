@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/AddonRepository.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://tps/logger.jsm");
 
@@ -59,8 +59,7 @@ Addon.prototype = {
     Logger.AssertTrue(!!addon, 'could not find addon ' + this.id + ' to uninstall');
 
     cb = Async.makeSpinningCallback();
-    let store = Engines.get("addons")._store;
-    store.uninstallAddon(addon, cb);
+    AddonUtils.uninstallAddon(addon, cb);
     cb.wait();
   },
 
@@ -97,11 +96,7 @@ Addon.prototype = {
     // for the addon's install .xml; we'll read the actual id from the .xml.
 
     let cb = Async.makeSpinningCallback();
-    // We call the store's APIs for installation because it is simpler. If that
-    // API is broken, it should ideally be caught by an xpcshell test. But, if
-    // TPS tests fail, it's all the same: a genuite reported error.
-    let store = Engines.get("addons")._store;
-    store.installAddons([{id: this.id}], cb);
+    AddonUtils.installAddons([{id: this.id, requireSecureURI: false}], cb);
     let result = cb.wait();
 
     Logger.AssertEqual(1, result.installedIDs.length, "Exactly 1 add-on was installed.");
@@ -121,9 +116,8 @@ Addon.prototype = {
       throw new Error("Unknown flag to setEnabled: " + flag);
     }
 
-    let store = Engines.get("addons")._store;
     let cb = Async.makeSpinningCallback();
-    store.updateUserDisabled(this.addon, userDisabled, cb);
+    AddonUtils.updateUserDisabled(this.addon, userDisabled, cb);
     cb.wait();
 
     return true;

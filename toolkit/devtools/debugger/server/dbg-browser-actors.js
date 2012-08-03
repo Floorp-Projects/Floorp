@@ -308,7 +308,9 @@ BrowserTabActor.prototype = {
     // Watch for globals being created in this tab.
     this.browser.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
     this.browser.addEventListener("pageshow", this._onWindowCreated, true);
-    this._progressListener = new DebuggerProgressListener(this);
+    if (this._tabbrowser) {
+      this._progressListener = new DebuggerProgressListener(this);
+    }
 
     this._attached = true;
   },
