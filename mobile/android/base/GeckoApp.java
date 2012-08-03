@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;

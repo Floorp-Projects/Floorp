@@ -8,6 +8,7 @@ import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONObject;
 
