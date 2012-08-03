@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    var testBuffer = getRandomBuffer(100000);
+
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let lockedFile = fileHandle.open("readwrite");
+
+      request = lockedFile.write(testBuffer);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      request = fileHandle.getFile();
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let file = event.target.result;
+
+      var worker = new Worker("dummy_worker.js");
+      try {
+        worker.postMessage(file);
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "DataCloneError", "Good error.");
+        is(e.code, DOMException.DATA_CLONE_ERR, "Good error code.")
+      }
+      worker.terminate();
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

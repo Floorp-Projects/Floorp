@@ -82,8 +82,11 @@ http://example.org:80           privileged
         self.assertRaises(MultiplePrimaryLocationsError, locations.add_host,
                           'primary.test', options='primary')
 
-        self.assertRaises(DuplicateLocationError, locations.add_host,
-                          '127.0.0.1')
+        # We no longer throw these DuplicateLocation Error
+        try:
+            locations.add_host('127.0.0.1')
+        except DuplicateLocationError:
+            self.assertTrue(False, "Should no longer throw DuplicateLocationError")
 
         self.assertRaises(BadPortLocationError, locations.add_host, '127.0.0.1',
                           port='abc')

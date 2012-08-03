@@ -581,7 +581,7 @@ private:
     bool constantFoldBranch(jsbytecode *target, bool taken);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(unsigned flags);
-    void iterNext(ptrdiff_t offset);
+    void iterNext();
     bool iterMore(jsbytecode *target);
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated);

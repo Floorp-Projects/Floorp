@@ -9,8 +9,6 @@
 #include "nsIDOMTouchEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIDocument.h"
-#include "dombindings.h"
 #include "mozilla/Attributes.h"
 
 class nsDOMTouch MOZ_FINAL : public nsIDOMTouch
@@ -99,46 +97,28 @@ protected:
   bool mPointsInitialized;
 };
 
-class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList,
-                                 public nsWrapperCache
+class nsDOMTouchList : public nsIDOMTouchList
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTouchList)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMTouchList)
   NS_DECL_NSIDOMTOUCHLIST
 
-  nsDOMTouchList(nsISupports *aParent) : mParent(aParent)
-  {
-    SetIsDOMBinding();
-  }
-  nsDOMTouchList(nsISupports *aParent,
-                 nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches)
-   : mPoints(aTouches),
-     mParent(aParent)
-  {
-    SetIsDOMBinding();
-  }
-
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap)
-  {
-    return mozilla::dom::binding::TouchList::create(cx, scope, this,
-                                                    triedToWrap);
-  }
-
-  nsISupports *GetParentObject()
-  {
-    return mParent;
-  }
+  nsDOMTouchList() { }
+  nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches);
 
   void Append(nsIDOMTouch* aPoint)
   {
     mPoints.AppendElement(aPoint);
   }
 
+  nsIDOMTouch* GetItemAt(PRUint32 aIndex)
+  {
+    return mPoints.SafeElementAt(aIndex, nsnull);
+  }
+
 protected:
   nsTArray<nsCOMPtr<nsIDOMTouch> > mPoints;
-  nsCOMPtr<nsISupports> mParent;
 };
 
 class nsDOMTouchEvent : public nsDOMUIEvent,

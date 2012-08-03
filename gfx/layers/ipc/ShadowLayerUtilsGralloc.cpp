@@ -16,6 +16,8 @@
 
 #include "gfxImageSurface.h"
 
+#include "sampler.h"
+
 using namespace android;
 using namespace base;
 using namespace mozilla::layers;
@@ -154,6 +156,7 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
                            const gfxContentType& aContent,
                            MaybeMagicGrallocBufferHandle* aOutHandle)
 {
+  SAMPLE_LABEL("GrallocBufferActor", "Create");
   GrallocBufferActor* actor = new GrallocBufferActor();
   *aOutHandle = null_t();
   android::PixelFormat format = PixelFormatForContentType(aContent);
@@ -175,6 +178,7 @@ ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext* aGL,
                                                      const SurfaceDescriptor& aDescriptor,
                                                      GLenum aWrapMode)
 {
+  SAMPLE_LABEL("ShadowLayerManager", "OpenDescriptorForDirectTexturing");
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
     return nullptr;
   }
@@ -226,6 +230,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
                                           uint32_t aCaps,
                                           SurfaceDescriptor* aBuffer)
 {
+  SAMPLE_LABEL("ShadowLayerForwarder", "PlatformAllocBuffer");
   // Gralloc buffers are efficiently mappable as gfxImageSurface, so
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
   MaybeMagicGrallocBufferHandle handle;
@@ -263,6 +268,7 @@ GrallocBufferActor::GetFrom(const SurfaceDescriptorGralloc& aDescriptor)
 ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
                                              const SurfaceDescriptor& aSurface)
 {
+  SAMPLE_LABEL("ShadowLayerForwarder", "PlatformOpenDescriptor");
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aSurface.type()) {
     return nullptr;
   }
@@ -337,6 +343,7 @@ ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 /*static*/ bool
 ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor& aDescriptor)
 {
+  SAMPLE_LABEL("ShadowLayerForwarder", "PlatformCloseDescriptor");
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
     return false;
   }

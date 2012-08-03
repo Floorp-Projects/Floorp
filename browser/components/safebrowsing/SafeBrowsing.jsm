@@ -34,20 +34,9 @@ var SafeBrowsing = {
     Services.prefs.addObserver("browser.safebrowsing", this.readPrefs, false);
     this.readPrefs();
 
-    this.initProviderURLs();
-
-    // Initialize the list manager
+    // Register our two types of tables, and add custom Mozilla entries
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
-
-    listManager.setUpdateUrl(this.updateURL);
-    // setKeyUrl has the side effect of fetching a key from the server.
-    // This shouldn't happen if anti-phishing/anti-malware is disabled.
-    if (this.phishingEnabled || this.malwareEnabled)
-      listManager.setKeyUrl(this.keyURL);
-    listManager.setGethashUrl(this.gethashURL);
-
-    // Register our two types of tables
     listManager.registerTable(phishingList, false);
     listManager.registerTable(malwareList, false);
     this.addMozEntries();
@@ -63,11 +52,11 @@ var SafeBrowsing = {
   phishingEnabled: false,
   malwareEnabled:  false,
 
-  provName:              null,
   updateURL:             null,
   keyURL:                null,
-  reportURL:             null,
   gethashURL:            null,
+
+  reportURL:             null,
   reportGenericURL:      null,
   reportErrorURL:        null,
   reportPhishURL:        null,
@@ -86,6 +75,7 @@ var SafeBrowsing = {
     debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
     this.malwareEnabled  = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
+    this.updateProviderURLs();
 
     // XXX The listManager backend gets confused if this is called before the
     // lists are registered. So only call it here when a pref changes, and not
@@ -95,67 +85,42 @@ var SafeBrowsing = {
   },
 
 
-  initProviderURLs: function() {
-    log("initializing provider URLs");
-
-    // XXX remove this as obsolete?
-    let provID = Services.prefs.getIntPref("browser.safebrowsing.dataProvider");
-    if (provID != 0) {
-      Cu.reportError("unknown safebrowsing provider ID " + provID);
-      return;
-    }
-
-    let basePref = "browser.safebrowsing.provider.0.";
-    this.provName = Services.prefs.getCharPref(basePref + "name");
-
-    // Urls used to get data from a provider
-    this.updateURL  = this.getUrlPref(basePref + "updateURL");
-    this.keyURL     = this.getUrlPref(basePref + "keyURL");
-    this.reportURL  = this.getUrlPref(basePref + "reportURL");
-    this.gethashURL = this.getUrlPref(basePref + "gethashURL");
-
-    // Urls to HTML report pages
-    this.reportGenericURL      = this.getUrlPref(basePref + "reportGenericURL");
-    this.reportErrorURL        = this.getUrlPref(basePref + "reportErrorURL");
-    this.reportPhishURL        = this.getUrlPref(basePref + "reportPhishURL");
-    this.reportMalwareURL      = this.getUrlPref(basePref + "reportMalwareURL")
-    this.reportMalwareErrorURL = this.getUrlPref(basePref + "reportMalwareErrorURL")
-  },
-
-
-  getUrlPref: function(prefName) {
-    let MOZ_OFFICIAL_BUILD = false;
-#ifdef OFFICIAL_BUILD
-    MOZ_OFFICIAL_BUILD = true;
+  updateProviderURLs: function() {
+#ifdef USE_HISTORIC_SAFEBROWSING_ID
+    let clientID = "navclient-auto-ffox";
+#else
+    let clientID = Services.appinfo.name;
 #endif
 
-    let url = Services.prefs.getCharPref(prefName);
+    log("initializing safe browsing URLs");
+    let basePref = "browser.safebrowsing.";
 
-    let clientName = MOZ_OFFICIAL_BUILD ? "navclient-auto-ffox" : Services.appinfo.name;
-    let clientVersion = Services.appinfo.version;
+    // Urls to HTML report pages
+    this.reportURL             = Services.urlFormatter.formatURLPref(basePref + "reportURL");
+    this.reportGenericURL      = Services.urlFormatter.formatURLPref(basePref + "reportGenericURL");
+    this.reportErrorURL        = Services.urlFormatter.formatURLPref(basePref + "reportErrorURL");
+    this.reportPhishURL        = Services.urlFormatter.formatURLPref(basePref + "reportPhishURL");
+    this.reportMalwareURL      = Services.urlFormatter.formatURLPref(basePref + "reportMalwareURL");
+    this.reportMalwareErrorURL = Services.urlFormatter.formatURLPref(basePref + "reportMalwareErrorURL");
 
-    // Parameter substitution
-    // XXX: we should instead use nsIURLFormatter here.
-    url = url.replace(/\{moz:locale\}/g,  this.getLocale());
-    url = url.replace(/\{moz:client\}/g,  clientName);
-    url = url.replace(/\{moz:buildid\}/g, Services.appinfo.appBuildID);
-    url = url.replace(/\{moz:version\}/g, clientVersion);
+    // Urls used to update DB
+    this.updateURL  = Services.urlFormatter.formatURLPref(basePref + "updateURL");
+    this.keyURL     = Services.urlFormatter.formatURLPref(basePref + "keyURL");
+    this.gethashURL = Services.urlFormatter.formatURLPref(basePref + "gethashURL");
 
-    log(prefName, "is", url);
-    return url;
-  },
+    this.updateURL  = this.updateURL.replace("SAFEBROWSING_ID", clientID);
+    this.keyURL     = this.keyURL.replace("SAFEBROWSING_ID", clientID);
+    this.gethashURL = this.gethashURL.replace("SAFEBROWSING_ID", clientID);
 
+    let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+                      getService(Ci.nsIUrlListManager);
 
-  getLocale: function() {
-    const localePref = "general.useragent.locale";
-
-    let locale = Services.prefs.getCharPref(localePref);
-    try {
-      // Dumb. This API only works if pref is localized or has a user value.
-      locale = Services.prefs.getComplexValue(localePref, Ci.nsIPrefLocalizedString).data;
-    } catch (e) { }
-
-    return locale;
+    listManager.setUpdateUrl(this.updateURL);
+    // XXX Bug 779317 - setKeyUrl has the side effect of fetching a key from the server.
+    // This shouldn't happen if anti-phishing/anti-malware is disabled.
+    if (this.phishingEnabled || this.malwareEnabled)
+      listManager.setKeyUrl(this.keyURL);
+    listManager.setGethashUrl(this.gethashURL);
   },
 
 
@@ -179,7 +144,7 @@ var SafeBrowsing = {
 
   addMozEntries: function() {
     // Add test entries to the DB.
-    // XXX this should really just be done by DB itself for all moz apps.
+    // XXX bug 779008 - this could be done by DB itself?
     const phishURL   = "mozilla.org/firefox/its-a-trap.html";
     const malwareURL = "mozilla.org/firefox/its-an-attack.html";
 

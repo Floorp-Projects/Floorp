@@ -37,6 +37,22 @@
   <commandset id="editMenuCommands"/>
   <commandset id="sourceEditorCommands"/>
   <keyset id="sourceEditorKeys"/>
+  <keyset id="scriptSearchKeys">
+    <key key="P" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onSearch()"/>
+    <key key="T" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onTokenSearch()"/>
+  </keyset>
+  <keyset id="threadStateKeys">
+    <key keycode="VK_F6"
+         oncommand="DebuggerView.StackFrames._onResume()"/>
+    <key keycode="VK_F7"
+         oncommand="DebuggerView.StackFrames._onStepOver()"/>
+    <key keycode="VK_F8"
+         oncommand="DebuggerView.StackFrames._onStepIn()"/>
+    <key keycode="VK_F8" modifiers="shift"
+         oncommand="DebuggerView.StackFrames._onStepOut()"/>
+  </keyset>
 
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
