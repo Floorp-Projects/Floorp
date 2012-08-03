@@ -155,12 +155,77 @@ let quotaValue;
 Observers.add("weave:service:quota:remaining",
               function (subject) { quotaValue = subject; });
 
-let server;
-
 function run_test() {
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  Svc.Prefs.set("network.numRetries", 1); // speed up test
+  run_next_test();
+}
+
+// This apparently has to come first in order for our PAC URL to be hit.
+// Don't put any other HTTP requests earlier in the file!
+add_test(function test_proxy_auth_redirect() {
+  _("Ensure that a proxy auth redirect (which switches out our channel) " +
+    "doesn't break AsyncResource.");
+  let server = httpd_setup({
+    "/open": server_open,
+    "/pac2": server_pac
+  });
+    
+  PACSystemSettings.PACURI = "http://localhost:8080/pac2";
+  installFakePAC();
+  let res = new AsyncResource("http://localhost:8080/open");
+  res.get(function (error, result) {
+    do_check_true(!error);
+    do_check_true(pacFetched);
+    do_check_true(fetched);
+    do_check_eq("This path exists", result);
+    pacFetched = fetched = false;
+    uninstallFakePAC();
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_new_channel() {
+  _("Ensure a redirect to a new channel is handled properly.");
+
+  let resourceRequested = false;
+  function resourceHandler(metadata, response) {
+    resourceRequested = true;
+
+    let body = "Test";
+    response.setHeader("Content-Type", "text/plain");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  function redirectHandler(metadata, response) {
+    let body = "Redirecting";
+    response.setStatusLine(metadata.httpVersion, 307, "TEMPORARY REDIRECT");
+    response.setHeader("Location", "http://localhost:8080/resource");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  let server = httpd_setup({"/resource": resourceHandler,
+                            "/redirect": redirectHandler},
+                            8080);
+
+  let request = new AsyncResource("http://localhost:8080/redirect");
+  request.get(function onRequest(error, content) {
+    do_check_null(error);
+    do_check_true(resourceRequested);
+    do_check_eq(200, content.status);
+    do_check_true("content-type" in content.headers);
+    do_check_eq("text/plain", content.headers["content-type"]);
+
+    server.stop(run_next_test);
+  });
+});
+
+
+let server;
+
+add_test(function setup() {
   server = httpd_setup({
     "/open": server_open,
     "/protected": server_protected,
@@ -176,27 +241,7 @@ function run_test() {
     "/quota-error": server_quota_error
   });
 
-  Svc.Prefs.set("network.numRetries", 1); // speed up test
   run_next_test();
-}
-
-// This apparently has to come first in order for our PAC URL to be hit.
-// Don't put any other HTTP requests earlier in the file!
-add_test(function test_proxy_auth_redirect() {
-  _("Ensure that a proxy auth redirect (which switches out our channel) " +
-    "doesn't break AsyncResource.");
-  PACSystemSettings.PACURI = "http://localhost:8080/pac2";
-  installFakePAC();
-  let res = new AsyncResource("http://localhost:8080/open");
-  res.get(function (error, result) {
-    do_check_true(!error);
-    do_check_true(pacFetched);
-    do_check_true(fetched);
-    do_check_eq("This path exists", result);
-    pacFetched = fetched = false;
-    uninstallFakePAC();
-    run_next_test();
-  });
 });
 
 add_test(function test_members() {
@@ -661,39 +706,4 @@ add_test(function test_uri_construction() {
  */
 add_test(function eliminate_server() {
   server.stop(run_next_test);
-});
-
-add_test(function test_new_channel() {
-  _("Ensure a redirect to a new channel is handled properly.");
-
-  let resourceRequested = false;
-  function resourceHandler(metadata, response) {
-    resourceRequested = true;
-
-    let body = "Test";
-    response.setHeader("Content-Type", "text/plain");
-    response.bodyOutputStream.write(body, body.length);
-  }
-
-  function redirectHandler(metadata, response) {
-    let body = "Redirecting";
-    response.setStatusLine(metadata.httpVersion, 307, "TEMPORARY REDIRECT");
-    response.setHeader("Location", "http://localhost:8080/resource");
-    response.bodyOutputStream.write(body, body.length);
-  }
-
-  let server = httpd_setup({"/resource": resourceHandler,
-                            "/redirect": redirectHandler},
-                            8080);
-
-  let request = new AsyncResource("http://localhost:8080/redirect");
-  request.get(function onRequest(error, content) {
-    do_check_null(error);
-    do_check_true(resourceRequested);
-    do_check_eq(200, content.status);
-    do_check_true("content-type" in content.headers);
-    do_check_eq("text/plain", content.headers["content-type"]);
-
-    server.stop(run_next_test);
-  });
 });
