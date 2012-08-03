@@ -423,7 +423,7 @@ PRMJ_Now(void)
 
             /* On some dual processor/core systems, we might get an earlier time
                so we cache the last time that we returned */
-            calibration.last = JS_MAX(calibration.last, int64_t(highresTime));
+            calibration.last = js::Max(calibration.last, int64_t(highresTime));
             returnedTime = calibration.last;
             MUTEX_UNLOCK(&calibration.data_lock);
 
@@ -692,7 +692,7 @@ DSTOffsetCache::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds, JSContex
     oldRangeEndSeconds = rangeEndSeconds;
 
     if (rangeStartSeconds <= localTimeSeconds) {
-        int64_t newEndSeconds = JS_MIN(rangeEndSeconds + RANGE_EXPANSION_AMOUNT, MAX_UNIX_TIMET);
+        int64_t newEndSeconds = js::Min(rangeEndSeconds + RANGE_EXPANSION_AMOUNT, MAX_UNIX_TIMET);
         if (newEndSeconds >= localTimeSeconds) {
             int64_t endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
             if (endOffsetMilliseconds == offsetMilliseconds) {
@@ -715,7 +715,7 @@ DSTOffsetCache::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds, JSContex
         return offsetMilliseconds;
     }
 
-    int64_t newStartSeconds = JS_MAX(rangeStartSeconds - RANGE_EXPANSION_AMOUNT, 0);
+    int64_t newStartSeconds = js::Max(rangeStartSeconds - RANGE_EXPANSION_AMOUNT, int64_t(0));
     if (newStartSeconds <= localTimeSeconds) {
         int64_t startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
         if (startOffsetMilliseconds == offsetMilliseconds) {
