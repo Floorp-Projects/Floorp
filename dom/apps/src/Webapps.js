@@ -125,6 +125,7 @@ WebappsRegistry.prototype = {
     let requestID = this.getRequestId(request);
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aURL, true);
+    xhr.channel.loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
