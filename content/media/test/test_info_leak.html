@@ -35,7 +35,7 @@ function createTestArray() {
   var tests = [];
   var tmpVid = document.createElement("video");
 
-  for (var testNum=0; testNum<gSeekTests.length; testNum++) {
+  for (var testNum=0; testNum<gInfoLeakTests.length; testNum++) {
     var test = gInfoLeakTests[testNum];
     if (!tmpVid.canPlayType(test.type)) {
       continue;

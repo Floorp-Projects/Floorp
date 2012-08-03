@@ -362,21 +362,11 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
     {
       // Don't use INT_TO_JSVAL directly to prevent bugs when dealing
       // with ints larger than what fits in a integer jsval.
-      jsval val;
-      if (::JS_NewNumberValue(cx, NPVARIANT_TO_INT32(*variant), &val)) {
-        return val;
-      }
-
-      break;
+      return ::JS_NumberValue(NPVARIANT_TO_INT32(*variant));
     }
   case NPVariantType_Double :
     {
-      jsval val;
-      if (::JS_NewNumberValue(cx, NPVARIANT_TO_DOUBLE(*variant), &val)) {
-        return val;
-      }
-
-      break;
+      return ::JS_NumberValue(NPVARIANT_TO_DOUBLE(*variant));
     }
   case NPVariantType_String :
     {

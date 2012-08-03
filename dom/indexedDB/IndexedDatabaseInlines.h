@@ -50,7 +50,7 @@ StructuredCloneReadInfo::SetFromSerialized(
     return false;
   }
 
-  mFileInfos.Clear();
+  mFiles.Clear();
   return true;
 }
 

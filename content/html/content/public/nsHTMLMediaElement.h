@@ -289,21 +289,21 @@ public:
 #ifdef MOZ_WAVE
   static bool IsWaveEnabled();
   static bool IsWaveType(const nsACString& aType);
-  static const char gWaveTypes[4][16];
+  static const char gWaveTypes[4][15];
   static char const *const gWaveCodecs[2];
 #endif
 
 #ifdef MOZ_WEBM
   static bool IsWebMEnabled();
   static bool IsWebMType(const nsACString& aType);
-  static const char gWebMTypes[2][17];
+  static const char gWebMTypes[2][11];
   static char const *const gWebMCodecs[4];
 #endif
 
 #ifdef MOZ_GSTREAMER
   static bool IsH264Enabled();
   static bool IsH264Type(const nsACString& aType);
-  static const char gH264Types[3][17];
+  static const char gH264Types[3][16];
   static char const *const gH264Codecs[7];
 #endif
 

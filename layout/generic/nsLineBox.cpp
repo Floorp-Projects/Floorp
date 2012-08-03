@@ -15,6 +15,7 @@
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif
+#include "nsStyleStructInlines.h"
 
 #ifdef DEBUG
 static PRInt32 ctorCount;
@@ -36,7 +37,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
   NS_ASSERTION(!aIsBlock || aCount == 1, "Blocks must have exactly one child");
   nsIFrame* f = aFrame;
   for (PRInt32 n = aCount; n > 0; f = f->GetNextSibling(), --n) {
-    NS_ASSERTION(aIsBlock == f->GetStyleDisplay()->IsBlockOutside(),
+    NS_ASSERTION(aIsBlock == f->IsBlockOutside(),
                  "wrong kind of child frame");
   }
 #endif

@@ -74,12 +74,13 @@ NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
 }
 
 WebGLContextOptions::WebGLContextOptions()
-    : depth(true), stencil(false),
+    : alpha(true), depth(true), stencil(false),
       premultipliedAlpha(true), antialias(true),
       preserveDrawingBuffer(false)
 {
     // Set default alpha state based on preference.
-    alpha = Preferences::GetBool("webgl.default-no-alpha", false) ? 0 : 1;
+    if (Preferences::GetBool("webgl.default-no-alpha", false))
+        alpha = false;
 }
 
 WebGLContext::WebGLContext()
@@ -150,7 +151,7 @@ WebGLContext::WebGLContext()
     mGLMaxVaryingVectors = 0;
     mGLMaxFragmentUniformVectors = 0;
     mGLMaxVertexUniformVectors = 0;
-    
+
     // See OpenGL ES 2.0.25 spec, 6.2 State Tables, table 6.13
     mPixelStorePackAlignment = 4;
     mPixelStoreUnpackAlignment = 4;
@@ -166,6 +167,8 @@ WebGLContext::WebGLContext()
 
     mAlreadyGeneratedWarnings = 0;
     mAlreadyWarnedAboutFakeVertexAttrib0 = false;
+
+    mLastUseIndex = 0;
 }
 
 WebGLContext::~WebGLContext()
@@ -334,7 +337,7 @@ NS_IMETHODIMP
 WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 {
     /*** early success return cases ***/
-  
+
     if (mCanvasElement) {
         mCanvasElement->InvalidateCanvas();
     }
@@ -365,11 +368,17 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         return NS_OK;
     }
 
-    /*** end of early success return cases ***/
+    /*** End of early success return cases.
+     *** At this point we know that we're not just resizing an existing context,
+     *** we are initializing a new context.
+     ***/
 
-    // At this point we know that the old context is not going to survive, even though we still don't
-    // know if creating the new context will succeed.
-    DestroyResourcesAndContext();
+    // if we exceeded either the global or the per-principal limit for WebGL contexts,
+    // lose the oldest-used context now to free resources. Note that we can't do that
+    // in the WebGLContext constructor as we don't have a canvas element yet there.
+    // Here is the right place to do so, as we are about to create the OpenGL context
+    // and that is what can fail if we already have too many.
+    LoseOldestWebGLContextIfLimitExceeded();
 
     // Get some prefs for some preferred/overriden things
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
@@ -628,6 +637,91 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFl
     return NS_OK;
 }
 
+void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
+{
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    // some mobile devices can't have more than 8 GL contexts overall
+    const size_t kMaxWebGLContextsPerPrincipal = 2;
+    const size_t kMaxWebGLContexts             = 4;
+#else
+    const size_t kMaxWebGLContextsPerPrincipal = 8;
+    const size_t kMaxWebGLContexts             = 16;
+#endif
+    MOZ_ASSERT(kMaxWebGLContextsPerPrincipal < kMaxWebGLContexts);
+
+    // it's important to update the index on a new context before losing old contexts,
+    // otherwise new unused contexts would all have index 0 and we couldn't distinguish older ones
+    // when choosing which one to lose first.
+    UpdateLastUseIndex();
+
+    WebGLMemoryMultiReporterWrapper::ContextsArrayType &contexts
+      = WebGLMemoryMultiReporterWrapper::Contexts();
+
+    // quick exit path, should cover a majority of cases
+    if (contexts.Length() <= kMaxWebGLContextsPerPrincipal) {
+        return;
+    }
+
+    // note that here by "context" we mean "non-lost context". See the check for
+    // IsContextLost() below. Indeed, the point of this function is to maybe lose
+    // some currently non-lost context.
+
+    uint64_t oldestIndex = UINT64_MAX;
+    uint64_t oldestIndexThisPrincipal = UINT64_MAX;
+    const WebGLContext *oldestContext = nsnull;
+    const WebGLContext *oldestContextThisPrincipal = nsnull;
+    size_t numContexts = 0;
+    size_t numContextsThisPrincipal = 0;
+
+    for(size_t i = 0; i < contexts.Length(); ++i) {
+
+        // don't want to lose ourselves.
+        if (contexts[i] == this)
+            continue;
+
+        if (contexts[i]->IsContextLost())
+            continue;
+
+        if (!contexts[i]->GetCanvas()) {
+            // Zombie context: the canvas is already destroyed, but something else
+            // (typically the compositor) is still holding on to the context.
+            // Killing zombies is a no-brainer.
+            const_cast<WebGLContext*>(contexts[i])->LoseContext();
+            continue;
+        }
+
+        numContexts++;
+        if (contexts[i]->mLastUseIndex < oldestIndex) {
+            oldestIndex = contexts[i]->mLastUseIndex;
+            oldestContext = contexts[i];
+        }
+
+        nsIPrincipal *ourPrincipal = GetCanvas()->NodePrincipal();
+        nsIPrincipal *theirPrincipal = contexts[i]->GetCanvas()->NodePrincipal();
+        bool samePrincipal;
+        nsresult rv = ourPrincipal->Equals(theirPrincipal, &samePrincipal);
+        if (NS_SUCCEEDED(rv) && samePrincipal) {
+            numContextsThisPrincipal++;
+            if (contexts[i]->mLastUseIndex < oldestIndexThisPrincipal) {
+                oldestIndexThisPrincipal = contexts[i]->mLastUseIndex;
+                oldestContextThisPrincipal = contexts[i];
+            }
+        }
+    }
+
+    if (numContextsThisPrincipal > kMaxWebGLContextsPerPrincipal) {
+        GenerateWarning("Exceeded %d live WebGL contexts for this principal, losing the "
+                        "least recently used one.", kMaxWebGLContextsPerPrincipal);
+        MOZ_ASSERT(oldestContextThisPrincipal); // if we reach this point, this can't be null
+        const_cast<WebGLContext*>(oldestContextThisPrincipal)->LoseContext();
+    } else if (numContexts > kMaxWebGLContexts) {
+        GenerateWarning("Exceeded %d live WebGL contexts, losing the least recently used one.",
+                        kMaxWebGLContexts);
+        MOZ_ASSERT(oldestContext); // if we reach this point, this can't be null
+        const_cast<WebGLContext*>(oldestContext)->LoseContext();
+    }
+}
+
 NS_IMETHODIMP
 WebGLContext::GetInputStream(const char* aMimeType,
                              const PRUnichar* aEncoderOptions,
@@ -690,6 +784,21 @@ WebGLContext::GetThebesSurface(gfxASurface **surface)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+void WebGLContext::UpdateLastUseIndex()
+{
+    static CheckedInt<uint64_t> sIndex = 0;
+
+    sIndex++;
+
+    // should never happen with 64-bit; trying to handle this would be riskier than
+    // not handling it as the handler code would never get exercised.
+    if (!sIndex.isValid()) {
+        NS_RUNTIMEABORT("Can't believe it's been 2^64 transactions already!");
+    }
+
+    mLastUseIndex = sIndex.value();
+}
+
 static PRUint8 gWebGLLayerUserData;
 
 namespace mozilla {
@@ -710,6 +819,8 @@ public:
 
     context->mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
     canvas->MarkContextClean();
+
+    context->UpdateLastUseIndex();
   }
 
 private:

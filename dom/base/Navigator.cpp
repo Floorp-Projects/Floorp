@@ -13,7 +13,6 @@
 #include "nsMimeTypeArray.h"
 #include "nsDesktopNotification.h"
 #include "nsGeolocation.h"
-#include "nsDeviceStorage.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
 #include "nsIDocShell.h"
@@ -191,6 +190,12 @@ Navigator::Invalidate()
     mMessagesManager = nullptr;
   }
 #endif
+
+  PRUint32 len = mDeviceStorageStores.Length();
+  for (PRUint32 i = 0; i < len; ++i) {
+    mDeviceStorageStores[i]->Shutdown();
+  }
+  mDeviceStorageStores.Clear();
 
 }
 
@@ -873,7 +878,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
 //    Navigator::nsIDOMNavigatorDeviceStorage
 //*****************************************************************************
 
-NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _retval)
+NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceStorage** _retval)
 {
   if (!Preferences::GetBool("device.storage.enabled", false)) {
     return NS_OK;
@@ -885,7 +890,15 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _
     return NS_ERROR_FAILURE;
   }
 
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, _retval);
+  nsRefPtr<nsDOMDeviceStorage> storage;
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, getter_AddRefs(storage));
+
+  if (!storage) {
+    return NS_OK;
+  }
+
+  NS_ADDREF(*_retval = storage.get());
+  mDeviceStorageStores.AppendElement(storage);                                                                                                                                                                                              
   return NS_OK;
 }
 

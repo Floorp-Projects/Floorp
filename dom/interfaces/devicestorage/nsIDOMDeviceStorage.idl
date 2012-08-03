@@ -3,24 +3,22 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
+#include "nsIDOMEventTarget.idl"
 interface nsIDOMBlob;
 interface nsIDOMDOMRequest;
 interface nsIDOMDeviceStorageCursor;
+interface nsIDOMDeviceStorageChangeEvent;
+interface nsIDOMEventListener;
 
 dictionary DeviceStorageEnumerationParameters
 {
   jsval since;
 };
 
-[scriptable, uuid(05C0D0C8-D698-4CCD-899C-7198A33BD7EC)]
-interface nsIDOMDeviceStorage : nsISupports
+[scriptable, uuid(3dbe0137-ca73-44c5-bcde-25c297bf7c65), builtinclass]
+interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
-    /*
-     * Hint as to what kind of storage this object is.
-     * May be "external", "shared", or "default".
-     */
-    readonly attribute DOMString type;
-
+    attribute nsIDOMEventListener onchange;
     nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
     nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);
 
