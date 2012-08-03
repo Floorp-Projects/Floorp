@@ -80,6 +80,10 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
              nsIFrame *aFrame, bool aIsCell)
 {
     nscoord minCoord, prefCoord;
+    const nsStylePosition *stylePos = aFrame->GetStylePosition();
+    bool isQuirks = aFrame->PresContext()->CompatibilityMode() ==
+                    eCompatibility_NavQuirks;
+    nscoord boxSizingToBorderEdge = 0;
     if (aIsCell) {
         // If aFrame is a container for font size inflation, then shrink
         // wrapping inside of it should not apply font size inflation.
@@ -87,6 +91,43 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
 
         minCoord = aFrame->GetMinWidth(aRenderingContext);
         prefCoord = aFrame->GetPrefWidth(aRenderingContext);
+        // Until almost the end of this function, minCoord and prefCoord
+        // represent the box-sizing based width values (which mean they
+        // should include horizontal padding and border width when
+        // box-sizing is set to border-box).
+        // Note that this function returns border-box width, we add the
+        // outer edges near the end of this function.
+
+        // XXX Should we ignore percentage padding?
+        nsIFrame::IntrinsicWidthOffsetData offsets = aFrame->IntrinsicWidthOffsets(aRenderingContext);
+
+        // In quirks mode, table cell width should be content-box,
+        // but height should be border box.
+        // Because of this historic anomaly, we do not use quirk.css.
+        // (We can't specify one value of box-sizing for width and another
+        // for height).
+        // For this reason, we also do not use box-sizing for just one of
+        // them, as this may be confusing.
+        if (isQuirks) {
+            boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
+        }
+        else {
+            switch (stylePos->mBoxSizing) {
+                case NS_STYLE_BOX_SIZING_CONTENT:
+                    boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
+                    break;
+                case NS_STYLE_BOX_SIZING_PADDING:
+                    minCoord += offsets.hPadding;
+                    prefCoord += offsets.hPadding;
+                    boxSizingToBorderEdge = offsets.hBorder;
+                    break;
+                default:
+                    // NS_STYLE_BOX_SIZING_BORDER
+                    minCoord += offsets.hPadding + offsets.hBorder;
+                    prefCoord += offsets.hPadding + offsets.hBorder;
+                    break;
+            }
+        }
     } else {
         minCoord = 0;
         prefCoord = 0;
@@ -94,7 +135,6 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
     float prefPercent = 0.0f;
     bool hasSpecifiedWidth = false;
 
-    const nsStylePosition *stylePos = aFrame->GetStylePosition();
     const nsStyleCoord &width = stylePos->mWidth;
     nsStyleUnit unit = width.GetUnit();
     // NOTE: We're ignoring calc() units here, for lack of a sensible
@@ -102,6 +142,10 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
     // handled like 'auto' for table cells and columns.
     if (unit == eStyleUnit_Coord) {
         hasSpecifiedWidth = true;
+        // Note: since ComputeWidthValue was designed to return content-box
+        // width, it will (in some cases) subtract the box-sizing edges.
+        // We prevent this unwanted behavior by calling it with
+        // aContentEdgeToBoxSizing and aBoxSizingToMarginEdge set to 0.
         nscoord w = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                                                      aFrame, 0, 0, 0, width);
         // Quirk: A cell with "nowrap" set and a coord value for the
@@ -109,9 +153,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         // that coord value as the minimum width.
         // This is kept up-to-date with dynamic changes to nowrap by code in
         // nsTableCellFrame::AttributeChanged
-        if (aIsCell && w > minCoord &&
-            aFrame->PresContext()->CompatibilityMode() ==
-              eCompatibility_NavQuirks &&
+        if (aIsCell && w > minCoord && isQuirks &&
             aFrame->GetContent()->HasAttr(kNameSpaceID_None,
                                           nsGkAtoms::nowrap)) {
             minCoord = w;
@@ -193,37 +235,8 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
 
     // XXX Should col frame have border/padding considered?
     if (aIsCell) {
-        nsIFrame::IntrinsicWidthOffsetData offsets =
-            aFrame->IntrinsicWidthOffsets(aRenderingContext);
-        // XXX Should we ignore percentage padding?
-
-        // In quirks mode, table cell width should be content-box,
-        // but height should be border box.
-        // Because of this historic anomaly, we do not use quirk.css.
-        // (We can't specify one value of box-sizing for width and another
-        // for height).
-        // For this reason, we also do not use box-sizing for just one of
-        // them, as this may be confusing.
-        nscoord add = 0;
-        if (aFrame->PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
-          add = offsets.hPadding + offsets.hBorder;
-        }
-        else
-        {
-          switch (stylePos->mBoxSizing) {
-            case NS_STYLE_BOX_SIZING_CONTENT:
-              add = offsets.hPadding + offsets.hBorder;
-              break;
-            case NS_STYLE_BOX_SIZING_PADDING:
-              add = offsets.hBorder;
-              break;
-            default:
-              // NS_STYLE_BOX_SIZING_BORDER
-              break;
-          }
-        }
-        minCoord += add;
-        prefCoord = NSCoordSaturatingAdd(prefCoord, add);
+        minCoord += boxSizingToBorderEdge;
+        prefCoord = NSCoordSaturatingAdd(prefCoord, boxSizingToBorderEdge);
     }
 
     return CellWidthInfo(minCoord, prefCoord, prefPercent, hasSpecifiedWidth);
