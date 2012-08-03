@@ -12,6 +12,7 @@
 #include "nsDOMError.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIClassInfo.h"
 #include "nsIConverterInputStream.h"
 #include "nsIDocument.h"
 #include "nsIFileStreams.h"
@@ -45,7 +46,9 @@ using namespace mozilla::dom;
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
 class DataOwnerAdapter MOZ_FINAL : public nsIInputStream,
-                                   public nsISeekableStream
+                                   public nsISeekableStream,
+                                   public nsIIPCSerializable,
+                                   public nsIClassInfo
 {
   typedef nsDOMMemoryFile::DataOwner DataOwner;
 public:
@@ -56,15 +59,22 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  // These are mandatory.
   NS_FORWARD_NSIINPUTSTREAM(mStream->)
-
   NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
+
+  // These are optional. We use a conditional QI to keep them from being called
+  // if the underlying stream doesn't QI to either interface.
+  NS_FORWARD_NSIIPCSERIALIZABLE(mSerializable->)
+  NS_FORWARD_NSICLASSINFO(mClassInfo->)
 
 private:
   DataOwnerAdapter(DataOwner* aDataOwner,
                    nsIInputStream* aStream)
     : mDataOwner(aDataOwner), mStream(aStream),
-      mSeekableStream(do_QueryInterface(aStream))
+      mSeekableStream(do_QueryInterface(aStream)),
+      mSerializable(do_QueryInterface(aStream)),
+      mClassInfo(do_QueryInterface(aStream))
   {
     NS_ASSERTION(mSeekableStream, "Somebody gave us the wrong stream!");
   }
@@ -72,11 +82,20 @@ private:
   nsRefPtr<DataOwner> mDataOwner;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsISeekableStream> mSeekableStream;
+  nsCOMPtr<nsIIPCSerializable> mSerializable;
+  nsCOMPtr<nsIClassInfo> mClassInfo;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(DataOwnerAdapter,
-                              nsIInputStream,
-                              nsISeekableStream)
+NS_IMPL_THREADSAFE_ADDREF(DataOwnerAdapter)
+NS_IMPL_THREADSAFE_RELEASE(DataOwnerAdapter)
+
+NS_INTERFACE_MAP_BEGIN(DataOwnerAdapter)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializable, mSerializable)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIClassInfo, mClassInfo)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
+NS_INTERFACE_MAP_END
 
 nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
                                   PRUint32 aStart,
