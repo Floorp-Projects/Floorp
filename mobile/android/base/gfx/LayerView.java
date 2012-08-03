@@ -19,12 +19,15 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 
 import java.nio.IntBuffer;
+
+import java.lang.reflect.Method;
 
 /**
  * A view rendered by the layer compositor.
@@ -56,21 +59,38 @@ public class LayerView extends FrameLayout {
     public static final int PAINT_BEFORE_FIRST = 1;
     public static final int PAINT_AFTER_FIRST = 2;
 
+    boolean shouldUseTextureView() {
+        // we can only use TextureView on ICS or higher
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            Log.i(LOGTAG, "Not using TextureView: not on ICS+");
+            return false;
+        }
+
+        try {
+            // and then we can only use it if we have a hardware accelerated window
+            Method m = View.class.getMethod("isHardwareAccelerated", new Class[0]);
+            return (Boolean) m.invoke(this);
+        } catch (Exception e) {
+            Log.i(LOGTAG, "Not using TextureView: caught exception checking for hw accel: " + e.toString());
+            return false;
+        }
+    }
+
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+        if (shouldUseTextureView()) {
+            mTextureView = new TextureView(context);
+            mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
+
+            addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        } else {
             mSurfaceView = new SurfaceView(context);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
             SurfaceHolder holder = mSurfaceView.getHolder();
             holder.addCallback(new SurfaceListener());
             holder.setFormat(PixelFormat.RGB_565);
-        } else {
-            mTextureView = new TextureView(context);
-            mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
-
-            addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         }
 
         mGLController = new GLController(this);
@@ -237,7 +257,7 @@ public class LayerView extends FrameLayout {
     }
 
     public Object getNativeWindow() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+        if (mSurfaceView != null)
             return mSurfaceView.getHolder();
 
         return mTextureView.getSurfaceTexture();
