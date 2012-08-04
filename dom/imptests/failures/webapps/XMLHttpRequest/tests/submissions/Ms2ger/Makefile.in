@@ -1,9 +1,9 @@
-DEPTH = @DEPTH@
+DEPTH = ../../../../../../../..
 
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = @relativesrcdir@
+relativesrcdir = dom/imptests/failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger
 
 DIRS = \
   $(NULL)
