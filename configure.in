@@ -3251,6 +3251,7 @@ AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
                                  [ struct timespec ts;
                                    clock_gettime(CLOCK_MONOTONIC, &ts); ],
                                  ac_cv_clock_monotonic=$libs
+                                 LIBS="$_SAVE_LIBS"
                                  break,
                                  ac_cv_clock_monotonic=no)
                     LIBS="$_SAVE_LIBS"
