@@ -845,6 +845,28 @@ nsContentUtils::IsJavaScriptLanguage(const nsString& aName, PRUint32 *aFlags)
   return true;
 }
 
+JSVersion
+nsContentUtils::ParseJavascriptVersion(const nsAString& aVersionStr)
+{
+  if (aVersionStr.Length() != 3 || aVersionStr[0] != '1' ||
+      aVersionStr[1] != '.') {
+    return JSVERSION_UNKNOWN;
+  }
+
+  switch (aVersionStr[2]) {
+  case '0': return JSVERSION_1_0;
+  case '1': return JSVERSION_1_1;
+  case '2': return JSVERSION_1_2;
+  case '3': return JSVERSION_1_3;
+  case '4': return JSVERSION_1_4;
+  case '5': return JSVERSION_1_5;
+  case '6': return JSVERSION_1_6;
+  case '7': return JSVERSION_1_7;
+  case '8': return JSVERSION_1_8;
+  default:  return JSVERSION_UNKNOWN;
+  }
+}
+
 void
 nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
                               nsString& aParams)
