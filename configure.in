@@ -3859,7 +3859,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
-    if test "$OS_ARCH" = "WINNT"; then
+    if test -z "$LIBXUL_SDK"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         if test -n "$GNU_CC"; then
             NSPR_LIBS="-L${LIBXUL_DIST}/lib -lnspr${NSPR_VERSION} -lplc${NSPR_VERSION} -lplds${NSPR_VERSION}"
@@ -3867,8 +3867,8 @@ else
             NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
         fi
     else
-        NSPR_CFLAGS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
-        NSPR_LIBS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
+        NSPR_CFLAGS=`"${LIBXUL_DIST}"/sdk/bin/nspr-config --prefix="${LIBXUL_DIST}" --includedir="${LIBXUL_DIST}/include/nspr" --cflags`
+        NSPR_LIBS=`"${LIBXUL_DIST}"/sdk/bin/nspr-config --prefix="${LIBXUL_DIST}" --libdir="${LIBXUL_DIST}"/lib --libs`
     fi
 fi
 
@@ -9072,18 +9072,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
       CPPFLAGS="$_SAVE_CFLAGS"
     fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
-fi
-
-if test -z "$MOZ_NATIVE_NSPR"; then
-    # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
-    AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test "$OS_ARCH" != "WINNT"; then
-       NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --libdir=$LIBXUL_DIST/lib --libs`
-       $PERL -pi.bak -e "s '^NSPR_LIBS\\s*=.*'NSPR_LIBS = $NSPR_LIBS'" config/autoconf.mk
-       NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --includedir=$LIBXUL_DIST/include/nspr --cflags`
-       $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $NSPR_CFLAGS'" config/autoconf.mk
-    fi
-    rm -f config/autoconf.mk.bak
 fi
 
 dnl ========================================================
