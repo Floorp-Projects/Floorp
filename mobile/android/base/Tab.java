@@ -49,7 +49,6 @@ public final class Tab {
     private boolean mExternal;
     private boolean mBookmark;
     private boolean mReadingListItem;
-    private HashMap<String, DoorHanger> mDoorHangers;
     private long mFaviconLoadId;
     private String mDocumentURI;
     private String mContentType;
@@ -89,7 +88,6 @@ public final class Tab {
         mHistorySize = 0;
         mBookmark = false;
         mReadingListItem = false;
-        mDoorHangers = new HashMap<String, DoorHanger>();
         mFaviconLoadId = 0;
         mDocumentURI = "";
         mContentType = "";
@@ -106,7 +104,6 @@ public final class Tab {
     }
 
     public void onDestroy() {
-        mDoorHangers = new HashMap<String, DoorHanger>();
         BrowserDB.unregisterContentObserver(mContentResolver, mContentObserver);
     }
 
@@ -490,43 +487,6 @@ public final class Tab {
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Forward", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
-    }
-
-    public void addDoorHanger(String value, DoorHanger dh) {
-        mDoorHangers.put(value, dh);
-    }
-
-    public void removeDoorHanger(String value) {
-        mDoorHangers.remove(value);
-    }
-
-    public void removeTransientDoorHangers() {
-        // Make a temporary set to avoid a ConcurrentModificationException
-        final HashSet<String> valuesToRemove = new HashSet<String>(); 
-
-        for (String value : mDoorHangers.keySet()) {
-            DoorHanger dh = mDoorHangers.get(value);
-            if (dh.shouldRemove())
-                valuesToRemove.add(value);
-        }
-
-        for (String value : valuesToRemove) {
-            mDoorHangers.remove(value);
-        }
-    }
-
-    public DoorHanger getDoorHanger(String value) {
-        if (mDoorHangers == null)
-            return null;
-
-        if (mDoorHangers.containsKey(value))
-            return mDoorHangers.get(value);
-
-        return null;
-    }
-
-    public HashMap<String, DoorHanger> getDoorHangers() {
-        return mDoorHangers;
     }
 
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
