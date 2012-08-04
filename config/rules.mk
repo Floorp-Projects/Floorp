@@ -1385,11 +1385,14 @@ libs::
 endif
 
 ################################################################################
-# Copy each element of EXTRA_JS_MODULES to $(FINAL_TARGET)/modules
+# Copy each element of EXTRA_JS_MODULES to JS_MODULES_PATH, or
+# $(FINAL_TARGET)/modules if that isn't defined.
+JS_MODULES_PATH ?= $(FINAL_TARGET)/modules
+
 ifdef EXTRA_JS_MODULES
 libs:: $(EXTRA_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(call install_cmd,$(IFLAGS1) $^ $(FINAL_TARGET)/modules)
+	$(call install_cmd,$(IFLAGS1) $^ $(JS_MODULES_PATH))
 endif
 
 endif
@@ -1398,9 +1401,9 @@ ifdef EXTRA_PP_JS_MODULES
 libs:: $(EXTRA_PP_JS_MODULES)
 ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
-	$(NSINSTALL) -D $(FINAL_TARGET)/modules; \
+	$(NSINSTALL) -D $(JS_MODULES_PATH); \
 	for i in $^; do \
-	  dest=$(FINAL_TARGET)/modules/`basename $$i`; \
+	  dest=$(JS_MODULES_PATH)/`basename $$i`; \
 	  $(RM) -f $$dest; \
 	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
 	done
