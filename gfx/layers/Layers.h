@@ -393,7 +393,7 @@ public:
    */
   bool HasUserData(void* aKey)
   {
-    return GetUserData(aKey);
+    return mUserData.Has(static_cast<gfx::UserDataKey*>(aKey));
   }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
@@ -756,7 +756,7 @@ public:
    */
   bool HasUserData(void* aKey)
   {
-    return GetUserData(aKey);
+    return mUserData.Has(static_cast<gfx::UserDataKey*>(aKey));
   }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
