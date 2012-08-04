@@ -1,0 +1,3 @@
+{
+  "isEqualNode should return true when only the internal subsets of DocumentTypes differ.": true
+}
