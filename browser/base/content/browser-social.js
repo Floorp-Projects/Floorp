@@ -160,10 +160,10 @@ let SocialShareButton = {
   updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("editSharePopupHeader");
     let profile = Social.provider.profile;
-    if (profile && profile.portrait && profile.displayName) {
+    if (profile && profile.displayName) {
       profileRow.hidden = false;
       let portrait = document.getElementById("socialUserPortrait");
-      portrait.style.listStyleImage = profile.portrait;
+      portrait.setAttribute("src", profile.portrait || "chrome://browser/skin/social/social.png");
       let displayName = document.getElementById("socialUserDisplayName");
       displayName.setAttribute("label", profile.displayName);
     } else {

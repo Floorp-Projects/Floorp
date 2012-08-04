@@ -3617,7 +3617,7 @@ JSObject::growElements(JSContext *cx, unsigned newcap)
                       ? oldcap * 2
                       : oldcap + (oldcap >> 3);
 
-    uint32_t actualCapacity = JS_MAX(newcap, nextsize);
+    uint32_t actualCapacity = Max(newcap, nextsize);
     if (actualCapacity >= CAPACITY_CHUNK)
         actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
     else if (actualCapacity < SLOT_CAPACITY_MIN)

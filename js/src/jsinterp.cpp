@@ -2777,7 +2777,7 @@ END_VARLEN_CASE
 
 BEGIN_CASE(JSOP_ACTUALSFILLED)
 {
-    PUSH_INT32(JS_MAX(regs.fp()->numActualArgs(), GET_UINT16(regs.pc)));
+    PUSH_INT32(Max(regs.fp()->numActualArgs(), GET_UINT16(regs.pc)));
 }
 END_CASE(JSOP_ACTUALSFILLED)
 

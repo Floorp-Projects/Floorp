@@ -3,8 +3,9 @@
 
 "use strict";
 
-Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-sync/addonutils.js");
+Cu.import("resource://services-sync/engines/addons.js");
 
 const HTTP_PORT = 8888;
 
@@ -52,12 +53,6 @@ function createAndStartHTTPServer(port) {
 
     server.registerFile("/search/guid:missing-xpi%40tests.mozilla.org",
                         do_get_file("missing-xpi-search.xml"));
-
-    server.registerFile("/search/guid:rewrite%40tests.mozilla.org",
-                        do_get_file("rewrite-search.xml"));
-
-    server.registerFile("/search/guid:missing-sourceuri%40tests.mozilla.org",
-                        do_get_file("missing-sourceuri.xml"));
 
     server.start(port);
 
@@ -409,64 +404,6 @@ add_test(function test_ignore_hotfixes() {
   run_next_test();
 });
 
-add_test(function test_ignore_untrusted_source_uris() {
-  _("Ensures that source URIs from insecure schemes are rejected.");
-
-  Svc.Prefs.set("addons.ignoreRepositoryChecking", false);
-
-  let ioService = Cc["@mozilla.org/network/io-service;1"]
-                  .getService(Ci.nsIIOService);
-
-  const bad = ["http://example.com/foo.xpi",
-               "ftp://example.com/foo.xpi",
-               "silly://example.com/foo.xpi"];
-
-  const good = ["https://example.com/foo.xpi"];
-
-  for each (let s in bad) {
-    let sourceURI = ioService.newURI(s, null, null);
-    let addon = {sourceURI: sourceURI, name: "foo"};
-
-    try {
-      let cb = Async.makeSpinningCallback();
-      store.getInstallFromSearchResult(addon, cb);
-      cb.wait();
-    } catch (ex) {
-      do_check_neq(null, ex);
-      do_check_eq(0, ex.message.indexOf("Insecure source URI"));
-      continue;
-    }
-
-    // We should never get here if an exception is thrown.
-    do_check_true(false);
-  }
-
-  let count = 0;
-  for each (let s in good) {
-    let sourceURI = ioService.newURI(s, null, null);
-    let addon = {sourceURI: sourceURI, name: "foo", id: "foo"};
-
-    // Despite what you might think, we don't get an error in the callback.
-    // The install won't work because the underlying Addon instance wasn't
-    // proper. But, that just results in an AddonInstall that is missing
-    // certain values. We really just care that the callback is being invoked
-    // anyway.
-    let callback = function(error, install) {
-      do_check_eq(null, error);
-      do_check_neq(null, install);
-      do_check_eq(sourceURI.spec, install.sourceURI.spec);
-
-      count += 1;
-
-      if (count >= good.length) {
-        run_next_test();
-      }
-    };
-
-    store.getInstallFromSearchResult(addon, callback);
-  }
-});
-
 add_test(function test_wipe() {
   _("Ensures that wiping causes add-ons to be uninstalled.");
 
@@ -481,65 +418,4 @@ add_test(function test_wipe() {
   Svc.Prefs.reset("addons.ignoreRepositoryChecking");
 
   run_next_test();
-});
-
-add_test(function test_source_uri_rewrite() {
-  _("Ensure that a 'src=api' query string is rewritten to 'src=sync'");
-
-  // This tests for conformance with bug 708134 so server-side metrics aren't
-  // skewed.
-
-  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
-
-  // We resort to monkeypatching because of the API design.
-  let oldFunction = store.__proto__.installAddonFromSearchResult;
-
-  let installCalled = false;
-  store.__proto__.installAddonFromSearchResult =
-    function testInstallAddon(addon, metadata, cb) {
-
-    do_check_eq("http://127.0.0.1:8888/require.xpi?src=sync",
-                addon.sourceURI.spec);
-
-    installCalled = true;
-
-    store.getInstallFromSearchResult(addon, function (error, install) {
-      do_check_eq("http://127.0.0.1:8888/require.xpi?src=sync",
-                  install.sourceURI.spec);
-
-      cb(null, {id: addon.id, addon: addon, install: install});
-    });
-  };
-
-  let server = createAndStartHTTPServer(HTTP_PORT);
-
-  let installCallback = Async.makeSpinningCallback();
-  store.installAddons([{id: "rewrite@tests.mozilla.org"}], installCallback);
-
-  installCallback.wait();
-  do_check_true(installCalled);
-  store.__proto__.installAddonFromSearchResult = oldFunction;
-
-  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
-  server.stop(run_next_test);
-});
-
-add_test(function test_handle_empty_source_uri() {
-  _("Ensure that search results without a sourceURI are properly ignored.");
-
-  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
-
-  let server = createAndStartHTTPServer(HTTP_PORT);
-
-  const ID = "missing-sourceuri@tests.mozilla.org";
-
-  let cb = Async.makeSpinningCallback();
-  store.installAddons([{id: ID}], cb);
-  let result = cb.wait();
-
-  do_check_true("installedIDs" in result);
-  do_check_eq(0, result.installedIDs.length);
-
-  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
-  server.stop(run_next_test);
 });

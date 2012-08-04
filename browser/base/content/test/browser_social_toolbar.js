@@ -23,7 +23,7 @@ function test() {
 var tests = {
   testProfileSet: function(next) {
     let profile = {
-      portrait: "chrome://branding/content/icon48.png",
+      portrait: "https://example.com/portrait.jpg",
       userName: "trickster",
       displayName: "Kuma Lisa",
       profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
@@ -31,7 +31,7 @@ var tests = {
     Social.provider.updateUserProfile(profile);
     // check dom values
     let portrait = document.getElementById("social-statusarea-user-portrait").getAttribute("src");
-    is(portrait, profile.portrait, "portrait is set");
+    is(profile.portrait, portrait, "portrait is set");
     let userButton = document.getElementById("social-statusarea-username");
     ok(!userButton.hidden, "username is visible");
     is(userButton.label, profile.userName, "username is set");

@@ -395,7 +395,7 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
     if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
-      if (!rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+      if (!rs->frame->IsAbsolutelyPositioned()) {
         return false;
       }
     }
@@ -641,20 +641,20 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     return;
   }
 
-  NS_ASSERTION(frame->GetStyleDisplay()->IsAbsolutelyPositioned() ==
-                 disp->IsAbsolutelyPositioned(),
+  NS_ASSERTION(frame->GetStyleDisplay()->IsAbsolutelyPositionedStyle() ==
+                 disp->IsAbsolutelyPositionedStyle(),
                "Unexpected position style");
-  NS_ASSERTION(frame->GetStyleDisplay()->IsFloating() ==
-                 disp->IsFloating(), "Unexpected float style");
+  NS_ASSERTION(frame->GetStyleDisplay()->IsFloatingStyle() ==
+                 disp->IsFloatingStyle(), "Unexpected float style");
   if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    if (disp->IsAbsolutelyPositioned()) {
+    if (disp->IsAbsolutelyPositioned(frame)) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
       //XXXfr hack for making frames behave properly when in overflow container lists
       //      see bug 154892; need to revisit later
       if (frame->GetPrevInFlow())
         frameType = NS_CSS_FRAME_TYPE_BLOCK;
     }
-    else if (disp->IsFloating()) {
+    else if (disp->IsFloating(frame)) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     } else {
       NS_ASSERTION(disp->mDisplay == NS_STYLE_DISPLAY_POPUP,
@@ -663,7 +663,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     }
   }
   else {
-    switch (disp->mDisplay) {
+    switch (GetDisplay()) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
@@ -1088,7 +1088,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
-      if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+      if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the top of the inline box which the placeholder lives in
         // as the hypothetical box's top.
         aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
@@ -1140,7 +1140,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   if (NS_STYLE_DIRECTION_LTR == blockVis->mDirection) {
     // How we determine the hypothetical box depends on whether the element
     // would have been inline-level or block-level
-    if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
       // The placeholder represents the left edge of the hypothetical box
       aHypotheticalBox.mLeft = placeholderOffset.x;
     } else {
@@ -1167,7 +1167,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   } else {
     // The placeholder represents the right edge of the hypothetical box
-    if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
+    if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
       aHypotheticalBox.mRight = placeholderOffset.x;
     } else {
       aHypotheticalBox.mRight = aBlockLeftContentEdge + aBlockContentWidth;
@@ -1608,7 +1608,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
       // not auto-height, use this as the percentage base.  2) If auto-height,
       // keep looking, unless the frame is positioned.
       if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
-        if (rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+        if (rs->frame->IsAbsolutelyPositioned()) {
           break;
         } else {
           continue;
@@ -1694,7 +1694,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
   // special case them here.
   if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE ||
       (frame->GetType() == nsGkAtoms::tableFrame &&
-       frame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
+       frame->IsAbsolutelyPositioned() &&
        (frame->GetParent()->GetStateBits() & NS_FRAME_OUT_OF_FLOW))) {
     // See if the ancestor is block-level or inline-level
     if (NS_FRAME_GET_TYPE(aContainingBlockRS->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
@@ -1897,7 +1897,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     // Compute our offsets if the element is relatively positioned.  We need
     // the correct containing block width and height here, which is why we need
     // to do it after all the quirks-n-such above.
-    if (NS_STYLE_POSITION_RELATIVE == mStyleDisplay->mPosition) {
+    if (mStyleDisplay->IsRelativelyPositioned(frame)) {
       PRUint8 direction = NS_STYLE_DIRECTION_LTR;
       if (cbrs && NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
         direction = NS_STYLE_DIRECTION_RTL;
@@ -2084,6 +2084,9 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
     mComputedPadding.left = presContext->DevPixelsToAppUnits(widget.left);
     needPaddingProp = false;
   }
+  else if (frame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    mComputedPadding.SizeTo(0, 0, 0, 0);
+  }
   else if (aPadding) { // padding is an input arg
     mComputedPadding = *aPadding;
     needPaddingProp = frame->GetStylePadding()->IsWidthDependent();
@@ -2105,6 +2108,9 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
       presContext->DevPixelsToAppUnits(widget.bottom);
     mComputedBorderPadding.left =
       presContext->DevPixelsToAppUnits(widget.left);
+  }
+  else if (frame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    mComputedBorderPadding.SizeTo(0, 0, 0, 0);
   }
   else if (aBorder) {  // border is an input arg
     mComputedBorderPadding = *aBorder;
@@ -2348,6 +2354,11 @@ nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
 bool
 nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
 {
+  // SVG text frames have no margin.
+  if (frame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
+    return false;
+  }
+
   // If style style can provide us the margin directly, then use it.
   const nsStyleMargin *styleMargin = frame->GetStyleMargin();
   bool isWidthDependent = !styleMargin->GetMargin(mComputedMargin);

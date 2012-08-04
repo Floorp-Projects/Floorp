@@ -92,12 +92,6 @@ nsWebShellWindow::nsWebShellWindow(PRUint32 aChromeFlags)
 
 nsWebShellWindow::~nsWebShellWindow()
 {
-  if (mWindow) {
-    mWindow->SetClientData(0);
-    mWindow->Destroy();
-    mWindow = nullptr; // Force release here.
-  }
-
   MutexAutoLock lock(mSPTimerLock);
   if (mSPTimer)
     mSPTimer->Cancel();

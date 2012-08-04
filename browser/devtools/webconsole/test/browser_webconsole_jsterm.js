@@ -52,7 +52,7 @@ function testJSTerm(hud)
   jsterm = hud.jsterm;
 
   jsterm.clearOutput();
-  jsterm.execute("'id=' + $('header').getAttribute('id')");
+  jsterm.execute("'id=' + $('#header').getAttribute('id')");
   checkResult('"id=header"', "$() worked", 1);
   yield;
 

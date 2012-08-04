@@ -11,7 +11,11 @@ let div;
 let editorTestSteps;
 
 function doNextStep() {
-  editorTestSteps.next();
+  try {
+    editorTestSteps.next();
+  } catch(exception) {
+    info("caught:", exception);
+  }
 }
 
 function setupEditorTests()
@@ -214,16 +218,33 @@ function doEditorTestSteps()
 
   yield; // End of Step 7
 
-
   // Step 8: validate that the editor was closed and that the editing was not saved
   ok(!treePanel.editingContext, "Step 8: editor session ended");
   editorVisible = editor.classList.contains("editing");
   ok(!editorVisible, "editor popup hidden");
   is(div.getAttribute("id"), "Hello World", "`id` attribute-value *not* updated");
   is(attrValNode_id.innerHTML, "Hello World", "attribute-value node in HTML panel *not* updated");
+  executeSoon(doNextStep);
 
-  // End of Step 8
-  executeSoon(finishUp);
+  yield; // End of Step 8
+
+  // Step 9: Open the Editor and verify that closing the tree panel does not make the
+  // Inspector go cray-cray.
+  executeSoon(function() {
+    // firing 2 clicks right in a row to simulate a double-click
+    EventUtils.synthesizeMouse(attrValNode_id, 2, 2, {clickCount: 2}, attrValNode_id.ownerDocument.defaultView);
+    doNextStep();
+  });
+
+  yield; // End of Step 9
+
+  ok(treePanel.editingContext, "Step 9: editor session started");
+  editorVisible = editor.classList.contains("editing");
+  ok(editorVisible, "editor popup is visible");
+  executeSoon(function() {
+    InspectorUI.toggleHTMLPanel();
+    finishUp();
+  });
 }
 
 function finishUp() {

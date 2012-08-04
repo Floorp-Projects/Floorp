@@ -402,7 +402,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
         // Fixed slots of non-array objects are required to be initialized.
         // Use the values currently in the template object.
-        size_t nslots = JS_MIN(templateObject->numFixedSlots(), templateObject->slotSpan());
+        size_t nslots = Min(templateObject->numFixedSlots(), templateObject->slotSpan());
         for (unsigned i = 0; i < nslots; i++) {
             storeValue(templateObject->getFixedSlot(i),
                        Address(obj, JSObject::getFixedSlotOffset(i)));

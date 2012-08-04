@@ -3032,7 +3032,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
     if (args.length() == 1) {
         uint16_t code;
-        if (!ValueToUint16(cx, args[0], &code))
+        if (!ToUint16(cx, args[0], &code))
             return JS_FALSE;
         if (StaticStrings::hasUnit(code)) {
             args.rval().setString(cx->runtime->staticStrings.getUnit(code));
@@ -3045,7 +3045,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
         return JS_FALSE;
     for (unsigned i = 0; i < args.length(); i++) {
         uint16_t code;
-        if (!ValueToUint16(cx, args[i], &code)) {
+        if (!ToUint16(cx, args[i], &code)) {
             cx->free_(chars);
             return JS_FALSE;
         }

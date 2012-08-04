@@ -629,7 +629,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             uint32_t len;
             JS_ALWAYS_TRUE(js_GetLengthProperty(cx, replacer, &len));
             if (replacer->isDenseArray())
-                len = JS_MIN(len, replacer->getDenseArrayCapacity());
+                len = Min(len, replacer->getDenseArrayCapacity());
 
             HashSet<jsid> idSet(cx);
             if (!idSet.init(len))
@@ -702,7 +702,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         /* Step 6. */
         double d;
         JS_ALWAYS_TRUE(ToInteger(cx, space, &d));
-        d = JS_MIN(10, d);
+        d = Min(10.0, d);
         if (d >= 1 && !gap.appendN(' ', uint32_t(d)))
             return false;
     } else if (space.isString()) {
@@ -711,7 +711,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         if (!str)
             return false;
         JS::Anchor<JSString *> anchor(str);
-        size_t len = JS_MIN(10, space.toString()->length());
+        size_t len = Min(size_t(10), space.toString()->length());
         if (!gap.append(str->chars(), len))
             return false;
     } else {

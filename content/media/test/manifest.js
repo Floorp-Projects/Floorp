@@ -7,7 +7,7 @@
 var gSmallTests = [
   { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
-  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
   { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh" }
@@ -19,7 +19,7 @@ var gProgressTests = [
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0, size:11069 },
   { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966, size:285310 },
-  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942 },
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942 },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
@@ -40,7 +40,7 @@ var gCloneTests = gSmallTests.concat([
   { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
   // short-video is more like 1s, so if you load this twice you'll get an unexpected duration
   { name:"dynamic_resource.sjs?key=" + cloneKey + "&res1=320x240.ogv&res2=short-video.ogv",
-    type:"video/ogg", duration:0.233 },
+    type:"video/ogg", duration:0.266 },
 ]);
 
 // Used by test_play_twice.  Need one test file per decoder backend, plus
@@ -59,7 +59,7 @@ var gPausedAfterEndedTests = gSmallTests.concat([
 // Test the mozHasAudio property
 var gMozHasAudioTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444, hasAudio:undefined },
-  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942, hasAudio:false },
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942, hasAudio:false },
   { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false },
   { name:"bogus.duh", type:"bogus/duh" }
@@ -128,7 +128,7 @@ var gPlayTests = [
 
   // Test playback/metadata work after a redirect
   { name:"redirect.sjs?domain=mochi.test:8888&file=320x240.ogv",
-    type:"video/ogg", duration:0.233 },
+    type:"video/ogg", duration:0.266 },
 
   // Test playback of a webm file
   { name:"seek.webm", type:"video/webm", duration:3.966 },
@@ -258,7 +258,7 @@ var gSeekTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"audio.wav", type:"audio/x-wav", duration:0.031247 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
-  { name:"320x240.ogv", type:"video/ogg", duration:0.233 },
+  { name:"320x240.ogv", type:"video/ogg", duration:0.266 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
