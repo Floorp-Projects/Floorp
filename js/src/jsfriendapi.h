@@ -745,6 +745,10 @@ typedef void
 extern JS_FRIEND_API(GCSliceCallback)
 SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback);
 
+/* Was the most recent GC run incrementally? */
+extern JS_FRIEND_API(bool)
+WasIncrementalGC(JSRuntime *rt);
+
 /*
  * Signals a good place to do an incremental slice, because the browser is
  * drawing a frame.

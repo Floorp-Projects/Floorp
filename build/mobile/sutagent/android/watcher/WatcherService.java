@@ -50,7 +50,7 @@ public class WatcherService extends Service
     String sPingTarget = "";
     long lDelay = 60000;
     long lPeriod = 300000;
-    int nMaxStrikes = 3; // maximum number of tries before we consider network unreachable
+    int nMaxStrikes = 0; // maximum number of tries before we consider network unreachable (0 means don't check)
     boolean bStartSUTAgent = true;
 
     Process    pProc;
@@ -111,7 +111,7 @@ public class WatcherService extends Service
         this.lDelay = Long.parseLong(sHold.trim());
         sHold = GetIniData("watcher", "period", sIniFile,"300000");
         this.lPeriod = Long.parseLong(sHold.trim());
-        sHold = GetIniData("watcher", "strikes", sIniFile,"3");
+        sHold = GetIniData("watcher", "strikes", sIniFile,"0");
         this.nMaxStrikes = Integer.parseInt(sHold.trim());
         Log.i("Watcher", String.format("Pinging %s after a delay of %s sec, period of %s sec, max number of failed attempts is %s (if max # of failed attempts is 0, then no checking)",
                                        this.sPingTarget, this.lDelay / 1000.0, this.lPeriod / 1000.0, nMaxStrikes));

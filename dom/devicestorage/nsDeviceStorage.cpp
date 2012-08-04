@@ -33,6 +33,7 @@
 #include "nsCRT.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "GeneratedEvents.h"
 
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
@@ -436,92 +437,6 @@ jsval StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
   }
 
   return result;
-}
-
-class nsDOMDeviceStorageChangeEvent : public nsDOMEvent, public nsIDOMDeviceStorageChangeEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-  NS_DECL_NSIDOMDEVICESTORAGECHANGEEVENT
-
-  nsDOMDeviceStorageChangeEvent();
-
-  virtual nsresult InitFromCtor(const nsAString& aType,
-                                JSContext* aCx,
-                                jsval* aVal);
-    
-  NS_IMETHOD Init(const nsAString & aEventTypeArg,
-                  bool aCanBubbleArg,
-                  bool aCancelableArg,
-                  nsAString& aPath,
-                  nsAString& aReason);
-
-private:
-  ~nsDOMDeviceStorageChangeEvent();
-
-protected:
-  nsString mPath;
-  nsString mReason;
-};
-
-DOMCI_DATA(DeviceStorageChangeEvent, nsDOMDeviceStorageChangeEvent)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorageChangeEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorageChangeEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorageChangeEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
-
-NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageChangeEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageChangeEvent, nsDOMEvent)
-
-nsDOMDeviceStorageChangeEvent::nsDOMDeviceStorageChangeEvent()
-  : nsDOMEvent(nullptr, nullptr)
-{ 
-}
-
-nsDOMDeviceStorageChangeEvent::~nsDOMDeviceStorageChangeEvent()
-{
-}
-
-NS_IMETHODIMP
-nsDOMDeviceStorageChangeEvent::Init(const nsAString & aEventTypeArg,
-                                    bool aCanBubbleArg,
-                                    bool aCancelableArg,
-                                    nsAString& aPath,
-                                    nsAString& aReason)
-{
-  nsresult rv = nsDOMEvent::InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mPath = aPath;
-  mReason = aReason;
-  return NS_OK;
-}
-
-nsresult
-nsDOMDeviceStorageChangeEvent::InitFromCtor(const nsAString& aType,
-                                            JSContext* aCx,
-                                            jsval* aVal)
-{
-  mozilla::dom::DeviceStorageChangeEventInit d;
-  nsresult rv = d.Init(aCx, aVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return Init(aType, d.bubbles, d.cancelable, d.path, d.reason);
-}
-
-NS_IMETHODIMP
-nsDOMDeviceStorageChangeEvent::GetPath(nsAString & aPath)
-{
-  aPath = mPath;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceStorageChangeEvent::GetReason(nsAString & aReason)
-{
-  aReason = mReason;
-  return NS_OK;
 }
 
 class DeviceStorageCursorRequest MOZ_FINAL
@@ -1668,16 +1583,18 @@ nsDOMDeviceStorage::Update(const char* aReason, nsIFile* aFile)
   nsAString::size_type len = rootpath.Length() + 1; // +1 for the trailing /
   nsDependentSubstring newPath (fullpath, len, fullpath.Length() - len);
 
-  nsRefPtr<nsDOMDeviceStorageChangeEvent> event = new nsDOMDeviceStorageChangeEvent();
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
+
   nsString reason;
   reason.AssignWithConversion(aReason);
-  rv = event->Init(NS_LITERAL_STRING("change"), true, false, newPath, reason);
+  rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"), true, false, newPath, reason);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMDeviceStorageChangeEvent> e = event.get();
-
   bool ignore;
-  DispatchEvent(e, &ignore);
+  DispatchEvent(ce, &ignore);
   return NS_OK;
 }
 

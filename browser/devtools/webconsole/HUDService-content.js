@@ -523,11 +523,11 @@ function JSTermHelper(aJSTerm)
    * @param string aId
    *        The ID of the element you want.
    * @return nsIDOMNode or null
-   *         The result of calling document.getElementById(aId).
+   *         The result of calling document.querySelector(aSelector).
    */
-  aJSTerm.sandbox.$ = function JSTH_$(aId)
+  aJSTerm.sandbox.$ = function JSTH_$(aSelector)
   {
-    return aJSTerm.window.document.getElementById(aId);
+    return aJSTerm.window.document.querySelector(aSelector);
   };
 
   /**

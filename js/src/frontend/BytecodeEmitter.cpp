@@ -6731,7 +6731,7 @@ frontend::NewSrcNote(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type)
     bce->current->lastNoteOffset = offset;
     if (delta >= SN_DELTA_LIMIT) {
         do {
-            xdelta = JS_MIN(delta, SN_XDELTA_MASK);
+            xdelta = Min(delta, SN_XDELTA_MASK);
             SN_MAKE_XDELTA(sn, xdelta);
             delta -= xdelta;
             index = AllocSrcNote(cx, bce);
@@ -6964,7 +6964,7 @@ frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *n
                 offset -= delta;
                 if (offset == 0)
                     break;
-                delta = JS_MIN(offset, SN_XDELTA_MASK);
+                delta = Min(offset, SN_XDELTA_MASK);
                 sn = bce->main.notes;
             }
         }

@@ -275,7 +275,7 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
     JS_ASSERT(JS_DHASH_MIN_SIZE - (maxAlpha * JS_DHASH_MIN_SIZE) >= 1);
     if (JS_DHASH_MIN_SIZE - (maxAlpha * JS_DHASH_MIN_SIZE) < 1) {
         maxAlpha = (float)
-                   (JS_DHASH_MIN_SIZE - JS_MAX(JS_DHASH_MIN_SIZE / 256, 1))
+                   (JS_DHASH_MIN_SIZE - Max(JS_DHASH_MIN_SIZE / 256, 1))
                    / JS_DHASH_MIN_SIZE;
     }
 
@@ -287,7 +287,7 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
     JS_ASSERT(minAlpha < maxAlpha / 2);
     if (minAlpha >= maxAlpha / 2) {
         size = JS_DHASH_TABLE_SIZE(table);
-        minAlpha = (size * maxAlpha - JS_MAX(size / 256, 1)) / (2 * size);
+        minAlpha = (size * maxAlpha - Max(size / 256, 1U)) / (2 * size);
     }
 
     table->maxAlphaFrac = (uint8_t)(maxAlpha * 256);

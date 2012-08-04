@@ -1,5 +1,9 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services-common/utils.js");
 
 function test_lastUsed() {
   let store = new TabEngine()._store;
@@ -80,7 +84,7 @@ function fakeSessionSvc(url, numtabs) {
       if (numtabs) {
         let tabs = obj.windows[0].tabs;
         for (let i = 0; i < numtabs-1; i++)
-          tabs.push(deepCopy(tabs[0]));
+          tabs.push(TestingUtils.deepCopy(tabs[0]));
       }
       return JSON.stringify(obj);
     }
