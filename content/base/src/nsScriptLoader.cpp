@@ -393,13 +393,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  PRUint32 typeID = nsIProgrammingLanguage::JAVASCRIPT;
   JSVersion version = JSVERSION_DEFAULT;
-  nsAutoString language, type, src;
   nsresult rv = NS_OK;
 
   // Check the type attribute to determine language and version.
   // If type exists, it trumps the deprecated 'language='
+  nsAutoString type;
   aElement->GetScriptType(type);
   if (!type.IsEmpty()) {
     nsContentTypeParser parser(type);
@@ -412,39 +411,35 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       return false;
     }
 
-    if (typeID != nsIProgrammingLanguage::UNKNOWN) {
-      // Get the version string, and ensure the language supports it.
-      nsAutoString versionName;
-      rv = parser.GetParameter("version", versionName);
+    // Get the version string, and ensure the language supports it.
+    nsAutoString versionName;
+    rv = parser.GetParameter("version", versionName);
 
-      if (NS_SUCCEEDED(rv)) {
-        version = nsContentUtils::ParseJavascriptVersion(versionName);
-      } else if (rv != NS_ERROR_INVALID_ARG) {
-        return false;
-      }
+    if (NS_SUCCEEDED(rv)) {
+      version = nsContentUtils::ParseJavascriptVersion(versionName);
+    } else if (rv != NS_ERROR_INVALID_ARG) {
+      return false;
     }
 
-    // Some js specifics yet to be abstracted.
-    if (typeID == nsIProgrammingLanguage::JAVASCRIPT) {
-      nsAutoString value;
-      rv = parser.GetParameter("e4x", value);
-      if (NS_FAILED(rv)) {
-        if (rv != NS_ERROR_INVALID_ARG)
-          return false;
-      } else {
-        if (value.Length() == 1 && value[0] == '1')
-          // This happens in about 2 web pages. Enable E4X no matter what JS
-          // version number was selected.  We do this by turning on the "moar
-          // XML" version bit.  This is OK even if version has
-          // JSVERSION_UNKNOWN (-1).
-          version = js::VersionSetMoarXML(version, true);
+    nsAutoString value;
+    rv = parser.GetParameter("e4x", value);
+    if (NS_SUCCEEDED(rv)) {
+      if (value.Length() == 1 && value[0] == '1') {
+        // This happens in about 2 web pages. Enable E4X no matter what JS
+        // version number was selected.  We do this by turning on the "moar
+        // XML" version bit.  This is OK even if version has
+        // JSVERSION_UNKNOWN (-1).
+        version = js::VersionSetMoarXML(version, true);
       }
+    } else if (rv != NS_ERROR_INVALID_ARG) {
+      return false;
     }
   } else {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
     if (scriptContent->IsHTML()) {
+      nsAutoString language;
       scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
       if (!language.IsEmpty()) {
         // IE, Opera, etc. do not respect language version, so neither should
@@ -459,21 +454,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         }
       }
     }
-  }
-
-  // If we don't know the language, we don't know how to evaluate
-  if (typeID == nsIProgrammingLanguage::UNKNOWN) {
-    return false;
-  }
-  // If not from a chrome document (which is always trusted), we need some way 
-  // of checking the language is "safe".  Currently the only other language 
-  // impl is Python, and that is *not* safe in untrusted code - so fixing 
-  // this isn't a priority.!
-  // See also similar code in nsXULContentSink.cpp
-  if (typeID != nsIProgrammingLanguage::JAVASCRIPT &&
-      !nsContentUtils::IsChromeDoc(mDocument)) {
-    NS_WARNING("Untrusted language called from non-chrome - ignored");
-    return false;
   }
 
   // Step 14. in the HTML5 spec
