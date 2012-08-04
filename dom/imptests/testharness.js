@@ -290,6 +290,14 @@ policies and contribution forms [3].
  *   asserts if called. Used to ensure that some codepath is *not* taken e.g.
  *   an event does not fire.
  *
+ * assert_any(assert_func, actual, expected_array, extra_arg_1, ... extra_arg_N)
+ *   asserts that one assert_func(actual, expected_array_N, extra_arg1, ..., extra_arg_N)
+ *   is true for some expected_array_N in expected_array. This only works for assert_func
+ *   with signature assert_func(actual, expected, args_1, ..., args_N). Note that tests
+ *   with multiple allowed pass conditions are bad practice unless the spec specifically
+ *   allows multiple behaviours. Test authors should not use this method simply to hide 
+ *   UA bugs.
+ *
  * assert_exists(object, property_name, description)
  *   *** deprecated ***
  *   asserts that object has an own property property_name
@@ -442,6 +450,7 @@ policies and contribution forms [3].
         switch (typeof val)
         {
         case "string":
+            val = val.replace("\\", "\\\\");
             for (var i = 0; i < 32; i++)
             {
                 var replace = "\\";
@@ -584,6 +593,13 @@ policies and contribution forms [3].
           * Test if two primitives are equal or two objects
           * are the same object
           */
+        if (typeof actual != typeof expected)
+        {
+            assert(false, "assert_equals", description,
+                          "expected (" + typeof expected + ") ${expected} but got (" + typeof actual + ") ${actual}",
+                          {expected:expected, actual:actual});
+            return;
+        }
         assert(same_value(actual, expected), "assert_equals", description,
                                              "expected ${expected} but got ${actual}",
                                              {expected:expected, actual:actual});
@@ -889,6 +905,27 @@ policies and contribution forms [3].
     }
     expose(assert_unreached, "assert_unreached");
 
+    function assert_any(assert_func, actual, expected_array) 
+    {
+        var args = [].slice.call(arguments, 3)
+        var errors = []
+        var passed = false;
+        forEach(expected_array, 
+                function(expected)
+                {
+                    try {
+                        assert_func.apply(this, [actual, expected].concat(args))
+                        passed = true;
+                    } catch(e) {
+                        errors.push(e.message);
+                    }
+                });
+        if (!passed) {
+            throw new AssertionError(errors.join("\n\n"));
+        }
+    }
+    expose(assert_any, "assert_any");
+
     function Test(name, properties)
     {
         this.name = name;
@@ -977,6 +1014,23 @@ policies and contribution forms [3].
         {
             test_this.step.apply(test_this, [func, this_obj].concat(
                 Array.prototype.slice.call(arguments)));
+        };
+    };
+
+    Test.prototype.step_func_done = function(func, this_obj)
+    {
+        var test_this = this;
+
+        if (arguments.length === 1)
+        {
+            this_obj = test_this;
+        }
+
+        return function()
+        {
+            test_this.step.apply(test_this, [func, this_obj].concat(
+                Array.prototype.slice.call(arguments)));
+            test_this.done();
         };
     };
 
@@ -1520,7 +1574,7 @@ policies and contribution forms [3].
             return '';
         }
         
-        log.appendChild(document.createElement("section"));
+        log.appendChild(document.createElementNS(xhtml_ns, "section"));
         var assertions = has_assertions();
         var html = "<h2>Details</h2><table id='results' " + (assertions ? "class='assertions'" : "" ) + ">"
             + "<thead><tr><th>Result</th><th>Test Name</th>"
