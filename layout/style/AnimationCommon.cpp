@@ -230,6 +230,9 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
   }
 
   nsIFrame* frame = aElement->GetPrimaryFrame();
+  if (aProperty == eCSSProperty_visibility) {
+    return true;
+  }
   if (aProperty == eCSSProperty_opacity) {
     bool enabled = nsLayoutUtils::AreOpacityAnimationsEnabled();
     if (!enabled && sShouldLog) {
