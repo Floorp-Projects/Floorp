@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
       browser.removeEventListener("contextmenu", onContextMenu1, false);
 
       browser.addEventListener("contextmenu", onContextMenu2, false);
-      var shiftMask = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+      var shiftMask = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
       wu.sendMouseEvent("contextmenu", left, top, 2, 1, shiftMask);
       browser.removeEventListener("contextmenu", onContextMenu2, false);
 

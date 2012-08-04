@@ -11,7 +11,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, builtinclass, uuid(b7b54fe0-9983-49bc-bb79-1d8ffcb2260c)]
+[scriptable, builtinclass, uuid(bb7f2758-9a71-4701-984f-eb66f08c4356)]
 interface nsIDOMXULCommandEvent : nsIDOMUIEvent
 {
   /**

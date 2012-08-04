@@ -67,13 +67,13 @@ function test_gestureListener(evt)
   is(evt.delta, test_expectedDelta,
      "evt.delta (" + evt.delta + ") does not match expected value");
 
-  is(evt.shiftKey, (test_expectedModifiers & Components.interfaces.nsIDOMNSEvent.SHIFT_MASK) != 0,
+  is(evt.shiftKey, (test_expectedModifiers & Components.interfaces.nsIDOMEvent.SHIFT_MASK) != 0,
      "evt.shiftKey did not match expected value");
-  is(evt.ctrlKey, (test_expectedModifiers & Components.interfaces.nsIDOMNSEvent.CONTROL_MASK) != 0,
+  is(evt.ctrlKey, (test_expectedModifiers & Components.interfaces.nsIDOMEvent.CONTROL_MASK) != 0,
      "evt.ctrlKey did not match expected value");
-  is(evt.altKey, (test_expectedModifiers & Components.interfaces.nsIDOMNSEvent.ALT_MASK) != 0,
+  is(evt.altKey, (test_expectedModifiers & Components.interfaces.nsIDOMEvent.ALT_MASK) != 0,
      "evt.altKey did not match expected value");
-  is(evt.metaKey, (test_expectedModifiers & Components.interfaces.nsIDOMNSEvent.META_MASK) != 0,
+  is(evt.metaKey, (test_expectedModifiers & Components.interfaces.nsIDOMEvent.META_MASK) != 0,
      "evt.metaKey did not match expected value");
 
   if (evt.type == "MozTapGesture") {
@@ -158,19 +158,19 @@ function test_TestEventListeners()
   e("MozEdgeUIGesture", 0, 0, 0);
 
   // event.shiftKey
-  let modifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+  let modifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.metaKey
-  modifier = Components.interfaces.nsIDOMNSEvent.META_MASK;
+  modifier = Components.interfaces.nsIDOMEvent.META_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.altKey
-  modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK;
+  modifier = Components.interfaces.nsIDOMEvent.ALT_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.ctrlKey
-  modifier = Components.interfaces.nsIDOMNSEvent.CONTROL_MASK;
+  modifier = Components.interfaces.nsIDOMEvent.CONTROL_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 }
 

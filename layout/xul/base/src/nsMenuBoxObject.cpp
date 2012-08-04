@@ -7,7 +7,6 @@
 #include "nsBoxObject.h"
 #include "nsIFrame.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsMenuFrame.h"
@@ -87,12 +86,8 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* a
     return NS_OK;
 
   // if event has already been handled, bail
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
-  if (!domNSEvent)
-    return NS_OK;
-
   bool eventHandled = false;
-  domNSEvent->GetPreventDefault(&eventHandled);
+  aKeyEvent->GetPreventDefault(&eventHandled);
   if (eventHandled)
     return NS_OK;
 

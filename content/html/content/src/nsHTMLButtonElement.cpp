@@ -19,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"

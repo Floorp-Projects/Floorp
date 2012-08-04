@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   /** Test for Bug 409604 **/
 
-  var modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK |
-                 Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+  var modifier = Components.interfaces.nsIDOMEvent.ALT_MASK |
+                 Components.interfaces.nsIDOMEvent.SHIFT_MASK;
   var expectedFocus = "a,c,d,e,f,g,h,i,j,k,l,m,n,p,x,y";
   // XXX the "map" test is causing trouble, see bug 433089
   var focusArray = expectedFocus.split(",");

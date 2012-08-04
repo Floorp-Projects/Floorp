@@ -8,7 +8,7 @@
 
 interface nsIDOMDataTransfer;
 
-[scriptable, builtinclass, uuid(25e7df11-dbfe-4b9e-bd75-35090d913865)]
+[scriptable, builtinclass, uuid(2b3b587d-6426-415f-a6f0-4f86eaa562f1)]
 interface nsIDOMDragEvent : nsIDOMMouseEvent
 {
   readonly attribute nsIDOMDataTransfer dataTransfer;

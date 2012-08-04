@@ -36,8 +36,6 @@
 #include "nsIDOMSVGTitleElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMNSEvent.h"
-#include "nsIDOMNamedNodeMap.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -899,12 +897,10 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
   NS_ENSURE_TRUE(dragEvent, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
-  if (domNSEvent) {
-    bool defaultPrevented;
-    domNSEvent->GetPreventDefault(&defaultPrevented);
-    if (defaultPrevented)
-      return NS_OK;
+  bool defaultPrevented;
+  aEvent->GetPreventDefault(&defaultPrevented);
+  if (defaultPrevented) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDroppedLinkHandler> handler = do_GetService("@mozilla.org/content/dropped-link-handler;1");
@@ -1647,15 +1643,10 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
-
-  if (domNSEvent) {
-    bool isDefaultPrevented = false;
-    domNSEvent->GetPreventDefault(&isDefaultPrevented);
-
-    if (isDefaultPrevented) {
-      return NS_OK;
-    }
+  bool isDefaultPrevented = false;
+  aMouseEvent->GetPreventDefault(&isDefaultPrevented);
+  if (isDefaultPrevented) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDOMEventTarget> targetNode;
@@ -1679,8 +1670,6 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIContextMenuInfo> menuInfo;
   if (menuListener2) {
     menuInfoImpl = new nsContextMenuInfo;
-    if (!menuInfoImpl)
-      return NS_ERROR_OUT_OF_MEMORY;
     menuInfo = menuInfoImpl; 
   }
 

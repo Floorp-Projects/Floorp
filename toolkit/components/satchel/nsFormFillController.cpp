@@ -34,7 +34,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
 #include "nsIDOMNSEditableElement.h"
-#include "nsIDOMNSEvent.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 
