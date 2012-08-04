@@ -23,7 +23,8 @@ import android.widget.RelativeLayout;
 
 import java.util.HashSet;
 
-public class DoorHangerPopup extends PopupWindow implements GeckoEventListener {
+public class DoorHangerPopup extends PopupWindow
+                             implements GeckoEventListener, Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoDoorHangerPopup";
 
     private GeckoApp mActivity;
@@ -49,11 +50,13 @@ public class DoorHangerPopup extends PopupWindow implements GeckoEventListener {
 
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", this);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", this);
+        Tabs.registerOnTabsChangedListener(this);
     }
 
     void destroy() {
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", this);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", this);
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public void handleMessage(String event, JSONObject geckoObject) {
@@ -82,6 +85,34 @@ public class DoorHangerPopup extends PopupWindow implements GeckoEventListener {
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
+    }
+
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        switch(msg) {
+            case CLOSED:
+                // Remove any doorhangers for a tab when it's closed
+                for (DoorHanger dh : mDoorHangers) {
+                    if (dh.getTabId() == tab.getId())
+                        removeDoorHanger(dh);
+                }
+                break;
+
+            case LOCATION_CHANGE:
+                // Only remove doorhangers if the popup is hidden or if we're navigating to a new URL
+                if (!isShowing() || !data.equals(tab.getURL()))
+                    removeTransientDoorHangers(tab.getId());
+
+                // Update the popup if the location change was on the current tab
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    updatePopup();
+                break;
+
+            case SELECTED:
+                // Always update the popup when a new tab is selected. This will cover cases
+                // where a different tab was closed, since we always need to select a new tab.
+                updatePopup();
+                break;
         }
     }
 

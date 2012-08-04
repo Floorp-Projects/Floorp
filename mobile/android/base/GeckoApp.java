@@ -213,7 +213,6 @@ abstract public class GeckoApp
                     break;
                 // Fall through...
             case SELECTED:
-                updatePopups(tab);
                 invalidateOptionsMenu();
                 break;
         }
@@ -663,10 +662,6 @@ abstract public class GeckoApp
     public void hideFormAssistPopup() {
         if (mFormAssistPopup != null)
             mFormAssistPopup.hide();
-    } 
-
-    void updatePopups(final Tab tab) {
-        mDoorHangerPopup.updatePopup();
     }
 
     void handleLocationChange(final int tabId, final String uri,
@@ -675,10 +670,6 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
-
-        // Only remove doorhangers if the popup is hidden or if we're navigating to a new URL
-        if (!mDoorHangerPopup.isShowing() || !uri.equals(tab.getURL()))
-            mDoorHangerPopup.removeTransientDoorHangers(tabId);
 
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
@@ -701,7 +692,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOCATION_CHANGE);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOCATION_CHANGE, uri);
             }
         });
     }
