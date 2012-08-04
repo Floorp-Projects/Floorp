@@ -6,11 +6,11 @@
 
 
 
-DEPTH		= @DEPTH@
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
-relativesrcdir  = @relativesrcdir@
+relativesrcdir  = js/jsd
 
 include $(DEPTH)/config/autoconf.mk
 
