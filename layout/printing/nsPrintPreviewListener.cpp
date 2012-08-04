@@ -11,7 +11,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
@@ -139,8 +139,9 @@ NS_IMETHODIMP
 nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target;
-  if (aEvent)
-    aEvent->GetOriginalTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(aEvent);
+  if (nsEvent)
+    nsEvent->GetOriginalTarget(getter_AddRefs(target));
   nsCOMPtr<nsIContent> content(do_QueryInterface(target));
   if (content && !content->IsXUL()) {
     eEventAction action = ::GetActionForEvent(aEvent);

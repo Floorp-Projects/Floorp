@@ -49,6 +49,7 @@ class nsIDOMEvent;
 class nsIDOMEventListener;
 class nsIDOMEventTarget;
 class nsIDOMKeyEvent;
+class nsIDOMNSEvent;
 class nsIDOMNode;
 class nsIDOMRange;
 class nsIDocument;
@@ -797,7 +798,7 @@ public:
       Init(aSelf, aIsTrusted);
     }
 
-    HandlingTrustedAction(nsEditor* aSelf, nsIDOMEvent* aEvent);
+    HandlingTrustedAction(nsEditor* aSelf, nsIDOMNSEvent* aEvent);
 
     ~HandlingTrustedAction()
     {

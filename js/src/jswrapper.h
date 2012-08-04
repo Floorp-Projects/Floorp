@@ -370,9 +370,6 @@ UnwrapOneChecked(JSContext *cx, JSObject *obj);
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(RawObject obj);
 
-JSObject *
-NewDeadProxyObject(JSContext *cx, JSObject *parent);
-
 void
 NukeCrossCompartmentWrapper(JSObject *wrapper);
 

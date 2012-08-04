@@ -49,8 +49,7 @@ bindinggen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
-MOCHITEST_FILES := \
-  test_bug773326.html \
+MOCHITEST_FILES = \
   test_enums.html \
   test_integers.html \
   test_interfaceToString.html \
