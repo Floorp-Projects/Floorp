@@ -17,14 +17,6 @@ XPIDL_MODULE = url-classifier
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
-# Normally the "client ID" sent in updates is appinfo.name, but for
-# official Firefox releases from Mozilla we use a special identifier.
-ifdef MOZILLA_OFFICIAL
-ifdef MOZ_PHOENIX
-DEFINES += -DUSE_HISTORIC_SAFEBROWSING_ID=1
-endif
-endif
-
 XPIDLSRCS = \
   nsIUrlClassifierDBService.idl \
   nsIUrlClassifierHashCompleter.idl \
@@ -56,10 +48,6 @@ EXTRA_COMPONENTS = \
 EXTRA_PP_COMPONENTS = \
   nsUrlClassifierLib.js \
   nsUrlClassifierListManager.js \
-  $(NULL)
-
-EXTRA_PP_JS_MODULES = \
-  SafeBrowsing.jsm \
   $(NULL)
 
 ifdef ENABLE_TESTS

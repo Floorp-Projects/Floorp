@@ -265,25 +265,14 @@ _BROWSER_FILES = \
                  social_worker.js \
                  $(NULL)
 
-ifdef MOZ_SAFE_BROWSING
-_BROWSER_FILES += \
-  browser_bug400731.js
-  $(NULL)
-endif
-
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \
-  browser_bug462289.js \
-  $(NULL)
-ifdef MOZ_SAFE_BROWSING
-_BROWSER_FILES += \
-  browser_bug415846.js \
-  $(NULL)
-endif
+		browser_bug462289.js \
+		$(NULL)
 else
 _BROWSER_FILES += \
-  browser_bug565667.js \
-  $(NULL)
+		browser_bug565667.js \
+		$(NULL)
 
 # TODO: Activate after carbon test plugin lands, bug 628651
 # 		browser_maconly_carbon_mismatch_plugin.js \
