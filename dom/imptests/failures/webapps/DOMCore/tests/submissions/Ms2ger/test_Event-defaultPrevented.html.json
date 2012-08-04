@@ -1,0 +1,3 @@
+{
+  "initEvent should unset defaultPrevented.": true
+}
