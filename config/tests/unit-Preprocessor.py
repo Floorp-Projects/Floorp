@@ -172,11 +172,11 @@ BAR
   
   def test_filter_attemptSubstitution(self):
     f = NamedIO('filter_attemptSubstitution.in', '''#filter attemptSubstitution
-P@VAR@ASS
+@PASS@
 #unfilter attemptSubstitution
 ''')
     self.pp.do_include(f)
-    self.assertEqual(self.pp.out.getvalue(), "PASS\n")
+    self.assertEqual(self.pp.out.getvalue(), "@PASS@\n")
   
   def test_filter_emptyLines(self):
     f = NamedIO('filter_emptyLines.in', '''lines with a
