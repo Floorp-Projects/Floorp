@@ -212,9 +212,9 @@ abstract public class BrowserApp extends GeckoApp
         super.finishProfileMigration();
     }
 
+    // We don't want to call super.initializeChrome in here because we don't
+    // want to create two DoorHangerPopup instances.
     @Override void initializeChrome(String uri, Boolean isExternalURL) {
-        super.initializeChrome(uri, isExternalURL);
-
         mBrowserToolbar.updateBackButton(false);
         mBrowserToolbar.updateForwardButton(false);
 
@@ -244,6 +244,8 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mBrowserToolbar.setProgressVisibility(isExternalURL || (mRestoreMode != GeckoAppShell.RESTORE_NONE));
+
+        mDoorHangerPopup = new DoorHangerPopup(this, mBrowserToolbar.mFavicon);
     }
 
     void toggleChrome(final boolean aShow) {
@@ -434,17 +436,6 @@ abstract public class BrowserApp extends GeckoApp
                 }
             }
         });
-    }
-
-    /* Doorhanger notification methods */
-    @Override
-    void updatePopups(final Tab tab) {
-        mDoorHangerPopup.updatePopup(mBrowserToolbar.mFavicon);
-    }
-
-    @Override
-    void addDoorHanger(String message, String value, JSONArray buttons, Tab tab, JSONObject options) {
-        mDoorHangerPopup.addDoorHanger(message, value, buttons, tab, options, mBrowserToolbar.mFavicon);
     }
 
     /* Favicon methods */
