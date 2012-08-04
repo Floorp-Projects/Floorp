@@ -1,3 +1,0 @@
-{
-  "Calling initEvent must not have an effect during dispatching.": true
-}
