@@ -352,6 +352,50 @@ public:
   }
 };
 
+static inline bool
+ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
+{
+  MOZ_ASSERT(!aType.IsEmpty());
+  MOZ_ASSERT(aVersion);
+  MOZ_ASSERT(*aVersion == JSVERSION_DEFAULT);
+
+  nsContentTypeParser parser(aType);
+
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!nsContentUtils::IsJavascriptMIMEType(mimeType)) {
+    return false;
+  }
+
+  // Get the version string, and ensure the language supports it.
+  nsAutoString versionName;
+  rv = parser.GetParameter("version", versionName);
+
+  if (NS_SUCCEEDED(rv)) {
+    *aVersion = nsContentUtils::ParseJavascriptVersion(versionName);
+  } else if (rv != NS_ERROR_INVALID_ARG) {
+    return false;
+  }
+
+  nsAutoString value;
+  rv = parser.GetParameter("e4x", value);
+  if (NS_SUCCEEDED(rv)) {
+    if (value.Length() == 1 && value[0] == '1') {
+      // This happens in about 2 web pages. Enable E4X no matter what JS
+      // version number was selected.  We do this by turning on the "moar
+      // XML" version bit.  This is OK even if version has
+      // JSVERSION_UNKNOWN (-1).
+      *aVersion = js::VersionSetMoarXML(*aVersion, true);
+    }
+  } else if (rv != NS_ERROR_INVALID_ARG) {
+    return false;
+  }
+
+  return true;
+}
+
 bool
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 {
@@ -394,46 +438,13 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   JSVersion version = JSVERSION_DEFAULT;
-  nsresult rv = NS_OK;
 
   // Check the type attribute to determine language and version.
   // If type exists, it trumps the deprecated 'language='
   nsAutoString type;
   aElement->GetScriptType(type);
   if (!type.IsEmpty()) {
-    nsContentTypeParser parser(type);
-
-    nsAutoString mimeType;
-    rv = parser.GetType(mimeType);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    if (!nsContentUtils::IsJavascriptMIMEType(mimeType)) {
-      return false;
-    }
-
-    // Get the version string, and ensure the language supports it.
-    nsAutoString versionName;
-    rv = parser.GetParameter("version", versionName);
-
-    if (NS_SUCCEEDED(rv)) {
-      version = nsContentUtils::ParseJavascriptVersion(versionName);
-    } else if (rv != NS_ERROR_INVALID_ARG) {
-      return false;
-    }
-
-    nsAutoString value;
-    rv = parser.GetParameter("e4x", value);
-    if (NS_SUCCEEDED(rv)) {
-      if (value.Length() == 1 && value[0] == '1') {
-        // This happens in about 2 web pages. Enable E4X no matter what JS
-        // version number was selected.  We do this by turning on the "moar
-        // XML" version bit.  This is OK even if version has
-        // JSVERSION_UNKNOWN (-1).
-        version = js::VersionSetMoarXML(version, true);
-      }
-    } else if (rv != NS_ERROR_INVALID_ARG) {
-      return false;
-    }
+    NS_ENSURE_TRUE(ParseTypeAttribute(type, &version), false);
   } else {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
@@ -457,7 +468,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   // Step 14. in the HTML5 spec
-
+  nsresult rv = NS_OK;
   nsRefPtr<nsScriptLoadRequest> request;
   if (aElement->GetScriptExternal()) {
     // external script
