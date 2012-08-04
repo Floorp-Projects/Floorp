@@ -25,6 +25,7 @@ fi
 
 # Common makefiles used by everyone
 add_makefiles "
+mozilla-config.h
 Makefile
 build/Makefile
 build/pgo/Makefile
