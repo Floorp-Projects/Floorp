@@ -2806,8 +2806,13 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
     size_t beglen = strlen(begin);
     size_t taglen = 1 + beglen + 1;                     /* '<begin' + '>' */
     if (param) {
-        size_t parlen = param->length();
-        taglen += 2 + parlen + 1;                       /* '="param"' */
+        size_t numChars = param->length();
+        const jschar *parchars = param->chars();
+        for (size_t i = 0, parlen = numChars; i < parlen; ++i) {
+            if (parchars[i] == '"')
+                numChars += 5;                          /* len(&quot;) - len(") */
+        }
+        taglen += 2 + numChars + 1;                     /* '="param"' */
     }
     size_t endlen = strlen(end);
     taglen += str->length() + 2 + endlen + 1;           /* 'str</end>' */
@@ -2824,7 +2829,14 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
     if (param) {
         sb.infallibleAppend('=');
         sb.infallibleAppend('"');
-        MOZ_ALWAYS_TRUE(sb.append(param));
+        const jschar *parchars = param->chars();
+        for (size_t i = 0, parlen = param->length(); i < parlen; ++i) {
+            if (parchars[i] != '"') {
+                sb.infallibleAppend(parchars[i]);
+            } else {
+                MOZ_ALWAYS_TRUE(sb.append("&quot;"));
+            }
+        }
         sb.infallibleAppend('"');
     }
     
