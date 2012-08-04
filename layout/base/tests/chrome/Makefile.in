@@ -40,7 +40,6 @@ MOCHITEST_CHROME_FILES = \
 	     printpreview_bug396024_helper.xul \
 	test_printpreview_bug482976.xul \
 	     printpreview_bug482976_helper.xul \
-	test_scrolling_repaints.html \
 	test_transformed_scrolling_repaints.html \
 	test_transformed_scrolling_repaints_2.html \
 	$(NULL)
