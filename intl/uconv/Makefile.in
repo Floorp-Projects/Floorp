@@ -15,7 +15,7 @@
 # 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
 #
 
-DEPTH		= ../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@

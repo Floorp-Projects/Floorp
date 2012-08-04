@@ -9,7 +9,7 @@
 # Build in docshell/build to relink.
 #
 
-DEPTH     = ..
+DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
