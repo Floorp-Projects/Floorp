@@ -12,11 +12,11 @@
 #
 
 # Note: DEPTH should be set to the relative path to mozilla/
-DEPTH		= ../../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = testing/xpcshell/example
+relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 

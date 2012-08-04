@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH = ../../..
+DEPTH = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -40,7 +40,7 @@ include $(topsrcdir)/config/rules.mk
 ABS_SRCDIR := $(call core_abspath,$(srcdir))
 ifeq ($(OS_ARCH),WINNT)
 
-ABS_DEPTH := $(call core_abspath,$(DEPTH))
+ABS_DEPTH := @DEPTH@
 
 check::
 	cd $(srcdir)/test; $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) shell.js 

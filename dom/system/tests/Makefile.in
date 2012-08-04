@@ -1,8 +1,8 @@
-DEPTH           = ../../..
+DEPTH           = @DEPTH@
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
-relativesrcdir  = dom/system/tests
+relativesrcdir  = @relativesrcdir@
 
 MODULE          = test_domsystem
 MOCHITEST_CHROME_FILES = \

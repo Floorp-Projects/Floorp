@@ -5,7 +5,7 @@
 
 # Blatantly copied from xpcom/tests/component.
 
-DEPTH		= ../../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
