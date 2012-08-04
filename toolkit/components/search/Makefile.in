@@ -9,9 +9,14 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = toolkitsearch.manifest
-EXTRA_PP_COMPONENTS = nsSearchService.js \
-	nsSearchSuggestions.js
+EXTRA_COMPONENTS = \
+  toolkitsearch.manifest \
+  nsSearchSuggestions.js \
+  $(NULL)
+
+EXTRA_PP_COMPONENTS = \
+  nsSearchService.js \
+  $(NULL)
 
 DEFINES += -DMOZ_DISTRIBUTION_ID=$(MOZ_DISTRIBUTION_ID)
 

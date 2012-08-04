@@ -545,7 +545,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     return NS_ERROR_FAILURE;
   }
 
-  // Make sure that nsIDOMEvent::target and nsIDOMEvent::originalTarget
+  // Make sure that nsIDOMEvent::target and nsIDOMNSEvent::originalTarget
   // point to the last item in the chain.
   if (!aEvent->target) {
     // Note, CurrentTarget() points always to the object returned by
@@ -682,8 +682,10 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     if (innerEvent->flags & NS_EVENT_DISPATCHED) {
       innerEvent->target = nullptr;
       innerEvent->originalTarget = nullptr;
-    } else {
-      aDOMEvent->GetIsTrusted(&dontResetTrusted);
+    }
+    else {
+      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDOMEvent));
+      nsevent->GetIsTrusted(&dontResetTrusted);
     }
 
     if (!dontResetTrusted) {

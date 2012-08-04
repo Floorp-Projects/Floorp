@@ -88,7 +88,9 @@ DIRS += \
   build \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = nsDefaultCLH.js
-EXTRA_COMPONENTS = nsDefaultCLH.manifest
+EXTRA_COMPONENTS = \
+  nsDefaultCLH.manifest \
+  nsDefaultCLH.js \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

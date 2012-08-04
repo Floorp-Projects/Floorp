@@ -947,7 +947,6 @@ ContainerState::CreateOrRecycleColorLayer()
     // We will reapply any necessary clipping.
     layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
-    layer->SetScale(1.0f, 1.0f);
   } else {
     // Create a new layer
     layer = mManager->CreateColorLayer();
@@ -971,7 +970,6 @@ ContainerState::CreateOrRecycleImageLayer()
     // We will reapply any necessary clipping.
     layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
-    layer->SetScale(1.0f, 1.0f);
   } else {
     // Create a new layer
     layer = mManager->CreateImageLayer();
@@ -1063,7 +1061,6 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     // We will reapply any necessary clipping.
     layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
-    layer->SetScale(1.0f, 1.0f);
 
     data = static_cast<ThebesDisplayItemLayerUserData*>
         (layer->GetUserData(&gThebesDisplayItemLayerUserData));
@@ -1118,7 +1115,6 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
-  layer->SetScale(1.0f, 1.0f);
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_JAVA_COMPOSITOR
@@ -1270,10 +1266,8 @@ ContainerState::PopThebesLayerData()
       nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer();
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
-      // The layer's current transform is applied first, then the result is scaled.
-      gfx3DMatrix transform = imageLayer->GetTransform()*
-        gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-      imageLayer->SetBaseTransform(transform);
+      imageLayer->SetPostScale(mParameters.mXScale,
+                               mParameters.mYScale);
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
@@ -1286,8 +1280,8 @@ ContainerState::PopThebesLayerData()
 
       // Copy transform
       colorLayer->SetBaseTransform(data->mLayer->GetBaseTransform());
-      colorLayer->SetScale(data->mLayer->GetXScale(), data->mLayer->GetYScale());
-      
+      colorLayer->SetPostScale(data->mLayer->GetPostXScale(), data->mLayer->GetPostYScale());
+
       // Clip colorLayer to its visible region, since ColorLayers are
       // allowed to paint outside the visible region. Here we rely on the
       // fact that uniform display items fill rectangles; obviously the
@@ -1782,10 +1776,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // If it's not a ContainerLayer, we need to apply the scale transform
       // ourselves.
       if (!ownLayer->AsContainerLayer()) {
-        // The layer's current transform is applied first, then the result is scaled.
-        gfx3DMatrix transform = ownLayer->GetTransform()*
-            gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-        ownLayer->SetBaseTransform(transform);
+        ownLayer->SetPostScale(mParameters.mXScale,
+                               mParameters.mYScale);
       }
 
       ownLayer->SetIsFixedPosition(
@@ -2129,9 +2121,10 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     scale = gfxSize(1.0, 1.0);
   }
 
-  // Apply the inverse of our resolution-scale before the rest of our transform
-  transform = gfx3DMatrix::ScalingMatrix(1.0/scale.width, 1.0/scale.height, 1.0)*transform;
+  // Store the inverse of our resolution-scale on the layer
   aLayer->SetBaseTransform(transform);
+  aLayer->SetPreScale(1.0f/float(scale.width),
+                      1.0f/float(scale.height));
 
   FrameLayerBuilder::ContainerParameters
     result(scale.width, scale.height, aIncomingScale);
@@ -2338,7 +2331,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
     Clip clip;
     state.ProcessDisplayItems(aChildren, clip, stateFlags);
- 
+
     // Set CONTENT_COMPONENT_ALPHA if any of our children have it.
     // This is suboptimal ... a child could have text that's over transparent
     // pixels in its own layer, but over opaque parts of previous siblings.

@@ -99,6 +99,7 @@
 #include "nsEventDispatcher.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsCCUncollectableMarker.h"
 
 namespace css = mozilla::css;
@@ -1135,18 +1136,19 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                 // pointed to by the command attribute.  The new event's
                 // sourceEvent will be the original command event that we're
                 // handling.
-                nsCOMPtr<nsIDOMEvent> domEvent = aVisitor.mDOMEvent;
-                while (domEvent) {
+                nsCOMPtr<nsIDOMNSEvent> nsevent =
+                    do_QueryInterface(aVisitor.mDOMEvent);
+                while (nsevent) {
                     nsCOMPtr<nsIDOMEventTarget> oTarget;
-                    domEvent->GetOriginalTarget(getter_AddRefs(oTarget));
+                    nsevent->GetOriginalTarget(getter_AddRefs(oTarget));
                     NS_ENSURE_STATE(!SameCOMIdentity(oTarget, commandContent));
+                    nsCOMPtr<nsIDOMEvent> tmp;
                     nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
-                        do_QueryInterface(domEvent);
+                        do_QueryInterface(nsevent);
                     if (commandEvent) {
-                        commandEvent->GetSourceEvent(getter_AddRefs(domEvent));
-                    } else {
-                        domEvent = NULL;
+                        commandEvent->GetSourceEvent(getter_AddRefs(tmp));
                     }
+                    nsevent = do_QueryInterface(tmp);
                 }
 
                 nsInputEvent* orig =

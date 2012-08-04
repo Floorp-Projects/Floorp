@@ -58,6 +58,7 @@
 #include "nsGkAtoms.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsITextControlFrame.h"
 #include "nsIForm.h"

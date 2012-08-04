@@ -26,8 +26,8 @@ public:
   nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                      nsMapRuleToAttributesFunc aMapRuleFunc);
 
-  // Do not return null.
   void* operator new(size_t size, PRUint32 aAttrCount = 1) CPP_THROW_NEW;
+
   nsMappedAttributes* Clone(bool aWillAddAttr);
 
   NS_DECL_ISUPPORTS
