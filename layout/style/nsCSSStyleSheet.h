@@ -48,7 +48,6 @@ class nsCSSStyleSheetInner {
 public:
   friend class nsCSSStyleSheet;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 private:
   nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
@@ -282,12 +281,9 @@ protected:
 
   friend class nsMediaList;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
   friend struct ChildSheetListBuilder;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)
-
-nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 
 #endif /* !defined(nsCSSStyleSheet_h_) */
