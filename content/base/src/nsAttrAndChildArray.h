@@ -127,10 +127,11 @@ private:
   PRUint32 NonMappedAttrCount() const;
   PRUint32 MappedAttrCount() const;
 
-  nsresult GetModifiableMapped(nsMappedAttributeElement* aContent,
-                               nsHTMLStyleSheet* aSheet,
-                               bool aWillAddAttr,
-                               nsMappedAttributes** aModifiable);
+  // Returns a non-null zero-refcount object.
+  nsMappedAttributes*
+  GetModifiableMapped(nsMappedAttributeElement* aContent,
+                      nsHTMLStyleSheet* aSheet,
+                      bool aWillAddAttr);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
   PRUint32 AttrSlotsSize() const
