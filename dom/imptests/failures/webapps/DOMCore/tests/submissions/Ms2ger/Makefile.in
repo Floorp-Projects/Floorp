@@ -20,7 +20,6 @@ _FILES = \
   test_Element-children.html.json \
   test_Event-constructors.html.json \
   test_Event-defaultPrevented.html.json \
-  test_Event-initEvent.html.json \
   test_EventTarget-dispatchEvent.html.json \
   test_Node-appendChild.html.json \
   test_Node-constants.html.json \
