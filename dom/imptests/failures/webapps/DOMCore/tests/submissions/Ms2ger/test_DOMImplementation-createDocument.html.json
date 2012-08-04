@@ -1,0 +1,11 @@
+{
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 16": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 31": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 46": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 61": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 76": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 92": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 93": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 95": true,
+  "DOMImplementation.createDocument(namespaceURI, qualifiedName, doctype) 97": true
+}

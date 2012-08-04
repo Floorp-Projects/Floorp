@@ -1,0 +1,6 @@
+{
+  "AttrExodus": true,
+  "First set attribute is returned by setAttribute": true,
+  "First set attribute is returned with mapped attribute set first": true,
+  "setAttribute should throw a NAMESPACE_ERR when qualifiedName starts with 'xmlns'": true
+}
