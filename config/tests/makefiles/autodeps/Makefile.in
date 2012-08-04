@@ -11,7 +11,7 @@ PYTEST = $(PYTHON) -E
 # python -B not supported by older interpreters
 export PYTHONDONTWRITEBYTECODE=1
 
-DEPTH     = ../../../..
+DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@

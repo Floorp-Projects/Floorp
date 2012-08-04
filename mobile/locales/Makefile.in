@@ -12,11 +12,11 @@
 #     based on current locale.
 #####################################################################################
 
-DEPTH     = ../..
+DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
-relativesrcdir = mobile/locales
+relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
