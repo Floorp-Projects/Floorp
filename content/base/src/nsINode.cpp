@@ -437,11 +437,10 @@ nsINode::RemoveChild(nsINode *aOldChild)
   }
 
   if (IsNodeOfType(eDATA_NODE)) {
-    // aOldChild can't be one of our children.
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  if (aOldChild->GetNodeParent() == this) {
+  if (aOldChild && aOldChild->GetNodeParent() == this) {
     nsContentUtils::MaybeFireNodeRemoved(aOldChild, this, OwnerDoc());
   }
 

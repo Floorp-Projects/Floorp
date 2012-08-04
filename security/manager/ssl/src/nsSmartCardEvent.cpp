@@ -5,6 +5,7 @@
 #include "nsSmartCardEvent.h"
 #include "nsIDOMSmartCardEvent.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsXPCOM.h"
 
@@ -22,6 +23,7 @@ nsSmartCardEvent::~nsSmartCardEvent()
 NS_INTERFACE_MAP_BEGIN(nsSmartCardEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMSmartCardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSmartCardEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SmartCardEvent)
 NS_INTERFACE_MAP_END
@@ -34,8 +36,14 @@ NS_IMPL_RELEASE(nsSmartCardEvent)
 //
 NS_IMETHODIMP nsSmartCardEvent::Init(nsIDOMEvent * aInner)
 {
+  nsresult rv;
+
   NS_ASSERTION(aInner, "SmartCardEvent initialized with a null Event");
   mInner = aInner;
+  mNSEvent = do_QueryInterface(mInner, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   return mInner->SetTrusted(true);
 }
 
@@ -46,7 +54,6 @@ NS_IMETHODIMP nsSmartCardEvent::GetTokenName(nsAString &aTokenName)
   return NS_OK;
 }
 
-// nsIDOMEvent maps
 NS_IMETHODIMP nsSmartCardEvent::DuplicatePrivateData(void)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
@@ -92,43 +99,45 @@ nsSmartCardEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   return mInner->Deserialize(aMsg, aIter);
 }
 
+// IDOMNSEvent maps
 NS_IMETHODIMP nsSmartCardEvent::GetOriginalTarget(nsIDOMEventTarget * *aOriginalTarget)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->GetOriginalTarget(aOriginalTarget);
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->GetOriginalTarget(aOriginalTarget);
 }
 
 NS_IMETHODIMP nsSmartCardEvent::GetExplicitOriginalTarget(nsIDOMEventTarget * *aTarget)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->GetExplicitOriginalTarget(aTarget);
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->GetExplicitOriginalTarget(aTarget);
 }
 
 NS_IMETHODIMP nsSmartCardEvent::PreventBubble(void)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->PreventBubble();
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->PreventBubble();
 }
 
 NS_IMETHODIMP nsSmartCardEvent::PreventCapture(void)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->PreventCapture();
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->PreventCapture();
 }
 
 NS_IMETHODIMP nsSmartCardEvent::GetIsTrusted(bool *aIsTrusted)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->GetIsTrusted(aIsTrusted);
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->GetIsTrusted(aIsTrusted);
 }
 
 NS_IMETHODIMP
 nsSmartCardEvent::GetPreventDefault(bool* aReturn)
 {
-  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
-  return mInner->GetPreventDefault(aReturn);
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->GetPreventDefault(aReturn);
 }
 
+// IDOMEvent maps
 NS_IMETHODIMP nsSmartCardEvent::GetType(nsAString & aType)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");

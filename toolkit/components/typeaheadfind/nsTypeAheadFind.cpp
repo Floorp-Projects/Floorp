@@ -17,6 +17,7 @@
 #include "nsIEditorDocShell.h"
 #include "nsISimpleEnumerator.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsString.h"

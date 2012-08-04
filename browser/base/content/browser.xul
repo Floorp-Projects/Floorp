@@ -658,6 +658,7 @@
       <toolbaritem id="social-toolbar-button"
                    class="toolbarbutton-1 chromeclass-toolbar-additional"
                    removable="false"
+                   pack="center"
                    title="&socialToolbar.title;"
                    hidden="true">
         <hbox id="social-toolbar-button-box" class="social-statusarea-container">

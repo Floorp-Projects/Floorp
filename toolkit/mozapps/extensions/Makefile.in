@@ -26,26 +26,29 @@ XPIDLSRCS = \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-  extensions.manifest \
   nsBlocklistService.js \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  extensions.manifest \
   addonManager.js \
   amContentHandler.js \
   amWebInstallListener.js \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  AddonLogging.jsm \
   AddonManager.jsm \
-  AddonRepository.jsm \
-  AddonUpdateChecker.jsm \
-  PluginProvider.jsm \
   XPIProvider.jsm \
   XPIProviderUtils.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
+  AddonLogging.jsm \
+  AddonRepository.jsm \
+  AddonUpdateChecker.jsm \
   ChromeManifestParser.jsm \
   LightweightThemeManager.jsm \
+  PluginProvider.jsm \
   SpellCheckDictionaryBootstrap.js \
   $(NULL)
 

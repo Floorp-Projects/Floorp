@@ -2632,3 +2632,120 @@ stack[anonid=browserStack][responsivemode] {
   background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
   border-radius: 1px;
 }
+
+#social-toolbar-button {
+  -moz-appearance: toolbarbutton;
+}
+
+/* favicon for the service */
+#social-provider-image {
+  -moz-appearance: none;
+  border: none;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 2px 5px;
+  margin: 0;
+  background: transparent;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+#social-provider-image > .button-box > .box-inherit > .button-icon {
+  max-height: 16px;
+  max-width: 16px;
+}
+
+#social-provider-image > .button-box {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+
+#social-provider-image > .button-box > .button-menu-dropmarker {
+  display: none;
+}
+
+/* hbox that hold notification icons */
+#social-status-iconbox {
+  margin: 0;
+  padding: 0;
+}
+
+/* hbox that surrounds an image and its counter */
+.social-notification-icon-container {
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* notification counter box */
+.social-notification-icon-counter {
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
+  padding-right: 1px;
+  padding-left: 1px;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  z-index: 1;
+  text-align: center;
+}
+
+/* notification image */
+.social-notification-icon-image {
+  padding: 2px;
+  margin: 0;
+  min-width: 20px;
+  max-width: 32px;
+  max-height: 20px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+/* social toolbar provider menu */
+#social-statusarea-popup {
+  margin-top: 0;
+  margin-left: -12px;
+  margin-right: -12px;
+}
+
+#social-statusarea-user {
+  border-bottom: 1px solid rgb(221,221,221);
+  background-color: -moz-Dialog;
+  color: -moz-dialogtext;
+  position: relative;
+  font: message-box;
+  font-size: 12px;
+}
+
+#social-statusarea-user-portrait {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  margin: 10px;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+#social-statusarea-username {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  color: -moz-nativehyperlinktext;
+  cursor: pointer;
+  min-width: 0;
+  margin: 0 6px;
+}
+#social-statusarea-username:hover {
+  text-decoration: underline;
+}
+
+#social-notification-panel {
+  min-height: 100px;
+  min-width: 100px;
+  max-height: 600px;
+  max-width: 400px;
+}
+

@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
   test_interfaces.html.json \
+  test_setrequestheader-invalid-arguments.htm.json \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

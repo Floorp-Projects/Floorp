@@ -172,20 +172,6 @@ public:
     return mDoc;
   }
 
-  nsIDocument* GetDoc()
-  {
-    if (!mDoc) {
-      MaybeCreateDoc();
-    }
-    return mDoc;
-  }
-
-protected:
-  // Lazily instantiate an about:blank document if necessary, and if
-  // we have what it takes to do so.
-  void MaybeCreateDoc();
-
-public:
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
   // one doesn't for security reasons.

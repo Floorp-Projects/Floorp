@@ -45,6 +45,7 @@
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"

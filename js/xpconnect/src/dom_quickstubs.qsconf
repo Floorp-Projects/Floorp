@@ -176,6 +176,8 @@ members = [
     'nsIDOMProgressEvent.loaded',
     'nsIDOMProgressEvent.total',
     #XXX Can't quickstub initProgressEvent because it has long long parameters.
+    'nsIDOMNSEvent.originalTarget',
+    'nsIDOMNSEvent.getPreventDefault',
     'nsIDOMUIEvent.which',
     'nsIDOMUIEvent.rangeParent',
     'nsIDOMUIEvent.rangeOffset',

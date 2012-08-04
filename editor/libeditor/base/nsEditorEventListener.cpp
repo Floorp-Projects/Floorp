@@ -27,6 +27,7 @@
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
+#include "nsIDOMNSEvent.h"              // for nsIDOMNSEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDOMRange.h"                // for nsIDOMRange
 #include "nsIDocument.h"                // for nsIDocument
@@ -452,7 +453,8 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   // Transfer the event's trusted-ness to our editor
-  nsEditor::HandlingTrustedAction operation(mEditor, aKeyEvent);
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aKeyEvent);
+  nsEditor::HandlingTrustedAction operation(mEditor, NSEvent);
 
   // DOM event handling happens in two passes, the client pass and the system
   // pass.  We do all of our processing in the system pass, to allow client
@@ -606,7 +608,8 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
   }
 
   // Transfer the event's trusted-ness to our editor
-  nsEditor::HandlingTrustedAction operation(mEditor, aTextEvent);
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aTextEvent);
+  nsEditor::HandlingTrustedAction operation(mEditor, NSEvent);
 
   return mEditor->UpdateIMEComposition(composedText, textRangeList);
 }
@@ -847,7 +850,8 @@ nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
   }
 
   // Transfer the event's trusted-ness to our editor
-  nsEditor::HandlingTrustedAction operation(mEditor, aCompositionEvent);
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aCompositionEvent);
+  nsEditor::HandlingTrustedAction operation(mEditor, NSEvent);
 
   mEditor->EndIMEComposition();
 }
