@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -430,365 +430,361 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         *((bool*)d) = tb;
         break;
     case nsXPTType::T_CHAR   :
-        {
-            JSString* str = JS_ValueToString(cx, s);
-            if (!str) {
-                return false;
-            }
-            size_t length;
-            const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
-            if (!chars) {
-                return false;
-            }
-            jschar ch = length ? chars[0] : 0;
+    {
+        JSString* str = JS_ValueToString(cx, s);
+        if (!str) {
+            return false;
+        }
+        size_t length;
+        const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
+        if (!chars) {
+            return false;
+        }
+        jschar ch = length ? chars[0] : 0;
 #ifdef DEBUG
-            CheckJSCharInCharRange(ch);
+        CheckJSCharInCharRange(ch);
 #endif
-            *((char*)d) = char(ch);
-            break;
-        }
+        *((char*)d) = char(ch);
+        break;
+    }
     case nsXPTType::T_WCHAR  :
-        {
-            JSString* str;
-            if (!(str = JS_ValueToString(cx, s))) {
-                return false;
-            }
-            size_t length;
-            const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
-            if (!chars) {
-                return false;
-            }
-            if (length == 0) {
-                *((uint16_t*)d) = 0;
-                break;
-            }
-            *((uint16_t*)d) = uint16_t(chars[0]);
+    {
+        JSString* str;
+        if (!(str = JS_ValueToString(cx, s))) {
+            return false;
+        }
+        size_t length;
+        const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
+        if (!chars) {
+            return false;
+        }
+        if (length == 0) {
+            *((uint16_t*)d) = 0;
             break;
         }
+        *((uint16_t*)d) = uint16_t(chars[0]);
+        break;
+    }
     case nsXPTType::T_JSVAL :
         *((jsval*)d) = s;
         break;
-    default:
+    case nsXPTType::T_VOID:
+        XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
+        NS_ERROR("void* params not supported");
+        return false;
+    case nsXPTType::T_IID:
+    {
+        const nsID* pid = nullptr;
 
-        switch (type.TagPart()) {
-        case nsXPTType::T_VOID:
-            XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
-            NS_ERROR("void* params not supported");
+        // There's no good reason to pass a null IID.
+        if (s.isNullOrUndefined()) {
+            if (pErr)
+                *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
             return false;
-        case nsXPTType::T_IID:
-        {
-            const nsID* pid = nullptr;
-
-            // There's no good reason to pass a null IID.
-            if (s.isNullOrUndefined()) {
-                if (pErr)
-                    *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
-                return false;
-            }
-
-            if (!s.isObject() ||
-                (!(pid = xpc_JSObjectToID(cx, &s.toObject()))) ||
-                (!(pid = (const nsID*) nsMemory::Clone(pid, sizeof(nsID))))) {
-                return false;
-            }
-            *((const nsID**)d) = pid;
-            return true;
         }
 
-        case nsXPTType::T_ASTRING:
-        {
-            isDOMString = false;
-            // Fall through to T_DOMSTRING case.
+        if (!s.isObject() ||
+            (!(pid = xpc_JSObjectToID(cx, &s.toObject()))) ||
+            (!(pid = (const nsID*) nsMemory::Clone(pid, sizeof(nsID))))) {
+            return false;
         }
-        case nsXPTType::T_DOMSTRING:
-        {
-            static const PRUnichar EMPTY_STRING[] = { '\0' };
-            static const PRUnichar VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
+        *((const nsID**)d) = pid;
+        return true;
+    }
 
-            const PRUnichar* chars = nullptr;
-            JSString* str = nullptr;
-            JSBool isNewString = false;
-            PRUint32 length = 0;
+    case nsXPTType::T_ASTRING:
+    {
+        isDOMString = false;
+        // Fall through to T_DOMSTRING case.
+    }
+    case nsXPTType::T_DOMSTRING:
+    {
+        static const PRUnichar EMPTY_STRING[] = { '\0' };
+        static const PRUnichar VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
 
-            if (JSVAL_IS_VOID(s)) {
-                if (isDOMString) {
-                    chars  = VOID_STRING;
-                    length = ArrayLength(VOID_STRING) - 1;
-                } else {
-                    chars = EMPTY_STRING;
-                    length = 0;
-                }
-            } else if (!JSVAL_IS_NULL(s)) {
-                str = JS_ValueToString(cx, s);
-                if (!str)
+        const PRUnichar* chars = nullptr;
+        JSString* str = nullptr;
+        JSBool isNewString = false;
+        PRUint32 length = 0;
+
+        if (JSVAL_IS_VOID(s)) {
+            if (isDOMString) {
+                chars  = VOID_STRING;
+                length = ArrayLength(VOID_STRING) - 1;
+            } else {
+                chars = EMPTY_STRING;
+                length = 0;
+            }
+        } else if (!JSVAL_IS_NULL(s)) {
+            str = JS_ValueToString(cx, s);
+            if (!str)
+                return false;
+
+            length = (PRUint32) JS_GetStringLength(str);
+            if (length) {
+                chars = JS_GetStringCharsZ(cx, str);
+                if (!chars)
+                    return false;
+                if (STRING_TO_JSVAL(str) != s)
+                    isNewString = true;
+            } else {
+                str = nullptr;
+                chars = EMPTY_STRING;
+            }
+        }
+
+        if (useAllocator) {
+            // XXX extra string copy when isNewString
+            if (str && !isNewString) {
+                size_t strLength;
+                const jschar *strChars = JS_GetStringCharsZAndLength(cx, str, &strLength);
+                if (!strChars)
                     return false;
 
-                length = (PRUint32) JS_GetStringLength(str);
-                if (length) {
-                    chars = JS_GetStringCharsZ(cx, str);
-                    if (!chars)
-                        return false;
-                    if (STRING_TO_JSVAL(str) != s)
-                        isNewString = true;
-                } else {
-                    str = nullptr;
-                    chars = EMPTY_STRING;
-                }
-            }
+                XPCReadableJSStringWrapper *wrapper =
+                    ccx.NewStringWrapper(strChars, strLength);
+                if (!wrapper)
+                    return false;
 
-            if (useAllocator) {
-                // XXX extra string copy when isNewString
-                if (str && !isNewString) {
-                    size_t strLength;
-                    const jschar *strChars = JS_GetStringCharsZAndLength(cx, str, &strLength);
-                    if (!strChars)
-                        return false;
+                *((const nsAString**)d) = wrapper;
+            } else if (JSVAL_IS_NULL(s)) {
+                XPCReadableJSStringWrapper *wrapper =
+                    new XPCReadableJSStringWrapper();
+                if (!wrapper)
+                    return false;
 
-                    XPCReadableJSStringWrapper *wrapper =
-                        ccx.NewStringWrapper(strChars, strLength);
-                    if (!wrapper)
-                        return false;
-
-                    *((const nsAString**)d) = wrapper;
-                } else if (JSVAL_IS_NULL(s)) {
-                    XPCReadableJSStringWrapper *wrapper =
-                        new XPCReadableJSStringWrapper();
-                    if (!wrapper)
-                        return false;
-
-                    *((const nsAString**)d) = wrapper;
-                } else {
-                    // use nsString to encourage sharing
-                    const nsAString *rs = new nsString(chars, length);
-                    if (!rs)
-                        return false;
-                    *((const nsAString**)d) = rs;
-                }
+                *((const nsAString**)d) = wrapper;
             } else {
-                nsAString* ws = *((nsAString**)d);
-
-                if (JSVAL_IS_NULL(s) || (!isDOMString && JSVAL_IS_VOID(s))) {
-                    ws->Truncate();
-                    ws->SetIsVoid(true);
-                } else
-                    ws->Assign(chars, length);
+                // use nsString to encourage sharing
+                const nsAString *rs = new nsString(chars, length);
+                if (!rs)
+                    return false;
+                *((const nsAString**)d) = rs;
             }
+        } else {
+            nsAString* ws = *((nsAString**)d);
+
+            if (JSVAL_IS_NULL(s) || (!isDOMString && JSVAL_IS_VOID(s))) {
+                ws->Truncate();
+                ws->SetIsVoid(true);
+            } else
+                ws->Assign(chars, length);
+        }
+        return true;
+    }
+
+    case nsXPTType::T_CHAR_STR:
+    {
+        if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+            *((char**)d) = nullptr;
             return true;
         }
 
-        case nsXPTType::T_CHAR_STR:
-        {
-            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                *((char**)d) = nullptr;
-                return true;
-            }
-
-            JSString* str = JS_ValueToString(cx, s);
-            if (!str) {
-                return false;
-            }
+        JSString* str = JS_ValueToString(cx, s);
+        if (!str) {
+            return false;
+        }
 #ifdef DEBUG
-            const jschar* chars=nullptr;
-            if (nullptr != (chars = JS_GetStringCharsZ(cx, str))) {
-                bool legalRange = true;
-                int len = JS_GetStringLength(str);
-                const jschar* t;
-                PRInt32 i=0;
-                for (t=chars; (i< len) && legalRange ; i++,t++) {
-                    if (!CheckJSCharInCharRange(*t))
-                        break;
-                }
-            }
-#endif // DEBUG
-            size_t length = JS_GetStringEncodingLength(cx, str);
-            if (length == size_t(-1)) {
-                return false;
-            }
-            char *buffer = static_cast<char *>(nsMemory::Alloc(length + 1));
-            if (!buffer) {
-                return false;
-            }
-            JS_EncodeStringToBuffer(str, buffer, length);
-            buffer[length] = '\0';
-            *((void**)d) = buffer;
-            return true;
-        }
-
-        case nsXPTType::T_WCHAR_STR:
-        {
-            const jschar* chars=nullptr;
-            JSString* str;
-
-            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
-                *((jschar**)d) = nullptr;
-                return true;
-            }
-
-            if (!(str = JS_ValueToString(cx, s))) {
-                return false;
-            }
-            if (!(chars = JS_GetStringCharsZ(cx, str))) {
-                return false;
-            }
+        const jschar* chars=nullptr;
+        if (nullptr != (chars = JS_GetStringCharsZ(cx, str))) {
+            bool legalRange = true;
             int len = JS_GetStringLength(str);
-            int byte_len = (len+1)*sizeof(jschar);
-            if (!(*((void**)d) = nsMemory::Alloc(byte_len))) {
-                // XXX should report error
-                return false;
+            const jschar* t;
+            PRInt32 i=0;
+            for (t=chars; (i< len) && legalRange ; i++,t++) {
+                if (!CheckJSCharInCharRange(*t))
+                    break;
             }
-            jschar* destchars = *((jschar**)d);
-            memcpy(destchars, chars, byte_len);
-            destchars[len] = 0;
-
-            return true;
         }
-
-        case nsXPTType::T_UTF8STRING:
-        {
-            const jschar* chars;
-            PRUint32 length;
-            JSString* str;
-
-            if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
-                if (useAllocator) {
-                    nsACString *rs = new nsCString();
-                    if (!rs)
-                        return false;
-
-                    rs->SetIsVoid(true);
-                    *((nsACString**)d) = rs;
-                } else {
-                    nsCString* rs = *((nsCString**)d);
-                    rs->Truncate();
-                    rs->SetIsVoid(true);
-                }
-                return true;
-            }
-
-            // The JS val is neither null nor void...
-
-            if (!(str = JS_ValueToString(cx, s))||
-                !(chars = JS_GetStringCharsZ(cx, str))) {
-                return false;
-            }
-
-            length = JS_GetStringLength(str);
-
-            nsCString *rs;
-            if (useAllocator) {
-                // Use nsCString to enable sharing
-                rs = new nsCString();
-                if (!rs)
-                    return false;
-
-                *((const nsCString**)d) = rs;
-            } else {
-                rs = *((nsCString**)d);
-            }
-            const PRUnichar* start = (const PRUnichar*)chars;
-            const PRUnichar* end = start + length;
-            CopyUTF16toUTF8(nsDependentSubstring(start, end), *rs);
-            return true;
-        }
-
-        case nsXPTType::T_CSTRING:
-        {
-            if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
-                if (useAllocator) {
-                    nsACString *rs = new nsCString();
-                    if (!rs)
-                        return false;
-
-                    rs->SetIsVoid(true);
-                    *((nsACString**)d) = rs;
-                } else {
-                    nsACString* rs = *((nsACString**)d);
-                    rs->Truncate();
-                    rs->SetIsVoid(true);
-                }
-                return true;
-            }
-
-            // The JS val is neither null nor void...
-            JSString* str = JS_ValueToString(cx, s);
-            if (!str) {
-                return false;
-            }
-
-            size_t length = JS_GetStringEncodingLength(cx, str);
-            if (length == size_t(-1)) {
-                return false;
-            }
-
-            nsACString *rs;
-            if (useAllocator) {
-                rs = new nsCString();
-                if (!rs)
-                    return false;
-                *((const nsACString**)d) = rs;
-            } else {
-                rs = *((nsACString**)d);
-            }
-
-            rs->SetLength(PRUint32(length));
-            if (rs->Length() != PRUint32(length)) {
-                return false;
-            }
-            JS_EncodeStringToBuffer(str, rs->BeginWriting(), length);
-
-            return true;
-        }
-
-        case nsXPTType::T_INTERFACE:
-        case nsXPTType::T_INTERFACE_IS:
-        {
-            NS_ASSERTION(iid,"can't do interface conversions without iid");
-
-            if (iid->Equals(NS_GET_IID(nsIVariant))) {
-                XPCVariant* variant = XPCVariant::newVariant(ccx, s);
-                if (!variant)
-                    return false;
-                *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
-                return true;
-            } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
-                       JSVAL_IS_STRING(s)) {
-                // We're trying to pass a string as an nsIAtom.  Let's atomize!
-                JSString* str = JSVAL_TO_STRING(s);
-                const PRUnichar* chars = JS_GetStringCharsZ(cx, str);
-                if (!chars) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
-                    return false;
-                }
-                PRUint32 length = JS_GetStringLength(str);
-                nsIAtom* atom = NS_NewAtom(nsDependentSubstring(chars,
-                                                                chars + length));
-                if (!atom && pErr)
-                    *pErr = NS_ERROR_OUT_OF_MEMORY;
-                *((nsISupports**)d) = atom;
-                return atom != nullptr;
-            }
-            //else ...
-
-            if (s.isNullOrUndefined()) {
-                *((nsISupports**)d) = nullptr;
-                return true;
-            }
-
-            // only wrap JSObjects
-            if (!s.isObject()) {
-                if (pErr && s.isInt32() && 0 == s.toInt32())
-                    *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL;
-                return false;
-            }
-
-            return JSObject2NativeInterface(ccx, (void**)d, &s.toObject(), iid,
-                                            nullptr, pErr);
-        }
-        default:
-            NS_ERROR("bad type");
+#endif // DEBUG
+        size_t length = JS_GetStringEncodingLength(cx, str);
+        if (length == size_t(-1)) {
             return false;
         }
+        char *buffer = static_cast<char *>(nsMemory::Alloc(length + 1));
+        if (!buffer) {
+            return false;
+        }
+        JS_EncodeStringToBuffer(str, buffer, length);
+        buffer[length] = '\0';
+        *((void**)d) = buffer;
+        return true;
+    }
+
+    case nsXPTType::T_WCHAR_STR:
+    {
+        const jschar* chars=nullptr;
+        JSString* str;
+
+        if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
+            *((jschar**)d) = nullptr;
+            return true;
+        }
+
+        if (!(str = JS_ValueToString(cx, s))) {
+            return false;
+        }
+        if (!(chars = JS_GetStringCharsZ(cx, str))) {
+            return false;
+        }
+        int len = JS_GetStringLength(str);
+        int byte_len = (len+1)*sizeof(jschar);
+        if (!(*((void**)d) = nsMemory::Alloc(byte_len))) {
+            // XXX should report error
+            return false;
+        }
+        jschar* destchars = *((jschar**)d);
+        memcpy(destchars, chars, byte_len);
+        destchars[len] = 0;
+
+        return true;
+    }
+
+    case nsXPTType::T_UTF8STRING:
+    {
+        const jschar* chars;
+        PRUint32 length;
+        JSString* str;
+
+        if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
+            if (useAllocator) {
+                nsACString *rs = new nsCString();
+                if (!rs)
+                    return false;
+
+                rs->SetIsVoid(true);
+                *((nsACString**)d) = rs;
+            } else {
+                nsCString* rs = *((nsCString**)d);
+                rs->Truncate();
+                rs->SetIsVoid(true);
+            }
+            return true;
+        }
+
+        // The JS val is neither null nor void...
+
+        if (!(str = JS_ValueToString(cx, s))||
+            !(chars = JS_GetStringCharsZ(cx, str))) {
+            return false;
+        }
+
+        length = JS_GetStringLength(str);
+
+        nsCString *rs;
+        if (useAllocator) {
+            // Use nsCString to enable sharing
+            rs = new nsCString();
+            if (!rs)
+                return false;
+
+            *((const nsCString**)d) = rs;
+        } else {
+            rs = *((nsCString**)d);
+        }
+        const PRUnichar* start = (const PRUnichar*)chars;
+        const PRUnichar* end = start + length;
+        CopyUTF16toUTF8(nsDependentSubstring(start, end), *rs);
+        return true;
+    }
+
+    case nsXPTType::T_CSTRING:
+    {
+        if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
+            if (useAllocator) {
+                nsACString *rs = new nsCString();
+                if (!rs)
+                    return false;
+
+                rs->SetIsVoid(true);
+                *((nsACString**)d) = rs;
+            } else {
+                nsACString* rs = *((nsACString**)d);
+                rs->Truncate();
+                rs->SetIsVoid(true);
+            }
+            return true;
+        }
+
+        // The JS val is neither null nor void...
+        JSString* str = JS_ValueToString(cx, s);
+        if (!str) {
+            return false;
+        }
+
+        size_t length = JS_GetStringEncodingLength(cx, str);
+        if (length == size_t(-1)) {
+            return false;
+        }
+
+        nsACString *rs;
+        if (useAllocator) {
+            rs = new nsCString();
+            if (!rs)
+                return false;
+            *((const nsACString**)d) = rs;
+        } else {
+            rs = *((nsACString**)d);
+        }
+
+        rs->SetLength(PRUint32(length));
+        if (rs->Length() != PRUint32(length)) {
+            return false;
+        }
+        JS_EncodeStringToBuffer(str, rs->BeginWriting(), length);
+
+        return true;
+    }
+
+    case nsXPTType::T_INTERFACE:
+    case nsXPTType::T_INTERFACE_IS:
+    {
+        NS_ASSERTION(iid,"can't do interface conversions without iid");
+
+        if (iid->Equals(NS_GET_IID(nsIVariant))) {
+            XPCVariant* variant = XPCVariant::newVariant(ccx, s);
+            if (!variant)
+                return false;
+            *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
+            return true;
+        } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
+                   JSVAL_IS_STRING(s)) {
+            // We're trying to pass a string as an nsIAtom.  Let's atomize!
+            JSString* str = JSVAL_TO_STRING(s);
+            const PRUnichar* chars = JS_GetStringCharsZ(cx, str);
+            if (!chars) {
+                if (pErr)
+                    *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
+                return false;
+            }
+            PRUint32 length = JS_GetStringLength(str);
+            nsIAtom* atom = NS_NewAtom(nsDependentSubstring(chars,
+                                                            chars + length));
+            if (!atom && pErr)
+                *pErr = NS_ERROR_OUT_OF_MEMORY;
+            *((nsISupports**)d) = atom;
+            return atom != nullptr;
+        }
+        //else ...
+
+        if (s.isNullOrUndefined()) {
+            *((nsISupports**)d) = nullptr;
+            return true;
+        }
+
+        // only wrap JSObjects
+        if (!s.isObject()) {
+            if (pErr && s.isInt32() && 0 == s.toInt32())
+                *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL;
+            return false;
+        }
+
+        return JSObject2NativeInterface(ccx, (void**)d, &s.toObject(), iid,
+                                        nullptr, pErr);
+    }
+    default:
+        NS_ERROR("bad type");
+        return false;
     }
     return true;
 }
