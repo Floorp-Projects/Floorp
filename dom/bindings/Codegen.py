@@ -1118,7 +1118,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructHook = CONSTRUCT_HOOK_NAME
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
-            constructHook = "ThrowingConstructorWorkers" if self.descriptor.workers else "ThrowingConstructor"
+            constructHook = "ThrowingConstructor"
             constructArgs = 0
 
         call = CGGeneric(("return dom::CreateInterfaceObjects(aCx, aGlobal, aReceiver, parentProto,\n"
