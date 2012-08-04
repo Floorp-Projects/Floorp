@@ -2577,18 +2577,7 @@ case $target in
 	;;
 esac
 
-dnl Performance measurement headers.
-MOZ_CHECK_HEADER(linux/perf_event.h,
-    [AC_CACHE_CHECK(for perf_event_open system call,ac_cv_perf_event_open,
-        [AC_TRY_COMPILE([#include <sys/syscall.h>],[return sizeof(__NR_perf_event_open);],
-        ac_cv_perf_event_open=yes,
-        ac_cv_perf_event_open=no)])])
-if test "$ac_cv_perf_event_open" = "yes"; then
-    HAVE_LINUX_PERF_EVENT_H=1
-else
-    HAVE_LINUX_PERF_EVENT_H=
-fi
-AC_SUBST(HAVE_LINUX_PERF_EVENT_H)
+MOZ_LINUX_PERF_EVENT
 
 dnl Checks for libraries.
 dnl ========================================================
