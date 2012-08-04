@@ -2930,56 +2930,51 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
 
     size_t beglen = strlen(begin);
     size_t taglen = 1 + beglen + 1;                     /* '<begin' + '>' */
+    size_t parlen = 0; /* Avoid warning. */
     if (param) {
-        size_t numChars = param->length();
-        const jschar *parchars = param->chars();
-        for (size_t i = 0, parlen = numChars; i < parlen; ++i) {
-            if (parchars[i] == '"')
-                numChars += 5;                          /* len(&quot;) - len(") */
-        }
-        taglen += 2 + numChars + 1;                     /* '="param"' */
+        parlen = param->length();
+        taglen += 2 + parlen + 1;                       /* '="param"' */
     }
     size_t endlen = strlen(end);
     taglen += str->length() + 2 + endlen + 1;           /* 'str</end>' */
 
-
-    StringBuffer sb(cx);
-    if (!sb.reserve(taglen))
+    if (taglen >= ~(size_t)0 / sizeof(jschar)) {
+        js_ReportAllocationOverflow(cx);
         return false;
-
-    sb.infallibleAppend('<');
-
-    MOZ_ALWAYS_TRUE(sb.appendInflated(begin, beglen));
-
-    if (param) {
-        sb.infallibleAppend('=');
-        sb.infallibleAppend('"');
-        const jschar *parchars = param->chars();
-        for (size_t i = 0, parlen = param->length(); i < parlen; ++i) {
-            if (parchars[i] != '"') {
-                sb.infallibleAppend(parchars[i]);
-            } else {
-                MOZ_ALWAYS_TRUE(sb.append("&quot;"));
-            }
-        }
-        sb.infallibleAppend('"');
     }
-    
-    sb.infallibleAppend('>');
 
-    MOZ_ALWAYS_TRUE(sb.append(str));
-
-    sb.infallibleAppend('<');
-    sb.infallibleAppend('/');
-
-    MOZ_ALWAYS_TRUE(sb.appendInflated(end, endlen));
-
-    sb.infallibleAppend('>');
-
-    JSFixedString *retstr = sb.finishString();
-    if (!retstr)
+    jschar *tagbuf = (jschar *) cx->malloc_((taglen + 1) * sizeof(jschar));
+    if (!tagbuf)
         return false;
 
+    size_t j = 0;
+    tagbuf[j++] = '<';
+    for (size_t i = 0; i < beglen; i++)
+        tagbuf[j++] = (jschar)begin[i];
+    if (param) {
+        tagbuf[j++] = '=';
+        tagbuf[j++] = '"';
+        js_strncpy(&tagbuf[j], param->chars(), parlen);
+        j += parlen;
+        tagbuf[j++] = '"';
+    }
+    tagbuf[j++] = '>';
+
+    js_strncpy(&tagbuf[j], str->chars(), str->length());
+    j += str->length();
+    tagbuf[j++] = '<';
+    tagbuf[j++] = '/';
+    for (size_t i = 0; i < endlen; i++)
+        tagbuf[j++] = (jschar)end[i];
+    tagbuf[j++] = '>';
+    JS_ASSERT(j == taglen);
+    tagbuf[j] = 0;
+
+    JSString *retstr = js_NewString(cx, tagbuf, taglen);
+    if (!retstr) {
+        Foreground::free_((char *)tagbuf);
+        return false;
+    }
     call.rval().setString(retstr);
     return true;
 }

@@ -3175,21 +3175,15 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 }
 
 /* void setRequestHeader (in AUTF8String header, in AUTF8String value); */
-// http://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#dom-xmlhttprequest-setrequestheader
 NS_IMETHODIMP
 nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
                                    const nsACString& value)
 {
-  // Step 1 and 2
-  if (!(mState & XML_HTTP_REQUEST_OPENED)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-  NS_ASSERTION(mChannel, "mChannel must be valid if we're OPENED.");
+  nsresult rv;
 
-  // Step 3
   // Make sure we don't store an invalid header name in mCORSUnsafeHeaders
-  if (!IsValidHTTPToken(header)) { // XXX nsHttp::IsValidToken?
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  if (!IsValidHTTPToken(header)) {
+    return NS_ERROR_FAILURE;
   }
 
   // Check that we haven't already opened the channel. We can't rely on
@@ -3197,7 +3191,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // still be waiting for mCORSPreflightChannel to actually open mChannel
   if (mCORSPreflightChannel) {
     bool pending;
-    nsresult rv = mCORSPreflightChannel->IsPending(&pending);
+    rv = mCORSPreflightChannel->IsPending(&pending);
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (pending) {
@@ -3205,10 +3199,13 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
   }
 
+  if (!(mState & XML_HTTP_REQUEST_OPENED))
+    return NS_ERROR_IN_PROGRESS;
+
   if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (!httpChannel) {
     return NS_OK;
   }
@@ -3217,11 +3214,12 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // the executing script has UniversalXPConnect.
 
   bool privileged;
-  if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &privileged)))
+  rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
+  if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
   if (!privileged) {
-    // Step 5: Check for dangerous headers.
+    // Check for dangerous headers
     const char *kInvalidHeaders[] = {
       "accept-charset", "accept-encoding", "access-control-request-headers",
       "access-control-request-method", "connection", "content-length",
@@ -3266,10 +3264,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   }
 
   // We need to set, not add to, the header.
-  nsresult rv = httpChannel->SetRequestHeader(header, value, false);
-  if (rv == NS_ERROR_INVALID_ARG) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
+  rv = httpChannel->SetRequestHeader(header, value, false);
   if (NS_SUCCEEDED(rv)) {
     // We'll want to duplicate this header for any replacement channels (eg. on redirect)
     RequestHeader reqHeader = {
@@ -3277,6 +3272,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     };
     mModifiedRequestHeaders.AppendElement(reqHeader);
   }
+
   return rv;
 }
 
@@ -4015,6 +4011,7 @@ DOMCI_DATA(XMLHttpProgressEvent, nsXMLHttpProgressEvent)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMProgressEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpProgressEvent)

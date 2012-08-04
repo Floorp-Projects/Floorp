@@ -62,6 +62,7 @@
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
 #include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent, etc
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
+#include "nsIDOMNSEvent.h"              // for nsIDOMNSEvent
 #include "nsIDOMNamedNodeMap.h"         // for nsIDOMNamedNodeMap
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList
@@ -5333,7 +5334,8 @@ bool
 nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
 {
   // If the event is trusted, the event should always cause input.
-  NS_ENSURE_TRUE(aEvent, false);
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aEvent);
+  NS_ENSURE_TRUE(NSEvent, false);
 
   // If this is mouse event but this editor doesn't have focus, we shouldn't
   // handle it.
@@ -5346,7 +5348,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   }
 
   bool isTrusted;
-  nsresult rv = aEvent->GetIsTrusted(&isTrusted);
+  nsresult rv = NSEvent->GetIsTrusted(&isTrusted);
   NS_ENSURE_SUCCESS(rv, false);
   if (isTrusted) {
     return true;
@@ -5388,7 +5390,7 @@ nsEditor::SetSuppressDispatchingInputEvent(bool aSuppress)
 }
 
 nsEditor::HandlingTrustedAction::HandlingTrustedAction(nsEditor* aSelf,
-                                                       nsIDOMEvent* aEvent)
+                                                       nsIDOMNSEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
