@@ -68,9 +68,7 @@ void* nsMappedAttributes::operator new(size_t aSize, PRUint32 aAttrCount) CPP_TH
                                   aAttrCount * sizeof(InternalAttr));
 
 #ifdef DEBUG
-  if (newAttrs) {
-    static_cast<nsMappedAttributes*>(newAttrs)->mBufferSize = aAttrCount;
-  }
+  static_cast<nsMappedAttributes*>(newAttrs)->mBufferSize = aAttrCount;
 #endif
 
   return newAttrs;
