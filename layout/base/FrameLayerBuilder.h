@@ -369,13 +369,15 @@ public:
   nsIntPoint GetLastPaintOffset(ThebesLayer* aLayer);
 
   /**
-   * Return the resolution at which we expect to render aFrame's contents,
-   * assuming they are being painted to retained layers. This takes into account
-   * the resolution the contents of the ContainerLayer containing aFrame are
-   * being rendered at, as well as any currently-inactive transforms between
-   * aFrame and that container layer.
+   * Return resolution and scroll offset of ThebesLayer content associated
+   * with aFrame's subtree.
+   * Returns true if some ThebesLayer was found.
+   * This just looks for the first ThebesLayer and returns its data. There
+   * could be other ThebesLayers with different resolution and offsets.
    */
-  static gfxSize GetThebesLayerScaleForFrame(nsIFrame* aFrame);
+  static bool GetThebesLayerResolutionForFrame(nsIFrame* aFrame,
+                                               double* aXRes, double* aYRes,
+                                               gfxPoint* aPoint);
 
   /**
    * Clip represents the intersection of an optional rectangle with a
