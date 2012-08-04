@@ -7,7 +7,6 @@ from __future__ import with_statement
 import glob, logging, os, platform, shutil, subprocess, sys, tempfile, urllib2, zipfile
 import re
 from urlparse import urlparse
-from operator import itemgetter
 
 __all__ = [
   "ZipFileReader",
@@ -20,7 +19,6 @@ __all__ = [
   "DEBUGGER_INFO",
   "replaceBackSlashes",
   "wrapCommand",
-  "ShutdownLeakLogger"
   ]
 
 # Map of debugging programs to information about them, like default arguments
@@ -419,115 +417,3 @@ def wrapCommand(cmd):
     return ["arch", "-arch", "i386"] + cmd
   # otherwise just execute the command normally
   return cmd
-
-class ShutdownLeakLogger(object):
-  """
-  Parses the mochitest run log when running a debug build, assigns all leaked
-  DOM windows (that are still around after test suite shutdown, despite running
-  the GC) to the tests that created them and prints leak statistics.
-  """
-  MAX_LEAK_COUNT = 4
-
-  def __init__(self, logger):
-    self.logger = logger
-    self.tests = []
-    self.leakedWindows = {}
-    self.leakedDocShells = set()
-    self.currentTest = None
-    self.seenShutdown = False
-
-  def log(self, line):
-    if line[2:11] == "DOMWINDOW":
-      self._logWindow(line)
-    elif line[2:10] == "DOCSHELL":
-      self._logDocShell(line)
-    elif line.startswith("TEST-START"):
-      fileName = line.split(" ")[-1].strip().replace("chrome://mochitests/content/browser/", "")
-      self.currentTest = {"fileName": fileName, "windows": set(), "docShells": set()}
-    elif line.startswith("INFO TEST-END"):
-      # don't track a test if no windows or docShells leaked
-      if self.currentTest and (self.currentTest["windows"] or self.currentTest["docShells"]):
-        self.tests.append(self.currentTest)
-      self.currentTest = None
-    elif line.startswith("INFO TEST-START | Shutdown"):
-      self.seenShutdown = True
-
-  def parse(self):
-    leakingTests = self._parseLeakingTests()
-
-    if leakingTests:
-      totalWindows = sum(len(test["leakedWindows"]) for test in leakingTests)
-      totalDocShells = sum(len(test["leakedDocShells"]) for test in leakingTests)
-      msgType = "TEST-INFO" if totalWindows + totalDocShells <= self.MAX_LEAK_COUNT else "TEST-UNEXPECTED-FAIL"
-      self.logger.info("%s | ShutdownLeaks | leaked %d DOMWindow(s) and %d DocShell(s) until shutdown", msgType, totalWindows, totalDocShells)
-
-    for test in leakingTests:
-      for url, count in self._zipLeakedWindows(test["leakedWindows"]):
-        self.logger.info("%s | %s | leaked %d window(s) until shutdown [url = %s]", msgType, test["fileName"], count, url)
-
-      if test["leakedDocShells"]:
-        self.logger.info("%s | %s | leaked %d docShell(s) until shutdown", msgType, test["fileName"], len(test["leakedDocShells"]))
-
-  def _logWindow(self, line):
-    created = line[:2] == "++"
-    id = self._parseValue(line, "serial")
-
-    # log line has invalid format
-    if not id:
-      return
-
-    if self.currentTest:
-      windows = self.currentTest["windows"]
-      if created:
-        windows.add(id)
-      else:
-        windows.discard(id)
-    elif self.seenShutdown and not created:
-      self.leakedWindows[id] = self._parseValue(line, "url")
-
-  def _logDocShell(self, line):
-    created = line[:2] == "++"
-    id = self._parseValue(line, "id")
-
-    # log line has invalid format
-    if not id:
-      return
-
-    if self.currentTest:
-      docShells = self.currentTest["docShells"]
-      if created:
-        docShells.add(id)
-      else:
-        docShells.discard(id)
-    elif self.seenShutdown and not created:
-      self.leakedDocShells.add(id)
-
-  def _parseValue(self, line, name):
-    match = re.search("\[%s = (.+?)\]" % name, line)
-    if match:
-      return match.group(1)
-    return None
-
-  def _parseLeakingTests(self):
-    leakingTests = []
-
-    for test in self.tests:
-      test["leakedWindows"] = [self.leakedWindows[id] for id in test["windows"] if id in self.leakedWindows]
-      test["leakedDocShells"] = [id for id in test["docShells"] if id in self.leakedDocShells]
-      test["leakCount"] = len(test["leakedWindows"]) + len(test["leakedDocShells"])
-
-      if test["leakCount"]:
-        leakingTests.append(test)
-
-    return sorted(leakingTests, key=itemgetter("leakCount"), reverse=True)
-
-  def _zipLeakedWindows(self, leakedWindows):
-    counts = []
-    counted = set()
-
-    for url in leakedWindows:
-      if not url in counted:
-        counts.append((url, leakedWindows.count(url)))
-        counted.add(url)
-
-    return sorted(counts, key=itemgetter(1), reverse=True)

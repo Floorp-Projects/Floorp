@@ -130,13 +130,21 @@ public class BaseResource implements Resource {
   }
 
   /**
+   * Return a Header object representing an Authentication header for HTTP Basic.
+   */
+  public static Header getBasicAuthHeader(final String credentials) {
+    Credentials creds = new UsernamePasswordCredentials(credentials);
+
+    // This must be UTF-8 to generate the same Basic Auth headers as desktop for non-ASCII passwords.
+    return BasicScheme.authenticate(creds, "UTF-8", false);
+  }
+
+  /**
    * Apply the provided credentials string to the provided request.
    * @param credentials a string, "user:pass".
    */
   private static void applyCredentials(String credentials, HttpUriRequest request, HttpContext context) {
-    Credentials creds = new UsernamePasswordCredentials(credentials);
-    Header header = BasicScheme.authenticate(creds, "US-ASCII", false);
-    request.addHeader(header);
+    request.addHeader(getBasicAuthHeader(credentials));
     Logger.trace(LOG_TAG, "Adding Basic Auth header.");
   }
 
