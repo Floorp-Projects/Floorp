@@ -32,10 +32,6 @@ using mozilla::gfx::SourceSurface;
 namespace mozilla {
 namespace layers {
 
-uint64_t Image::sSerialCounter = 0;
-mozilla::Mutex Image::sSerialMutex("mozilla.layers.Image.sSerialMutex");
-
-
 already_AddRefed<Image>
 ImageFactory::CreateImage(const Image::Format *aFormats,
                           PRUint32 aNumFormats,

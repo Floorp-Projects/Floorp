@@ -143,24 +143,16 @@ public:
   void SetBackendData(LayersBackend aBackend, ImageBackendData* aData)
   { mBackendData[aBackend] = aData; }
 
-  uint64_t GetSerial() { return mSerial; }
-
 protected:
   Image(void* aImplData, Format aFormat) :
     mImplData(aImplData),
     mFormat(aFormat)
-  {
-    MutexAutoLock lock(sSerialMutex);
-    mSerial = ++sSerialCounter;
-  }
+  {}
 
   nsAutoPtr<ImageBackendData> mBackendData[mozilla::layers::LAYERS_LAST];
 
   void* mImplData;
-  uint64_t mSerial;
   Format mFormat;
-  static uint64_t sSerialCounter;
-  static mozilla::Mutex sSerialMutex;
 };
 
 /**
