@@ -1676,12 +1676,11 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
 }
 
 /*
- * The location object is special. There is the location object itself and
- * then the location object wrapper. Because there are no direct references to
- * the location object itself, we don't want the old obj (|origobj| here) to
- * become the new wrapper but the wrapper itself instead. This leads to very
- * subtle differences between js_TransplantObjectWithWrapper and
- * JS_TransplantObject.
+ * Some C++ objects (such as the location object and XBL) require both an XPConnect
+ * reflector and a security wrapper for that reflector. We expect that there are
+ * no live references to the reflector, so when we perform the transplant we turn
+ * the security wrapper into a cross-compartment wrapper. Just in case there
+ * happen to be live references to the reflector, we swap it out to limit the harm.
  */
 JS_FRIEND_API(JSObject *)
 js_TransplantObjectWithWrapper(JSContext *cx,
@@ -1737,12 +1736,25 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     // Lastly, update things in the original compartment. Our invariants dictate
     // that the original compartment can only have one cross-compartment wrapper
     // to the new object. So we choose to update |origwrapper|, not |origobj|,
-    // since theoretically there should have been no direct intra-compartment
-    // references to |origobj|.
+    // since there are probably no live direct intra-compartment references to
+    // |origobj|.
     {
         AutoCompartment ac(cx, origobj);
+        if (!ac.enter())
+            return NULL;
+
+        // We can't be sure that the reflector is completely dead. This is bad,
+        // because it is in a weird state. To minimize potential harm we create
+        // a new unreachable dummy object and swap it with the reflector.
+        // After the swap we have a possibly-live object that isn't dangerous,
+        // and a possibly-dangerous object that isn't live.
+        RootedObject reflectorGuts(cx, NewDeadProxyObject(cx, JS_GetGlobalForObject(cx, origobj)));
+        if (!reflectorGuts || !origobj->swap(cx, reflectorGuts))
+            return NULL;
+
+        // Turn origwrapper into a CCW to the new object.
         RootedObject wrapperGuts(cx, targetobj);
-        if (!ac.enter() || !JS_WrapObject(cx, wrapperGuts.address()))
+        if (!JS_WrapObject(cx, wrapperGuts.address()))
             return NULL;
         if (!origwrapper->swap(cx, wrapperGuts))
             return NULL;

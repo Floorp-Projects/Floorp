@@ -1033,6 +1033,13 @@ int DeadObjectProxy::sDeadObjectFamily;
 
 } // namespace js
 
+JSObject *
+js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
+{
+    return NewProxyObject(cx, &DeadObjectProxy::singleton, NullValue(),
+                          NULL, parent, NULL, NULL);
+}
+
 void
 js::NukeCrossCompartmentWrapper(JSObject *wrapper)
 {
