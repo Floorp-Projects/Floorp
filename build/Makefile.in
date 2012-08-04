@@ -263,4 +263,8 @@ libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
 endif
 
 GARBAGE += $(srcdir)/automationutils.pyc
+
+# Test for ConfigStatus.py
+check::
+	$(PYTHON) $(srcdir)/tests/unit-ConfigStatus.py
 endif # ENABLE_TESTS
