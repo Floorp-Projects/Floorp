@@ -7369,17 +7369,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     if (sDocument_id == id) {
-      nsCOMPtr<nsIDOMDocument> document;
-      rv = win->GetDocument(getter_AddRefs(document));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // FIXME Ideally we'd have an nsIDocument here and get nsWrapperCache
-      //       from it.
-      jsval v;
+      nsCOMPtr<nsIDocument> document = win->GetDoc();
+      JS::Value v;
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), document,
-                      &NS_GET_IID(nsIDOMDocument), false, &v,
-                      getter_AddRefs(holder));
+      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), document, document,
+                      &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
+                      false);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // The PostCreate hook for the document will handle defining the
