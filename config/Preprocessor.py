@@ -392,7 +392,7 @@ class Preprocessor:
         return str(self.context[varname])
       if fatal:
         raise Preprocessor.Error(self, 'UNDEFINED_VAR', varname)
-      return ''
+      return matchobj.group(0)
     return self.varsubst.sub(repl, aLine)
   def filter_attemptSubstitution(self, aLine):
     return self.filter_substitution(aLine, fatal=False)
