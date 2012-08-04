@@ -2805,51 +2805,44 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
 
     size_t beglen = strlen(begin);
     size_t taglen = 1 + beglen + 1;                     /* '<begin' + '>' */
-    size_t parlen = 0; /* Avoid warning. */
     if (param) {
-        parlen = param->length();
+        size_t parlen = param->length();
         taglen += 2 + parlen + 1;                       /* '="param"' */
     }
     size_t endlen = strlen(end);
     taglen += str->length() + 2 + endlen + 1;           /* 'str</end>' */
 
-    if (taglen >= ~(size_t)0 / sizeof(jschar)) {
-        js_ReportAllocationOverflow(cx);
-        return false;
-    }
 
-    jschar *tagbuf = (jschar *) cx->malloc_((taglen + 1) * sizeof(jschar));
-    if (!tagbuf)
+    StringBuffer sb(cx);
+    if (!sb.reserve(taglen))
         return false;
 
-    size_t j = 0;
-    tagbuf[j++] = '<';
-    for (size_t i = 0; i < beglen; i++)
-        tagbuf[j++] = (jschar)begin[i];
+    sb.infallibleAppend('<');
+
+    MOZ_ALWAYS_TRUE(sb.appendInflated(begin, beglen));
+
     if (param) {
-        tagbuf[j++] = '=';
-        tagbuf[j++] = '"';
-        js_strncpy(&tagbuf[j], param->chars(), parlen);
-        j += parlen;
-        tagbuf[j++] = '"';
+        sb.infallibleAppend('=');
+        sb.infallibleAppend('"');
+        MOZ_ALWAYS_TRUE(sb.append(param));
+        sb.infallibleAppend('"');
     }
-    tagbuf[j++] = '>';
+    
+    sb.infallibleAppend('>');
 
-    js_strncpy(&tagbuf[j], str->chars(), str->length());
-    j += str->length();
-    tagbuf[j++] = '<';
-    tagbuf[j++] = '/';
-    for (size_t i = 0; i < endlen; i++)
-        tagbuf[j++] = (jschar)end[i];
-    tagbuf[j++] = '>';
-    JS_ASSERT(j == taglen);
-    tagbuf[j] = 0;
+    MOZ_ALWAYS_TRUE(sb.append(str));
 
-    JSString *retstr = js_NewString(cx, tagbuf, taglen);
-    if (!retstr) {
-        Foreground::free_((char *)tagbuf);
+    sb.infallibleAppend('<');
+    sb.infallibleAppend('/');
+
+    MOZ_ALWAYS_TRUE(sb.appendInflated(end, endlen));
+
+    sb.infallibleAppend('>');
+
+    JSFixedString *retstr = sb.finishString();
+    if (!retstr)
         return false;
-    }
+
     call.rval().setString(retstr);
     return true;
 }
