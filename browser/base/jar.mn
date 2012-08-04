@@ -105,8 +105,3 @@ browser.jar:
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
-#ifdef MOZ_SAFE_BROWSING
-*       content/browser/report-phishing-overlay.xul     (content/report-phishing-overlay.xul)
-        content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
-% overlay chrome://browser/content/browser.xul chrome://browser/content/report-phishing-overlay.xul
-#endif

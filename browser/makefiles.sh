@@ -66,6 +66,12 @@ dom/locales/Makefile
 security/manager/locales/Makefile
 "
 
+if [ "$MOZ_SAFE_BROWSING" ]; then
+  add_makefiles "
+    browser/components/safebrowsing/Makefile
+  "
+fi
+
 if [ "$MAKENSISU" ]; then
   add_makefiles "
     browser/installer/windows/Makefile
@@ -124,4 +130,9 @@ if [ "$ENABLE_TESTS" ]; then
     browser/fuel/test/Makefile
     browser/modules/test/Makefile
   "
+  if [ "$MOZ_SAFE_BROWSING" ]; then
+    add_makefiles "
+      browser/components/safebrowsing/content/test/Makefile
+    "
+  fi
 fi
