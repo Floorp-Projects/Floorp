@@ -7671,8 +7671,12 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING)
     inheritBits |= NS_STYLE_INHERIT_BIT(Padding);
 
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW)
+    inheritBits |= NS_STYLE_INHERIT_BIT(Text);
+
   // properties in the SIDS, whether or not we care about them
-  size_t nprops = 0, backgroundOffset, borderOffset, paddingOffset;
+  size_t nprops = 0,
+         backgroundOffset, borderOffset, paddingOffset, textShadowOffset;
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     backgroundOffset = nprops;
@@ -7687,6 +7691,11 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
     paddingOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Padding);
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
+    textShadowOffset = nprops;
+    nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Text);
   }
 
   void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
@@ -7706,6 +7715,10 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
     ruleData.mValueOffsets[eStyleStruct_Padding] = paddingOffset;
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
+    ruleData.mValueOffsets[eStyleStruct_Text] = textShadowOffset;
   }
 
   static const nsCSSProperty backgroundValues[] = {
@@ -7747,16 +7760,22 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     eCSSProperty_padding_end_value,
   };
 
+  static const nsCSSProperty textShadowValues[] = {
+    eCSSProperty_text_shadow
+  };
+
   // Number of properties we care about
   size_t nValues = 0;
 
   nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
                      NS_ARRAY_LENGTH(borderValues) +
-                     NS_ARRAY_LENGTH(paddingValues)];
+                     NS_ARRAY_LENGTH(paddingValues) +
+                     NS_ARRAY_LENGTH(textShadowValues)];
 
   nsCSSProperty properties[NS_ARRAY_LENGTH(backgroundValues) +
                            NS_ARRAY_LENGTH(borderValues) +
-                           NS_ARRAY_LENGTH(paddingValues)];
+                           NS_ARRAY_LENGTH(paddingValues) +
+                           NS_ARRAY_LENGTH(textShadowValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     for (PRUint32 i = 0, i_end = ArrayLength(backgroundValues);
@@ -7779,6 +7798,14 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
          i < i_end; ++i) {
       properties[nValues] = paddingValues[i];
       values[nValues++] = ruleData.ValueFor(paddingValues[i]);
+    }
+  }
+
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
+    for (PRUint32 i = 0, i_end = ArrayLength(textShadowValues);
+         i < i_end; ++i) {
+      properties[nValues] = textShadowValues[i];
+      values[nValues++] = ruleData.ValueFor(textShadowValues[i]);
     }
   }
 
