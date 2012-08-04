@@ -14,7 +14,6 @@
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
 #include "nsCaret.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsITextControlFrame.h"
 #include "nsGkAtoms.h"

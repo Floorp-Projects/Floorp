@@ -17,7 +17,6 @@
 #include "nsPresContext.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIFrame.h"
@@ -202,8 +201,7 @@ nsIMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   NS_ENSURE_TRUE(widget, );
 
   bool isTrusted;
-  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aMouseEvent);
-  nsresult rv = NSEvent->GetIsTrusted(&isTrusted);
+  nsresult rv = aMouseEvent->GetIsTrusted(&isTrusted);
   NS_ENSURE_SUCCESS(rv, );
   if (!isTrusted) {
     return; // ignore untrusted event.

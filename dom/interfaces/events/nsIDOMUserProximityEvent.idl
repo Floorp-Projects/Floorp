@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(caf39525-b0f9-46d1-91d2-59f31dd6e206)]
+[scriptable, builtinclass, uuid(ae59b379-1c58-4baa-bef4-21fca57fc4c2)]
 interface nsIDOMUserProximityEvent : nsIDOMEvent
 {
   [noscript] void initUserProximityEvent(in DOMString eventTypeArg,
