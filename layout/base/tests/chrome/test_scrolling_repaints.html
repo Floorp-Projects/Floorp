@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that we don't get unnecessary repaints due to subpixel shifts</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<!-- Need a timeout here to allow paint unsuppression before we start the test -->
+<body onload="setTimeout(startTest,0)">
+<div id="t" style="width:400px; height:100px; background:yellow; overflow:hidden">
+  <div style="height:40px;"></div>
+  <div id="e" style="height:30px; background:lime"></div>
+  <div style="height:60.4px; background:pink"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var t = document.getElementById("t");
+var e = document.getElementById("e");
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+               getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function startTest() {
+  // Do a scroll to ensure we trigger activity heuristics.
+  waitForAllPaintsFlushed(function () {
+    t.scrollTop = 5;
+	// Scroll down as far as we can, to put our rendering layer at a subpixel offset within the layer
+    waitForAllPaintsFlushed(function () {
+      t.scrollTop = 1000;
+      waitForAllPaintsFlushed(function () {
+        // Clear paint state now and scroll again.
+        utils.checkAndClearPaintedState(e);
+		// scroll up a little bit. This should not cause anything to be repainted.
+        t.scrollTop = t.scrollTop - 10;
+        waitForAllPaintsFlushed(function () {
+          var painted = utils.checkAndClearPaintedState(e);
+          is(painted, false, "Fully-visible scrolled element should not have been painted");
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>
