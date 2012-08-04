@@ -444,10 +444,8 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue)
       return NS_OK;
     }
 
-    nsRefPtr<nsMappedAttributes> mapped;
-    nsresult rv = GetModifiableMapped(nullptr, nullptr, false,
-                                      getter_AddRefs(mapped));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsMappedAttributes> mapped =
+      GetModifiableMapped(nullptr, nullptr, false);
 
     mapped->RemoveAttrAt(aPos, aValue);
 
@@ -558,18 +556,15 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
                                           nsMappedAttributeElement* aContent,
                                           nsHTMLStyleSheet* aSheet)
 {
-  nsRefPtr<nsMappedAttributes> mapped;
-
   bool willAdd = true;
   if (mImpl && mImpl->mMappedAttrs) {
-    willAdd = mImpl->mMappedAttrs->GetAttr(aLocalName) == nullptr;
+    willAdd = !mImpl->mMappedAttrs->GetAttr(aLocalName);
   }
 
-  nsresult rv = GetModifiableMapped(aContent, aSheet, willAdd,
-                                    getter_AddRefs(mapped));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsMappedAttributes> mapped =
+    GetModifiableMapped(aContent, aSheet, willAdd);
 
-  rv = mapped->SetAndTakeAttr(aLocalName, aValue);
+  nsresult rv = mapped->SetAndTakeAttr(aLocalName, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return MakeMappedUnique(mapped);
@@ -584,10 +579,8 @@ nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
     return NS_OK;
   }
 
-  nsRefPtr<nsMappedAttributes> mapped;
-  nsresult rv = GetModifiableMapped(nullptr, nullptr, false, 
-                                    getter_AddRefs(mapped));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsMappedAttributes> mapped =
+    GetModifiableMapped(nullptr, nullptr, false);
 
   mapped->SetStyleSheet(aSheet);
 
@@ -697,33 +690,20 @@ nsAttrAndChildArray::MappedAttrCount() const
   return mImpl && mImpl->mMappedAttrs ? (PRUint32)mImpl->mMappedAttrs->Count() : 0;
 }
 
-nsresult
+nsMappedAttributes*
 nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
                                          nsHTMLStyleSheet* aSheet,
-                                         bool aWillAddAttr,
-                                         nsMappedAttributes** aModifiable)
+                                         bool aWillAddAttr)
 {
-  *aModifiable = nullptr;
-
   if (mImpl && mImpl->mMappedAttrs) {
-    *aModifiable = mImpl->mMappedAttrs->Clone(aWillAddAttr);
-    NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(*aModifiable);
-    
-    return NS_OK;
+    return mImpl->mMappedAttrs->Clone(aWillAddAttr);
   }
 
-  NS_ASSERTION(aContent, "Trying to create modifiable without content");
+  MOZ_ASSERT(aContent, "Trying to create modifiable without content");
 
   nsMapRuleToAttributesFunc mapRuleFunc =
     aContent->GetAttributeMappingFunction();
-  *aModifiable = new nsMappedAttributes(aSheet, mapRuleFunc);
-  NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aModifiable);
-
-  return NS_OK;
+  return new nsMappedAttributes(aSheet, mapRuleFunc);
 }
 
 nsresult
