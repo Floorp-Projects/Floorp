@@ -403,13 +403,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 JSBool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-  return Throw<true>(cx, NS_ERROR_FAILURE);
-}
-
-JSBool
-ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-  return Throw<false>(cx, NS_ERROR_FAILURE);
+  return ThrowErrorMessage(cx, MSG_ILLEGAL_CONSTRUCTOR);
 }
 
 bool
