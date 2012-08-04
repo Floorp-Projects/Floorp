@@ -6,11 +6,11 @@
 
 $(warning httpserver XPI_NAME=$(XPI_NAME))
 
-DEPTH          = ../../..
+DEPTH          = @DEPTH@
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-relativesrcdir = netwerk/test/httpserver
+relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 

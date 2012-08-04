@@ -3,11 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = build/pgo
+relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -19,7 +19,7 @@ DIRS = \
 include $(topsrcdir)/config/rules.mk
 
 # We install to _profile/pgo
-TARGET_DEPTH = ../..
+TARGET_DEPTH = @DEPTH@
 include $(topsrcdir)/build/automation-build.mk
 
 # Need to override the browser_path from binary-location.mk (included via automation-build.mk)
