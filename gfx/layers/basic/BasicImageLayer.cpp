@@ -174,7 +174,8 @@ class BasicShadowableImageLayer : public BasicImageLayer,
 public:
   BasicShadowableImageLayer(BasicShadowLayerManager* aManager) :
     BasicImageLayer(aManager),
-    mBufferIsOpaque(false)
+    mBufferIsOpaque(false),
+    mLastPaintedImageSerial(0)
   {
     MOZ_COUNT_CTOR(BasicShadowableImageLayer);
   }
@@ -243,6 +244,7 @@ private:
   SurfaceDescriptor mBackBufferU;
   SurfaceDescriptor mBackBufferV;
   gfxIntSize mCbCrSize;
+  uint64_t mLastPaintedImageSerial;
 };
  
 void
@@ -371,6 +373,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
     if (!BasicManager()->AllocBuffer(mSize, type, &mBackBuffer))
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
+  } else if (mLastPaintedImageSerial == image->GetSerial()) {
+    return;
   }
 
   AutoOpenSurface backSurface(OPEN_READ_WRITE, mBackBuffer);
@@ -382,6 +386,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                mBackBuffer);
+  mLastPaintedImageSerial = image->GetSerial();
 }
 
 class BasicShadowImageLayer : public ShadowImageLayer, public BasicImplData {
