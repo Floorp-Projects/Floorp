@@ -6471,8 +6471,6 @@ nsDocument::SetCurrentRadioButton(const nsAString& aName,
                                   nsIDOMHTMLInputElement* aRadio)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_OK);
-
   radioGroup->mSelectedRadioButton = aRadio;
   return NS_OK;
 }
@@ -6482,8 +6480,6 @@ nsDocument::GetCurrentRadioButton(const nsAString& aName,
                                   nsIDOMHTMLInputElement** aRadio)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_OK);
-
   *aRadio = radioGroup->mSelectedRadioButton;
   NS_IF_ADDREF(*aRadio);
   return NS_OK;
@@ -6502,7 +6498,6 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
   *aRadioOut = nullptr;
 
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_ERROR_FAILURE);
 
   // Return the radio button relative to the focused radio button.
   // If no radio is focused, get the radio relative to the selected one.
@@ -6548,7 +6543,6 @@ nsDocument::AddToRadioGroup(const nsAString& aName,
                             nsIFormControl* aRadio)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   radioGroup->mRadioButtons.AppendObject(aRadio);
 
@@ -6565,7 +6559,6 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
                                  nsIFormControl* aRadio)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   radioGroup->mRadioButtons.RemoveObject(aRadio);
 
@@ -6585,7 +6578,6 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
                            bool aFlushContent)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
     if (!aVisitor->Visit(radioGroup->mRadioButtons[i])) {
@@ -6607,10 +6599,6 @@ void
 nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-
-  if (!radioGroup) {
-    return;
-  }
 
   nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
   NS_ASSERTION(element, "radio controls have to be content elements");
@@ -6634,11 +6622,6 @@ void
 nsDocument::SetValueMissingState(const nsAString& aName, bool aValue)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-
-  if (!radioGroup) {
-    return;
-  }
-
   radioGroup->mGroupSuffersFromValueMissing = aValue;
 }
 
