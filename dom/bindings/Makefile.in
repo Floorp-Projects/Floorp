@@ -62,15 +62,16 @@ EXPORTS_mozilla = \
   $(NULL)
 
 EXPORTS_$(binding_include_path) = \
+  BindingUtils.h \
   DOMJSClass.h \
   Errors.msg \
+  Nullable.h \
+  PrimitiveConversions.h \
   PrototypeList.h \
   RegisterBindings.h \
-  Nullable.h \
   TypedArray.h \
-  BindingUtils.h \
-  UnionTypes.h \
   UnionConversions.h \
+  UnionTypes.h \
   $(exported_binding_headers) \
   $(NULL)
 
