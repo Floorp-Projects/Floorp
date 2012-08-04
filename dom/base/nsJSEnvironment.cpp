@@ -3658,6 +3658,29 @@ nsJSRuntime::CreateContext()
   return scriptContext.forget();
 }
 
+nsresult
+nsJSRuntime::ParseVersion(const nsString &aVersionStr, PRUint32 *flags)
+{
+    NS_PRECONDITION(flags, "Null flags param?");
+    JSVersion jsVersion = JSVERSION_UNKNOWN;
+    if (aVersionStr.Length() != 3 || aVersionStr[0] != '1' || aVersionStr[1] != '.')
+        jsVersion = JSVERSION_UNKNOWN;
+    else switch (aVersionStr[2]) {
+        case '0': jsVersion = JSVERSION_1_0; break;
+        case '1': jsVersion = JSVERSION_1_1; break;
+        case '2': jsVersion = JSVERSION_1_2; break;
+        case '3': jsVersion = JSVERSION_1_3; break;
+        case '4': jsVersion = JSVERSION_1_4; break;
+        case '5': jsVersion = JSVERSION_1_5; break;
+        case '6': jsVersion = JSVERSION_1_6; break;
+        case '7': jsVersion = JSVERSION_1_7; break;
+        case '8': jsVersion = JSVERSION_1_8; break;
+        default:  jsVersion = JSVERSION_UNKNOWN;
+    }
+    *flags = (PRUint32)jsVersion;
+    return NS_OK;
+}
+
 //static
 void
 nsJSRuntime::Startup()

@@ -2262,6 +2262,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   // is probably the right thing to do.
 
   // Now reset our inline style and attribute sheets.
+  nsresult rv = NS_OK;
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
     nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2271,8 +2272,11 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     }
     mAttrStyleSheet->Reset(aURI);
   } else {
-    mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
-    NS_ADDREF(mAttrStyleSheet);
+    rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURI, this);
+    if (NS_FAILED(rv)) {
+      NS_IF_RELEASE(mAttrStyleSheet);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
@@ -2289,7 +2293,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     mStyleAttrStyleSheet->Reset(aURI);
   } else {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
-    nsresult rv = mStyleAttrStyleSheet->Init(aURI, this);
+    NS_ENSURE_TRUE(mStyleAttrStyleSheet, NS_ERROR_OUT_OF_MEMORY);
+    rv = mStyleAttrStyleSheet->Init(aURI, this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2303,7 +2308,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     FillStyleSet(shell->StyleSet());
   }
 
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -6414,44 +6419,15 @@ nsDocument::IsScriptEnabled()
 }
 
 nsRadioGroupStruct*
-nsDocument::GetRadioGroupInternal(const nsAString& aName) const
+nsDocument::GetRadioGroup(const nsAString& aName)
 {
-#ifdef DEBUG
+  nsAutoString tmKey(aName);
   if (IsHTML()) {
-    nsAutoString lcName;
-    ToLowerCase(aName, lcName);
-    MOZ_ASSERT(aName == lcName);
+    ToLowerCase(tmKey); //should case-insensitive.
   }
-#endif
 
   nsRadioGroupStruct* radioGroup;
-  if (!mRadioGroups.Get(aName, &radioGroup)) {
-    return nullptr;
-  }
-
-  return radioGroup;
-}
-
-nsRadioGroupStruct*
-nsDocument::GetRadioGroup(const nsAString& aName) const
-{
-  nsAutoString tmKey(aName);
-  if (IsHTML()) {
-    ToLowerCase(tmKey); //should case-insensitive.
-  }
-
-  return GetRadioGroupInternal(tmKey);
-}
-
-nsRadioGroupStruct*
-nsDocument::GetOrCreateRadioGroup(const nsAString& aName)
-{
-  nsAutoString tmKey(aName);
-  if (IsHTML()) {
-    ToLowerCase(tmKey); //should case-insensitive.
-  }
-
-  if (nsRadioGroupStruct* radioGroup = GetRadioGroupInternal(tmKey)) {
+  if (mRadioGroups.Get(tmKey, &radioGroup)) {
     return radioGroup;
   }
 
@@ -6465,7 +6441,9 @@ NS_IMETHODIMP
 nsDocument::SetCurrentRadioButton(const nsAString& aName,
                                   nsIDOMHTMLInputElement* aRadio)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_OK);
+
   radioGroup->mSelectedRadioButton = aRadio;
   return NS_OK;
 }
@@ -6474,7 +6452,9 @@ NS_IMETHODIMP
 nsDocument::GetCurrentRadioButton(const nsAString& aName,
                                   nsIDOMHTMLInputElement** aRadio)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_OK);
+
   *aRadio = radioGroup->mSelectedRadioButton;
   NS_IF_ADDREF(*aRadio);
   return NS_OK;
@@ -6492,7 +6472,8 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
   //     opposed to nsHTMLDocument?
   *aRadioOut = nullptr;
 
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_ERROR_FAILURE);
 
   // Return the radio button relative to the focused radio button.
   // If no radio is focused, get the radio relative to the selected one.
@@ -6537,7 +6518,8 @@ NS_IMETHODIMP
 nsDocument::AddToRadioGroup(const nsAString& aName,
                             nsIFormControl* aRadio)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   radioGroup->mRadioButtons.AppendObject(aRadio);
 
@@ -6553,7 +6535,8 @@ NS_IMETHODIMP
 nsDocument::RemoveFromRadioGroup(const nsAString& aName,
                                  nsIFormControl* aRadio)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   radioGroup->mRadioButtons.RemoveObject(aRadio);
 
@@ -6572,7 +6555,8 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
                            nsIRadioVisitor* aVisitor,
                            bool aFlushContent)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  NS_ENSURE_TRUE(radioGroup, NS_OK);
 
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
     if (!aVisitor->Visit(radioGroup->mRadioButtons[i])) {
@@ -6586,14 +6570,26 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
 PRUint32
 nsDocument::GetRequiredRadioCount(const nsAString& aName) const
 {
-  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = nullptr;
+  // TODO: we should call GetRadioGroup here (and make it const) but for that
+  // we would need to have an explicit CreateRadioGroup() instead of create
+  // one when GetRadioGroup is called. See bug 636123.
+  nsAutoString tmKey(aName);
+  if (IsHTML())
+     ToLowerCase(tmKey); //should case-insensitive.
+  mRadioGroups.Get(tmKey, &radioGroup);
+
   return radioGroup ? radioGroup->mRequiredRadioCount : 0;
 }
 
 void
 nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+
+  if (!radioGroup) {
+    return;
+  }
 
   nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
   NS_ASSERTION(element, "radio controls have to be content elements");
@@ -6609,14 +6605,27 @@ nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
 bool
 nsDocument::GetValueMissingState(const nsAString& aName) const
 {
-  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = nullptr;
+  // TODO: we should call GetRadioGroup here (and make it const) but for that
+  // we would need to have an explicit CreateRadioGroup() instead of create
+  // one when GetRadioGroup is called. See bug 636123.
+  nsAutoString tmKey(aName);
+  if (IsHTML())
+     ToLowerCase(tmKey); //should case-insensitive.
+  mRadioGroups.Get(tmKey, &radioGroup);
+
   return radioGroup && radioGroup->mGroupSuffersFromValueMissing;
 }
 
 void
 nsDocument::SetValueMissingState(const nsAString& aName, bool aValue)
 {
-  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
+
+  if (!radioGroup) {
+    return;
+  }
+
   radioGroup->mGroupSuffersFromValueMissing = aValue;
 }
 

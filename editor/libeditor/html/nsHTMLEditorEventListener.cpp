@@ -14,6 +14,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"
@@ -103,7 +104,8 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMEventTarget> target;
-  res = aMouseEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(aMouseEvent);
+  res = internalEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);

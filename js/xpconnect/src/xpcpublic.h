@@ -281,56 +281,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  nsISupports *closure, size_t *rtTotal = NULL);
 
 /**
- * Convert a jsval to PRInt64. Return true on success.
- */
-inline bool
-ValueToInt64(JSContext *cx, JS::Value v, int64_t *result)
-{
-    if (JSVAL_IS_INT(v)) {
-        int32_t intval;
-        if (!JS_ValueToECMAInt32(cx, v, &intval))
-            return false;
-        *result = static_cast<int64_t>(intval);
-    } else {
-        double doubleval;
-        if (!JS_ValueToNumber(cx, v, &doubleval))
-            return false;
-        // Be careful with non-finite doubles
-        if (NS_finite(doubleval))
-            // XXXbz this isn't quite right either; need to do the mod thing
-            *result = static_cast<int64_t>(doubleval);
-        else
-            *result = 0;
-    }
-    return true;
-}
-
-/**
- * Convert a jsval to uint64_t. Return true on success.
- */
-inline bool
-ValueToUint64(JSContext *cx, JS::Value v, uint64_t *result)
-{
-    if (JSVAL_IS_INT(v)) {
-        uint32_t intval;
-        if (!JS_ValueToECMAUint32(cx, v, &intval))
-            return false;
-        *result = static_cast<uint64_t>(intval);
-    } else {
-        double doubleval;
-        if (!JS_ValueToNumber(cx, v, &doubleval))
-            return false;
-        // Be careful with non-finite doubles
-        if (NS_finite(doubleval))
-            // XXXbz this isn't quite right either; need to do the mod thing
-            *result = static_cast<uint64_t>(doubleval);
-        else
-            *result = 0;
-    }
-    return true;
-}
-
-/**
  * Given an arbitrary object, Unwrap will return the wrapped object if the
  * passed-in object is a wrapper that Unwrap knows about *and* the
  * currently running code has permission to access both the wrapper and

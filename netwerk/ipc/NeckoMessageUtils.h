@@ -191,6 +191,8 @@ struct ParamTraits<InputStream>
     }
 
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mStream);
+    NS_ASSERTION(classInfo, "Must QI to nsIClassInfo for this to work!");
+
     char cidStr[NSID_LENGTH];
     nsCID cid;
     mozilla::DebugOnly<nsresult> rv = classInfo->GetClassIDNoAlloc(&cid);

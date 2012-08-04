@@ -13,7 +13,7 @@
         <View android:id="@+id/curve"
               android:layout_width="84dip"
               android:layout_height="fill_parent"
-              android:layout_marginRight="50dip"
+              android:layout_marginRight="56dip"
               android:layout_alignParentRight="true"
               android:background="@drawable/address_bar_bg_curve"/>
 
@@ -39,7 +39,7 @@
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="112dip"
-                     android:layout_marginRight="22dip"
+                     android:layout_marginRight="28dip"
                      android:layout_alignParentRight="true"
                      android:background="@drawable/tabs_full_button"
                      android:gravity="center_vertical"

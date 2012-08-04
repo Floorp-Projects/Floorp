@@ -406,6 +406,13 @@ var SocialSidebar = {
     return Services.prefs.getBoolPref("social.sidebar.open");
   },
 
+  dispatchEvent: function(aType, aDetail) {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    let evt = sbrowser.contentDocument.createEvent("CustomEvent");
+    evt.initCustomEvent(aType, true, true, aDetail ? aDetail : {});
+    sbrowser.contentDocument.documentElement.dispatchEvent(evt);
+  },
+
   updateSidebar: function SocialSidebar_updateSidebar() {
     // Hide the toggle menu item if the sidebar cannot appear
     let command = document.getElementById("Social:ToggleSidebar");
@@ -418,17 +425,29 @@ var SocialSidebar = {
     broadcaster.hidden = hideSidebar;
     command.setAttribute("checked", !hideSidebar);
 
-    // If the sidebar is hidden, unload its document
-    // XXX this results in a poor UX, we should revisit
     let sbrowser = document.getElementById("social-sidebar-browser");
-    if (broadcaster.hidden) {
-      sbrowser.removeAttribute("origin");
-      sbrowser.setAttribute("src", "about:blank");
-      return;
+    if (hideSidebar) {
+      this.dispatchEvent("sidebarhide");
+      // If we're disabled, unload the sidebar content
+      if (!this.canShow) {
+        sbrowser.removeAttribute("origin");
+        sbrowser.setAttribute("src", "about:blank");
+      }
+    } else {
+      // Make sure the right sidebar URL is loaded
+      if (sbrowser.getAttribute("origin") != Social.provider.origin) {
+        sbrowser.setAttribute("origin", Social.provider.origin);
+        sbrowser.setAttribute("src", Social.provider.sidebarURL);
+        sbrowser.addEventListener("load", function sidebarOnShow() {
+          sbrowser.removeEventListener("load", sidebarOnShow);
+          // let load finish, then fire our event
+          setTimeout(function () {
+            SocialSidebar.dispatchEvent("sidebarshow");
+          }, 0);
+        });
+      } else {
+        this.dispatchEvent("sidebarshow");
+      }
     }
-
-    // Load the sidebar document
-    sbrowser.setAttribute("origin", Social.provider.origin);
-    sbrowser.setAttribute("src", Social.provider.sidebarURL);
   }
 }
