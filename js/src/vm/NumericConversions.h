@@ -33,25 +33,28 @@ union DoublePun {
 
 } /* namespace detail */
 
-/* ES5 9.5 ToInt32 (specialized for doubles). */
-inline int32_t
-ToInt32(double d)
+/* Numeric Conversion base. Round doubles to Ints according to ECMA or WEBIDL standards. */
+template<size_t width, typename ResultType>
+inline ResultType
+ToIntWidth(double d)
 {
 #if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
     defined(_M_IX86) || defined(_M_X64)
-    detail::DoublePun du, duh, two32;
+    detail::DoublePun du, duh, twoWidth;
     uint32_t di_h, u_tmp, expon, shift_amount;
     int32_t mask32;
 
     /*
      * Algorithm Outline
-     *  Step 1. If d is NaN, +/-Inf or |d|>=2^84 or |d|<1, then return 0
-     *          All of this is implemented based on an exponent comparison.
-     *  Step 2. If |d|<2^31, then return (int)d
+     *  Step 1. If d is NaN, +/-Inf or |d|>=2^(width + 52) or |d|<1, then return 0
+     *          All of this is implemented based on an exponent comparison,
+     *          since anything with a higher exponent is either not finite, or
+     *          going to round to 0..
+     *  Step 2. If |d|<2^(width - 1), then return (int)d
      *          The cast to integer (conversion in RZ mode) returns the correct result.
-     *  Step 3. If |d|>=2^32, d:=fmod(d, 2^32) is taken  -- but without a call
-     *  Step 4. If |d|>=2^31, then the fractional bits are cleared before
-     *          applying the correction by 2^32:  d - sign(d)*2^32
+     *  Step 3. If |d|>=2^width, d:=fmod(d, 2^width) is taken  -- but without a call
+     *  Step 4. If |d|>=2^(width - 1), then the fractional bits are cleared before
+     *          applying the correction by 2^width:  d - sign(d)*2^width
      *  Step 5. Return (int)d
      */
 
@@ -59,27 +62,40 @@ ToInt32(double d)
     di_h = du.s.hi;
 
     u_tmp = (di_h & 0x7ff00000) - 0x3ff00000;
-    if (u_tmp >= (0x45300000-0x3ff00000)) {
-        // d is Nan, +/-Inf or +/-0, or |d|>=2^(32+52) or |d|<1, in which case result=0
+    if (u_tmp >= ((width + 52) << 20)) {
+        // d is Nan, +/-Inf or +/-0, or |d|>=2^(width+52) or |d|<1, in which case result=0
+        // If we need to shift by more than (width + 52), there are no data bits
+        // to preserve, and the mod will turn out 0.
         return 0;
     }
 
-    if (u_tmp < 0x01f00000) {
-        // |d|<2^31
-        return int32_t(d);
+    if (u_tmp < ((width - 1) << 20)) {
+        // |d|<2^(width - 1)
+        return ResultType(d);
     }
 
-    if (u_tmp > 0x01f00000) {
-        // |d|>=2^32
+    if (u_tmp > ((width - 1) << 20)) {
+        // |d|>=2^width
+        // Throw away multiples of 2^width.
+        //
+        // That is, compute du.d = the value in (-2^width, 2^width)
+        // that has the same sign as d and is equal to d modulo 2^width.
+        //
+        // This can't be done simply by masking away bits of du because
+        // the implicit one-bit of the mantissa is one of the ones we want to
+        // eliminate. So instead we compute duh.d = the appropriate multiple
+        // of 2^width, which *can* be computed by masking, and then we
+        // subtract that from du.d.
         expon = u_tmp >> 20;
-        shift_amount = expon - 21;
-        duh.u64 = du.u64;
+        shift_amount = expon - (width - 11);
         mask32 = 0x80000000;
         if (shift_amount < 32) {
+            // Shift only affects top word.
             mask32 >>= shift_amount;
             duh.s.hi = du.s.hi & mask32;
             duh.s.lo = 0;
         } else {
+            // Top word all 1s, shift affects bottom word.
             mask32 >>= (shift_amount-32);
             duh.s.hi = du.s.hi;
             duh.s.lo = du.s.lo & mask32;
@@ -89,28 +105,56 @@ ToInt32(double d)
 
     di_h = du.s.hi;
 
-    // eliminate fractional bits
+    // Eliminate fractional bits
     u_tmp = (di_h & 0x7ff00000);
-    if (u_tmp >= 0x41e00000) {
-        // |d|>=2^31
+    if (u_tmp >= (0x3ff00000 + ((width - 1) << 20))) {
+        // |d|>=2^(width - 1)
         expon = u_tmp >> 20;
+
+        // Same idea as before, except save everything non-fractional.
         shift_amount = expon - (0x3ff - 11);
         mask32 = 0x80000000;
         if (shift_amount < 32) {
+            // Top word only
             mask32 >>= shift_amount;
             du.s.hi &= mask32;
             du.s.lo = 0;
         } else {
+            // Bottom word. Top word all 1s.
             mask32 >>= (shift_amount-32);
             du.s.lo &= mask32;
         }
-        two32.s.hi = 0x41f00000 ^ (du.s.hi & 0x80000000);
-        two32.s.lo = 0;
-        du.d -= two32.d;
+        // Apply step 4's 2^width correction.
+        twoWidth.s.hi = (0x3ff00000 + (width << 20)) ^ (du.s.hi & 0x80000000);
+        twoWidth.s.lo = 0;
+        du.d -= twoWidth.d;
     }
 
-    return int32_t(du.d);
-#elif defined (__arm__) && defined (__GNUC__)
+    return ResultType(du.d);
+#else
+    double twoWidth, twoWidthMin1;
+
+    if (!MOZ_DOUBLE_IS_FINITE(d))
+        return 0;
+
+    /* FIXME: This relies on undefined behavior; see bug 667739. */
+    ResultType i = (ResultType) d;
+    if ((double) i == d)
+        return ResultType(i);
+
+    twoWidth = width == 32 ? 4294967296.0 : 18446744073709551616.0;
+    twoWidthMin1 = width == 32 ? 2147483648.0 : 9223372036854775808.0;
+    d = fmod(d, twoWidth);
+    d = (d >= 0) ? floor(d) : ceil(d) + twoWidth;
+    return (ResultType) (d >= twoWidthMin1 ? d - twoWidth : d);
+#endif
+}
+
+/* ES5 9.5 ToInt32 (specialized for doubles). */
+inline int32_t
+ToInt32(double d)
+{
+#if defined (__arm__) && defined (__GNUC__)
     int32_t i;
     uint32_t    tmp0;
     uint32_t    tmp1;
@@ -232,22 +276,7 @@ ToInt32(double d)
         );
     return i;
 #else
-    int32_t i;
-    double two32, two31;
-
-    if (!MOZ_DOUBLE_IS_FINITE(d))
-        return 0;
-
-    /* FIXME: This relies on undefined behavior; see bug 667739. */
-    i = (int32_t) d;
-    if ((double) i == d)
-        return i;
-
-    two32 = 4294967296.0;
-    two31 = 2147483648.0;
-    d = fmod(d, two32);
-    d = (d >= 0) ? floor(d) : ceil(d) + two32;
-    return (int32_t) (d >= two31 ? d - two32 : d);
+    return ToIntWidth<32, int32_t>(d);
 #endif
 }
 
@@ -256,6 +285,20 @@ inline uint32_t
 ToUint32(double d)
 {
     return uint32_t(ToInt32(d));
+}
+
+/* WEBIDL 4.2.10 */
+inline int64_t
+ToInt64(double d)
+{
+    return ToIntWidth<64, int64_t>(d);
+}
+
+/* WEBIDL 4.2.11 */
+inline uint64_t
+ToUint64(double d)
+{
+    return uint64_t(ToInt64(d));
 }
 
 /* ES5 9.4 ToInteger (specialized for doubles). */

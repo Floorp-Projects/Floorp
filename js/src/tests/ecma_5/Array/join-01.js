@@ -56,6 +56,13 @@ count = 0;
 assertEq(undefiney.join(stringifyCounter), "1objobj3obj4obj5");
 assertEq(count, 1);
 
+var log = '';
+arr = {length: {valueOf: function () { log += "L"; return 2; }},
+      0: "x", 1: "z"};
+var sep = {toString: function () { log += "S"; return "y"; }};
+assertEq(Array.prototype.join.call(arr, sep), "xyz");
+assertEq(log, "LS");
+
 var funky =
   {
     toString: function()
