@@ -1,5 +1,3 @@
 {
-  "Calling removeChild on a comment with no children should throw NOT_FOUND_ERR.": true,
-  "Calling removeChild on a text with no children should throw NOT_FOUND_ERR.": true,
   "Passing a value that is not a Node reference to removeChild should throw TypeError.": true
 }
