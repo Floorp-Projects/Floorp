@@ -498,9 +498,9 @@ def parsestring(s, filename):
                 e.rstrip()
 
                 if token is None:
-                    condstack[-1].append(parserdata.ExportDirective(e, single=False))
+                    condstack[-1].append(parserdata.ExportDirective(e, concurrent_set=False))
                 else:
-                    condstack[-1].append(parserdata.ExportDirective(e, single=True))
+                    condstack[-1].append(parserdata.ExportDirective(e, concurrent_set=True))
 
                     value = flattenmakesyntax(d, offset).lstrip()
                     condstack[-1].append(parserdata.SetVariable(e, value=value, valueloc=d.getloc(offset), token=token, targetexp=None))
