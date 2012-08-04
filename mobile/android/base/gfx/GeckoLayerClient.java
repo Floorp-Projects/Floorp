@@ -122,7 +122,7 @@ public class GeckoLayerClient
         mCheckerboardColor = Color.WHITE;
         mCheckerboardShouldShowChecks = true;
 
-        mPanZoomController = new PanZoomController(this);
+        mPanZoomController = new PanZoomController(this, mEventDispatcher);
     }
 
     public void setView(LayerView v) {
