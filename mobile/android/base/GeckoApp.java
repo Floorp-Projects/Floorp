@@ -678,7 +678,7 @@ abstract public class GeckoApp
 
         // Only remove doorhangers if the popup is hidden or if we're navigating to a new URL
         if (!mDoorHangerPopup.isShowing() || !uri.equals(tab.getURL()))
-            tab.removeTransientDoorHangers();
+            mDoorHangerPopup.removeTransientDoorHangers(tabId);
 
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
