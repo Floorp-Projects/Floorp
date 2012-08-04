@@ -2019,6 +2019,12 @@ public:
    */
   static bool IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);
 
+  /**
+   * Returns the JSVersion for a string of the form '1.n', n = 0, ..., 8, and
+   * JSVERSION_UNKNOWN for other strings.
+   */
+  static JSVersion ParseJavascriptVersion(const nsAString& aVersionStr);
+
   static void SplitMimeType(const nsAString& aValue, nsString& aType,
                             nsString& aParams);
 
