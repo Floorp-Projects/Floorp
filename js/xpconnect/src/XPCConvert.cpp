@@ -25,6 +25,7 @@
 #include "jsfriendapi.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/PrimitiveConversions.h"
 
 using namespace xpc;
 using namespace mozilla;
@@ -372,10 +373,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
     JSContext* cx = ccx.GetJSContext();
 
-    int32_t  ti;
-    uint32_t tu;
-    double td;
-    JSBool   tb;
     JSBool isDOMString = true;
 
     if (pErr)
@@ -383,52 +380,27 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
     switch (type.TagPart()) {
     case nsXPTType::T_I8     :
-        if (!JS_ValueToECMAInt32(cx, s, &ti))
-            return false;
-        *((int8_t*)d)  = int8_t(ti);
-        break;
+        return ValueToPrimitive(cx, s, static_cast<int8_t*>(d));
     case nsXPTType::T_I16    :
-        if (!JS_ValueToECMAInt32(cx, s, &ti))
-            return false;
-        *((int16_t*)d)  = int16_t(ti);
-        break;
+        return ValueToPrimitive(cx, s, static_cast<int16_t*>(d));
     case nsXPTType::T_I32    :
-        if (!JS_ValueToECMAInt32(cx, s, (int32_t*)d))
-            return false;
-        break;
+        return ValueToPrimitive(cx, s, static_cast<int32_t*>(d));
     case nsXPTType::T_I64    :
-        return JS::ToInt64(cx, s, (int64_t*)d);
-
+        return ValueToPrimitive(cx, s, static_cast<int64_t*>(d));
     case nsXPTType::T_U8     :
-        if (!JS_ValueToECMAUint32(cx, s, &tu))
-            return false;
-        *((uint8_t*)d)  = uint8_t(tu);
-        break;
+        return ValueToPrimitive(cx, s, static_cast<uint8_t*>(d));
     case nsXPTType::T_U16    :
-        if (!JS_ValueToECMAUint32(cx, s, &tu))
-            return false;
-        *((uint16_t*)d)  = uint16_t(tu);
-        break;
+        return ValueToPrimitive(cx, s, static_cast<uint16_t*>(d));
     case nsXPTType::T_U32    :
-        if (!JS_ValueToECMAUint32(cx, s, (uint32_t*)d))
-            return false;
-        break;
+        return ValueToPrimitive(cx, s, static_cast<uint32_t*>(d));
     case nsXPTType::T_U64    :
-        return JS::ToUint64(cx, s, (uint64_t*)d);
-
+        return ValueToPrimitive(cx, s, static_cast<uint64_t*>(d));
     case nsXPTType::T_FLOAT  :
-        if (!JS_ValueToNumber(cx, s, &td))
-            return false;
-        *((float*)d) = (float) td;
-        break;
+        return ValueToPrimitive(cx, s, static_cast<float*>(d));
     case nsXPTType::T_DOUBLE :
-        if (!JS_ValueToNumber(cx, s, (double*)d))
-            return false;
-        break;
+        return ValueToPrimitive(cx, s, static_cast<double*>(d));
     case nsXPTType::T_BOOL   :
-        JS_ValueToBoolean(cx, s, &tb);
-        *((bool*)d) = tb;
-        break;
+        return ValueToPrimitive(cx, s, static_cast<bool*>(d));
     case nsXPTType::T_CHAR   :
     {
         JSString* str = JS_ValueToString(cx, s);
