@@ -669,10 +669,6 @@ abstract public class GeckoApp
         mDoorHangerPopup.updatePopup();
     }
 
-    void addDoorHanger(String message, String value, JSONArray buttons, Tab tab, JSONObject options) {
-        mDoorHangerPopup.addDoorHanger(message, value, buttons, tab, options, null);
-    }
-
     void handleLocationChange(final int tabId, final String uri,
                               final String documentURI, final String contentType,
                               final boolean sameDocument) {
@@ -937,10 +933,6 @@ abstract public class GeckoApp
             } else if (event.equals("Content:PageShow")) {
                 final int tabId = message.getInt("tabID");
                 handlePageShow(tabId);
-            } else if (event.equals("Doorhanger:Add")) {
-                handleDoorHanger(message);
-            } else if (event.equals("Doorhanger:Remove")) {
-                handleDoorHangerRemove(message);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
                 final Menu menu = mMenu;
@@ -1214,41 +1206,6 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 builder.create().show();
-            }
-        });
-    }
-
-    void handleDoorHanger(JSONObject geckoObject) throws JSONException {
-        final String message = geckoObject.getString("message");
-        final String value = geckoObject.getString("value");
-        final JSONArray buttons = geckoObject.getJSONArray("buttons");
-        final int tabId = geckoObject.getInt("tabID");
-        final JSONObject options = geckoObject.getJSONObject("options");
-
-        Log.i(LOGTAG, "DoorHanger received for tab " + tabId + ", msg:" + message);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab != null)
-                    addDoorHanger(message, value, buttons, tab, options);
-            }
-        });
-    }
-
-    void handleDoorHangerRemove(JSONObject geckoObject) throws JSONException {
-        final String value = geckoObject.getString("value");
-        final int tabId = geckoObject.getInt("tabID");
-
-        Log.i(LOGTAG, "Doorhanger:Remove received for tab " + tabId);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab == null)
-                    return;
-                tab.removeDoorHanger(value);
-                updatePopups(tab);
             }
         });
     }
@@ -1610,7 +1567,9 @@ abstract public class GeckoApp
         ((GeckoApplication) getApplication()).addApplicationLifecycleCallbacks(this);
     }
 
-    void initializeChrome(String uri, Boolean isExternalURL) { }
+    void initializeChrome(String uri, Boolean isExternalURL) {
+        mDoorHangerPopup = new DoorHangerPopup(this, null);
+    }
 
     private void initialize() {
         mInitialized = true;
@@ -1729,8 +1688,6 @@ abstract public class GeckoApp
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
-
-        mDoorHangerPopup = new DoorHangerPopup(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
@@ -1749,8 +1706,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:PageShow", this);
         GeckoAppShell.registerGeckoEventListener("Reader:FaviconRequest", this);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", this);
-        GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", this);
-        GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", this);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", this);
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", this);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", this);
@@ -2114,8 +2069,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", this);
         GeckoAppShell.unregisterGeckoEventListener("Reader:FaviconRequest", this);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", this);
-        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", this);
-        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", this);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", this);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", this);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", this);
@@ -2150,6 +2103,8 @@ abstract public class GeckoApp
             mLayerController.destroy();
         if (mLayerClient != null)
             mLayerClient.destroy();
+        if (mDoorHangerPopup != null)
+            mDoorHangerPopup.destroy();
         if (mFormAssistPopup != null)
             mFormAssistPopup.destroy();
         if (mPromptService != null)
