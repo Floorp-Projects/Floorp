@@ -774,9 +774,6 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet)
   mSheets.AppendElement(aPrimarySheet);
 
   mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-  if (!mPrincipal) {
-    NS_RUNTIMEABORT("OOM");
-  }
 }
 
 static bool SetStyleSheetReference(css::Rule* aRule, void* aSheet)
@@ -2163,4 +2160,25 @@ nsCSSStyleSheet::ParseSheet(const nsAString& aInput)
 nsCSSStyleSheet::GetOriginalURI() const
 {
   return mInner->mOriginalSheetURI;
+}
+
+nsresult
+NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult)
+{
+  *aInstancePtrResult = nullptr;
+  nsCSSStyleSheet  *it = new nsCSSStyleSheet();
+
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(it);
+
+  if (!it->mInner || !it->mInner->mPrincipal) {
+    NS_RELEASE(it);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  *aInstancePtrResult = it;
+  return NS_OK;
 }

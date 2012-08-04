@@ -317,6 +317,8 @@ public:
 
   virtual already_AddRefed<nsIScriptContext> CreateContext();
 
+  virtual nsresult ParseVersion(const nsString &aVersionStr, PRUint32 *flags);
+
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
   

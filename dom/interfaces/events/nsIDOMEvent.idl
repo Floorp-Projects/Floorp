@@ -11,10 +11,6 @@ interface nsIDOMEventTarget;
 [ptr] native IPCMessagePtr(IPC::Message);
 [ptr] native ConstIPCMessagePtr(const IPC::Message);
 %{C++
-#ifdef ERROR
-#undef ERROR
-#endif
-
 class nsEvent;
 class nsCommandEvent;
 class nsPresContext;
@@ -33,7 +29,7 @@ class Message;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, builtinclass, uuid(270c945b-8a65-4170-bc0b-4ec1443cd39f)]
+[scriptable, builtinclass, uuid(a7dc0284-5832-4034-a8a5-d860ce0f21d3)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType
@@ -168,75 +164,6 @@ interface nsIDOMEvent : nsISupports
    * unlike Event.stopPropagation() its effect is immediate.
    */
   void                       stopImmediatePropagation();
-
-  const long MOUSEDOWN    = 0x00000001;
-  const long MOUSEUP      = 0x00000002;
-  const long MOUSEOVER    = 0x00000004;
-  const long MOUSEOUT     = 0x00000008;
-  const long MOUSEMOVE    = 0x00000010;
-  const long MOUSEDRAG    = 0x00000020;
-  const long CLICK        = 0x00000040;
-  const long DBLCLICK     = 0x00000080;
-  const long KEYDOWN      = 0x00000100;
-  const long KEYUP        = 0x00000200;
-  const long KEYPRESS     = 0x00000400;
-  const long DRAGDROP     = 0x00000800;
-  const long FOCUS        = 0x00001000;
-  const long BLUR         = 0x00002000;
-  const long SELECT       = 0x00004000;
-  const long CHANGE       = 0x00008000;
-  const long RESET        = 0x00010000;
-  const long SUBMIT       = 0x00020000;
-  const long SCROLL       = 0x00040000;
-  const long LOAD         = 0x00080000;
-  const long UNLOAD       = 0x00100000;
-  const long XFER_DONE    = 0x00200000;
-  const long ABORT        = 0x00400000;
-  const long ERROR        = 0x00800000;
-  const long LOCATE       = 0x01000000;
-  const long MOVE         = 0x02000000;
-  const long RESIZE       = 0x04000000;
-  const long FORWARD      = 0x08000000;
-  const long HELP         = 0x10000000;
-  const long BACK         = 0x20000000;
-  const long TEXT         = 0x40000000;
-
-  const long ALT_MASK     = 0x00000001;
-  const long CONTROL_MASK = 0x00000002;
-  const long SHIFT_MASK   = 0x00000004;
-  const long META_MASK    = 0x00000008;
-
-  /** The original target of the event, before any retargetings. */
-  readonly attribute nsIDOMEventTarget  originalTarget;
-  /**
-   * The explicit original target of the event.  If the event was retargeted
-   * for some reason other than an anonymous boundary crossing, this will be set
-   * to the target before the retargeting occurs.  For example, mouse events
-   * are retargeted to their parent node when they happen over text nodes (bug
-   * 185889), and in that case .target will show the parent and
-   * .explicitOriginalTarget will show the text node.
-   * .explicitOriginalTarget differs from .originalTarget in that it will never
-   * contain anonymous content.
-   */
-  readonly attribute nsIDOMEventTarget  explicitOriginalTarget;
-
-  /**
-   * @deprecated Use nsIDOMEvent::stopPropagation.
-   */
-  void                      preventBubble();
-
-  /**
-   * @deprecated Use nsIDOMEvent::stopPropagation.
-   */
-  void                      preventCapture();
-
-  /**
-   * @deprecated Use nsIDOMEvent::defaultPrevented.
-   * To be removed in bug 691151.
-   */
-  boolean                   getPreventDefault();
-
-  readonly attribute boolean isTrusted;
 
   [noscript] void duplicatePrivateData();
   [noscript] void setTarget(in nsIDOMEventTarget aTarget);

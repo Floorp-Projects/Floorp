@@ -1839,7 +1839,7 @@ nsRange::CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aOtherRange,
       break;
     default:
       // We were passed an illegal value
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (mRoot != otherRange->GetRoot())

@@ -10,6 +10,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
@@ -279,14 +280,17 @@ DoCommandCallback(const char *aCommand, void *aData)
 nsresult
 nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType)
 {
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   bool prevent;
-  aKeyEvent->GetPreventDefault(&prevent);
+  domNSEvent->GetPreventDefault(&prevent);
   if (prevent)
     return NS_OK;
 
   bool trustedEvent = false;
-  // Don't process the event if it was not dispatched from a trusted source
-  aKeyEvent->GetIsTrusted(&trustedEvent);
+  if (domNSEvent) {
+    //Don't process the event if it was not dispatched from a trusted source
+    domNSEvent->GetIsTrusted(&trustedEvent);
+  }
 
   if (!trustedEvent)
     return NS_OK;
@@ -299,7 +303,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   if (!el) {
     if (mUserHandler) {
       WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
-      aKeyEvent->GetPreventDefault(&prevent);
+      domNSEvent->GetPreventDefault(&prevent);
       if (prevent)
         return NS_OK; // Handled by the user bindings. Our work here is done.
     }

@@ -352,50 +352,6 @@ public:
   }
 };
 
-static inline bool
-ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
-{
-  MOZ_ASSERT(!aType.IsEmpty());
-  MOZ_ASSERT(aVersion);
-  MOZ_ASSERT(*aVersion == JSVERSION_DEFAULT);
-
-  nsContentTypeParser parser(aType);
-
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!nsContentUtils::IsJavascriptMIMEType(mimeType)) {
-    return false;
-  }
-
-  // Get the version string, and ensure the language supports it.
-  nsAutoString versionName;
-  rv = parser.GetParameter("version", versionName);
-
-  if (NS_SUCCEEDED(rv)) {
-    *aVersion = nsContentUtils::ParseJavascriptVersion(versionName);
-  } else if (rv != NS_ERROR_INVALID_ARG) {
-    return false;
-  }
-
-  nsAutoString value;
-  rv = parser.GetParameter("e4x", value);
-  if (NS_SUCCEEDED(rv)) {
-    if (value.Length() == 1 && value[0] == '1') {
-      // This happens in about 2 web pages. Enable E4X no matter what JS
-      // version number was selected.  We do this by turning on the "moar
-      // XML" version bit.  This is OK even if version has
-      // JSVERSION_UNKNOWN (-1).
-      *aVersion = js::VersionSetMoarXML(*aVersion, true);
-    }
-  } else if (rv != NS_ERROR_INVALID_ARG) {
-    return false;
-  }
-
-  return true;
-}
-
 bool
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 {
@@ -437,38 +393,126 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  JSVersion version = JSVERSION_DEFAULT;
+  PRUint32 typeID = nsIProgrammingLanguage::JAVASCRIPT;
+  PRUint32 version = 0;
+  nsAutoString language, type, src;
+  nsresult rv = NS_OK;
 
   // Check the type attribute to determine language and version.
   // If type exists, it trumps the deprecated 'language='
-  nsAutoString type;
   aElement->GetScriptType(type);
   if (!type.IsEmpty()) {
-    NS_ENSURE_TRUE(ParseTypeAttribute(type, &version), false);
+    nsContentTypeParser parser(type);
+
+    nsAutoString mimeType;
+    rv = parser.GetType(mimeType);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    // Javascript keeps the fast path, optimized for most-likely type
+    // Table ordered from most to least likely JS MIME types.
+    // See bug 62485, feel free to add <script type="..."> survey data to it,
+    // or to a new bug once 62485 is closed.
+    static const char *jsTypes[] = {
+      "text/javascript",
+      "text/ecmascript",
+      "application/javascript",
+      "application/ecmascript",
+      "application/x-javascript",
+      nullptr
+    };
+
+    bool isJavaScript = false;
+    for (PRInt32 i = 0; jsTypes[i]; i++) {
+      if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
+        isJavaScript = true;
+        break;
+      }
+    }
+
+    if (!isJavaScript) {
+      typeID = nsIProgrammingLanguage::UNKNOWN;
+    }
+
+    if (typeID != nsIProgrammingLanguage::UNKNOWN) {
+      // Get the version string, and ensure the language supports it.
+      nsAutoString versionName;
+      rv = parser.GetParameter("version", versionName);
+      if (NS_FAILED(rv)) {
+        // no version attribute - version remains 0.
+        if (rv != NS_ERROR_INVALID_ARG)
+          return false;
+      } else {
+        nsCOMPtr<nsIScriptRuntime> runtime;
+        rv = NS_GetJSRuntime(getter_AddRefs(runtime));
+        if (NS_FAILED(rv)) {
+          NS_ERROR("Failed to locate the language with this ID");
+          return false;
+        }
+        rv = runtime->ParseVersion(versionName, &version);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("This script language version is not supported - ignored");
+          typeID = nsIProgrammingLanguage::UNKNOWN;
+        }
+      }
+    }
+
+    // Some js specifics yet to be abstracted.
+    if (typeID == nsIProgrammingLanguage::JAVASCRIPT) {
+      nsAutoString value;
+      rv = parser.GetParameter("e4x", value);
+      if (NS_FAILED(rv)) {
+        if (rv != NS_ERROR_INVALID_ARG)
+          return false;
+      } else {
+        if (value.Length() == 1 && value[0] == '1')
+          // This happens in about 2 web pages. Enable E4X no matter what JS
+          // version number was selected.  We do this by turning on the "moar
+          // XML" version bit.  This is OK even if version has
+          // JSVERSION_UNKNOWN (-1).
+          version = js::VersionSetMoarXML(JSVersion(version), true);
+      }
+    }
   } else {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
     if (scriptContent->IsHTML()) {
-      nsAutoString language;
       scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
       if (!language.IsEmpty()) {
+        if (nsContentUtils::IsJavaScriptLanguage(language, &version))
+          typeID = nsIProgrammingLanguage::JAVASCRIPT;
+        else
+          typeID = nsIProgrammingLanguage::UNKNOWN;
         // IE, Opera, etc. do not respect language version, so neither should
         // we at this late date in the browser wars saga.  Note that this change
         // affects HTML but not XUL or SVG (but note also that XUL has its own
         // code to check nsContentUtils::IsJavaScriptLanguage -- that's probably
         // a separate bug, one we may not be able to fix short of XUL2).  See
         // bug 255895 (https://bugzilla.mozilla.org/show_bug.cgi?id=255895).
-        PRUint32 dummy;
-        if (!nsContentUtils::IsJavaScriptLanguage(language, &dummy)) {
-          return false;
-        }
+        NS_ASSERTION(JSVERSION_DEFAULT == 0,
+                     "We rely on all languages having 0 as a version default");
+        version = 0;
       }
     }
   }
 
+  // If we don't know the language, we don't know how to evaluate
+  if (typeID == nsIProgrammingLanguage::UNKNOWN) {
+    return false;
+  }
+  // If not from a chrome document (which is always trusted), we need some way 
+  // of checking the language is "safe".  Currently the only other language 
+  // impl is Python, and that is *not* safe in untrusted code - so fixing 
+  // this isn't a priority.!
+  // See also similar code in nsXULContentSink.cpp
+  if (typeID != nsIProgrammingLanguage::JAVASCRIPT &&
+      !nsContentUtils::IsChromeDoc(mDocument)) {
+    NS_WARNING("Untrusted language called from non-chrome - ignored");
+    return false;
+  }
+
   // Step 14. in the HTML5 spec
-  nsresult rv = NS_OK;
+
   nsRefPtr<nsScriptLoadRequest> request;
   if (aElement->GetScriptExternal()) {
     // external script

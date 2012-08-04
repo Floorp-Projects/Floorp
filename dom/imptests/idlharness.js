@@ -779,11 +779,11 @@ IdlException.prototype.test_members = function()
                 assert_throws(new TypeError(), function()
                 {
                     window[this.name].prototype[member.name];
-                }.bind(this), "getting property on prototype object must throw TypeError");
+                }, "getting property on prototype object must throw TypeError");
                 assert_throws(new TypeError(), function()
                 {
                     desc.get.call({});
-                }.bind(this), "calling getter on wrong object type must throw TypeError");
+                }, "calling getter on wrong object type must throw TypeError");
             }.bind(this), this.name + " exception: field " + member.name + " on exception interface prototype object");
         }
     }
@@ -946,11 +946,11 @@ IdlInterface.prototype.test_self = function()
             assert_throws(new TypeError(), function()
             {
                 window[this.name]();
-            }.bind(this), "interface object didn't throw TypeError when called as a function");
+            }, "interface object didn't throw TypeError when called as a function");
             assert_throws(new TypeError(), function()
             {
                 new window[this.name]();
-            }.bind(this), "interface object didn't throw TypeError when called as a constructor");
+            }, "interface object didn't throw TypeError when called as a constructor");
         }
     }.bind(this), this.name + " interface: existence and properties of interface object");
 
@@ -1367,7 +1367,7 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
                     assert_throws(new TypeError(), function()
                     {
                         obj[member.name].apply(obj, args);
-                    }.bind(this), "Called with " + i + " arguments");
+                    }, "Called with " + i + " arguments");
 
                     args.push(create_suitable_object(member.arguments[i].type));
                 }

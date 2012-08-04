@@ -2292,7 +2292,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   *aTargetNode = nullptr;
 
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
   if (!window)
     return;
 
