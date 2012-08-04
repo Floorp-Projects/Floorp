@@ -560,6 +560,8 @@ GroupRule::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = 0, count = mRules.Count(); index < count; ++index) {
     mRules.ObjectAt(index)->List(out, aIndent + 1);
   }
+
+  for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
   fputs("}\n", out);
 }
 #endif
