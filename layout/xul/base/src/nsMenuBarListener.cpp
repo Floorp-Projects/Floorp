@@ -6,7 +6,7 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIDOMNSEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
@@ -117,15 +117,12 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   bool trustedEvent = false;
+  aKeyEvent->GetIsTrusted(&trustedEvent);
 
-  if (domNSEvent) {
-    domNSEvent->GetIsTrusted(&trustedEvent);
-  }
-
-  if (!trustedEvent)
+  if (!trustedEvent) {
     return NS_OK;
+  }
 
   if (mAccessKey && mAccessKeyFocuses)
   {
@@ -167,10 +164,9 @@ nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   // if event has already been handled, bail
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
-  if (domNSEvent) {
+  if (aKeyEvent) {
     bool eventHandled = false;
-    domNSEvent->GetPreventDefault(&eventHandled);
+    aKeyEvent->GetPreventDefault(&eventHandled);
     if (eventHandled) {
       return NS_OK;       // don't consume event
     }
@@ -178,8 +174,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   //handlers shouldn't be triggered by non-trusted events.
   bool trustedEvent = false;
-  if (domNSEvent) {
-    domNSEvent->GetIsTrusted(&trustedEvent);
+  if (aKeyEvent) {
+    aKeyEvent->GetIsTrusted(&trustedEvent);
   }
 
   if (!trustedEvent)
@@ -192,7 +188,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (mAccessKey)
   {
     bool preventDefault;
-    domNSEvent->GetPreventDefault(&preventDefault);
+    aKeyEvent->GetPreventDefault(&preventDefault);
     if (!preventDefault) {
       nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
       PRUint32 keyCode, charCode;
@@ -307,11 +303,9 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   bool trustedEvent = false;
-
-  if (domNSEvent) {
-    domNSEvent->GetIsTrusted(&trustedEvent);
+  if (aKeyEvent) {
+    aKeyEvent->GetIsTrusted(&trustedEvent);
   }
 
   if (!trustedEvent)

@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(7a6723d3-2165-4aa6-a4a3-697e7b7af673)]
+[scriptable, builtinclass, uuid(1b8ea6e4-8142-4aba-b174-4d580b5bc294)]
 interface nsIDOMUSSDReceivedEvent : nsIDOMEvent
 {
   readonly attribute DOMString message;

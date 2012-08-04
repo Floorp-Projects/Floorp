@@ -13,7 +13,7 @@
 interface nsIDOMSVGRect;
 interface nsIDOMSVGPoint;
 
-[scriptable, builtinclass, uuid(8bd39d5a-6a01-4bcf-bb9b-02653ed6d794)]
+[scriptable, builtinclass, uuid(77a0b46e-54cf-4e6e-a962-a2f52389da34)]
 interface nsIDOMSVGZoomEvent : nsIDOMUIEvent
 {
   readonly attribute nsIDOMSVGRect  zoomRectScreen;

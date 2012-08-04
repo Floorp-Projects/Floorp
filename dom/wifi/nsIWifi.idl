@@ -120,7 +120,7 @@ interface nsIDOMWifiManager : nsISupports
     attribute nsIDOMEventListener ondisabled;
 };
 
-[scriptable, builtinclass, uuid(ba1dab70-b70d-11e1-afa6-0800200c9a66)]
+[scriptable, builtinclass, uuid(f3ef70b0-b2d3-4eb5-8ea4-008f8d330cd6)]
 interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
 {
     /**
@@ -142,7 +142,7 @@ interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
                                                  in DOMString status);
 };
 
-[scriptable, builtinclass, uuid(b383e950-b70d-11e1-afa6-0800200c9a66)]
+[scriptable, builtinclass, uuid(34994296-d694-4aed-953d-fc25ee25c050)]
 interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
 {
     /**

@@ -25,7 +25,6 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSEvent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -93,12 +92,6 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  // check if someone has attempted to prevent this action.
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(mouseEvent);
-  if (!domNSEvent) {
-    return NS_OK;
-  }
-
   // Get the node that was clicked on.
   nsCOMPtr<nsIDOMEventTarget> target;
   mouseEvent->GetTarget(getter_AddRefs(target));
@@ -123,7 +116,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   bool preventDefault;
-  domNSEvent->GetPreventDefault(&preventDefault);
+  mouseEvent->GetPreventDefault(&preventDefault);
   if (preventDefault && targetNode && mIsContext) {
     // Someone called preventDefault on a context menu.
     // Let's make sure they are allowed to do so.
@@ -172,8 +165,6 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
     if (tag == nsGkAtoms::menu || tag == nsGkAtoms::menuitem)
       return NS_OK;
   }
-
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aEvent);
 
   if (mIsContext) {
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP

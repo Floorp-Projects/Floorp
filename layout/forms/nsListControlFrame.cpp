@@ -33,7 +33,6 @@
 #include "nsIComponentManager.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
 #include "nsINodeInfo.h"
