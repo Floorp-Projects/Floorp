@@ -1153,27 +1153,26 @@ GARBAGE_DIRS += $(_JAVA_DIR)
 ###############################################################################
 
 ifndef NO_MAKEFILE_RULE
-# Note: Passing depth to make-makefile is optional.
-#       It saves the script some work, though.
 Makefile: Makefile.in
-	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH)
+	@$(DEPTH)/config.status -n --file=Makefile
 endif
 
 ifndef NO_SUBMAKEFILES_RULE
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(if $(subsrcdir),cd $(subsrcdir) && )$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir)$(addprefix /,$(subsrcdir)) -d $(DEPTH) $(@:$(subsrcdir)/%=%)
+	$(DEPTH)$(addprefix /,$(subsrcdir))/config.status -n --file=$@
 endif
 endif
 
 ifdef AUTOUPDATE_CONFIGURE
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
-	(cd $(topsrcdir) && $(AUTOCONF)) && (cd $(DEPTH) && ./config.status --recheck)
+	(cd $(topsrcdir) && $(AUTOCONF)) && $(DEPTH)/config.status -n --recheck)
 endif
 
 $(DEPTH)/config/autoconf.mk: $(topsrcdir)/config/autoconf.mk.in
-	cd $(DEPTH) && CONFIG_HEADERS= CONFIG_FILES=config/autoconf.mk ./config.status
+	$(DEPTH)/config.status -n --file=$(DEPTH)/config/autoconf.mk
+	$(TOUCH) $@
 
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
@@ -1552,23 +1551,6 @@ libs::
 	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - . | (cd "../../bin/extensions/$(INSTALL_EXTENSION_ID)" && tar -xf -)
 
 endif
-
-ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
-_JAR_REGCHROME_DISABLE_JAR=1
-else
-_JAR_REGCHROME_DISABLE_JAR=0
-endif
-
-REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
-	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
-	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(FINAL_TARGET)/chrome/installed-chrome.txt \
-	$(_JAR_REGCHROME_DISABLE_JAR)
-
-REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
-	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
-	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt \
-	$(_JAR_REGCHROME_DISABLE_JAR)
-
 
 #############################################################################
 # Dependency system

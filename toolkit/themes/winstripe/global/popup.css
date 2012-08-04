@@ -37,7 +37,7 @@ panel[type="arrow"] {
 }
 
 .panel-arrowcontainer[panelopen] {
-  transition-duration: 250ms;
+  transition-duration: 200ms, 150ms;
   transition-property: opacity, transform;
   transition-timing-function: ease-out;
 }

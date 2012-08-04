@@ -1400,6 +1400,44 @@ ToNumberSlow(JSContext *cx, Value v, double *out)
     return true;
 }
 
+/*
+ * Convert a value to an int64_t, according to the WebIDL rules for long long
+ * conversion. Return converted value in *out on success, false on failure.
+ */
+JS_PUBLIC_API(bool)
+ToInt64Slow(JSContext *cx, const Value &v, int64_t *out)
+{
+    JS_ASSERT(!v.isInt32());
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumberSlow(cx, v, &d))
+            return false;
+    }
+    *out = ToInt64(d);
+    return true;
+}
+
+/*
+ * Convert a value to an uint64_t, according to the WebIDL rules for unsigned long long
+ * conversion. Return converted value in *out on success, false on failure.
+ */
+JS_PUBLIC_API(bool)
+ToUint64Slow(JSContext *cx, const Value &v, uint64_t *out)
+{
+    JS_ASSERT(!v.isInt32());
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumberSlow(cx, v, &d))
+            return false;
+    }
+    *out = ToUint64(d);
+    return true;
+}
+
 JS_PUBLIC_API(bool)
 ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 {

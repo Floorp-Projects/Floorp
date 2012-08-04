@@ -92,10 +92,17 @@ class Preprocessor:
     """
     Set the marker to be used for processing directives.
     Used for handling CSS files, with pp.setMarker('%'), for example.
+    The given marker may be None, in which case no markers are processed.
     """
     self.marker = aMarker
-    self.instruction = re.compile('%s(?P<cmd>[a-z]+)(?:\s(?P<args>.*))?$'%aMarker, re.U)
-    self.comment = re.compile(aMarker, re.U)
+    if aMarker:
+      self.instruction = re.compile('%s(?P<cmd>[a-z]+)(?:\s(?P<args>.*))?$'%aMarker, re.U)
+      self.comment = re.compile(aMarker, re.U)
+    else:
+      class NoMatch(object):
+        def match(self, *args):
+          return False
+      self.instruction = self.comment = NoMatch()
   
   def clone(self):
     """
@@ -392,7 +399,7 @@ class Preprocessor:
         return str(self.context[varname])
       if fatal:
         raise Preprocessor.Error(self, 'UNDEFINED_VAR', varname)
-      return ''
+      return matchobj.group(0)
     return self.varsubst.sub(repl, aLine)
   def filter_attemptSubstitution(self, aLine):
     return self.filter_substitution(aLine, fatal=False)

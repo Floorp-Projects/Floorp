@@ -26,7 +26,6 @@ endif
 
 DIRS += pgo
 
-TEST_DIRS += autoconf/test
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 TEST_DIRS += mobile/sutagent/android \
           mobile/sutagent/android/watcher \
@@ -263,4 +262,8 @@ libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
 endif
 
 GARBAGE += $(srcdir)/automationutils.pyc
+
+# Test for ConfigStatus.py
+check::
+	$(PYTHON) $(srcdir)/tests/unit-ConfigStatus.py
 endif # ENABLE_TESTS
