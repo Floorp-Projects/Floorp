@@ -43,7 +43,7 @@ addLoadEvent(function test() {
                    .getInterface(CI.nsIDOMWindowUtils),
         sec = netscape.security,
         eSelect = $("eSelect"),
-        IDOMNSEvent = CI.nsIDOMNSEvent,
+        IDOMEvent = CI.nsIDOMEvent,
         IDOMKeyEvent = CI.nsIDOMKeyEvent,
         timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
 
@@ -105,10 +105,10 @@ addLoadEvent(function test() {
     is(eSelect.value, "2", "SELECT value should be 2 after pressing Down.")
       
     // Test ALT-Down.
-    testKey(IDOMKeyEvent.DOM_VK_DOWN, IDOMNSEvent.ALT_MASK, "ALT-Down", nextKey1)
+    testKey(IDOMKeyEvent.DOM_VK_DOWN, IDOMEvent.ALT_MASK, "ALT-Down", nextKey1)
     function nextKey1() {
         // Test ALT-Up.
-        testKey(IDOMKeyEvent.DOM_VK_UP, IDOMNSEvent.ALT_MASK, "ALT-Up", nextKey2)
+        testKey(IDOMKeyEvent.DOM_VK_UP, IDOMEvent.ALT_MASK, "ALT-Up", nextKey2)
     }
     function nextKey2() {
         // Test the F4 key on OS/2 and Windows.

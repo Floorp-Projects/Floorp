@@ -7,7 +7,6 @@
 #define nsDOMEvent_h__
 
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
@@ -24,7 +23,6 @@ struct JSContext;
 struct JSObject;
  
 class nsDOMEvent : public nsIDOMEvent,
-                   public nsIDOMNSEvent,
                    public nsIJSNativeInitializer
 {
 public:
@@ -191,9 +189,6 @@ public:
   // nsIDOMEvent Interface
   NS_DECL_NSIDOMEVENT
 
-  // nsIDOMNSEvent Interface
-  NS_DECL_NSIDOMNSEVENT
-
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
                         PRUint32 aArgc, jsval* aArgv);
@@ -251,6 +246,12 @@ protected:
   NS_IMETHOD InitEvent(const nsAString & eventTypeArg, bool canBubbleArg, bool cancelableArg) { return _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } \
   NS_IMETHOD GetDefaultPrevented(bool *aDefaultPrevented) { return _to GetDefaultPrevented(aDefaultPrevented); } \
   NS_IMETHOD StopImmediatePropagation(void) { return _to StopImmediatePropagation(); } \
+  NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) { return _to GetOriginalTarget(aOriginalTarget); } \
+  NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
+  NS_IMETHOD PreventBubble() { return _to PreventBubble(); } \
+  NS_IMETHOD PreventCapture() { return _to PreventCapture(); } \
+  NS_IMETHOD GetPreventDefault(bool* aRetval) { return _to GetPreventDefault(aRetval); } \
+  NS_IMETHOD GetIsTrusted(bool* aIsTrusted) { return _to GetIsTrusted(aIsTrusted); } \
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget) { return _to SetTarget(aTarget); } \
   NS_IMETHOD_(bool) IsDispatchStopped(void) { return _to IsDispatchStopped(); } \
   NS_IMETHOD_(nsEvent *) GetInternalNSEvent(void) { return _to GetInternalNSEvent(); } \

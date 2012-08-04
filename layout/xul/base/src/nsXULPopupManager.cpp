@@ -12,7 +12,7 @@
 #include "nsMenuBarListener.h"
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
@@ -2110,11 +2110,9 @@ nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
     return NS_OK;
 
   //handlers shouldn't be triggered by non-trusted events.
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   bool trustedEvent = false;
-
-  if (domNSEvent) {
-    domNSEvent->GetIsTrusted(&trustedEvent);
+  if (aKeyEvent) {
+    aKeyEvent->GetIsTrusted(&trustedEvent);
   }
 
   if (!trustedEvent)
