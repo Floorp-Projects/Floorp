@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<title>Element.tagName</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var HTMLNS = "http://www.w3.org/1999/xhtml",
+      SVGNS = "http://www.w3.org/2000/svg"
+  assert_equals(document.createElementNS(HTMLNS, "I").tagName, "I")
+  assert_equals(document.createElementNS(HTMLNS, "i").tagName, "I")
+  assert_equals(document.createElementNS(SVGNS, "svg").tagName, "svg")
+  assert_equals(document.createElementNS(SVGNS, "SVG").tagName, "SVG")
+  assert_equals(document.createElementNS(HTMLNS, "x:b").tagName, "X:B")
+})
+test(function() {
+  if ("DOMParser" in window) {
+    var xmlel = new DOMParser()
+      .parseFromString('<div xmlns="http://www.w3.org/1999/xhtml">Test</div>', 'text/xml')
+      .documentElement;
+    assert_equals(xmlel.tagName, "div", "tagName should be lowercase in XML")
+    var htmlel = document.importNode(xmlel, true)
+    assert_equals(htmlel.tagName, "DIV", "tagName should be uppercase in HTML")
+  }
+}, "tagName should be updated when changing ownerDocument")
+</script>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<title>Document.getElementById with an empty string</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<div id="log"></div>
+<div id=""></div>
+<script>
+test(function() {
+  assert_equals(document.getElementById(""), null)
+  // XXX needs more tests
+})
+</script>

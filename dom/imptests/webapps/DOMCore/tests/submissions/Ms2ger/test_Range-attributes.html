@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<title>Range attributes</title>
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+test(function() {
+  var r = document.createRange();
+  assert_equals(r.startContainer, document)
+  assert_equals(r.endContainer, document)
+  assert_equals(r.startOffset, 0)
+  assert_equals(r.endOffset, 0)
+  assert_true(r.collapsed)
+  r.detach()
+  assert_throws("INVALID_STATE_ERR", function() { r.startContainer })
+  assert_throws("INVALID_STATE_ERR", function() { r.startOffset })
+  assert_throws("INVALID_STATE_ERR", function() { r.endContainer })
+  assert_throws("INVALID_STATE_ERR", function() { r.endOffset })
+  assert_throws("INVALID_STATE_ERR", function() { r.collapsed })
+})
+</script>
