@@ -1178,39 +1178,33 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
   return result;
 }
 
-nsresult PresShell::CreatePreferenceStyleSheet(void)
+nsresult
+PresShell::CreatePreferenceStyleSheet()
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
   NS_ASSERTION(!mPrefStyleSheet, "prefStyleSheet already exists");
-  nsresult result = NS_NewCSSStyleSheet(getter_AddRefs(mPrefStyleSheet));
-  if (NS_SUCCEEDED(result)) {
-    NS_ASSERTION(mPrefStyleSheet, "null but no error");
-    nsCOMPtr<nsIURI> uri;
-    result = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
-    if (NS_SUCCEEDED(result)) {
-      NS_ASSERTION(uri, "null but no error");
-      mPrefStyleSheet->SetURIs(uri, uri, uri);
-      mPrefStyleSheet->SetComplete();
-      PRUint32 index;
-      result =
-        mPrefStyleSheet->InsertRuleInternal(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"),
-                                            0, &index);
-      if (NS_SUCCEEDED(result)) {
-        mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
-      }
-    }
-  }
-
-#ifdef DEBUG_attinasi
-  printf("CreatePrefStyleSheet completed: error=%ld\n",(long)result);
-#endif
-
-  if (NS_FAILED(result)) {
+  mPrefStyleSheet = new nsCSSStyleSheet();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
+  if (NS_FAILED(rv)) {
     mPrefStyleSheet = nullptr;
+    return rv;
+  }
+  NS_ASSERTION(uri, "null but no error");
+  mPrefStyleSheet->SetURIs(uri, uri, uri);
+  mPrefStyleSheet->SetComplete();
+  PRUint32 index;
+  rv =
+    mPrefStyleSheet->InsertRuleInternal(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"),
+                                        0, &index);
+  if (NS_FAILED(rv)) {
+    mPrefStyleSheet = nullptr;
+    return rv;
   }
 
-  return result;
+  mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
+  return NS_OK;
 }
 
 // XXX We want these after the @namespace rule.  Does order matter

@@ -1080,7 +1080,6 @@ Loader::CreateSheet(nsIURI* aURI,
     mPendingDatas.Init();
   }
 
-  nsresult rv = NS_OK;
   *aSheet = nullptr;
   aSheetState = eSheetStateUnknown;
 
@@ -1199,9 +1198,9 @@ Loader::CreateSheet(nsIURI* aURI,
       originalURI = aURI;
     }
 
-    rv = NS_NewCSSStyleSheet(aSheet);
-    NS_ENSURE_SUCCESS(rv, rv);
-    (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
+    nsRefPtr<nsCSSStyleSheet> sheet = new nsCSSStyleSheet();
+    sheet->SetURIs(sheetURI, originalURI, baseURI);
+    sheet.forget(aSheet);
   }
 
   NS_ASSERTION(*aSheet, "We should have a sheet by now!");
