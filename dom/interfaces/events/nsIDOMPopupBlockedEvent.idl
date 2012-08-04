@@ -12,7 +12,7 @@ interface nsIURI;
  * posted when a popup window is blocked.
  */
 
-[scriptable, builtinclass, uuid(f3a2bae2-291d-43eb-b7f0-bc1b69a890fe)]
+[scriptable, builtinclass, uuid(4eec5417-1687-46ef-9e41-e0a6fbb18927)]
 interface nsIDOMPopupBlockedEvent : nsIDOMEvent
 {
   /**

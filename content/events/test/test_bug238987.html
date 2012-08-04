@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
         shouldStop = true;
       }
     } else if (e.target.id == "end") {
-      modifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+      modifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
     } else if (modifier) {
       var expected = backwardFocusArray.pop();
       ok(expected == e.target.id,

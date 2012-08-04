@@ -102,7 +102,7 @@ Form History test: form field autocomplete
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var input = $_(1, "field1");
-const shiftModifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 // Get the form history service
 var fh = Components.classes["@mozilla.org/satchel/form-history;1"].

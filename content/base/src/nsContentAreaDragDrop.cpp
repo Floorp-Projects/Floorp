@@ -19,7 +19,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"

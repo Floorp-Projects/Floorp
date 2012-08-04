@@ -64,7 +64,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
@@ -2375,7 +2374,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 
 #define DOM_CLASSINFO_EVENT_MAP_ENTRIES                                       \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)                                      \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEvent)                                    \
 
 #define DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES                                    \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMUIEvent)                                    \
@@ -6396,14 +6394,6 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JSObject *obj)
   nsresult rv = DefineInterfaceConstants(cx, obj, class_iid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Special case for |Event|, Event needs constants from NSEvent
-  // too for backwards compatibility.
-  if (class_iid->Equals(NS_GET_IID(nsIDOMEvent))) {
-    rv = DefineInterfaceConstants(cx, obj,
-                                  &NS_GET_IID(nsIDOMNSEvent));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // Special case for |IDBKeyRange| which gets funny "static" functions.
   if (class_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
       !indexedDB::IDBKeyRange::DefineConstructors(cx, obj)) {
@@ -6547,14 +6537,6 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Special case for |Event|, Event needs constants from NSEvent
-    // too for backwards compatibility.
-    if (primary_iid->Equals(NS_GET_IID(nsIDOMEvent))) {
-      rv = DefineInterfaceConstants(cx, class_obj,
-                                    &NS_GET_IID(nsIDOMNSEvent));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     // Special case for |IDBKeyRange| which gets funny "static" functions.
     if (primary_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
