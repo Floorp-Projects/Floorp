@@ -5,7 +5,7 @@
 #include "domstubs.idl"
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(468304d6-aab6-4e1e-8ab2-569d9e703431), builtinclass]
+[scriptable, uuid(49bdda6f-430a-4cf8-b535-b97b5b1ed575), builtinclass]
 interface nsIDOMDeviceStorageChangeEvent : nsIDOMEvent
 {
 

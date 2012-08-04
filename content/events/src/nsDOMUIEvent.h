@@ -29,8 +29,6 @@ public:
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter);
 
-  NS_FORWARD_NSIDOMNSEVENT(nsDOMEvent::)
-
   virtual nsresult InitFromCtor(const nsAString& aType,
                                 JSContext* aCx, jsval* aVal);
 

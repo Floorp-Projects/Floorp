@@ -26,7 +26,6 @@
 #include "nsTArray.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIDOMLSProgressEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsITimer.h"
 #include "nsDOMProgressEvent.h"
 #include "nsDOMEventTargetHelper.h"
@@ -35,12 +34,12 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/XMLHttpRequestBinding.h"
-#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;
@@ -710,8 +709,7 @@ protected:
 // helper class to expose a progress DOM Event
 
 class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
-                               public nsIDOMLSProgressEvent,
-                               public nsIDOMNSEvent
+                               public nsIDOMLSProgressEvent
 {
 public:
   nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
@@ -721,9 +719,8 @@ public:
   virtual ~nsXMLHttpProgressEvent();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpProgressEvent, nsIDOMNSEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpProgressEvent, nsIDOMProgressEvent)
   NS_FORWARD_NSIDOMEVENT(mInner->)
-  NS_FORWARD_NSIDOMNSEVENT(mInner->)
   NS_FORWARD_NSIDOMPROGRESSEVENT(mInner->)
   NS_DECL_NSIDOMLSPROGRESSEVENT
 
