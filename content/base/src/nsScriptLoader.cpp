@@ -394,7 +394,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   PRUint32 typeID = nsIProgrammingLanguage::JAVASCRIPT;
-  PRUint32 version = 0;
+  JSVersion version = JSVERSION_DEFAULT;
   nsAutoString language, type, src;
   nsresult rv = NS_OK;
 
@@ -437,22 +437,11 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // Get the version string, and ensure the language supports it.
       nsAutoString versionName;
       rv = parser.GetParameter("version", versionName);
-      if (NS_FAILED(rv)) {
-        // no version attribute - version remains 0.
-        if (rv != NS_ERROR_INVALID_ARG)
-          return false;
-      } else {
-        nsCOMPtr<nsIScriptRuntime> runtime;
-        rv = NS_GetJSRuntime(getter_AddRefs(runtime));
-        if (NS_FAILED(rv)) {
-          NS_ERROR("Failed to locate the language with this ID");
-          return false;
-        }
-        rv = runtime->ParseVersion(versionName, &version);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("This script language version is not supported - ignored");
-          typeID = nsIProgrammingLanguage::UNKNOWN;
-        }
+
+      if (NS_SUCCEEDED(rv)) {
+        version = nsContentUtils::ParseJavascriptVersion(versionName);
+      } else if (rv != NS_ERROR_INVALID_ARG) {
+        return false;
       }
     }
 
@@ -469,7 +458,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           // version number was selected.  We do this by turning on the "moar
           // XML" version bit.  This is OK even if version has
           // JSVERSION_UNKNOWN (-1).
-          version = js::VersionSetMoarXML(JSVersion(version), true);
+          version = js::VersionSetMoarXML(version, true);
       }
     }
   } else {
@@ -479,19 +468,16 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     if (scriptContent->IsHTML()) {
       scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
       if (!language.IsEmpty()) {
-        if (nsContentUtils::IsJavaScriptLanguage(language, &version))
-          typeID = nsIProgrammingLanguage::JAVASCRIPT;
-        else
-          typeID = nsIProgrammingLanguage::UNKNOWN;
         // IE, Opera, etc. do not respect language version, so neither should
         // we at this late date in the browser wars saga.  Note that this change
         // affects HTML but not XUL or SVG (but note also that XUL has its own
         // code to check nsContentUtils::IsJavaScriptLanguage -- that's probably
         // a separate bug, one we may not be able to fix short of XUL2).  See
         // bug 255895 (https://bugzilla.mozilla.org/show_bug.cgi?id=255895).
-        NS_ASSERTION(JSVERSION_DEFAULT == 0,
-                     "We rely on all languages having 0 as a version default");
-        version = 0;
+        PRUint32 dummy;
+        if (!nsContentUtils::IsJavaScriptLanguage(language, &dummy)) {
+          return false;
+        }
       }
     }
   }
