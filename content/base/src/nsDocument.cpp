@@ -2262,7 +2262,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   // is probably the right thing to do.
 
   // Now reset our inline style and attribute sheets.
-  nsresult rv = NS_OK;
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
     nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2272,11 +2271,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     }
     mAttrStyleSheet->Reset(aURI);
   } else {
-    rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURI, this);
-    if (NS_FAILED(rv)) {
-      NS_IF_RELEASE(mAttrStyleSheet);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
+    NS_ADDREF(mAttrStyleSheet);
   }
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
@@ -2293,8 +2289,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     mStyleAttrStyleSheet->Reset(aURI);
   } else {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
-    NS_ENSURE_TRUE(mStyleAttrStyleSheet, NS_ERROR_OUT_OF_MEMORY);
-    rv = mStyleAttrStyleSheet->Init(aURI, this);
+    nsresult rv = mStyleAttrStyleSheet->Init(aURI, this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2308,7 +2303,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     FillStyleSet(shell->StyleSet());
   }
 
-  return rv;
+  return NS_OK;
 }
 
 void
