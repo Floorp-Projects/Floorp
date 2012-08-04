@@ -165,8 +165,8 @@ struct Animation {
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
   TransformMatrix transform;
-  float xScale;
-  float yScale;
+  float postXScale;
+  float postYScale;
   PRUint32 contentFlags;
   Opacity opacity;
   bool useClipRect;
@@ -181,11 +181,15 @@ struct CommonLayerAttributes {
 struct ThebesLayerAttributes {
   nsIntRegion validRegion;
 };
-struct ContainerLayerAttributes{ FrameMetrics metrics; };
-struct ColorLayerAttributes    { Color color; };
-struct CanvasLayerAttributes   { GraphicsFilterType filter; };
-struct RefLayerAttributes      { int64_t id; };
-struct ImageLayerAttributes    {
+struct ContainerLayerAttributes {
+  FrameMetrics metrics;
+  float preXScale;
+  float preYScale;
+};
+struct ColorLayerAttributes     { Color color; };
+struct CanvasLayerAttributes    { GraphicsFilterType filter; };
+struct RefLayerAttributes       { int64_t id; };
+struct ImageLayerAttributes     {
   GraphicsFilterType filter;
   bool forceSingleTile;
 };

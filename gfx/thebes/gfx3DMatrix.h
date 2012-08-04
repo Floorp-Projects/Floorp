@@ -213,13 +213,15 @@ public:
    * a single transformation and post-multiply it onto the current
    * matrix.
    */
-  
+
   /**
    * Add a translation by aPoint after the matrix.
    * This is functionally equivalent to:
    * matrix * gfx3DMatrix::Translation(aPoint)
    */
   void TranslatePost(const gfxPoint3D& aPoint);
+
+  void ScalePost(float aX, float aY, float aZ);
 
   /**
    * Transforms a point according to this matrix.

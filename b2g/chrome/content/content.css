@@ -11,23 +11,19 @@ xul|window xul|scrollbar {
 }
 
 html xul|scrollbar {
-  display: block;
-}
-
-xul|scrollbar[orient="vertical"] {
   -moz-appearance: none !important;
   position: relative;
-  margin-left: -8px;
-  min-width: 8px;
-  max-width: 8px;
   background-color: transparent !important;
   background-image: none !important;
   border: 0px solid transparent !important;
+  z-index: 2147483647;
+  opacity: 1;
 }
 
-xul|scrollbar[orient="vertical"]:-moz-locale-dir(rtl) {
-  margin-left: 2px;
-  margin-right: -10px;
+xul|scrollbar[orient="vertical"] {
+  -moz-margin-start: -8px;
+  min-width: 8px;
+  max-width: 8px;
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
@@ -36,14 +32,9 @@ xul|scrollbar[orient="vertical"] xul|thumb {
 }
 
 xul|scrollbar[orient="horizontal"] {
-  -moz-appearance: none !important;
-  position: relative;
+  margin-top: -8px;
   min-height: 8px;
   max-height: 8px;
-  margin-top: -8px;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 0px solid transparent !important;
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
@@ -51,9 +42,10 @@ xul|scrollbar[orient="horizontal"] xul|thumb {
   min-height: 6px !important;
 }
 
-xul|scrollbox {
-  overflow-y: scroll;
-  overflow-x: scroll;
+xul|scrollbar:not([active="true"]),
+xul|scrollbar[disabled] {
+  opacity: 0;
+  -moz-transition: opacity 1s ease;
 }
 
 xul|scrollbarbutton {

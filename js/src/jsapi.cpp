@@ -582,6 +582,20 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32_t *ip)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_ValueToInt64(JSContext *cx, jsval v, int64_t *ip)
+{
+    RootedValue value(cx, v);
+    return JS::ToInt64(cx, value, ip);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ValueToUint64(JSContext *cx, jsval v, uint64_t *ip)
+{
+    RootedValue value(cx, v);
+    return JS::ToUint64(cx, value, ip);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_ValueToInt32(JSContext *cx, jsval v, int32_t *ip)
 {
     AssertHeapIsIdle(cx);
