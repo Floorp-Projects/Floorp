@@ -34,7 +34,7 @@ struct RedirEntry {
  */
 static RedirEntry kRedirMap[] = {
 #ifdef MOZ_SAFE_BROWSING
-  { "blocked", "chrome://browser/content/blockedSite.xhtml",
+  { "blocked", "chrome://browser/content/safebrowsing/blockedSite.xhtml",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
