@@ -70,6 +70,9 @@
 #    define MOZ_HAVE_CXX11_OVERRIDE
 #    define MOZ_HAVE_CXX11_FINAL         final
 #  endif
+#  if __has_extension(cxx_strong_enums)
+#    define MOZ_HAVE_CXX11_ENUM_TYPE
+#  endif
 #  if __has_attribute(noinline)
 #    define MOZ_HAVE_NEVER_INLINE        __attribute__((noinline))
 #  endif
@@ -89,6 +92,7 @@
 #      endif
 #      if __GNUC_MINOR__ >= 4
 #        define MOZ_HAVE_CXX11_DELETE
+#        define MOZ_HAVE_CXX11_ENUM_TYPE
 #      endif
 #    endif
 #  else
@@ -108,6 +112,7 @@
 #    define MOZ_HAVE_CXX11_OVERRIDE
      /* MSVC currently spells "final" as "sealed". */
 #    define MOZ_HAVE_CXX11_FINAL         sealed
+#    define MOZ_HAVE_CXX11_ENUM_TYPE
 #  endif
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
@@ -296,6 +301,31 @@
 #  define MOZ_FINAL             MOZ_HAVE_CXX11_FINAL
 #else
 #  define MOZ_FINAL             /* no support */
+#endif
+
+/**
+ * MOZ_ENUM_TYPE specifies the underlying numeric type for an enum.  It's
+ * specified by placing MOZ_ENUM_TYPE(type) immediately after the enum name in
+ * its declaration, and before the opening curly brace, like
+ *
+ *   enum MyEnum MOZ_ENUM_TYPE(PRUint16)
+ *   {
+ *     A,
+ *     B = 7,
+ *     C
+ *   };
+ *
+ * In supporting compilers, the macro will expand to ": PRUint16".  The
+ * compiler will allocate exactly two bytes for MyEnum, and will require all
+ * enumerators to have values between 0 and 65535.  (Thus specifying "B =
+ * 100000" instead of "B = 7" would fail to compile.)  In old compilers, the
+ * macro expands to the empty string, and the underlying type is generally
+ * undefined.
+ */
+#ifdef MOZ_HAVE_CXX11_ENUM_TYPE
+#  define MOZ_ENUM_TYPE(type)   : type
+#else
+#  define MOZ_ENUM_TYPE(type)   /* no support */
 #endif
 
 /**
