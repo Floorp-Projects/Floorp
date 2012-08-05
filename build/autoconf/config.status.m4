@@ -85,7 +85,7 @@ topsrcdir = '''${WIN_TOP_SRC:-$srcdir}'''
 if not os.path.isabs(topsrcdir):
     topsrcdir = os.path.normpath(os.path.join(os.path.dirname(<<<__file__>>>), topsrcdir))
 dnl Don't rely on virtualenv here. Standalone js doesn't use it.
-sys.path.append(os.path.join(topsrcdir, 'build'))
+sys.path.append(os.path.join(topsrcdir, ${COMM_BUILD:+'mozilla',} 'build'))
 from ConfigStatus import config_status
 
 args = {
