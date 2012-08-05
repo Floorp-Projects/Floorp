@@ -320,7 +320,7 @@ endif
 
 ifneq (,$(CONFIG_STATUS))
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
-	$(OBJDIR)/config.status -n --file=$(OBJDIR)/config/autoconf.mk
+	$(PYTHON) $(OBJDIR)/config.status -n --file=$(OBJDIR)/config/autoconf.mk
 endif
 
 
