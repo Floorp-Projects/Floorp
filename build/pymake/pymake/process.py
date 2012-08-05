@@ -16,7 +16,7 @@ _log = logging.getLogger('pymake.process')
 
 _escapednewlines = re.compile(r'\\\n')
 _blacklist = re.compile(r'[$><;[~`|&()]' +
-    r'|${|(?:^|\s){(?:$|\s)')  # Blacklist ${foo} and { commands }
+    r'|\${|(?:^|\s){(?:$|\s)')  # Blacklist ${foo} and { commands }
 _needsglob = re.compile(r'[\*\?]')
 def clinetoargv(cline):
     """
