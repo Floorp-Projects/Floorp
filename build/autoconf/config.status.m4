@@ -45,9 +45,11 @@ dnl Replace AC_OUTPUT to create and call a python config.status
 define([AC_OUTPUT],
 [dnl Top source directory in Windows format (as opposed to msys format).
 WIN_TOP_SRC=
+encoding=utf-8
 case "$host_os" in
 mingw*)
     WIN_TOP_SRC=`cd $srcdir; pwd -W`
+    encoding=mbcs
     ;;
 esac
 AC_SUBST(WIN_TOP_SRC)
@@ -74,6 +76,7 @@ echo creating $CONFIG_STATUS
 
 cat > $CONFIG_STATUS <<EOF
 #!${PYTHON}
+# coding=$encoding
 
 import os, sys
 dnl topsrcdir is the top source directory in native form, as opposed to a
