@@ -12,50 +12,29 @@
 #ifndef FragmentOrElement_h___
 #define FragmentOrElement_h___
 
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
-#include "nsIContent.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMDocumentFragment.h"
-#include "nsILinkHandler.h"
-#include "nsNodeUtils.h"
-#include "nsAttrAndChildArray.h"
-#include "mozFlushType.h"
-#include "nsDOMAttributeMap.h"
-#include "nsIWeakReference.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
-#include "nsIDOMNodeSelector.h"
-#include "nsIDOMXPathNSResolver.h"
-#include "nsPresContext.h"
-#include "nsIDOMDOMStringMap.h"
-#include "nsContentList.h"
-#include "nsDOMClassInfoID.h" // DOMCI_DATA
-#include "nsIDOMTouchEvent.h"
-#include "nsIInlineEventHandlers.h"
-#include "mozilla/CORSMode.h"
-#include "mozilla/Attributes.h"
+#include "nsAttrAndChildArray.h"          // member
+#include "nsCOMPtr.h"                     // member
+#include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
+#include "nsIContent.h"                   // base class
+#include "nsIDOMNodeSelector.h"           // base class
+#include "nsIDOMTouchEvent.h"             // base class (nsITouchEventReceiver)
+#include "nsIDOMXPathNSResolver.h"        // base class
+#include "nsIInlineEventHandlers.h"       // base class
+#include "nsINodeList.h"                  // base class
+#include "nsIWeakReference.h"             // base class
+#include "nsNodeUtils.h"                  // class member nsNodeUtils::CloneNodeImpl
 
-#include "nsISMILAttr.h"
-
-class nsIDOMAttr;
-class nsIDOMEventListener;
-class nsIFrame;
-class nsIDOMNamedNodeMap;
-class nsICSSDeclaration;
-class nsIDOMCSSStyleDeclaration;
-class nsIURI;
-class nsINodeInfo;
-class nsIControllers;
-class nsEventListenerManager;
-class nsIScrollableFrame;
-class nsAttrValueOrString;
-class nsContentList;
-class nsDOMTokenList;
 class ContentUnbinder;
-struct nsRect;
-
-typedef PRUptrdiff PtrBits;
+class nsContentList;
+class nsDOMAttributeMap;
+class nsDOMTokenList;
+class nsIControllers;
+class nsICSSDeclaration;
+class nsIDocument;
+class nsIDOMDOMStringMap;
+class nsIDOMNamedNodeMap;
+class nsINodeInfo;
+class nsIURI;
 
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
