@@ -1155,6 +1155,7 @@ GARBAGE_DIRS += $(_JAVA_DIR)
 ifndef NO_MAKEFILE_RULE
 Makefile: Makefile.in
 	@$(PYTHON) $(DEPTH)/config.status -n --file=Makefile
+	@$(TOUCH) $@
 endif
 
 ifndef NO_SUBMAKEFILES_RULE
@@ -1162,6 +1163,7 @@ ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
 	$(PYTHON) $(DEPTH)$(addprefix /,$(subsrcdir))/config.status -n --file=$@
+	@$(TOUCH) $@
 endif
 endif
 
