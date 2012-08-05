@@ -2505,53 +2505,44 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
   return nullptr;
 }
 
-static gfxSize
-PredictScaleForContent(nsIFrame* aFrame, nsIFrame* aAncestorWithScale,
-                       const gfxSize& aScale)
+bool
+FrameLayerBuilder::GetThebesLayerResolutionForFrame(nsIFrame* aFrame,
+                                                    double* aXres, double* aYres,
+                                                    gfxPoint* aPoint)
 {
-  gfx3DMatrix transform =
-    gfx3DMatrix::ScalingMatrix(aScale.width, aScale.height, 1.0);
-  // aTransform is applied first, then the scale is applied to the result
-  transform = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestorWithScale)*transform;
-  gfxMatrix transform2d;
-  if (transform.CanDraw2D(&transform2d)) {
-     return transform2d.ScaleFactors(true);
-  }
-  return gfxSize(1.0, 1.0);
-}
-
-gfxSize
-FrameLayerBuilder::GetThebesLayerScaleForFrame(nsIFrame* aFrame)
-{
-  nsIFrame* last;
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    last = f;
-    if (f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
-      nsTArray<DisplayItemData>* array = GetDisplayItemDataArrayForFrame(f);
-	  // Some frames with NS_FRAME_HAS_CONTAINER_LAYER may not have display items.
-	  // In particular the root frame probably doesn't!
-      if (!array)
-	    continue;
-      for (PRUint32 i = 0; i < array->Length(); ++i) {
-        Layer* layer = array->ElementAt(i).mLayer;
-        ContainerLayer* container = layer->AsContainerLayer();
-        if (!container) {
-          continue;
-        }
-        for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
-          ThebesDisplayItemLayerUserData* data =
-              static_cast<ThebesDisplayItemLayerUserData*>
-                (l->GetUserData(&gThebesDisplayItemLayerUserData));
-          if (data) {
-            return PredictScaleForContent(aFrame, f, gfxSize(data->mXScale, data->mYScale));
-          }
-        }
+  nsTArray<DisplayItemData> *array = GetDisplayItemDataArrayForFrame(aFrame);
+  if (array) {
+    for (PRUint32 i = 0; i < array->Length(); ++i) {
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+        ThebesDisplayItemLayerUserData* data =
+          static_cast<ThebesDisplayItemLayerUserData*>
+            (layer->GetUserData(&gThebesDisplayItemLayerUserData));
+        *aXres = data->mXScale;
+        *aYres = data->mYScale;
+        *aPoint = data->mActiveScrolledRootPosition;
+        return true;
       }
     }
   }
 
-  return PredictScaleForContent(aFrame, last,
-      last->PresContext()->PresShell()->GetResolution());
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    if (lists.CurrentID() == nsIFrame::kPopupList ||
+        lists.CurrentID() == nsIFrame::kSelectPopupList) {
+      continue;
+    }
+
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      if (GetThebesLayerResolutionForFrame(childFrames.get(),
+                                           aXres, aYres, aPoint)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 #ifdef MOZ_DUMP_PAINTING
