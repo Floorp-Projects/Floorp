@@ -2404,6 +2404,10 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun, float aInflation)
   }
 }
 
+NS_QUERYFRAME_HEAD(nsTextFrame)
+  NS_QUERYFRAME_ENTRY(nsTextFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsTextFrameBase)
+
 gfxSkipCharsIterator
 nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
                            gfxContext* aReferenceContext,
