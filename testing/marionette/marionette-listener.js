@@ -23,6 +23,7 @@ utils.window = content;
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
+loader.loadSubScript("chrome://marionette/content/marionette-sendkeys.js", utils);
 
 loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
 loader.loadSubScript("chrome://specialpowers/content/specialpowers.js");
@@ -659,7 +660,7 @@ function isElementSelected(msg) {
 function sendKeysToElement(msg) {
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    utils.sendKeysToElement(el, msg.json.value);
+    utils.type(curWindow.document, el, msg.json.value.join(""), true);
     sendOk();
   }
   catch (e) {
