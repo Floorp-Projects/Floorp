@@ -5,6 +5,7 @@
 import socket
 
 from client import MarionetteClient
+from keys import Keys
 from errors import *
 from emulator import Emulator
 from geckoinstance import GeckoInstance
@@ -47,8 +48,19 @@ class HTMLElement(object):
     def text(self):
         return self.marionette._send_message('getElementText', 'value', element=self.id)
 
-    def send_keys(self, string):
-        return self.marionette._send_message('sendKeysToElement', 'ok', element=self.id, value=string)
+    def send_keys(self, *string):
+        typing = []
+        for val in string:
+            if isinstance(val, Keys):
+                typing.append(val)
+            elif isinstance(val, int):
+                val = str(val)
+                for i in range(len(val)):
+                    typing.append(val[i])
+            else:
+                for i in range(len(val)):
+                    typing.append(val[i])
+        return self.marionette._send_message('sendKeysToElement', 'ok', element=self.id, value=typing)
 
     def value(self):
         return self.marionette._send_message('getElementValue', 'value', element=self.id)
