@@ -402,6 +402,15 @@ void NotifyAlarmFired();
  */
 bool SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds);
 
+/**
+ * Set the priority of the given process.
+ *
+ * Exactly what this does will vary between platforms.  On *nix we might give
+ * background processes higher nice values.  On other platforms, we might
+ * ignore this call entirely.
+ */
+void SetProcessPriority(int aPid, hal::ProcessPriority aPriority);
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

@@ -94,11 +94,13 @@
 #include "nsHyphenationManager.h"
 #include "nsEditorSpellCheck.h"
 #include "nsWindowMemoryReporter.h"
+#include "mozilla/dom/ipc/ProcessPriorityManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -242,6 +244,8 @@ nsLayoutStatics::Initialize()
   nsWindowMemoryReporter::Init();
 
   nsSVGUtils::Init();
+
+  InitProcessPriorityManager();
 
   return NS_OK;
 }
