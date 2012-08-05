@@ -1154,24 +1154,24 @@ GARBAGE_DIRS += $(_JAVA_DIR)
 
 ifndef NO_MAKEFILE_RULE
 Makefile: Makefile.in
-	@$(DEPTH)/config.status -n --file=Makefile
+	@$(PYTHON) $(DEPTH)/config.status -n --file=Makefile
 endif
 
 ifndef NO_SUBMAKEFILES_RULE
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(DEPTH)$(addprefix /,$(subsrcdir))/config.status -n --file=$@
+	$(PYTHON) $(DEPTH)$(addprefix /,$(subsrcdir))/config.status -n --file=$@
 endif
 endif
 
 ifdef AUTOUPDATE_CONFIGURE
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
-	(cd $(topsrcdir) && $(AUTOCONF)) && $(DEPTH)/config.status -n --recheck)
+	(cd $(topsrcdir) && $(AUTOCONF)) && $(PYTHON) $(DEPTH)/config.status -n --recheck)
 endif
 
 $(DEPTH)/config/autoconf.mk: $(topsrcdir)/config/autoconf.mk.in
-	$(DEPTH)/config.status -n --file=$(DEPTH)/config/autoconf.mk
+	$(PYTHON) $(DEPTH)/config.status -n --file=$(DEPTH)/config/autoconf.mk
 	$(TOUCH) $@
 
 ###############################################################################
