@@ -40,6 +40,7 @@ EXPORTS_mozilla/dom = \
 
 EXPORTS_mozilla/dom/ipc = \
   Blob.h \
+  ProcessPriorityManager.h \
   nsIRemoteBlob.h \
   $(NULL)
 
@@ -50,6 +51,7 @@ CPPSRCS = \
   ContentChild.cpp \
   CrashReporterParent.cpp \
   CrashReporterChild.cpp \
+  ProcessPriorityManager.cpp \
   StructuredCloneUtils.cpp \
   TabParent.cpp \
   TabChild.cpp \

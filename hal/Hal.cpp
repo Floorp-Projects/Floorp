@@ -22,6 +22,11 @@
 #include "WindowIdentifier.h"
 #include "mozilla/dom/ScreenOrientation.h"
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#endif
+
 using namespace mozilla::services;
 
 #define PROXY_IF_SANDBOXED(_call)                 \
@@ -726,6 +731,17 @@ SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds)
   // It's pointless to program an alarm nothing is going to observe ...
   MOZ_ASSERT(sAlarmObserver);
   RETURN_PROXY_IF_SANDBOXED(SetAlarm(aSeconds, aNanoseconds));
+}
+
+void
+SetProcessPriority(int aPid, ProcessPriority aPriority)
+{
+  if (InSandbox()) {
+    hal_sandbox::SetProcessPriority(aPid, aPriority);
+  }
+  else {
+    hal_impl::SetProcessPriority(aPid, aPriority);
+  }
 }
 
 } // namespace hal

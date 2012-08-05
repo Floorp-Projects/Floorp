@@ -54,11 +54,13 @@ enum SwitchState {
 };
 
 typedef Observer<SwitchEvent> SwitchObserver;
-} // namespace hal
-} // namespace mozilla
 
-namespace mozilla {
-namespace hal {
+enum ProcessPriority {
+  PROCESS_PRIORITY_BACKGROUND,
+  PROCESS_PRIORITY_FOREGROUND,
+  PROCESS_PRIORITY_MASTER,
+  NUM_PROCESS_PRIORITY
+};
 
 /**
  * Used by ModifyWakeLock
@@ -69,8 +71,8 @@ enum WakeLockControl {
   WAKE_LOCK_ADD_ONE    = 1,
 };
 
-}
-}
+} // namespace hal
+} // namespace mozilla
 
 namespace IPC {
 
@@ -132,6 +134,13 @@ struct ParamTraits<mozilla::hal::SwitchDevice>:
   public EnumSerializer<mozilla::hal::SwitchDevice,
                         mozilla::hal::SWITCH_DEVICE_UNKNOWN,
                         mozilla::hal::NUM_SWITCH_DEVICE> {
+};
+
+template <>
+struct ParamTraits<mozilla::hal::ProcessPriority>:
+  public EnumSerializer<mozilla::hal::ProcessPriority,
+                        mozilla::hal::PROCESS_PRIORITY_BACKGROUND,
+                        mozilla::hal::NUM_PROCESS_PRIORITY> {
 };
 
 

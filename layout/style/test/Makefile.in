@@ -185,6 +185,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame_empty.html \
 		test_load_events_on_stylesheets.html \
 		test_bug721136.html \
+		test_bug732153.html \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX
