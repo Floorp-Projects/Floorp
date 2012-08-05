@@ -124,7 +124,8 @@ class ConfigEnvironment(object):
 
     ConfigEnvironment expects a "top_srcdir" subst to be set with the top
     source directory, in msys format on windows. It is used to derive a
-    "srcdir" subst when treating config files.
+    "srcdir" subst when treating config files. It can either be an absolute
+    path or a path relative to the topobjdir.
     '''
 
     def __init__(self, topobjdir = '.', topsrcdir = '.',
@@ -147,12 +148,22 @@ class ConfigEnvironment(object):
             return dir
         return '.'
 
+    def get_top_srcdir(self, file):
+        '''Returns a normalized top_srcdir for the given file: if
+        substs['top_srcdir'] is a relative path, it is relative to the
+        topobjdir. Adjust it to be relative to the file path.'''
+        top_srcdir = self.substs['top_srcdir']
+        if posixpath.isabs(top_srcdir):
+            return top_srcdir
+        return posixpath.normpath(posixpath.join(self.get_depth(file), top_srcdir))
+
     def get_file_srcdir(self, file):
         '''Returns the srcdir for the given file, where srcdir is in msys
         format on windows, thus derived from top_srcdir.
         '''
         dir = self.get_relative_srcdir(file)
-        return posixpath.normpath(posixpath.join(self.substs['top_srcdir'], dir))
+        top_srcdir = self.get_top_srcdir(file)
+        return posixpath.normpath(posixpath.join(top_srcdir, dir))
 
     def get_depth(self, file):
         '''Returns the DEPTH for the given file, that is, the path to the
@@ -181,6 +192,7 @@ class ConfigEnvironment(object):
         input = self.get_input(path)
         pp = Preprocessor()
         pp.context.update(self.substs)
+        pp.context.update(top_srcdir = self.get_top_srcdir(path))
         pp.context.update(srcdir = self.get_file_srcdir(path))
         pp.context.update(relativesrcdir = self.get_relative_srcdir(path))
         pp.context.update(DEPTH = self.get_depth(path))
