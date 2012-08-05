@@ -376,6 +376,17 @@ IsInlineFrame(const nsIFrame* aFrame)
 }
 
 /**
+ * True if aFrame is an instance of an SVG frame class or is an inline/block
+ * frame being used for SVG text.
+ */
+static bool
+IsFrameForSVG(const nsIFrame* aFrame)
+{
+  return aFrame->IsFrameOfType(nsIFrame::eSVG) ||
+         aFrame->IsSVGText();
+}
+
+/**
  * Returns true iff aFrame explicitly prevents its descendants from floating
  * (at least, down to the level of descendants which themselves are
  * float-containing blocks -- those will manage the floating status of any
@@ -5233,7 +5244,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     // Don't create frames for non-SVG element children of SVG elements.
     if (aNameSpaceID != kNameSpaceID_SVG &&
         aParentFrame &&
-        aParentFrame->IsFrameOfType(nsIFrame::eSVG) &&
+        IsFrameForSVG(aParentFrame) &&
         !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
         ) {
       SetAsUndisplayedContent(aItems, element, styleContext,
