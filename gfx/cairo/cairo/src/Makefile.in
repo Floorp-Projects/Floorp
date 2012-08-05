@@ -233,4 +233,4 @@ DEFINES += -DMOZ_TREE_PIXMAN
 endif
 
 cairo-features.h: $(srcdir)/cairo-features.h.in $(GLOBAL_DEPS)
-	$(DEPTH)/config.status -n --file=$@
+	$(PYTHON) $(DEPTH)/config.status -n --file=$@
