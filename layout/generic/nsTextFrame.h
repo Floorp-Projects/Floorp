@@ -23,18 +23,24 @@ class PropertyProvider;
 
 #define TEXT_HAS_FONT_INFLATION          NS_FRAME_STATE_BIT(61)
 
-class nsTextFrame : public nsFrame {
+typedef nsFrame nsTextFrameBase;
+
+class nsTextFrame : public nsTextFrameBase {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
   friend class nsContinuingTextFrame;
 
   nsTextFrame(nsStyleContext* aContext)
-    : nsFrame(aContext)
+    : nsTextFrameBase(aContext)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
   }
   
+  // nsQueryFrame
+  NS_DECL_QUERYFRAME
+
   // nsIFrame
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
