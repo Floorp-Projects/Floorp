@@ -153,8 +153,7 @@ function popstateExpected(msg) {
 }
 
 function getColor(elem) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = document.defaultView.
+  var utils = SpecialPowers.wrap(document).defaultView.
                 QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                 getInterface(Components.interfaces.nsIDOMWindowUtils);
   return utils.getVisitedDependentComputedStyle(elem, "", "color");
@@ -162,12 +161,10 @@ function getColor(elem) {
 
 function getSHistory(theWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   const Ci = Components.interfaces;
-  var sh = theWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .sessionHistory;
+  var sh = SpecialPowers.wrap(theWindow.QueryInterface(Ci.nsIInterfaceRequestor))
+                        .getInterface(Ci.nsIWebNavigation)
+                        .sessionHistory;
   if (!sh || sh == null)
     throw("Couldn't get shistory for window!");
 
@@ -176,8 +173,6 @@ function getSHistory(theWindow)
 
 function getSHTitle(sh, offset)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   if (!offset)
     offset = 0;
 
