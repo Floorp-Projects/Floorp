@@ -624,12 +624,12 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
 }
 
 static
-void addProfileEntry(ProfileStack *aStack, ThreadProfile &aProfile, int i)
+void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile)
 {
   // First entry has tagName 's' (start)
   // Check for magic pointer bit 1 to indicate copy
-  const char* sampleLabel = aStack->mStack[i].mLabel;
-  if (aStack->mStack[i].isCopyLabel()) {
+  const char* sampleLabel = entry.label();
+  if (entry.isCopyLabel()) {
     // Store the string using 1 or more 'd' (dynamic) tags
     // that will happen to the preceding tag
 
@@ -740,13 +740,13 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     // pseudoStackPos is the position in the Pseudo stack starting
     // at the first frame (run_js in the example) and increasing.
     for (size_t i = array.count; i > 0; --i) {
-      while (pseudoStackPos < stack->mStackPointer) {
+      while (pseudoStackPos < stack->stackSize()) {
         volatile StackEntry& entry = stack->mStack[pseudoStackPos];
 
-        if (entry.mStackAddress < array.sp_array[i-1] && entry.mStackAddress)
+        if (entry.stackAddress() < array.sp_array[i-1] && entry.stackAddress())
           break;
 
-        addProfileEntry(stack, aProfile, pseudoStackPos);
+        addProfileEntry(entry, aProfile);
         pseudoStackPos++;
       }
 
@@ -811,10 +811,8 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   // 's' tag denotes the start of a sample block
   // followed by 0 or more 'c' tags.
   aProfile.addTag(ProfileEntry('s', "(root)"));
-  for (mozilla::sig_safe_t i = 0;
-       i < aStack->mStackPointer && i < mozilla::ArrayLength(aStack->mStack);
-       i++) {
-    addProfileEntry(aStack, aProfile, i);
+  for (uint32_t i = 0; i < aStack->stackSize(); i++) {
+    addProfileEntry(aStack->mStack[i], aProfile);
   }
 #ifdef ENABLE_SPS_LEAF_DATA
   if (sample) {
