@@ -9,6 +9,21 @@ from cStringIO import StringIO
 
 log = logging.getLogger('pymake.data')
 
+def emit_expansions(descend, *expansions):
+    """Helper function to emit all expansions within an input set."""
+    for expansion in expansions:
+        yield expansion
+
+        if not descend or not isinstance(expansion, list):
+            continue
+
+        for e, is_func in expansion:
+            if is_func:
+                for exp in e.expansions(True):
+                    yield exp
+            else:
+                yield e
+
 class Function(object):
     """
     An object that represents a function call. This class is always subclassed
@@ -73,6 +88,31 @@ class Function(object):
 
         return '$(%s %s)' % (self.name, ','.join(args))
 
+    def expansions(self, descend=False):
+        """Obtain all expansions contained within this function.
+
+        By default, only expansions directly part of this function are
+        returned. If descend is True, we will descend into child expansions and
+        return all of the composite parts.
+
+        This is a generator for pymake.data.BaseExpansion instances.
+        """
+        # Our default implementation simply returns arguments. More advanced
+        # functions like variable references may need their own implementation.
+        return emit_expansions(descend, *self._arguments)
+
+    @property
+    def is_filesystem_dependent(self):
+        """Exposes whether this function depends on the filesystem for results.
+
+        If True, the function touches the filesystem as part of evaluation.
+
+        This only tests whether the function itself uses the filesystem. If
+        this function has arguments that are functions that touch the
+        filesystem, this will return False.
+        """
+        return False
+
     def __len__(self):
         return len(self._arguments)
 
@@ -128,7 +168,7 @@ class VariableRef(Function):
         self.loc = loc
         assert isinstance(vname, (data.Expansion, data.StringExpansion))
         self.vname = vname
-        
+
     def setup(self):
         assert False, "Shouldn't get here"
 
@@ -152,6 +192,9 @@ class VariableRef(Function):
             return '$(%s)' % self.vname.s
 
         return '$(%s)' % self.vname.to_source()
+
+    def expansions(self, descend=False):
+        return emit_expansions(descend, self.vname)
 
     def __repr__(self):
         return "VariableRef<%s>(%r)" % (self.loc, self.vname)
@@ -202,6 +245,10 @@ class SubstitutionRef(Function):
             self.vname.to_source(),
             self.substfrom.to_source(),
             self.substto.to_source())
+
+    def expansions(self, descend=False):
+        return emit_expansions(descend, self.vname, self.substfrom,
+                self.substto)
 
     def __repr__(self):
         return "SubstitutionRef<%s>(%r:%r=%r)" % (
@@ -503,6 +550,10 @@ class WildcardFunction(Function):
                            for p in patterns
                            for x in glob(makefile.workdir, p)]))
 
+    @property
+    def is_filesystem_dependent(self):
+        return True
+
 class RealpathFunction(Function):
     name = 'realpath'
     minargs = 1
@@ -511,6 +562,9 @@ class RealpathFunction(Function):
     def resolve(self, makefile, variables, fd, setting):
         fd.write(' '.join([os.path.realpath(os.path.join(makefile.workdir, path)).replace('\\', '/')
                            for path in self._arguments[0].resolvesplit(makefile, variables, setting)]))
+
+    def is_filesystem_dependent(self):
+        return True
 
 class AbspathFunction(Function):
     name = 'abspath'
