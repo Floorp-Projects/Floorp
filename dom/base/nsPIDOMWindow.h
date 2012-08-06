@@ -617,8 +617,8 @@ public:
   virtual bool IsPartOfApp() = 0;
 
   /**
-   * Returns true of this window is part of an we app, and this window has
-   * the same origin (principal) as the web app.
+   * Returns true if this window is part of a web app and has the same origin
+   * (principal) as the app.
    */
   virtual bool IsInAppOrigin() = 0;
 
