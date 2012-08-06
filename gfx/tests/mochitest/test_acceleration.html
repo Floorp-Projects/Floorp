@@ -20,11 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=627498
 // Make sure that acceleration is enabled/disabled the way we expect it to be
 // based on platform.
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var importObj = {};
+SpecialPowers.wrap(Components).utils.import("resource://gre/modules/Services.jsm",
+                                            importObj);
+var Services = SpecialPowers.wrap(importObj).Services;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-var Cc = Components.classes;
+var Cc = SpecialPowers.wrap(Components).classes;
 var Ci = Components.interfaces;
 
 var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
