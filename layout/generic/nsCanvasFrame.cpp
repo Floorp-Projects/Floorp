@@ -209,7 +209,6 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
 
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
-  nsIntRect pixelRect = bounds.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
   nsRenderingContext context;
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
   nsRefPtr<gfxASurface> surf;
