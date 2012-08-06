@@ -335,9 +335,9 @@ ConsoleAPI.prototype = {
   /**
    * Process the console API call arguments in order to perform printf-like
    * string substitution.
-   * TODO: object substitution should display an interactive property list (bug
-   * 685815) and width and precision qualifiers should be taken into account
-   * (bug 685813).
+   *
+   * TODO: object substitution should take into account width and precision
+   * qualifiers (bug 685813).
    *
    * @param mixed aArguments
    *        The arguments given to the console API call.
@@ -346,12 +346,18 @@ ConsoleAPI.prototype = {
     if (aArguments.length < 2 || typeof aArguments[0] != "string") {
       return aArguments;
     }
+
     let args = Array.prototype.slice.call(aArguments);
     let format = args.shift();
+    let splitter = "%" + format.length + Date.now() + "%";
+    let objects = [];
+
     // Format specification regular expression.
     let processed = format.replace(ARGUMENT_PATTERN, function CA_PA_substitute(match, submatch) {
       switch (submatch) {
         case "o":
+          objects.push(args.shift());
+          return splitter;
         case "s":
           return String(args.shift());
         case "d":
@@ -363,8 +369,19 @@ ConsoleAPI.prototype = {
           return submatch;
       };
     });
-    args.unshift(processed);
-    return args;
+
+    let result = [];
+    let processedArray = processed.split(splitter);
+    processedArray.forEach(function(aValue, aIndex) {
+      if (aValue !== "") {
+        result.push(aValue);
+      }
+      if (objects[aIndex]) {
+        result.push(objects[aIndex]);
+      }
+    });
+
+    return result.concat(args);
   },
 
   /**

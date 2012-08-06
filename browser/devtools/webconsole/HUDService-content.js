@@ -1161,17 +1161,17 @@ let ConsoleAPIObserver = {
           WebConsoleUtils.cloneObject(aOriginalMessage.arguments, true);
         break;
 
-      case "log":
-      case "info":
-      case "warn":
-      case "error":
-      case "debug":
       case "groupEnd":
         aRemoteMessage.argumentsToString =
           Array.map(aOriginalMessage.arguments || [],
                     this._formatObject.bind(this));
         break;
 
+      case "log":
+      case "info":
+      case "warn":
+      case "error":
+      case "debug":
       case "dir": {
         aRemoteMessage.objectsCacheId = Manager.sequenceId;
         aRemoteMessage.argumentsToString = [];
