@@ -118,6 +118,7 @@ class BindingIter
     bool done() const { return shape_.empty(); }
     operator bool() const { return !done(); }
     void operator++(int) { shape_.popFront(); settle(); }
+    BindingIter &operator++() { (*this)++; return *this; }
 
     const Binding &operator*() const { JS_ASSERT(!done()); return binding_; }
     const Binding *operator->() const { JS_ASSERT(!done()); return &binding_; }
