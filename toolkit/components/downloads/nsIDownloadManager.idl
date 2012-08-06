@@ -16,7 +16,20 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(9b6b2f21-affb-4e8f-907a-fd5bd7a2d562)]
+[scriptable, function, uuid(0c07ffeb-791b-49f3-ae38-2c331fd55a52)]
+interface nsIDownloadManagerResult : nsISupports {
+  /**
+   * Process an asynchronous result from getDownloadByGUID.
+   *
+   * @param aStatus The result code of the operation:
+   *        * NS_OK: an item was found. No other success values are returned.
+   *        * NS_ERROR_NOT_AVAILABLE: no such item was found.
+   *        * Other error values are possible, but less well-defined.
+   */
+  void handleResult(in nsresult aStatus, in nsIDownload aDownload);
+};
+
+[scriptable, uuid(c2ac096c-53f9-4ef4-85f4-b920a9cc1de5)]
 interface nsIDownloadManager : nsISupports {
   /**
    * Download type for generic file download.
@@ -138,6 +151,18 @@ interface nsIDownloadManager : nsISupports {
    * @throws NS_ERROR_NOT_AVAILABLE if the download is not in the database.
    */
   nsIDownload getDownload(in unsigned long aID);
+
+  /**
+   * Retrieves a download managed by the download manager.  This can be one that
+   * is in progress, or one that has completed in the past and is stored in the
+   * database.  The result of this method is returned via an asynchronous callback,
+   * the parameter of which will be an nsIDownload object, or null if none exists
+   * with the provided GUID.
+   *
+   * @param aGUID The unique GUID of the download.
+   * @param aCallback The callback to invoke with the result of the search.
+   */
+  void getDownloadByGUID(in ACString aGUID, in nsIDownloadManagerResult aCallback);
 
   /**
    * Cancels the download with the specified ID if it's currently in-progress.

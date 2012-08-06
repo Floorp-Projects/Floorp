@@ -28,11 +28,14 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDownloadManager.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 #include "mozStorageCID.h"
 #include "nsDocShellCID.h"
 #include "nsEmbedCID.h"
 #include "nsToolkitCompsCID.h"
+
+#include "SQLFunctions.h"
 
 #ifdef XP_WIN
 #include <shlobj.h>
@@ -54,6 +57,7 @@
 #endif
 
 using namespace mozilla;
+using mozilla::downloads::GenerateGUID;
 
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
@@ -68,7 +72,7 @@ using namespace mozilla;
 
 static const int64_t gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      8
+#define DM_SCHEMA_VERSION      9
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
@@ -299,6 +303,14 @@ nsDownloadManager::CloseDB()
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
+static nsresult
+InitSQLFunctions(mozIStorageConnection* aDBConn)
+{
+  nsresult rv = mozilla::downloads::GenerateGUIDFunction::create(aDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
 nsresult
 nsDownloadManager::InitMemoryDB()
 {
@@ -309,10 +321,12 @@ nsDownloadManager::InitMemoryDB()
   if (!mDBConn)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsresult rv = CreateTable();
+  nsresult rv = InitSQLFunctions(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mDBType = DATABASE_MEMORY;
+  rv = CreateTable();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -334,17 +348,21 @@ nsDownloadManager::InitFileDB()
   mDBConn = GetFileDBConnection(dbFile);
   NS_ENSURE_TRUE(mDBConn, NS_ERROR_NOT_AVAILABLE);
 
+  rv = InitSQLFunctions(mDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   bool tableExists;
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_downloads"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
+
   if (!tableExists) {
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
-    mDBType = DATABASE_DISK;
+
+    // We're done with the initialization now and can skip the remaining
+    // upgrading logic.
     return NS_OK;
   }
-
-  mDBType = DATABASE_DISK;
 
   // Checking the database schema now
   int32_t schemaVersion;
@@ -521,6 +539,37 @@ nsDownloadManager::InitFileDB()
     }
     // Fallthrough to the next upgrade
 
+    // Warning: schema versions >=8 must take into account that they can
+    // be operating on schemas from unknown, future versions that have
+    // been downgraded. Operations such as adding columns may fail,
+    // since the column may already exist.
+
+  case 8: // This version adds a column for GUIDs
+    {
+      bool exists;
+      rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_downloads_guid_uniqueindex"),
+                                &exists);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!exists) {
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE moz_downloads ADD COLUMN guid TEXT"));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "CREATE UNIQUE INDEX moz_downloads_guid_uniqueindex ON moz_downloads (guid)"));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "UPDATE moz_downloads SET guid = GENERATE_GUID() WHERE guid ISNULL"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the database schema
+      schemaVersion = 9;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
   // Extra sanity checking for developers
 #ifndef DEBUG
   case DM_SCHEMA_VERSION:
@@ -552,10 +601,15 @@ nsDownloadManager::InitFileDB()
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT id, name, source, target, tempPath, startTime, endTime, state, "
                "referrer, entityID, currBytes, maxBytes, mimeType, "
-               "preferredApplication, preferredAction, autoResume "
+               "preferredApplication, preferredAction, autoResume, guid "
         "FROM moz_downloads"), getter_AddRefs(stmt));
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        // We have a database that contains all of the elements that make up
+        // the latest known schema. Reset the version to force an upgrade
+        // path if this downgraded database is used in a later version.
+        mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
         break;
+      }
 
       // if the statement fails, that means all the columns were not there.
       // First we backup the database
@@ -587,7 +641,7 @@ nsDownloadManager::CreateTable()
   nsresult rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
   if (NS_FAILED(rv)) return rv;
 
-  return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_downloads ("
       "id INTEGER PRIMARY KEY, "
       "name TEXT, "
@@ -604,8 +658,15 @@ nsDownloadManager::CreateTable()
       "mimeType TEXT, "
       "preferredApplication TEXT, "
       "preferredAction INTEGER NOT NULL DEFAULT 0, "
-      "autoResume INTEGER NOT NULL DEFAULT 0"
+      "autoResume INTEGER NOT NULL DEFAULT 0, "
+      "guid TEXT"
     ")"));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE UNIQUE INDEX moz_downloads_guid_uniqueindex "
+      "ON moz_downloads(guid)"));
+  return rv;
 }
 
 nsresult
@@ -716,15 +777,16 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
                                    int64_t aEndTime,
                                    const nsACString &aMimeType,
                                    const nsACString &aPreferredApp,
-                                   nsHandlerInfoAction aPreferredAction)
+                                   nsHandlerInfoAction aPreferredAction,
+                                   nsACString& aNewGUID)
 {
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_downloads "
     "(name, source, target, tempPath, startTime, endTime, state, "
-     "mimeType, preferredApplication, preferredAction) VALUES "
+     "mimeType, preferredApplication, preferredAction, guid) VALUES "
     "(:name, :source, :target, :tempPath, :startTime, :endTime, :state, "
-     ":mimeType, :preferredApplication, :preferredAction)"),
+     ":mimeType, :preferredApplication, :preferredAction, :guid)"),
     getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
@@ -758,6 +820,12 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("preferredAction"), aPreferredAction);
   NS_ENSURE_SUCCESS(rv, 0);
 
+  nsAutoCString guid;
+  rv = GenerateGUID(guid);
+  NS_ENSURE_SUCCESS(rv, 0);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), guid);
+  NS_ENSURE_SUCCESS(rv, 0);
+
   bool hasMore;
   rv = stmt->ExecuteStep(&hasMore); // we want to keep our lock
   NS_ENSURE_SUCCESS(rv, 0);
@@ -765,6 +833,8 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   int64_t id = 0;
   rv = mDBConn->GetLastInsertRowID(&id);
   NS_ENSURE_SUCCESS(rv, 0);
+
+  aNewGUID = guid;
 
   // lock on DB from statement will be released once we return
   return id;
@@ -948,17 +1018,38 @@ nsDownloadManager::GetQuitBehavior()
 }
 
 nsresult
-nsDownloadManager::GetDownloadFromDB(uint32_t aID, nsDownload **retVal)
+nsDownloadManager::GetDownloadFromDB(const nsACString& aGUID, nsDownload **retVal)
 {
-  NS_ASSERTION(!FindDownload(aID),
-               "If it is a current download, you should not call this method!");
+  MOZ_ASSERT(!FindDownload(aGUID),
+             "If it is a current download, you should not call this method!");
 
   // First, let's query the database and see if it even exists
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
            "entityID, currBytes, maxBytes, mimeType, preferredAction, "
-           "preferredApplication, autoResume "
+           "preferredApplication, autoResume, guid "
+    "FROM moz_downloads "
+    "WHERE guid = :guid"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), aGUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return GetDownloadFromDB(stmt, retVal);
+}
+
+nsresult
+nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
+{
+  MOZ_ASSERT(!FindDownload(aID),
+             "If it is a current download, you should not call this method!");
+
+  // First, let's query the database and see if it even exists
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
+           "entityID, currBytes, maxBytes, mimeType, preferredAction, "
+           "preferredApplication, autoResume, guid "
     "FROM moz_downloads "
     "WHERE id = :id"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -966,8 +1057,14 @@ nsDownloadManager::GetDownloadFromDB(uint32_t aID, nsDownload **retVal)
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return GetDownloadFromDB(stmt, retVal);
+}
+
+nsresult
+nsDownloadManager::GetDownloadFromDB(mozIStorageStatement* stmt, nsDownload **retVal)
+{
   bool hasResults = false;
-  rv = stmt->ExecuteStep(&hasResults);
+  nsresult rv = stmt->ExecuteStep(&hasResults);
   if (NS_FAILED(rv) || !hasResults)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -1065,6 +1162,29 @@ nsDownloadManager::GetDownloadFromDB(uint32_t aID, nsDownload **retVal)
 
   dl->mAutoResume =
     static_cast<enum nsDownload::AutoResume>(stmt->AsInt32(i++));
+
+  rv = stmt->GetUTF8String(i++, dl->mGUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Handle situations where we load a download from a database that has been
+  // used in an older version and not gone through the upgrade path (ie. it
+  // contains empty GUID entries).
+  if (dl->mGUID.IsEmpty()) {
+    rv = GenerateGUID(dl->mGUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+                                    "UPDATE moz_downloads SET guid = :guid "
+                                    "WHERE id = :id"),
+                                  getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), dl->mGUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), dl->mID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
@@ -1402,7 +1522,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
 
   int64_t id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
                                dl->mStartTime, dl->mLastUpdate,
-                               mimeType, persistentDescriptor, action);
+                               mimeType, persistentDescriptor, action,
+                               dl->mGUID /* outparam */);
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;
 
@@ -1482,14 +1603,67 @@ nsDownloadManager::GetDownload(uint32_t aID, nsIDownload **aDownloadItem)
   return NS_OK;
 }
 
+namespace {
+class AsyncResult : public nsRunnable
+{
+public:
+  AsyncResult(nsresult aStatus, nsIDownload* aResult,
+              nsIDownloadManagerResult* aCallback)
+  : mStatus(aStatus), mResult(aResult), mCallback(aCallback)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    mCallback->HandleResult(mStatus, mResult);
+    return NS_OK;
+  }
+
+private:
+  nsresult mStatus;
+  nsCOMPtr<nsIDownload> mResult;
+  nsCOMPtr<nsIDownloadManagerResult> mCallback;
+};
+} // anonymous namespace
+
+NS_IMETHODIMP
+nsDownloadManager::GetDownloadByGUID(const nsACString& aGUID,
+                                     nsIDownloadManagerResult* aCallback)
+{
+  nsDownload *itm = FindDownload(aGUID);
+
+  nsresult rv = NS_OK;
+  nsRefPtr<nsDownload> dl;
+  if (!itm) {
+    rv = GetDownloadFromDB(aGUID, getter_AddRefs(dl));
+    itm = dl.get();
+  }
+
+  nsRefPtr<AsyncResult> runnable = new AsyncResult(rv, itm, aCallback);
+  NS_DispatchToMainThread(runnable);
+  return NS_OK;
+}
+
 nsDownload *
 nsDownloadManager::FindDownload(uint32_t aID)
 {
   // we shouldn't ever have many downloads, so we can loop over them
   for (int32_t i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
     nsDownload *dl = mCurrentDownloads[i];
-
     if (dl->mID == aID)
+      return dl;
+  }
+
+  return nullptr;
+}
+
+nsDownload *
+nsDownloadManager::FindDownload(const nsACString& aGUID)
+{
+  // we shouldn't ever have many downloads, so we can loop over them
+  for (int32_t i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
+    nsDownload *dl = mCurrentDownloads[i];
+    if (dl->mGUID == aGUID)
       return dl;
   }
 
@@ -1506,42 +1680,19 @@ nsDownloadManager::CancelDownload(uint32_t aID)
   if (!dl)
     return NS_ERROR_FAILURE;
 
-  // Don't cancel if download is already finished
-  if (dl->IsFinished())
-    return NS_OK;
+  return dl->Cancel();
+}
 
-  // if the download is fake-paused, we have to resume it so we can cancel it
-  if (dl->IsPaused() && !dl->IsResumable())
-    (void)dl->Resume();
-
-  // Have the download cancel its connection
-  (void)dl->Cancel();
-
-  // Dump the temp file because we know we don't need the file anymore. The
-  // underlying transfer creating the file doesn't delete the file because it
-  // can't distinguish between a pause that cancels the transfer or a real
-  // cancel.
-  if (dl->mTempFile) {
-    bool exists;
-    dl->mTempFile->Exists(&exists);
-    if (exists)
-      dl->mTempFile->Remove(false);
-  }
-
-  nsCOMPtr<nsIFile> file;
-  if (NS_SUCCEEDED(dl->GetTargetFile(getter_AddRefs(file))))
-  {
-    bool exists;
-    file->Exists(&exists);
-    if (exists)
-      file->Remove(false);
-  }
-
-  nsresult rv = dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+nsresult
+nsDownloadManager::RetryDownload(const nsACString& aGUID)
+{
+  nsRefPtr<nsDownload> dl;
+  nsresult rv = GetDownloadFromDB(aGUID, getter_AddRefs(dl));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return RetryDownload(dl);
 }
+
 
 NS_IMETHODIMP
 nsDownloadManager::RetryDownload(uint32_t aID)
@@ -1550,6 +1701,12 @@ nsDownloadManager::RetryDownload(uint32_t aID)
   nsresult rv = GetDownloadFromDB(aID, getter_AddRefs(dl));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return RetryDownload(dl);
+}
+
+nsresult
+nsDownloadManager::RetryDownload(nsDownload* dl)
+{
   // if our download is not canceled or failed, we should fail
   if (dl->mDownloadState != nsIDownloadManager::DOWNLOAD_FAILED &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL &&
@@ -1559,6 +1716,7 @@ nsDownloadManager::RetryDownload(uint32_t aID)
     return NS_ERROR_FAILURE;
 
   // If the download has failed and is resumable then we first try resuming it
+  nsresult rv;
   if (dl->mDownloadState == nsIDownloadManager::DOWNLOAD_FAILED && dl->IsResumable()) {
     rv = dl->Resume();
     if (NS_SUCCEEDED(rv))
@@ -1596,6 +1754,38 @@ nsDownloadManager::RetryDownload(uint32_t aID)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsDownloadManager::RemoveDownload(const nsACString& aGUID)
+{
+  nsDownload *dl = FindDownload(aGUID);
+  NS_ASSERTION(!dl, "Can't call RemoveDownload on a download in progress!");
+  if (dl)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_downloads "
+    "WHERE guid = :guid"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), aGUID); // unsigned; 64-bit to prevent overflow
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsPRUint32> id =
+      do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = id->SetData(dl->mID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI with the topic and download id
+  return mObserverService->NotifyObservers(id,
+                                           "download-manager-remove-download",
+                                           nullptr);
 }
 
 NS_IMETHODIMP
@@ -2770,6 +2960,13 @@ nsDownload::GetId(uint32_t *aId)
 }
 
 NS_IMETHODIMP
+nsDownload::GetGuid(nsACString &aGUID)
+{
+  aGUID = mGUID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownload::GetReferrer(nsIURI **referrer)
 {
   NS_IF_ADDREF(*referrer = mReferrer);
@@ -2958,20 +3155,20 @@ nsDownload::SetProgressBytes(int64_t aCurrBytes, int64_t aMaxBytes)
     mPercentComplete = (int32_t)((double)currBytes / maxBytes * 100 + .5);
 }
 
-nsresult
+NS_IMETHODIMP
 nsDownload::Pause()
 {
   if (!IsResumable())
     return NS_ERROR_UNEXPECTED;
 
-  nsresult rv = Cancel();
+  nsresult rv = CancelTransfer();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
 }
 
 nsresult
-nsDownload::Cancel()
+nsDownload::CancelTransfer()
 {
   nsresult rv = NS_OK;
   if (mCancelable) {
@@ -2983,7 +3180,47 @@ nsDownload::Cancel()
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
+nsDownload::Cancel()
+{
+  // Don't cancel if download is already finished
+  if (IsFinished())
+    return NS_OK;
+
+  // if the download is fake-paused, we have to resume it so we can cancel it
+  if (IsPaused() && !IsResumable())
+    (void)Resume();
+
+  // Have the download cancel its connection
+  (void)CancelTransfer();
+
+  // Dump the temp file because we know we don't need the file anymore. The
+  // underlying transfer creating the file doesn't delete the file because it
+  // can't distinguish between a pause that cancels the transfer or a real
+  // cancel.
+  if (mTempFile) {
+    bool exists;
+    mTempFile->Exists(&exists);
+    if (exists)
+      mTempFile->Remove(false);
+  }
+
+  nsCOMPtr<nsIFile> file;
+  if (NS_SUCCEEDED(GetTargetFile(getter_AddRefs(file))))
+  {
+    bool exists;
+    file->Exists(&exists);
+    if (exists)
+      file->Remove(false);
+  }
+
+  nsresult rv = SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownload::Resume()
 {
   if (!IsPaused() || !IsResumable())
@@ -3062,6 +3299,18 @@ nsDownload::Resume()
   }
 
   return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+}
+
+NS_IMETHODIMP
+nsDownload::Remove()
+{
+  return mDownloadManager->RemoveDownload(mGUID);
+}
+
+NS_IMETHODIMP
+nsDownload::Retry()
+{
+  return mDownloadManager->RetryDownload(mGUID);
 }
 
 bool

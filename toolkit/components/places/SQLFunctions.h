@@ -9,6 +9,9 @@
 /**
  * This file contains functions that Places adds to the database handle that can
  * be accessed by SQL queries.
+ *
+ * Keep the GUID-related parts of this file in sync with
+ * toolkit/downloads/SQLFunctions.[h|cpp]!
  */
 
 #include "mozIStorageFunction.h"

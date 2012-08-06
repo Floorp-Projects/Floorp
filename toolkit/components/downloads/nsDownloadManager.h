@@ -91,7 +91,9 @@ protected:
    */
   nsresult RestoreActiveDownloads();
 
+  nsresult GetDownloadFromDB(const nsACString& aGUID, nsDownload **retVal);
   nsresult GetDownloadFromDB(uint32_t aID, nsDownload **retVal);
+  nsresult GetDownloadFromDB(mozIStorageStatement* stmt, nsDownload **retVal);
 
   /**
    * Specially track the active downloads so that we don't need to check
@@ -114,7 +116,8 @@ protected:
                           int64_t aEndTime,
                           const nsACString &aMimeType,
                           const nsACString &aPreferredApp,
-                          nsHandlerInfoAction aPreferredAction);
+                          nsHandlerInfoAction aPreferredAction,
+                          nsACString &aNewGUID);
 
   void NotifyListenersOnDownloadStateChange(int16_t aOldState,
                                             nsIDownload *aDownload);
@@ -131,6 +134,7 @@ protected:
                                     nsresult aStatus,
                                     nsIDownload *aDownload);
 
+  nsDownload *FindDownload(const nsACString& aGUID);
   nsDownload *FindDownload(uint32_t aID);
 
   /**
@@ -218,6 +222,11 @@ protected:
   void OnEnterPrivateBrowsingMode();
   void OnLeavePrivateBrowsingMode();
 
+  nsresult RetryDownload(const nsACString& aGUID);
+  nsresult RetryDownload(nsDownload* dl);
+
+  nsresult RemoveDownload(const nsACString& aGUID);
+
   // Virus scanner for windows
 #ifdef DOWNLOAD_SCANNER
 private:
@@ -296,21 +305,10 @@ protected:
   void SetProgressBytes(int64_t aCurrBytes, int64_t aMaxBytes);
 
   /**
-   * Pause the download, but in certain cases it might get fake-paused instead
-   * of real-paused.
-   */
-  nsresult Pause();
-
-  /**
    * All this does is cancel the connection that the download is using. It does
    * not remove it from the download manager.
    */
-  nsresult Cancel();
-
-  /**
-   * Resume the download.
-   */
-  nsresult Resume();
+  nsresult CancelTransfer();
 
   /**
    * Download is not transferring?
@@ -373,6 +371,7 @@ protected:
 private:
   nsString mDisplayName;
   nsCString mEntityID;
+  nsCString mGUID;
 
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIURI> mReferrer;
