@@ -45,8 +45,7 @@ function doContentTest(id) {
 }
 
 function checkPrincipal() {
-  is(SpecialPowers.call_Instanceof(SpecialPowers.getNodePrincipal(document),
-                                   Components.interfaces.nsIPrincipal),
+  is(SpecialPowers.getNodePrincipal(document) instanceof Components.interfaces.nsIPrincipal,
      true,
      "Should be a principal");
 }

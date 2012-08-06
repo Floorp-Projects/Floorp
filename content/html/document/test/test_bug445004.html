@@ -55,7 +55,9 @@ function checkURI(uri, name, type) {
 
 function checkFrame(num) {
   // Just snarf our data
-  var outer = SpecialPowers.wrap(window.frames[num]);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var outer = window.frames[num]
   name = outer.name;
 
   is(outer.document.baseURI,

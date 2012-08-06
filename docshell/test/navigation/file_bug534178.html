@@ -4,6 +4,7 @@
     
       function testDone() {
         document.body.removeChild(document.body.firstChild);
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         var isOK = false;
         try {
           isOK = history.previous != location;
