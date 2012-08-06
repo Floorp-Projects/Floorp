@@ -9,6 +9,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 
 Components.utils.import("resource://mochikit/MockFilePicker.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowersAPI() { 
   this._consoleListeners = [];
@@ -407,6 +408,10 @@ SpecialPowersAPI.prototype = {
 
   get MockFilePicker() {
     return MockFilePicker
+  },
+
+  get Services() {
+    return wrapPrivileged(Services);
   },
 
   getDOMWindowUtils: function(aWindow) {
