@@ -588,16 +588,18 @@ class ProfileEntry
     }
 
     uint32_t line() volatile { JS_ASSERT(!js()); return idx; }
-    jsbytecode *pc() volatile;
     JSScript *script() volatile { JS_ASSERT(js()); return script_; }
     void *stackAddress() volatile { return sp; }
     const char *label() volatile { return string; }
 
     void setLine(uint32_t line) volatile { JS_ASSERT(!js()); idx = line; }
-    void setPC(jsbytecode *pc) volatile;
     void setLabel(const char *string) volatile { this->string = string; }
     void setStackAddress(void *sp) volatile { this->sp = sp; }
     void setScript(JSScript *script) volatile { script_ = script; }
+
+    /* we can't know the layout of JSScript, so look in vm/SPSProfiler.cpp */
+    JS_FRIEND_API(jsbytecode *) pc() volatile;
+    JS_FRIEND_API(void) setPC(jsbytecode *pc) volatile;
 
     static size_t offsetOfString() { return offsetof(ProfileEntry, string); }
     static size_t offsetOfStackAddress() { return offsetof(ProfileEntry, sp); }
