@@ -41,10 +41,6 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS += dlldeps-xul.cpp
 endif
 
-ifneq (,$(MOZ_ENABLE_GTK2))
-DEFINES += -DMOZ_ENABLE_GTK2
-endif
-
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
   $(NULL)
