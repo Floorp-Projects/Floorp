@@ -10181,11 +10181,11 @@ NS_IMETHODIMP
 nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                             JSObject *globalObj, JSObject **parentObj)
 {
+#ifdef DEBUG
   nsWrapperCache* cache = nullptr;
   CallQueryInterface(nativeObj, &cache);
-  if (!cache) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
+  MOZ_ASSERT(cache, "All CSS declarations must be wrappercached");
+#endif
 
   nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
   nsINode *native_parent = declaration->GetParentObject();
