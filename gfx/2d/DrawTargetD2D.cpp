@@ -14,12 +14,9 @@
 #include "Logging.h"
 #include "Tools.h"
 #include <algorithm>
+#include "mozilla/Constants.h"
 
 #include <dwrite.h>
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
     D2D1_FACTORY_TYPE factoryType,
