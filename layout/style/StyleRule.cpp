@@ -1067,6 +1067,7 @@ NS_INTERFACE_MAP_BEGIN(DOMCSSDeclarationImpl)
       aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
     return DomRule()->QueryInterface(aIID, aInstancePtr);
   }
+  else
 NS_IMPL_QUERY_TAIL_INHERITING(nsDOMCSSDeclaration)
 
 void
