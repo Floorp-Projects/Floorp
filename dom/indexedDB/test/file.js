@@ -82,14 +82,14 @@ function verifyBuffers(buffer1, buffer2)
 
 function verifyBlob(blob1, blob2, fileId, blobReadHandler)
 {
-  is(SpecialPowers.call_Instanceof(blob1, Components.interfaces.nsIDOMBlob), true,
+  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
      "Instance of nsIDOMBlob");
-  is(SpecialPowers.call_Instanceof(blob1, Components.interfaces.nsIDOMFile),
-     SpecialPowers.call_Instanceof(blob2, Components.interfaces.nsIDOMFile),
+  is(blob1 instanceof Components.interfaces.nsIDOMFile,
+     blob2 instanceof Components.interfaces.nsIDOMFile,
      "Instance of nsIDOMFile");
   is(blob1.size, blob2.size, "Correct size");
   is(blob1.type, blob2.type, "Correct type");
-  if (SpecialPowers.call_Instanceof(blob2, Components.interfaces.nsIDOMFile)) {
+  if (blob2 instanceof Components.interfaces.nsIDOMFile) {
     is(blob1.name, blob2.name, "Correct name");
   }
   is(utils.getFileId(blob1), fileId, "Correct file id");

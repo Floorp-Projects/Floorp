@@ -9,7 +9,6 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 
 Components.utils.import("resource://mochikit/MockFilePicker.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowersAPI() { 
   this._consoleListeners = [];
@@ -410,10 +409,6 @@ SpecialPowersAPI.prototype = {
     return MockFilePicker
   },
 
-  get Services() {
-    return wrapPrivileged(Services);
-  },
-
   getDOMWindowUtils: function(aWindow) {
     if (aWindow == this.window.get() && this.DOMWindowUtils != null)
       return this.DOMWindowUtils;
@@ -637,12 +632,6 @@ SpecialPowersAPI.prototype = {
   },
   do_QueryInterface: function(obj, iface) {
     return obj.QueryInterface(Ci[iface]); 
-  },
-
-  call_Instanceof: function (obj1, obj2) {
-     obj1=unwrapIfWrapped(obj1);
-     obj2=unwrapIfWrapped(obj2);
-     return obj1 instanceof obj2;
   },
 
   // Mimic the get*Pref API

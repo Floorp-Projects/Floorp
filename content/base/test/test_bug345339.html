@@ -32,14 +32,15 @@ function afterLoad() {
     iframeDoc.getElementById("password").value = "123456";
     iframeDoc.getElementById("hidden").value = "gecko";
 
-    var file = SpecialPowers.wrap(Components).classes["@mozilla.org/file/directory_service;1"]
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var file = Components.classes["@mozilla.org/file/directory_service;1"]
              .getService(Components.interfaces.nsIProperties)
              .get("TmpD", Components.interfaces.nsILocalFile);
     file.append("345339_test.file");
     file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
     filePath = file.path;
 
-    SpecialPowers.wrap(iframeDoc).getElementById("file").value = filePath;
+    iframeDoc.getElementById("file").value = filePath;
 
     /* Reload the page */
     $("testframe").setAttribute("onload", "afterReload()");
@@ -61,7 +62,8 @@ function afterReload() {
        "password field value forgotten");
     is(iframeDoc.getElementById("hidden").value, "gecko",
        "hidden field value preserved");
-    is(SpecialPowers.wrap(iframeDoc).getElementById("file").value, filePath,
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    is(iframeDoc.getElementById("file").value, filePath,
        "file field value preserved");
 
     SimpleTest.finish();

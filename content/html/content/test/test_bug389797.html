@@ -245,15 +245,14 @@ for each (var tag in allTags) {
      tagName(tag) + " not an instance of " + classInfos[tag]);
   is(node instanceof HTMLUnknownElement, false,
      tagName(tag) + " is an instance of HTMLUnknownElement");
-  is(SpecialPowers.call_Instanceof(node, Components.interfaces.nsIDOMHTMLUnknownElement), 
-     false,
+  is(node instanceof Components.interfaces.nsIDOMHTMLUnknownElement, false,
      tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
 
   // Check that each node QIs to all the things we expect it to QI to
   for each (var iface in interfaces[tag].concat(interfacesNonClassinfo[tag])) {
     is(iface in Components.interfaces, true,
        iface + " not in Components.interfaces");
-    is(SpecialPowers.call_Instanceof(node, Components.interfaces[iface]), true,
+    is(node instanceof Components.interfaces[iface], true,
        tagName(tag) + " does not QI to " + iface);
   }
 
