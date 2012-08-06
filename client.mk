@@ -402,7 +402,7 @@ cleansrcdir:
 	   build/autoconf/clean-config.sh; \
 	fi;
 
-# Because the SpiderMonkey can be distributed and built independently
+# Because SpiderMonkey can be distributed and built independently
 # of the Mozilla source tree, it contains its own copies of many of
 # the files used by the top-level Mozilla build process, from the
 # 'config' and 'build' subtrees.
