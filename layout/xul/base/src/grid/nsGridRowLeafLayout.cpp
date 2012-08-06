@@ -35,7 +35,7 @@ nsGridRowLeafLayout::~nsGridRowLeafLayout()
 }
 
 nsSize
-nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -53,7 +53,7 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -69,7 +69,7 @@ nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -88,7 +88,7 @@ nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
 /** If a child is added or removed or changes size
   */
 void
-nsGridRowLeafLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -99,7 +99,7 @@ nsGridRowLeafLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 void
-nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes)
+nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsBoxSize*& aBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -114,7 +114,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
     nsBoxSize* start = nullptr;
     nsBoxSize* last = nullptr;
     nsBoxSize* current = nullptr;
-    nsIBox* child = aBox->GetChildBox();
+    nsIFrame* child = aBox->GetChildBox();
     for (int i=0; i < count; i++)
     {
       column = grid->GetColumnAt(i,isHorizontal); 
@@ -132,7 +132,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
       nscoord left  = 0;
       nscoord right  = 0;
       grid->GetRowOffsets(aState, i, left, right, !isHorizontal); // GetColumnOffsets
-      nsIBox* box = column->GetBox();
+      nsIFrame* box = column->GetBox();
       bool collapsed = false;
       nscoord topMargin = column->mTopMargin;
       nscoord bottomMargin = column->mBottomMargin;
@@ -216,7 +216,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
 }
 
 void
-nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
+nsGridRowLeafLayout::ComputeChildSizes(nsIFrame* aBox,
                            nsBoxLayoutState& aState, 
                            nscoord& aGivenSize, 
                            nsBoxSize* aBoxSizes, 
@@ -229,10 +229,10 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
 
     // go up the parent chain looking for scrollframes
     nscoord diff = 0;
-    nsIBox* parentBox;
+    nsIFrame* parentBox;
     (void)GetParentGridPart(aBox, &parentBox);
     while (parentBox) {
-      nsIBox* scrollbox = nsGrid::GetScrollBox(parentBox);
+      nsIFrame* scrollbox = nsGrid::GetScrollBox(parentBox);
       nsIScrollableFrame *scrollable = do_QueryFrame(scrollbox);
       if (scrollable) {
         // Don't call GetActualScrollbarSizes here because it's not safe
@@ -278,13 +278,13 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
 }
 
 NS_IMETHODIMP
-nsGridRowLeafLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsGridRowLeafLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   return nsGridRowLayout::Layout(aBox, aBoxLayoutState);
 }
 
 void
-nsGridRowLeafLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   if (aBox) {
     // mark us dirty
@@ -296,10 +296,10 @@ nsGridRowLeafLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 void
-nsGridRowLeafLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
+nsGridRowLeafLayout::CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
   if (aBox) {
-    nsIBox* child = aBox->GetChildBox();
+    nsIFrame* child = aBox->GetChildBox();
 
     // count the children
     PRInt32 columnCount = 0;
@@ -317,8 +317,8 @@ nsGridRowLeafLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32&
 }
 
 PRInt32
-nsGridRowLeafLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
-{ 
+nsGridRowLeafLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows)
+{
   if (aBox) {
       aRows[0].Init(aBox, false);
       return 1;

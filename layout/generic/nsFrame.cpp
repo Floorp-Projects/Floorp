@@ -7615,7 +7615,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState)
 
   // get our size in CSS.
   bool widthSet, heightSet;
-  bool completelyRedefined = nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
+  bool completelyRedefined = nsIFrame::AddCSSPrefSize(this, size, widthSet, heightSet);
 
   // Refresh our caches with new sizes.
   if (!completelyRedefined) {
@@ -7652,7 +7652,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState)
   // get our size in CSS.
   bool widthSet, heightSet;
   bool completelyRedefined =
-    nsIBox::AddCSSMinSize(aState, this, size, widthSet, heightSet);
+    nsIFrame::AddCSSMinSize(aState, this, size, widthSet, heightSet);
 
   // Refresh our caches with new sizes.
   if (!completelyRedefined) {
@@ -7815,7 +7815,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
   //printf("width=%d, height=%d\n", aWidth, aHeight);
   /*
-  nsIBox* parent;
+  nsIFrame* parent;
   GetParentBox(&parent);
 
  // if (parent->GetStateBits() & NS_STATE_CURRENTLY_IN_DEBUG)
