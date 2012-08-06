@@ -581,7 +581,7 @@ struct JSScript : public js::gc::Cell
      * non-strict function (where 'arguments' aliases formals), then all access
      * must go through the arguments object. Otherwise, the local slot is the
      * canonical location for the arguments. Note: if a formal is aliased
-     * through the scope chain, then script->argLivesInCallObject and
+     * through the scope chain, then script->formalLivesInCallObject and
      * JSOP_*ARG* opcodes won't be emitted at all.
      */
     bool argsObjAliasesFormals() const {
