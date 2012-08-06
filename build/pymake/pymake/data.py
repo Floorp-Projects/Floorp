@@ -1542,7 +1542,7 @@ class Makefile(object):
         if len(np.rules):
             self.context = process.getcontext(1)
 
-	flavor, source, value = self.variables.get('.DEFAULT_GOAL')
+        flavor, source, value = self.variables.get('.DEFAULT_GOAL')
         if value is not None:
             self.defaulttarget = value.resolvestr(self, self.variables, ['.DEFAULT_GOAL']).strip()
 
