@@ -6,17 +6,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsnum.h"
+#include "jsscript.h"
 
 #include "vm/SPSProfiler.h"
 #include "vm/StringBuffer.h"
 
 using namespace js;
 
+SPSProfiler::SPSProfiler(JSRuntime *rt)
+  : rt(rt),
+    stack_(NULL),
+    size_(NULL),
+    max_(0),
+    slowAssertions(false),
+    enabled_(false)
+{
+    JS_ASSERT(rt != NULL);
+}
+
 SPSProfiler::~SPSProfiler()
 {
     if (strings.initialized()) {
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
-            js_free((void*) e.front().value);
+            rt->array_delete(e.front().value);
     }
 }
 
@@ -55,7 +67,7 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
     if (str == NULL)
         return NULL;
     if (!strings.add(s, script, str)) {
-        js_free((void*) str);
+        rt->array_delete(str);
         return NULL;
     }
     return str;
@@ -76,7 +88,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
         const char *tofree = entry->value;
         strings.remove(entry);
-        js_free((void*) tofree);
+        rt->array_delete(tofree);
     }
 }
 
@@ -87,7 +99,9 @@ SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
     if (str == NULL)
         return false;
 
-    push(str, NULL);
+    JS_ASSERT_IF(*size_ > 0 && *size_ - 1 < max_ && stack_[*size_ - 1].js(),
+                 stack_[*size_ - 1].pc() != NULL);
+    push(str, NULL, script, script->code);
     return true;
 }
 
@@ -102,22 +116,31 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
         const char *str = profileString(cx, script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
         JS_ASSERT(str != NULL);
-        JS_ASSERT(strcmp((const char*) stack_[*size_].string, str) == 0);
-        stack_[*size_].string = NULL;
-        stack_[*size_].sp     = NULL;
+        JS_ASSERT(stack_[*size_].js());
+        JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
+        stack_[*size_].setLabel(NULL);
+        stack_[*size_].setPC(NULL);
     }
 #endif
 }
 
 void
-SPSProfiler::push(const char *string, void *sp)
+SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc)
 {
+    /* these operations cannot be re-ordered, so volatile-ize operations */
+    volatile ProfileEntry *stack = stack_;
+    volatile uint32_t *size = size_;
+    uint32_t current = *size;
+
     JS_ASSERT(enabled());
-    if (*size_ < max_) {
-        stack_[*size_].string = string;
-        stack_[*size_].sp = sp;
+    if (current < max_) {
+        stack[current].setLabel(string);
+        stack[current].setStackAddress(sp);
+        stack[current].setScript(script);
+        if (pc != NULL)
+            stack_[current].setPC(pc);
     }
-    (*size_)++;
+    *size = current + 1;
 }
 
 void
@@ -160,7 +183,7 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
         return NULL;
 
     size_t len = buf.length();
-    char *cstr = (char*) js_malloc(len + 1);
+    char *cstr = rt->array_new<char>(len + 1);
     if (cstr == NULL)
         return NULL;
 
@@ -181,11 +204,21 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_I
         profiler = NULL;
         return;
     }
-    profiler->push("js::RunScript", this);
+    profiler->push("js::RunScript", this, NULL, NULL);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
     if (profiler != NULL)
         profiler->pop();
+}
+
+JS_FRIEND_API(jsbytecode*)
+ProfileEntry::pc() volatile {
+    return script()->code + idx;
+}
+
+JS_FRIEND_API(void)
+ProfileEntry::setPC(jsbytecode *pc) volatile {
+    idx = pc - script()->code;
 }
