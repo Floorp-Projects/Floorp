@@ -88,8 +88,10 @@ ArchiveRequest::Run()
   // Register this request to the reader.
   // When the reader is ready to return data, a 'Ready()' will be called
   nsresult rv = mArchiveReader->RegisterRequest(this);
-  if (NS_FAILED(rv))
-    FireError(rv);
+  if (NS_FAILED(rv)) {
+    bool allowDefault;
+    FireError(rv, &allowDefault);
+  }
 }
 
 void
@@ -109,8 +111,9 @@ nsresult
 ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
                             nsresult aStatus)
 {
+  bool allowDefault;
   if (aStatus != NS_OK) {
-    FireError(aStatus);
+    FireError(aStatus, &allowDefault);
     return NS_OK;
   }
 
@@ -148,10 +151,10 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    FireSuccess(result);
+    FireSuccess(result, &allowDefault);
   }
   else {
-    FireError(rv);
+    FireError(rv, &allowDefault);
   }
 
   return NS_OK;

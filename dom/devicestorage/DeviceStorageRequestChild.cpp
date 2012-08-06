@@ -36,14 +36,16 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TErrorResponse:
     {
       ErrorResponse r = aValue;
-      mRequest->FireError(r.error());
+      bool allowDefault;
+      mRequest->FireError(r.error(), &allowDefault);
       break;
     }
 
     case DeviceStorageResponseValue::TSuccessResponse:
     {
       jsval result = StringToJsval(mRequest->GetOwner(), mFile->mPath);
-      mRequest->FireSuccess(result);
+      bool allowDefault;
+      mRequest->FireSuccess(result, &allowDefault);
       break;
     }
 
@@ -65,7 +67,8 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
                                                       mimeType);
 
       jsval result = BlobToJsval(mRequest->GetOwner(), blob);
-      mRequest->FireSuccess(result);
+      bool allowDefault;
+      mRequest->FireSuccess(result, &allowDefault);
       break;
     }
 
