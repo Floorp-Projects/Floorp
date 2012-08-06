@@ -74,32 +74,32 @@ CallObject::callee() const
 }
 
 inline const Value &
-CallObject::formal(unsigned i, MaybeCheckAliasing checkAliasing) const
+CallObject::formal(unsigned i) const
 {
-    JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
+    JS_ASSERT(callee().script()->formalLivesInCallObject(i));
     return getSlot(RESERVED_SLOTS + i);
 }
 
 inline void
-CallObject::setFormal(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
+CallObject::setFormal(unsigned i, const Value &v)
 {
-    JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
+    JS_ASSERT(callee().script()->formalLivesInCallObject(i));
     setSlot(RESERVED_SLOTS + i, v);
 }
 
 inline const Value &
-CallObject::var(unsigned i, MaybeCheckAliasing checkAliasing) const
+CallObject::var(unsigned i) const
 {
     JSFunction &fun = callee();
-    JS_ASSERT_IF(checkAliasing, fun.script()->varIsAliased(i));
+    JS_ASSERT(fun.script()->varIsAliased(i));
     return getSlot(RESERVED_SLOTS + fun.nargs + i);
 }
 
 inline void
-CallObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
+CallObject::setVar(unsigned i, const Value &v)
 {
     JSFunction &fun = callee();
-    JS_ASSERT_IF(checkAliasing, fun.script()->varIsAliased(i));
+    JS_ASSERT(fun.script()->varIsAliased(i));
     setSlot(RESERVED_SLOTS + fun.nargs + i, v);
 }
 
