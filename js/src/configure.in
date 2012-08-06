@@ -4212,15 +4212,6 @@ if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
-MOZ_ARG_WITH_STRING(sync-build-files,
-[  --with-sync-build-files=DIR
-                          Check that files in 'config' and 'build' match
-                          their originals in 'DIR/config' and 'DIR/build'.
-                          This helps keep the SpiderMonkey build machinery
-                          in sync with Mozilla's, on which it is based.],
-[MOZ_SYNC_BUILD_FILES=$withval ] )
-AC_SUBST(MOZ_SYNC_BUILD_FILES)
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
