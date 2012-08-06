@@ -8,9 +8,10 @@ export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x64/Microsoft.VC100.CRT
 # https://connect.microsoft.com/VisualStudio/feedback/details/686117/
 export LD=/c/tools/msvs10/VC/BIN/x86_amd64/link.exe
 
+. $topsrcdir/build/mozconfig.vs2010-common
 
-mk_add_options "export LIB=$LIB"
-mk_add_options "export LIBPATH=$LIBPATH"
-mk_add_options "export PATH=$PATH"
-mk_add_options "export INCLUDE=$INCLUDE"
-mk_add_options "export WIN32_REDIST_DIR=$WIN32_REDIST_DIR"
+mk_export_correct_style LIB
+mk_export_correct_style LIBPATH
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style WIN32_REDIST_DIR
