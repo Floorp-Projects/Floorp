@@ -11,7 +11,7 @@
 #include "nsPIDOMWindow.h"
 
 #include "jsapi.h"
-#include "mozilla/Preferences.h"
+#include "nsIPermissionManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -26,9 +26,6 @@
 
 USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom::gonk;
-using mozilla::Preferences;
-
-#define DOM_TELEPHONY_APP_PHONE_URL_PREF "dom.telephony.app.phone.url"
 
 namespace {
 
@@ -547,15 +544,24 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
+  // Need the document for security check.
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(innerWindow->GetExtantDocument());
+  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
 
-  bool allowed;
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
+
+  PRUint32 permission;
   nsresult rv =
-    nsContentUtils::IsOnPrefWhitelist(innerWindow,
-                                      DOM_TELEPHONY_APP_PHONE_URL_PREF,
-                                      &allowed);
+    permMgr->TestPermissionFromPrincipal(principal, "telephony", &permission);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!allowed) {
+
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
     *aTelephony = nullptr;
     return NS_OK;
   }
