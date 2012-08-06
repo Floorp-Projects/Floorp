@@ -2,6 +2,7 @@
  * Copyright © 1998-2004  David Turner and Werner Lemberg
  * Copyright © 2006  Behdad Esfahbod
  * Copyright © 2007,2008,2009  Red Hat, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,6 +25,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #include "hb-ot-layout-private.hh"
@@ -32,19 +34,20 @@
 #include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
 #include "hb-ot-maxp-table.hh"
-#include "hb-ot-shape-private.hh"
 
 
 #include <stdlib.h>
 #include <string.h>
 
 
+HB_SHAPER_DATA_ENSURE_DECLARE(ot, face)
 
 hb_ot_layout_t *
 _hb_ot_layout_create (hb_face_t *face)
 {
-  /* TODO Remove this object altogether */
   hb_ot_layout_t *layout = (hb_ot_layout_t *) calloc (1, sizeof (hb_ot_layout_t));
+  if (unlikely (!layout))
+    return NULL;
 
   layout->gdef_blob = Sanitizer<GDEF>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GDEF));
   layout->gdef = Sanitizer<GDEF>::lock_instance (layout->gdef_blob);
@@ -54,6 +57,24 @@ _hb_ot_layout_create (hb_face_t *face)
 
   layout->gpos_blob = Sanitizer<GPOS>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GPOS));
   layout->gpos = Sanitizer<GPOS>::lock_instance (layout->gpos_blob);
+
+  layout->gsub_lookup_count = layout->gsub->get_lookup_count ();
+  layout->gpos_lookup_count = layout->gpos->get_lookup_count ();
+
+  layout->gsub_digests = (hb_set_digest_t *) calloc (layout->gsub->get_lookup_count (), sizeof (hb_set_digest_t));
+  layout->gpos_digests = (hb_set_digest_t *) calloc (layout->gpos->get_lookup_count (), sizeof (hb_set_digest_t));
+
+  if (unlikely ((layout->gsub_lookup_count && !layout->gsub_digests) ||
+		(layout->gpos_lookup_count && !layout->gpos_digests)))
+  {
+    _hb_ot_layout_destroy (layout);
+    return NULL;
+  }
+
+  for (unsigned int i = 0; i < layout->gsub_lookup_count; i++)
+    layout->gsub->add_coverage (&layout->gsub_digests[i], i);
+  for (unsigned int i = 0; i < layout->gpos_lookup_count; i++)
+    layout->gpos->add_coverage (&layout->gpos_digests[i], i);
 
   return layout;
 }
@@ -65,23 +86,29 @@ _hb_ot_layout_destroy (hb_ot_layout_t *layout)
   hb_blob_destroy (layout->gsub_blob);
   hb_blob_destroy (layout->gpos_blob);
 
+  free (layout->gsub_digests);
+  free (layout->gpos_digests);
+
   free (layout);
 }
 
 static inline const GDEF&
 _get_gdef (hb_face_t *face)
 {
-  return likely (face->ot_layout && face->ot_layout->gdef) ? *face->ot_layout->gdef : Null(GDEF);
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return Null(GDEF);
+  return *hb_ot_layout_from_face (face)->gdef;
 }
 static inline const GSUB&
 _get_gsub (hb_face_t *face)
 {
-  return likely (face->ot_layout && face->ot_layout->gsub) ? *face->ot_layout->gsub : Null(GSUB);
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return Null(GSUB);
+  return *hb_ot_layout_from_face (face)->gsub;
 }
 static inline const GPOS&
 _get_gpos (hb_face_t *face)
 {
-  return likely (face->ot_layout && face->ot_layout->gpos) ? *face->ot_layout->gpos : Null(GPOS);
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return Null(GPOS);
+  return *hb_ot_layout_from_face (face)->gpos;
 }
 
 
@@ -94,84 +121,6 @@ hb_ot_layout_has_glyph_classes (hb_face_t *face)
 {
   return _get_gdef (face).has_glyph_classes ();
 }
-
-unsigned int
-_hb_ot_layout_get_glyph_property (hb_face_t       *face,
-				  hb_glyph_info_t *info)
-{
-  if (!info->props_cache())
-  {
-    const GDEF &gdef = _get_gdef (face);
-    info->props_cache() = gdef.get_glyph_props (info->codepoint);
-  }
-
-  return info->props_cache();
-}
-
-static hb_bool_t
-_hb_ot_layout_match_properties (hb_face_t      *face,
-				hb_codepoint_t  codepoint,
-				unsigned int    glyph_props,
-				unsigned int    lookup_props)
-{
-  /* Not covered, if, for example, glyph class is ligature and
-   * lookup_props includes LookupFlags::IgnoreLigatures
-   */
-  if (glyph_props & lookup_props & LookupFlag::IgnoreFlags)
-    return false;
-
-  if (glyph_props & HB_OT_LAYOUT_GLYPH_CLASS_MARK)
-  {
-    /* If using mark filtering sets, the high short of
-     * lookup_props has the set index.
-     */
-    if (lookup_props & LookupFlag::UseMarkFilteringSet)
-      return _get_gdef (face).mark_set_covers (lookup_props >> 16, codepoint);
-
-    /* The second byte of lookup_props has the meaning
-     * "ignore marks of attachment type different than
-     * the attachment type specified."
-     */
-    if (lookup_props & LookupFlag::MarkAttachmentType && glyph_props & LookupFlag::MarkAttachmentType)
-      return (lookup_props & LookupFlag::MarkAttachmentType) == (glyph_props & LookupFlag::MarkAttachmentType);
-  }
-
-  return true;
-}
-
-hb_bool_t
-_hb_ot_layout_check_glyph_property (hb_face_t    *face,
-				    hb_glyph_info_t *ginfo,
-				    unsigned int  lookup_props,
-				    unsigned int *property_out)
-{
-  unsigned int property;
-
-  property = _hb_ot_layout_get_glyph_property (face, ginfo);
-  (void) (property_out && (*property_out = property));
-
-  return _hb_ot_layout_match_properties (face, ginfo->codepoint, property, lookup_props);
-}
-
-hb_bool_t
-_hb_ot_layout_skip_mark (hb_face_t    *face,
-			 hb_glyph_info_t *ginfo,
-			 unsigned int  lookup_props,
-			 unsigned int *property_out)
-{
-  unsigned int property;
-
-  property = _hb_ot_layout_get_glyph_property (face, ginfo);
-  (void) (property_out && (*property_out = property));
-
-  /* If it's a mark, skip it we don't accept it. */
-  if (unlikely (property & HB_OT_LAYOUT_GLYPH_CLASS_MARK))
-    return !_hb_ot_layout_match_properties (face, ginfo->codepoint, property, lookup_props);
-
-  /* If not a mark, don't skip. */
-  return false;
-}
-
 
 
 unsigned int
@@ -194,6 +143,7 @@ hb_ot_layout_get_ligature_carets (hb_font_t      *font,
 {
   return _get_gdef (font->face).get_lig_carets (font, direction, glyph, start_offset, caret_count, caret_array);
 }
+
 
 /*
  * GSUB/GPOS
@@ -233,19 +183,19 @@ hb_ot_layout_table_find_script (hb_face_t    *face,
   const GSUBGPOS &g = get_gsubgpos_table (face, table_tag);
 
   if (g.find_script_index (script_tag, script_index))
-    return TRUE;
+    return true;
 
   /* try finding 'DFLT' */
   if (g.find_script_index (HB_OT_TAG_DEFAULT_SCRIPT, script_index))
-    return FALSE;
+    return false;
 
   /* try with 'dflt'; MS site has had typos and many fonts use it now :(.
    * including many versions of DejaVu Sans Mono! */
   if (g.find_script_index (HB_OT_TAG_DEFAULT_LANGUAGE, script_index))
-    return FALSE;
+    return false;
 
   if (script_index) *script_index = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
-  return FALSE;
+  return false;
 }
 
 hb_bool_t
@@ -263,7 +213,7 @@ hb_ot_layout_table_choose_script (hb_face_t      *face,
     if (g.find_script_index (*script_tags, script_index)) {
       if (chosen_script)
         *chosen_script = *script_tags;
-      return TRUE;
+      return true;
     }
     script_tags++;
   }
@@ -272,14 +222,14 @@ hb_ot_layout_table_choose_script (hb_face_t      *face,
   if (g.find_script_index (HB_OT_TAG_DEFAULT_SCRIPT, script_index)) {
     if (chosen_script)
       *chosen_script = HB_OT_TAG_DEFAULT_SCRIPT;
-    return FALSE;
+    return false;
   }
 
   /* try with 'dflt'; MS site has had typos and many fonts use it now :( */
   if (g.find_script_index (HB_OT_TAG_DEFAULT_LANGUAGE, script_index)) {
     if (chosen_script)
       *chosen_script = HB_OT_TAG_DEFAULT_LANGUAGE;
-    return FALSE;
+    return false;
   }
 
   /* try with 'latn'; some old fonts put their features there even though
@@ -288,13 +238,13 @@ hb_ot_layout_table_choose_script (hb_face_t      *face,
   if (g.find_script_index (HB_OT_TAG_LATIN_SCRIPT, script_index)) {
     if (chosen_script)
       *chosen_script = HB_OT_TAG_LATIN_SCRIPT;
-    return FALSE;
+    return false;
   }
 
   if (script_index) *script_index = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
   if (chosen_script)
     *chosen_script = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
-  return FALSE;
+  return false;
 }
 
 unsigned int
@@ -334,14 +284,14 @@ hb_ot_layout_script_find_language (hb_face_t    *face,
   const Script &s = get_gsubgpos_table (face, table_tag).get_script (script_index);
 
   if (s.find_lang_sys_index (language_tag, language_index))
-    return TRUE;
+    return true;
 
   /* try with 'dflt'; MS site has had typos and many fonts use it now :( */
   if (s.find_lang_sys_index (HB_OT_TAG_DEFAULT_LANGUAGE, language_index))
-    return FALSE;
+    return false;
 
   if (language_index) *language_index = HB_OT_LAYOUT_DEFAULT_LANGUAGE_INDEX;
-  return FALSE;
+  return false;
 }
 
 hb_bool_t
@@ -416,12 +366,12 @@ hb_ot_layout_language_find_feature (hb_face_t    *face,
 
     if (feature_tag == g.get_feature_tag (f_index)) {
       if (feature_index) *feature_index = f_index;
-      return TRUE;
+      return true;
     }
   }
 
   if (feature_index) *feature_index = HB_OT_LAYOUT_NO_FEATURE_INDEX;
-  return FALSE;
+  return false;
 }
 
 unsigned int
@@ -449,26 +399,49 @@ hb_ot_layout_has_substitution (hb_face_t *face)
   return &_get_gsub (face) != &Null(GSUB);
 }
 
-void
-hb_ot_layout_substitute_start (hb_buffer_t  *buffer)
+hb_bool_t
+hb_ot_layout_would_substitute_lookup (hb_face_t            *face,
+				      const hb_codepoint_t *glyphs,
+				      unsigned int          glyphs_length,
+				      unsigned int          lookup_index)
 {
-  GSUB::substitute_start (buffer);
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return false;
+  return hb_ot_layout_would_substitute_lookup_fast (face, glyphs, glyphs_length, lookup_index);
 }
 
 hb_bool_t
-hb_ot_layout_substitute_lookup (hb_face_t    *face,
+hb_ot_layout_would_substitute_lookup_fast (hb_face_t            *face,
+					   const hb_codepoint_t *glyphs,
+					   unsigned int          glyphs_length,
+					   unsigned int          lookup_index)
+{
+  if (unlikely (glyphs_length < 1 || glyphs_length > 2)) return false;
+  if (unlikely (lookup_index >= hb_ot_layout_from_face (face)->gsub_lookup_count)) return false;
+  hb_would_apply_context_t c (face, glyphs[0], glyphs_length == 2 ? glyphs[1] : -1, &hb_ot_layout_from_face (face)->gsub_digests[lookup_index]);
+  return hb_ot_layout_from_face (face)->gsub->would_substitute_lookup (&c, lookup_index);
+}
+
+void
+hb_ot_layout_substitute_start (hb_font_t *font, hb_buffer_t *buffer)
+{
+  GSUB::substitute_start (font, buffer);
+}
+
+hb_bool_t
+hb_ot_layout_substitute_lookup (hb_font_t    *font,
 				hb_buffer_t  *buffer,
 				unsigned int  lookup_index,
 				hb_mask_t     mask)
 {
-  hb_apply_context_t c (NULL, face, buffer, mask);
-  return _get_gsub (face).substitute_lookup (&c, lookup_index);
+  if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gsub_lookup_count)) return false;
+  hb_apply_context_t c (font, buffer, mask, &hb_ot_layout_from_face (font->face)->gsub_digests[lookup_index]);
+  return hb_ot_layout_from_face (font->face)->gsub->substitute_lookup (&c, lookup_index);
 }
 
 void
-hb_ot_layout_substitute_finish (hb_buffer_t  *buffer HB_UNUSED)
+hb_ot_layout_substitute_finish (hb_font_t *font, hb_buffer_t *buffer)
 {
-  GSUB::substitute_finish (buffer);
+  GSUB::substitute_finish (font, buffer);
 }
 
 void
@@ -491,50 +464,24 @@ hb_ot_layout_has_positioning (hb_face_t *face)
 }
 
 void
-hb_ot_layout_position_start (hb_buffer_t  *buffer)
+hb_ot_layout_position_start (hb_font_t *font, hb_buffer_t *buffer)
 {
-  GPOS::position_start (buffer);
+  GPOS::position_start (font, buffer);
 }
 
 hb_bool_t
-hb_ot_layout_position_lookup   (hb_font_t    *font,
-				hb_buffer_t  *buffer,
-				unsigned int  lookup_index,
-				hb_mask_t     mask)
+hb_ot_layout_position_lookup (hb_font_t    *font,
+			      hb_buffer_t  *buffer,
+			      unsigned int  lookup_index,
+			      hb_mask_t     mask)
 {
-  hb_apply_context_t c (font, font->face, buffer, mask);
-  return _get_gpos (font->face).position_lookup (&c, lookup_index);
+  if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gpos_lookup_count)) return false;
+  hb_apply_context_t c (font, buffer, mask, &hb_ot_layout_from_face (font->face)->gpos_digests[lookup_index]);
+  return hb_ot_layout_from_face (font->face)->gpos->position_lookup (&c, lookup_index);
 }
 
 void
-hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer)
+hb_ot_layout_position_finish (hb_font_t *font, hb_buffer_t *buffer, hb_bool_t zero_width_attached_marks)
 {
-  /* force diacritics to have zero width */
-  unsigned int count = buffer->len;
-  const hb_glyph_info_t *info = buffer->info;
-  hb_glyph_position_t *positions = buffer->pos;
-  /*
-   * Forcibly zero widths of chars with GC=Mn; we don't use the GDEF 'Mark' class
-   * because some fonts (e.g. C-DAC Yogesh) classify spacing Indic matras as 'Mark'
-   * but we don't want to force their width to zero.
-   */
-  if (buffer->props.direction == HB_DIRECTION_RTL) {
-    for (unsigned int i = 1; i < count; i++) {
-      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
-        positions[i].x_advance = 0;
-      }
-    }
-  } else {
-    for (unsigned int i = 1; i < count; i++) {
-      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
-        hb_glyph_position_t& pos = positions[i];
-        pos.x_offset -= pos.x_advance;
-        pos.x_advance = 0;
-      }
-    }
-  }
-
-  GPOS::position_finish (buffer);
+  GPOS::position_finish (font, buffer, zero_width_attached_marks);
 }
-
-

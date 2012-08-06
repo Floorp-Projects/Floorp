@@ -39,8 +39,13 @@ main (void)
     unsigned int category = type & 0x0F;
     unsigned int position = type >> 4;
 
-    hb_codepoint_t a, b;
-    if (!hb_unicode_decompose (funcs, u, &a, &b))
-      printf ("U+%04X\n", u);
+    hb_unicode_general_category_t cat = hb_unicode_general_category (funcs, u);
+    unsigned int ccc = hb_unicode_combining_class (funcs, u);
+    if (category == OT_M && ccc)
+      printf ("U+%04X %d\n", u, ccc);
+
+//    hb_codepoint_t a, b;
+//    if (!hb_unicode_decompose (funcs, u, &a, &b))
+//      printf ("U+%04X %x %x\n", u, category, position);
   }
 }

@@ -24,25 +24,37 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
-#define HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
+#ifndef HB_SHAPE_PLAN_PRIVATE_HH
+#define HB_SHAPE_PLAN_PRIVATE_HH
 
 #include "hb-private.hh"
 
-#include "hb-font.h"
-#include "hb-buffer.h"
+#include "hb-shape-plan.h"
+
+#include "hb-shaper-private.hh"
 
 
-enum hb_ot_shape_normalization_mode_t {
-  HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED,
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS, /* never composes base-to-base */
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_FULL, /* including base-to-base composition */
+struct hb_shape_plan_t
+{
+  hb_object_header_t header;
+  ASSERT_POD ();
 
-  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT = HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS,
+  hb_bool_t default_shaper_list;
+  hb_face_t *face;
+  hb_segment_properties_t props;
+
+  hb_shape_func_t *shaper_func;
+
+  struct hb_shaper_data_t shaper_data;
 };
 
-HB_INTERNAL void _hb_ot_shape_normalize (hb_font_t *font,
-					 hb_buffer_t *buffer,
-					 hb_ot_shape_normalization_mode_t mode);
+#define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS \
+	, const hb_feature_t            *user_features \
+	, unsigned int                   num_user_features
+#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_PROTOTYPE(shaper, shape_plan);
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+#undef HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS
 
-#endif /* HB_OT_SHAPE_NORMALIZE_PRIVATE_HH */
+
+#endif /* HB_SHAPE_PLAN_PRIVATE_HH */
