@@ -104,6 +104,24 @@ class StringExpansion(object):
     def __repr__(self):
         return "Exp<%s>(%r)" % (self.loc, self.s)
 
+    def __eq__(self, other):
+        """We only compare the string contents."""
+        return self.s == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def to_source(self, escape_variables=False, escape_comments=False):
+        s = self.s
+
+        if escape_comments:
+            s = s.replace('#', '\\#')
+
+        if escape_variables:
+            return s.replace('$', '$$')
+
+        return s
+
 class Expansion(list):
     """
     A representation of expanded data, such as that for a recursively-expanded variable, a command, etc.
@@ -234,6 +252,68 @@ class Expansion(list):
 
     def __repr__(self):
         return "<Expansion with elements: %r>" % ([e for e, isfunc in self],)
+
+    def to_source(self, escape_variables=False, escape_comments=False):
+        parts = []
+        for e, is_func in self:
+            if is_func:
+                parts.append(e.to_source())
+                continue
+
+            if escape_variables:
+                parts.append(e.replace('$', '$$'))
+                continue
+
+            parts.append(e)
+
+        return ''.join(parts)
+
+    def __eq__(self, other):
+        if not isinstance(other, (Expansion, StringExpansion)):
+            return False
+
+        # Expansions are equivalent if adjacent string literals normalize to
+        # the same value. So, we must normalize before any comparisons are
+        # made.
+        a = self.clone().finish()
+
+        if isinstance(other, StringExpansion):
+            if isinstance(a, StringExpansion):
+                return a == other
+
+            # A normalized Expansion != StringExpansion.
+            return False
+
+        b = other.clone().finish()
+
+        # b could be a StringExpansion now.
+        if isinstance(b, StringExpansion):
+            if isinstance(a, StringExpansion):
+                return a == b
+
+            # Our normalized Expansion != normalized StringExpansion.
+            return False
+
+        if len(a) != len(b):
+            return False
+
+        for i in xrange(len(self)):
+            e1, is_func1 = a[i]
+            e2, is_func2 = b[i]
+
+            if is_func1 != is_func2:
+                return False
+
+            if type(e1) != type(e2):
+                return False
+
+            if e1 != e2:
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class Variables(object):
     """

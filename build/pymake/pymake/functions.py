@@ -44,6 +44,35 @@ class Function(object):
         assert isinstance(arg, (data.Expansion, data.StringExpansion))
         self._arguments.append(arg)
 
+    def to_source(self):
+        """Convert the function back to make file "source" code."""
+        if not hasattr(self, 'name'):
+            raise Exception("%s must implement to_source()." % self.__class__)
+
+        # The default implementation simply prints the function name and all
+        # the arguments joined by a comma.
+        # According to the GNU make manual Section 8.1, whitespace around
+        # arguments is *not* part of the argument's value. So, we trim excess
+        # white space so we have consistent behavior.
+        args = []
+        curly = False
+        for i, arg in enumerate(self._arguments):
+            arg = arg.to_source()
+
+            if i == 0:
+                arg = arg.lstrip()
+
+            # Are balanced parens even OK?
+            if arg.count('(') != arg.count(')'):
+                curly = True
+
+            args.append(arg)
+
+        if curly:
+            return '${%s %s}' % (self.name, ','.join(args))
+
+        return '$(%s %s)' % (self.name, ','.join(args))
+
     def __len__(self):
         return len(self._arguments)
 
@@ -53,7 +82,46 @@ class Function(object):
             ','.join([repr(a) for a in self._arguments]),
             )
 
+    def __eq__(self, other):
+        if not hasattr(self, 'name'):
+            raise Exception("%s must implement __eq__." % self.__class__)
+
+        if type(self) != type(other):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if len(self._arguments) != len(other._arguments):
+            return False
+
+        for i in xrange(len(self._arguments)):
+            # According to the GNU make manual Section 8.1, whitespace around
+            # arguments is *not* part of the argument's value. So, we do a
+            # whitespace-agnostic comparison.
+            if i == 0:
+                a = self._arguments[i]
+                a.lstrip()
+
+                b = other._arguments[i]
+                b.lstrip()
+
+                if a != b:
+                    return False
+
+                continue
+
+            if self._arguments[i] != other._arguments[i]:
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class VariableRef(Function):
+    AUTOMATIC_VARIABLES = set(['@', '%', '<', '?', '^', '+', '|', '*'])
+
     __slots__ = ('vname', 'loc')
 
     def __init__(self, loc, vname):
@@ -76,8 +144,23 @@ class VariableRef(Function):
 
         value.resolve(makefile, variables, fd, setting + [vname])
 
+    def to_source(self):
+        if isinstance(self.vname, data.StringExpansion):
+            if self.vname.s in self.AUTOMATIC_VARIABLES:
+                return '$%s' % self.vname.s
+
+            return '$(%s)' % self.vname.s
+
+        return '$(%s)' % self.vname.to_source()
+
     def __repr__(self):
         return "VariableRef<%s>(%r)" % (self.loc, self.vname)
+
+    def __eq__(self, other):
+        if not isinstance(other, VariableRef):
+            return False
+
+        return self.vname == other.vname
 
 class SubstitutionRef(Function):
     """$(VARNAME:.c=.o) and $(VARNAME:%.c=%.o)"""
@@ -114,9 +197,22 @@ class SubstitutionRef(Function):
         fd.write(' '.join([f.subst(substto, word, False)
                            for word in value.resolvesplit(makefile, variables, setting + [vname])]))
 
+    def to_source(self):
+        return '$(%s:%s=%s)' % (
+            self.vname.to_source(),
+            self.substfrom.to_source(),
+            self.substto.to_source())
+
     def __repr__(self):
         return "SubstitutionRef<%s>(%r:%r=%r)" % (
             self.loc, self.vname, self.substfrom, self.substto,)
+
+    def __eq__(self, other):
+        if not isinstance(other, SubstitutionRef):
+            return False
+
+        return self.vname == other.vname and self.substfrom == other.substfrom \
+                and self.substto == other.substto
 
 class SubstFunction(Function):
     name = 'subst'
@@ -352,7 +448,7 @@ class BasenameFunction(Function):
         util.joiniter(fd, self.basenames(self._arguments[0].resolvesplit(makefile, variables, setting)))
 
 class AddSuffixFunction(Function):
-    name = 'addprefix'
+    name = 'addsuffix'
     minargs = 2
     maxargs = 2
 
@@ -364,7 +460,7 @@ class AddSuffixFunction(Function):
         fd.write(' '.join([w + suffix for w in self._arguments[1].resolvesplit(makefile, variables, setting)]))
 
 class AddPrefixFunction(Function):
-    name = 'addsuffix'
+    name = 'addprefix'
     minargs = 2
     maxargs = 2
 
@@ -406,8 +502,6 @@ class WildcardFunction(Function):
         fd.write(' '.join([x.replace('\\','/')
                            for p in patterns
                            for x in glob(makefile.workdir, p)]))
-
-    __slots__ = Function.__slots__
 
 class RealpathFunction(Function):
     name = 'realpath'
