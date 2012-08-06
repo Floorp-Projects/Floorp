@@ -13,6 +13,7 @@ EXPORTS_mozilla += \
   Attributes.h \
   BloomFilter.h \
   CheckedInt.h \
+  Constants.h \
   FloatingPoint.h \
   GuardObjects.h \
   HashFunctions.h \
