@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 from optparse import OptionParser
-import sys, re, os, posixpath
+import sys, re, os, posixpath, ntpath
 from StringIO import StringIO
 # Standalone js doesn't have virtualenv.
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'config'))
@@ -153,7 +153,7 @@ class ConfigEnvironment(object):
         substs['top_srcdir'] is a relative path, it is relative to the
         topobjdir. Adjust it to be relative to the file path.'''
         top_srcdir = self.substs['top_srcdir']
-        if posixpath.isabs(top_srcdir):
+        if posixpath.isabs(top_srcdir) or ntpath.isabs(top_srcdir):
             return top_srcdir
         return posixpath.normpath(posixpath.join(self.get_depth(file), top_srcdir))
 
