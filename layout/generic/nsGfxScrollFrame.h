@@ -122,7 +122,7 @@ public:
                                 nscoord aIncrement);
   static void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
   void SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom, nscoord aSize);
-  nscoord GetCoordAttribute(nsIBox* aFrame, nsIAtom* aAtom, nscoord aDefaultValue,
+  nscoord GetCoordAttribute(nsIFrame* aFrame, nsIAtom* aAtom, nscoord aDefaultValue,
                             nscoord* aRangeStart, nscoord* aRangeLength);
 
   // Update scrollbar curpos attributes to reflect current scroll position
@@ -178,7 +178,7 @@ public:
   void RestoreState(nsPresState* aState);
 
   nsIFrame* GetScrolledFrame() const { return mScrolledFrame; }
-  nsIBox* GetScrollbarBox(bool aVertical) const {
+  nsIFrame* GetScrollbarBox(bool aVertical) const {
     return aVertical ? mVScrollbarBox : mHScrollbarBox;
   }
 
@@ -189,7 +189,7 @@ public:
     mListeners.RemoveElement(aListener);
   }
 
-  static void SetScrollbarVisibility(nsIBox* aScrollbar, bool aVisible);
+  static void SetScrollbarVisibility(nsIFrame* aScrollbar, bool aVisible);
 
   /**
    * GetScrolledRect is designed to encapsulate deciding which
@@ -265,11 +265,11 @@ public:
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
   nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
-  nsIBox* mHScrollbarBox;
-  nsIBox* mVScrollbarBox;
+  nsIFrame* mHScrollbarBox;
+  nsIFrame* mVScrollbarBox;
   nsIFrame* mScrolledFrame;
-  nsIBox* mScrollCornerBox;
-  nsIBox* mResizerBox;
+  nsIFrame* mScrollCornerBox;
+  nsIFrame* mResizerBox;
   nsContainerFrame* mOuter;
   nsRefPtr<AsyncScroll> mAsyncScroll;
   nsAutoPtr<mozilla::ScrollbarActivity> mScrollbarActivity;
@@ -493,7 +493,7 @@ public:
   virtual void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) {
     mInner.RemoveScrollPositionListener(aListener);
   }
-  virtual nsIBox* GetScrollbarBox(bool aVertical) {
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) {
     return mInner.GetScrollbarBox(aVertical);
   }
   virtual void CurPosAttributeChanged(nsIContent* aChild) {
@@ -738,7 +738,7 @@ public:
   virtual void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) {
     mInner.RemoveScrollPositionListener(aListener);
   }
-  virtual nsIBox* GetScrollbarBox(bool aVertical) {
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) {
     return mInner.GetScrollbarBox(aVertical);
   }
   virtual void CurPosAttributeChanged(nsIContent* aChild) {

@@ -25,6 +25,7 @@
 #include "nsEventStates.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentUtils.h"
+#include "nsIFrame.h"
 
 class nsIPresShell;
 class nsIDocShell;

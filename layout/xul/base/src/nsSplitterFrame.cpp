@@ -105,13 +105,13 @@ public:
   bool SupportsCollapseDirection(CollapseDirection aDirection);
 
   void EnsureOrient();
-  void SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize);
+  void SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChildBox, nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize);
 
   nsSplitterFrame* mOuter;
   bool mDidDrag;
   nscoord mDragStart;
   nscoord mCurrentPos;
-  nsIBox* mParentBox;
+  nsIFrame* mParentBox;
   bool mPressed;
   nsSplitterInfo* mChildInfosBefore;
   nsSplitterInfo* mChildInfosAfter;
@@ -319,7 +319,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 void
 nsSplitterFrame::GetInitialOrientation(bool& aIsHorizontal)
 {
-  nsIBox* box = GetParentBox();
+  nsIFrame* box = GetParentBox();
   if (box) {
     aIsHorizontal = !box->IsHorizontal();
   }
@@ -662,7 +662,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mChildInfosBeforeCount = 0;
   mChildInfosAfterCount = 0;
 
-  nsIBox* childBox = mParentBox->GetChildBox();
+  nsIFrame* childBox = mParentBox->GetChildBox();
 
   while (nullptr != childBox) 
   { 
@@ -907,9 +907,9 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
   aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);
 }
 
-static nsIBox* GetChildBoxForContent(nsIBox* aParentBox, nsIContent* aContent)
+static nsIFrame* GetChildBoxForContent(nsIFrame* aParentBox, nsIContent* aContent)
 {
-  nsIBox* childBox = aParentBox->GetChildBox();
+  nsIFrame* childBox = aParentBox->GetChildBox();
 
   while (nullptr != childBox) {
     if (childBox->GetContent() == aContent) {
@@ -930,7 +930,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // first set all the widths.
-  nsIBox* child =  mOuter->GetChildBox();
+  nsIFrame* child =  mOuter->GetChildBox();
   while(child)
   {
     SetPreferredSize(state, child, onePixel, aIsHorizontal, nullptr);
@@ -941,7 +941,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   for (int i=0; i < aCount; i++) 
   {
     nscoord   pref       = aChildInfos[i].changed;
-    nsIBox* childBox     = GetChildBoxForContent(mParentBox, aChildInfos[i].childElem);
+    nsIFrame* childBox     = GetChildBoxForContent(mParentBox, aChildInfos[i].childElem);
 
     if (childBox) {
       SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
@@ -950,7 +950,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
 }
 
 void
-nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize)
+nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChildBox, nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize)
 {
   nsRect rect(aChildBox->GetRect());
   nscoord pref = 0;

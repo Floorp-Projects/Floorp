@@ -27,29 +27,31 @@ public:
 
   friend already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout();
 
-  virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
-  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
-  virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState);
+  virtual PRInt32 BuildRows(nsIFrame* aBox, nsGridRow* aRows);
   virtual Type GetType() { return eRowLeaf; }
 
 protected:
 
-  virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
-  virtual void ComputeChildSizes(nsIBox* aBox, 
-                         nsBoxLayoutState& aState, 
-                         nscoord& aGivenSize, 
-                         nsBoxSize* aBoxSizes, 
-                         nsComputedBoxSize*& aComputedBoxSizes);
+  virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
+                                nsBoxSize*& aBoxSizes, nscoord& aMinSize,
+                                nscoord& aMaxSize, PRInt32& aFlexes);
+  virtual void ComputeChildSizes(nsIFrame* aBox,
+                                 nsBoxLayoutState& aState,
+                                 nscoord& aGivenSize,
+                                 nsBoxSize* aBoxSizes,
+                                 nsComputedBoxSize*& aComputedBoxSizes);
 
 
   nsGridRowLeafLayout();
   virtual ~nsGridRowLeafLayout();
-  //virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
+  //virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
 
 private:
 

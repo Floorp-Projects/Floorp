@@ -18,7 +18,6 @@
 class nsGridLayout2;
 class nsBoxLayoutState;
 class nsIFrame;
-typedef class nsIFrame nsIBox;
 
 /**
  * The row (or column) data structure in the grid cellmap.
@@ -28,11 +27,11 @@ class nsGridRow
 public:
    nsGridRow();
    ~nsGridRow();
-   
-   void Init(nsIBox* aBox, bool aIsBogus);
+
+   void Init(nsIFrame* aBox, bool aIsBogus);
 
 // accessors
-   nsIBox* GetBox()   { return mBox;          }
+   nsIFrame* GetBox()   { return mBox;          }
    bool IsPrefSet() { return (mPref != -1); }
    bool IsMinSet()  { return (mMin  != -1); }
    bool IsMaxSet()  { return (mMax  != -1); } 
@@ -43,7 +42,7 @@ public:
 public:
 
    bool    mIsBogus;
-   nsIBox* mBox;
+   nsIFrame* mBox;
    nscoord mFlex;
    nscoord mPref;
    nscoord mMin;

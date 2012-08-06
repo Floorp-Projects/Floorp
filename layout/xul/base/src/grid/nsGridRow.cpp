@@ -30,7 +30,7 @@ nsGridRow::nsGridRow():mIsBogus(false),
 }
 
 void
-nsGridRow::Init(nsIBox* aBox, bool aIsBogus)
+nsGridRow::Init(nsIFrame* aBox, bool aIsBogus)
 {
   mBox = aBox;
   mIsBogus = aIsBogus;

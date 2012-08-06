@@ -61,7 +61,7 @@ protected:
 
   void IndexChanged();
   PRInt32 GetSelectedIndex();
-  void HideBox(nsIBox* aBox);
+  void HideBox(nsIFrame* aBox);
 
 private:
 
