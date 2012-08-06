@@ -2158,6 +2158,12 @@ MacroAssemblerARMCompat::unboxBoolean(const ValueOperand &operand, const Registe
 }
 
 void
+MacroAssemblerARMCompat::unboxBoolean(const Address &src, const Register &dest)
+{
+    ma_ldr(payloadOf(src), dest);
+}
+
+void
 MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
     JS_ASSERT(dest != ScratchFloatReg);
