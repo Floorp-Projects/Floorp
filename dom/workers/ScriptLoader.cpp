@@ -35,6 +35,8 @@
 #include "WorkerFeature.h"
 #include "WorkerPrivate.h"
 
+#include "nsDOMError.h"
+
 #define MAX_CONCURRENT_SCRIPTS 1000
 
 USING_WORKERS_NAMESPACE

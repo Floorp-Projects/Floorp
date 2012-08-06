@@ -13,6 +13,7 @@
 
 #include "nsFontFaceLoader.h"
 
+#include "nsDOMError.h"
 #include "nsError.h"
 #include "nsIFile.h"
 #include "nsIStreamListener.h"
