@@ -528,7 +528,7 @@ private:
     CompileStatus finishThisUp();
     CompileStatus pushActiveFrame(JSScript *script, uint32_t argc);
     void popActiveFrame();
-    void updatePCCounts(jsbytecode *pc, Label *start, bool *updated);
+    void updatePCCounts(jsbytecode *pc, bool *updated);
     void updatePCTypes(jsbytecode *pc, FrameEntry *fe);
     void updateArithCounts(jsbytecode *pc, FrameEntry *fe,
                              JSValueType firstUseType, JSValueType secondUseType);
