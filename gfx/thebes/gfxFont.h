@@ -46,7 +46,7 @@ class gfxShapedWord;
 
 class nsILanguageAtomService;
 
-typedef struct _hb_blob_t hb_blob_t;
+typedef struct hb_blob_t hb_blob_t;
 
 #define FONT_MAX_SIZE                  2000.0
 

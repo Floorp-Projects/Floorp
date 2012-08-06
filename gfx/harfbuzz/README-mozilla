@@ -1,0 +1,23 @@
+gfx/harfbuzz status as of 2012-08-06:
+
+This directory contains the "harfbuzz-ng" source from the 'master' branch of
+git://anongit.freedesktop.org/git/harfbuzz.
+
+UPDATING:
+
+Note that hb-ot-shape-complex-indic-machine.hh and gfx/harfbuzz/src/hb-version.h
+are not present in the upstream Git repository. These are created at build time
+by the harfbuzz build system; but as we don't use that build system in mozilla,
+it is necessary to refresh these files when updating harfbuzz, and check them in
+to the mozilla tree. (This avoids adding the ragel processor to mozilla's build
+prerequisites.)
+
+The normal approach to updating harfbuzz, therefore, is to pull the latest HB
+source into a scratch directory and do a local build; then copy the original
+sources AND the generated headers mentioned above from the build directory into
+the mozilla tree.
+
+In addition, the src/Makefile.in file here is NOT from upstream, nor is it
+generated from src/Makefile.am (the original harfbuzz version); it is a mozilla-
+specific makefile that is maintained by hand. It should only need updating when
+new source files or exported headers are added in harfbuzz.
