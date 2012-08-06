@@ -313,7 +313,7 @@ struct TreeContext {                /* tree context for semantic checks */
      *  - Sometimes a script's bindings are accessed at runtime to retrieve the
      *    contents of the lexical scope (e.g., from the debugger).
      */
-    bool generateBindings(JSContext *cx, Bindings *bindings) const;
+    bool generateFunctionBindings(JSContext *cx, Bindings *bindings) const;
 
   public:
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
@@ -361,11 +361,6 @@ struct TreeContext {                /* tree context for semantic checks */
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
-
-  private:
-    // Set to indicate args_ contains a duplicate
-    bool            hasDuplicateArgument_:1;
-  public:
 
     inline TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
     inline ~TreeContext();

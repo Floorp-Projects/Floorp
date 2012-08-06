@@ -1095,7 +1095,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->decompiledOpcodes = NULL;
     if (fun && fun->isInterpreted() && fun->script()->bindings.count() > 0) {
         jp->localNames = cx->new_<BindingVector>(cx);
-        if (!jp->localNames || !GetOrderedBindings(cx, fun->script()->bindings, jp->localNames)) {
+        if (!jp->localNames || !FillBindingVector(fun->script()->bindings, jp->localNames)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1753,7 +1753,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.count(), NULL);
-    JSAtom *name = (*jp->localNames)[slot].name;
+    JSAtom *name = (*jp->localNames)[slot].name();
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
 #endif
@@ -4698,7 +4698,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     if (fun->script()->bindings.count() > 0) {
                         innerLocalNames = cx->new_<BindingVector>(cx);
                         if (!innerLocalNames ||
-                            !GetOrderedBindings(cx, fun->script()->bindings, innerLocalNames))
+                            !FillBindingVector(fun->script()->bindings, innerLocalNames))
                         {
                             return NULL;
                         }
@@ -6046,7 +6046,7 @@ ExpressionDecompiler::init()
     localNames = cx->new_<BindingVector>(cx);
     if (!localNames)
         return false;
-    if (!GetOrderedBindings(cx, script->bindings, localNames))
+    if (!FillBindingVector(script->bindings, localNames))
         return false;
 
     return true;
@@ -6106,7 +6106,7 @@ ExpressionDecompiler::getArg(unsigned slot)
 {
     JS_ASSERT(fun);
     JS_ASSERT(slot < script->bindings.count());
-    return (*localNames)[slot].name;
+    return (*localNames)[slot].name();
 }
 
 JSAtom *
@@ -6115,7 +6115,7 @@ ExpressionDecompiler::getVar(unsigned slot)
     JS_ASSERT(fun);
     slot += fun->nargs;
     JS_ASSERT(slot < script->bindings.count());
-    return (*localNames)[slot].name;
+    return (*localNames)[slot].name();
 }
 
 bool

@@ -652,12 +652,12 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             // Fish out the argument names.
             BindingVector *localNames = cx->new_<BindingVector>(cx);
             js::ScopedDeletePtr<BindingVector> freeNames(localNames);
-            if (!GetOrderedBindings(cx, script->bindings, localNames))
+            if (!FillBindingVector(script->bindings, localNames))
                 return NULL;
             for (unsigned i = 0; i < fun->nargs; i++) {
                 if ((i && !out.append(", ")) ||
                     (i == unsigned(fun->nargs - 1) && fun->hasRest() && !out.append("...")) ||
-                    !out.append((*localNames)[i].name)) {
+                    !out.append((*localNames)[i].name())) {
                     return NULL;
                 }
             }

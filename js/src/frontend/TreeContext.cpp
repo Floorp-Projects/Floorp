@@ -129,7 +129,7 @@ TreeContext::prepareToAddDuplicateArg(Definition *prevDecl)
 {
     JS_ASSERT(prevDecl->kind() == Definition::ARG);
     JS_ASSERT(decls_.lookupFirst(prevDecl->name()) == prevDecl);
-    hasDuplicateArgument_ = true;
+    JS_ASSERT(!prevDecl->isClosed());
     decls_.remove(prevDecl->name());
 }
 
@@ -170,42 +170,63 @@ TreeContext::popLetDecl(JSAtom *atom)
     decls_.remove(atom);
 }
 
+void
+AppendPackedBindings(const TreeContext *tc, const DeclVector &vec, Binding *dst)
+{
+    for (unsigned i = 0; i < vec.length(); ++i, ++dst) {
+        Definition *dn = vec[i];
+        PropertyName *name = dn->name();
+
+        BindingKind kind;
+        switch (dn->kind()) {
+          case Definition::VAR:
+            kind = VARIABLE;
+            break;
+          case Definition::CONST:
+            kind = CONSTANT;
+            break;
+          case Definition::ARG:
+            kind = ARGUMENT;
+            break;
+          case Definition::LET:
+          case Definition::NAMED_LAMBDA:
+          case Definition::PLACEHOLDER:
+            JS_NOT_REACHED("unexpected dn->kind");
+        }
+
+        /*
+         * Bindings::init does not check for duplicates so we must ensure that
+         * only one binding with a given name is marked aliased. tc->decls
+         * maintains the canonical definition for each name, so use that.
+         */
+        JS_ASSERT_IF(dn->isClosed(), tc->decls().lookupFirst(name) == dn);
+        bool aliased = dn->isClosed() ||
+                       (tc->sc->bindingsAccessedDynamically() &&
+                        tc->decls().lookupFirst(name) == dn);
+
+        *dst = Binding(name, kind, aliased);
+    }
+}
+
 bool
-TreeContext::generateBindings(JSContext *cx, Bindings *bindings) const
+TreeContext::generateFunctionBindings(JSContext *cx, Bindings *bindings) const
 {
     JS_ASSERT(sc->inFunction());
 
-    if (hasDuplicateArgument_)
-        bindings->noteDup();
+    unsigned count = args_.length() + vars_.length();
+    Binding *packedBindings = cx->tempLifoAlloc().newArrayUninitialized<Binding>(count);
+    if (!packedBindings) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
 
-    if (!bindings->ensureShape(cx))
+    AppendPackedBindings(this, args_, packedBindings);
+    AppendPackedBindings(this, vars_, packedBindings + args_.length());
+
+    if (!bindings->init(cx, args_.length(), vars_.length(), packedBindings))
         return false;
 
-    bool hasAnyClosedVar = false;
-
-    Rooted<JSAtom *> atom(cx);
-    for (unsigned i = 0; i < args_.length(); ++i) {
-        Definition *arg = args_[i];
-        JS_ASSERT(arg->kind() == Definition::ARG);
-        atom = arg->name();
-        if (arg->isClosed())
-            hasAnyClosedVar = true;
-        if (!bindings->add(cx, atom, ARGUMENT, arg->isClosed()))
-            return false;
-    }
-
-    for (unsigned i = 0; i < vars_.length(); ++i) {
-        Definition *var = vars_[i];
-        JS_ASSERT(var->kind() == Definition::VAR || var->kind() == Definition::CONST);
-        atom = var->name();
-        if (var->isClosed())
-            hasAnyClosedVar = true;
-        BindingKind kind = var->kind() == Definition::VAR ? VARIABLE : CONSTANT;
-        if (!bindings->add(cx, atom, kind, var->isClosed()))
-            return false;
-    }
-
-    if (hasAnyClosedVar || sc->bindingsAccessedDynamically() || sc->funHasExtensibleScope())
+    if (bindings->hasAnyAliasedBindings() || sc->funHasExtensibleScope())
         sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
 
     return true;

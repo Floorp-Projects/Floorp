@@ -100,6 +100,11 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     if (!script)
         return NULL;
 
+    // Global/eval script bindings are always empty (all names are added to the
+    // scope dynamically via JSOP_DEFFUN/VAR).
+    if (!script->bindings.init(cx, 0, 0, NULL))
+        return NULL;
+
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
     JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : NULL;
     JS_ASSERT_IF(globalScope, globalScope->isNative());
@@ -309,7 +314,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     if (!script)
         return false;
 
-    if (!funtc.generateBindings(cx, &script->bindings))
+    if (!funtc.generateFunctionBindings(cx, &script->bindings))
         return false;
 
     BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, /* callerFrame = */ NULL,

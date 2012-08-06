@@ -51,210 +51,197 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-BindingIter::BindingIter(JSContext *cx, const Bindings &bindings, Shape *shape)
-  : bindings_(&bindings), shape_(shape), rooter_(cx, &shape_)
-{
-    settle();
-}
-
-BindingIter::BindingIter(JSContext *cx, Init init)
-  : bindings_(init.bindings), shape_(init.shape), rooter_(cx, &shape_)
-{
-    settle();
-}
-
-BindingIter::BindingIter(JSContext *cx, Bindings &bindings)
-  : bindings_(&bindings), shape_(bindings.lastBinding), rooter_(cx, &shape_)
-{
-    settle();
-}
-
-void
-BindingIter::operator=(Init init)
-{
-    bindings_ = init.bindings;
-    shape_ = init.shape;
-    settle();
-}
-
-void
-BindingIter::settle()
-{
-    if (shape_.empty())
-        return;
-    Shape &shape = shape_.front();
-    jsid id = shape_.front().propid();
-    binding_.name = JSID_TO_ATOM(id)->asPropertyName();
-    binding_.kind = shape.slot() - CallObject::RESERVED_SLOTS < bindings_->numArgs()
-                    ? ARGUMENT
-                    : shape.writable() ? VARIABLE : CONSTANT;
-}
-
-bool
-js::GetOrderedBindings(JSContext *cx, Bindings &bindings, BindingVector *vec)
-{
-    JS_ASSERT(vec->empty());
-    if (!vec->reserve(bindings.count()))
-        return false;
-
-    for (BindingIter bi(cx, bindings); bi; bi++)
-        vec->infallibleAppend(*bi);
-
-    /* Variables/arguments are stored in reverse order. */
-    Reverse(vec->begin(), vec->end());
-    return true;
-}
-
-BindingIter::Init
-Bindings::lookup(JSContext *cx, PropertyName *name) const
-{
-    if (!lastBinding)
-        return BindingIter::Init(this, NULL);
-
-    const Bindings *self = this;
-    SkipRoot skipSelf(cx, &self);
-    Shape **_;
-    return BindingIter::Init(self, Shape::search(cx, lastBinding, NameToId(name), &_));
-}
-
 unsigned
 Bindings::argumentsVarIndex(JSContext *cx) const
 {
-    BindingIter bi(cx, lookup(cx, cx->runtime->atomState.argumentsAtom));
+    PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
+    BindingIter bi(*this);
+    while (bi->name() != arguments)
+        bi++;
     return bi.frameIndex();
 }
 
 bool
-Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind, bool aliased)
+Bindings::init(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray)
 {
-    if (!ensureShape(cx))
-        return false;
+    JS_ASSERT(!callObjShape_);
+    JS_ASSERT(!bindingArray_);
 
-    if (nargs + nvars == BINDING_COUNT_LIMIT) {
+    if (numArgs > UINT16_MAX || numVars > UINT16_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             (kind == ARGUMENT)
-                             ? JSMSG_TOO_MANY_FUN_ARGS
-                             : JSMSG_TOO_MANY_LOCALS);
+                             numArgs_ > numVars_ ?
+                             JSMSG_TOO_MANY_FUN_ARGS :
+                             JSMSG_TOO_MANY_LOCALS);
         return false;
     }
+
+    bindingArray_ = bindingArray;
+    numArgs_ = numArgs;
+    numVars_ = numVars;
+
 
     /*
-     * We still follow 10.2.3 of ES3 and make argument and variable properties
-     * of the Call objects enumerable. ES5 reformulated all of its Clause 10 to
-     * avoid objects as activations, something we should do too.
+     * Get the initial shape to use when creating CallObjects for this script.
+     * Since unaliased variables are, by definition, only accessed by local
+     * operations and never through the scope chain, only give shapes to
+     * aliased variables. While the debugger may observe any scope object at
+     * any time, such accesses are mediated by DebugScopeProxy (see
+     * DebugScopeProxy::handleUnaliasedAccess).
      */
-    unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    uint16_t *indexp;
-    uint32_t slot = CallObject::RESERVED_SLOTS;
+    JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == 2);
+    gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
+    JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
+    callObjShape_ = EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(),
+                                                allocKind, BaseShape::VAROBJ);
 
-    if (kind == ARGUMENT) {
-        JS_ASSERT(nvars == 0);
-        indexp = &nargs;
-        slot += nargs;
-    } else {
-        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-
-        indexp = &nvars;
-        if (kind == CONSTANT)
-            attrs |= JSPROP_READONLY;
-        slot += nargs + nvars;
-    }
-
-    RootedId id(cx);
-    if (!name) {
-        JS_ASSERT(kind == ARGUMENT); /* destructuring */
-        id = INT_TO_JSID(nargs);
-    } else {
-        id = AtomToId(name);
-    }
-
-    uint32_t flags = BaseShape::VAROBJ | (aliased ? BaseShape::CLOSED_VAR : 0);
-    StackBaseShape base(&CallClass, cx->global(), flags);
-    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
-    if (!nbase)
+#ifdef DEBUG
+    HashSet<PropertyName *> added(cx);
+    if (!added.init())
         return false;
+#endif
 
-    StackShape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
+    BindingIter bi(*this);
+    unsigned slot = CallObject::RESERVED_SLOTS;
+    for (unsigned i = 0, n = count(); i < n; i++, bi++) {
+        if (!bi->aliased())
+            continue;
 
-    /* Shapes in bindings cannot be dictionaries. */
-    Shape *shape = lastBinding->getChildBinding(cx, child);
-    if (!shape)
-        return false;
+#ifdef DEBUG
+        /* The caller ensures no duplicate aliased names. */
+        JS_ASSERT(!added.has(bi->name()));
+        if (!added.put(bi->name()))
+            return false;
+#endif
 
-    lastBinding = shape;
-    ++*indexp;
+        StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+        if (!nbase)
+            return false;
+
+        RootedId id(cx, NameToId(bi->name()));
+        unsigned attrs = JSPROP_PERMANENT | JSPROP_ENUMERATE |
+                         (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
+        unsigned frameIndex = bi.frameIndex();
+        StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
+
+        callObjShape_ = callObjShape_->getChildBinding(cx, child);
+        if (!callObjShape_)
+            return false;
+    }
+    JS_ASSERT(!bi);
+
     return true;
 }
 
-Shape *
-Bindings::callObjectShape(JSContext *cx) const
+uint8_t *
+Bindings::switchStorageTo(Binding *newBindingArray)
 {
-    if (!hasDup())
-        return lastBinding;
-
-    /*
-     * Build a vector of non-duplicate properties in order from last added
-     * to first (i.e., the order we normally have iterate over Shapes). Choose
-     * the last added property in each set of dups.
-     */
-    Vector<Shape *> shapes(cx);
-    HashSet<jsid> seen(cx);
-    if (!seen.init())
-        return NULL;
-
-    for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
-        Shape &s = r.front();
-        HashSet<jsid>::AddPtr p = seen.lookupForAdd(s.propid());
-        if (!p) {
-            if (!seen.add(p, s.propid()))
-                return NULL;
-            if (!shapes.append(&s))
-                return NULL;
-        }
-    }
-
-    /*
-     * Now build the Shape without duplicate properties.
-     */
-    RootedShape shape(cx, initialShape(cx));
-    for (int i = shapes.length() - 1; i >= 0; --i) {
-        shape = shape->getChildBinding(cx, shapes[i]);
-        if (!shape)
-            return NULL;
-    }
-
-    return shape;
+    PodCopy(newBindingArray, bindingArray_, count());
+    bindingArray_ = newBindingArray;
+    return reinterpret_cast<uint8_t *>(newBindingArray + count());
 }
 
 bool
-Bindings::extractClosedArgsAndVars(JSContext *cx, SlotVector *args, SlotVector *vars)
+Bindings::clone(JSContext *cx, uint8_t *dstScriptData, HandleScript srcScript)
 {
-    if (!ensureShape(cx))
-        return false;
+    /* The clone has the same bindingArray_ offset as 'src'. */
+    Bindings &src = srcScript->bindings;
+    ptrdiff_t off = (uint8_t *)src.bindingArray_ - srcScript->data;
+    JS_ASSERT(off >= 0);
+    JS_ASSERT(off <= (srcScript->code - srcScript->data));
+    Binding *dstPackedBindings = (Binding *)(dstScriptData + off);
 
-    for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
-        Shape &shape = r.front();
-        if (shape.base()->isClosedVar()) {
-            unsigned i = shape.slot() - CallObject::RESERVED_SLOTS;
-            if (i < nargs) {
-                if (!args->append(i))
-                    return false;
-            } else {
-                JS_ASSERT(i < count());
-                if (!vars->append(i - nargs))
-                    return false;
-            }
+    /*
+     * Since atoms are shareable throughout the runtime, we can simply copy
+     * the source's bindingArray directly.
+     */
+    PodCopy(dstPackedBindings, src.bindingArray_, src.count());
+    return init(cx, src.numArgs(), src.numVars(), dstPackedBindings);
+}
+
+template<XDRMode mode>
+static bool
+XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, unsigned numVars,
+                  HandleScript script)
+{
+    JSContext *cx = xdr->cx();
+
+    if (mode == XDR_ENCODE) {
+        for (BindingIter bi(script->bindings); bi; bi++) {
+            JSAtom *atom = bi->name();
+            if (!XDRAtom(xdr, &atom))
+                return false;
         }
+
+        for (BindingIter bi(script->bindings); bi; bi++) {
+            uint8_t u8 = (uint8_t(bi->kind()) << 1) | bi->aliased();
+            if (!xdr->codeUint8(&u8))
+                return false;
+        }
+    } else {
+        unsigned nameCount = numArgs + numVars;
+
+        AutoValueVector atoms(cx);
+        if (!atoms.resize(nameCount))
+            return false;
+        for (unsigned i = 0; i < nameCount; i++) {
+            JSAtom *atom;
+            if (!XDRAtom(xdr, &atom))
+                return false;
+            atoms[i] = StringValue(atom);
+        }
+
+        Binding *bindingArray = las.alloc().newArrayUninitialized<Binding>(nameCount);
+        if (!bindingArray)
+            return false;
+        for (unsigned i = 0; i < nameCount; i++) {
+            uint8_t u8;
+            if (!xdr->codeUint8(&u8))
+                return false;
+
+            PropertyName *name = atoms[i].toString()->asAtom().asPropertyName();
+            BindingKind kind = BindingKind(u8 >> 1);
+            bool aliased = bool(u8 & 1);
+
+            bindingArray[i] = Binding(name, kind, aliased);
+        }
+
+        if (!script->bindings.init(cx, numArgs, numVars, bindingArray))
+            return false;
     }
+
     return true;
+}
+
+bool
+Bindings::bindingIsAliased(unsigned bindingIndex)
+{
+    JS_ASSERT(bindingIndex < count());
+    return bindingArray_[bindingIndex].aliased();
 }
 
 void
 Bindings::trace(JSTracer *trc)
 {
-    if (lastBinding)
-        MarkShape(trc, &lastBinding, "shape");
+    if (callObjShape_)
+        MarkShape(trc, &callObjShape_, "callObjShape");
+
+    for (Binding *b = bindingArray_, *end = b + count(); b != end; b++) {
+        PropertyName *name = b->name();
+        MarkStringUnbarriered(trc, &name, "bindingArray");
+    }
+}
+
+bool
+js::FillBindingVector(Bindings &bindings, BindingVector *vec)
+{
+    for (BindingIter bi(bindings); bi; bi++) {
+        if (!vec->append(*bi))
+            return false;
+    }
+
+    return true;
 }
 
 template<XDRMode mode>
@@ -378,6 +365,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         StrictModeCode,
         ContainsDynamicNameAccess,
         FunHasExtensibleScope,
+        FunHasAnyAliasedFormal,
         ArgumentsHasVarBinding,
         NeedsArgsObj,
         OwnFilename,
@@ -389,14 +377,14 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     };
 
     uint32_t length, lineno, nslots;
-    uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, nClosedArgs, nClosedVars, i;
+    uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32_t prologLength, version;
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
 
     JSContext *cx = xdr->cx();
     Rooted<JSScript*> script(cx);
-    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = nClosedArgs = nClosedVars = 0;
+    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     jssrcnote *notes = NULL;
 
     /* XDR arguments and vars. */
@@ -415,40 +403,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (mode == XDR_DECODE) {
         nargs = argsVars >> 16;
         nvars = argsVars & 0xFFFF;
-    }
-    JS_ASSERT(nargs != Bindings::BINDING_COUNT_LIMIT);
-    JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
-
-    Bindings bindings;
-    Bindings::AutoRooter bindingsRoot(cx, &bindings);
-
-    uint32_t nameCount = nargs + nvars;
-    if (nameCount > 0) {
-        LifoAllocScope las(&cx->tempLifoAlloc());
-
-        BindingVector names(cx);
-        if (mode == XDR_ENCODE) {
-            if (!GetOrderedBindings(cx, script->bindings, &names))
-                return false;
-        }
-
-        for (unsigned i = 0; i < nameCount; i++) {
-            RootedAtom name(cx);
-            if (mode == XDR_ENCODE)
-                name = names[i].name;
-            if (!XDRAtom(xdr, name.address()))
-                return false;
-            if (mode == XDR_DECODE) {
-                BindingKind kind = (i < nargs) ? ARGUMENT : VARIABLE;
-                if (!bindings.add(cx, name, kind, /* aliased = */ false))
-                    return false;
-            }
-        }
-    }
-
-    if (mode == XDR_DECODE) {
-        if (!bindings.ensureShape(cx))
-            return false;
     }
 
     if (mode == XDR_ENCODE)
@@ -476,8 +430,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             nregexps = script->regexps()->length;
         if (script->hasTrynotes())
             ntrynotes = script->trynotes()->length;
-        nClosedArgs = script->numClosedArgs();
-        nClosedVars = script->numClosedVars();
 
         nTypeSets = script->nTypeSets;
 
@@ -493,6 +445,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << ContainsDynamicNameAccess);
         if (script->funHasExtensibleScope)
             scriptBits |= (1 << FunHasExtensibleScope);
+        if (script->funHasAnyAliasedFormal)
+            scriptBits |= (1 << FunHasAnyAliasedFormal);
         if (script->argumentsHasVarBinding())
             scriptBits |= (1 << ArgumentsHasVarBinding);
         if (script->analyzedArgsUsage() && script->needsArgsObj())
@@ -534,10 +488,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         return JS_FALSE;
     if (!xdr->codeUint32(&nconsts))
         return JS_FALSE;
-    if (!xdr->codeUint32(&nClosedArgs))
-        return JS_FALSE;
-    if (!xdr->codeUint32(&nClosedVars))
-        return JS_FALSE;
     if (!xdr->codeUint32(&nTypeSets))
         return JS_FALSE;
     if (!xdr->codeUint32(&scriptBits))
@@ -565,13 +515,20 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         ScriptSourceHolder ssh(cx->runtime, ss);
         script = JSScript::Create(cx, enclosingScope, !!(scriptBits & (1 << SavedCallerFun)),
                                   options, /* staticLevel = */ 0, ss, 0, 0);
-        if (!script || !JSScript::partiallyInit(cx, script,
-                                                length, nsrcnotes, natoms, nobjects,
-                                                nregexps, ntrynotes, nconsts, nClosedArgs,
-                                                nClosedVars, nTypeSets))
-            return JS_FALSE;
+        if (!script)
+            return false;
+    }
 
-        script->bindings.transferFrom(&bindings);
+    /* JSScript::partiallyInit assumes script->bindings is fully initialized. */
+    LifoAllocScope las(&cx->tempLifoAlloc());
+    if (!XDRScriptBindings(xdr, las, nargs, nvars, script))
+        return false;
+
+    if (mode == XDR_DECODE) {
+        if (!JSScript::partiallyInit(cx, script, length, nsrcnotes, natoms, nobjects, nregexps,
+                                     ntrynotes, nconsts, nTypeSets))
+            return false;
+
         JS_ASSERT(!script->mainOffset);
         script->mainOffset = prologLength;
         script->nfixed = uint16_t(version >> 16);
@@ -588,6 +545,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << FunHasExtensibleScope))
             script->funHasExtensibleScope = true;
+        if (scriptBits & (1 << FunHasAnyAliasedFormal))
+            script->funHasAnyAliasedFormal = true;
         if (scriptBits & (1 << ArgumentsHasVarBinding))
             script->setArgumentsHasVarBinding();
         if (scriptBits & (1 << NeedsArgsObj))
@@ -727,14 +686,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     }
     for (i = 0; i != nregexps; ++i) {
         if (!XDRScriptRegExpObject(xdr, &script->regexps()->vector[i]))
-            return false;
-    }
-    for (i = 0; i != nClosedArgs; ++i) {
-        if (!xdr->codeUint32(&script->closedArgs()->vector[i]))
-            return false;
-    }
-    for (i = 0; i != nClosedVars; ++i) {
-        if (!xdr->codeUint32(&script->closedVars()->vector[i]))
             return false;
     }
 
@@ -1408,8 +1359,6 @@ js::FreeScriptFilenames(JSRuntime *rt)
  * ObjectArray      Objects         objects()
  * ObjectArray      Regexps         regexps()
  * TryNoteArray     Try notes       trynotes()
- * ClosedSlotArray  ClosedArgs      closedArgs()
- * ClosedSlotArray  ClosedVars      closedVars()
  *
  * Then are the elements of several arrays.
  * - Most of these arrays have headers listed above (if present).  For each of
@@ -1426,8 +1375,6 @@ js::FreeScriptFilenames(JSRuntime *rt)
  * Objects          objects()->vector     objects()->length
  * Regexps          regexps()->vector     regexps()->length
  * Try notes        trynotes()->vector    trynotes()->length
- * Closed args      closedArgs()->vector  closedArgs()->length
- * Closed vars      closedVars()->vector  closedVars()->length
  * Bytecodes        code                  length
  * Source notes     notes()               numNotes() * sizeof(jssrcnote)
  *
@@ -1461,7 +1408,6 @@ js::FreeScriptFilenames(JSRuntime *rt)
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ObjectArray));       /* there are two of these */
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(TryNoteArray));
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ClosedSlotArray));   /* there are two of these */
 
 /* These assertions ensure there is no padding required between array elements. */
 JS_STATIC_ASSERT(HAS_JSVAL_ALIGNMENT(HeapValue));
@@ -1475,9 +1421,8 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(uint32_t, jsbytecode));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(jsbytecode, jssrcnote));
 
 static inline size_t
-ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-               uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
-               uint16_t nClosedArgs, uint16_t nClosedVars)
+ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t nbindings, uint32_t natoms,
+               uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts)
 {
     size_t size = 0;
 
@@ -1490,11 +1435,8 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
         size += sizeof(ObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
         size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
-    if (nClosedArgs != 0)
-        size += sizeof(ClosedSlotArray) + nClosedArgs * sizeof(uint32_t);
-    if (nClosedVars != 0)
-        size += sizeof(ClosedSlotArray) + nClosedVars * sizeof(uint32_t);
 
+    size += nbindings * sizeof(Binding);
     size += length * sizeof(jsbytecode);
     size += nsrcnotes * sizeof(jssrcnote);
     return size;
@@ -1565,15 +1507,18 @@ AllocScriptData(JSContext *cx, size_t size)
 JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
                         uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
                         uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
-                        uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets)
+                        uint32_t nTypeSets)
 {
-    size_t size = ScriptDataSize(length, nsrcnotes, natoms, nobjects, nregexps,
-                                 ntrynotes, nconsts, nClosedArgs, nClosedVars);
+    size_t size = ScriptDataSize(length, nsrcnotes, script->bindings.count(), natoms, nobjects,
+                                 nregexps, ntrynotes, nconsts);
     script->data = AllocScriptData(cx, size);
     if (!script->data)
         return false;
 
     script->length = length;
+
+    JS_ASSERT(nTypeSets <= UINT16_MAX);
+    script->nTypeSets = uint16_t(nTypeSets);
 
     uint8_t *cursor = script->data;
     if (nconsts != 0) {
@@ -1591,14 +1536,6 @@ JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
     if (ntrynotes != 0) {
         script->setHasArray(TRYNOTES);
         cursor += sizeof(TryNoteArray);
-    }
-    if (nClosedArgs != 0) {
-        script->setHasArray(CLOSED_ARGS);
-        cursor += sizeof(ClosedSlotArray);
-    }
-    if (nClosedVars != 0) {
-        script->setHasArray(CLOSED_VARS);
-        cursor += sizeof(ClosedSlotArray);
     }
 
     if (nconsts != 0) {
@@ -1636,20 +1573,7 @@ JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
         cursor += vectorSize;
     }
 
-    if (nClosedArgs != 0) {
-        script->closedArgs()->length = nClosedArgs;
-        script->closedArgs()->vector = reinterpret_cast<uint32_t *>(cursor);
-        cursor += nClosedArgs * sizeof(script->closedArgs()->vector[0]);
-    }
-
-    if (nClosedVars != 0) {
-        script->closedVars()->length = nClosedVars;
-        script->closedVars()->vector = reinterpret_cast<uint32_t *>(cursor);
-        cursor += nClosedVars * sizeof(script->closedVars()->vector[0]);
-    }
-
-    JS_ASSERT(nTypeSets <= UINT16_MAX);
-    script->nTypeSets = uint16_t(nTypeSets);
+    cursor = script->bindings.switchStorageTo(reinterpret_cast<Binding *>(cursor));
 
     script->code = (jsbytecode *)cursor;
     JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == script->data + size);
@@ -1660,7 +1584,7 @@ JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
 /* static */ bool
 JSScript::fullyInitTrivial(JSContext *cx, Handle<JSScript*> script)
 {
-    if (!partiallyInit(cx, script, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0))
+    if (!partiallyInit(cx, script, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0))
         return false;
 
     script->code[0] = JSOP_STOP;
@@ -1672,10 +1596,6 @@ JSScript::fullyInitTrivial(JSContext *cx, Handle<JSScript*> script)
 /* static */ bool
 JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, BytecodeEmitter *bce)
 {
-    Bindings::SlotVector closedArgs(cx), closedVars(cx);
-    if (!script->bindings.extractClosedArgsAndVars(cx, &closedArgs, &closedVars))
-        return false;
-
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
     JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
@@ -1684,21 +1604,16 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
-    uint16_t nClosedArgs = uint16_t(closedArgs.length());
-    JS_ASSERT(nClosedArgs == closedArgs.length());
-    uint16_t nClosedVars = uint16_t(closedVars.length());
-    JS_ASSERT(nClosedVars == closedVars.length());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
                        bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
-                       bce->constList.length(), nClosedArgs, nClosedVars,
-                       bce->typesetCount))
+                       bce->constList.length(), bce->typesetCount))
         return false;
 
     JS_ASSERT(script->mainOffset == 0);
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    uint32_t nfixed = bce->sc->inFunction() ? bce->script->bindings.numVars() : 0;
+    uint32_t nfixed = bce->sc->inFunction() ? script->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1747,11 +1662,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         }
     }
 
-    if (nClosedArgs)
-        PodCopy<uint32_t>(script->closedArgs()->vector, &closedArgs[0], nClosedArgs);
-    if (nClosedVars)
-        PodCopy<uint32_t>(script->closedVars()->vector, &closedVars[0], nClosedVars);
-
     RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
@@ -1766,6 +1676,13 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
      */
     if (cx->hasRunOption(JSOPTION_PCCOUNT))
         (void) script->initScriptCounts(cx);
+
+    for (unsigned i = 0, n = script->bindings.numArgs(); i < n; ++i) {
+        if (script->formalIsAliased(i)) {
+            script->funHasAnyAliasedFormal = true;
+            break;
+        }
+    }
 
     return true;
 }
@@ -2103,13 +2020,11 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     uint32_t nobjects  = src->hasObjects()  ? src->objects()->length  : 0;
     uint32_t nregexps  = src->hasRegexps()  ? src->regexps()->length  : 0;
     uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes()->length : 0;
-    uint32_t nClosedArgs = src->numClosedArgs();
-    uint32_t nClosedVars = src->numClosedVars();
 
     /* Script data */
 
-    size_t size = ScriptDataSize(src->length, src->numNotes(), src->natoms,
-                                 nobjects, nregexps, ntrynotes, nconsts, nClosedArgs, nClosedVars);
+    size_t size = ScriptDataSize(src->length, src->numNotes(), src->bindings.count(), src->natoms,
+                                 nobjects, nregexps, ntrynotes, nconsts);
 
     uint8_t *data = AllocScriptData(cx, size);
     if (!data)
@@ -2118,18 +2033,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Bindings */
 
     Bindings bindings;
-    Bindings::AutoRooter bindingsRoot(cx, &bindings);
-    BindingVector names(cx);
-    if (!GetOrderedBindings(cx, src->bindings, &names))
-        return NULL;
-
-    for (unsigned i = 0; i < names.length(); ++i) {
-        Rooted<JSAtom*> atom(cx, names[i].name);
-        if (!bindings.add(cx, atom, names[i].kind, /* aliasedVar = */ false))
-            return NULL;
-    }
-
-    if (!bindings.ensureShape(cx))
+    Bindings::AutoRooter bindingRooter(cx, &bindings);
+    if (!bindings.clone(cx, data, src))
         return NULL;
 
     /* Objects */
@@ -2195,7 +2100,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         return NULL;
     }
 
-    dst->bindings.transferFrom(&bindings);
+    dst->bindings = bindings;
 
     /* This assignment must occur before all the Rebase calls. */
     dst->data = data;
@@ -2227,6 +2132,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->explicitUseStrict = src->explicitUseStrict;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
+    dst->funHasAnyAliasedFormal = src->funHasAnyAliasedFormal;
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
     dst->isGeneratorExp = src->isGeneratorExp;
@@ -2258,10 +2164,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     }
     if (ntrynotes != 0)
         dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
-    if (nClosedArgs != 0)
-        dst->closedArgs()->vector = Rebase<uint32_t>(dst, src, src->closedArgs()->vector);
-    if (nClosedVars != 0)
-        dst->closedVars()->vector = Rebase<uint32_t>(dst, src, src->closedVars()->vector);
 
     return dst;
 }
@@ -2630,43 +2532,17 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 bool
 JSScript::varIsAliased(unsigned varSlot)
 {
-    if (bindingsAccessedDynamically)
-        return true;
-
-    for (uint32_t i = 0; i < numClosedVars(); ++i) {
-        if (closedVars()->vector[i] == varSlot) {
-            JS_ASSERT(function()->isHeavyweight());
-            return true;
-        }
-    }
-
-    return false;
+    return bindings.bindingIsAliased(bindings.numArgs() + varSlot);
 }
 
 bool
 JSScript::formalIsAliased(unsigned argSlot)
 {
-    return formalLivesInCallObject(argSlot) || argsObjAliasesFormals();
+    return bindings.bindingIsAliased(argSlot);
 }
 
 bool
 JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 {
-    return argsObjAliasesFormals() && !formalLivesInCallObject(argSlot);
-}
-
-bool
-JSScript::formalLivesInCallObject(unsigned argSlot)
-{
-    if (bindingsAccessedDynamically)
-        return true;
-
-    for (uint32_t i = 0; i < numClosedArgs(); ++i) {
-        if (closedArgs()->vector[i] == argSlot) {
-            JS_ASSERT(function()->isHeavyweight());
-            return true;
-        }
-    }
-
-    return false;
+    return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }

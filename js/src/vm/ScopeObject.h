@@ -194,13 +194,9 @@ class CallObject : public ScopeObject
      */
     inline JSFunction &callee() const;
 
-    /* Get/set the formal argument at the given index. */
-    inline const Value &formal(unsigned i) const;
-    inline void setFormal(unsigned i, const Value &v);
-
-    /* Get/set the variable at the given index. */
-    inline const Value &var(unsigned i) const;
-    inline void setVar(unsigned i, const Value &v);
+    /* Get/set the aliased variable referred to by 'bi'. */
+    inline const Value &aliasedVar(AliasedFormalIter fi);
+    inline void setAliasedVar(AliasedFormalIter fi, const Value &v);
 };
 
 class DeclEnvObject : public ScopeObject
