@@ -222,6 +222,16 @@ StackFrame::pcQuadratic(const ContextStack &stack, size_t maxDepth)
     return regs.fp()->script()->code;
 }
 
+bool
+StackFrame::copyRawFrameSlots(CopyVector *vec)
+{
+    if (!vec->resize(numFormalArgs() + script()->nfixed))
+        return false;
+    PodCopy(vec->begin(), formals(), numFormalArgs());
+    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed);
+    return true;
+}
+
 static inline void
 AssertDynamicScopeMatchesStaticScope(JSScript *script, JSObject *scope)
 {

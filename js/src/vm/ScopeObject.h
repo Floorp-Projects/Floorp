@@ -195,15 +195,12 @@ class CallObject : public ScopeObject
     inline JSFunction &callee() const;
 
     /* Get/set the formal argument at the given index. */
-    inline const Value &formal(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
-    inline void setFormal(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
+    inline const Value &formal(unsigned i) const;
+    inline void setFormal(unsigned i, const Value &v);
 
     /* Get/set the variable at the given index. */
-    inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
-    inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
-
-    /* Copy in all the unaliased formals and locals. */
-    void copyUnaliasedValues(StackFrame *fp);
+    inline const Value &var(unsigned i) const;
+    inline void setVar(unsigned i, const Value &v);
 };
 
 class DeclEnvObject : public ScopeObject
@@ -480,10 +477,10 @@ class ScopeIterKey
  * To resolve this, the debugger first calls GetDebugScopeFor(Function|Frame)
  * to synthesize a "debug scope chain". A debug scope chain is just a chain of
  * objects that fill in missing scopes and protect the engine from unexpected
- * access. (The latter means that some debugger operations, like adding a new
- * binding to a lexical scope, can fail when a true eval would succeed.) To do
- * both of these things, GetDebugScopeFor* creates a new proxy DebugScopeObject
- * to sit in front of every existing ScopeObject.
+ * access. (The latter means that some debugger operations, like redefining a
+ * lexical binding, can fail when a true eval would succeed.) To do both of
+ * these things, GetDebugScopeFor* creates a new proxy DebugScopeObject to sit
+ * in front of every existing ScopeObject.
  *
  * GetDebugScopeFor* ensures the invariant that the same DebugScopeObject is
  * always produced for the same underlying scope (optimized or not!). This is
@@ -499,13 +496,27 @@ GetDebugScopeForFrame(JSContext *cx, StackFrame *fp);
 /* Provides debugger access to a scope. */
 class DebugScopeObject : public JSObject
 {
+    /*
+     * The enclosing scope on the dynamic scope chain. This slot is analogous
+     * to the SCOPE_CHAIN_SLOT of a ScopeObject.
+     */
     static const unsigned ENCLOSING_EXTRA = 0;
+
+    /*
+     * NullValue or a dense array holding the unaliased variables of a function
+     * frame that has been popped.
+     */
+    static const unsigned SNAPSHOT_EXTRA = 1;
 
   public:
     static DebugScopeObject *create(JSContext *cx, ScopeObject &scope, HandleObject enclosing);
 
     ScopeObject &scope() const;
     JSObject &enclosingScope() const;
+
+    /* May only be called for proxies to function call objects. */
+    JSObject *maybeSnapshot() const;
+    void initSnapshot(JSObject &snapshot);
 
     /* Currently, the 'declarative' scopes are Call and Block. */
     bool isForDeclarative() const;
