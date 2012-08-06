@@ -16,6 +16,9 @@
 #ifdef ANDROID
 #include <android/log.h>
 #endif
+#ifdef XP_WIN
+#include <windows.h>
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -180,6 +183,11 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const PRUnichar*>(chars));
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
+#endif
+#ifdef XP_WIN
+    if (IsDebuggerPresent()) {
+      OutputDebugStringW(reinterpret_cast<const PRUnichar*>(chars));
+    }
 #endif
     fputs(utf8str.get(), stdout);
     fflush(stdout);
