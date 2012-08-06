@@ -11,7 +11,6 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
-#include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"

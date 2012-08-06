@@ -13,10 +13,10 @@
 #ifndef nsGridCell_h___
 #define nsGridCell_h___
 
-#include "nsIFrame.h"
-
 class nsBoxLayoutState;
 struct nsSize;
+class nsIFrame;
+typedef class nsIFrame nsIBox;
 
 /*
  * Grid cell is what makes up the cellmap in the grid. Each GridCell contains

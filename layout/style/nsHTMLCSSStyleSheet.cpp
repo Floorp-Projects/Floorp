@@ -13,7 +13,6 @@
 #include "nsIURL.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
-#include "nsIFrame.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsPresContext.h"

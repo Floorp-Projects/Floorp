@@ -6,7 +6,6 @@
 #include "nsListBoxLayout.h"
 
 #include "nsListBoxBodyFrame.h"
-#include "nsIFrame.h"
 #include "nsBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"

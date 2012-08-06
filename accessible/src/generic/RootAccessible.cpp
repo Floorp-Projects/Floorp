@@ -33,7 +33,6 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
-#include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsPIDOMWindow.h"

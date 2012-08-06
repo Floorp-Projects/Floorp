@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextPositioningElement.h"
-#include "nsIFrame.h"
 #include "nsDOMError.h"
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"

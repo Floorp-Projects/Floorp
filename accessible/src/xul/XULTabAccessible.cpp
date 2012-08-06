@@ -13,7 +13,6 @@
 // NOTE: alphabetically ordered
 #include "nsIAccessibleRelation.h"
 #include "nsIDocument.h"
-#include "nsIFrame.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"

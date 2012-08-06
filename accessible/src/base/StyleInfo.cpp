@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsComputedDOMStyle.h"
+#include "nsIFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
