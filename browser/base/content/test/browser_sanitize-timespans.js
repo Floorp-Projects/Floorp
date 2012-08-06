@@ -394,15 +394,16 @@ function setupDownloads() {
     startTime: now_uSec - 10 * kUsecPerMin, // 10 minutes ago, in uSec
     endTime: now_uSec - 11 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "a1bcD23eF4g5"
   };
 
   let db = dm.DBConnection;
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (id, name, source, target, startTime, endTime, " +
-      "state, currBytes, maxBytes, preferredAction, autoResume) " +
+      "state, currBytes, maxBytes, preferredAction, autoResume, guid) " +
     "VALUES (:id, :name, :source, :target, :startTime, :endTime, :state, " +
-      ":currBytes, :maxBytes, :preferredAction, :autoResume)");
+      ":currBytes, :maxBytes, :preferredAction, :autoResume, :guid)");
   try {
     for (let prop in data)
       stmt.params[prop] = data[prop];
@@ -421,7 +422,8 @@ function setupDownloads() {
     startTime: now_uSec - 45 * kUsecPerMin, // 45 minutes ago, in uSec
     endTime: now_uSec - 44 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "1bcD23eF4g5a"
   };
 
   try {
@@ -442,7 +444,8 @@ function setupDownloads() {
     startTime: now_uSec - 70 * kUsecPerMin, // 70 minutes ago, in uSec
     endTime: now_uSec - 71 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "a1cbD23e4Fg5"
   };
 
   try {
@@ -463,7 +466,8 @@ function setupDownloads() {
     startTime: now_uSec - 90 * kUsecPerMin, // 90 minutes ago, in uSec
     endTime: now_uSec - 89 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "b1aDc23eFg54"
   };
 
   try {
@@ -484,7 +488,8 @@ function setupDownloads() {
     startTime: now_uSec - 130 * kUsecPerMin, // 130 minutes ago, in uSec
     endTime: now_uSec - 131 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "z1bcD23eF4g5"
   };
 
   try {
@@ -505,7 +510,8 @@ function setupDownloads() {
     startTime: now_uSec - 180 * kUsecPerMin, // 180 minutes ago, in uSec
     endTime: now_uSec - 179 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "zzzcD23eF4g5"
   };
   
   try {
@@ -526,7 +532,8 @@ function setupDownloads() {
     startTime: now_uSec - 250 * kUsecPerMin, // 250 minutes ago, in uSec
     endTime: now_uSec - 251 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "z1bzz23eF4gz"
   };
   
   try {
@@ -552,7 +559,8 @@ function setupDownloads() {
     startTime: today.getTime() * 1000,  // 12:00:30am this morning, in uSec
     endTime: (today.getTime() + 1000) * 1000, // 1 second later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "ffffD23eF4g5"
   };
   
   try {
@@ -575,7 +583,8 @@ function setupDownloads() {
     startTime: lastYear.getTime() * 1000, // 1 year ago, in uSec
     endTime: (lastYear.getTime() + 1000) * 1000, // 1 second later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "ggggg23eF4g5"
   };
   
   try {
