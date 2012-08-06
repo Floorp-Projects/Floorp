@@ -671,8 +671,7 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   , mPlayPreviewCanceled(false)
   , mIsStopping(false)
   , mIsLoading(false)
-  , mScriptRequested(false)
-  , mSrcStreamLoading(false) {}
+  , mScriptRequested(false) {}
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
 {
@@ -1251,7 +1250,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
         // XXX(johns): Our de-facto behavior since forever was to refuse to load
         // Objects who don't have a classid we support, regardless of other type
         // or uri info leads to a valid plugin.
-        newMime.Assign("");
+        newMime.Truncate();
         stateInvalid = true;
       }
     }
@@ -1371,7 +1370,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
     if (NS_FAILED(rv)) {
       NS_NOTREACHED("GetContentType failed");
       stateInvalid = true;
-      channelType.Assign("");
+      channelType.Truncate();
     }
 
     LOG(("OBJLC [%p]: Channel has a content type of %s", this, channelType.get()));
