@@ -65,7 +65,6 @@
 #include "nsCaret.h"
 
 #include "nsSubDocumentFrame.h"
-#include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 #include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -111,8 +110,6 @@ using namespace mozilla::dom;
 //#define DEBUG_DOCSHELL_FOCUS
 
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
-
-static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 static bool sLeftClickOnly = true;
 static bool sKeyCausesActivation = true;
@@ -2292,7 +2289,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   *aTargetNode = nullptr;
 
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
   if (!window)
     return;
 

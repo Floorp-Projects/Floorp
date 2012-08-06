@@ -5,7 +5,7 @@
 # Branding Makefile
 #  - jars chrome artwork
 
-DEPTH = ../../../../..
+DEPTH = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@

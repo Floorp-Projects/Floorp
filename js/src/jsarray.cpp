@@ -1521,10 +1521,40 @@ class AutoArrayCycleDetector
   protected:
 };
 
-static JSBool
-array_toString_sub(JSContext *cx, HandleObject obj, JSBool locale,
-                   HandleString sepstr, CallArgs &args)
+static bool
+array_join_sub(JSContext *cx, CallArgs &args, bool locale)
 {
+    // This method is shared by Array.prototype.join and
+    // Array.prototype.toLocaleString. The steps in ES5 are nearly the same, so
+    // the annotations in this function apply to both toLocaleString and join.
+
+    // Step 1
+    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    if (!obj)
+        return false;
+
+    AutoArrayCycleDetector detector(cx, obj);
+    if (!detector.init())
+        return false;
+
+    if (detector.foundCycle()) {
+        args.rval().setString(cx->runtime->atomState.emptyAtom);
+        return true;
+    }
+
+    // Steps 2 and 3
+    uint32_t length;
+    if (!js_GetLengthProperty(cx, obj, &length))
+        return false;
+
+
+    // Steps 4 and 5
+    RootedString sepstr(cx, NULL);
+    if (!locale && args.hasDefined(0)) {
+        sepstr = ToString(cx, args[0]);
+        if (!sepstr)
+            return false;
+    }
     static const jschar comma = ',';
     const jschar *sep;
     size_t seplen;
@@ -1536,21 +1566,11 @@ array_toString_sub(JSContext *cx, HandleObject obj, JSBool locale,
         seplen = 1;
     }
 
-    AutoArrayCycleDetector detector(cx, obj);
-    if (!detector.init())
-        return false;
-
-    if (detector.foundCycle()) {
-        args.rval().setString(cx->runtime->atomState.emptyAtom);
-        return true;
-    }
-
-    uint32_t length;
-    if (!js_GetLengthProperty(cx, obj, &length))
-        return false;
+    // Step 6 is implicit in the loops below
 
     StringBuffer sb(cx);
 
+    // Various optimized versions of steps 7-10
     if (!locale && !seplen && obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
         const Value *start = obj->getDenseArrayElements();
         const Value *end = start + obj->getDenseArrayInitializedLength();
@@ -1616,6 +1636,7 @@ array_toString_sub(JSContext *cx, HandleObject obj, JSBool locale,
         }
     }
 
+    // Step 11
     JSString *str = sb.finishString();
     if (!str)
         return false;
@@ -1660,22 +1681,25 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/* ES5 15.4.4.3 */
 static JSBool
 array_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
-    if (!obj)
-        return false;
 
-    /*
-     *  Passing comma here as the separator. Need a way to get a
-     *  locale-specific version.
-     */
-    Rooted<JSString*> none(cx, NULL);
-    return array_toString_sub(cx, obj, JS_TRUE, none, args);
+    return array_join_sub(cx, args, true);
+}
+
+/* ES5 15.4.4.5 */
+static JSBool
+array_join(JSContext *cx, unsigned argc, Value *vp)
+{
+    JS_CHECK_RECURSION(cx, return false);
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return array_join_sub(cx, args, false);
 }
 
 static inline bool
@@ -1772,30 +1796,6 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     } while (vector != end);
 
     return true;
-}
-
-/*
- * Perl-inspired join, reverse, and sort.
- */
-static JSBool
-array_join(JSContext *cx, unsigned argc, Value *vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString str(cx);
-    if (args.hasDefined(0)) {
-        str = ToString(cx, args[0]);
-        if (!str)
-            return JS_FALSE;
-        args[0].setString(str);
-    } else {
-        str = NULL;
-    }
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
-    if (!obj)
-        return false;
-    return array_toString_sub(cx, obj, JS_FALSE, str, args);
 }
 
 static JSBool

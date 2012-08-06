@@ -1,0 +1,7 @@
+{
+  "getElementsByTagName ABC": true,
+  "getElementsByTagName Abc": true,
+  "getElementsByTagName abc": true,
+  "getElementsByTagName \u00c4": true,
+  "getElementsByTagName \u00e4": true
+}

@@ -64,7 +64,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
@@ -2375,7 +2374,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 
 #define DOM_CLASSINFO_EVENT_MAP_ENTRIES                                       \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)                                      \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEvent)                                    \
 
 #define DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES                                    \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMUIEvent)                                    \
@@ -6396,14 +6394,6 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JSObject *obj)
   nsresult rv = DefineInterfaceConstants(cx, obj, class_iid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Special case for |Event|, Event needs constants from NSEvent
-  // too for backwards compatibility.
-  if (class_iid->Equals(NS_GET_IID(nsIDOMEvent))) {
-    rv = DefineInterfaceConstants(cx, obj,
-                                  &NS_GET_IID(nsIDOMNSEvent));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // Special case for |IDBKeyRange| which gets funny "static" functions.
   if (class_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
       !indexedDB::IDBKeyRange::DefineConstructors(cx, obj)) {
@@ -6547,14 +6537,6 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Special case for |Event|, Event needs constants from NSEvent
-    // too for backwards compatibility.
-    if (primary_iid->Equals(NS_GET_IID(nsIDOMEvent))) {
-      rv = DefineInterfaceConstants(cx, class_obj,
-                                    &NS_GET_IID(nsIDOMNSEvent));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     // Special case for |IDBKeyRange| which gets funny "static" functions.
     if (primary_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
@@ -7387,17 +7369,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     if (sDocument_id == id) {
-      nsCOMPtr<nsIDOMDocument> document;
-      rv = win->GetDocument(getter_AddRefs(document));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // FIXME Ideally we'd have an nsIDocument here and get nsWrapperCache
-      //       from it.
-      jsval v;
+      nsCOMPtr<nsIDocument> document = win->GetDoc();
+      JS::Value v;
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), document,
-                      &NS_GET_IID(nsIDOMDocument), false, &v,
-                      getter_AddRefs(holder));
+      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), document, document,
+                      &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
+                      false);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // The PostCreate hook for the document will handle defining the
@@ -10204,16 +10181,16 @@ NS_IMETHODIMP
 nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                             JSObject *globalObj, JSObject **parentObj)
 {
+#ifdef DEBUG
   nsWrapperCache* cache = nullptr;
   CallQueryInterface(nativeObj, &cache);
-  if (!cache) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
+  MOZ_ASSERT(cache, "All CSS declarations must be wrappercached");
+#endif
 
   nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
   nsINode *native_parent = declaration->GetParentObject();
   if (!native_parent) {
-    return NS_ERROR_FAILURE;
+    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
   }
 
   nsresult rv =

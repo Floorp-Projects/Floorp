@@ -63,7 +63,6 @@ public:
   virtual bool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
-  // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   virtual void MarkIntrinsicWidthsDirty();
 
@@ -98,8 +97,8 @@ public:
   void CreateRows();
   void DestroyRows(PRInt32& aRowsToLose);
   void ReverseDestroyRows(PRInt32& aRowsToLose);
-  nsIBox* GetFirstItemBox(PRInt32 aOffset, bool* aCreated);
-  nsIBox* GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, bool* aCreated);
+  nsIFrame* GetFirstItemBox(PRInt32 aOffset, bool* aCreated);
+  nsIFrame* GetNextItemBox(nsIFrame* aBox, PRInt32 aOffset, bool* aCreated);
   bool ContinueReflow(nscoord height);
   NS_IMETHOD ListBoxAppendFrames(nsFrameList& aFrameList);
   NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsFrameList& aFrameList);

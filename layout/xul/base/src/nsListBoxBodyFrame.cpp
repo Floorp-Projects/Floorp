@@ -184,7 +184,7 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   NS_ENSURE_SUCCESS(rv, rv);
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (scrollFrame) {
-    nsIBox* verticalScrollbar = scrollFrame->GetScrollbarBox(true);
+    nsIFrame* verticalScrollbar = scrollFrame->GetScrollbarBox(true);
     nsScrollbarFrame* scrollbarFrame = do_QueryFrame(verticalScrollbar);
     if (scrollbarFrame) {
       scrollbarFrame->SetScrollbarMediatorContent(GetContent());
@@ -234,8 +234,6 @@ nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return rv;
  
 }
-
-/////////// nsIBox ///////////////
 
 /* virtual */ void
 nsListBoxBodyFrame::MarkIntrinsicWidthsDirty()
@@ -995,7 +993,7 @@ nsListBoxBodyFrame::CreateRows()
   
   // get the first tree box. If there isn't one create one.
   bool created = false;
-  nsIBox* box = GetFirstItemBox(0, &created);
+  nsIFrame* box = GetFirstItemBox(0, &created);
   nscoord rowHeight = GetRowHeightAppUnits();
   while (box) {  
     if (created && mRowsToPrepend > 0)
@@ -1088,10 +1086,10 @@ IsListItemChild(nsListBoxBodyFrame* aParent, nsIContent* aChild,
 }
 
 //
-// Get the nsIBox for the first visible listitem, and if none exists,
+// Get the nsIFrame for the first visible listitem, and if none exists,
 // create one.
 //
-nsIBox* 
+nsIFrame*
 nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, bool* aCreated)
 {
   if (aCreated)
@@ -1101,7 +1099,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, bool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame) {
-    return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nullptr;
+    return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
   }
 
   // top frame was cleared out
@@ -1109,7 +1107,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, bool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame && mRowsToPrepend <= 0) {
-    return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nullptr;
+    return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
   }
 
   // At this point, we either have no frames at all, 
@@ -1159,7 +1157,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, bool* aCreated)
 
       mBottomFrame = mTopFrame;
 
-      return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nullptr;
+      return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
     } else
       return GetFirstItemBox(++aOffset, 0);
   }
@@ -1168,11 +1166,11 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, bool* aCreated)
 }
 
 //
-// Get the nsIBox for the next visible listitem after aBox, and if none
+// Get the nsIFrame for the next visible listitem after aBox, and if none
 // exists, create one.
 //
-nsIBox* 
-nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
+nsIFrame*
+nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, PRInt32 aOffset,
                                    bool* aCreated)
 {
   if (aCreated)

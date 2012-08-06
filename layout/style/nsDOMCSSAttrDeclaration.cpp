@@ -17,6 +17,9 @@
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
 #include "nsGenericElement.h"
+#include "nsContentUtils.h"
+#include "xpcpublic.h"
+#include "nsWrapperCacheInlines.h"
 
 namespace css = mozilla::css;
 namespace dom = mozilla::dom;
@@ -36,29 +39,36 @@ nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
   MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
-// If nsDOMCSSAttributeDeclaration is changed so that any additional
-// fields are traversed by the cycle collector (for instance, if
-// wrapper cache handling is changed) then CAN_SKIP must be updated.
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMCSSAttributeDeclaration, mElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCSSAttributeDeclaration, mElement)
 
-// nsDOMCSSAttributeDeclaration has only one cycle collected field, so
-// if mElement is going to be skipped, the attribute declaration can't
-// be part of a garbage cycle.
+// mElement holds a strong ref to us, so if it's going to be
+// skipped, the attribute declaration can't be part of a garbage
+// cycle.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMCSSAttributeDeclaration)
-  return !tmp->mElement || nsGenericElement::CanSkip(tmp->mElement, true);
+  if (tmp->mElement && nsGenericElement::CanSkip(tmp->mElement, true)) {
+    if (tmp->PreservingWrapper()) {
+      // Not relying on GetWrapper to unmark us gray because the
+      // side-effect thing is pretty weird.
+      JSObject* o = tmp->GetWrapperPreserveColor();
+      xpc_UnmarkGrayObject(o);
+    }
+    return true;
+  }
+  return tmp->IsBlack();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDOMCSSAttributeDeclaration)
-  return !tmp->mElement || nsGenericElement::CanSkipInCC(tmp->mElement);
+  return tmp->IsBlack() ||
+    (tmp->mElement && nsGenericElement::CanSkipInCC(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-// CanSkipThis returns false to avoid problems with incomplete unlinking.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMCSSAttributeDeclaration)
+  return tmp->IsBlack() ||
+    (tmp->mElement && nsGenericElement::CanSkipThis(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-NS_INTERFACE_MAP_BEGIN(nsDOMCSSAttributeDeclaration)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSAttributeDeclaration)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMCSSAttributeDeclaration)
 NS_IMPL_QUERY_TAIL_INHERITING(nsDOMCSSDeclaration)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSAttributeDeclaration)

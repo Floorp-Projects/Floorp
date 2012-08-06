@@ -28,8 +28,7 @@ class nsHTMLStyleSheet MOZ_FINAL : public nsIStyleSheet,
                                    public nsIStyleRuleProcessor
 {
 public:
-  nsHTMLStyleSheet(void);
-  nsresult Init();
+  nsHTMLStyleSheet(nsIURI* aURL, nsIDocument* aDocument);
 
   NS_DECL_ISUPPORTS
 
@@ -68,7 +67,6 @@ public:
     SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
   size_t DOMSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   void Reset(nsIURI* aURL);
   nsresult SetLinkColor(nscolor aColor);
   nsresult SetActiveLinkColor(nscolor aColor);
@@ -149,13 +147,5 @@ private:
 
   PLDHashTable            mMappedAttrTable;
 };
-
-// XXX convenience method. Calls Initialize() automatically.
-nsresult
-NS_NewHTMLStyleSheet(nsHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
-                     nsIDocument* aDocument);
-
-nsresult
-NS_NewHTMLStyleSheet(nsHTMLStyleSheet** aInstancePtrResult);
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */

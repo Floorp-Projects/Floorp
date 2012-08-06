@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(a2d63af8-966a-443f-ac78-082b06d2878f)]
+[scriptable, builtinclass, uuid(8e37040a-dbbb-41d8-a019-eb687e5e8ec7)]
 interface nsIDOMDeviceOrientationEvent : nsIDOMEvent
 {
   void initDeviceOrientationEvent(in DOMString eventTypeArg,

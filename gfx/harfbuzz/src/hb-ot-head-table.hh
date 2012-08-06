@@ -54,7 +54,7 @@ struct head
     return TRACE_RETURN (c->check_struct (this) && likely (version.major == 1));
   }
 
-  private:
+  protected:
   FixedVersion	version;		/* Version of the head table--currently
 					 * 0x00010000 for version 1.0. */
   FixedVersion	fontRevision;		/* Set by font manufacturer. */

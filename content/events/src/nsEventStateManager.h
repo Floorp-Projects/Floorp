@@ -17,7 +17,6 @@
 #include "nsIDocument.h"
 #include "nsCOMArray.h"
 #include "nsIFrameLoader.h"
-#include "nsIFrame.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIScrollableFrame.h"
@@ -26,6 +25,7 @@
 #include "nsEventStates.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentUtils.h"
+#include "nsIFrame.h"
 
 class nsIPresShell;
 class nsIDocShell;
@@ -34,6 +34,7 @@ class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
 class MouseEnterLeaveDispatcher;
+class nsIFrame;
 
 namespace mozilla {
 namespace dom {

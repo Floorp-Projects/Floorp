@@ -91,7 +91,7 @@ struct PrimitiveConversionTraits<int64_t> {
   typedef int64_t jstype;
   typedef int64_t intermediateType;
   static inline bool converter(JSContext* cx, JS::Value v, jstype* retval) {
-    return xpc::ValueToInt64(cx, v, retval);
+    return JS::ToInt64(cx, v, retval);
   }
 };
 
@@ -100,7 +100,7 @@ struct PrimitiveConversionTraits<uint64_t> {
   typedef uint64_t jstype;
   typedef uint64_t intermediateType;
   static inline bool converter(JSContext* cx, JS::Value v, jstype* retval) {
-    return xpc::ValueToUint64(cx, v, retval);
+    return JS::ToUint64(cx, v, retval);
   }
 };
 

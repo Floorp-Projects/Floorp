@@ -27,7 +27,7 @@
 
         <LinearLayout android:layout_width="fill_parent"
                       android:layout_height="fill_parent"
-                      android:layout_marginRight="12dip">
+                      android:layout_marginRight="15dip">
 
             <TextView android:id="@+id/title"
                       android:layout_width="wrap_content"

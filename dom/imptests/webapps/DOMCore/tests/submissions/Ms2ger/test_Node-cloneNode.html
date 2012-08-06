@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<title>Node.cloneNode</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+test(function() {
+  var el = document.createElement("foo");
+  el.appendChild(document.createElement("bar"));
+  el.setAttribute("a", "b");
+  el.setAttribute("c", "d");
+  var c = el.cloneNode(false);
+  assert_true(c.attributes != el.attributes);
+  assert_true(c.attributes !== el.attributes);
+  assert_equals(c.attributes.length, el.attributes.length);
+  for (var i = 0, il = el.attributes.length; i < il; ++i) {
+    assert_not_equals(c.attributes[i], el.attributes[i]);
+    assert_equals(c.attributes[i].name, el.attributes[i].name);
+    assert_equals(c.attributes[i].prefix, el.attributes[i].prefix);
+    assert_equals(c.attributes[i].namespaceURI, el.attributes[i].namespaceURI);
+    assert_equals(c.attributes[i].value, el.attributes[i].value);
+  }
+  assert_equals(c.childNodes.length, 0);
+})
+</script>

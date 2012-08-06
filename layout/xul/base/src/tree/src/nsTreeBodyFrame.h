@@ -101,7 +101,6 @@ public:
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
 
-  // nsIBox
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowArea = false);

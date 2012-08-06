@@ -7,7 +7,7 @@
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMError.h"
-#include "nsIDOMNSEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsDOMWindowUtils.h"
 #include "nsQueryContentEventResult.h"
 #include "nsGlobalWindow.h"

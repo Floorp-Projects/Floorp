@@ -1379,7 +1379,7 @@ var NativeWindow = {
       }
 
       // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
-      if (this.menuitems) {
+      if (!this.textContext.matches(element) && this.menuitems) {
         let event = rootElement.ownerDocument.createEvent("MouseEvent");
         event.initMouseEvent("contextmenu", true, true, content,
                              0, aX, aY, aX, aY, false, false, false, false,
@@ -1522,6 +1522,17 @@ var SelectionHandler = {
     this._viewRef = Cu.getWeakReference(aView);
   },
 
+  // The target can be a window or an input element
+  get _target() {
+    if (this._targetRef)
+      return this._targetRef.get();
+    return null;
+  },
+
+  set _target(aTarget) {
+    this._targetRef = Cu.getWeakReference(aTarget);
+  },
+
   get _cwu() {
     return BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
                                                     getInterface(Ci.nsIDOMWindowUtils);
@@ -1645,23 +1656,25 @@ var SelectionHandler = {
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
+
+    if (aElement instanceof Ci.nsIDOMNSEditableElement)
+      this._target = aElement;
+    else
+      this._target = this._view;
+
     this._view.addEventListener("pagehide", this, false);
     this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
-    let selection = this._view.getSelection();
+    let selection = this.getSelection();
     selection.removeAllRanges();
 
     // Position the caret using a fake mouse click sent to the top-level window
     this._sendMouseEvents(aX, aY, false);
 
     try {
-      let selectionController = this._view.QueryInterface(Ci.nsIInterfaceRequestor).
-                                           getInterface(Ci.nsIWebNavigation).
-                                           QueryInterface(Ci.nsIInterfaceRequestor).
-                                           getInterface(Ci.nsISelectionDisplay).
-                                           QueryInterface(Ci.nsISelectionController);
+      let selectionController = this.getSelectionController();
 
       // Select the word nearest the caret
       selectionController.wordMove(false, false);
@@ -1691,6 +1704,24 @@ var SelectionHandler = {
     this._active = true;
   },
 
+  getSelection: function sh_getSelection() {
+    if (this._target instanceof Ci.nsIDOMNSEditableElement)
+      return this._target.QueryInterface(Ci.nsIDOMNSEditableElement).editor.selection;
+    else
+      return this._target.getSelection();
+  },
+
+  getSelectionController: function sh_getSelectionController() {
+    if (this._target instanceof Ci.nsIDOMNSEditableElement)
+      return this._target.QueryInterface(Ci.nsIDOMNSEditableElement).editor.selectionController;
+    else
+      return this._target.QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsIWebNavigation).
+                          QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsISelectionDisplay).
+                          QueryInterface(Ci.nsISelectionController);
+  },
+
   showContextMenu: function sh_showContextMenu(aX, aY) {
     let [SELECT_ALL, COPY, SHARE] = [0, 1, 2];
     let listitems = [
@@ -1710,11 +1741,7 @@ var SelectionHandler = {
 
     switch (id) {
       case SELECT_ALL: {
-        let selectionController = this._view.QueryInterface(Ci.nsIInterfaceRequestor).
-                                             getInterface(Ci.nsIWebNavigation).
-                                             QueryInterface(Ci.nsIInterfaceRequestor).
-                                             getInterface(Ci.nsISelectionDisplay).
-                                             QueryInterface(Ci.nsISelectionController);
+        let selectionController = this.getSelectionController();
         selectionController.selectAll();
         this.updateCacheForSelection();
         this.positionHandles();
@@ -1786,7 +1813,7 @@ var SelectionHandler = {
     let selectedText = "";
     let pointInSelection = false;
     if (this._view) {
-      let selection = this._view.getSelection();
+      let selection = this.getSelection();
       if (selection) {
         // Get the text before we clear the selection!
         selectedText = selection.toString().trim();
@@ -1813,6 +1840,7 @@ var SelectionHandler = {
 
     this._view.removeEventListener("pagehide", this, false);
     this._view = null;
+    this._target = null;
     this._isRTL = false;
     this.cache = null;
 
@@ -1837,7 +1865,7 @@ var SelectionHandler = {
 
   _pointInSelection: function sh_pointInSelection(aX, aY) {
     let offset = this._getViewOffset();
-    let rangeRect = this._view.getSelection().getRangeAt(0).getBoundingClientRect();
+    let rangeRect = this.getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
     return (aX - offset.x > rangeRect.left - radius.left &&
             aX - offset.x < rangeRect.right + radius.right &&
@@ -1848,7 +1876,8 @@ var SelectionHandler = {
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
   // param to decide whether the selection has been reversed.
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
-    let rects = this._view.getSelection().getRangeAt(0).getClientRects();
+    let selection = this.getSelection();
+    let rects = selection.getRangeAt(0).getClientRects();
     let start = { x: rects[0].left, y: rects[0].bottom };
     let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
@@ -1871,6 +1900,7 @@ var SelectionHandler = {
     let offset = this._getViewOffset();
     let scrollX = {}, scrollY = {};
     this._view.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
+
     sendMessageToJava({
       gecko: {
         type: "TextSelection:PositionHandles",

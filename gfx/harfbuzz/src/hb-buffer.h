@@ -40,9 +40,9 @@
 HB_BEGIN_DECLS
 
 
-typedef struct _hb_buffer_t hb_buffer_t;
+typedef struct hb_buffer_t hb_buffer_t;
 
-typedef struct _hb_glyph_info_t {
+typedef struct hb_glyph_info_t {
   hb_codepoint_t codepoint;
   hb_mask_t      mask;
   uint32_t       cluster;
@@ -52,7 +52,7 @@ typedef struct _hb_glyph_info_t {
   hb_var_int_t   var2;
 } hb_glyph_info_t;
 
-typedef struct _hb_glyph_position_t {
+typedef struct hb_glyph_position_t {
   hb_position_t  x_advance;
   hb_position_t  y_advance;
   hb_position_t  x_offset;
@@ -121,13 +121,13 @@ hb_buffer_get_language (hb_buffer_t *buffer);
 void
 hb_buffer_reset (hb_buffer_t *buffer);
 
-/* Returns FALSE if allocation failed */
+/* Returns false if allocation failed */
 hb_bool_t
 hb_buffer_pre_allocate (hb_buffer_t  *buffer,
 		        unsigned int  size);
 
 
-/* Returns FALSE if allocation has failed before */
+/* Returns false if allocation has failed before */
 hb_bool_t
 hb_buffer_allocation_successful (hb_buffer_t  *buffer);
 
@@ -191,6 +191,19 @@ hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
 hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
                                unsigned int *length);
+
+
+/* Reorders a glyph buffer to have canonical in-cluster glyph order / position.
+ * The resulting clusters should behave identical to pre-reordering clusters.
+ * NOTE: This has nothing to do with Unicode normalization. */
+void
+hb_buffer_normalize_glyphs (hb_buffer_t *buffer);
+
+/*
+ * NOT IMPLEMENTED
+void
+hb_buffer_normalize_characters (hb_buffer_t *buffer);
+*/
 
 
 HB_END_DECLS

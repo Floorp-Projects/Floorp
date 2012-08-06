@@ -186,7 +186,6 @@ destroying the nsBuiltinDecoder object.
 #include "nsIThread.h"
 #include "nsIChannel.h"
 #include "nsIObserver.h"
-#include "nsIFrame.h"
 #include "nsAutoPtr.h"
 #include "nsSize.h"
 #include "prlog.h"

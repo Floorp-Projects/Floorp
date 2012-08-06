@@ -20,9 +20,9 @@
 #include "nsIChannelEventSink.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
-#include "nsIFrame.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsIThreadInternal.h"
+#include "nsIFrame.h"
 
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;

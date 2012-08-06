@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(6ed26570-b640-11e1-afa6-0800200c9a66)]
+[scriptable, builtinclass, uuid(b05dd60a-bfb8-4428-982e-c7f20e77b673)]
 interface nsIDOMMozContactChangeEvent : nsIDOMEvent
 {
   readonly attribute DOMString contactID;

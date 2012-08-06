@@ -1,8 +1,7 @@
-/*
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -21,16 +20,16 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function tm_gLogEnabled() {
 });
 
 /**
-#  Gets a preference value, handling the case where there is no default.
-#  @param   func
-#           The name of the preference function to call, on nsIPrefBranch
-#  @param   preference
-#           The name of the preference
-#  @param   defaultValue
-#           The default value to return in the event the preference has
-#           no setting
-#  @returns The value of the preference, or undefined if there was no
-#           user or default value.
+ *  Gets a preference value, handling the case where there is no default.
+ *  @param   func
+ *           The name of the preference function to call, on nsIPrefBranch
+ *  @param   preference
+ *           The name of the preference
+ *  @param   defaultValue
+ *           The default value to return in the event the preference has
+ *           no setting
+ *  @returns The value of the preference, or undefined if there was no
+ *           user or default value.
  */
 function getPref(func, preference, defaultValue) {
   try {
@@ -42,9 +41,9 @@ function getPref(func, preference, defaultValue) {
 }
 
 /**
-#  Logs a string to the error console.
-#  @param   string
-#           The string to write to the error console.
+ *  Logs a string to the error console.
+ *  @param   string
+ *           The string to write to the error console.
  */
 function LOG(string) {
   if (gLogEnabled) {
@@ -54,9 +53,9 @@ function LOG(string) {
 }
 
 /**
-#  A manager for timers. Manages timers that fire over long periods of time
-#  (e.g. days, weeks, months).
-#  @constructor
+ *  A manager for timers. Manages timers that fire over long periods of time
+ *  (e.g. days, weeks, months).
+ *  @constructor
  */
 function TimerManager() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -68,9 +67,9 @@ TimerManager.prototype = {
   _timer: null,
 
   /**
-#    The Checker Timer minimum delay interval as specified by the
-#    app.update.timerMinimumDelay pref. If the app.update.timerMinimumDelay
-#    pref doesn't exist this will default to 120000.
+ *    The Checker Timer minimum delay interval as specified by the
+ *    app.update.timerMinimumDelay pref. If the app.update.timerMinimumDelay
+ *    pref doesn't exist this will default to 120000.
    */
    _timerMinimumDelay: null,
 
@@ -117,14 +116,14 @@ TimerManager.prototype = {
   },
 
   /**
-#    Called when the checking timer fires.
-#
-#    We only fire one notification each time, so that the operations are
-#    staggered. We don't want too many to happen at once, which could
-#    negatively impact responsiveness.
-#
-#    @param   timer
-#             The checking timer that fired.
+   * Called when the checking timer fires.
+   *
+   * We only fire one notification each time, so that the operations are
+   * staggered. We don't want too many to happen at once, which could
+   * negatively impact responsiveness.
+   *
+   * @param   timer
+   *          The checking timer that fired.
    */
   notify: function TM_notify(timer) {
     var nextDelay = null;

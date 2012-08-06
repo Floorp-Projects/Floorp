@@ -108,7 +108,7 @@ static const void *hb_gr_get_table (const void *data, unsigned int tag, size_t *
 
 static float hb_gr_get_advance (const void *hb_font, unsigned short gid)
 {
-  return hb_font_get_glyph_h_advance ((hb_font_t *) hb_font, gid);
+  return ((hb_font_t *) font)->get_glyph_h_advance (gid);
 }
 
 static void _hb_gr_face_data_destroy (void *data)
@@ -159,7 +159,7 @@ _hb_gr_face_get_data (hb_face_t *face)
 
   if (unlikely (!hb_face_set_user_data (face, &hb_gr_data_key, data,
 					(hb_destroy_func_t) _hb_gr_face_data_destroy,
-					FALSE)))
+					false)))
   {
     _hb_gr_face_data_destroy (data);
     data = (hb_gr_face_data_t *) hb_face_get_user_data (face, &hb_gr_data_key);
@@ -191,14 +191,12 @@ _hb_gr_font_get_data (hb_font_t *font)
   }
 
   data->grface = _hb_gr_face_get_data (font->face)->grface;
-  int scale;
-  hb_font_get_scale (font, &scale, NULL);
-  data->grfont = gr_make_font_with_advance_fn (scale, font, &hb_gr_get_advance, data->grface);
+  data->grfont = gr_make_font_with_advance_fn (font->x_scale, font, &hb_gr_get_advance, data->grface);
 
 
   if (unlikely (!hb_font_set_user_data (font, &hb_gr_data_key, data,
 					(hb_destroy_func_t) _hb_gr_font_data_destroy,
-					FALSE)))
+					false)))
   {
     _hb_gr_font_data_destroy (data);
     data = (hb_gr_font_data_t *) hb_font_get_user_data (font, &hb_gr_data_key);
@@ -225,14 +223,14 @@ _hb_graphite_shape (hb_font_t          *font,
    * is not graphite!  Shouldn't do. */
 
   hb_gr_font_data_t *data = _hb_gr_font_get_data (font);
-  if (!data->grface) return FALSE;
+  if (!data->grface) return false;
 
   unsigned int charlen;
   hb_glyph_info_t *bufferi = hb_buffer_get_glyph_infos (buffer, &charlen);
 
   int success = 0;
 
-  if (!charlen) return TRUE;
+  if (!charlen) return true;
 
   const char *lang = hb_language_to_string (hb_buffer_get_language (buffer));
   const char *lang_end = strchr (lang, '-');

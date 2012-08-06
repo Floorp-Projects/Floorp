@@ -10,7 +10,6 @@
 #include "nsStackLayout.h"
 #include "nsIGridPart.h"
 #include "nsCOMPtr.h"
-#include "nsIFrame.h"
 
 class nsGridRowGroupLayout;
 class nsGridRowLayout;
@@ -56,7 +55,7 @@ public:
 
   void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, bool aIsHorizontal = true);
   void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, bool aIsHorizontal = true);
-  void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
+  void DirtyRows(nsIFrame* aRowBox, nsBoxLayoutState& aState);
 #ifdef DEBUG_grid
   void PrintCellMap();
 #endif
@@ -64,16 +63,16 @@ public:
   PRInt32 GetExtraRowCount(bool aIsHorizontal = true);
 
 // accessors
-  void SetBox(nsIBox* aBox) { mBox = aBox; }
-  nsIBox* GetBox() { return mBox; }
-  nsIBox* GetRowsBox() { return mRowsBox; }
-  nsIBox* GetColumnsBox() { return mColumnsBox; }
+  void SetBox(nsIFrame* aBox) { mBox = aBox; }
+  nsIFrame* GetBox() { return mBox; }
+  nsIFrame* GetRowsBox() { return mRowsBox; }
+  nsIFrame* GetColumnsBox() { return mColumnsBox; }
   PRInt32 GetRowCount(PRInt32 aIsHorizontal = true);
   PRInt32 GetColumnCount(PRInt32 aIsHorizontal = true);
 
-  static nsIBox* GetScrolledBox(nsIBox* aChild);
-  static nsIBox* GetScrollBox(nsIBox* aChild);
-  static nsIGridPart* GetPartFromBox(nsIBox* aBox);
+  static nsIFrame* GetScrolledBox(nsIFrame* aChild);
+  static nsIFrame* GetScrollBox(nsIFrame* aChild);
+  static nsIGridPart* GetPartFromBox(nsIFrame* aBox);
   void GetFirstAndLastRow(nsBoxLayoutState& aState, 
                           PRInt32& aFirstIndex, 
                           PRInt32& aLastIndex, 
@@ -83,20 +82,20 @@ public:
 
 private:
 
-  nsMargin GetBoxTotalMargin(nsIBox* aBox, bool aIsHorizontal = true);
+  nsMargin GetBoxTotalMargin(nsIFrame* aBox, bool aIsHorizontal = true);
 
   void FreeMap();
-  void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
-  void BuildRows(nsIBox* aBox, PRInt32 aSize, nsGridRow** aColumnsRows, bool aIsHorizontal = true);
+  void FindRowsAndColumns(nsIFrame** aRows, nsIFrame** aColumns);
+  void BuildRows(nsIFrame* aBox, PRInt32 aSize, nsGridRow** aColumnsRows, bool aIsHorizontal = true);
   nsGridCell* BuildCellMap(PRInt32 aRows, PRInt32 aColumns);
   void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, bool aIsHorizontal = true);
-  void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   void SetLargestSize(nsSize& aSize, nscoord aHeight, bool aIsHorizontal = true);
   void SetSmallestSize(nsSize& aSize, nscoord aHeight, bool aIsHorizontal = true);
-  bool IsGrid(nsIBox* aBox);
+  bool IsGrid(nsIFrame* aBox);
 
   // the box that implement the <grid> tag
-  nsIBox* mBox;
+  nsIFrame* mBox;
 
   // an array of row object
   nsGridRow* mRows;
@@ -105,10 +104,10 @@ private:
   nsGridRow* mColumns;
 
   // the first in the <grid> that implements the <rows> tag.
-  nsIBox* mRowsBox;
+  nsIFrame* mRowsBox;
 
   // the first in the <grid> that implements the <columns> tag.
-  nsIBox* mColumnsBox;
+  nsIFrame* mColumnsBox;
 
   // a flag that is false tells us to rebuild the who grid
   bool mNeedsRebuild;

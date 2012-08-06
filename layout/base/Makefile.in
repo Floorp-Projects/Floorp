@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -40,8 +40,7 @@ EXPORTS		= \
 		nsDisplayList.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
-		nsFrameTraversal.h \
-		nsIFrameTraversal.h \
+		nsFrameIterator.h \
 		nsILayoutDebugger.h \
 		nsILayoutHistoryState.h \
 		nsIPercentHeightObserver.h  \
@@ -77,7 +76,7 @@ CPPSRCS		= \
 		nsDisplayList.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameManager.cpp \
-		nsFrameTraversal.cpp \
+		nsFrameIterator.cpp \
 		nsGenConList.cpp \
 		nsImageLoader.cpp \
 		nsLayoutDebugger.cpp \

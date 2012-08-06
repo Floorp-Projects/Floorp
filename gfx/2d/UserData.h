@@ -82,6 +82,16 @@ public:
     return NULL;
   }
 
+  bool Has(UserDataKey *key)
+  {
+    for (int i=0; i<count; i++) {
+      if (key == entries[i].key) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void Destroy()
   {
     for (int i=0; i<count; i++) {

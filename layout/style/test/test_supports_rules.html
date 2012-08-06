@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=649740
     @supports ((color: green)) { }
     @supports (color: green) and (color: blue) { }
     @supports ( Font:  20px serif ! Important)  { }
-    @supports(a:) { }
   </style>
 </head>
 <body>
@@ -38,7 +37,6 @@ is(condition(sheet.cssRules[1].cssText), "(color: green)");
 is(condition(sheet.cssRules[2].cssText), "((color: green))");
 is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
 is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
-is(condition(sheet.cssRules[5].cssText), "(a:)");
 </script>
 </pre>
 </body>

@@ -227,6 +227,7 @@ static dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(COPYFILE_XATTR),
   INT_CONSTANT(COPYFILE_STAT),
   INT_CONSTANT(COPYFILE_ACL),
+  INT_CONSTANT(COPYFILE_MOVE),
 #endif // defined(COPYFILE_DATA)
 
   // error values

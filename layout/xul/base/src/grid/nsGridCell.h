@@ -13,10 +13,9 @@
 #ifndef nsGridCell_h___
 #define nsGridCell_h___
 
-#include "nsIFrame.h"
-
 class nsBoxLayoutState;
 struct nsSize;
+class nsIFrame;
 
 /*
  * Grid cell is what makes up the cellmap in the grid. Each GridCell contains
@@ -38,14 +37,14 @@ public:
     bool        IsCollapsed();
 
 // accessors
-    nsIBox*     GetBoxInColumn()             { return mBoxInColumn; }
-    nsIBox*     GetBoxInRow()                { return mBoxInRow; }
-    void        SetBoxInRow(nsIBox* aBox)    { mBoxInRow = aBox; }
-    void        SetBoxInColumn(nsIBox* aBox) { mBoxInColumn = aBox; }
+    nsIFrame*   GetBoxInColumn()               { return mBoxInColumn; }
+    nsIFrame*   GetBoxInRow()                  { return mBoxInRow; }
+    void        SetBoxInRow(nsIFrame* aBox)    { mBoxInRow = aBox; }
+    void        SetBoxInColumn(nsIFrame* aBox) { mBoxInColumn = aBox; }
 
 private:
-    nsIBox* mBoxInColumn;
-    nsIBox* mBoxInRow;
+    nsIFrame* mBoxInColumn;
+    nsIFrame* mBoxInRow;
 };
 
 #endif

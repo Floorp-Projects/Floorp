@@ -16,7 +16,6 @@ class nsTextBoxFrame : public nsTextBoxFrameSuper
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  // nsIBox
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);

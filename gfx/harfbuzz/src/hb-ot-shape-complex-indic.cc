@@ -25,66 +25,111 @@
  */
 
 #include "hb-ot-shape-complex-indic-private.hh"
-#include "hb-ot-shape-private.hh"
+#include "hb-ot-layout-private.hh"
 
-static const struct indic_options_t
+
+/*
+ * Global Indic shaper options.
+ */
+
+struct indic_options_t
 {
-  indic_options_t (void)
-  {
-    char *c = getenv ("HB_OT_INDIC_OPTIONS");
-    uniscribe_bug_compatible = c && strstr (c, "uniscribe-bug-compatible");
+  int initialized : 1;
+  int uniscribe_bug_compatible : 1;
+};
+
+union indic_options_union_t {
+  int i;
+  indic_options_t opts;
+};
+ASSERT_STATIC (sizeof (int) == sizeof (indic_options_union_t));
+
+static indic_options_union_t
+indic_options_init (void)
+{
+  indic_options_union_t u;
+  u.i = 0;
+  u.opts.initialized = 1;
+
+  char *c = getenv ("HB_OT_INDIC_OPTIONS");
+  u.opts.uniscribe_bug_compatible = c && strstr (c, "uniscribe-bug-compatible");
+
+  return u;
+}
+
+inline indic_options_t
+indic_options (void)
+{
+  static indic_options_union_t options;
+
+  if (unlikely (!options.i)) {
+    /* This is idempotent and threadsafe. */
+    options = indic_options_init ();
   }
 
-  bool uniscribe_bug_compatible;
-} options;
-
-static int
-compare_codepoint (const void *pa, const void *pb)
-{
-  hb_codepoint_t a = * (hb_codepoint_t *) pa;
-  hb_codepoint_t b = * (hb_codepoint_t *) pb;
-
-  return a < b ? -1 : a == b ? 0 : +1;
+  return options.opts;
 }
 
-static indic_position_t
-consonant_position (hb_codepoint_t u)
+
+/*
+ * Indic configurations.  Note that we do not want to keep every single script-specific
+ * behavior in these tables necessarily.  This should mainly be used for per-script
+ * properties that are cheaper keeping here, than in the code.  Ie. if, say, one and
+ * only one script has an exception, that one script can be if'ed directly in the code,
+ * instead of adding a new flag in these structs.
+ */
+
+enum base_position_t {
+  BASE_POS_FIRST,
+  BASE_POS_LAST
+};
+enum reph_position_t {
+  REPH_POS_DEFAULT     = POS_BEFORE_POST,
+
+  REPH_POS_AFTER_MAIN  = POS_AFTER_MAIN,
+  REPH_POS_BEFORE_SUB  = POS_BEFORE_SUB,
+  REPH_POS_AFTER_SUB   = POS_AFTER_SUB,
+  REPH_POS_BEFORE_POST = POS_BEFORE_POST,
+  REPH_POS_AFTER_POST  = POS_AFTER_POST
+};
+enum reph_mode_t {
+  REPH_MODE_IMPLICIT,  /* Reph formed out of initial Ra,H sequence. */
+  REPH_MODE_EXPLICIT,  /* Reph formed out of initial Ra,H,ZWJ sequence. */
+  REPH_MODE_VIS_REPHA, /* Encoded Repha character, no reordering needed. */
+  REPH_MODE_LOG_REPHA  /* Encoded Repha character, needs reordering. */
+};
+struct indic_config_t
 {
-  consonant_position_t *record;
+  hb_script_t     script;
+  bool            has_old_spec;
+  hb_codepoint_t  virama;
+  base_position_t base_pos;
+  reph_position_t reph_pos;
+  reph_mode_t     reph_mode;
+};
 
-  record = (consonant_position_t *) bsearch (&u, consonant_positions,
-					     ARRAY_LENGTH (consonant_positions),
-					     sizeof (consonant_positions[0]),
-					     compare_codepoint);
-
-  return record ? record->position : POS_BASE_C;
-}
-
-static bool
-is_ra (hb_codepoint_t u)
+static const indic_config_t indic_configs[] =
 {
-  return !!bsearch (&u, ra_chars,
-		    ARRAY_LENGTH (ra_chars),
-		    sizeof (ra_chars[0]),
-		    compare_codepoint);
-}
+  /* Default.  Should be first. */
+  {HB_SCRIPT_INVALID,	false,     0,BASE_POS_LAST, REPH_POS_DEFAULT,    REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_DEVANAGARI,true, 0x094D,BASE_POS_LAST, REPH_POS_BEFORE_POST,REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_BENGALI,	true, 0x09CD,BASE_POS_LAST, REPH_POS_AFTER_SUB,  REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_GURMUKHI,	true, 0x0A4D,BASE_POS_LAST, REPH_POS_BEFORE_SUB, REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_GUJARATI,	true, 0x0ACD,BASE_POS_LAST, REPH_POS_BEFORE_POST,REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_ORIYA,	true, 0x0B4D,BASE_POS_LAST, REPH_POS_AFTER_MAIN, REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_TAMIL,	true, 0x0BCD,BASE_POS_LAST, REPH_POS_AFTER_POST, REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_TELUGU,	true, 0x0C4D,BASE_POS_LAST, REPH_POS_AFTER_POST, REPH_MODE_EXPLICIT},
+  {HB_SCRIPT_KANNADA,	true, 0x0CCD,BASE_POS_LAST, REPH_POS_AFTER_POST, REPH_MODE_IMPLICIT},
+  {HB_SCRIPT_MALAYALAM,	true, 0x0D4D,BASE_POS_LAST, REPH_POS_AFTER_MAIN, REPH_MODE_LOG_REPHA},
+  {HB_SCRIPT_SINHALA,	false,0x0DCA,BASE_POS_FIRST,REPH_POS_AFTER_MAIN, REPH_MODE_EXPLICIT},
+  {HB_SCRIPT_KHMER,	false,0x17D2,BASE_POS_FIRST,REPH_POS_DEFAULT,    REPH_MODE_VIS_REPHA},
+};
 
-static bool
-is_joiner (const hb_glyph_info_t &info)
-{
-  return !!(FLAG (info.indic_category()) & (FLAG (OT_ZWJ) | FLAG (OT_ZWNJ)));
-}
 
-static bool
-is_consonant (const hb_glyph_info_t &info)
-{
-  /* Note:
-   *
-   * We treat Vowels and placeholders as if they were consonants.  This is safe because Vowels
-   * cannot happen in a consonant syllable.  The plus side however is, we can call the
-   * consonant syllable logic from the vowel syllable function and get it all right! */
-  return !!(FLAG (info.indic_category()) & (FLAG (OT_C) | FLAG (OT_Ra) | FLAG (OT_V) | FLAG (OT_NBSP) | FLAG (OT_DOTTEDCIRCLE)));
-}
+
+/*
+ * Indic shaper.
+ */
 
 struct feature_list_t {
   hb_tag_t tag;
@@ -92,103 +137,220 @@ struct feature_list_t {
 };
 
 static const feature_list_t
-indic_basic_features[] =
+indic_features[] =
 {
+  /*
+   * Basic features.
+   * These features are applied in order, one at a time, after initial_reordering.
+   */
   {HB_TAG('n','u','k','t'), true},
-  {HB_TAG('a','k','h','n'), false},
+  {HB_TAG('a','k','h','n'), true},
   {HB_TAG('r','p','h','f'), false},
   {HB_TAG('r','k','r','f'), true},
   {HB_TAG('p','r','e','f'), false},
   {HB_TAG('b','l','w','f'), false},
   {HB_TAG('h','a','l','f'), false},
+  {HB_TAG('a','b','v','f'), false},
   {HB_TAG('p','s','t','f'), false},
-  {HB_TAG('c','j','c','t'), false},
+  {HB_TAG('c','f','a','r'), false},
+  {HB_TAG('c','j','c','t'), true},
   {HB_TAG('v','a','t','u'), true},
-};
-
-/* Same order as the indic_basic_features array */
-enum {
-  _NUKT,
-  AKHN,
-  RPHF,
-  _RKRF,
-  PREF,
-  BLWF,
-  HALF,
-  PSTF,
-  CJCT,
-  VATU
-};
-
-static const feature_list_t
-indic_other_features[] =
-{
+  /*
+   * Other features.
+   * These features are applied all at once, after final_reordering.
+   */
   {HB_TAG('i','n','i','t'), false},
   {HB_TAG('p','r','e','s'), true},
   {HB_TAG('a','b','v','s'), true},
   {HB_TAG('b','l','w','s'), true},
   {HB_TAG('p','s','t','s'), true},
   {HB_TAG('h','a','l','n'), true},
-
+  /* Positioning features, though we don't care about the types. */
   {HB_TAG('d','i','s','t'), true},
   {HB_TAG('a','b','v','m'), true},
   {HB_TAG('b','l','w','m'), true},
 };
 
-/* Same order as the indic_other_features array */
+/*
+ * Must be in the same order as the indic_features array.
+ */
 enum {
-  INIT
+  _NUKT,
+  _AKHN,
+  RPHF,
+  _RKRF,
+  PREF,
+  BLWF,
+  HALF,
+  ABVF,
+  PSTF,
+  CFAR,
+  _CJCT,
+  _VATU,
+
+  INIT,
+  _PRES,
+  _ABVS,
+  _BLWS,
+  _PSTS,
+  _HALN,
+  _DIST,
+  _ABVM,
+  _BLWM,
+
+  INDIC_NUM_FEATURES,
+  INDIC_BASIC_FEATURES = INIT /* Don't forget to update this! */
 };
 
+static void
+initial_reordering (const hb_ot_shape_plan_t *plan,
+		    hb_font_t *font,
+		    hb_buffer_t *buffer);
+static void
+final_reordering (const hb_ot_shape_plan_t *plan,
+		  hb_font_t *font,
+		  hb_buffer_t *buffer);
 
 static void
-initial_reordering (const hb_ot_map_t *map,
-		    hb_face_t *face,
-		    hb_buffer_t *buffer,
-		    void *user_data HB_UNUSED);
-static void
-final_reordering (const hb_ot_map_t *map,
-		  hb_face_t *face,
-		  hb_buffer_t *buffer,
-		  void *user_data HB_UNUSED);
-
-void
-_hb_ot_shape_complex_collect_features_indic (hb_ot_map_builder_t *map,
-					     const hb_segment_properties_t *props HB_UNUSED)
+collect_features_indic (hb_ot_shape_planner_t *plan)
 {
+  hb_ot_map_builder_t *map = &plan->map;
+
   map->add_bool_feature (HB_TAG('l','o','c','l'));
   /* The Indic specs do not require ccmp, but we apply it here since if
    * there is a use of it, it's typically at the beginning. */
   map->add_bool_feature (HB_TAG('c','c','m','p'));
 
-  map->add_gsub_pause (initial_reordering, NULL);
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH (indic_basic_features); i++) {
-    map->add_bool_feature (indic_basic_features[i].tag, indic_basic_features[i].is_global);
-    map->add_gsub_pause (NULL, NULL);
+  unsigned int i = 0;
+  map->add_gsub_pause (initial_reordering);
+  for (; i < INDIC_BASIC_FEATURES; i++) {
+    map->add_bool_feature (indic_features[i].tag, indic_features[i].is_global);
+    map->add_gsub_pause (NULL);
   }
-
-  map->add_gsub_pause (final_reordering, NULL);
-
-  for (unsigned int i = 0; i < ARRAY_LENGTH (indic_other_features); i++) {
-    map->add_bool_feature (indic_other_features[i].tag, indic_other_features[i].is_global);
-    map->add_gsub_pause (NULL, NULL);
+  map->add_gsub_pause (final_reordering);
+  for (; i < INDIC_NUM_FEATURES; i++) {
+    map->add_bool_feature (indic_features[i].tag, indic_features[i].is_global);
   }
 }
 
-
-hb_ot_shape_normalization_mode_t
-_hb_ot_shape_complex_normalization_preference_indic (void)
+static void
+override_features_indic (hb_ot_shape_planner_t *plan)
 {
-  /* We want split matras decomposed by the common shaping logic. */
-  return HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED;
+  /* Uniscribe does not apply 'kern'. */
+  if (indic_options ().uniscribe_bug_compatible)
+    plan->map.add_feature (HB_TAG('k','e','r','n'), 0, true);
 }
 
 
-void
-_hb_ot_shape_complex_setup_masks_indic (hb_ot_map_t *map HB_UNUSED,
-					hb_buffer_t *buffer,
-					hb_font_t *font HB_UNUSED)
+struct would_substitute_feature_t
+{
+  inline void init (const hb_ot_map_t *map, hb_tag_t feature_tag)
+  {
+    map->get_stage_lookups (0/*GSUB*/,
+			    map->get_feature_stage (0/*GSUB*/, feature_tag),
+			    &lookups, &count);
+  }
+
+  inline bool would_substitute (hb_codepoint_t    *glyphs,
+				unsigned int       glyphs_count,
+				hb_face_t         *face) const
+  {
+    for (unsigned int i = 0; i < count; i++)
+      if (hb_ot_layout_would_substitute_lookup_fast (face, glyphs, glyphs_count, lookups[i].index))
+	return true;
+    return false;
+  }
+
+  private:
+  const hb_ot_map_t::lookup_map_t *lookups;
+  unsigned int count;
+};
+
+struct indic_shape_plan_t
+{
+  ASSERT_POD ();
+
+  inline bool get_virama_glyph (hb_font_t *font, hb_codepoint_t *pglyph) const
+  {
+    hb_codepoint_t glyph = virama_glyph;
+    if (unlikely (virama_glyph == (hb_codepoint_t) -1))
+    {
+      if (!config->virama || !font->get_glyph (config->virama, 0, &glyph))
+	glyph = 0;
+      /* Technically speaking, the spec says we should apply 'locl' to virama too.
+       * Maybe one day... */
+
+      /* Our get_glyph() function needs a font, so we can't get the virama glyph
+       * during shape planning...  Instead, overwrite it here.  It's safe.  Don't worry! */
+      (const_cast<indic_shape_plan_t *> (this))->virama_glyph = glyph;
+    }
+
+    *pglyph = glyph;
+    return glyph != 0;
+  }
+
+  const indic_config_t *config;
+
+  bool is_old_spec;
+  hb_codepoint_t virama_glyph;
+
+  would_substitute_feature_t pref;
+  would_substitute_feature_t blwf;
+  would_substitute_feature_t pstf;
+
+  hb_mask_t mask_array[INDIC_NUM_FEATURES];
+};
+
+static void *
+data_create_indic (const hb_ot_shape_plan_t *plan)
+{
+  indic_shape_plan_t *indic_plan = (indic_shape_plan_t *) calloc (1, sizeof (indic_shape_plan_t));
+  if (unlikely (!indic_plan))
+    return NULL;
+
+  indic_plan->config = &indic_configs[0];
+  for (unsigned int i = 1; i < ARRAY_LENGTH (indic_configs); i++)
+    if (plan->props.script == indic_configs[i].script) {
+      indic_plan->config = &indic_configs[i];
+      break;
+    }
+
+  indic_plan->is_old_spec = indic_plan->config->has_old_spec && ((plan->map.get_chosen_script (0) & 0x000000FF) != '2');
+  indic_plan->virama_glyph = (hb_codepoint_t) -1;
+
+  indic_plan->pref.init (&plan->map, HB_TAG('p','r','e','f'));
+  indic_plan->blwf.init (&plan->map, HB_TAG('b','l','w','f'));
+  indic_plan->pstf.init (&plan->map, HB_TAG('p','s','t','f'));
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH (indic_plan->mask_array); i++)
+    indic_plan->mask_array[i] = indic_features[i].is_global ? 0 : plan->map.get_1_mask (indic_features[i].tag);
+
+  return indic_plan;
+}
+
+static void
+data_destroy_indic (void *data)
+{
+  free (data);
+}
+
+static indic_position_t
+consonant_position_from_face (const indic_shape_plan_t *indic_plan,
+			      hb_codepoint_t *glyphs, unsigned int glyphs_len,
+			      hb_face_t      *face)
+{
+  if (indic_plan->pref.would_substitute (glyphs, glyphs_len, face)) return POS_BELOW_C;
+  if (indic_plan->blwf.would_substitute (glyphs, glyphs_len, face)) return POS_BELOW_C;
+  if (indic_plan->pstf.would_substitute (glyphs, glyphs_len, face)) return POS_POST_C;
+  return POS_BASE_C;
+}
+
+
+static void
+setup_masks_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		   hb_buffer_t              *buffer,
+		   hb_font_t                *font HB_UNUSED)
 {
   HB_BUFFER_ALLOCATE_VAR (buffer, indic_category);
   HB_BUFFER_ALLOCATE_VAR (buffer, indic_position);
@@ -198,38 +360,7 @@ _hb_ot_shape_complex_setup_masks_indic (hb_ot_map_t *map HB_UNUSED,
 
   unsigned int count = buffer->len;
   for (unsigned int i = 0; i < count; i++)
-  {
-    hb_glyph_info_t &info = buffer->info[i];
-    unsigned int type = get_indic_categories (info.codepoint);
-
-    info.indic_category() = type & 0x0F;
-    info.indic_position() = type >> 4;
-
-    /* The spec says U+0952 is OT_A.  However, testing shows that Uniscribe
-     * treats U+0951..U+0952 all as OT_VD.
-     * TESTS:
-     * U+092E,U+0947,U+0952
-     * U+092E,U+0952,U+0947
-     * U+092E,U+0947,U+0951
-     * U+092E,U+0951,U+0947
-     * */
-    if (unlikely (hb_in_range<hb_codepoint_t> (info.codepoint, 0x0951, 0x0954)))
-      info.indic_category() = OT_VD;
-
-    if (info.indic_category() == OT_C) {
-      info.indic_position() = consonant_position (info.codepoint);
-      if (is_ra (info.codepoint))
-	info.indic_category() = OT_Ra;
-    } else if (info.indic_category() == OT_SM ||
-	       info.indic_category() == OT_VD) {
-      info.indic_position() = POS_SMVD;
-    } else if (unlikely (info.codepoint == 0x200C))
-      info.indic_category() = OT_ZWNJ;
-    else if (unlikely (info.codepoint == 0x200D))
-      info.indic_category() = OT_ZWJ;
-    else if (unlikely (info.codepoint == 0x25CC))
-      info.indic_category() = OT_DOTTEDCIRCLE;
-  }
+    set_indic_properties (buffer->info[i]);
 }
 
 static int
@@ -241,13 +372,38 @@ compare_indic_order (const hb_glyph_info_t *pa, const hb_glyph_info_t *pb)
   return a < b ? -1 : a == b ? 0 : +1;
 }
 
+
+
+static void
+update_consonant_positions (const hb_ot_shape_plan_t *plan,
+			    hb_font_t         *font,
+			    hb_buffer_t       *buffer)
+{
+  const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
+
+  unsigned int consonant_pos = indic_plan->is_old_spec ? 0 : 1;
+  hb_codepoint_t glyphs[2];
+  if (indic_plan->get_virama_glyph (font, &glyphs[1 - consonant_pos]))
+  {
+    hb_face_t *face = font->face;
+    unsigned int count = buffer->len;
+    for (unsigned int i = 0; i < count; i++)
+      if (buffer->info[i].indic_position() == POS_BASE_C) {
+	glyphs[consonant_pos] = buffer->info[i].codepoint;
+	buffer->info[i].indic_position() = consonant_position_from_face (indic_plan, glyphs, 2, face);
+      }
+  }
+}
+
+
 /* Rules from:
  * https://www.microsoft.com/typography/otfntdev/devanot/shaping.aspx */
 
 static void
-initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buffer, hb_mask_t *mask_array,
+initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan, hb_buffer_t *buffer,
 				       unsigned int start, unsigned int end)
 {
+  const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
   hb_glyph_info_t *info = buffer->info;
 
 
@@ -273,58 +429,115 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
      *    and has more than one consonant, Ra is excluded from candidates for
      *    base consonants. */
     unsigned int limit = start;
-    if (mask_array[RPHF] &&
+    if (indic_plan->mask_array[RPHF] &&
 	start + 3 <= end &&
 	info[start].indic_category() == OT_Ra &&
 	info[start + 1].indic_category() == OT_H &&
-	!is_joiner (info[start + 2]))
+	(/* TODO Handle other Reph modes. */
+	 (indic_plan->config->reph_mode == REPH_MODE_IMPLICIT && !is_joiner (info[start + 2])) ||
+	 (indic_plan->config->reph_mode == REPH_MODE_EXPLICIT && info[start + 2].indic_category() == OT_ZWJ)
+	))
     {
       limit += 2;
+      while (limit < end && is_joiner (info[limit]))
+        limit++;
       base = start;
       has_reph = true;
     };
 
-    /* -> starting from the end of the syllable, move backwards */
-    unsigned int i = end;
-    do {
-      i--;
-      /* -> until a consonant is found */
-      if (is_consonant (info[i]))
+    switch (indic_plan->config->base_pos == BASE_POS_LAST)
+    {
+      case BASE_POS_LAST:
       {
-	/* -> that does not have a below-base or post-base form
-	 * (post-base forms have to follow below-base forms), */
-	if (info[i].indic_position() != POS_BELOW_C &&
-	    info[i].indic_position() != POS_POST_C)
-	{
-	  base = i;
-	  break;
-	}
+	/* -> starting from the end of the syllable, move backwards */
+	unsigned int i = end;
+	bool seen_below = false;
+	do {
+	  i--;
+	  /* -> until a consonant is found */
+	  if (is_consonant (info[i]))
+	  {
+	    /* -> that does not have a below-base or post-base form
+	     * (post-base forms have to follow below-base forms), */
+	    if (info[i].indic_position() != POS_BELOW_C &&
+		(info[i].indic_position() != POS_POST_C || seen_below))
+	    {
+	      base = i;
+	      break;
+	    }
+	    if (info[i].indic_position() == POS_BELOW_C)
+	      seen_below = true;
 
-	/* -> or that is not a pre-base reordering Ra,
-	 *
-	 * TODO
-	 */
+	    /* -> or that is not a pre-base reordering Ra,
+	     *
+	     * IMPLEMENTATION NOTES:
+	     *
+	     * Our pre-base reordering Ra's are marked POS_BELOW, so will be skipped
+	     * by the logic above already.
+	     */
 
-	/* -> or arrive at the first consonant. The consonant stopped at will
-	 * be the base. */
-	base = i;
+	    /* -> or arrive at the first consonant. The consonant stopped at will
+	     * be the base. */
+	    base = i;
+	  }
+	  else
+	  {
+	    /* A ZWJ after a Halant stops the base search, and requests an explicit
+	     * half form.
+	     * A ZWJ before a Halant, requests a subjoined form instead, and hence
+	     * search continues.  This is particularly important for Bengali
+	     * sequence Ra,H,Ya that shouls form Ya-Phalaa by subjoining Ya. */
+	    if (start < i &&
+		info[i].indic_category() == OT_ZWJ &&
+		info[i - 1].indic_category() == OT_H)
+	      break;
+	  }
+	} while (i > limit);
       }
-      else
-	if (is_joiner (info[i]))
-	  break;
-    } while (i > limit);
-    if (base < start)
-      base = start; /* Just in case... */
+      break;
 
+      case BASE_POS_FIRST:
+      {
+	/* In scripts without half forms (eg. Khmer), the first consonant is always the base. */
+
+	if (!has_reph)
+	  base = limit;
+
+	/* Find the last base consonant that is not blocked by ZWJ.  If there is
+	 * a ZWJ right before a base consonant, that would request a subjoined form. */
+	for (unsigned int i = limit; i < end; i++)
+	  if (is_consonant (info[i]) && info[i].indic_position() == POS_BASE_C)
+	  {
+	    if (limit < i && info[i - 1].indic_category() == OT_ZWJ)
+	      break;
+	    else
+	      base = i;
+	  }
+
+	/* Mark all subsequent consonants as below. */
+	for (unsigned int i = base + 1; i < end; i++)
+	  if (is_consonant (info[i]) && info[i].indic_position() == POS_BASE_C)
+	    info[i].indic_position() = POS_BELOW_C;
+      }
+      break;
+
+      default:
+      abort ();
+    }
 
     /* -> If the syllable starts with Ra + Halant (in a script that has Reph)
      *    and has more than one consonant, Ra is excluded from candidates for
-     *    base consonants. */
-    if (has_reph && base == start) {
+     *    base consonants.
+     *
+     *  Only do this for unforced Reph. (ie. not for Ra,H,ZWJ. */
+    if (has_reph && base == start && start + 2 == limit) {
       /* Have no other consonant, so Reph is not formed and Ra becomes base. */
       has_reph = false;
     }
   }
+
+  if (base < end)
+    info[base].indic_position() = POS_BASE_C;
 
 
   /* 2. Decompose and reorder Matras:
@@ -362,8 +575,22 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
   /* Reorder characters */
 
   for (unsigned int i = start; i < base; i++)
-    info[i].indic_position() = POS_PRE_C;
-  info[base].indic_position() = POS_BASE_C;
+    info[i].indic_position() = MIN (POS_PRE_C, (indic_position_t) info[i].indic_position());
+
+  if (base < end)
+    info[base].indic_position() = POS_BASE_C;
+
+  /* Mark final consonants.  A final consonant is one appearing after a matra,
+   * like in Khmer. */
+  for (unsigned int i = base + 1; i < end; i++)
+    if (info[i].indic_category() == OT_M) {
+      for (unsigned int j = i + 1; j < end; j++)
+        if (is_consonant (info[j])) {
+	  info[j].indic_position() = POS_FINAL_C;
+	  break;
+	}
+      break;
+    }
 
   /* Handle beginning Ra */
   if (has_reph)
@@ -371,8 +598,7 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
 
   /* For old-style Indic script tags, move the first post-base Halant after
    * last consonant. */
-  if ((map->get_chosen_script (0) & 0x000000FF) != '2') {
-    /* We should only do this for Indic scripts which have a version two I guess. */
+  if (indic_plan->is_old_spec) {
     for (unsigned int i = base + 1; i < end; i++)
       if (info[i].indic_category() == OT_H) {
         unsigned int j;
@@ -389,34 +615,51 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
       }
   }
 
-  /* Attach ZWJ, ZWNJ, nukta, and halant to previous char to move with them. */
-  if (!options.uniscribe_bug_compatible)
+  /* Attach misc marks to previous char to move with them. */
   {
-    /* Please update the Uniscribe branch when touching this! */
-    for (unsigned int i = start + 1; i < end; i++)
-      if ((FLAG (info[i].indic_category()) & (FLAG (OT_ZWNJ) | FLAG (OT_ZWJ) | FLAG (OT_N) | FLAG (OT_H))))
-	info[i].indic_position() = info[i - 1].indic_position();
-  } else {
-    /*
-     * Uniscribe doesn't move the Halant with Left Matra.
-     * TEST: U+092B,U+093F,U+094DE
-     */
-    /* Please update the non-Uniscribe branch when touching this! */
-    for (unsigned int i = start + 1; i < end; i++)
-      if ((FLAG (info[i].indic_category()) & (FLAG (OT_ZWNJ) | FLAG (OT_ZWJ) | FLAG (OT_N) | FLAG (OT_H)))) {
-	info[i].indic_position() = info[i - 1].indic_position();
-	if (info[i].indic_category() == OT_H && info[i].indic_position() == POS_PRE_M)
+    indic_position_t last_pos = POS_START;
+    for (unsigned int i = start; i < end; i++)
+    {
+      if ((FLAG (info[i].indic_category()) & (JOINER_FLAGS | FLAG (OT_N) | FLAG (OT_RS) | HALANT_OR_COENG_FLAGS)))
+      {
+	info[i].indic_position() = last_pos;
+	if (unlikely (indic_options ().uniscribe_bug_compatible &&
+		      info[i].indic_category() == OT_H &&
+		      info[i].indic_position() == POS_PRE_M))
+	{
+	  /*
+	   * Uniscribe doesn't move the Halant with Left Matra.
+	   * TEST: U+092B,U+093F,U+094DE
+	   */
 	  for (unsigned int j = i; j > start; j--)
 	    if (info[j - 1].indic_position() != POS_PRE_M) {
 	      info[i].indic_position() = info[j - 1].indic_position();
 	      break;
 	    }
+	}
+      } else if (info[i].indic_position() != POS_SMVD) {
+        last_pos = (indic_position_t) info[i].indic_position();
+      }
+    }
+  }
+  /* Re-attach ZWJ, ZWNJ, and halant to next char, for after-base consonants. */
+  {
+    unsigned int last_halant = end;
+    for (unsigned int i = base + 1; i < end; i++)
+      if (is_halant_or_coeng (info[i]))
+        last_halant = i;
+      else if (is_consonant (info[i])) {
+	for (unsigned int j = last_halant; j < i; j++)
+	  if (info[j].indic_position() != POS_SMVD)
+	    info[j].indic_position() = info[i].indic_position();
       }
   }
 
-  /* We do bubble-sort, skip malicious clusters attempts */
-  if (end - start < 64)
   {
+    /* Things are out-of-control for post base positions, they may shuffle
+     * around like crazy, so merge clusters.  For pre-base stuff, we handle
+     * cluster issues in final reordering. */
+    buffer->merge_clusters (base, end);
     /* Sit tight, rock 'n roll! */
     hb_bubble_sort (info + start, end - start, compare_indic_order);
     /* Find base again */
@@ -435,19 +678,44 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
 
     /* Reph */
     for (unsigned int i = start; i < end && info[i].indic_position() == POS_RA_TO_BECOME_REPH; i++)
-      info[i].mask |= mask_array[RPHF];
+      info[i].mask |= indic_plan->mask_array[RPHF];
 
     /* Pre-base */
-    mask = mask_array[HALF] | mask_array[AKHN] | mask_array[CJCT];
+    mask = indic_plan->mask_array[HALF];
     for (unsigned int i = start; i < base; i++)
       info[i].mask  |= mask;
     /* Base */
-    mask = mask_array[AKHN] | mask_array[CJCT];
-    info[base].mask |= mask;
+    mask = 0;
+    if (base < end)
+      info[base].mask |= mask;
     /* Post-base */
-    mask = mask_array[BLWF] | mask_array[PSTF] | mask_array[CJCT];
+    mask = indic_plan->mask_array[BLWF] | indic_plan->mask_array[ABVF] | indic_plan->mask_array[PSTF];
     for (unsigned int i = base + 1; i < end; i++)
       info[i].mask  |= mask;
+  }
+
+  /* XXX This will not match for old-Indic spec since the Halant-Ra order is reversed already. */
+  if (indic_plan->mask_array[PREF] && base + 2 < end)
+  {
+    /* Find a Halant,Ra sequence and mark it for pre-base reordering processing. */
+    for (unsigned int i = base + 1; i + 1 < end; i++)
+      if (is_halant_or_coeng (info[i]) &&
+	  info[i + 1].indic_category() == OT_Ra)
+      {
+	info[i++].mask |= indic_plan->mask_array[PREF];
+	info[i++].mask |= indic_plan->mask_array[PREF];
+
+	/* Mark the subsequent stuff with 'cfar'.  Used in Khmer.
+	 * Read the feature spec.
+	 * This allows distinguishing the following cases with MS Khmer fonts:
+	 * U+1784,U+17D2,U+179A,U+17D2,U+1782
+	 * U+1784,U+17D2,U+1782,U+17D2,U+179A
+	 */
+	for (; i < end; i++)
+	  info[i].mask |= indic_plan->mask_array[CFAR];
+
+	break;
+      }
   }
 
   /* Apply ZWJ/ZWNJ effects */
@@ -459,9 +727,12 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
       do {
 	j--;
 
-	info[j].mask &= ~mask_array[CJCT];
+	/* A ZWJ disables CJCT, however, it's mere presence is enough
+	 * to disable ligation.  No explicit action needed. */
+
+	/* A ZWNJ disables HALF. */
 	if (non_joiner)
-	  info[j].mask &= ~mask_array[HALF];
+	  info[j].mask &= ~indic_plan->mask_array[HALF];
 
       } while (j > start && !is_consonant (info[j]));
     }
@@ -469,25 +740,23 @@ initial_reordering_consonant_syllable (const hb_ot_map_t *map, hb_buffer_t *buff
 
 
 static void
-initial_reordering_vowel_syllable (const hb_ot_map_t *map,
+initial_reordering_vowel_syllable (const hb_ot_shape_plan_t *plan,
 				   hb_buffer_t *buffer,
-				   hb_mask_t *mask_array,
 				   unsigned int start, unsigned int end)
 {
   /* We made the vowels look like consonants.  So let's call the consonant logic! */
-  initial_reordering_consonant_syllable (map, buffer, mask_array, start, end);
+  initial_reordering_consonant_syllable (plan, buffer, start, end);
 }
 
 static void
-initial_reordering_standalone_cluster (const hb_ot_map_t *map,
+initial_reordering_standalone_cluster (const hb_ot_shape_plan_t *plan,
 				       hb_buffer_t *buffer,
-				       hb_mask_t *mask_array,
 				       unsigned int start, unsigned int end)
 {
   /* We treat NBSP/dotted-circle as if they are consonants, so we should just chain.
    * Only if not in compatibility mode that is... */
 
-  if (options.uniscribe_bug_compatible)
+  if (indic_options ().uniscribe_bug_compatible)
   {
     /* For dotted-circle, this is what Uniscribe does:
      * If dotted-circle is the last glyph, it just does nothing.
@@ -496,13 +765,12 @@ initial_reordering_standalone_cluster (const hb_ot_map_t *map,
       return;
   }
 
-  initial_reordering_consonant_syllable (map, buffer, mask_array, start, end);
+  initial_reordering_consonant_syllable (plan, buffer, start, end);
 }
 
 static void
-initial_reordering_non_indic (const hb_ot_map_t *map HB_UNUSED,
+initial_reordering_non_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
 			      hb_buffer_t *buffer HB_UNUSED,
-			      hb_mask_t *mask_array HB_UNUSED,
 			      unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
 {
   /* Nothing to do right now.  If we ever switch to using the output
@@ -512,23 +780,20 @@ initial_reordering_non_indic (const hb_ot_map_t *map HB_UNUSED,
 #include "hb-ot-shape-complex-indic-machine.hh"
 
 static void
-initial_reordering (const hb_ot_map_t *map,
-		    hb_face_t *face HB_UNUSED,
-		    hb_buffer_t *buffer,
-		    void *user_data HB_UNUSED)
+initial_reordering (const hb_ot_shape_plan_t *plan,
+		    hb_font_t *font,
+		    hb_buffer_t *buffer)
 {
-  hb_mask_t mask_array[ARRAY_LENGTH (indic_basic_features)] = {0};
-  unsigned int num_masks = ARRAY_LENGTH (indic_basic_features);
-  for (unsigned int i = 0; i < num_masks; i++)
-    mask_array[i] = map->get_1_mask (indic_basic_features[i].tag);
-
-  find_syllables (map, buffer, mask_array);
+  update_consonant_positions (plan, font, buffer);
+  find_syllables (plan, buffer);
 }
 
 static void
-final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
+final_reordering_syllable (const hb_ot_shape_plan_t *plan,
+			   hb_buffer_t *buffer,
 			   unsigned int start, unsigned int end)
 {
+  const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
   hb_glyph_info_t *info = buffer->info;
 
   /* 4. Final reordering:
@@ -540,21 +805,14 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
    */
 
   /* Find base again */
-  unsigned int base = end;
-  for (unsigned int i = start; i < end; i++)
-    if (info[i].indic_position() == POS_BASE_C) {
-      base = i;
+  unsigned int base;
+  for (base = start; base < end; base++)
+    if (info[base].indic_position() >= POS_BASE_C) {
+      if (start < base && info[base].indic_position() > POS_BASE_C)
+        base--;
       break;
     }
 
-  if (base == start) {
-    /* There's no Reph, and no left Matra to reposition.  Just merge the cluster
-     * and go home. */
-    buffer->merge_clusters (start, end);
-    return;
-  }
-
-  unsigned int start_of_last_cluster = base;
 
   /*   o Reorder matras:
    *
@@ -566,29 +824,53 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
    *     halant, position is moved after it.
    */
 
+  if (start + 1 < end && start < base) /* Otherwise there can't be any pre-base matra characters. */
   {
-    unsigned int new_matra_pos = base - 1;
-    while (new_matra_pos > start &&
-	   !(FLAG (info[new_matra_pos].indic_category()) & (FLAG (OT_M) | FLAG (OT_H))))
-      new_matra_pos--;
-    /* If we found no Halant we are done.  Otherwise only proceed if the Halant does
-     * not belong to the Matra itself! */
-    if (info[new_matra_pos].indic_category() == OT_H &&
-	info[new_matra_pos].indic_position() != POS_PRE_M) {
-      /* -> If ZWJ or ZWNJ follow this halant, position is moved after it. */
-      if (new_matra_pos + 1 < end && is_joiner (info[new_matra_pos + 1]))
-	new_matra_pos++;
+    /* If we lost track of base, alas, position before last thingy. */
+    unsigned int new_pos = base == end ? base - 2 : base - 1;
 
+    /* Malayalam does not have "half" forms or explicit virama forms.
+     * The glyphs formed by 'half' are Chillus.  We want to position
+     * matra after them all.
+     */
+    if (buffer->props.script != HB_SCRIPT_MALAYALAM)
+    {
+      while (new_pos > start &&
+	     !(is_one_of (info[new_pos], (FLAG (OT_M) | FLAG (OT_H) | FLAG (OT_Coeng)))))
+	new_pos--;
+
+      /* If we found no Halant we are done.
+       * Otherwise only proceed if the Halant does
+       * not belong to the Matra itself! */
+      if (is_halant_or_coeng (info[new_pos]) &&
+	  info[new_pos].indic_position() != POS_PRE_M)
+      {
+	/* -> If ZWJ or ZWNJ follow this halant, position is moved after it. */
+	if (new_pos + 1 < end && is_joiner (info[new_pos + 1]))
+	  new_pos++;
+      }
+      else
+        new_pos = start; /* No move. */
+    }
+
+    if (start < new_pos)
+    {
       /* Now go see if there's actually any matras... */
-      for (unsigned int i = new_matra_pos; i > start; i--)
+      for (unsigned int i = new_pos; i > start; i--)
 	if (info[i - 1].indic_position () == POS_PRE_M)
 	{
-	  unsigned int old_matra_pos = i - 1;
-	  hb_glyph_info_t matra = info[old_matra_pos];
-	  memmove (&info[old_matra_pos], &info[old_matra_pos + 1], (new_matra_pos - old_matra_pos) * sizeof (info[0]));
-	  info[new_matra_pos] = matra;
-	  start_of_last_cluster = MIN (new_matra_pos, start_of_last_cluster);
-	  new_matra_pos--;
+	  unsigned int old_pos = i - 1;
+	  hb_glyph_info_t tmp = info[old_pos];
+	  memmove (&info[old_pos], &info[old_pos + 1], (new_pos - old_pos) * sizeof (info[0]));
+	  info[new_pos] = tmp;
+	  new_pos--;
+	}
+      buffer->merge_clusters (new_pos, MIN (end, base + 1));
+    } else {
+      for (unsigned int i = start; i < base; i++)
+	if (info[i].indic_position () == POS_PRE_M) {
+	  buffer->merge_clusters (i, MIN (end, base + 1));
+	  break;
 	}
     }
   }
@@ -610,49 +892,15 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
       info[start].indic_position() == POS_RA_TO_BECOME_REPH &&
       info[start + 1].indic_position() != POS_RA_TO_BECOME_REPH)
   {
-      unsigned int new_reph_pos;
+    unsigned int new_reph_pos;
+    reph_position_t reph_pos = indic_plan->config->reph_pos;
 
-     enum reph_position_t {
-       REPH_AFTER_MAIN,
-       REPH_BEFORE_SUBSCRIPT,
-       REPH_AFTER_SUBSCRIPT,
-       REPH_BEFORE_POSTSCRIPT,
-       REPH_AFTER_POSTSCRIPT
-     } reph_pos;
-
-     /* XXX Figure out old behavior too */
-     switch ((hb_tag_t) buffer->props.script)
-     {
-       case HB_SCRIPT_MALAYALAM:
-       case HB_SCRIPT_ORIYA:
-	 reph_pos = REPH_AFTER_MAIN;
-	 break;
-
-       case HB_SCRIPT_GURMUKHI:
-	 reph_pos = REPH_BEFORE_SUBSCRIPT;
-	 break;
-
-       case HB_SCRIPT_BENGALI:
-	 reph_pos = REPH_AFTER_SUBSCRIPT;
-	 break;
-
-       default:
-       case HB_SCRIPT_DEVANAGARI:
-       case HB_SCRIPT_GUJARATI:
-	 reph_pos = REPH_BEFORE_POSTSCRIPT;
-	 break;
-
-       case HB_SCRIPT_KANNADA:
-       case HB_SCRIPT_TAMIL:
-       case HB_SCRIPT_TELUGU:
-	 reph_pos = REPH_AFTER_POSTSCRIPT;
-	 break;
-     }
+    /* XXX Figure out old behavior too */
 
     /*       1. If reph should be positioned after post-base consonant forms,
      *          proceed to step 5.
      */
-    if (reph_pos == REPH_AFTER_POSTSCRIPT)
+    if (reph_pos == REPH_POS_AFTER_POST)
     {
       goto reph_step_5;
     }
@@ -670,10 +918,10 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
      */
     {
       new_reph_pos = start + 1;
-      while (new_reph_pos < base && info[new_reph_pos].indic_category() != OT_H)
+      while (new_reph_pos < base && !is_halant_or_coeng (info[new_reph_pos]))
 	new_reph_pos++;
 
-      if (new_reph_pos < base && info[new_reph_pos].indic_category() == OT_H) {
+      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos])) {
 	/* ->If ZWJ or ZWNJ are following this halant, position is moved after it. */
 	if (new_reph_pos + 1 < base && is_joiner (info[new_reph_pos + 1]))
 	  new_reph_pos++;
@@ -685,9 +933,14 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
      *          first consonant not ligated with main, or find the first
      *          consonant that is not a potential pre-base reordering Ra.
      */
-    if (reph_pos == REPH_AFTER_MAIN)
+    if (reph_pos == REPH_POS_AFTER_MAIN)
     {
-      /* XXX */
+      new_reph_pos = base;
+      /* XXX Skip potential pre-base reordering Ra. */
+      while (new_reph_pos + 1 < end && info[new_reph_pos + 1].indic_position() <= POS_AFTER_MAIN)
+	new_reph_pos++;
+      if (new_reph_pos < end)
+        goto reph_move;
     }
 
     /*       4. If reph should be positioned before post-base consonant, find
@@ -696,11 +949,11 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
      *          first matra, syllable modifier sign or vedic sign.
      */
     /* This is our take on what step 4 is trying to say (and failing, BADLY). */
-    if (reph_pos == REPH_AFTER_SUBSCRIPT)
+    if (reph_pos == REPH_POS_AFTER_SUB)
     {
       new_reph_pos = base;
       while (new_reph_pos < end &&
-	     !( FLAG (info[new_reph_pos + 1].indic_position()) & (FLAG (POS_POST_C) | FLAG (POS_POST_M) | FLAG (POS_SMVD))))
+	     !( FLAG (info[new_reph_pos + 1].indic_position()) & (FLAG (POS_POST_C) | FLAG (POS_AFTER_POST) | FLAG (POS_SMVD))))
 	new_reph_pos++;
       if (new_reph_pos < end)
         goto reph_move;
@@ -715,7 +968,17 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
      */
     reph_step_5:
     {
-      /* XXX */
+      /* Copied from step 2. */
+      new_reph_pos = start + 1;
+      while (new_reph_pos < base && !is_halant_or_coeng (info[new_reph_pos]))
+	new_reph_pos++;
+
+      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos])) {
+	/* ->If ZWJ or ZWNJ are following this halant, position is moved after it. */
+	if (new_reph_pos + 1 < base && is_joiner (info[new_reph_pos + 1]))
+	  new_reph_pos++;
+	goto reph_move;
+      }
     }
 
     /*       6. Otherwise, reorder reph to the end of the syllable.
@@ -732,8 +995,8 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
        * Uniscribe doesn't do this.
        * TEST: U+0930,U+094D,U+0915,U+094B,U+094D
        */
-      if (!options.uniscribe_bug_compatible &&
-	  unlikely (info[new_reph_pos].indic_category() == OT_H)) {
+      if (!indic_options ().uniscribe_bug_compatible &&
+	  unlikely (is_halant_or_coeng (info[new_reph_pos]))) {
 	for (unsigned int i = base + 1; i < new_reph_pos; i++)
 	  if (info[i].indic_category() == OT_M) {
 	    /* Ok, got it. */
@@ -745,11 +1008,13 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
 
     reph_move:
     {
+      /* Yay, one big cluster! Merge before moving. */
+      buffer->merge_clusters (start, end);
+
       /* Move */
       hb_glyph_info_t reph = info[start];
       memmove (&info[start], &info[start + 1], (new_reph_pos - start) * sizeof (info[0]));
       info[new_reph_pos] = reph;
-      start_of_last_cluster = start; /* Yay, one big cluster! */
     }
   }
 
@@ -758,88 +1023,118 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
    *
    *     If a pre-base reordering consonant is found, reorder it according to
    *     the following rules:
-   *
-   *       1. Only reorder a glyph produced by substitution during application
-   *          of the feature. (Note that a font may shape a Ra consonant with
-   *          the feature generally but block it in certain contexts.)
-   *
-   *       2. Try to find a target position the same way as for pre-base matra.
-   *          If it is found, reorder pre-base consonant glyph.
-   *
-   *       3. If position is not found, reorder immediately before main
-   *          consonant.
    */
 
-  /* TODO */
+  if (indic_plan->mask_array[PREF] && base + 1 < end) /* Otherwise there can't be any pre-base reordering Ra. */
+  {
+    for (unsigned int i = base + 1; i < end; i++)
+      if ((info[i].mask & indic_plan->mask_array[PREF]) != 0)
+      {
+	/*       1. Only reorder a glyph produced by substitution during application
+	 *          of the <pref> feature. (Note that a font may shape a Ra consonant with
+	 *          the feature generally but block it in certain contexts.)
+	 */
+	if (i + 1 == end || (info[i + 1].mask & indic_plan->mask_array[PREF]) == 0)
+	{
+	  /*
+	   *       2. Try to find a target position the same way as for pre-base matra.
+	   *          If it is found, reorder pre-base consonant glyph.
+	   *
+	   *       3. If position is not found, reorder immediately before main
+	   *          consonant.
+	   */
 
+	  unsigned int new_pos = base;
+	  while (new_pos > start &&
+		 !(is_one_of (info[new_pos - 1], FLAG(OT_M) | HALANT_OR_COENG_FLAGS)))
+	    new_pos--;
+
+	  /* In Khmer coeng model, a V,Ra can go *after* matras.  If it goes after a
+	   * split matra, it should be reordered to *before* the left part of such matra. */
+	  if (new_pos > start && info[new_pos - 1].indic_category() == OT_M)
+	  {
+	    unsigned int old_pos = i;
+	    for (unsigned int i = base + 1; i < old_pos; i++)
+	      if (info[i].indic_category() == OT_M)
+	      {
+		new_pos--;
+		break;
+	      }
+	  }
+
+	  if (new_pos > start && is_halant_or_coeng (info[new_pos - 1]))
+	    /* -> If ZWJ or ZWNJ follow this halant, position is moved after it. */
+	    if (new_pos < end && is_joiner (info[new_pos]))
+	      new_pos++;
+
+	  {
+	    unsigned int old_pos = i;
+	    buffer->merge_clusters (new_pos, old_pos + 1);
+	    hb_glyph_info_t tmp = info[old_pos];
+	    memmove (&info[new_pos + 1], &info[new_pos], (old_pos - new_pos) * sizeof (info[0]));
+	    info[new_pos] = tmp;
+	  }
+	}
+
+        break;
+      }
+  }
 
 
   /* Apply 'init' to the Left Matra if it's a word start. */
   if (info[start].indic_position () == POS_PRE_M &&
       (!start ||
        !(FLAG (_hb_glyph_info_get_general_category (&info[start - 1])) &
-	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_TITLECASE_LETTER) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))))
-    info[start].mask |= mask_array[INIT];
+	 FLAG_RANGE (HB_UNICODE_GENERAL_CATEGORY_FORMAT, HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))))
+    info[start].mask |= indic_plan->mask_array[INIT];
 
 
-
-  /* Finish off the clusters and go home! */
-
-  if (!options.uniscribe_bug_compatible)
+  /*
+   * Finish off the clusters and go home!
+   */
+  if (indic_options ().uniscribe_bug_compatible)
   {
-    /* This is what Uniscribe does.  Ie. add cluster boundaries after Halant,ZWNJ.
+    /* Uniscribe merges the entire cluster.
      * This means, half forms are submerged into the main consonants cluster.
      * This is unnecessary, and makes cursor positioning harder, but that's what
      * Uniscribe does. */
-    unsigned int cluster_start = start;
-    for (unsigned int i = start + 1; i < start_of_last_cluster; i++)
-      if (info[i - 1].indic_category() == OT_H && info[i].indic_category() == OT_ZWNJ) {
-        i++;
-	buffer->merge_clusters (cluster_start, i);
-	cluster_start = i;
-      }
-    start_of_last_cluster = cluster_start;
+    buffer->merge_clusters (start, end);
   }
-
-  buffer->merge_clusters (start_of_last_cluster, end);
 }
 
 
 static void
-final_reordering (const hb_ot_map_t *map,
-		  hb_face_t *face HB_UNUSED,
-		  hb_buffer_t *buffer,
-		  void *user_data HB_UNUSED)
+final_reordering (const hb_ot_shape_plan_t *plan,
+		  hb_font_t *font,
+		  hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
   if (!count) return;
-
-  hb_mask_t mask_array[ARRAY_LENGTH (indic_other_features)] = {0};
-  unsigned int num_masks = ARRAY_LENGTH (indic_other_features);
-  for (unsigned int i = 0; i < num_masks; i++)
-    mask_array[i] = map->get_1_mask (indic_other_features[i].tag);
 
   hb_glyph_info_t *info = buffer->info;
   unsigned int last = 0;
   unsigned int last_syllable = info[0].syllable();
   for (unsigned int i = 1; i < count; i++)
     if (last_syllable != info[i].syllable()) {
-      final_reordering_syllable (buffer, mask_array, last, i);
+      final_reordering_syllable (plan, buffer, last, i);
       last = i;
       last_syllable = info[last].syllable();
     }
-  final_reordering_syllable (buffer, mask_array, last, count);
+  final_reordering_syllable (plan, buffer, last, count);
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_category);
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_position);
 }
 
 
-
+const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
+{
+  "indic",
+  collect_features_indic,
+  override_features_indic,
+  data_create_indic,
+  data_destroy_indic,
+  NULL, /* normalization_preference */
+  setup_masks_indic,
+  false, /* zero_width_attached_marks */
+};

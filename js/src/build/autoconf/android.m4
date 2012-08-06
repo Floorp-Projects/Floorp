@@ -15,12 +15,20 @@ MOZ_ARG_WITH_STRING(android-toolchain,
                           location of the android toolchain],
     android_toolchain=$withval)
 
+dnl default android_version is different per target cpu
+case "$target_cpu" in
+arm)
+    android_version=5
+    ;;
+i?86|mipsel)
+    android_version=9
+    ;;
+esac
 
 MOZ_ARG_WITH_STRING(android-version,
 [  --with-android-version=VER
-                          android platform version, default 5],
-    android_version=$withval,
-    android_version=5)
+                          android platform version, default 5 for arm, 9 for x86/mips],
+    android_version=$withval)
 
 MOZ_ARG_WITH_STRING(android-platform,
 [  --with-android-platform=DIR

@@ -11,7 +11,7 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
-Cu.import("resource:///modules/WebappsInstaller.jsm");
+Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
 let webappsUI = {

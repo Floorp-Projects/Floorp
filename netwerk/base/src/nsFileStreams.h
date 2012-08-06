@@ -178,6 +178,7 @@ class nsPartialFileInputStream : public nsFileInputStream,
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPARTIALFILEINPUTSTREAM
+    NS_DECL_NSIIPCSERIALIZABLE
 
     NS_IMETHOD Tell(PRInt64 *aResult);
     NS_IMETHOD Available(PRUint32 *aResult);

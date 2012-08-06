@@ -29,3 +29,6 @@ random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
 # bug 692744
 == text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
 
+# bug 721750
+needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1-ref.html
+needs-focus == text-shadow-on-selection-2.html text-shadow-on-selection-2-ref.html

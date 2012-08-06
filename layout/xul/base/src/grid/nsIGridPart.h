@@ -7,7 +7,6 @@
 #define nsIGridPart_h___
 
 #include "nsISupports.h"
-#include "nsFrame.h"
 
 class nsGridRowGroupLayout;
 class nsGrid;
@@ -50,7 +49,7 @@ public:
    *                   grids.)
    * @return The grid of which aBox (a row, row group, or grid) is a part.
    */
-  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr)=0;
+  virtual nsGrid* GetGrid(nsIFrame* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr)=0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -60,7 +59,7 @@ public:
    *                   row group).
    * @returns The layout manager for aParentBox.
    */
-  virtual nsIGridPart* GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox) = 0;
+  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) = 0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -68,10 +67,10 @@ public:
    * @param aRowCount [INOUT] Row count
    * @param aComputedColumnCount [INOUT] Column count
    */
-  virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
-  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
-  virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows)=0;
-  virtual nsMargin GetTotalMargin(nsIBox* aBox, bool aIsHorizontal)=0;
+  virtual void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)=0;
+  virtual PRInt32 BuildRows(nsIFrame* aBox, nsGridRow* aRows)=0;
+  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal)=0;
   virtual PRInt32 GetRowCount() { return 1; }
   
   /**

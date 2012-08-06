@@ -61,12 +61,6 @@
 # define NULL ((void *) 0)
 #endif
 
-#undef FALSE
-#define FALSE 0
-
-#undef TRUE
-#define TRUE 1
-
 
 /* Basics */
 
@@ -84,11 +78,11 @@ template <typename Type> static inline Type MAX (const Type &a, const Type &b) {
 #define HB_STMT_START do
 #define HB_STMT_END   while (0)
 
-#define _ASSERT_STATIC1(_line, _cond) typedef int _static_assert_on_line_##_line##_failed[(_cond)?1:-1]
-#define _ASSERT_STATIC0(_line, _cond) _ASSERT_STATIC1 (_line, (_cond))
-#define ASSERT_STATIC(_cond) _ASSERT_STATIC0 (__LINE__, (_cond))
+#define _ASSERT_STATIC1(_line, _cond)	typedef int _static_assert_on_line_##_line##_failed[(_cond)?1:-1]
+#define _ASSERT_STATIC0(_line, _cond)	_ASSERT_STATIC1 (_line, (_cond))
+#define ASSERT_STATIC(_cond)		_ASSERT_STATIC0 (__LINE__, (_cond))
 
-#define ASSERT_STATIC_EXPR(_cond) ((void) sizeof (char[(_cond) ? 1 : -1]))
+#define ASSERT_STATIC_EXPR(_cond)((void) sizeof (char[(_cond) ? 1 : -1]))
 #define ASSERT_STATIC_EXPR_ZERO(_cond) (0 * sizeof (char[(_cond) ? 1 : -1]))
 
 #define _PASTE1(a,b) a##b
@@ -109,6 +103,34 @@ ASSERT_STATIC (sizeof (hb_codepoint_t) == 4);
 ASSERT_STATIC (sizeof (hb_position_t) == 4);
 ASSERT_STATIC (sizeof (hb_mask_t) == 4);
 ASSERT_STATIC (sizeof (hb_var_int_t) == 4);
+
+
+/* We like our types POD */
+
+#define _ASSERT_TYPE_POD1(_line, _type)	union _type_##_type##_on_line_##_line##_is_not_POD { _type instance; }
+#define _ASSERT_TYPE_POD0(_line, _type)	_ASSERT_TYPE_POD1 (_line, _type)
+#define ASSERT_TYPE_POD(_type)		_ASSERT_TYPE_POD0 (__LINE__, _type)
+
+#ifdef __GNUC__
+# define _ASSERT_INSTANCE_POD1(_line, _instance) \
+	HB_STMT_START { \
+		typedef __typeof__(_instance) _type_##_line; \
+		_ASSERT_TYPE_POD1 (_line, _type_##_line); \
+	} HB_STMT_END
+#else
+# define _ASSERT_INSTANCE_POD1(_line, _instance)	typedef int _assertion_on_line_##_line##_not_tested
+#endif
+# define _ASSERT_INSTANCE_POD0(_line, _instance)	_ASSERT_INSTANCE_POD1 (_line, _instance)
+# define ASSERT_INSTANCE_POD(_instance)			_ASSERT_INSTANCE_POD0 (__LINE__, _instance)
+
+/* Check _assertion in a method environment */
+#define _ASSERT_POD1(_line) \
+	inline void _static_assertion_on_line_##_line (void) const \
+	{ _ASSERT_INSTANCE_POD1 (_line, *this); /* Make sure it's POD. */ }
+# define _ASSERT_POD0(_line)	_ASSERT_POD1 (_line)
+# define ASSERT_POD()		_ASSERT_POD0 (__LINE__)
+
+
 
 /* Misc */
 
@@ -239,15 +261,16 @@ typedef int (*hb_compare_func_t) (const void *, const void *);
 /* arrays and maps */
 
 
+#define HB_PREALLOCED_ARRAY_INIT {0}
 template <typename Type, unsigned int StaticSize>
-struct hb_prealloced_array_t {
-
+struct hb_prealloced_array_t
+{
   unsigned int len;
   unsigned int allocated;
   Type *array;
   Type static_array[StaticSize];
 
-  hb_prealloced_array_t (void) { memset (this, 0, sizeof (*this)); }
+  void init (void) { memset (this, 0, sizeof (*this)); }
 
   inline Type& operator [] (unsigned int i) { return array[i]; }
   inline const Type& operator [] (unsigned int i) const { return array[i]; }
@@ -342,14 +365,14 @@ struct hb_prealloced_array_t {
   }
 };
 
-template <typename Type>
-struct hb_array_t : hb_prealloced_array_t<Type, 2> {};
 
-
+#define HB_LOCKABLE_SET_INIT {HB_PREALLOCED_ARRAY_INIT}
 template <typename item_t, typename lock_t>
 struct hb_lockable_set_t
 {
-  hb_array_t <item_t> items;
+  hb_prealloced_array_t <item_t, 2> items;
+
+  inline void init (void) { items.init (); }
 
   template <typename T>
   inline item_t *replace_or_insert (T v, lock_t &l, bool replace)
@@ -419,6 +442,11 @@ struct hb_lockable_set_t
 
   inline void finish (lock_t &l)
   {
+    if (!items.len) {
+      /* No need for locking. */
+      items.finish ();
+      return;
+    }
     l.lock ();
     while (items.len) {
       item_t old = items[items.len - 1];
@@ -441,7 +469,17 @@ struct hb_lockable_set_t
 static inline uint16_t hb_be_uint16 (const uint16_t v)
 {
   const uint8_t *V = (const uint8_t *) &v;
-  return (uint16_t) (V[0] << 8) + V[1];
+  return (V[0] << 8) | V[1];
+}
+
+static inline uint16_t hb_uint16_swap (const uint16_t v)
+{
+  return (v >> 8) | (v << 8);
+}
+
+static inline uint32_t hb_uint32_swap (const uint32_t v)
+{
+  return (hb_uint16_swap (v) << 16) | hb_uint16_swap (v >> 16);
 }
 
 /* Note, of the following macros, uint16_get is the one called many many times.
@@ -524,13 +562,20 @@ _hb_debug_msg_va (const char *what,
     fprintf (stderr, " %*s  ", (unsigned int) (2 * sizeof (void *)), "");
 
   if (indented) {
-    static const char bars[] = "││││││││││││││││││││││││││││││││││││││││";
-    fprintf (stderr, "%2d %s├%s",
+/* One may want to add ASCII version of these.  See:
+ * https://bugs.freedesktop.org/show_bug.cgi?id=50970 */
+#define VBAR	"\342\224\202"	/* U+2502 BOX DRAWINGS LIGHT VERTICAL */
+#define VRBAR	"\342\224\234"	/* U+251C BOX DRAWINGS LIGHT VERTICAL AND RIGHT */
+#define DLBAR	"\342\225\256"	/* U+256E BOX DRAWINGS LIGHT ARC DOWN AND LEFT */
+#define ULBAR	"\342\225\257"	/* U+256F BOX DRAWINGS LIGHT ARC UP AND LEFT */
+#define LBAR	"\342\225\264"	/* U+2574 BOX DRAWINGS LIGHT LEFT */
+    static const char bars[] = VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR;
+    fprintf (stderr, "%2d %s" VRBAR "%s",
 	     level,
-	     bars + sizeof (bars) - 1 - MIN ((unsigned int) sizeof (bars), 3 * level),
-	     level_dir ? (level_dir > 0 ? "╮" : "╯") : "╴");
+	     bars + sizeof (bars) - 1 - MIN ((unsigned int) sizeof (bars), (unsigned int) (sizeof (VBAR) - 1) * level),
+	     level_dir ? (level_dir > 0 ? DLBAR : ULBAR) : LBAR);
   } else
-    fprintf (stderr, "   ├╴");
+    fprintf (stderr, "   " VRBAR LBAR);
 
   if (func) {
     /* If there's a class name, just write that. */
@@ -600,9 +645,9 @@ _hb_debug_msg<0> (const char *what HB_UNUSED,
 		  const char *message HB_UNUSED,
 		  ...) {}
 
-#define DEBUG_MSG_LEVEL(WHAT, OBJ, LEVEL, LEVEL_DIR, ...)	_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), NULL,    TRUE, (LEVEL), (LEVEL_DIR), __VA_ARGS__)
-#define DEBUG_MSG(WHAT, OBJ, ...) 				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), NULL,    FALSE, 0, 0, __VA_ARGS__)
-#define DEBUG_MSG_FUNC(WHAT, OBJ, ...)				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), HB_FUNC, FALSE, 0, 0, __VA_ARGS__)
+#define DEBUG_MSG_LEVEL(WHAT, OBJ, LEVEL, LEVEL_DIR, ...)	_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), NULL,    true, (LEVEL), (LEVEL_DIR), __VA_ARGS__)
+#define DEBUG_MSG(WHAT, OBJ, ...) 				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), NULL,    false, 0, 0, __VA_ARGS__)
+#define DEBUG_MSG_FUNC(WHAT, OBJ, ...)				_hb_debug_msg<HB_DEBUG_##WHAT> (#WHAT, (OBJ), HB_FUNC, false, 0, 0, __VA_ARGS__)
 
 
 /*
@@ -622,28 +667,28 @@ struct hb_auto_trace_t {
 
     va_list ap;
     va_start (ap, message);
-    _hb_debug_msg_va<max_level> (what, obj, func, TRUE, plevel ? *plevel : 0, +1, message, ap);
+    _hb_debug_msg_va<max_level> (what, obj, func, true, plevel ? *plevel : 0, +1, message, ap);
     va_end (ap);
   }
   inline ~hb_auto_trace_t (void)
   {
     if (unlikely (!returned)) {
       fprintf (stderr, "OUCH, returned with no call to TRACE_RETURN.  This is a bug, please report.  Level was %d.\n", plevel ? *plevel : -1);
-      _hb_debug_msg<max_level> (what, obj, NULL, TRUE, plevel ? *plevel : 1, -1, " ");
+      _hb_debug_msg<max_level> (what, obj, NULL, true, plevel ? *plevel : 1, -1, " ");
       return;
     }
 
     if (plevel) --*plevel;
   }
 
-  inline bool ret (bool v)
+  inline bool ret (bool v, unsigned int line = 0)
   {
     if (unlikely (returned)) {
       fprintf (stderr, "OUCH, double calls to TRACE_RETURN.  This is a bug, please report.\n");
       return v;
     }
 
-    _hb_debug_msg<max_level> (what, obj, NULL, TRUE, plevel ? *plevel : 1, -1, "return %s", v ? "true" : "false");
+    _hb_debug_msg<max_level> (what, obj, NULL, true, plevel ? *plevel : 1, -1, "return %s (line %d)", v ? "true" : "false", line);
     if (plevel) --*plevel;
     plevel = NULL;
     returned = true;
@@ -666,10 +711,10 @@ struct hb_auto_trace_t<0> {
 				   ...) {}
 
   template <typename T>
-  inline T ret (T v) { return v; }
+  inline T ret (T v, unsigned int line = 0) { return v; }
 };
 
-#define TRACE_RETURN(RET) trace.ret (RET)
+#define TRACE_RETURN(RET) trace.ret (RET, __LINE__)
 
 /* Misc */
 
@@ -678,7 +723,7 @@ struct hb_auto_trace_t<0> {
  * Checks for lo <= u <= hi but with an optimization if lo and hi
  * are only different in a contiguous set of lower-most bits.
  */
-template <typename T> inline bool
+template <typename T> static inline bool
 hb_in_range (T u, T lo, T hi)
 {
   if ( ((lo^hi) & lo) == 0 &&
@@ -689,16 +734,23 @@ hb_in_range (T u, T lo, T hi)
     return lo <= u && u <= hi;
 }
 
+template <typename T> static inline bool
+hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
+{
+  return hb_in_range (u, lo1, hi1) || hb_in_range (u, lo2, hi2) || hb_in_range (u, lo3, hi3);
+}
+
 
 /* Useful for set-operations on small enums.
  * For example, for testing "x ∈ {x1, x2, x3}" use:
  * (FLAG(x) & (FLAG(x1) | FLAG(x2) | FLAG(x3)))
  */
 #define FLAG(x) (1<<(x))
+#define FLAG_RANGE(x,y) (ASSERT_STATIC_EXPR_ZERO ((x) < (y)) + FLAG(y+1) - FLAG(x))
 
 
-template <typename T> inline void
-hb_bubble_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
+template <typename T, typename T2> inline void
+hb_bubble_sort (T *array, unsigned int len, int(*compar)(const T *, const T *), T2 *array2)
 {
   if (unlikely (!len))
     return;
@@ -708,11 +760,21 @@ hb_bubble_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
     unsigned int new_k = 0;
 
     for (unsigned int j = 0; j < k; j++)
-      if (compar (&array[j], &array[j+1]) > 0) {
-        T t;
-	t = array[j];
-	array[j] = array[j + 1];
-	array[j + 1] = t;
+      if (compar (&array[j], &array[j+1]) > 0)
+      {
+        {
+	  T t;
+	  t = array[j];
+	  array[j] = array[j + 1];
+	  array[j + 1] = t;
+	}
+        if (array2)
+        {
+	  T2 t;
+	  t = array2[j];
+	  array2[j] = array2[j + 1];
+	  array2[j + 1] = t;
+	}
 
 	new_k = j;
       }
@@ -720,6 +782,11 @@ hb_bubble_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
   } while (k);
 }
 
+template <typename T> inline void
+hb_bubble_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
+{
+  hb_bubble_sort (array, len, compar, (int *) NULL);
+}
 
 
 
