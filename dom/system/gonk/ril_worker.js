@@ -4073,10 +4073,57 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Read GSM 8-bit unpacked octets,
+   * which are SMS default 7-bit alphabets with bit 8 set to 0.
+   *
+   * @param numOctets
+   *        Number of octets to be read.
+   */
+  read8BitUnpackedToString: function read8BitUnpackedToString(numOctets) {
+    let ret = "";
+    let escapeFound = false;
+    let i;
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+
+    for(i = 0; i < numOctets; i++) {
+      let octet = this.readHexOctet();
+      if (octet == 0xff) {
+        i++;
+        break;
+      }
+
+      if (escapeFound) {
+        escapeFound = false;
+        if (octet == PDU_NL_EXTENDED_ESCAPE) {
+          // According to 3GPP TS 23.038, section 6.2.1.1, NOTE 1, "On
+          // receipt of this code, a receiving entity shall display a space
+          // until another extensiion table is defined."
+          ret += " ";
+        } else if (octet == PDU_NL_RESERVED_CONTROL) {
+          // According to 3GPP TS 23.038 B.2, "This code represents a control
+          // character and therefore must not be used for language specific
+          // characters."
+          ret += " ";
+        } else {
+          ret += langShiftTable[octet];
+        }
+      } else if (octet == PDU_NL_EXTENDED_ESCAPE) {
+        escapeFound = true;
+      } else {
+        ret += langTable[octet];
+      }
+    }
+
+    Buf.seekIncoming((numOctets - i) * PDU_HEX_OCTET_SIZE);
+    return ret;
+  },
+
+  /**
    * Read user data and decode as a UCS2 string.
    *
    * @param numOctets
-   *        num of octets to read as UCS2 string.
+   *        Number of octets to be read as UCS2 string.
    *
    * @return a string.
    */
@@ -4105,6 +4152,42 @@ let GsmPDUHelper = {
       this.writeHexOctet((code >> 8) & 0xFF);
       this.writeHexOctet(code & 0xFF);
     }
+  },
+
+  /**
+   * Read UCS2 String on UICC.
+   *
+   * @see TS 101.221, Annex A.
+   * @param scheme
+   *        Coding scheme for UCS2 on UICC. One of 0x80, 0x81 or 0x82.
+   * @param numOctets
+   *        Number of octets to be read as UCS2 string.
+   */
+  readICCUCS2String: function readICCUCS2String(scheme, numOctets) {
+    let str = "";
+    switch (scheme) {
+      case 0x80:
+        let isOdd = numOctets % 2;
+        let i;
+        for (i = 0; i < numOctets - isOdd; i += 2) {
+          let code = (this.readHexOctet() << 8) | this.readHexOctet();
+          if (code == 0xffff) {
+            i += 2;
+            break;
+          }
+          str += String.fromCharCode(code);
+        }
+
+        // Skip trailing 0xff
+        Buf.seekIncoming((numOctets - i) * PDU_HEX_OCTET_SIZE);
+        break;
+      case 0x81:
+      case 0x82:
+        //TODO Bug 780825
+        Buf.seekIncoming(numOctets * PDU_HEX_OCTET_SIZE);
+        break;
+    }
+    return str;
   },
 
   /**
@@ -4355,40 +4438,28 @@ let GsmPDUHelper = {
    *
    * @see TS 131.102
    *
-   * @param len
-   *        The length of Alpha Identifier in bytes.
+   * @param numOctets
+   *        Number of octets to be read.
    *
-   * it uses either
+   * It uses either
    *  1. SMS default 7-bit alphabet with bit 8 set to 0.
    *  2. UCS2 string.
    *
    * Unused bytes should be set to 0xff.
    */
-  readAlphaIdentifier: function readAlphaIdentifier(len) {
-    let temp, isUCS2 = false;
-    let alphaId = "";
+  readAlphaIdentifier: function readAlphaIdentifier(numOctets) {
+    let temp;
 
-    // Read the 1st byte to determine the encoding.
-    if ((temp = GsmPDUHelper.readHexOctet()) == 0x80) {
-      isUCS2 = true;
-    } else if (temp != 0xff) {
-      alphaId += String.fromCharCode(temp);
+    // Read the 1st octet to determine the encoding.
+    if ((temp = GsmPDUHelper.readHexOctet()) == 0x80 ||
+         temp == 0x81 ||
+         temp == 0x82) {
+      numOctets--;
+      return this.readICCUCS2String(temp, numOctets);
+    } else {
+      Buf.seekIncoming(-1 * PDU_HEX_OCTET_SIZE);
+      return this.read8BitUnpackedToString(numOctets);
     }
-    len--;
-
-    while (len) {
-      if ((temp = GsmPDUHelper.readHexOctet()) != 0xff) {
-        if (isUCS2) {
-          let temp2 = GsmPDUHelper.readHexOctet();
-          len--;
-          alphaId += String.fromCharCode((temp << 8) | temp2);
-        } else {
-          alphaId += String.fromCharCode(temp);
-        }
-      }
-      len--;
-    }
-    return alphaId;
   },
 
   /**
