@@ -78,6 +78,7 @@ class Marionette(object):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
+        self.instance = None
         self.profile = profile
         self.session = None
         self.window = None
