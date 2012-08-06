@@ -32,6 +32,7 @@ function seekStarted(evt) {
 function seekEnded(evt) {
   var v = evt.target;
   v._gotSeekEnded = true;
+  v.play();
 }
 
 function loadedData(evt) {

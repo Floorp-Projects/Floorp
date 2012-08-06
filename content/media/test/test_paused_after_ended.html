@@ -14,8 +14,14 @@ var manager = new MediaTestManager;
 
 function ended(evt) {
   var v = evt.target;
-  is(v.paused, false, v._name + " must not be paused after end");
+  is(v.gotPause, true, "We should have received a \"pause\" event.")
+  is(v.paused, true, v._name + " must be paused after end");
   manager.finished(v.token);
+}
+
+function pause(evt) {
+  var v = evt.target;
+  v.gotPause = true;
 }
 
 function startTest(test, token) {
@@ -31,6 +37,7 @@ function startTest(test, token) {
   v.play();
   is(v.paused, false, v._name + " must not be paused after play");
 
+  v.addEventListener("pause", pause, false);
   v.addEventListener("ended", ended, false);
 }
 
