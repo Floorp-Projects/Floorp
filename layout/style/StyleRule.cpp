@@ -985,7 +985,7 @@ public:
 
   virtual nsINode *GetParentObject()
   {
-    return nullptr;
+    return mRule ? mRule->GetDocument() : nullptr;
   }
 
   friend class css::DOMCSSStyleRule;
