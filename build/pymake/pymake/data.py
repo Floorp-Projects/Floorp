@@ -62,10 +62,61 @@ def _if_else(c, t, f):
         return t()
     return f()
 
-class StringExpansion(object):
+
+class BaseExpansion(object):
+    """Base class for expansions.
+
+    A make expansion is the parsed representation of a string, which may
+    contain references to other elements.
+    """
+
+    @property
+    def is_static_string(self):
+        """Returns whether the expansion is composed of static string content.
+
+        This is always True for StringExpansion. It will be True for Expansion
+        only if all elements of that Expansion are static strings.
+        """
+        raise Exception('Must be implemented in child class.')
+
+    def functions(self, descend=False):
+        """Obtain all functions inside this expansion.
+
+        This is a generator for pymake.functions.Function instances.
+
+        By default, this only returns functions existing as the primary
+        elements of this expansion. If `descend` is True, it will descend into
+        child expansions and extract all functions in the tree.
+        """
+        # An empty generator. Yeah, it's weird.
+        for x in []:
+            yield x
+
+    def variable_references(self, descend=False):
+        """Obtain all variable references in this expansion.
+
+        This is a generator for pymake.functionsVariableRef instances.
+
+        To retrieve the names of variables, simply query the `vname` field on
+        the returned instances. Most of the time these will be StringExpansion
+        instances.
+        """
+        for f in self.functions(descend=descend):
+            if not isinstance(f, functions.VariableRef):
+                continue
+
+            yield f
+
+
+class StringExpansion(BaseExpansion):
+    """An Expansion representing a static string.
+
+    This essentially wraps a single str instance.
+    """
+
     __slots__ = ('loc', 's',)
     simple = True
-    
+
     def __init__(self, s, loc):
         assert isinstance(s, str)
         self.s = s
@@ -93,6 +144,10 @@ class StringExpansion(object):
         e = Expansion(self.loc)
         e.appendstr(self.s)
         return e
+
+    @property
+    def is_static_string(self):
+        return True
 
     def __len__(self):
         return 1
@@ -122,9 +177,13 @@ class StringExpansion(object):
 
         return s
 
-class Expansion(list):
-    """
-    A representation of expanded data, such as that for a recursively-expanded variable, a command, etc.
+
+class Expansion(BaseExpansion, list):
+    """A representation of expanded data.
+
+    This is effectively an ordered list of StringExpansion and
+    pymake.function.Function instances. Every item in the collection appears in
+    the same context in a make file.
     """
 
     __slots__ = ('loc',)
@@ -249,6 +308,24 @@ class Expansion(list):
 
     def resolvesplit(self, makefile, variables, setting=[]):
         return self.resolvestr(makefile, variables, setting).split()
+
+    @property
+    def is_static_string(self):
+        """An Expansion is static if all its components are strings, not
+        functions."""
+        for e, is_func in self:
+            if is_func:
+                return False
+
+        return True
+
+    def functions(self, descend=False):
+        for e, is_func in self:
+            if is_func:
+                yield e
+
+            if descend:
+                raise Exception('TODO implement descend.')
 
     def __repr__(self):
         return "<Expansion with elements: %r>" % ([e for e, isfunc in self],)
