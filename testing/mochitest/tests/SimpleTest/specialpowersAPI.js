@@ -634,6 +634,12 @@ SpecialPowersAPI.prototype = {
     return obj.QueryInterface(Ci[iface]); 
   },
 
+  call_Instanceof: function (obj1, obj2) {
+     obj1=unwrapIfWrapped(obj1);
+     obj2=unwrapIfWrapped(obj2);
+     return obj1 instanceof obj2;
+  },
+
   // Mimic the get*Pref API
   getBoolPref: function(aPrefName) {
     return (this._getPref(aPrefName, 'BOOL'));

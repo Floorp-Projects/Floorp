@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483651
         var t1 = $("t1");
         var editor = null;
 
-        if (t1 instanceof Components.interfaces.nsIDOMNSEditableElement)
+        if (SpecialPowers.call_Instanceof(t1, Components.interfaces.nsIDOMNSEditableElement))
           editor = t1.editor;
 
         ok(editor, "able to get editor for the element");
