@@ -85,7 +85,7 @@ MoveEmitterARM::tempReg()
 
     // For now, just pick r12/ip as the eviction point. This is totally
     // random, and if it ends up being bad, we can use actual heuristics later.
-    spilledReg_ = Register::FromCode(12);
+    spilledReg_ = r12;
     if (pushedAtSpill_ == -1) {
         masm.Push(spilledReg_);
         pushedAtSpill_ = masm.framePushed();
@@ -119,6 +119,11 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
             masm.ma_ldr(toOperand(to, false), temp);
             masm.ma_str(temp, cycleSlot());
         } else {
+            if (to.reg() == spilledReg_) {
+                // If the destination was spilled, restore it first.
+                masm.ma_ldr(spillSlot(), spilledReg_);
+                spilledReg_ = InvalidReg;
+            }
             masm.ma_str(to.reg(), cycleSlot());
         }
     }
@@ -147,6 +152,10 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             masm.ma_ldr(cycleSlot(), temp);
             masm.ma_str(temp, toOperand(to, false));
         } else {
+            if (to.reg() == spilledReg_) {
+                // Make sure we don't re-clobber the spilled register later.
+                spilledReg_ = InvalidReg;
+            }
             masm.ma_ldr(cycleSlot(), to.reg());
         }
     }
