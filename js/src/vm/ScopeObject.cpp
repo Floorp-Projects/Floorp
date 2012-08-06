@@ -1091,13 +1091,9 @@ class DebugScopeProxy : public BaseProxyHandler
                                jsid id, Action action, Value *vp)
     {
         JS_ASSERT(&debugScope->scope() == scope);
-
-        Shape *shape = scope->lastProperty()->search(cx, id);
-        if (!shape)
-            return false;
-
         StackFrame *maybefp = cx->runtime->debugScopes->hasLiveFrame(*scope);
 
+        /* Handle unaliased formals, vars, and consts at function scope. */
         if (scope->isCall() && !scope->asCall().isForEval()) {
             CallObject &callobj = scope->asCall();
             JSScript *script = callobj.callee().script();
@@ -1105,12 +1101,14 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             Bindings &bindings = script->bindings;
-            unsigned i = shape->slot() - CallObject::RESERVED_SLOTS;
-            bool isArg = i < bindings.numArgs();
-            bool isVar = !isArg && (i - bindings.numArgs()) < bindings.numVars();
+            BindingIter bi(cx, script->bindings);
+            while (NameToId(bi->name) != id) {
+                if (!++bi)
+                    return false;
+            }
 
-            if (isVar) {
-                unsigned i = shape->shortid();
+            if (bi->kind == VARIABLE || bi->kind == CONSTANT) {
+                unsigned i = bi.frameIndex();
                 if (script->varIsAliased(i))
                     return false;
 
@@ -1133,11 +1131,9 @@ class DebugScopeProxy : public BaseProxyHandler
                 if (action == SET)
                     TypeScript::SetLocal(cx, script, i, *vp);
 
-                return true;
-            }
-
-            if (isArg) {
-                unsigned i = shape->shortid();
+            } else {
+                JS_ASSERT(bi->kind == ARGUMENT);
+                unsigned i = bi.frameIndex();
                 if (script->formalLivesInCallObject(i))
                     return false;
 
@@ -1166,15 +1162,18 @@ class DebugScopeProxy : public BaseProxyHandler
 
                 if (action == SET)
                     TypeScript::SetArgument(cx, script, i, *vp);
-
-                return true;
             }
 
-            return false;
+            return true;
         }
 
+        /* Handle unaliased let and catch bindings at block scope. */
         if (scope->isClonedBlock()) {
             ClonedBlockObject &block = scope->asClonedBlock();
+            Shape *shape = block.lastProperty()->search(cx, id);
+            if (!shape)
+                return false;
+
             unsigned i = shape->shortid();
             if (block.staticBlock().isAliased(i))
                 return false;
@@ -1197,6 +1196,7 @@ class DebugScopeProxy : public BaseProxyHandler
             return true;
         }
 
+        /* The rest of the internal scopes do not have unaliased vars. */
         JS_ASSERT(scope->isDeclEnv() || scope->isWith() || scope->asCall().isForEval());
         return false;
     }
