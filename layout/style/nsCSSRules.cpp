@@ -1369,6 +1369,7 @@ DOMCI_DATA(CSSFontFaceStyleDecl, nsCSSFontFaceStyleDecl)
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceStyleDecl)
 NS_INTERFACE_MAP_END
@@ -1576,6 +1577,28 @@ nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSProperty aPropID,
+                                         nsAString& aValue)
+{
+  return
+    GetPropertyValue(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
+                     aValue);
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSProperty aPropID,
+                                         const nsAString& aValue)
+{
+  return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
+                     aValue, EmptyString());
+}
+
+nsINode*
+nsCSSFontFaceStyleDecl::GetParentObject()
+{
+  return nullptr;
+}
 
 // -------------------------------------------
 // nsCSSFontFaceRule
