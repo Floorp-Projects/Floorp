@@ -652,6 +652,19 @@ Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsIPrincipal* principal = doc->NodePrincipal();
+  if (!nsContentUtils::IsSystemPrincipal(principal)) {
+    PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+    principal->GetAppStatus(&appStatus);
+    if (appStatus != nsIPrincipal::APP_STATUS_CERTIFIED) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+  }
+
   if (NS_FAILED(win->RegisterIdleObserver(aIdleObserver))) {
     NS_WARNING("Failed to add idle observer.");
   }
