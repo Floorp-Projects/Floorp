@@ -57,7 +57,7 @@ struct hmtx
     return TRACE_RETURN (true);
   }
 
-  private:
+  protected:
   LongHorMetric	longHorMetric[VAR];	/* Paired advance width and left side
 					 * bearing values for each glyph. The
 					 * value numOfHMetrics comes from

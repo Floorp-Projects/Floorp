@@ -49,6 +49,8 @@ struct hb_cache_t
     unsigned int v = values[k];
     if ((v >> value_bits) != (key >> cache_bits))
       return false;
+    *value = v & ((1<<value_bits)-1);
+    return true;
   }
 
   inline bool set (unsigned int key, unsigned int value)

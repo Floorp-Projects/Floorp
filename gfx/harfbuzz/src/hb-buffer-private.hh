@@ -40,15 +40,48 @@
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == 20);
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == sizeof (hb_glyph_position_t));
 
-typedef struct _hb_segment_properties_t {
+
+/*
+ * hb_segment_properties_t
+ */
+
+typedef struct hb_segment_properties_t {
     hb_direction_t      direction;
     hb_script_t         script;
     hb_language_t       language;
+    ASSERT_POD ();
 } hb_segment_properties_t;
 
+#define _HB_BUFFER_PROPS_DEFAULT { HB_DIRECTION_INVALID, HB_SCRIPT_INVALID, HB_LANGUAGE_INVALID }
 
-struct _hb_buffer_t {
+static inline hb_bool_t
+hb_segment_properties_equal (const hb_segment_properties_t *a,
+			     const hb_segment_properties_t *b)
+{
+  return a->direction == b->direction &&
+	 a->script    == b->script    &&
+	 a->language  == b->language;
+}
+
+
+static inline long
+hb_segment_properties_hash (const hb_segment_properties_t *p)
+{
+  /* TODO improve */
+  return (long) p->direction +
+	 (long) p->script +
+	 (long) p->language;
+}
+
+
+
+/*
+ * hb_buffer_t
+ */
+
+struct hb_buffer_t {
   hb_object_header_t header;
+  ASSERT_POD ();
 
   /* Information about how the text in the buffer should be treated */
 
@@ -108,12 +141,11 @@ struct _hb_buffer_t {
   HB_INTERNAL void swap_buffers (void);
   HB_INTERNAL void clear_output (void);
   HB_INTERNAL void clear_positions (void);
-  HB_INTERNAL void replace_glyphs_be16 (unsigned int num_in,
-					unsigned int num_out,
-					const uint16_t *glyph_data_be);
+
   HB_INTERNAL void replace_glyphs (unsigned int num_in,
 				   unsigned int num_out,
 				   const hb_codepoint_t *glyph_data);
+
   HB_INTERNAL void replace_glyph (hb_codepoint_t glyph_index);
   /* Makes a copy of the glyph at idx to output and replace glyph_index */
   HB_INTERNAL void output_glyph (hb_codepoint_t glyph_index);
@@ -149,7 +181,7 @@ struct _hb_buffer_t {
   HB_INTERNAL bool enlarge (unsigned int size);
 
   inline bool ensure (unsigned int size)
-  { return likely (size <= allocated) ? TRUE : enlarge (size); }
+  { return likely (size < allocated) ? true : enlarge (size); }
 
   HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
 
@@ -164,7 +196,6 @@ struct _hb_buffer_t {
 	HB_BUFFER_XALLOCATE_VAR (b, allocate_var, var (), #var)
 #define HB_BUFFER_DEALLOCATE_VAR(b, var) \
 	HB_BUFFER_XALLOCATE_VAR (b, deallocate_var, var (), #var)
-
 
 
 #endif /* HB_BUFFER_PRIVATE_HH */

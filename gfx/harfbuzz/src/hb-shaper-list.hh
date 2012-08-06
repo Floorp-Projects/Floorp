@@ -24,25 +24,27 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
-#define HB_OT_SHAPE_NORMALIZE_PRIVATE_HH
+#ifndef HB_SHAPER_LIST_HH
+#define HB_SHAPER_LIST_HH
+#endif /* HB_SHAPER_LIST_HH */ /* Dummy header guards */
 
-#include "hb-private.hh"
+/* v--- Add new shapers in the right place here. */
+#ifdef HAVE_GRAPHITE
+HB_SHAPER_IMPLEMENT (graphite2)
+#endif
+#ifdef HAVE_UNISCRIBE
+HB_SHAPER_IMPLEMENT (uniscribe)
+#endif
+#ifdef HAVE_CORETEXT
+HB_SHAPER_IMPLEMENT (coretext)
+#endif
 
-#include "hb-font.h"
-#include "hb-buffer.h"
+#ifdef HAVE_OT
+HB_SHAPER_IMPLEMENT (ot) /* <--- This is our main OpenType shaper. */
+#endif
 
+#ifdef HAVE_HB_OLD
+HB_SHAPER_IMPLEMENT (old)
+#endif
 
-enum hb_ot_shape_normalization_mode_t {
-  HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED,
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS, /* never composes base-to-base */
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_FULL, /* including base-to-base composition */
-
-  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT = HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS,
-};
-
-HB_INTERNAL void _hb_ot_shape_normalize (hb_font_t *font,
-					 hb_buffer_t *buffer,
-					 hb_ot_shape_normalization_mode_t mode);
-
-#endif /* HB_OT_SHAPE_NORMALIZE_PRIVATE_HH */
+HB_SHAPER_IMPLEMENT (fallback) /* <--- This should be last. */

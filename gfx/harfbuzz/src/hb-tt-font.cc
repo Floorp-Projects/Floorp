@@ -88,7 +88,7 @@ hb_font_get_glyph_nil (hb_font_t *font HB_UNUSED,
     return hb_font_get_glyph (font->parent, unicode, variation_selector, glyph);
 
   *glyph = 0;
-  return FALSE;
+  return false;
 }
 
 static hb_position_t
@@ -133,7 +133,7 @@ hb_font_get_glyph_h_origin_nil (hb_font_t *font HB_UNUSED,
   }
 
   *x = *y = 0;
-  return FALSE;
+  return false;
 }
 
 static hb_bool_t
@@ -154,7 +154,7 @@ hb_font_get_glyph_v_origin_nil (hb_font_t *font HB_UNUSED,
   }
 
   *x = *y = 0;
-  return FALSE;
+  return false;
 }
 
 static hb_position_t
@@ -202,7 +202,7 @@ hb_font_get_glyph_extents_nil (hb_font_t *font HB_UNUSED,
   }
 
   memset (extents, 0, sizeof (*extents));
-  return FALSE;
+  return false;
 }
 
 static hb_bool_t
@@ -224,14 +224,14 @@ hb_font_get_glyph_contour_point_nil (hb_font_t *font HB_UNUSED,
   }
 
   *x = *y = 0;
-  return FALSE;
+  return false;
 }
 
 
 static hb_font_funcs_t _hb_font_funcs_nil = {
   HB_OBJECT_HEADER_STATIC,
 
-  TRUE, /* immutable */
+  true, /* immutable */
 
   {
 #define HB_FONT_FUNC_IMPLEMENT(name) hb_font_get_##name##_nil,

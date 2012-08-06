@@ -36,7 +36,7 @@
 HB_BEGIN_DECLS
 
 
-typedef struct _hb_set_t hb_set_t;
+typedef struct hb_set_t hb_set_t;
 
 
 hb_set_t *
@@ -63,7 +63,7 @@ hb_set_get_user_data (hb_set_t           *set,
 		      hb_user_data_key_t *key);
 
 
-/* Returns FALSE if allocation has failed before */
+/* Returns false if allocation has failed before */
 hb_bool_t
 hb_set_allocation_successful (hb_set_t  *set);
 
