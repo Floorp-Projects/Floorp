@@ -303,7 +303,7 @@ NS_IMETHODIMP nsWebBrowserPersist::GetCurrentState(PRUint32 *aCurrentState)
 }
 
 /* readonly attribute unsigned long result; */
-NS_IMETHODIMP nsWebBrowserPersist::GetResult(PRUint32 *aResult)
+NS_IMETHODIMP nsWebBrowserPersist::GetResult(nsresult *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = mPersistResult;
