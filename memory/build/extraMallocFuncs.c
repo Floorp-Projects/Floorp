@@ -5,10 +5,12 @@
 #include <string.h>
 #include "mozilla/Types.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #define wrap(a) __wrap_ ## a
 #elif defined(XP_WIN) || defined(XP_MACOSX)
 #define wrap(a) je_ ## a
+#elif defined(MOZ_WIDGET_GONK)
+#define wrap(a) a
 #endif
 
 #ifdef wrap
