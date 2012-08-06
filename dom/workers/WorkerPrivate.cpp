@@ -946,9 +946,6 @@ public:
     JSObject* target = aWorkerPrivate->IsAcceptingEvents() ?
                        aWorkerPrivate->GetJSObject() :
                        nullptr;
-    if (target) {
-      aWorkerPrivate->AssertInnerWindowIsCorrect();
-    }
 
     PRUint64 innerWindowId;
 
@@ -963,6 +960,8 @@ public:
         aWorkerPrivate->QueueRunnable(this);
         return true;
       }
+
+      aWorkerPrivate->AssertInnerWindowIsCorrect();
 
       innerWindowId = aWorkerPrivate->GetInnerWindowId();
     }
