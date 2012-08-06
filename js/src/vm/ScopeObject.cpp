@@ -63,7 +63,7 @@ StaticScopeIter::scopeShape() const
 {
     JS_ASSERT(hasDynamicScopeObject());
     JS_ASSERT(type() != NAMED_LAMBDA);
-    return type() == BLOCK ? block().lastProperty() : funScript()->bindings.lastBinding;
+    return type() == BLOCK ? block().lastProperty() : funScript()->bindings.callObjShape();
 }
 
 StaticScopeIter::Type
@@ -142,9 +142,7 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
 CallObject *
 CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
 {
-    RootedShape shape(cx, script->bindings.callObjectShape(cx));
-    if (shape == NULL)
-        return NULL;
+    RootedShape shape(cx, script->bindings.callObjShape());
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
@@ -204,17 +202,8 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
         return NULL;
 
     /* Copy in the closed-over formal arguments. */
-    if (script->bindingsAccessedDynamically) {
-        Value *formals = fp->formals();
-        for (unsigned slot = 0, n = fp->fun()->nargs; slot < n; ++slot)
-            callobj->setFormal(slot, formals[slot]);
-    } else if (unsigned n = script->numClosedArgs()) {
-        Value *formals = fp->formals();
-        for (unsigned i = 0; i < n; ++i) {
-            uint32_t slot = script->getClosedArg(i);
-            callobj->setFormal(slot, formals[slot]);
-        }
-    }
+    for (AliasedFormalIter i(script); i; i++)
+        callobj->setAliasedVar(i, fp->unaliasedFormal(i.frameIndex(), DONT_CHECK_ALIASING));
 
     return callobj;
 }
@@ -1101,13 +1090,13 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             Bindings &bindings = script->bindings;
-            BindingIter bi(cx, script->bindings);
-            while (NameToId(bi->name) != id) {
+            BindingIter bi(script->bindings);
+            while (NameToId(bi->name()) != id) {
                 if (!++bi)
                     return false;
             }
 
-            if (bi->kind == VARIABLE || bi->kind == CONSTANT) {
+            if (bi->kind() == VARIABLE || bi->kind() == CONSTANT) {
                 unsigned i = bi.frameIndex();
                 if (script->varIsAliased(i))
                     return false;
@@ -1132,9 +1121,9 @@ class DebugScopeProxy : public BaseProxyHandler
                     TypeScript::SetLocal(cx, script, i, *vp);
 
             } else {
-                JS_ASSERT(bi->kind == ARGUMENT);
+                JS_ASSERT(bi->kind() == ARGUMENT);
                 unsigned i = bi.frameIndex();
-                if (script->formalLivesInCallObject(i))
+                if (script->formalIsAliased(i))
                     return false;
 
                 if (maybefp) {
@@ -1354,7 +1343,7 @@ class DebugScopeProxy : public BaseProxyHandler
                                      desc->attrs);
     }
 
-    bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
+    bool getScopePropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props, unsigned flags)
     {
         ScopeObject &scope = proxy->asDebugScope().scope();
 
@@ -1364,30 +1353,32 @@ class DebugScopeProxy : public BaseProxyHandler
             return false;
         }
 
-        RootedObject scopeObj(cx, &scope);
-        return GetPropertyNames(cx, scopeObj, JSITER_OWNONLY, &props);
+        RootedObject rootedScope(cx, &scope);
+        if (!GetPropertyNames(cx, rootedScope, flags, &props))
+            return false;
+
+        /*
+         * Function scopes are optimized to not contain unaliased variables so
+         * they must be manually appended here.
+         */
+        if (scope.isCall() && !scope.asCall().isForEval()) {
+            for (BindingIter bi(scope.asCall().callee().script()->bindings); bi; bi++) {
+                if (!bi->aliased() && !props.append(NameToId(bi->name())))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
-    bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
+    bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
-        RootedValue val(cx, IdToValue(id));
-        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,
-                                        JSDVG_IGNORE_STACK, val, NullPtr(),
-                                        NULL, NULL);
+        return getScopePropertyNames(cx, proxy, props, JSITER_OWNONLY);
     }
 
     bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
-        ScopeObject &scope = proxy->asDebugScope().scope();
-
-        if (isMissingArgumentsBinding(scope) &&
-            !props.append(NameToId(cx->runtime->atomState.argumentsAtom)))
-        {
-            return false;
-        }
-
-        RootedObject scopeObj(cx, &scope);
-        return GetPropertyNames(cx, scopeObj, 0, &props);
+        return getScopePropertyNames(cx, proxy, props, 0);
     }
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
@@ -1400,12 +1391,32 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         JSBool found;
-        RootedObject scopeObj(cx, &scope);
-        if (!JS_HasPropertyById(cx, scopeObj, id, &found))
+        RootedObject rootedScope(cx, &scope);
+        if (!JS_HasPropertyById(cx, rootedScope, id, &found))
             return false;
+
+        /*
+         * Function scopes are optimized to not contain unaliased variables so
+         * a manual search is necessary.
+         */
+        if (!found && scope.isCall() && !scope.asCall().isForEval()) {
+            for (BindingIter bi(scope.asCall().callee().script()->bindings); bi; bi++) {
+                if (!bi->aliased() && NameToId(bi->name()) == id) {
+                    found = true;
+                    break;
+                }
+            }
+        }
 
         *bp = found;
         return true;
+    }
+
+    bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
+    {
+        RootedValue idval(cx, IdToValue(id));
+        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,
+                                        JSDVG_IGNORE_STACK, idval, NullPtr(), NULL, NULL);
     }
 };
 

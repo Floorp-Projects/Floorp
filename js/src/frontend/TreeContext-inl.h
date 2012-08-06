@@ -81,8 +81,7 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, u
     hasReturnExpr(false),
     hasReturnVoid(false),
     inForInit(false),
-    inDeclDestructuring(false),
-    hasDuplicateArgument_(false)
+    inDeclDestructuring(false)
 {
     prs->tc = this;
 }

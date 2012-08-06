@@ -265,9 +265,8 @@ class BaseShape : public js::gc::Cell
         ITERATED_SINGLETON =  0x800,
         NEW_TYPE_UNKNOWN   = 0x1000,
         UNCACHEABLE_PROTO  = 0x2000,
-        CLOSED_VAR         = 0x4000,  /* This bit will be removed in bug 767013 */
 
-        OBJECT_FLAG_MASK   = 0x7ff8
+        OBJECT_FLAG_MASK   = 0x3ff8
     };
 
   private:
@@ -311,7 +310,6 @@ class BaseShape : public js::gc::Cell
     inline BaseShape &operator=(const BaseShape &other);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
-    bool isClosedVar() const { return !!(flags & CLOSED_VAR); }
 
     inline bool matchesGetterSetter(PropertyOp rawGetter,
                                     StrictPropertyOp rawSetter) const;
