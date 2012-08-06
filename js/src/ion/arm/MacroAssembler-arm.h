@@ -539,6 +539,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxInt32(const ValueOperand &operand, const Register &dest);
     void unboxInt32(const Address &src, const Register &dest);
     void unboxBoolean(const ValueOperand &operand, const Register &dest);
+    void unboxBoolean(const Address &src, const Register &dest);
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
