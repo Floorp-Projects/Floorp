@@ -26,6 +26,7 @@ class nsIAtom;
 class nsIPresShell;
 class nsIURI;
 class nsSVGClipPathFrame;
+class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
 
@@ -278,6 +279,13 @@ public:
   NS_DECLARE_FRAME_PROPERTY(StrokeProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(HrefProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(BackgroundImageProperty, DestroyHashtable)
+
+  /**
+   * Get the paint server for a aTargetFrame.
+   */
+  static nsSVGPaintServerFrame *GetPaintServer(nsIFrame *aTargetFrame,
+                                               const nsStyleSVGPaint *aPaint,
+                                               const FramePropertyDescriptor *aProperty);
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;

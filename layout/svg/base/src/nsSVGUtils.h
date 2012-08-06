@@ -668,10 +668,18 @@ public:
                             NS_MIN(double(PR_INT32_MAX), aVal)));
   }
 
-  static void GetFallbackOrPaintColor(gfxContext *aContext,
-                                      nsStyleContext *aStyleContext,
-                                      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                      float *aOpacity, nscolor *color);
+  static nscolor GetFallbackOrPaintColor(gfxContext *aContext,
+                                         nsStyleContext *aStyleContext,
+                                         nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
+
+  /**
+   * Set the graphics context ready for filling.
+   */
+  static bool SetupCairoFill(gfxContext *aContext, nsIFrame *aFrame);
+  /**
+   * Set the graphics context ready for stroking.
+   */
+  static bool SetupCairoStroke(gfxContext *aContext, nsIFrame *aFrame);
 };
 
 #endif
