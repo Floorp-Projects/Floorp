@@ -957,8 +957,9 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePatte
 
     SetupCairoStrokeHitGeometry(aContext);
     float opacity = style->mStrokeOpacity;
-    nsSVGPaintServerFrame *ps = GetPaintServer(&style->mStroke,
-                                               nsSVGEffects::StrokeProperty());
+    nsSVGPaintServerFrame *ps =
+      nsSVGEffects::GetPaintServer(this, &style->mStroke,
+                                   nsSVGEffects::StrokeProperty());
 
     nsRefPtr<gfxPattern> strokePattern;
 
@@ -970,10 +971,8 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePatte
     }
 
     if (!strokePattern) {
-      nscolor color;
-      nsSVGUtils::GetFallbackOrPaintColor(aContext, GetStyleContext(),
-                                          &nsStyleSVG::mStroke, &opacity,
-                                          &color);
+      nscolor color = nsSVGUtils::GetFallbackOrPaintColor(
+                        aContext, GetStyleContext(), &nsStyleSVG::mStroke);
       strokePattern = new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
                                              NS_GET_G(color) / 255.0,
                                              NS_GET_B(color) / 255.0,

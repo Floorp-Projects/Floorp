@@ -10,6 +10,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
+#include "nsSVGPaintServerFrame.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
@@ -424,6 +425,32 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
   return result;
 }
 
+nsSVGPaintServerFrame *
+nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPaint,
+                             const FramePropertyDescriptor *aType)
+{
+  if (aPaint->mType != eStyleSVGPaintType_Server)
+    return nullptr;
+
+  nsIFrame *frame = aTargetFrame->GetContent()->IsNodeOfType(nsINode::eTEXT) ?
+                      aTargetFrame->GetParent() : aTargetFrame;
+  nsSVGPaintingProperty *property =
+    nsSVGEffects::GetPaintingProperty(aPaint->mPaint.mPaintServer, frame, aType);
+  if (!property)
+    return nullptr;
+  nsIFrame *result = property->GetReferencedFrame();
+  if (!result)
+    return nullptr;
+
+  nsIAtom *type = result->GetType();
+  if (type != nsGkAtoms::svgLinearGradientFrame &&
+      type != nsGkAtoms::svgRadialGradientFrame &&
+      type != nsGkAtoms::svgPatternFrame)
+    return nullptr;
+
+  return static_cast<nsSVGPaintServerFrame*>(result);
+}
+ 
 nsSVGClipPathFrame *
 nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
 {

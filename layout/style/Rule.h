@@ -10,9 +10,10 @@
 
 #include "nsIStyleRule.h"
 #include "nsIDOMCSSRule.h"
+#include "nsCSSStyleSheet.h"
 
 class nsIStyleSheet;
-class nsCSSStyleSheet;
+class nsIDocument;
 struct nsRuleData;
 template<class T> struct already_AddRefed;
 
@@ -75,6 +76,13 @@ public:
   virtual PRInt32 GetType() const = 0;
 
   nsCSSStyleSheet* GetStyleSheet() const { return mSheet; }
+
+  // Return the document the rule lives in, if any
+  nsIDocument* GetDocument() const
+  {
+    nsCSSStyleSheet* sheet = GetStyleSheet();
+    return sheet ? sheet->GetDocument() : nullptr;
+  }
 
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 

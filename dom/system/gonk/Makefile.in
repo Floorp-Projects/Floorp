@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DEPTH            = ../../..
+DEPTH            = @DEPTH@
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-relativesrcdir   = dom/system/gonk
+relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<title>CharacterData.insertData</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+function testNode(node) {
+  test(function() {
+    assert_throws("INDEX_SIZE_ERR", function() { node.insertData(5, "x") })
+    assert_throws("INDEX_SIZE_ERR", function() { node.insertData(5, "") })
+    node.insertData(2, "X")
+    assert_equals(node.data, "teXst")
+    node.data = "test"
+    node.insertData(4, "ing")
+    assert_equals(node.data, "testing")
+  })
+}
+test(function() {
+  testNode(document.createTextNode("test"))
+  testNode(document.createComment("test"))
+})
+</script>

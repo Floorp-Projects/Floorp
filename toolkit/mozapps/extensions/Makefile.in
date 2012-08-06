@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = ../../..
+DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
@@ -26,26 +26,29 @@ XPIDLSRCS = \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-  extensions.manifest \
   nsBlocklistService.js \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  extensions.manifest \
   addonManager.js \
   amContentHandler.js \
   amWebInstallListener.js \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  AddonLogging.jsm \
   AddonManager.jsm \
-  AddonRepository.jsm \
-  AddonUpdateChecker.jsm \
-  PluginProvider.jsm \
   XPIProvider.jsm \
   XPIProviderUtils.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
+  AddonLogging.jsm \
+  AddonRepository.jsm \
+  AddonUpdateChecker.jsm \
   ChromeManifestParser.jsm \
   LightweightThemeManager.jsm \
+  PluginProvider.jsm \
   SpellCheckDictionaryBootstrap.js \
   $(NULL)
 

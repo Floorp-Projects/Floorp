@@ -1,0 +1,7 @@
+{
+  "Calling insertBefore with a non-Node first argument must throw TypeError.": true,
+  "Calling insertBefore with a non-Node first argument on a leaf node Comment node <!--Foo--> must throw TypeError.": true,
+  "Calling insertBefore with a non-Node first argument on a leaf node DocumentType node must throw TypeError.": true,
+  "Calling insertBefore with a non-Node first argument on a leaf node ProcessingInstruction node with target \"foo\" and data \"bar\" must throw TypeError.": true,
+  "Calling insertBefore with a non-Node first argument on a leaf node Text node \"Foo\" must throw TypeError.": true
+}

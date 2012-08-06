@@ -62,20 +62,17 @@ public:
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
 
   // nsIRadioGroupContainer
-  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement* aRadio);
-  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement** aRadio);
+  void SetCurrentRadioButton(const nsAString& aName,
+                             nsIDOMHTMLInputElement* aRadio);
+  nsIDOMHTMLInputElement* GetCurrentRadioButton(const nsAString& aName);
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
                                 const bool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
                                 nsIDOMHTMLInputElement** aRadioOut);
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
                             bool aFlushContent);
-  NS_IMETHOD AddToRadioGroup(const nsAString& aName,
-                             nsIFormControl* aRadio);
-  NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
-                                  nsIFormControl* aRadio);
+  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
+  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
   virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const;
   virtual void RadioRequiredChanged(const nsAString& aName,
                                     nsIFormControl* aRadio);

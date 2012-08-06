@@ -13,6 +13,7 @@
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/dom/ipc/Blob.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
@@ -279,7 +280,7 @@ private:
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
 
-    class WatchedFile : public nsIFileUpdateListener {
+    class WatchedFile MOZ_FINAL : public nsIFileUpdateListener {
       public:
         WatchedFile(ContentParent* aParent, const nsString& aPath)
           : mParent(aParent)

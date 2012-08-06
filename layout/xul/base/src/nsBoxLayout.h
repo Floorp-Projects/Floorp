@@ -7,7 +7,13 @@
 #define nsBoxLayout_h___
 
 #include "nsISupports.h"
-#include "nsIFrame.h"
+#include "nsCoord.h"
+#include "nsFrameList.h"
+
+class nsIFrame;
+class nsBoxLayoutState;
+struct nsSize;
+struct nsMargin;
 
 #define NS_BOX_LAYOUT_IID \
 { 0x09d522a7, 0x304c, 0x4137, \
@@ -26,23 +32,23 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_BOX_LAYOUT_IID)
 
-  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState);
 
-  virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
-                                nsIBox* aPrevBox,
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nscoord GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
+                                nsIFrame* aPrevBox,
                                 const nsFrameList::Slice& aNewChildren) {}
-  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+  virtual void ChildrenAppended(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 const nsFrameList::Slice& aNewChildren) {}
-  virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList) {}
-  virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList) {}
-  virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState) {}
+  virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
+  virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
+  virtual void IntrinsicWidthsDirty(nsIFrame* aBox, nsBoxLayoutState& aState) {}
 
-  virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
-  virtual void AddMargin(nsIBox* aChild, nsSize& aSize);
+  virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
+  virtual void AddMargin(nsIFrame* aChild, nsSize& aSize);
   virtual void AddMargin(nsSize& aSize, const nsMargin& aMargin);
 
   virtual nsIGridPart* AsGridPart() { return nullptr; }

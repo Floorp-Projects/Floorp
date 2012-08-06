@@ -60,7 +60,6 @@
 #include "nsIContent.h" // for menus
 
 // For calculating size
-#include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 

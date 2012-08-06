@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<title>Document.getElementsByTagNameNS</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<div id="log"></div>
+<script>
+test(function() {
+  assert_false(document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html") instanceof NodeList, "NodeList")
+  assert_true(document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html") instanceof HTMLCollection, "HTMLCollection")
+  assert_true(document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html") !==
+              document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html") ||
+              document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html") ===
+              document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "html"), "Caching is allowed.")
+})
+</script>

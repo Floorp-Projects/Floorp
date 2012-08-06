@@ -26,24 +26,13 @@
 #include "mozilla/dom/Element.h"
 
 #include "nsIAccessibleRelation.h"
-#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMDataContainerEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
-#include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsPIDOMWindow.h"
@@ -262,9 +251,9 @@ RootAccessible::DocumentActivated(DocAccessible* aDocument)
 NS_IMETHODIMP
 RootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr<nsIDOMNSEvent> DOMNSEvent(do_QueryInterface(aDOMEvent));
+  MOZ_ASSERT(aDOMEvent);
   nsCOMPtr<nsIDOMEventTarget> DOMEventTarget;
-  DOMNSEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
+  aDOMEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
   nsCOMPtr<nsINode> origTargetNode(do_QueryInterface(DOMEventTarget));
   if (!origTargetNode)
     return NS_OK;
@@ -299,9 +288,9 @@ RootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
 void
 RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr<nsIDOMNSEvent> DOMNSEvent(do_QueryInterface(aDOMEvent));
+  MOZ_ASSERT(aDOMEvent);
   nsCOMPtr<nsIDOMEventTarget> DOMEventTarget;
-  DOMNSEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
+  aDOMEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
   nsCOMPtr<nsINode> origTargetNode(do_QueryInterface(DOMEventTarget));
 
   nsAutoString eventType;

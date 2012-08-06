@@ -33,6 +33,7 @@
 #ifndef HB_COMMON_H
 #define HB_COMMON_H
 
+#ifndef HB_BEGIN_DECLS
 # ifdef __cplusplus
 #  define HB_BEGIN_DECLS	extern "C" {
 #  define HB_END_DECLS		}
@@ -40,6 +41,7 @@
 #  define HB_BEGIN_DECLS
 #  define HB_END_DECLS
 # endif /* !__cplusplus */
+#endif
 
 HB_BEGIN_DECLS
 
@@ -124,7 +126,7 @@ hb_direction_to_string (hb_direction_t direction);
 
 /* hb_language_t */
 
-typedef struct _hb_language_t *hb_language_t;
+typedef struct hb_language_impl_t *hb_language_t;
 
 /* len=-1 means str is NUL-terminated */
 hb_language_t
@@ -139,47 +141,11 @@ hb_language_t
 hb_language_get_default (void);
 
 
-/* hb_unicode_general_category_t */
-
-typedef enum
-{
-  HB_UNICODE_GENERAL_CATEGORY_CONTROL,			/* Cc */
-  HB_UNICODE_GENERAL_CATEGORY_FORMAT,			/* Cf */
-  HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,		/* Cn */
-  HB_UNICODE_GENERAL_CATEGORY_PRIVATE_USE,		/* Co */
-  HB_UNICODE_GENERAL_CATEGORY_SURROGATE,		/* Cs */
-  HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER,		/* Ll */
-  HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER,		/* Lm */
-  HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER,		/* Lo */
-  HB_UNICODE_GENERAL_CATEGORY_TITLECASE_LETTER,		/* Lt */
-  HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER,		/* Lu */
-  HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK,		/* Mc */
-  HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK,		/* Me */
-  HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK,		/* Mn */
-  HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER,		/* Nd */
-  HB_UNICODE_GENERAL_CATEGORY_LETTER_NUMBER,		/* Nl */
-  HB_UNICODE_GENERAL_CATEGORY_OTHER_NUMBER,		/* No */
-  HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION,	/* Pc */
-  HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION,		/* Pd */
-  HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION,	/* Pe */
-  HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION,	/* Pf */
-  HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION,	/* Pi */
-  HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION,	/* Po */
-  HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION,		/* Ps */
-  HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL,		/* Sc */
-  HB_UNICODE_GENERAL_CATEGORY_MODIFIER_SYMBOL,		/* Sk */
-  HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL,		/* Sm */
-  HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL,		/* So */
-  HB_UNICODE_GENERAL_CATEGORY_LINE_SEPARATOR,		/* Zl */
-  HB_UNICODE_GENERAL_CATEGORY_PARAGRAPH_SEPARATOR,	/* Zp */
-  HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR		/* Zs */
-} hb_unicode_general_category_t;
-
-
 /* hb_script_t */
 
 /* http://unicode.org/iso15924/ */
 /* http://goo.gl/x9ilM */
+/* Unicode Character Database property: Script (sc) */
 typedef enum
 {
   /* Unicode-1.1 additions */
@@ -333,7 +299,7 @@ hb_script_get_horizontal_direction (hb_script_t script);
 
 /* User data */
 
-typedef struct _hb_user_data_key_t {
+typedef struct hb_user_data_key_t {
   /*< private >*/
   char unused;
 } hb_user_data_key_t;

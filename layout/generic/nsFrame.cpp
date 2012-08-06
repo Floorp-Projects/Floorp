@@ -52,7 +52,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSFrameConstructor.h"
 
-#include "nsFrameTraversal.h"
+#include "nsFrameIterator.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
 #include "nsRange.h"
@@ -5782,16 +5782,12 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       //resultFrame is not a block frame
       result = NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                    aPresContext, resultFrame,
-                                    ePostOrder,
-                                    false, // aVisual
-                                    aPos->mScrollViewStop,
-                                    false     // aFollowOOFs
-                                    );
-      if (NS_FAILED(result))
-        return result;
+      PRUint32 flags = FrameIteratorFlags::FLAG_NONE;
+      if (aPos->mScrollViewStop) {
+        flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+      }
+      nsFrameIterator frameTraversal(aPresContext, resultFrame,
+                                     ePostOrder, flags);
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
         nsPoint point;
@@ -5868,21 +5864,21 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
           break;
         //always try previous on THAT line if that fails go the other way
-        frameTraversal->Prev();
-        resultFrame = frameTraversal->CurrentItem();
+        frameTraversal.Prev();
+        resultFrame = frameTraversal.CurrentItem();
         if (!resultFrame)
           return NS_ERROR_FAILURE;
       }
 
       if (!found){
         resultFrame = storeOldResultFrame;
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                      aPresContext, resultFrame,
-                                      eLeaf,
-                                      false, // aVisual
-                                      aPos->mScrollViewStop,
-                                      false     // aFollowOOFs
-                                      );
+
+        PRUint32 flags = FrameIteratorFlags::FLAG_NONE;
+        if (aPos->mScrollViewStop) {
+          flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+        }
+        frameTraversal = nsFrameIterator(aPresContext, resultFrame,
+                                         eLeaf, flags);
       }
       while ( !found ){
         nsPoint point(aPos->mDesiredX, 0);
@@ -5913,8 +5909,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
           break;
         //previous didnt work now we try "next"
-        frameTraversal->Next();
-        nsIFrame *tempFrame = frameTraversal->CurrentItem();
+        frameTraversal.Next();
+        nsIFrame *tempFrame = frameTraversal.CurrentItem();
         if (!tempFrame)
           break;
         resultFrame = tempFrame;
@@ -6638,23 +6634,22 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
         return NS_ERROR_FAILURE; //we are done. cannot jump lines
     }
 
-    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-    result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                  presContext, traversedFrame,
-                                  eLeaf,
-                                  aVisual && presContext->BidiEnabled(),
-                                  aScrollViewStop,
-                                  true     // aFollowOOFs
-                                  );
-    if (NS_FAILED(result))
-      return result;
+    PRUint32 flags = FrameIteratorFlags::FLAG_FOLLOW_OUT_OF_FLOW;
+    if (aScrollViewStop) {
+      flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+    }
+    if (aVisual && presContext->BidiEnabled()) {
+      flags |= FrameIteratorFlags::FLAG_VISUAL;
+    }
+    nsFrameIterator frameTraversal(presContext, traversedFrame,
+                                   eLeaf, flags);
 
     if (aDirection == eDirNext)
-      frameTraversal->Next();
+      frameTraversal.Next();
     else
-      frameTraversal->Prev();
+      frameTraversal.Prev();
 
-    traversedFrame = frameTraversal->CurrentItem();
+    traversedFrame = frameTraversal.CurrentItem();
     if (!traversedFrame)
       return NS_ERROR_FAILURE;
     traversedFrame->IsSelectable(&selectable, nullptr);
@@ -7620,7 +7615,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState)
 
   // get our size in CSS.
   bool widthSet, heightSet;
-  bool completelyRedefined = nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
+  bool completelyRedefined = nsIFrame::AddCSSPrefSize(this, size, widthSet, heightSet);
 
   // Refresh our caches with new sizes.
   if (!completelyRedefined) {
@@ -7657,7 +7652,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState)
   // get our size in CSS.
   bool widthSet, heightSet;
   bool completelyRedefined =
-    nsIBox::AddCSSMinSize(aState, this, size, widthSet, heightSet);
+    nsIFrame::AddCSSMinSize(aState, this, size, widthSet, heightSet);
 
   // Refresh our caches with new sizes.
   if (!completelyRedefined) {
@@ -7820,7 +7815,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
   //printf("width=%d, height=%d\n", aWidth, aHeight);
   /*
-  nsIBox* parent;
+  nsIFrame* parent;
   GetParentBox(&parent);
 
  // if (parent->GetStateBits() & NS_STATE_CURRENTLY_IN_DEBUG)

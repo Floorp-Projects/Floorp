@@ -19,9 +19,9 @@
 #include "nsIContent.h"
 #include "nsTextFragment.h"
 #include "mozilla/dom/Element.h"
-#include "nsIFrame.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
+#include "nsIFrame.h"
 
 using namespace mozilla;
 

@@ -179,10 +179,10 @@ let Util = {
   },
 
   modifierMaskFromEvent: function modifierMaskFromEvent(aEvent) {
-    return (aEvent.altKey   ? Ci.nsIDOMNSEvent.ALT_MASK     : 0) |
-           (aEvent.ctrlKey  ? Ci.nsIDOMNSEvent.CONTROL_MASK : 0) |
-           (aEvent.shiftKey ? Ci.nsIDOMNSEvent.SHIFT_MASK   : 0) |
-           (aEvent.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
+    return (aEvent.altKey   ? Ci.nsIDOMEvent.ALT_MASK     : 0) |
+           (aEvent.ctrlKey  ? Ci.nsIDOMEvent.CONTROL_MASK : 0) |
+           (aEvent.shiftKey ? Ci.nsIDOMEvent.SHIFT_MASK   : 0) |
+           (aEvent.metaKey  ? Ci.nsIDOMEvent.META_MASK    : 0);
   },
 
   get displayDPI() {

@@ -80,7 +80,7 @@ using namespace mozilla;
 
 #ifdef DEBUG_LAYOUT
 bool nsBoxFrame::gDebug = false;
-nsIBox* nsBoxFrame::mDebugChild = nullptr;
+nsIFrame* nsBoxFrame::mDebugChild = nullptr;
 #endif
 
 nsIFrame*
@@ -759,7 +759,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet))
+  if (!nsIFrame::AddCSSPrefSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
@@ -822,7 +822,7 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
+  if (!nsIFrame::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetMinSize(this, aBoxLayoutState);
@@ -862,7 +862,7 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIBox::AddCSSMaxSize(this, size, widthSet, heightSet))
+  if (!nsIFrame::AddCSSMaxSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetMaxSize(this, aBoxLayoutState);
@@ -1226,7 +1226,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   else if (aAttribute == nsGkAtoms::ordinal) {
     nsBoxLayoutState state(PresContext());
-    nsIBox* parent = GetParentBox();
+    nsIFrame* parent = GetParentBox();
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
     // Also don't bother with popup frames since they are kept on the 
@@ -1713,7 +1713,7 @@ nsBoxFrame::GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch
 }
 
 nsresult
-nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
+nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                                 nsPoint& aPoint)
 {
     nsBoxLayoutState state(GetPresContext());
@@ -1736,7 +1736,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
     //printf("%%%%%% inside box %%%%%%%\n");
 
     int count = 0;
-    nsIBox* child = aBox->GetChildBox();
+    nsIFrame* child = aBox->GetChildBox();
 
     nsMargin m;
     nsMargin m2;
@@ -1783,10 +1783,10 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
                     nscoord flexCSS = NS_INTRINSICSIZE;
 
                     bool widthSet, heightSet;
-                    nsIBox::AddCSSPrefSize(child, prefSizeCSS, widthSet, heightSet);
-                    nsIBox::AddCSSMinSize (state, child, minSizeCSS, widthSet, heightSet);
-                    nsIBox::AddCSSMaxSize (child, maxSizeCSS, widthSet, heightSet);
-                    nsIBox::AddCSSFlex    (state, child, flexCSS);
+                    nsIFrame::AddCSSPrefSize(child, prefSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddCSSMinSize (state, child, minSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddCSSMaxSize (child, maxSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddCSSFlex    (state, child, flexCSS);
 
                     nsSize prefSize = child->GetPrefSize(state);
                     nsSize minSize = child->GetMinSize(state);
@@ -1837,9 +1837,9 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
 }
 
 void
-nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, bool aDebug)
+nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool aDebug)
 {
-    nsIBox* child = GetChildBox();
+    nsIFrame* child = GetChildBox();
      while (child)
      {
         child->SetDebug(aState, aDebug);
@@ -1848,7 +1848,7 @@ nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, bool a
 }
 
 nsresult
-nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
+nsBoxFrame::GetFrameSizeWithMargin(nsIFrame* aBox, nsSize& aSize)
 {
   nsRect rect(aBox->GetRect());
   nsMargin margin(0,0,0,0);
@@ -2024,7 +2024,7 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
 }
 
 nsresult
-nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect)
+nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect& aRect)
 {
   // get the current rect
   nsRect oldRect(aBox->GetRect());
@@ -2040,7 +2040,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& 
 }
 
 NS_IMETHODIMP
-nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
+nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
 {
   if (!SupportsOrdinalsInChildren())
     return NS_OK;

@@ -43,7 +43,7 @@ public:
   virtual bool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return true; } 
   virtual bool GetInitialAutoStretch(bool& aStretch)    { aStretch = true; return true; } 
 
-  nsIBox* GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect);
+  nsIFrame* GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect);
 };
 
 /*
@@ -133,7 +133,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
 
   nsRect groupRect;
-  nsIBox* groupBox = GetCaptionBox(presContext, groupRect);
+  nsIFrame* groupBox = GetCaptionBox(presContext, groupRect);
 
   if (groupBox) {        
     // if the border is smaller than the legend. Move the border down
@@ -207,11 +207,11 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
   }
 }
 
-nsIBox*
+nsIFrame*
 nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect)
 {
     // first child is our grouped area
-    nsIBox* box = GetChildBox();
+    nsIFrame* box = GetChildBox();
 
     // no area fail.
     if (!box)
@@ -225,7 +225,7 @@ nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect
       return nullptr;
 
     // now get the caption itself. It is in the caption frame.
-    nsIBox* child = box->GetChildBox();
+    nsIFrame* child = box->GetChildBox();
 
     if (child) {
        // convert to our coordinates.

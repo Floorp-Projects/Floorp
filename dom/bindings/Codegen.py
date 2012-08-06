@@ -1118,7 +1118,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructHook = CONSTRUCT_HOOK_NAME
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
-            constructHook = "ThrowingConstructorWorkers" if self.descriptor.workers else "ThrowingConstructor"
+            constructHook = "ThrowingConstructor"
             constructArgs = 0
 
         call = CGGeneric(("return dom::CreateInterfaceObjects(aCx, aGlobal, aReceiver, parentProto,\n"
@@ -1213,24 +1213,27 @@ def CheckPref(descriptor, globalName, varName, retval, wrapperCache = None):
     """
     if not descriptor.prefable:
         return ""
+
     if wrapperCache:
        wrapperCache = "      %s->ClearIsDOMBinding();\n" % (wrapperCache)
     else:
         wrapperCache = ""
+
+    failureCode = ("      %s = false;\n" +
+                   "      return %s;") % (varName, retval)
     return """
   {
     XPCWrappedNativeScope* scope =
       XPCWrappedNativeScope::FindInJSObjectScope(aCx, %s);
     if (!scope) {
-      return %s;
+%s
     }
 
     if (!scope->ExperimentalBindingsEnabled()) {
-%s      %s = false;
-      return %s;
+%s%s
     }
   }
-""" % (globalName, retval, wrapperCache, varName, retval)
+""" % (globalName, failureCode, wrapperCache, failureCode)
 
 class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     """

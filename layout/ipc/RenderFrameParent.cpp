@@ -249,7 +249,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
   const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  gfx3DMatrix shadowTransform = aLayer->GetBaseTransform();
+  gfx3DMatrix shadowTransform = aLayer->GetTransform();
   ViewTransform layerTransform = aTransform;
 
   if (metrics && metrics->IsScrollable()) {
@@ -296,6 +296,18 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
       shadow->SetShadowClipRect(&transformedClipRect);
     }
   }
+
+  // The transform already takes the resolution scale into account.  Since we
+  // will apply the resolution scale again when computing the effective
+  // transform, we must apply the inverse resolution scale here.
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    shadowTransform.Scale(1.0f/c->GetPreXScale(),
+                          1.0f/c->GetPreYScale(),
+                          1);
+  }
+  shadowTransform.ScalePost(1.0f/aLayer->GetPostXScale(),
+                            1.0f/aLayer->GetPostYScale(),
+                            1);
 
   shadow->SetShadowTransform(shadowTransform);
   for (Layer* child = aLayer->GetFirstChild();
@@ -612,6 +624,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   if (mContainer) {
     ClearContainer(mContainer);
+    mContainer->SetPreScale(1.0f, 1.0f);
+    mContainer->SetPostScale(1.0f, 1.0f);
   }
 
   ContainerLayer* shadowRoot = GetRootLayer();

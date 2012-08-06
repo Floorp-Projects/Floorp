@@ -59,7 +59,7 @@ main (int argc, char **argv)
     hb_memory_mode_t mm;
 
 #ifdef HAVE_GLIB
-    GMappedFile *mf = g_mapped_file_new (argv[1], FALSE, NULL);
+    GMappedFile *mf = g_mapped_file_new (argv[1], false, NULL);
     font_data = g_mapped_file_get_contents (mf);
     len = g_mapped_file_get_length (mf);
     destroy = (hb_destroy_func_t) g_mapped_file_unref;

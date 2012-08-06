@@ -951,11 +951,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     }
     else if (aIID.Equals(NS_GET_IID(nsIDocument)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-        if (!domDoc)
-            return NS_NOINTERFACE;
-        return domDoc->QueryInterface(aIID, aSink);
+        nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+        doc.forget(aSink);
+        return *aSink ? NS_OK : NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer))) {
         *aSink = nullptr;

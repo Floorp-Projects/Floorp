@@ -30,12 +30,6 @@
 
 /* Public API */
 
-static hb_set_t _hb_set_nil = {
-  HB_OBJECT_HEADER_STATIC,
-
-  {0} /* elts */
-};
-
 
 hb_set_t *
 hb_set_create ()
@@ -43,7 +37,7 @@ hb_set_create ()
   hb_set_t *set;
 
   if (!(set = hb_object_create<hb_set_t> ()))
-    return &_hb_set_nil;
+    return hb_set_get_empty ();
 
   set->clear ();
 
@@ -53,7 +47,13 @@ hb_set_create ()
 hb_set_t *
 hb_set_get_empty (void)
 {
-  return &_hb_set_nil;
+  static const hb_set_t _hb_set_nil = {
+    HB_OBJECT_HEADER_STATIC,
+
+    {0} /* elts */
+  };
+
+  return const_cast<hb_set_t *> (&_hb_set_nil);
 }
 
 hb_set_t *
@@ -93,7 +93,7 @@ hb_set_get_user_data (hb_set_t        *set,
 hb_bool_t
 hb_set_allocation_successful (hb_set_t  *set HB_UNUSED)
 {
-  return TRUE;
+  return true;
 }
 
 void

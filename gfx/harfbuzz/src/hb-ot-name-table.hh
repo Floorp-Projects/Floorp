@@ -114,7 +114,7 @@ struct name
   }
 
   /* We only implement format 0 for now. */
-  private:
+  protected:
   USHORT	format;			/* Format selector (=0/1). */
   USHORT	count;			/* Number of name records. */
   Offset	stringOffset;		/* Offset to start of string storage (from start of table). */

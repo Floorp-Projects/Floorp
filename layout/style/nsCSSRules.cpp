@@ -560,6 +560,8 @@ GroupRule::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = 0, count = mRules.Count(); index < count; ++index) {
     mRules.ObjectAt(index)->List(out, aIndent + 1);
   }
+
+  for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
   fputs("}\n", out);
 }
 #endif
@@ -1366,8 +1368,17 @@ DOMCI_DATA(CSSFontFaceStyleDecl, nsCSSFontFaceStyleDecl)
 
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  // We forward the cycle collection interfaces to ContainingRule(), which is
+  // never null (in fact, we're part of that object!)
+  if (aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) ||
+      aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
+    return ContainingRule()->QueryInterface(aIID, aInstancePtr);
+  }
+  else
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceStyleDecl)
 NS_INTERFACE_MAP_END
 
@@ -1574,6 +1585,28 @@ nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSProperty aPropID,
+                                         nsAString& aValue)
+{
+  return
+    GetPropertyValue(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
+                     aValue);
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSProperty aPropID,
+                                         const nsAString& aValue)
+{
+  return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
+                     aValue, EmptyString());
+}
+
+nsINode*
+nsCSSFontFaceStyleDecl::GetParentObject()
+{
+  return ContainingRule()->GetDocument();
+}
 
 // -------------------------------------------
 // nsCSSFontFaceRule
@@ -1586,13 +1619,36 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, Rule)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSFontFaceRule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSFontFaceRule)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsCSSFontFaceRule)
+  // Trace the wrapper for our declaration.  This just expands out
+  // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
+  // directly because the wrapper is on the declaration, not on us.
+  nsContentUtils::TraceWrapper(&tmp->mDecl, aCallback, aClosure);
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSFontFaceRule)
+  // Unlink the wrapper for our declaraton.  This just expands out
+  // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
+  // directly because the wrapper is on the declaration, not on us.
+  nsContentUtils::ReleaseWrapper(s, &tmp->mDecl);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSFontFaceRule)
+  // Just NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS here: that will call
+  // into our Trace hook, where we do the right thing with declarations
+  // already.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(CSSFontFaceRule, nsCSSFontFaceRule)
 
 // QueryInterface implementation for nsCSSFontFaceRule
-NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
@@ -1731,8 +1787,14 @@ nsCSSKeyframeStyleDeclaration::~nsCSSKeyframeStyleDeclaration()
   NS_ASSERTION(!mRule, "DropReference not called.");
 }
 
-NS_IMPL_ADDREF(nsCSSKeyframeStyleDeclaration)
-NS_IMPL_RELEASE(nsCSSKeyframeStyleDeclaration)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSKeyframeStyleDeclaration)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeStyleDeclaration)
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsCSSKeyframeStyleDeclaration)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeStyleDeclaration)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
 css::Declaration*
 nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(bool aAllocate)
@@ -1771,6 +1833,12 @@ nsIDocument*
 nsCSSKeyframeStyleDeclaration::DocToUpdate()
 {
   return nullptr;
+}
+
+nsINode*
+nsCSSKeyframeStyleDeclaration::GetParentObject()
+{
+  return mRule ? mRule->GetDocument() : nullptr;
 }
 
 // -------------------------------------------

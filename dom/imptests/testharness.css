@@ -72,7 +72,7 @@ tr.notrun > td:first-child {
     color:blue;
 }
 
-.pass .fail .timeout .notrun > td:first-child {
+.pass > td:first-child, .fail > td:first-child, .timeout > td:first-child, .notrun > td:first-child {
     font-variant:small-caps;
 }
 

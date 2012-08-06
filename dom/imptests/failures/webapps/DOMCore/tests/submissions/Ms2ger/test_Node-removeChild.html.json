@@ -1,0 +1,3 @@
+{
+  "Passing a value that is not a Node reference to removeChild should throw TypeError.": true
+}

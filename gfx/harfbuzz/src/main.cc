@@ -49,7 +49,7 @@ main (int argc, char **argv)
   int len = 0;
 
 #ifdef HAVE_GLIB
-  GMappedFile *mf = g_mapped_file_new (argv[1], FALSE, NULL);
+  GMappedFile *mf = g_mapped_file_new (argv[1], false, NULL);
   font_data = g_mapped_file_get_contents (mf);
   len = g_mapped_file_get_length (mf);
 #else
