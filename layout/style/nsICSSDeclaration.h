@@ -21,6 +21,7 @@
 
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSProperty.h"
+#include "nsWrapperCache.h"
 
 // 57eb81d1-a607-4429-926b-802519d43aad
 #define NS_ICSSDECLARATION_IID \
@@ -29,7 +30,8 @@
 
 class nsINode;
 
-class nsICSSDeclaration : public nsIDOMCSSStyleDeclaration
+class nsICSSDeclaration : public nsIDOMCSSStyleDeclaration,
+                          public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSDECLARATION_IID)
