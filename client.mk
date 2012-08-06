@@ -402,7 +402,20 @@ cleansrcdir:
 	   build/autoconf/clean-config.sh; \
 	fi;
 
-## Sanity check $X and js/src/$X are in sync
+# Because the SpiderMonkey can be distributed and built independently
+# of the Mozilla source tree, it contains its own copies of many of
+# the files used by the top-level Mozilla build process, from the
+# 'config' and 'build' subtrees.
+#
+# To make it simpler to keep the copies in sync, we follow the policy
+# that the SpiderMonkey copies must always be exact copies of those in
+# the containing Mozilla tree.  If you've made a change in one, it
+# belongs in the other as well.  If the change isn't right for both
+# places, then that's something to bring up with the other developers.
+#
+# Some files are reasonable to diverge; for  example,
+# js/src/config/autoconf.mk.in doesn't need most of the stuff in
+# config/autoconf.mk.in.
 .PHONY: check-sync-dirs
 check-sync-dirs: check-sync-dirs-build check-sync-dirs-config
 check-sync-dirs-%:
