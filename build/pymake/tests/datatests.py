@@ -201,5 +201,37 @@ class ExpansionTest(unittest.TestCase):
 
         self.assertTrue(isinstance(funcs[0], pymake.functions.SortFunction))
 
+    def test_is_filesystem_dependent(self):
+        e = pymake.data.Expansion()
+        vname1 = pymake.data.StringExpansion('FOO', None)
+        func1 = pymake.functions.VariableRef(None, vname1)
+        e.appendfunc(func1)
+
+        self.assertFalse(e.is_filesystem_dependent)
+
+        func2 = pymake.functions.WildcardFunction(None)
+        func2.append(vname1)
+        e.appendfunc(func2)
+
+        self.assertTrue(e.is_filesystem_dependent)
+
+    def test_is_filesystem_dependent_descend(self):
+        sort = pymake.functions.SortFunction(None)
+        wildcard = pymake.functions.WildcardFunction(None)
+
+        e = pymake.data.StringExpansion('foo/*', None)
+        wildcard.append(e)
+
+        e = pymake.data.Expansion(None)
+        e.appendfunc(wildcard)
+
+        sort.append(e)
+
+        e = pymake.data.Expansion(None)
+        e.appendfunc(sort)
+
+        self.assertTrue(e.is_filesystem_dependent)
+
+
 if __name__ == '__main__':
     unittest.main()
