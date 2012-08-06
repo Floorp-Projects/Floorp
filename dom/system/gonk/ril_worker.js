@@ -669,7 +669,7 @@ let RIL = {
   /**
    * Pending messages to be send in batch from requestNetworkInfo()
    */
-  _pendingNetworkInfo: {type: "networkinfochanged"},
+  _pendingNetworkInfo: {rilMessageType: "networkinfochanged"},
 
   /**
    * Mute or unmute the radio.
@@ -777,9 +777,9 @@ let RIL = {
    * Outgoing requests to the RIL. These can be triggered from the
    * main thread via messages that look like this:
    *
-   *   {type:  "methodName",
-   *    extra: "parameters",
-   *    go:    "here"}
+   *   {rilMessageType: "methodName",
+   *    extra:          "parameters",
+   *    go:             "here"}
    *
    * So if one of the following methods takes arguments, it takes only one,
    * an object, which then contains all of the parameters as attributes.
@@ -1051,7 +1051,7 @@ let RIL = {
    * Update the ICC information to RadioInterfaceLayer.
    */
   _handleICCInfoChange: function _handleICCInfoChange() {
-    this.iccInfo.type = "iccinfochange";
+    this.iccInfo.rilMessageType = "iccinfochange";
     this.sendDOMMessage(this.iccInfo);
   },
 
@@ -1283,7 +1283,7 @@ let RIL = {
                                 " number = " + this.iccInfo.fdn[i].number);
           }
         }
-        this.sendDOMMessage({type: "icccontacts",
+        this.sendDOMMessage({rilMessageType: "icccontacts",
                              contactType: "FDN",
                              contacts: this.iccInfo.fdn,
                              requestId: options.requestId});
@@ -1328,7 +1328,7 @@ let RIL = {
                                 " number = " + this.iccInfo.adn[i].number);
           }
         }
-        this.sendDOMMessage({type: "icccontacts",
+        this.sendDOMMessage({rilMessageType: "icccontacts",
                              contactType: "ADN",
                              contacts: this.iccInfo.adn,
                              requestId: options.requestId});
@@ -1366,7 +1366,7 @@ let RIL = {
         }
         if (this.iccInfo.mbdn != contact.number) {
           this.iccInfo.mbdn = contact.number;
-          contact.type = "iccmbdn";
+          contact.rilMessageType = "iccmbdn";
           this.sendDOMMessage(contact);
         }
       };
@@ -1606,7 +1606,7 @@ let RIL = {
       if (!this._isEmergencyNumber(options.number)) {
         // Notify error in establishing the call with an invalid number.
         options.callIndex = -1;
-        options.type = "callError";
+        options.rilMessageType = "callError";
         options.error =
           RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_UNOBTAINABLE_NUMBER];
         this.sendDOMMessage(options);
@@ -1975,7 +1975,7 @@ let RIL = {
         return;
       }
       this.cardState = GECKO_CARDSTATE_ABSENT;
-      this.sendDOMMessage({type: "cardstatechange",
+      this.sendDOMMessage({rilMessageType: "cardstatechange",
                            cardState: this.cardState});
       return;
     }
@@ -1990,7 +1990,7 @@ let RIL = {
       }
       this.cardState = GECKO_CARDSTATE_ABSENT;
       this.operator = null;
-      this.sendDOMMessage({type: "cardstatechange",
+      this.sendDOMMessage({rilMessageType: "cardstatechange",
                            cardState: this.cardState});
       return;
     }
@@ -2030,7 +2030,7 @@ let RIL = {
     this.fetchICCRecords();
 
     this.cardState = newCardState;
-    this.sendDOMMessage({type: "cardstatechange",
+    this.sendDOMMessage({rilMessageType: "cardstatechange",
                          cardState: this.cardState});
   },
 
@@ -2264,7 +2264,7 @@ let RIL = {
     }
 
     if (cellChanged) {
-      cell.type = "celllocationchanged";
+      cell.rilMessageType = "celllocationchanged";
       this.sendDOMMessage(cell);
     }
 
@@ -2294,7 +2294,7 @@ let RIL = {
     }
 
     if (stateChanged) {
-      rs.type = "voiceregistrationstatechange";
+      rs.rilMessageType = "voiceregistrationstatechange";
       this._sendNetworkInfoMessage(NETWORK_INFO_VOICE_REGISTRATION_STATE, rs);
     }
   },
@@ -2316,7 +2316,7 @@ let RIL = {
     }
 
     if (stateChanged) {
-      rs.type = "dataregistrationstatechange";
+      rs.rilMessageType = "dataregistrationstatechange";
       this._sendNetworkInfoMessage(NETWORK_INFO_DATA_REGISTRATION_STATE, rs);
     }
   },
@@ -2329,7 +2329,7 @@ let RIL = {
     }
 
     if (!this.operator) {
-      this.operator = {type: "operatorchange"};
+      this.operator = {rilMessageType: "operatorchange"};
     }
 
     let [longName, shortName, networkTuple] = operatorData;
@@ -2424,13 +2424,13 @@ let RIL = {
   },
 
   _handleChangedCallState: function _handleChangedCallState(changedCall) {
-    let message = {type: "callStateChange",
+    let message = {rilMessageType: "callStateChange",
                    call: changedCall};
     this.sendDOMMessage(message);
   },
 
   _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
-    let message = {type: "callDisconnected",
+    let message = {rilMessageType: "callDisconnected",
                    call: disconnectedCall};
     this.sendDOMMessage(message);
   },
@@ -2464,7 +2464,7 @@ let RIL = {
       if (!updatedDataCall) {
         delete this.currentDataCalls[currentDataCall.callIndex];
         currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-        currentDataCall.type = "datacallstatechange";
+        currentDataCall.rilMessageType = "datacallstatechange";
         this.sendDOMMessage(currentDataCall);
         continue;
       }
@@ -2474,7 +2474,7 @@ let RIL = {
         currentDataCall.status = updatedDataCall.status;
         currentDataCall.active = updatedDataCall.active;
         currentDataCall.state = updatedDataCall.state;
-        currentDataCall.type = "datacallstatechange";
+        currentDataCall.rilMessageType = "datacallstatechange";
         this.sendDOMMessage(currentDataCall);
       }
     }
@@ -2493,7 +2493,7 @@ let RIL = {
       } else if (DEBUG) {
         debug("Unexpected new data call: " + JSON.stringify(newDataCall));
       }
-      newDataCall.type = "datacallstatechange";
+      newDataCall.rilMessageType = "datacallstatechange";
       this.sendDOMMessage(newDataCall);
     }
   },
@@ -2636,7 +2636,7 @@ let RIL = {
     }
 
     if (message) {
-      message.type = "sms-received";
+      message.rilMessageType = "sms-received";
       this.sendDOMMessage(message);
     }
 
@@ -2699,7 +2699,7 @@ let RIL = {
     } else {
       // Last segment delivered with success. Report it.
       this.sendDOMMessage({
-        type: "sms-delivered",
+        rilMessageType: "sms-delivered",
         envelopeId: options.envelopeId,
       });
     }
@@ -2801,7 +2801,7 @@ let RIL = {
    */
   handleDOMMessage: function handleMessage(message) {
     if (DEBUG) debug("Received DOM message " + JSON.stringify(message));
-    let method = this[message.type];
+    let method = this[message.rilMessageType];
     if (typeof method != "function") {
       if (DEBUG) {
         debug("Don't know what to do with message " + JSON.stringify(message));
@@ -2820,7 +2820,7 @@ let RIL = {
     for each (let call in this.currentCalls) {
       calls.push(call);
     }
-    this.sendDOMMessage({type: "enumerateCalls", calls: calls});
+    this.sendDOMMessage({rilMessageType: "enumerateCalls", calls: calls});
   },
 
   /**
@@ -2831,7 +2831,7 @@ let RIL = {
     for each (let datacall in this.currentDataCalls) {
       datacall_list.push(datacall);
     }
-    this.sendDOMMessage({type: "datacalllist",
+    this.sendDOMMessage({rilMessageType: "datacalllist",
                          datacalls: datacall_list});
   },
 
@@ -2900,42 +2900,42 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   this._processICCStatus(iccStatus);
 };
 RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
-  this.sendDOMMessage({type: "iccunlockcardlock",
+  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
                        lockType: "pin",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
                        requestId: options.requestId});
 };
 RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({type: "iccunlockcardlock",
+  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
                        lockType: "puk",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
                        requestId: options.requestId});
 };
 RIL[REQUEST_ENTER_SIM_PIN2] = function REQUEST_ENTER_SIM_PIN2(length, options) {
-  this.sendDOMMessage({type: "iccunlockcardlock",
+  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
                        lockType: "pin2",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
                        requestId: options.requestId});
 };
 RIL[REQUEST_ENTER_SIM_PUK2] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({type: "iccunlockcardlock",
+  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
                        lockType: "puk2",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
                        requestId: options.requestId});
 };
 RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
-  this.sendDOMMessage({type: "iccsetcardlock",
+  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
                        lockType: "pin",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
                        requestId: options.requestId});
 };
 RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
-  this.sendDOMMessage({type: "iccsetcardlock",
+  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
                        lockType: "pin2",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
@@ -3081,7 +3081,7 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
     case CALL_FAIL_IMSI_UNKNOWN_IN_VLR:
     case CALL_FAIL_IMEI_NOT_ACCEPTED:
     case CALL_FAIL_ERROR_UNSPECIFIED:
-      options.type = "callError";
+      options.rilMessageType = "callError";
       options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
       this.sendDOMMessage(options);
       break;
@@ -3147,7 +3147,7 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options)
   }
 
   if (DEBUG) debug("Signal strength " + JSON.stringify(obj));
-  obj.type = "signalstrengthchange";
+  obj.rilMessageType = "signalstrengthchange";
   this.sendDOMMessage(obj);
 };
 RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length, options) {
@@ -3202,7 +3202,7 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
         // Fallback to default error handling if it meets max retry count.
       default:
         this.sendDOMMessage({
-          type: "sms-send-failed",
+          rilMessageType: "sms-send-failed",
           envelopeId: options.envelopeId,
           error: options.rilRequestError,
         });
@@ -3229,7 +3229,7 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   } else {
     // Last segment sent with success. Report it.
     this.sendDOMMessage({
-      type: "sms-sent",
+      rilMessageType: "sms-sent",
       envelopeId: options.envelopeId,
     });
   }
@@ -3253,7 +3253,7 @@ RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
 
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
   if (options.rilRequestError) {
-    options.type = "datacallerror";
+    options.rilMessageType = "datacallerror";
     this.sendDOMMessage(options);
     return;
   }
@@ -3263,7 +3263,7 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
     // we retain the APN and other info about how the data call was set up.
     this.readSetupDataCall_v5(options);
     this.currentDataCalls[options.cid] = options;
-    options.type = "datacallstatechange";
+    options.rilMessageType = "datacallstatechange";
     this.sendDOMMessage(options);
     // Let's get the list of data calls to ensure we know whether it's active
     // or not.
@@ -3295,7 +3295,7 @@ RIL[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, options) {
   if (DEBUG) {
     debug("REQUEST_SEND_USSD " + JSON.stringify(options)); 
   }
-  options.type = "sendussd";
+  options.rilMessageType = "sendussd";
   options.success = options.rilRequestError == 0 ? true : false;
   this.sendDOMMessage(options);
 };
@@ -3303,7 +3303,7 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   if (DEBUG) {
     debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
   }
-  options.type = "cancelussd";
+  options.rilMessageType = "cancelussd";
   options.success = options.rilRequestError == 0 ? true : false;
   this.sendDOMMessage(options);
 };
@@ -3337,7 +3337,7 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
   datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-  datacall.type = "datacallstatechange";
+  datacall.rilMessageType = "datacallstatechange";
   this.sendDOMMessage(datacall);
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, options) {
@@ -3346,13 +3346,13 @@ RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, 
   }
 
   let response = Buf.readUint32List()[0];
-  this.sendDOMMessage({type: "iccgetcardlock",
+  this.sendDOMMessage({rilMessageType: "iccgetcardlock",
                        lockType: "pin",
                        enabled: response == 0 ? false : true,
                        requestId: options.requestId});
 };
 RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
-  this.sendDOMMessage({type: "iccsetcardlock",
+  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
                        lockType: "pin",
                        result: options.rilRequestError == 0 ? true : false,
                        retryCount: length ? Buf.readUint32List()[0] : -1,
@@ -3385,7 +3385,7 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 
   if (this.mode != selectionMode) {
     this.mode = options.mode = selectionMode;
-    options.type = "networkselectionmodechange";
+    options.rilMessageType = "networkselectionmodechange";
     this._sendNetworkInfoMessage(NETWORK_INFO_NETWORK_SELECTION_MODE, options);
   }
 };
@@ -3603,7 +3603,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
 
   this.radioState = newState;
   this.sendDOMMessage({
-    type: "radiostatechange",
+    rilMessageType: "radiostatechange",
     radioState: newState
   });
 
@@ -3644,7 +3644,7 @@ RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
   if (!message || message == "") {
     return;
   }
-  this.sendDOMMessage({type: "ussdreceived",
+  this.sendDOMMessage({rilMessageType: "ussdreceived",
                        message: message});
 };
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
@@ -3679,7 +3679,7 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
     return;
   }
 
-  this.sendDOMMessage({type: "nitzTime",
+  this.sendDOMMessage({rilMessageType: "nitzTime",
                        networkTimeInSeconds: timeInSeconds,
                        networkTimeZoneInMinutes: tz * 15,
                        dstFlag: dst,
