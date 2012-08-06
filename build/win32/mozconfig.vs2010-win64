@@ -5,9 +5,12 @@ export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x86/Microsoft.VC100.CRT
 export MOZ_TOOLS=C:/mozilla-build/moztools
 export PATH="/c/tools/msvs10/Common7/IDE:/c/tools/msvs10/VC/BIN:/c/tools/msvs10/Common7/Tools:/c/tools/msvs10/VC/VCPackages:/c/mozilla-build/moztools:/c/Tools/sdks/v7.0/bin:${PATH}"
 
-mk_add_options "export LIB=$LIB"
-mk_add_options "export LIBPATH=$LIBPATH"
-mk_add_options "export PATH=$PATH"
-mk_add_options "export INCLUDE=$INCLUDE"
-mk_add_options "export WIN32_REDIST_DIR=$WIN32_REDIST_DIR"
+. $topsrcdir/build/mozconfig.vs2010-common
+
+mk_export_correct_style LIB
+mk_export_correct_style LIBPATH
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style WIN32_REDIST_DIR
+
 mk_add_options "export MOZ_TOOLS=$MOZ_TOOLS"
