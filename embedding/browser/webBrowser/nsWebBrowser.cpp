@@ -887,8 +887,8 @@ NS_IMETHODIMP nsWebBrowser::GetCurrentState(PRUint32 *aCurrentState)
     return NS_OK;
 }
 
-/* readonly attribute unsigned long result; */
-NS_IMETHODIMP nsWebBrowser::GetResult(PRUint32 *aResult)
+/* readonly attribute nsresult result; */
+NS_IMETHODIMP nsWebBrowser::GetResult(nsresult *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     if (mPersist)
