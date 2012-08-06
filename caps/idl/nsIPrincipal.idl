@@ -241,8 +241,9 @@ interface nsIPrincipal : nsISerializable
     readonly attribute unsigned short appStatus;
 
     /**
-     * Returns the app id the principal is in.
-     * Returns nsIAppsService::NO_APP_ID if this principal isn't part of an app.
+     * Returns the app id the principal is in, or returns
+     * nsIScriptSecurityManager::NO_APP_ID if this principal isn't part of an
+     * app.
      */
     readonly attribute unsigned long appId;
 
