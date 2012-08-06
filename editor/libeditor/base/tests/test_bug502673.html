@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
       function doTest() {
         netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
         var input = document.getElementById("ip");
-        if (input instanceof Components.interfaces.nsIDOMNSEditableElement) {
+        if (SpecialPowers.call_Instanceof(input, Components.interfaces.nsIDOMNSEditableElement)) {
           // Add multiple listeners to the same editor
           var editor = input.editor;
           var listener1 = new listener();

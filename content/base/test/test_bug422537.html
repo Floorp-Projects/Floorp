@@ -37,10 +37,11 @@ for each (var i in body) {
   xhr.open("POST", url, true);
   xhr.send(i);
   var chan = SpecialPowers.unwrap(SpecialPowers.wrap(xhr).channel);
-  if (!(chan instanceof Components.interfaces.nsIUploadChannel))
+  if (!SpecialPowers.call_Instanceof(chan, Components.interfaces.nsIUploadChannel))
     throw "Must be an upload channel";
   var stream = chan.uploadStream;
-  if (!stream || !(stream instanceof Components.interfaces.nsISeekableStream))
+  if (!stream || !SpecialPowers.call_Instanceof(stream,
+                                                Components.interfaces.nsISeekableStream))
     throw "Stream must be seekable";
   // the following is a no-op, but should not throw an exception
   stream.seek(Components.interfaces.nsISeekableStream.NS_SEEK_CUR, 0);
