@@ -345,6 +345,11 @@ class PunboxAssembler : public JSC::MacroAssembler
         return testString(cond, Registers::ValueReg);
     }
 
+    Jump testPrivate(Condition cond, Address address, void *ptr) {
+        uint64_t valueBits = PrivateValue(ptr).asRawBits();
+        return branchPtr(cond, address, ImmPtr((void *) valueBits));
+    }
+
     void compareValue(Address one, Address two, RegisterID T0, RegisterID T1,
                       Vector<Jump> *mismatches) {
         loadValue(one, T0);

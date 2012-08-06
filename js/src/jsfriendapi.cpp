@@ -922,4 +922,26 @@ EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
     rt->spsProfiler.enable(enabled);
 }
 
+static void *gListBaseHandlerFamily = NULL;
+static uint32_t gListBaseExpandoSlot = 0;
+
+JS_FRIEND_API(void)
+SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot)
+{
+    gListBaseHandlerFamily = listBaseHandlerFamily;
+    gListBaseExpandoSlot = listBaseExpandoSlot;
+}
+
+void *
+GetListBaseHandlerFamily()
+{
+    return gListBaseHandlerFamily;
+}
+
+uint32_t
+GetListBaseExpandoSlot()
+{
+    return gListBaseExpandoSlot;
+}
+
 } // namespace js
