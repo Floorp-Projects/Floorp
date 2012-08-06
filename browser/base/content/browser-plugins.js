@@ -231,7 +231,7 @@ var gPluginHandler = {
   managePlugins: function (aEvent) {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
- 
+
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
   openPluginUpdatePage: function (aEvent) {
@@ -279,9 +279,8 @@ var gPluginHandler = {
     // The overlay is null if the XBL binding is not attached (element is display:none).
     if (overlay) {
       overlay.addEventListener("click", function(aEvent) {
-        // Have to check that the target is a XULElement and not the link
-        // to update the plugin
-        if (aEvent.target instanceof XULElement && 
+        // Have to check that the target is not the link to update the plugin
+        if (!(aEvent.originalTarget instanceof HTMLAnchorElement) &&
             aEvent.button == 0 && aEvent.isTrusted)
           gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
       }, true);
