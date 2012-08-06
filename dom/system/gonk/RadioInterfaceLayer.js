@@ -308,7 +308,7 @@ RadioInterfaceLayer.prototype = {
   onmessage: function onmessage(event) {
     let message = event.data;
     debug("Received message from worker: " + JSON.stringify(message));
-    switch (message.type) {
+    switch (message.rilMessageType) {
       case "callStateChange":
         // This one will handle its own notifications.
         this.handleCallStateChange(message.call);
@@ -434,7 +434,8 @@ RadioInterfaceLayer.prototype = {
         this.handleCancelUSSD(message);
         break;
       default:
-        throw new Error("Don't know about this message type: " + message.type);
+        throw new Error("Don't know about this message type: " +
+                        message.rilMessageType);
     }
   },
 
@@ -1066,7 +1067,7 @@ RadioInterfaceLayer.prototype = {
 
   setRadioEnabled: function setRadioEnabled(value) {
     debug("Setting radio power to " + value);
-    this.worker.postMessage({type: "setRadioPower", on: value});
+    this.worker.postMessage({rilMessageType: "setRadioPower", on: value});
   },
 
   rilContext: null,
@@ -1075,72 +1076,84 @@ RadioInterfaceLayer.prototype = {
 
   enumerateCalls: function enumerateCalls() {
     debug("Requesting enumeration of calls for callback");
-    this.worker.postMessage({type: "enumerateCalls"});
+    this.worker.postMessage({rilMessageType: "enumerateCalls"});
   },
 
   dial: function dial(number) {
     debug("Dialing " + number);
-    this.worker.postMessage({type: "dial", number: number, isDialEmergency: false});
+    this.worker.postMessage({rilMessageType: "dial",
+                             number: number,
+                             isDialEmergency: false});
   },
 
   dialEmergency: function dialEmergency(number) {
     debug("Dialing emergency " + number);
-    this.worker.postMessage({type: "dial", number: number, isDialEmergency: true});
+    this.worker.postMessage({rilMessageType: "dial",
+                             number: number,
+                             isDialEmergency: true});
   },
 
   hangUp: function hangUp(callIndex) {
     debug("Hanging up call no. " + callIndex);
-    this.worker.postMessage({type: "hangUp", callIndex: callIndex});
+    this.worker.postMessage({rilMessageType: "hangUp",
+                             callIndex: callIndex});
   },
 
   startTone: function startTone(dtmfChar) {
     debug("Sending Tone for " + dtmfChar);
-    this.worker.postMessage({type: "startTone", dtmfChar: dtmfChar});
+    this.worker.postMessage({rilMessageType: "startTone",
+                             dtmfChar: dtmfChar});
   },
 
   stopTone: function stopTone() {
     debug("Stopping Tone");
-    this.worker.postMessage({type: "stopTone"});
+    this.worker.postMessage({rilMessageType: "stopTone"});
   },
 
   answerCall: function answerCall(callIndex) {
-    this.worker.postMessage({type: "answerCall", callIndex: callIndex});
+    this.worker.postMessage({rilMessageType: "answerCall",
+                             callIndex: callIndex});
   },
 
   rejectCall: function rejectCall(callIndex) {
-    this.worker.postMessage({type: "rejectCall", callIndex: callIndex});
+    this.worker.postMessage({rilMessageType: "rejectCall",
+                             callIndex: callIndex});
   },
  
   holdCall: function holdCall(callIndex) {
-    this.worker.postMessage({type: "holdCall", callIndex: callIndex});
+    this.worker.postMessage({rilMessageType: "holdCall",
+                             callIndex: callIndex});
   },
 
   resumeCall: function resumeCall(callIndex) {
-    this.worker.postMessage({type: "resumeCall", callIndex: callIndex});
+    this.worker.postMessage({rilMessageType: "resumeCall",
+                             callIndex: callIndex});
   },
 
   getAvailableNetworks: function getAvailableNetworks(requestId) {
-    this.worker.postMessage({type: "getAvailableNetworks", requestId: requestId});
+    this.worker.postMessage({rilMessageType: "getAvailableNetworks",
+                             requestId: requestId});
   },
 
   sendUSSD: function sendUSSD(message) {
     debug("SendUSSD " + JSON.stringify(message));
-    message.type = "sendUSSD";
+    message.rilMessageType = "sendUSSD";
     this.worker.postMessage(message);
   },
 
   cancelUSSD: function cancelUSSD(message) {
     debug("Cancel pending USSD");
-    message.type = "cancelUSSD";
+    message.rilMessageType = "cancelUSSD";
     this.worker.postMessage(message);
   },
 
   selectNetworkAuto: function selectNetworkAuto(requestId) {
-    this.worker.postMessage({type: "selectNetworkAuto", requestId: requestId});
+    this.worker.postMessage({rilMessageType: "selectNetworkAuto",
+                             requestId: requestId});
   },
 
   selectNetwork: function selectNetwork(message) {
-    message.type = "selectNetwork";
+    message.rilMessageType = "selectNetwork";
     this.worker.postMessage(message);
   },
 
@@ -1549,7 +1562,7 @@ RadioInterfaceLayer.prototype = {
 
   sendSMS: function sendSMS(number, message, requestId, processId) {
     let options = this._calculateUserDataLength(message);
-    options.type = "sendSMS";
+    options.rilMessageType = "sendSMS";
     options.number = number;
     options.requestId = requestId;
     options.processId = processId;
@@ -1618,7 +1631,7 @@ RadioInterfaceLayer.prototype = {
   },
 
   setupDataCall: function setupDataCall(radioTech, apn, user, passwd, chappap, pdptype) {
-    this.worker.postMessage({type: "setupDataCall",
+    this.worker.postMessage({rilMessageType: "setupDataCall",
                              radioTech: radioTech,
                              apn: apn,
                              user: user,
@@ -1628,20 +1641,20 @@ RadioInterfaceLayer.prototype = {
   },
 
   deactivateDataCall: function deactivateDataCall(cid, reason) {
-    this.worker.postMessage({type: "deactivateDataCall",
+    this.worker.postMessage({rilMessageType: "deactivateDataCall",
                              cid: cid,
                              reason: reason});
   },
 
   getDataCallList: function getDataCallList() {
-    this.worker.postMessage({type: "getDataCallList"});
+    this.worker.postMessage({rilMessageType: "getDataCallList"});
   },
 
   getCardLock: function getCardLock(message) {
     // Currently only support pin.
     switch (message.lockType) {
       case "pin" :
-        message.type = "getICCPinLock";
+        message.rilMessageType = "getICCPinLock";
         break;
       default:
         ppmm.sendAsyncMessage("RIL:GetCardLock:Return:KO",
@@ -1655,16 +1668,16 @@ RadioInterfaceLayer.prototype = {
   unlockCardLock: function unlockCardLock(message) {
     switch (message.lockType) {
       case "pin":
-        message.type = "enterICCPIN";
+        message.rilMessageType = "enterICCPIN";
         break;
       case "pin2":
-        message.type = "enterICCPIN2";
+        message.rilMessageType = "enterICCPIN2";
         break;
       case "puk":
-        message.type = "enterICCPUK";
+        message.rilMessageType = "enterICCPUK";
         break;
       case "puk2":
-        message.type = "enterICCPUK2";
+        message.rilMessageType = "enterICCPUK2";
         break;
       default:
         ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:KO",
@@ -1680,10 +1693,10 @@ RadioInterfaceLayer.prototype = {
     if (message.newPin !== undefined) {
       switch (message.lockType) {
         case "pin":
-          message.type = "changeICCPIN";
+          message.rilMessageType = "changeICCPIN";
           break;
         case "pin2":
-          message.type = "changeICCPIN2";
+          message.rilMessageType = "changeICCPIN2";
           break;
         default:
           ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
@@ -1697,7 +1710,7 @@ RadioInterfaceLayer.prototype = {
                                 {errorMsg: "Unsupported Card Lock.",
                                  requestId: message.requestId});
       }
-      message.type = "setICCPinLock";
+      message.rilMessageType = "setICCPinLock";
     }
     this.worker.postMessage(message);
   },
@@ -1722,7 +1735,7 @@ RadioInterfaceLayer.prototype = {
         debug("Unknown contact type. " + type);
         return;
     }
-    this.worker.postMessage({type: msgType, requestId: requestId});
+    this.worker.postMessage({rilMessageType: msgType, requestId: requestId});
   }
 };
 
