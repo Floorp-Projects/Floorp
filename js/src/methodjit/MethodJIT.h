@@ -595,8 +595,13 @@ struct NativeMapEntry {
 
 /* Per-op counts of performance metrics. */
 struct PCLengthEntry {
-    double          codeLength; /* amount of inline code generated */
-    double          picsLength; /* amount of PIC stub code generated */
+    double          inlineLength; /* amount of inline code generated */
+    double          picsLength;   /* amount of PIC stub code generated */
+    double          stubLength;   /* amount of stubcc code generated */
+    double          codeLengthAugment; /* augment to inlineLength to be added
+                                          at runtime, represents instrumentation
+                                          taken out or common stubcc accounted
+                                          for (instead of just adding inlineLength) */
 };
 
 /*
