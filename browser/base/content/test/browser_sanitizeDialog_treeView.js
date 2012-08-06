@@ -414,15 +414,16 @@ function addDownloadWithMinutesAgo(aMinutesAgo) {
     startTime: now_uSec - (aMinutesAgo * 60 * 1000000),
     endTime:   now_uSec - ((aMinutesAgo + 1) *60 * 1000000),
     state:     Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
+    guid: "a1bcD23eF4g5"
   };
 
   let db = dm.DBConnection;
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (id, name, source, target, startTime, endTime, " +
-      "state, currBytes, maxBytes, preferredAction, autoResume) " +
+      "state, currBytes, maxBytes, preferredAction, autoResume, guid) " +
     "VALUES (:id, :name, :source, :target, :startTime, :endTime, :state, " +
-      ":currBytes, :maxBytes, :preferredAction, :autoResume)");
+      ":currBytes, :maxBytes, :preferredAction, :autoResume, :guid)");
   try {
     for (let prop in data) {
       stmt.params[prop] = data[prop];
