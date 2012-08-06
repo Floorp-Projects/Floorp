@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -812,14 +812,20 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/remote_tabs_off.png \
   res/drawable-large-mdpi-v11/remote_tabs_on.png \
   res/drawable-large-mdpi-v11/tab_new.png \
+  res/drawable-large-mdpi-v11/tab_new_normal.png \
+  res/drawable-large-mdpi-v11/tab_new_pressed.png \
   res/drawable-large-mdpi-v11/urlbar_stop.png \
   res/drawable-large-mdpi-v11/reader.png \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/menu.png \
+  res/drawable-large-mdpi-v11/menu_normal.png \
+  res/drawable-large-mdpi-v11/menu_pressed.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   res/drawable-large-mdpi-v11/tabs_crop_normal.png \
   res/drawable-large-mdpi-v11/tabs_crop_pressed.png \
+  res/drawable-large-mdpi-v11/tabs_full_normal.png \
+  res/drawable-large-mdpi-v11/tabs_full_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -838,14 +844,20 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/remote_tabs_off.png \
   res/drawable-large-hdpi-v11/remote_tabs_on.png \
   res/drawable-large-hdpi-v11/tab_new.png \
+  res/drawable-large-hdpi-v11/tab_new_normal.png \
+  res/drawable-large-hdpi-v11/tab_new_pressed.png \
   res/drawable-large-hdpi-v11/urlbar_stop.png \
   res/drawable-large-hdpi-v11/reader.png \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/menu.png \
+  res/drawable-large-hdpi-v11/menu_normal.png \
+  res/drawable-large-hdpi-v11/menu_pressed.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   res/drawable-large-hdpi-v11/tabs_crop_normal.png \
   res/drawable-large-hdpi-v11/tabs_crop_pressed.png \
+  res/drawable-large-hdpi-v11/tabs_full_normal.png \
+  res/drawable-large-hdpi-v11/tabs_full_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -864,14 +876,20 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/remote_tabs_on.png \
   res/drawable-large-xhdpi-v11/remote_tabs_off.png \
   res/drawable-large-xhdpi-v11/tab_new.png \
+  res/drawable-large-xhdpi-v11/tab_new_normal.png \
+  res/drawable-large-xhdpi-v11/tab_new_pressed.png \
   res/drawable-large-xhdpi-v11/urlbar_stop.png \
   res/drawable-large-xhdpi-v11/reader.png \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/menu.png \
+  res/drawable-large-xhdpi-v11/menu_normal.png \
+  res/drawable-large-xhdpi-v11/menu_pressed.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   res/drawable-large-xhdpi-v11/tabs_crop_normal.png \
   res/drawable-large-xhdpi-v11/tabs_crop_pressed.png \
+  res/drawable-large-xhdpi-v11/tabs_full_normal.png \
+  res/drawable-large-xhdpi-v11/tabs_full_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \

@@ -7,12 +7,20 @@ test -z "$srcdir" && srcdir=.
 stat=0
 
 test "x$HBHEADERS" = x && HBHEADERS=`find . -maxdepth 1 -name 'hb*.h'`
+test "x$HBSOURCES" = x && HBSOURCES=`find . -maxdepth 1 -name 'hb*.h'`
 
 
 for x in $HBHEADERS; do
 	test -f $srcdir/$x && x=$srcdir/$x
 	if ! grep -q HB_BEGIN_DECLS "$x" || ! grep -q HB_END_DECLS "$x"; then
-		echo "Ouch, file $x does not HB_BEGIN_DECLS / HB_END_DECLS"
+		echo "Ouch, file $x does not have HB_BEGIN_DECLS / HB_END_DECLS, but it should"
+		stat=1
+	fi
+done
+for x in $HBSOURCES; do
+	test -f $srcdir/$x && x=$srcdir/$x
+	if grep -q HB_BEGIN_DECLS "$x" || grep -q HB_END_DECLS "$x"; then
+		echo "Ouch, file $x has HB_BEGIN_DECLS / HB_END_DECLS, but it shouldn't"
 		stat=1
 	fi
 done

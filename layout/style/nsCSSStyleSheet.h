@@ -48,7 +48,6 @@ class nsCSSStyleSheetInner {
 public:
   friend class nsCSSStyleSheet;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 private:
   nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
@@ -166,6 +165,9 @@ public:
   // Principal() never returns a null pointer.
   nsIPrincipal* Principal() const { return mInner->mPrincipal; }
 
+  // The document this style sheet is associated with.  May be null
+  nsIDocument* GetDocument() const { return mDocument; }
+
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
@@ -282,12 +284,9 @@ protected:
 
   friend class nsMediaList;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
   friend struct ChildSheetListBuilder;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)
-
-nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 
 #endif /* !defined(nsCSSStyleSheet_h_) */

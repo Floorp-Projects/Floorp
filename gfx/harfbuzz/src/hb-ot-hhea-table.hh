@@ -47,7 +47,7 @@ struct hhea
     return TRACE_RETURN (c->check_struct (this) && likely (version.major == 1));
   }
 
-  private:
+  protected:
   FixedVersion	version;		/* 0x00010000 for version 1.0. */
   FWORD		ascender;		/* Typographic ascent. <a
 					 * href="http://developer.apple.com/fonts/TTRefMan/RM06/Chap6hhea.html">

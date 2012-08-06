@@ -8,8 +8,8 @@
 #include "nsIScriptContext.h"
 
 #define NS_ISCRIPTRUNTIME_IID \
-{ 0xb146580f, 0x55f7, 0x4d97, \
-  { 0x8a, 0xbb, 0x4a, 0x50, 0xb0, 0xa8, 0x04, 0x97 } }
+{ 0xfa30d7a8, 0x7f0a, 0x437a, \
+  { 0xa1, 0x0c, 0xc2, 0xbe, 0xa3, 0xdb, 0x4f, 0x4b } }
 
 /**
  * A singleton language environment for an application.  Responsible for
@@ -21,13 +21,6 @@ class nsIScriptRuntime : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTRUNTIME_IID)
 
-  /* Parses a "version string" for the language into a bit-mask used by
-   * the language implementation.  If the specified version is not supported
-   * an error should be returned.  If the specified version is blank, a default
-   * version should be assumed
-   */
-  virtual nsresult ParseVersion(const nsString &aVersionStr, PRUint32 *verFlags) = 0;
-  
   /* Factory for a new context for this language */
   virtual already_AddRefed<nsIScriptContext> CreateContext() = 0;
   

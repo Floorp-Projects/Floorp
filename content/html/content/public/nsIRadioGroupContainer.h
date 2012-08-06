@@ -41,16 +41,15 @@ public:
    * @param aName the group name
    * @param aRadio the currently selected radio button
    */
-  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement* aRadio) = 0;
+  virtual void SetCurrentRadioButton(const nsAString& aName, 
+                                     nsIDOMHTMLInputElement* aRadio) = 0;
 
   /**
    * Get the current radio button in a group
    * @param aName the group name
-   * @param aRadio the currently selected radio button [OUT]
+   * @return the currently selected radio button
    */
-  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
-                                   nsIDOMHTMLInputElement** aRadio) = 0;
+  virtual nsIDOMHTMLInputElement* GetCurrentRadioButton(const nsAString& aName) = 0;
 
   /**
    * Get the next/prev radio button in a group
@@ -73,8 +72,7 @@ public:
    * @param aName radio group's name
    * @param aRadio radio button's pointer
    */
-  NS_IMETHOD AddToRadioGroup(const nsAString& aName,
-                             nsIFormControl* aRadio) = 0;
+  virtual void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio) = 0;
 
   /**
    * Remove radio button from radio group
@@ -85,8 +83,7 @@ public:
    * @param aName radio group's name
    * @param aRadio radio button's pointer
    */
-  NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
-                                  nsIFormControl* aRadio) = 0;
+  virtual void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) = 0;
 
   virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const = 0;
   virtual void RadioRequiredChanged(const nsAString& aName,

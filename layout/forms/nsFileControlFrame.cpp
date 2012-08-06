@@ -33,7 +33,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
-#include "nsIDOMNSEvent.h"
 #include "nsEventListenerManager.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -275,10 +274,9 @@ bool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
 {
   // only allow the left button
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_TRUE(mouseEvent && domNSEvent, false);
+  NS_ENSURE_TRUE(mouseEvent, false);
   bool defaultPrevented = false;
-  domNSEvent->GetPreventDefault(&defaultPrevented);
+  aMouseEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return false;
   }
@@ -403,10 +401,8 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     return input ? input->FireAsyncClickHandler() : NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
-  NS_ENSURE_STATE(domNSEvent);
   bool defaultPrevented = false;
-  domNSEvent->GetPreventDefault(&defaultPrevented);
+  aEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return NS_OK;
   }

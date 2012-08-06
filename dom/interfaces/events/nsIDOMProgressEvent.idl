@@ -13,7 +13,7 @@
  * the specification is complete and is compatible with the WebKit ProgressEvent.
  */
 
-[scriptable, builtinclass, uuid(1b1842f0-b586-4990-9f6a-057e92483a4b)]
+[scriptable, builtinclass, uuid(c5b7ec31-b846-4a9f-b81e-859e76a74f6b)]
 interface nsIDOMProgressEvent : nsIDOMEvent
 {
   readonly attribute boolean lengthComputable;

@@ -3,11 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../../..
+DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = layout/style/test
+relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -185,6 +185,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame_empty.html \
 		test_load_events_on_stylesheets.html \
 		test_bug721136.html \
+		test_bug732153.html \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX

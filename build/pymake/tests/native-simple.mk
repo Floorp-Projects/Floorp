@@ -2,9 +2,10 @@ ifndef TOUCH
 TOUCH = touch
 endif
 
-all: testfile
+all: testfile {testfile2}
 	test -f testfile
+	test -f {testfile2}
 	@echo TEST-PASS
 
-testfile:
+testfile {testfile2}:
 	$(TOUCH) $@

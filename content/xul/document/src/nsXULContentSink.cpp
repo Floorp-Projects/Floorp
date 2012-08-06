@@ -865,29 +865,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               NS_ENSURE_SUCCESS(rv, rv);
           }
 
-          // Javascript keeps the fast path, optimized for most-likely type
-          // Table ordered from most to least likely JS MIME types. For .xul
-          // files that we host, the likeliest type is application/x-javascript.
-          // See bug 62485, feel free to add <script type="..."> survey data to it,
-          // or to a new bug once 62485 is closed.
-          static const char *jsTypes[] = {
-              "application/x-javascript",
-              "text/javascript",
-              "text/ecmascript",
-              "application/javascript",
-              "application/ecmascript",
-              nullptr
-          };
-
-          bool isJavaScript = false;
-          for (PRInt32 i = 0; jsTypes[i]; i++) {
-              if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
-                  isJavaScript = true;
-                  break;
-              }
-          }
-
-          if (isJavaScript) {
+          if (nsContentUtils::IsJavascriptMIMEType(mimeType)) {
               langID = nsIProgrammingLanguage::JAVASCRIPT;
               version = JSVERSION_LATEST;
           } else {
@@ -898,20 +876,11 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
             // Get the version string, and ensure the language supports it.
             nsAutoString versionName;
             rv = parser.GetParameter("version", versionName);
-            if (NS_FAILED(rv)) {
-              if (rv != NS_ERROR_INVALID_ARG)
-                return rv;
-              // no version specified - version remains the default.
-            } else {
-              nsCOMPtr<nsIScriptRuntime> runtime;
-              rv = NS_GetJSRuntime(getter_AddRefs(runtime));
-              if (NS_FAILED(rv))
-                return rv;
-              rv = runtime->ParseVersion(versionName, &version);
-              if (NS_FAILED(rv)) {
-                NS_WARNING("This script language version is not supported - ignored");
-                langID = nsIProgrammingLanguage::UNKNOWN;
-              }
+
+            if (NS_SUCCEEDED(rv)) {
+              version = nsContentUtils::ParseJavascriptVersion(versionName);
+            } else if (rv != NS_ERROR_INVALID_ARG) {
+              return rv;
             }
           }
           // Some js specifics yet to be abstracted.

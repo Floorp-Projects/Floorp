@@ -508,13 +508,28 @@ nsFileInputStream::Write(IPC::Message *aMsg)
 ////////////////////////////////////////////////////////////////////////////////
 // nsPartialFileInputStream
 
+NS_IMPL_ADDREF_INHERITED(nsPartialFileInputStream, nsFileStreamBase)
+NS_IMPL_RELEASE_INHERITED(nsPartialFileInputStream, nsFileStreamBase)
+
+NS_IMPL_CLASSINFO(nsPartialFileInputStream, NULL, nsIClassInfo::THREADSAFE,
+                  NS_PARTIALLOCALFILEINPUTSTREAM_CID)
+
 // Don't forward to nsFileInputStream as we don't want to QI to
 // nsIFileInputStream
-NS_IMPL_ISUPPORTS_INHERITED3(nsPartialFileInputStream,
-                             nsFileStreamBase,
+NS_INTERFACE_MAP_BEGIN(nsPartialFileInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIPartialFileInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_IMPL_QUERY_CLASSINFO(nsPartialFileInputStream)
+NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
+
+NS_IMPL_CI_INTERFACE_GETTER5(nsPartialFileInputStream,
                              nsIInputStream,
                              nsIPartialFileInputStream,
-                             nsILineInputStream)
+                             nsISeekableStream,
+                             nsILineInputStream,
+                             nsIIPCSerializable)
 
 nsresult
 nsPartialFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID,
@@ -612,6 +627,57 @@ nsPartialFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
         mPosition = offset - mStart;
     }
     return rv;
+}
+
+bool
+nsPartialFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
+{
+    using IPC::ReadParam;
+
+    // Grab our members first.
+    PRUint64 start;
+    PRUint64 length;
+    if (!ReadParam(aMsg, aIter, &start) ||
+        !ReadParam(aMsg, aIter, &length))
+        return false;
+
+    // Then run base class deserialization.
+    if (!nsFileInputStream::Read(aMsg, aIter))
+        return false;
+
+    // Set members.
+    mStart = start;
+    mLength = length;
+
+    // XXX This isn't really correct, we should probably set this to whatever
+    //     the sender had. However, it doesn't look like nsFileInputStream deals
+    //     with sending a partially-consumed stream either, so...
+    mPosition = 0;
+
+    // Mirror nsPartialFileInputStream::Init here. We can't call it directly
+    // because nsFileInputStream::Read() already calls the base class Init
+    // method.
+    return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, start));
+}
+
+void
+nsPartialFileInputStream::Write(IPC::Message *aMsg)
+{
+    using IPC::WriteParam;
+
+    // Write our members first.
+    WriteParam(aMsg, mStart);
+    WriteParam(aMsg, mLength);
+
+    // XXX This isn't really correct, we should probably send this too. However,
+    //     it doesn't look like nsFileInputStream deals with sending a
+    //     partially-consumed stream either, so...
+    if (mPosition) {
+      NS_WARNING("No support for sending a partially-consumed input stream!");
+    }
+
+    // Now run base class serialization.
+    nsFileInputStream::Write(aMsg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

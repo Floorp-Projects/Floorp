@@ -68,7 +68,6 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
-pref("dom.send_after_paint_to_content", true);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
@@ -481,3 +480,18 @@ pref("javascript.options.mem.log", true);
 
 // Increase mark slice time from 10ms to 30ms
 pref("javascript.options.mem.gc_incremental_slice_ms", 30);
+
+// Show/Hide scrollbars when active/inactive
+pref("ui.showHideScrollbars", 1);
+
+// Enable the ProcessPriorityManager, and give processes with no visible
+// documents a 1s grace period before they're eligible to be marked as
+// background.
+pref("dom.ipc.processPriorityManager.enabled", true);
+pref("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
+pref("hal.processPriorityManager.gonk.masterOomAdjust", 0);
+pref("hal.processPriorityManager.gonk.foregroundOomAdjust", 1);
+pref("hal.processPriorityManager.gonk.backgroundOomAdjust", 2);
+pref("hal.processPriorityManager.gonk.masterNice", -1);
+pref("hal.processPriorityManager.gonk.foregroundNice", 0);
+pref("hal.processPriorityManager.gonk.backgroundNice", 10);

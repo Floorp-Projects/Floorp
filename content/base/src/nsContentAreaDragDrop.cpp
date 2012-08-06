@@ -19,7 +19,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -57,7 +56,7 @@
 class NS_STACK_CLASS DragDataProducer
 {
 public:
-  DragDataProducer(nsIDOMWindow* aWindow,
+  DragDataProducer(nsPIDOMWindow* aWindow,
                    nsIContent* aTarget,
                    nsIContent* aSelectionTargetNode,
                    bool aIsAltKeyPressed);
@@ -85,7 +84,7 @@ private:
   static void GetSelectedLink(nsISelection* inSelection,
                               nsIContent **outLinkNode);
 
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIContent> mTarget;
   nsCOMPtr<nsIContent> mSelectionTargetNode;
   bool mIsAltKeyPressed;
@@ -105,7 +104,7 @@ private:
 
 
 nsresult
-nsContentAreaDragDrop::GetDragData(nsIDOMWindow* aWindow,
+nsContentAreaDragDrop::GetDragData(nsPIDOMWindow* aWindow,
                                    nsIContent* aTarget,
                                    nsIContent* aSelectionTargetNode,
                                    bool aIsAltKeyPressed,
@@ -239,7 +238,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
   return rv;
 }
 
-DragDataProducer::DragDataProducer(nsIDOMWindow* aWindow,
+DragDataProducer::DragDataProducer(nsPIDOMWindow* aWindow,
                                    nsIContent* aTarget,
                                    nsIContent* aSelectionTargetNode,
                                    bool aIsAltKeyPressed)
@@ -649,9 +648,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     mInfoString.Truncate();
     mTitleString.Truncate();
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mWindow->GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
     // if we have selected text, use it in preference to the node

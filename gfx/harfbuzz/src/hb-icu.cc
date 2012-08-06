@@ -63,13 +63,13 @@ hb_icu_script_from_script (hb_script_t script)
 }
 
 
-static unsigned int
+static hb_unicode_combining_class_t
 hb_icu_unicode_combining_class (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 				hb_codepoint_t      unicode,
 				void               *user_data HB_UNUSED)
 
 {
-  return u_getCombiningClass (unicode);
+  return (hb_unicode_combining_class_t) u_getCombiningClass (unicode);
 }
 
 static unsigned int
@@ -172,7 +172,7 @@ hb_icu_unicode_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 			void               *user_data HB_UNUSED)
 {
   if (!a || !b)
-    return FALSE;
+    return false;
 
   UChar utf16[4], normalized[5];
   int len;
@@ -180,21 +180,21 @@ hb_icu_unicode_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   UErrorCode icu_err;
 
   len = 0;
-  err = FALSE;
+  err = false;
   U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), a, err);
-  if (err) return FALSE;
+  if (err) return false;
   U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), b, err);
-  if (err) return FALSE;
+  if (err) return false;
 
   icu_err = U_ZERO_ERROR;
   len = unorm_normalize (utf16, len, UNORM_NFC, 0, normalized, ARRAY_LENGTH (normalized), &icu_err);
   if (U_FAILURE (icu_err))
-    return FALSE;
+    return false;
   if (u_countChar32 (normalized, len) == 1) {
     U16_GET_UNSAFE (normalized, 0, *ab);
-    ret = TRUE;
+    ret = true;
   } else {
-    ret = FALSE;
+    ret = false;
   }
 
   return ret;
@@ -207,7 +207,7 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 			  hb_codepoint_t     *b,
 			  void               *user_data HB_UNUSED)
 {
-  UChar utf16[2], normalized[20];
+  UChar utf16[2], normalized[2 * HB_UNICODE_MAX_DECOMPOSITION_LEN + 1];
   int len;
   hb_bool_t ret, err;
   UErrorCode icu_err;
@@ -217,14 +217,14 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   /* Watchout for the dragons.  Err, watchout for macros changing len. */
 
   len = 0;
-  err = FALSE;
+  err = false;
   U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), ab, err);
-  if (err) return FALSE;
+  if (err) return false;
 
   icu_err = U_ZERO_ERROR;
   len = unorm_normalize (utf16, len, UNORM_NFD, 0, normalized, ARRAY_LENGTH (normalized), &icu_err);
   if (U_FAILURE (icu_err))
-    return FALSE;
+    return false;
 
   len = u_countChar32 (normalized, len);
 
@@ -244,37 +244,74 @@ hb_icu_unicode_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
     icu_err = U_ZERO_ERROR;
     unorm_normalize (normalized, len, UNORM_NFC, 0, recomposed, ARRAY_LENGTH (recomposed), &icu_err);
     if (U_FAILURE (icu_err))
-      return FALSE;
+      return false;
     hb_codepoint_t c;
     U16_GET_UNSAFE (recomposed, 0, c);
     if (c != *a && c != ab) {
       *a = c;
       *b = 0;
     }
-    ret = TRUE;
+    ret = true;
   } else {
     /* If decomposed to more than two characters, take the last one,
      * and recompose the rest to get the first component. */
-    U16_PREV_UNSAFE (normalized, len, *b);
-    UChar recomposed[20];
+    U16_PREV_UNSAFE (normalized, len, *b); /* Changes len in-place. */
+    UChar recomposed[18 * 2];
     icu_err = U_ZERO_ERROR;
     len = unorm_normalize (normalized, len, UNORM_NFC, 0, recomposed, ARRAY_LENGTH (recomposed), &icu_err);
     if (U_FAILURE (icu_err))
-      return FALSE;
+      return false;
     /* We expect that recomposed has exactly one character now. */
+    if (unlikely (u_countChar32 (recomposed, len) != 1))
+      return false;
     U16_GET_UNSAFE (recomposed, 0, *a);
-    ret = TRUE;
+    ret = true;
   }
 
   return ret;
 }
 
-extern HB_INTERNAL hb_unicode_funcs_t _hb_unicode_funcs_icu;
-hb_unicode_funcs_t _hb_icu_unicode_funcs = {
+static unsigned int
+hb_icu_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
+					hb_codepoint_t      u,
+					hb_codepoint_t     *decomposed,
+					void               *user_data HB_UNUSED)
+{
+  UChar utf16[2], normalized[2 * HB_UNICODE_MAX_DECOMPOSITION_LEN + 1];
+  int len;
+  int32_t utf32_len;
+  hb_bool_t err;
+  UErrorCode icu_err;
+
+  /* Copy @u into a UTF-16 array to be passed to ICU. */
+  len = 0;
+  err = FALSE;
+  U16_APPEND (utf16, len, ARRAY_LENGTH (utf16), u, err);
+  if (err)
+    return 0;
+
+  /* Normalise the codepoint using NFKD mode. */
+  icu_err = U_ZERO_ERROR;
+  len = unorm_normalize (utf16, len, UNORM_NFKD, 0, normalized, ARRAY_LENGTH (normalized), &icu_err);
+  if (icu_err)
+    return 0;
+
+  /* Convert the decomposed form from UTF-16 to UTF-32. */
+  icu_err = U_ZERO_ERROR;
+  u_strToUTF32 ((UChar32*) decomposed, HB_UNICODE_MAX_DECOMPOSITION_LEN, &utf32_len, normalized, len, &icu_err);
+  if (icu_err)
+    return 0;
+
+  return utf32_len;
+}
+
+
+extern HB_INTERNAL const hb_unicode_funcs_t _hb_icu_unicode_funcs;
+const hb_unicode_funcs_t _hb_icu_unicode_funcs = {
   HB_OBJECT_HEADER_STATIC,
 
   NULL, /* parent */
-  TRUE, /* immutable */
+  true, /* immutable */
   {
 #define HB_UNICODE_FUNC_IMPLEMENT(name) hb_icu_unicode_##name,
     HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS
@@ -285,7 +322,7 @@ hb_unicode_funcs_t _hb_icu_unicode_funcs = {
 hb_unicode_funcs_t *
 hb_icu_get_unicode_funcs (void)
 {
-  return &_hb_icu_unicode_funcs;
+  return const_cast<hb_unicode_funcs_t *> (&_hb_icu_unicode_funcs);
 }
 
 

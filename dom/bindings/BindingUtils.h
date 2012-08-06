@@ -690,8 +690,6 @@ JSBool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
 JSBool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
-JSBool
-ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp);
 
 template<class T>
 class NonNull

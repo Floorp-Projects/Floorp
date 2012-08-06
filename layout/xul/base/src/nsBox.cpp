@@ -203,7 +203,7 @@ nsBox::Shutdown()
 }
 
 NS_IMETHODIMP
-nsBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
+nsBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
 {
   return NS_OK;
 }
@@ -405,7 +405,7 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(pref);
   bool widthSet, heightSet;
-  nsIBox::AddCSSPrefSize(this, pref, widthSet, heightSet);
+  nsIFrame::AddCSSPrefSize(this, pref, widthSet, heightSet);
 
   nsSize minSize = GetMinSize(aState);
   nsSize maxSize = GetMaxSize(aState);
@@ -425,7 +425,7 @@ nsBox::GetMinSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(min);
   bool widthSet, heightSet;
-  nsIBox::AddCSSMinSize(aState, this, min, widthSet, heightSet);
+  nsIFrame::AddCSSMinSize(aState, this, min, widthSet, heightSet);
   return min;
 }
 
@@ -448,7 +448,7 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(maxSize);
   bool widthSet, heightSet;
-  nsIBox::AddCSSMaxSize(this, maxSize, widthSet, heightSet);
+  nsIFrame::AddCSSMaxSize(this, maxSize, widthSet, heightSet);
   return maxSize;
 }
 
@@ -457,7 +457,7 @@ nsBox::GetFlex(nsBoxLayoutState& aState)
 {
   nscoord flex = 0;
 
-  nsIBox::AddCSSFlex(aState, this, flex);
+  nsIFrame::AddCSSFlex(aState, this, flex);
 
   return flex;
 }
@@ -604,7 +604,7 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
 }
 
 bool
-nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
+nsIFrame::AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
     aHeightSet = false;
@@ -677,7 +677,7 @@ nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeig
 
 
 bool
-nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
+nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
                       bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
@@ -787,7 +787,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
 }
 
 bool
-nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
+nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
     aHeightSet = false;
@@ -846,7 +846,7 @@ nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeigh
 }
 
 bool
-nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
+nsIFrame::AddCSSFlex(nsBoxLayoutState& aState, nsIFrame* aBox, nscoord& aFlex)
 {
     bool flexSet = false;
 
@@ -882,7 +882,7 @@ nsBox::AddBorderAndPadding(nsSize& aSize)
 }
 
 void
-nsBox::AddBorderAndPadding(nsIBox* aBox, nsSize& aSize)
+nsBox::AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize)
 {
   nsMargin borderPadding(0,0,0,0);
   aBox->GetBorderAndPadding(borderPadding);
@@ -890,7 +890,7 @@ nsBox::AddBorderAndPadding(nsIBox* aBox, nsSize& aSize)
 }
 
 void
-nsBox::AddMargin(nsIBox* aChild, nsSize& aSize)
+nsBox::AddMargin(nsIFrame* aChild, nsSize& aSize)
 {
   nsMargin margin(0,0,0,0);
   aChild->GetMargin(margin);
@@ -942,14 +942,14 @@ nsBox::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 
 NS_IMETHODIMP
 nsBox::GetDebugBoxAt( const nsPoint& aPoint,
-                      nsIBox**     aBox)
+                      nsIFrame**     aBox)
 {
   nsRect thisRect(nsPoint(0,0), GetSize());
   if (!thisRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
-  nsIBox* child = GetChildBox();
-  nsIBox* hit = nullptr;
+  nsIFrame* child = GetChildBox();
+  nsIFrame* hit = nullptr;
 
   *aBox = nullptr;
   while (nullptr != child) {

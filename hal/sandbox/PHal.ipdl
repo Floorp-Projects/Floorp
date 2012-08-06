@@ -21,6 +21,7 @@ using mozilla::hal::SensorAccuracyType;
 using mozilla::hal::WakeLockControl;
 using mozilla::hal::SwitchState;
 using mozilla::hal::SwitchDevice;
+using mozilla::hal::ProcessPriority;
 using nsIntRect;
 using PRTime;
 
@@ -71,7 +72,8 @@ struct ScreenConfiguration {
   uint32_t colorDepth;
   uint32_t pixelDepth;
 };
-}
+
+} // namespace hal
 
 namespace hal_sandbox {
 
@@ -137,6 +139,8 @@ parent:
     DisableSwitchNotifications(SwitchDevice aDevice);
     sync GetCurrentSwitchState(SwitchDevice aDevice)
       returns (SwitchState aState);
+
+    SetProcessPriority(int aPid, ProcessPriority aPriority);
 
 child:
     NotifySensorChange(SensorData aSensorData);

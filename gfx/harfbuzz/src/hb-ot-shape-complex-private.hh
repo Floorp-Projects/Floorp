@@ -29,19 +29,10 @@
 
 #include "hb-private.hh"
 
-#include "hb-ot-map-private.hh"
+#include "hb-ot-shape-private.hh"
 #include "hb-ot-shape-normalize-private.hh"
 
 
-
-/* buffer var allocations, used during the entire shaping process */
-#define unicode_props0()	var1.u8[0]
-#define unicode_props1()	var1.u8[1]
-
-/* buffer var allocations, used during the GSUB/GPOS processing */
-#define props_cache()		var1.u16[1] /* GSUB/GPOS glyph_props cache */
-#define syllable()		var2.u8[0] /* GSUB/GPOS shaping boundaries */
-#define lig_props()		var2.u8[1] /* GSUB/GPOS ligature tracking */
 
 /* buffer var allocations, used by complex shapers */
 #define complex_var_persistent_u8_0()	var2.u8[2]
@@ -49,29 +40,79 @@
 #define complex_var_temporary_u8()	var2.u8[0]
 
 
+
+/* Master OT shaper list */
 #define HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS \
   HB_COMPLEX_SHAPER_IMPLEMENT (default) /* should be first */ \
   HB_COMPLEX_SHAPER_IMPLEMENT (arabic) \
-  HB_COMPLEX_SHAPER_IMPLEMENT (hangul) \
   HB_COMPLEX_SHAPER_IMPLEMENT (indic) \
   HB_COMPLEX_SHAPER_IMPLEMENT (thai) \
   /* ^--- Add new shapers here */
 
-enum hb_ot_complex_shaper_t {
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) hb_ot_complex_shaper_##name,
-  HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-  /* Just here to avoid enum trailing comma: */
-  hb_ot_complex_shaper_generic = hb_ot_complex_shaper_default
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
+
+struct hb_ot_complex_shaper_t
+{
+  char name[8];
+
+  /* collect_features()
+   * Called during shape_plan().
+   * Shapers should use plan->map to add their features and callbacks.
+   * May be NULL.
+   */
+  void (*collect_features) (hb_ot_shape_planner_t *plan);
+
+  /* override_features()
+   * Called during shape_plan().
+   * Shapers should use plan->map to override features and add callbacks after
+   * common features are added.
+   * May be NULL.
+   */
+  void (*override_features) (hb_ot_shape_planner_t *plan);
+
+
+  /* data_create()
+   * Called at the end of shape_plan().
+   * Whatever shapers return will be accessible through plan->data later.
+   * If NULL is returned, means a plan failure.
+   * May be NULL. */
+  void *(*data_create) (const hb_ot_shape_plan_t *plan);
+
+  /* data_destroy()
+   * Called when the shape_plan is being destroyed.
+   * plan->data is passed here for destruction.
+   * If NULL is returned, means a plan failure.
+   * May be NULL. */
+  void (*data_destroy) (void *data);
+
+  /* normalization_preference()
+   * Called during shape().
+   */
+  hb_ot_shape_normalization_mode_t
+  (*normalization_preference) (const hb_ot_shape_plan_t *plan);
+
+  /* setup_masks()
+   * Called during shape().
+   * Shapers should use map to get feature masks and set on buffer.
+   */
+  void (*setup_masks) (const hb_ot_shape_plan_t *plan,
+		       hb_buffer_t              *buffer,
+		       hb_font_t                *font);
+
+  bool zero_width_attached_marks;
 };
 
-static inline hb_ot_complex_shaper_t
+#define HB_COMPLEX_SHAPER_IMPLEMENT(name) extern HB_INTERNAL const hb_ot_complex_shaper_t _hb_ot_complex_shaper_##name;
+HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
+#undef HB_COMPLEX_SHAPER_IMPLEMENT
+
+
+static inline const hb_ot_complex_shaper_t *
 hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
 {
   switch ((hb_tag_t) props->script)
   {
     default:
-      return hb_ot_complex_shaper_default;
+      return &_hb_ot_complex_shaper_default;
 
 
     /* Unicode-1.1 additions */
@@ -85,20 +126,14 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     /* Unicode-6.0 additions */
     case HB_SCRIPT_MANDAIC:
 
-      return hb_ot_complex_shaper_arabic;
-
-
-    /* Unicode-1.1 additions */
-    case HB_SCRIPT_HANGUL:
-
-      return hb_ot_complex_shaper_hangul;
+      return &_hb_ot_complex_shaper_arabic;
 
 
     /* Unicode-1.1 additions */
     case HB_SCRIPT_THAI:
     case HB_SCRIPT_LAO:
 
-      return hb_ot_complex_shaper_thai;
+      return &_hb_ot_complex_shaper_thai;
 
 
 
@@ -213,96 +248,9 @@ hb_ot_shape_complex_categorize (const hb_segment_properties_t *props)
     case HB_SCRIPT_SHARADA:
     case HB_SCRIPT_TAKRI:
 
-      return hb_ot_complex_shaper_indic;
+      return &_hb_ot_complex_shaper_indic;
   }
 }
-
-
-
-/*
- * collect_features()
- *
- * Called during shape_plan().
- *
- * Shapers should use map to add their features and callbacks.
- */
-
-typedef void hb_ot_shape_complex_collect_features_func_t (hb_ot_map_builder_t *map, const hb_segment_properties_t  *props);
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-  HB_INTERNAL hb_ot_shape_complex_collect_features_func_t _hb_ot_shape_complex_collect_features_##name;
-  HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-
-static inline void
-hb_ot_shape_complex_collect_features (hb_ot_complex_shaper_t shaper,
-				      hb_ot_map_builder_t *map,
-				      const hb_segment_properties_t  *props)
-{
-  switch (shaper) {
-    default:
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-    case hb_ot_complex_shaper_##name:	_hb_ot_shape_complex_collect_features_##name (map, props); return;
-    HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-  }
-}
-
-
-/*
- * normalization_preference()
- *
- * Called during shape_execute().
- *
- * Shapers should return TRUE if it prefers decomposed (NFD) input rather than precomposed (NFC).
- */
-
-typedef hb_ot_shape_normalization_mode_t hb_ot_shape_complex_normalization_preference_func_t (void);
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-  HB_INTERNAL hb_ot_shape_complex_normalization_preference_func_t _hb_ot_shape_complex_normalization_preference_##name;
-  HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-
-static inline hb_ot_shape_normalization_mode_t
-hb_ot_shape_complex_normalization_preference (hb_ot_complex_shaper_t shaper)
-{
-  switch (shaper) {
-    default:
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-    case hb_ot_complex_shaper_##name:	return _hb_ot_shape_complex_normalization_preference_##name ();
-    HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-  }
-}
-
-
-/* setup_masks()
- *
- * Called during shape_execute().
- *
- * Shapers should use map to get feature masks and set on buffer.
- */
-
-typedef void hb_ot_shape_complex_setup_masks_func_t (hb_ot_map_t *map, hb_buffer_t *buffer, hb_font_t *font);
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-  HB_INTERNAL hb_ot_shape_complex_setup_masks_func_t _hb_ot_shape_complex_setup_masks_##name;
-  HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-
-static inline void
-hb_ot_shape_complex_setup_masks (hb_ot_complex_shaper_t shaper,
-				 hb_ot_map_t *map,
-				 hb_buffer_t *buffer,
-				 hb_font_t *font)
-{
-  switch (shaper) {
-    default:
-#define HB_COMPLEX_SHAPER_IMPLEMENT(name) \
-    case hb_ot_complex_shaper_##name:	_hb_ot_shape_complex_setup_masks_##name (map, buffer, font); return;
-    HB_COMPLEX_SHAPERS_IMPLEMENT_SHAPERS
-#undef HB_COMPLEX_SHAPER_IMPLEMENT
-  }
-}
-
 
 
 #endif /* HB_OT_SHAPE_COMPLEX_PRIVATE_HH */

@@ -488,7 +488,7 @@ case "$target" in
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "17"; then
             _CC_SUITE=11
-            _MSVS_VERSION=2011
+            _MSVS_VERSION=2012
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
@@ -1033,7 +1033,6 @@ ASM_SUFFIX=s
 IMPORT_LIB_SUFFIX=
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
-WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
@@ -2991,6 +2990,8 @@ case $target in
 	;;
 esac
 
+MOZ_LINUX_PERF_EVENT
+
 dnl Checks for libraries.
 dnl ========================================================
 case $target in
@@ -3252,6 +3253,7 @@ AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
                                  [ struct timespec ts;
                                    clock_gettime(CLOCK_MONOTONIC, &ts); ],
                                  ac_cv_clock_monotonic=$libs
+                                 LIBS="$_SAVE_LIBS"
                                  break,
                                  ac_cv_clock_monotonic=no)
                     LIBS="$_SAVE_LIBS"
@@ -3859,7 +3861,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
-    if test "$OS_ARCH" = "WINNT"; then
+    if test -z "$LIBXUL_SDK"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         if test -n "$GNU_CC"; then
             NSPR_LIBS="-L${LIBXUL_DIST}/lib -lnspr${NSPR_VERSION} -lplc${NSPR_VERSION} -lplds${NSPR_VERSION}"
@@ -3867,8 +3869,8 @@ else
             NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
         fi
     else
-        NSPR_CFLAGS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
-        NSPR_LIBS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
+        NSPR_CFLAGS=`"${LIBXUL_DIST}"/sdk/bin/nspr-config --prefix="${LIBXUL_DIST}" --includedir="${LIBXUL_DIST}/include/nspr" --cflags`
+        NSPR_LIBS=`"${LIBXUL_DIST}"/sdk/bin/nspr-config --prefix="${LIBXUL_DIST}" --libdir="${LIBXUL_DIST}"/lib --libs`
     fi
 fi
 
@@ -4794,7 +4796,7 @@ MOZ_ARG_DISABLE_BOOL(pango,
 dnl ========================================================
 dnl = Pango
 dnl ========================================================
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2" -o "$MOZ_ENABLE_QT"
 then
     AC_SUBST(MOZ_PANGO)
 
@@ -4807,28 +4809,10 @@ then
     then
         AC_DEFINE(MOZ_PANGO)
     else
-        PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0 fontconfig)
+        PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0)
         AC_SUBST(FT2_CFLAGS)
         AC_SUBST(FT2_LIBS)
     fi
-fi
-
-if test "$MOZ_ENABLE_QT"
-then
-    if test "$MOZ_PANGO"
-    then
-        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION],
-        [
-            AC_SUBST(MOZ_PANGO_CFLAGS)
-            AC_SUBST(MOZ_PANGO_LIBS)
-            AC_DEFINE(MOZ_PANGO)
-        ],
-        [
-            echo "Pango library not found, will use FT2 font engine"
-            MOZ_PANGO=
-        ])
-    fi
-    AC_SUBST(MOZ_PANGO)
 fi
 
 dnl ========================================================
@@ -7804,6 +7788,17 @@ MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
 
 if test "$USE_FC_FREETYPE"; then
+    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig,
+    [
+        if test "$MOZ_PANGO"; then
+            MOZ_PANGO_CFLAGS="$MOZ_PANGO_CFLAGS $_FONTCONFIG_CFLAGS"
+            MOZ_PANGO_LIBS="$MOZ_PANGO_LIBS $_FONTCONFIG_LIBS"
+        else
+            FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
+            FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
+        fi
+    ])
+
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
         dnl = Check for freetype2 and its functionality
@@ -7983,12 +7978,10 @@ if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_OSLIBS='${CAIRO_FT_OSLIBS}'
 
     if test "$MOZ_X11"; then
-        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
+        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
     fi
 
     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
-    mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
-
 else
     PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
     MOZ_CAIRO_CFLAGS="$CAIRO_CFLAGS"
@@ -8110,6 +8103,7 @@ NECKO_PROTOCOLS=`${PERL} ${srcdir}/build/unix/uniq.pl ${NECKO_PROTOCOLS}`
 AC_SUBST(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
+    _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_PROTOCOL_$p"
 done
 
 dnl
@@ -8142,6 +8136,7 @@ fi
 
 if test "$NECKO_WIFI"; then
   AC_DEFINE(NECKO_WIFI)
+  _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
 fi
 AC_SUBST(NECKO_WIFI)
 
@@ -8155,6 +8150,7 @@ MOZ_ARG_DISABLE_BOOL(cookies,
 AC_SUBST(NECKO_COOKIES)
 if test "$NECKO_COOKIES"; then
     AC_DEFINE(NECKO_COOKIES)
+    _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_COOKIES"
 fi
 
 dnl
@@ -8168,9 +8164,6 @@ AC_SUBST(BUILD_CTYPES)
 if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
-
-dnl NECKO_ configuration options are not global
-_NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
 dnl Build Places if required
 if test "$MOZ_PLACES"; then
@@ -8671,14 +8664,6 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
-case "$host_os" in
-mingw*)
-    WIN_TOP_SRC=`cd $srcdir; pwd -W`
-    ;;
-esac
-
-AC_SUBST(WIN_TOP_SRC)
-
 AC_SUBST(MOZILLA_VERSION)
 
 AC_SUBST(ac_configure_args)
@@ -8696,6 +8681,7 @@ HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_PARTIAL_SPECIALIZATION
 HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
 HAVE_STATVFS
+HAVE_STATVFS64
 NEED_CPP_UNUSED_IMPLEMENTATIONS
 NEW_H
 HAVE_GETPAGESIZE
@@ -8729,80 +8715,6 @@ case "$host" in
     ;;
 esac
 
-# Save the defines header file before autoconf removes it.
-# (Do not add AC_DEFINE calls after this line.)
-  _CONFIG_TMP=confdefs-tmp.h
-  _CONFIG_DEFS_H=mozilla-config.h
-
-  cat > $_CONFIG_TMP <<\EOF
-/* List of defines generated by configure. Included with preprocessor flag,
- * -include, to avoid long list of -D defines on the compile command-line.
- * Do not edit.
- */
-
-#ifndef _MOZILLA_CONFIG_H_
-#define _MOZILLA_CONFIG_H_
-EOF
-
-_EGREP_PATTERN='^#define ('
-if test -n "$_NON_GLOBAL_ACDEFINES"; then
-    for f in $_NON_GLOBAL_ACDEFINES; do
-        _EGREP_PATTERN="${_EGREP_PATTERN}$f|"
-    done
-fi
-_EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
-
-  sort confdefs.h | $FIXED_EGREP -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
-
-  if test "$?" != 0; then
-    AC_MSG_ERROR([Error outputting config definitions])
-  fi
-
-  cat >> $_CONFIG_TMP <<\EOF
-
-/* The c99 defining the limit macros (UINT32_MAX for example), says:
- * C++ implementations should define these macros only when __STDC_LIMIT_MACROS
- * is defined before <stdint.h> is included. */
-#define __STDC_LIMIT_MACROS
-
-/* Force-include hunspell_alloc_hooks.h for hunspell, so that we don't need to
- * modify it directly.
- *
- * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
- * unless --enable-system-hunspell is defined.
- */
-#if defined(HUNSPELL_STATIC)
-#include "hunspell_alloc_hooks.h"
-#endif
-
-#endif /* _MOZILLA_CONFIG_H_ */
-
-EOF
-
-  # Only write mozilla-config.h when something changes (or it doesn't exist)
-  if cmp -s $_CONFIG_TMP $_CONFIG_DEFS_H; then
-    rm $_CONFIG_TMP
-  else
-    AC_MSG_RESULT("creating $_CONFIG_DEFS_H")
-    mv -f $_CONFIG_TMP $_CONFIG_DEFS_H
-
-    echo ==== $_CONFIG_DEFS_H =================================
-    cat $_CONFIG_DEFS_H
-  fi
-
-dnl Probably shouldn't call this manually but we always want the output of DEFS
-rm -f confdefs.h.save
-mv confdefs.h confdefs.h.save
-$FIXED_EGREP -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
-if test "$?" != 0; then
-  AC_MSG_ERROR([Error outputting confdefs.h])
-fi
-AC_OUTPUT_MAKE_DEFS()
-ACDEFINES=$DEFS
-AC_SUBST(ACDEFINES)
-rm -f confdefs.h
-mv confdefs.h.save confdefs.h
-
 dnl Create a virtualenv where we can install local Python packages
 AC_MSG_RESULT([Creating Python virtualenv])
 rm -rf _virtualenv
@@ -8832,26 +8744,8 @@ dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
 dnl   allmakefiles.sh sets the variable, MAKEFILES.
 . ${srcdir}/allmakefiles.sh
-dnl
-dnl Run a perl script to quickly create the makefiles.
-dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
-dnl   for the files it cannot handle correctly. This way, config.status
-dnl   will handle these files.
-dnl If it fails, nothing is set and config.status will run as usual.
-dnl
-dnl This does not change the $MAKEFILES variable.
-dnl
-echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
-res="$?"
-if test "$res" != 0; then
-    exit $res
-fi
-. ./conftest.sh
-rm conftest.sh
 
 echo $MAKEFILES > unallmakefiles
-
-mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
 
 AC_OUTPUT($MAKEFILES)
 
@@ -8910,16 +8804,6 @@ if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp
 else
   mv -f ./mozinfo.json.tmp ./mozinfo.json
-fi
-
-dnl Prevent the regeneration of cairo-features.h forcing rebuilds of gfx stuff
-if test "$CAIRO_FEATURES_H"; then
-  if cmp -s $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig; then
-    echo "$CAIRO_FEATURES_H is unchanged"
-    mv -f "$CAIRO_FEATURES_H".orig "$CAIRO_FEATURES_H" 2> /dev/null
-  else
-    rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
-  fi
 fi
 
 # Run jemalloc configure script
@@ -9074,18 +8958,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 
-if test -z "$MOZ_NATIVE_NSPR"; then
-    # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
-    AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test "$OS_ARCH" != "WINNT"; then
-       NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --libdir=$LIBXUL_DIST/lib --libs`
-       $PERL -pi.bak -e "s '^NSPR_LIBS\\s*=.*'NSPR_LIBS = $NSPR_LIBS'" config/autoconf.mk
-       NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --includedir=$LIBXUL_DIST/include/nspr --cflags`
-       $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $NSPR_CFLAGS'" config/autoconf.mk
-    fi
-    rm -f config/autoconf.mk.bak
-fi
-
 dnl ========================================================
 dnl = Setup a nice relatively clean build environment for
 dnl = sub-configures.
@@ -9142,13 +9014,3 @@ AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
-
-dnl Prevent the regeneration of autoconf.mk forcing rebuilds of the world
-dnl Needs to be at the end to respect possible changes from NSPR configure
-if cmp -s config/autoconf.mk config/autoconf.mk.orig; then
-  echo "config/autoconf.mk is unchanged"
-  mv -f config/autoconf.mk.orig config/autoconf.mk 2> /dev/null
-else
-  rm -f config/autoconf.mk.orig 2> /dev/null
-fi
-

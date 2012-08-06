@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-DEPTH     = ../..
+DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
@@ -57,20 +57,20 @@ endif
 TEST_DIRS += tests
 
 EXTRA_JS_MODULES = \
+  debug.js \
   Geometry.jsm \
   InlineSpellChecker.jsm \
   PopupNotifications.jsm \
   Dict.jsm \
+  PageMenu.jsm \
   PropertyListUtils.jsm \
   PrivateBrowsingUtils.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  debug.js \
   LightweightThemeConsumer.jsm \
   Services.jsm \
   WindowDraggingUtils.jsm \
-  PageMenu.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

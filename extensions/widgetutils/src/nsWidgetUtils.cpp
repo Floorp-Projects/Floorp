@@ -33,7 +33,6 @@
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsIView.h"
 #include "nsGUIEvent.h"
 #include "nsIViewManager.h"
@@ -114,13 +113,12 @@ nsWidgetUtils::Init()
 nsresult
 nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
-  mouseEvent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
 
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenX(&g_lastX);
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenY(&g_lastY);
+  mouseEvent->GetScreenX(&g_lastX);
+  mouseEvent->GetScreenY(&g_lastY);
 
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsCOMPtr<nsIDOMNode> mNode;
@@ -129,10 +127,8 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   PRUint32 type = 0;
   bool isXul = false;
   {
-    nsCOMPtr <nsIDOMNSEvent> aEvent = do_QueryInterface(aDOMEvent);
     nsCOMPtr<nsIDOMEventTarget> eventOrigTarget;
-    if (aEvent)
-      aEvent->GetOriginalTarget(getter_AddRefs(eventOrigTarget));
+    aDOMEvent->GetOriginalTarget(getter_AddRefs(eventOrigTarget));
     if (eventOrigTarget)
       mOrigNode = do_QueryInterface(eventOrigTarget);
     isXul = IsXULNode(mOrigNode, &type);

@@ -278,11 +278,24 @@ private:
   };
 
   /**
-   * Initializes the SourceGraphic and SourceAlpha graph nodes (i.e. sets
+   * Initializes the keyword nodes e.g. SourceGraphic (i.e. sets
    * .mImage.mFilterPrimitiveSubregion and .mResultBoundingBox on
    * mSourceColorAlpha and mSourceAlpha).
    */
   nsresult BuildSources();
+
+  /**
+   * Creates a gfxImageSurface for either the FillPaint or StrokePaint graph
+   * nodes
+   */
+  nsresult BuildSourcePaint(PrimitiveInfo *aPrimitive);
+
+  /**
+   * Creates a gfxImageSurface for either the FillPaint and StrokePaint graph
+   * nodes, fills its contents and assigns it to mFillPaint.mImage.mImage and
+   * mStrokePaint.mImage.mImage respectively.
+   */
+  nsresult BuildSourcePaints();
 
   /**
    * Creates the gfxImageSurfaces for the SourceGraphic and SourceAlpha graph
@@ -414,6 +427,8 @@ private:
 
   PrimitiveInfo           mSourceColorAlpha;
   PrimitiveInfo           mSourceAlpha;
+  PrimitiveInfo           mFillPaint;
+  PrimitiveInfo           mStrokePaint;
   nsTArray<PrimitiveInfo> mPrimitives;
 };
 

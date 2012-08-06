@@ -1,0 +1,18 @@
+{
+  "DocumentType member must be nuked: internalSubset": true,
+  "Historical DOM features must be removed: CDATASection": true,
+  "Historical DOM features must be removed: NamedNodeMap": true,
+  "Historical DOM features must be removed: UserDataHandler": true,
+  "Historical DOM features must be removed: createAttribute": true,
+  "Historical DOM features must be removed: createAttributeNS": true,
+  "Historical DOM features must be removed: createCDATASection": true,
+  "Historical DOM features must be removed: getAttributeNode": true,
+  "Historical DOM features must be removed: getAttributeNodeNS": true,
+  "Historical DOM features must be removed: inputEncoding": true,
+  "Historical DOM features must be removed: removeAttributeNode": true,
+  "Historical DOM features must be removed: setAttributeNode": true,
+  "Node member must be nuked: getUserData": true,
+  "Node member must be nuked: hasAttributes": true,
+  "Node member must be nuked: isSupported": true,
+  "Node member must be nuked: setUserData": true
+}

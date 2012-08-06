@@ -14,6 +14,7 @@ class nsIWidget;
 struct nsRect;
 class nsRegion;
 class nsDeviceContext;
+class nsIPresShell;
 
 #define NS_IVIEWMANAGER_IID \
 { 0x540610a6, 0x4fdd, 0x4ae3, \

@@ -400,7 +400,7 @@ protected:
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
    * take an |aNotify| parameter.
    */
-  nsresult DoSetChecked(bool aValue, bool aNotify, bool aSetValueChanged);
+  void DoSetChecked(bool aValue, bool aNotify, bool aSetValueChanged);
 
   /**
    * Do all the work that |SetCheckedChanged| does (radio button handling,
@@ -415,7 +415,7 @@ protected:
    */
   void SetCheckedInternal(bool aValue, bool aNotify);
 
-  nsresult RadioSetChecked(bool aNotify);
+  void RadioSetChecked(bool aNotify);
   void SetCheckedChanged(bool aCheckedChanged);
 
   /**

@@ -21,6 +21,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <sys/syscall.h>
+#include <sys/resource.h>
 #include <time.h>
 
 #include "android/log.h"
@@ -39,7 +40,9 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include "nsAlgorithm.h"
+#include "nsPrintfCString.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIRunnable.h"
@@ -56,7 +59,8 @@
 #define NsecPerSec   1000000000
 
 
-using mozilla::hal::WindowIdentifier;
+using namespace mozilla;
+using namespace mozilla::hal;
 
 namespace mozilla {
 namespace hal_impl {
@@ -798,6 +802,51 @@ SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds)
   }
 
   return true;
+}
+
+void
+SetProcessPriority(int aPid, ProcessPriority aPriority)
+{
+  HAL_LOG(("SetProcessPriority(pid=%d, priority=%d)", aPid, aPriority));
+
+  const char* priorityStr = NULL;
+  switch (aPriority) {
+  case PROCESS_PRIORITY_BACKGROUND:
+    priorityStr = "background";
+    break;
+  case PROCESS_PRIORITY_FOREGROUND:
+    priorityStr = "foreground";
+    break;
+  case PROCESS_PRIORITY_MASTER:
+    priorityStr = "master";
+    break;
+  default:
+    MOZ_NOT_REACHED();
+  }
+
+  // Notice that you can disable oom_adj and renice by deleting the prefs
+  // hal.processPriorityManager{foreground,background,master}{OomAdjust,Nice}.
+
+  PRInt32 oomAdj = 0;
+  nsresult rv = Preferences::GetInt(nsPrintfCString(
+    "hal.processPriorityManager.gonk.%sOomAdjust", priorityStr).get(), &oomAdj);
+  if (NS_SUCCEEDED(rv)) {
+    HAL_LOG(("Setting oom_adj for pid %d to %d", aPid, oomAdj));
+    WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
+                nsPrintfCString("%d", oomAdj).get());
+  }
+
+  PRInt32 nice = 0;
+  rv = Preferences::GetInt(nsPrintfCString(
+    "hal.processPriorityManager.gonk.%sNice", priorityStr).get(), &nice);
+  if (NS_SUCCEEDED(rv)) {
+    HAL_LOG(("Setting nice for pid %d to %d", aPid, nice));
+
+    int success = setpriority(PRIO_PROCESS, aPid, nice);
+    if (success != 0) {
+      HAL_LOG(("Failed to set nice for pid %d to %d", aPid, nice));
+    }
+  }
 }
 
 } // hal_impl

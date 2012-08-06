@@ -22,14 +22,12 @@
 
 #include <stdio.h>
 #include "nsQueryFrame.h"
-#include "nsEvent.h"
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
 #include "nsStyleStructFwd.h"
-#include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
-#include "gfxMatrix.h"
 #include "nsFrameList.h"
+#include "nsIContent.h"
 #include "nsAlgorithm.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
@@ -54,6 +52,7 @@
 struct nsHTMLReflowState;
 class nsHTMLReflowCommand;
 
+struct gfxMatrix;
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
@@ -89,8 +88,6 @@ namespace layers {
 class Layer;
 }
 }
-
-typedef class nsIFrame nsIBox;
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -2678,17 +2675,17 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowAreas = false) = 0;
   NS_HIDDEN_(nsresult) Layout(nsBoxLayoutState& aBoxLayoutState);
-  nsIBox* GetChildBox() const
+  nsIFrame* GetChildBox() const
   {
     // box layout ends at box-wrapped frames, so don't allow these frames
     // to report child boxes.
     return IsBoxFrame() ? GetFirstPrincipalChild() : nullptr;
   }
-  nsIBox* GetNextBox() const
+  nsIFrame* GetNextBox() const
   {
     return (mParent && mParent->IsBoxFrame()) ? mNextSibling : nullptr;
   }
-  nsIBox* GetParentBox() const
+  nsIFrame* GetParentBox() const
   {
     return (mParent && mParent->IsBoxFrame()) ? mParent : nullptr;
   }
@@ -2710,7 +2707,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
   NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nullptr);
-  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)=0;
   // XXX take this out after we've branched
   virtual bool GetMouseThrough() const { return false; }
 
@@ -2727,11 +2724,11 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    */
   virtual bool HasTerminalNewline() const;
 
-  static bool AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
-  static bool AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox,
-                              nsSize& aSize, bool& aWidth, bool& aHeightSet);
-  static bool AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
-  static bool AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex);
+  static bool AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
+  static bool AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
+                            nsSize& aSize, bool& aWidth, bool& aHeightSet);
+  static bool AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
+  static bool AddCSSFlex(nsBoxLayoutState& aState, nsIFrame* aBox, nscoord& aFlex);
 
   // END OF BOX LAYOUT METHODS
   // The above methods have been migrated from nsIBox and are in the process of

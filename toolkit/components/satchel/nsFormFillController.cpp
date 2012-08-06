@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIFrame.h"
 #include "nsRect.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsILoginManager.h"
@@ -34,7 +33,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
 #include "nsIDOMNSEditableElement.h"
-#include "nsIDOMNSEvent.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 
