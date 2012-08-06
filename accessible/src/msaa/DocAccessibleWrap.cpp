@@ -17,7 +17,6 @@
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
-#include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"

@@ -27,7 +27,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIFrame.h"
 #include "nsIView.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"

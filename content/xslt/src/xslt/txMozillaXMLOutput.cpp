@@ -32,13 +32,13 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "nsCharsetAlias.h"
-#include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "txXMLUtils.h"
 #include "nsContentSink.h"
 #include "nsINode.h"
 #include "nsContentCreatorFunctions.h"
 #include "txError.h"
+#include "nsIFrame.h"
 
 using namespace mozilla::dom;
 

@@ -21,6 +21,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 #include "nsGridRow.h"
+#include "nsHTMLReflowState.h"
 
 already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout()
 {

@@ -20,7 +20,6 @@
 #include "nsAttrName.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"

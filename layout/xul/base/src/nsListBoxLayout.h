@@ -7,8 +7,9 @@
 #define nsListBoxLayout_h___
 
 #include "nsGridRowGroupLayout.h"
-#include "nsIFrame.h"
 
+class nsIFrame;
+typedef class nsIFrame nsIBox;
 class nsBoxLayoutState;
 
 class nsListBoxLayout : public nsGridRowGroupLayout

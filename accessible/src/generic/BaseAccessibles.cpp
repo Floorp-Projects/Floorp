@@ -15,7 +15,6 @@
 
 #include "nsGUIEvent.h"
 #include "nsILink.h"
-#include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
 

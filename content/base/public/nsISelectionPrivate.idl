@@ -16,13 +16,12 @@ interface nsINode;
 
 %{C++
 class nsFrameSelection;
-class nsIFrame;
 class nsIPresShell;
 struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
-#include "nsIFrame.h"
 #include "nsTArray.h"
+#include "nsIFrame.h"
 %}
 
 [ptr] native nsFrameSelection(nsFrameSelection);
