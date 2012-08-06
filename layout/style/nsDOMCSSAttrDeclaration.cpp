@@ -19,6 +19,7 @@
 #include "nsGenericElement.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
+#include "nsWrapperCacheInlines.h"
 
 namespace css = mozilla::css;
 namespace dom = mozilla::dom;

@@ -45,6 +45,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsGenericElement.h"
 #include "CSSCalc.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
