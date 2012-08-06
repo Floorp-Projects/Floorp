@@ -67,12 +67,7 @@
 #endif
 
 #ifdef MOZ_PREF_EXTENSIONS
-#ifdef MOZ_ENABLE_GTK
-#define SYSTEMPREF_MODULES \
-    MODULE(nsAutoConfigModule)
-#else
 #define SYSTEMPREF_MODULES MODULE(nsAutoConfigModule)
-#endif
 #else
 #define SYSTEMPREF_MODULES
 #endif
@@ -125,7 +120,7 @@
 #endif
 
 #ifdef MOZ_XUL
-#ifdef MOZ_ENABLE_GTK
+#ifdef MOZ_WIDGET_GTK
 #define UNIXPROXY_MODULE MODULE(nsUnixProxyModule)
 #endif
 #if defined(MOZ_WIDGET_QT)
