@@ -63,6 +63,7 @@ EXPORTS = \
   nsPIWindowRoot.h \
   nsFocusManager.h \
   nsWrapperCache.h \
+  nsWrapperCacheInlines.h \
   nsContentPermissionHelper.h \
   nsStructuredCloneContainer.h \
   nsWindowMemoryReporter.h \
