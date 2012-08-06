@@ -73,7 +73,6 @@ Readability.prototype = {
     negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
-    replaceBrs: /(<br[^>]*>[ \n\r\t]*){2,}/gi,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
@@ -283,11 +282,80 @@ Readability.prototype = {
       styleTags[st].textContent = "";
     }
 
-    // Turn all double br's into p's. Note, this is pretty costly as far
-    // as processing goes. Maybe optimize later.
-    doc.body.innerHTML =
-        doc.body.innerHTML.replace(this.REGEXPS.replaceBrs, '</p><p>').
-            replace(this.REGEXPS.replaceFonts, '<$1span>');
+    this._replaceBrs(doc.body);
+
+    doc.body.innerHTML = doc.body.innerHTML.replace(this.REGEXPS.replaceFonts, '<$1span>');
+  },
+
+  /**
+   * Replaces 2 or more successive <br> elements with a single <p>.
+   * Whitespace between <br> elements are ignored. For example:
+   *   <div>foo<br>bar<br> <br><br>abc</div>
+   * will become:
+   *   <div>foo<br>bar<p>abc</p></div>
+   */
+  _replaceBrs: function (elem) {
+    // ignore whitespace between elements
+    let whitespace = /^\s*$/;
+
+    /**
+     * Finds the next element, starting from the given node, and ignoring
+     * whitespace in between. If the given node is an element, the same node is
+     * returned.
+     */
+    function nextElement(node) {
+      let next = node;
+      while (next
+          && (next.nodeType != Node.ELEMENT_NODE)
+          && !whitespace.test(next.textContent)) {
+        next = next.nextSibling;
+      }
+      return next;
+    }
+
+    let brs = elem.getElementsByTagName("br");
+    for (let i = 0; i < brs.length; i++) {
+      let br = brs[i];
+      let next = br.nextSibling;
+
+      // Whether 2 or more <br> elements have been found and replaced with a
+      // <p> block.
+      let replaced = false;
+
+      // If we find a <br> chain, remove the <br>s until we hit another element
+      // or non-whitespace. This leaves behind the first <br> in the chain
+      // (which will be replaced with a <p> later).
+      while ((next = nextElement(next)) && (next.tagName == "BR")) {
+        replaced = true;
+        let sibling = next.nextSibling;
+        next.parentNode.removeChild(next);
+        next = sibling;
+      }
+
+      // If we removed a <br> chain, replace the remaining <br> with a <p>. Add
+      // all sibling nodes as children of the <p> until we hit another <br>
+      // chain.
+      if (replaced) {
+        let p = this._doc.createElement("p");
+        br.parentNode.replaceChild(p, br);
+
+        next = p.nextSibling;
+        while (next) {
+          // If we've hit another <br><br>, we're done adding children to this <p>.
+          if (next.tagName == "BR") {
+            let nextElem = nextElement(next);
+            if (nextElem && nextElem.tagName == "BR") {
+              break;
+            }
+          }
+          
+          // Otherwise, make this node a child of the new <p>.
+          let sibling = next.nextSibling;
+          p.appendChild(next);
+          next = sibling;
+        }
+      }
+    }
   },
 
   /**
@@ -1109,10 +1177,10 @@ Readability.prototype = {
           let responseHtml = r.responseText.replace(/\n/g,'\uffff').replace(/<script.*?>.*?<\/script>/gi, '');
           responseHtml = responseHtml.replace(/\n/g,'\uffff').replace(/<script.*?>.*?<\/script>/gi, '');
           responseHtml = responseHtml.replace(/\uffff/g,'\n').replace(/<(\/?)noscript/gi, '<$1div');
-          responseHtml = responseHtml.replace(this.REGEXPS.replaceBrs, '</p><p>');
           responseHtml = responseHtml.replace(this.REGEXPS.replaceFonts, '<$1span>');
 
           page.innerHTML = responseHtml;
+          this._replaceBrs(page);
 
           // Reset all flags for the next page, as they will search through it and
           // disable as necessary at the end of grabArticle.
