@@ -62,8 +62,9 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   nsresult rv = aFileHelper->mResultCode;
 
   // If the request failed then fire error event and return.
+  bool allowDefault;
   if (NS_FAILED(rv)) {
-    FireError(rv);
+    FireError(rv, &allowDefault);
     return NS_OK;
   }
 
@@ -93,10 +94,10 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    FireSuccess(result);
+    FireSuccess(result, &allowDefault);
   }
   else {
-    FireError(rv);
+    FireError(rv, &allowDefault);
   }
 
   return NS_OK;
