@@ -120,5 +120,86 @@ class EqualityTest(unittest.TestCase):
 
         self.assertEqual(s1, s2)
 
+
+class StringExpansionTest(unittest.TestCase):
+    def test_base_expansion_interface(self):
+        s1 = pymake.data.StringExpansion('FOO', None)
+
+        self.assertTrue(s1.is_static_string)
+
+        funcs = list(s1.functions())
+        self.assertEqual(len(funcs), 0)
+
+        funcs = list(s1.functions(True))
+        self.assertEqual(len(funcs), 0)
+
+        refs = list(s1.variable_references())
+        self.assertEqual(len(refs), 0)
+
+
+class ExpansionTest(unittest.TestCase):
+    def test_is_static_string(self):
+        e1 = pymake.data.Expansion()
+        e1.appendstr('foo')
+
+        self.assertTrue(e1.is_static_string)
+
+        e1.appendstr('bar')
+        self.assertTrue(e1.is_static_string)
+
+        vname = pymake.data.StringExpansion('FOO', None)
+        func = pymake.functions.VariableRef(None, vname)
+
+        e1.appendfunc(func)
+
+        self.assertFalse(e1.is_static_string)
+
+    def test_get_functions(self):
+        e1 = pymake.data.Expansion()
+        e1.appendstr('foo')
+
+        vname1 = pymake.data.StringExpansion('FOO', None)
+        vname2 = pymake.data.StringExpansion('BAR', None)
+
+        func1 = pymake.functions.VariableRef(None, vname1)
+        func2 = pymake.functions.VariableRef(None, vname2)
+
+        e1.appendfunc(func1)
+        e1.appendfunc(func2)
+
+        funcs = list(e1.functions())
+        self.assertEqual(len(funcs), 2)
+
+        func3 = pymake.functions.SortFunction(None)
+        func3.append(vname1)
+
+        e1.appendfunc(func3)
+
+        funcs = list(e1.functions())
+        self.assertEqual(len(funcs), 3)
+
+        refs = list(e1.variable_references())
+        self.assertEqual(len(refs), 2)
+
+    def test_get_functions_descend(self):
+        e1 = pymake.data.Expansion()
+        vname1 = pymake.data.StringExpansion('FOO', None)
+        func1 = pymake.functions.VariableRef(None, vname1)
+        e2 = pymake.data.Expansion()
+        e2.appendfunc(func1)
+
+        func2 = pymake.functions.SortFunction(None)
+        func2.append(e2)
+
+        e1.appendfunc(func2)
+
+        funcs = list(e1.functions())
+        self.assertEqual(len(funcs), 1)
+
+        funcs = list(e1.functions(True))
+        self.assertEqual(len(funcs), 2)
+
+        self.assertTrue(isinstance(funcs[0], pymake.functions.SortFunction))
+
 if __name__ == '__main__':
     unittest.main()
