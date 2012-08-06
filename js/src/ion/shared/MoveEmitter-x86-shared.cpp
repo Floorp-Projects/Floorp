@@ -75,9 +75,14 @@ MoveEmitterX86::tempReg()
     if (spilledReg_ != InvalidReg)
         return spilledReg_;
 
-    // For now, just pick ecx/rcx as the eviction point. This is totally
+    // For now, just pick edx/rdx as the eviction point. This is totally
     // random, and if it ends up being bad, we can use actual heuristics later.
-    spilledReg_ = Register::FromCode(2);
+    spilledReg_ = edx;
+
+#ifdef JS_CPU_X64
+    JS_ASSERT(edx == rdx);
+#endif
+
     if (pushedAtSpill_ == -1) {
         masm.Push(spilledReg_);
         pushedAtSpill_ = masm.framePushed();
@@ -109,6 +114,11 @@ MoveEmitterX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
             masm.mov(toOperand(to), temp);
             masm.mov(temp, cycleSlot());
         } else {
+            if (to.reg() == spilledReg_) {
+                // If the destination was spilled, restore it first.
+                masm.mov(spillSlot(), spilledReg_);
+                spilledReg_ = InvalidReg;
+            }
             masm.mov(to.reg(), cycleSlot());
         }
     }
@@ -136,6 +146,10 @@ MoveEmitterX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             masm.mov(cycleSlot(), temp);
             masm.mov(temp, toOperand(to));
         } else {
+            if (to.reg() == spilledReg_) {
+                // Make sure we don't re-clobber the spilled register later.
+                spilledReg_ = InvalidReg;
+            }
             masm.mov(cycleSlot(), to.reg());
         }
     }
