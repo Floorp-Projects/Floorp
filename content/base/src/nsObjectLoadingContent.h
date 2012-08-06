@@ -26,8 +26,6 @@
 
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;
-class AutoNotifier;
-class AutoFallback;
 class AutoSetInstantiatingToFalse;
 class nsObjectFrame;
 class nsFrameLoader;
@@ -131,12 +129,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Called by nsDocument so we may suspend plugins in inactive documents)
      */
     void NotifyOwnerDocumentActivityChanged();
-
-    /**
-     * Used by pluginHost to know if we're loading with a channel, so it
-     * will not open its own.
-     */
-    bool SrcStreamLoading() { return mSrcStreamLoading; }
 
     /**
      * When a plug-in is instantiated, it can create a scriptable
@@ -525,14 +517,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // For plugin stand-in types (click-to-play, play preview, ...) tracks
     // whether content js has tried to access the plugin script object.
     bool                        mScriptRequested : 1;
-
-    // Used to track when we might try to instantiate a plugin instance based on
-    // a src data stream being delivered to this object. When this is true we
-    // don't want plugin instance instantiation code to attempt to load src data
-    // again or we'll deliver duplicate streams. Should be cleared when we are
-    // not loading src data.
-    bool                        mSrcStreamLoading : 1;
-
 
     nsWeakFrame                 mPrintFrame;
 
