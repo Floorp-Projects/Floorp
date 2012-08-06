@@ -107,6 +107,29 @@ class BaseExpansion(object):
 
             yield f
 
+    @property
+    def is_filesystem_dependent(self):
+        """Whether this expansion may query the filesystem for evaluation.
+
+        This effectively asks "is any function in this expansion dependent on
+        the filesystem.
+        """
+        for f in self.functions(descend=True):
+            if f.is_filesystem_dependent:
+                return True
+
+        return False
+
+    @property
+    def is_shell_dependent(self):
+        """Whether this expansion may invoke a shell for evaluation."""
+
+        for f in self.functions(descend=True):
+            if isinstance(f, functions.ShellFunction):
+                return True
+
+        return False
+
 
 class StringExpansion(BaseExpansion):
     """An Expansion representing a static string.
@@ -325,7 +348,9 @@ class Expansion(BaseExpansion, list):
                 yield e
 
             if descend:
-                raise Exception('TODO implement descend.')
+                for exp in e.expansions(descend=True):
+                    for f in exp.functions(descend=True):
+                        yield f
 
     def __repr__(self):
         return "<Expansion with elements: %r>" % ([e for e, isfunc in self],)
