@@ -8,13 +8,10 @@
 #ifndef SPSProfiler_h__
 #define SPSProfiler_h__
 
-#include "mozilla/HashFunctions.h"
-
 #include <stddef.h>
 
-#include "jsfriendapi.h"
-#include "jsfun.h"
-#include "jsscript.h"
+#include "mozilla/HashFunctions.h"
+#include "js/Utility.h"
 
 /*
  * SPS Profiler integration with the JS Engine
@@ -44,13 +41,14 @@
  * but it will still maintain the size of the stack. SPS code is aware of this
  * and iterates the stack accordingly.
  *
- * There are two pointers of information pushed on the SPS stack for every JS
- * function that is entered. First is a char* pointer of a description of what
- * function was entered. Currently this string is of the form
- * "function (file:line)" if there's a function name, or just "file:line" if
- * there's no function name available. The other bit of information is the
- * relevant C++ (native) stack pointer. This stack pointer is what enables the
- * interleaving of the C++ and the JS stack.
+ * There is some information pushed on the SPS stack for every JS function that
+ * is entered. First is a char* pointer of a description of what function was
+ * entered. Currently this string is of the form "function (file:line)" if
+ * there's a function name, or just "file:line" if there's no function name
+ * available. The other bit of information is the relevant C++ (native) stack
+ * pointer. This stack pointer is what enables the interleaving of the C++ and
+ * the JS stack. Finally, throughout execution of the function, some extra
+ * information may be updated on the ProfileEntry structure.
  *
  * = Profile Strings
  *
@@ -80,9 +78,34 @@
  * interleaving C++ and JS, if SPS sees a NULL native stack pointer on the SPS
  * stack, it looks backwards for the first non-NULL pointer and uses that for
  * all subsequent NULL native stack pointers.
+ *
+ * = Line Numbers
+ *
+ * One goal of sampling is to get both a backtrace of the JS stack, but also
+ * know where within each function on the stack execution currently is. For
+ * this, each ProfileEntry has a 'pc' field to tell where its execution
+ * currently is. This field is updated whenever a call is made to another JS
+ * function, and for the JIT it is also updated whenever the JIT is left.
+ *
+ * This field is in a union with a uint32_t 'line' so that C++ can make use of
+ * the field as well. It was observed that tracking 'line' via PCToLineNumber in
+ * JS was far too expensive, so that is why the pc instead of the translated
+ * line number is stored.
+ *
+ * As an invariant, if the pc is NULL, then the JIT is currently executing
+ * generated code. Otherwise execution is in another JS function or in C++. With
+ * this in place, only the top entry of the stack can ever have NULL as its pc.
+ * Additionally with this invariant, it is possible to maintain mappings of JIT
+ * code to pc which can be accessed safely because they will only be accessed
+ * from a signal handler when the JIT code is executing.
  */
 
+struct JSFunction;
+struct JSScript;
+
 namespace js {
+
+class ProfileEntry;
 
 typedef HashMap<JSScript*, const char*, DefaultHasher<JSScript*>, SystemAllocPolicy>
         ProfileStringMap;
@@ -101,33 +124,44 @@ class SPSProfiler
     bool                 slowAssertions;
     bool                 enabled_;
 
-    static const char *allocProfileString(JSContext *cx, JSScript *script,
-                                          JSFunction *function);
-    void push(const char *string, void *sp);
+    const char *allocProfileString(JSContext *cx, JSScript *script,
+                                   JSFunction *function);
+    void push(const char *string, void *sp, JSScript *script, jsbytecode *pc);
     void pop();
 
   public:
-    SPSProfiler(JSRuntime *rt)
-        : rt(rt),
-          stack_(NULL),
-          size_(NULL),
-          max_(0),
-          slowAssertions(false),
-          enabled_(false)
-    {}
+    SPSProfiler(JSRuntime *rt);
     ~SPSProfiler();
 
     uint32_t *size() { return size_; }
     uint32_t maxSize() { return max_; }
     ProfileEntry *stack() { return stack_; }
 
+    /* management of whether instrumentation is on or off */
     bool enabled() { JS_ASSERT_IF(enabled_, installed()); return enabled_; }
     bool installed() { return stack_ != NULL && size_ != NULL; }
     void enable(bool enabled);
     void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
     bool slowAssertionsEnabled() { return slowAssertions; }
+
+    /*
+     * Functions which are the actual instrumentation to track run information
+     *
+     *   - enter: a function has started to execute
+     *   - updatePC: updates the pc information about where a function
+     *               is currently executing
+     *   - exit: this function has ceased execution, and no further
+     *           entries/exits will be made
+     */
     bool enter(JSContext *cx, JSScript *script, JSFunction *maybeFun);
     void exit(JSContext *cx, JSScript *script, JSFunction *maybeFun);
+    void updatePC(JSScript *script, jsbytecode *pc) {
+        if (enabled() && *size_ - 1 < max_) {
+            JS_ASSERT(*size_ > 0);
+            stack_[*size_ - 1].setPC(pc);
+        }
+    }
+
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);
     const char *profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun);
     void onScriptFinalized(JSScript *script);
