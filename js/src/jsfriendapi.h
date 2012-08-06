@@ -456,13 +456,6 @@ GetObjectSlot(RawObject obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
-inline Shape *
-GetObjectShape(RawObject obj)
-{
-    shadow::Shape *shape = reinterpret_cast<const shadow::Object*>(obj)->shape;
-    return reinterpret_cast<Shape *>(shape);
-}
-
 inline const jschar *
 GetAtomChars(JSAtom *atom)
 {
@@ -892,6 +885,13 @@ NukeCrossCompartmentWrappers(JSContext* cx,
                              const CompartmentFilter& sourceFilter,
                              const CompartmentFilter& targetFilter,
                              NukeReferencesToWindow nukeReferencesToWindow);
+
+/* Specify information about ListBase proxies in the DOM, for use by ICs. */
+JS_FRIEND_API(void)
+SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot);
+
+void *GetListBaseHandlerFamily();
+uint32_t GetListBaseExpandoSlot();
 
 } /* namespace js */
 
