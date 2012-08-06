@@ -1,4 +1,4 @@
-import pymake.data, pymake.util
+import pymake.data, pymake.functions, pymake.util
 import unittest
 import re
 from cStringIO import StringIO
@@ -73,6 +73,52 @@ class LRUTest(unittest.TestCase):
             goti = tuple(c.debugitems())
             self.assertEqual(goti, di,
                              "debugitems, iteration %i, got %r expected %r" % (i, goti, di))
+
+class EqualityTest(unittest.TestCase):
+    def test_string_expansion(self):
+        s1 = pymake.data.StringExpansion('foo bar', None)
+        s2 = pymake.data.StringExpansion('foo bar', None)
+
+        self.assertEqual(s1, s2)
+
+    def test_expansion_simple(self):
+        s1 = pymake.data.Expansion(None)
+        s2 = pymake.data.Expansion(None)
+
+        self.assertEqual(s1, s2)
+
+        s1.appendstr('foo')
+        s2.appendstr('foo')
+        self.assertEqual(s1, s2)
+
+    def test_expansion_string_finish(self):
+        """Adjacent strings should normalize to same value."""
+        s1 = pymake.data.Expansion(None)
+        s2 = pymake.data.Expansion(None)
+
+        s1.appendstr('foo')
+        s2.appendstr('foo')
+
+        s1.appendstr(' bar')
+        s1.appendstr(' baz')
+        s2.appendstr(' bar baz')
+
+        self.assertEqual(s1, s2)
+
+    def test_function(self):
+        s1 = pymake.data.Expansion(None)
+        s2 = pymake.data.Expansion(None)
+
+        n1 = pymake.data.StringExpansion('FOO', None)
+        n2 = pymake.data.StringExpansion('FOO', None)
+
+        v1 = pymake.functions.VariableRef(None, n1)
+        v2 = pymake.functions.VariableRef(None, n2)
+
+        s1.appendfunc(v1)
+        s2.appendfunc(v2)
+
+        self.assertEqual(s1, s2)
 
 if __name__ == '__main__':
     unittest.main()

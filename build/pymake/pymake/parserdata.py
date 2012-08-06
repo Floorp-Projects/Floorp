@@ -102,11 +102,26 @@ class Statement(object):
     Represents parsed make file syntax.
 
     This is an abstract base class. Child classes are expected to implement
-    `execute()`.
+    basic methods defined below.
     """
 
     def execute(self, makefile, context):
-        raise Exception("Must implement execute() in child classes.")
+        """Executes this Statement within a make file execution context."""
+        raise Exception("%s must implement execute()." % self.__class__)
+
+    def to_source(self):
+        """Obtain the make file "source" representation of the Statement.
+
+        This converts an individual Statement back to a string that can again
+        be parsed into this Statement.
+        """
+        raise Exception("%s must implement to_source()." % self.__class__)
+
+    def __eq__(self, other):
+        raise Exception("%s must implement __eq__." % self.__class__)
+
+    def __ne__(self, other):
+        return self.__eq__(other)
 
 class DummyRule(object):
     __slots__ = ()
@@ -172,6 +187,29 @@ class Rule(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sRule %s: %s" % (indent, self.targetexp, self.depexp)
 
+    def to_source(self):
+        sep = ':'
+
+        if self.doublecolon:
+            sep = '::'
+
+        deps = self.depexp.to_source()
+        if len(deps) > 0 and not deps[0].isspace():
+            sep += ' '
+
+        return '\n%s%s%s' % (
+            self.targetexp.to_source(escape_variables=True),
+            sep,
+            deps)
+
+    def __eq__(self, other):
+        if not isinstance(other, Rule):
+            return False
+
+        return self.targetexp == other.targetexp \
+                and self.depexp == other.depexp \
+                and self.doublecolon == other.doublecolon
+
 class StaticPatternRule(Statement):
     """
     Static pattern rules are rules which specify multiple targets based on a
@@ -227,6 +265,33 @@ class StaticPatternRule(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sStaticPatternRule %s: %s: %s" % (indent, self.targetexp, self.patternexp, self.depexp)
 
+    def to_source(self):
+        sep = ':'
+
+        if self.doublecolon:
+            sep = '::'
+
+        pattern = self.patternexp.to_source()
+        deps = self.depexp.to_source()
+
+        if len(pattern) > 0 and pattern[0] not in (' ', '\t'):
+            sep += ' '
+
+        return '\n%s%s%s:%s' % (
+            self.targetexp.to_source(escape_variables=True),
+            sep,
+            pattern,
+            deps)
+
+    def __eq__(self, other):
+        if not isinstance(other, StaticPatternRule):
+            return False
+
+        return self.targetexp == other.targetexp \
+                and self.patternexp == other.patternexp \
+                and self.depexp == other.depexp \
+                and self.doublecolon == other.doublecolon
+
 class Command(Statement):
     """
     Commands are things that get executed by a rule.
@@ -253,6 +318,23 @@ class Command(Statement):
 
     def dump(self, fd, indent):
         print >>fd, "%sCommand %s" % (indent, self.exp,)
+
+    def to_source(self):
+        # Commands have some interesting quirks when it comes to source
+        # formatting. First, they can be multi-line. Second, a tab needs to be
+        # inserted at the beginning of every line. Finally, there might be
+        # variable references inside the command. This means we need to escape
+        # variable references inside command strings. Luckily, this is handled
+        # by the Expansion.
+        s = self.exp.to_source(escape_variables=True)
+
+        return '\n'.join(['\t%s' % line for line in s.split('\n')])
+
+    def __eq__(self, other):
+        if not isinstance(other, Command):
+            return False
+
+        return self.exp == other.exp
 
 class SetVariable(Statement):
     """
@@ -336,6 +418,66 @@ class SetVariable(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sSetVariable<%s> %s %s\n%s %r" % (indent, self.valueloc, self.vnameexp, self.token, indent, self.value)
 
+    def __eq__(self, other):
+        if not isinstance(other, SetVariable):
+            return False
+
+        return self.vnameexp == other.vnameexp \
+                and self.token == other.token \
+                and self.value == other.value \
+                and self.targetexp == other.targetexp \
+                and self.source == other.source
+
+    def to_source(self):
+        chars = []
+        for i in xrange(0, len(self.value)):
+            c = self.value[i]
+
+            # Literal # is escaped in variable assignment otherwise it would be
+            # a comment.
+            if c == '#':
+                # If a backslash precedes this, we need to escape it as well.
+                if i > 0 and self.value[i-1] == '\\':
+                    chars.append('\\')
+
+                chars.append('\\#')
+                continue
+
+            chars.append(c)
+
+        value = ''.join(chars)
+
+        prefix = ''
+        if self.source == data.Variables.SOURCE_OVERRIDE:
+            prefix = 'override '
+
+        # SetVariable come in two flavors: simple and target-specific.
+
+        # We handle the target-specific syntax first.
+        if self.targetexp is not None:
+            return '%s: %s %s %s' % (
+                self.targetexp.to_source(),
+                self.vnameexp.to_source(),
+                self.token,
+                value)
+
+        # The variable could be multi-line or have leading whitespace. For
+        # regular variable assignment, whitespace after the token but before
+        # the value is ignored. If we see leading whitespace in the value here,
+        # the variable must have come from a define.
+        if value.count('\n') > 0 or (len(value) and value[0].isspace()):
+            # The parser holds the token in vnameexp for whatever reason.
+            return '%sdefine %s\n%s\nendef' % (
+                prefix,
+                self.vnameexp.to_source(),
+                value)
+
+        return '%s%s %s %s' % (
+                prefix,
+                self.vnameexp.to_source(),
+                self.token,
+                value)
+
 class Condition(object):
     """
     An abstract "condition", either ifeq or ifdef, perhaps negated.
@@ -346,6 +488,12 @@ class Condition(object):
 
     def evaluate(self, makefile)
     """
+
+    def __eq__(self, other):
+        raise Exception("%s must implement __eq__." % __class__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class EqCondition(Condition):
     """
@@ -374,6 +522,14 @@ class EqCondition(Condition):
 
     def __str__(self):
         return "ifeq (expected=%s) %s %s" % (self.expected, self.exp1, self.exp2)
+
+    def __eq__(self, other):
+        if not isinstance(other, EqCondition):
+            return False
+
+        return self.exp1 == other.exp1 \
+                and self.exp2 == other.exp2 \
+                and self.expected == other.expected
 
 class IfdefCondition(Condition):
     """
@@ -404,6 +560,12 @@ class IfdefCondition(Condition):
     def __str__(self):
         return "ifdef (expected=%s) %s" % (self.expected, self.exp)
 
+    def __eq__(self, other):
+        if not isinstance(other, IfdefCondition):
+            return False
+
+        return self.exp == other.exp and self.expected == other.expected
+
 class ElseCondition(Condition):
     """
     Represents the transition between branches in a ConditionBlock.
@@ -415,6 +577,9 @@ class ElseCondition(Condition):
 
     def __str__(self):
         return "else"
+
+    def __eq__(self, other):
+        return isinstance(other, ElseCondition)
 
 class ConditionBlock(Statement):
     """
@@ -473,6 +638,106 @@ class ConditionBlock(Statement):
             print >>fd, "%s ~Condition" % (indent,)
         print >>fd, "%s~ConditionBlock" % (indent,)
 
+    def to_source(self):
+        lines = []
+        index = 0
+        for condition, statements in self:
+            lines.append(ConditionBlock.condition_source(condition, index))
+            index += 1
+
+            for statement in statements:
+                lines.append(statement.to_source())
+
+        lines.append('endif')
+
+        return '\n'.join(lines)
+
+    def __eq__(self, other):
+        if not isinstance(other, ConditionBlock):
+            return False
+
+        if len(self) != len(other):
+            return False
+
+        for i in xrange(0, len(self)):
+            our_condition, our_statements = self[i]
+            other_condition, other_statements = other[i]
+
+            if our_condition != other_condition:
+                return False
+
+            if our_statements != other_statements:
+                return False
+
+        return True
+
+    @staticmethod
+    def condition_source(statement, index):
+        """Convert a condition to its source representation.
+
+        The index argument defines the index of this condition inside a
+        ConditionBlock. If it is greater than 0, an "else" will be prepended
+        to the result, if necessary.
+        """
+        prefix = ''
+        if isinstance(statement, (EqCondition, IfdefCondition)) and index > 0:
+            prefix = 'else '
+
+        if isinstance(statement, IfdefCondition):
+            s = statement.exp.s
+
+            if statement.expected:
+                return '%sifdef %s' % (prefix, s)
+
+            return '%sifndef %s' % (prefix, s)
+
+        if isinstance(statement, EqCondition):
+            args = [
+                statement.exp1.to_source(escape_comments=True),
+                statement.exp2.to_source(escape_comments=True)]
+
+            use_quotes = False
+            single_quote_present = False
+            double_quote_present = False
+            for i, arg in enumerate(args):
+                if len(arg) > 0 and (arg[0].isspace() or arg[-1].isspace()):
+                    use_quotes = True
+
+                    if "'" in arg:
+                        single_quote_present = True
+
+                    if '"' in arg:
+                        double_quote_present = True
+
+            # Quote everything if needed.
+            if single_quote_present and double_quote_present:
+                raise Exception('Cannot format condition with multiple quotes.')
+
+            if use_quotes:
+                for i, arg in enumerate(args):
+                    # Double to single quotes.
+                    if single_quote_present:
+                        args[i] = '"' + arg + '"'
+                    else:
+                        args[i] = "'" + arg + "'"
+
+            body = None
+            if use_quotes:
+                body = ' '.join(args)
+            else:
+                body = '(%s)' % ','.join(args)
+
+            if statement.expected:
+                return '%sifeq %s' % (prefix, body)
+
+            return '%sifneq %s' % (prefix, body)
+
+        if isinstance(statement, ElseCondition):
+            return 'else'
+
+        raise Exception('Unhandled Condition statement: %s' %
+                statement.__class__)
+
     def __iter__(self):
         return iter(self._groups)
 
@@ -508,6 +773,20 @@ class Include(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sInclude %s" % (indent, self.exp)
 
+    def to_source(self):
+        prefix = ''
+
+        if not self.required:
+            prefix = '-'
+
+        return '%sinclude %s' % (prefix, self.exp.to_source())
+
+    def __eq__(self, other):
+        if not isinstance(other, Include):
+            return False
+
+        return self.exp == other.exp and self.required == other.required
+
 class VPathDirective(Statement):
     """
     Represents the vpath directive.
@@ -540,6 +819,15 @@ class VPathDirective(Statement):
 
     def dump(self, fd, indent):
         print >>fd, "%sVPath %s" % (indent, self.exp)
+
+    def to_source(self):
+        return 'vpath %s' % self.exp.to_source()
+
+    def __eq__(self, other):
+        if not isinstance(other, VPathDirective):
+            return False
+
+        return self.exp == other.exp
 
 class ExportDirective(Statement):
     """
@@ -577,6 +865,17 @@ class ExportDirective(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sExport (single=%s) %s" % (indent, self.single, self.exp)
 
+    def to_source(self):
+        return ('export %s' % self.exp.to_source()).rstrip()
+
+    def __eq__(self, other):
+        if not isinstance(other, ExportDirective):
+            return False
+
+        # single is irrelevant because it just says whether the next Statement
+        # contains a variable definition.
+        return self.exp == other.exp
+
 class UnexportDirective(Statement):
     """
     Represents the "unexport" directive.
@@ -595,6 +894,15 @@ class UnexportDirective(Statement):
 
     def dump(self, fd, indent):
         print >>fd, "%sUnexport %s" % (indent, self.exp)
+
+    def to_source(self):
+        return 'unexport %s' % self.exp.to_source()
+
+    def __eq__(self, other):
+        if not isinstance(other, UnexportDirective):
+            return False
+
+        return self.exp == other.exp
 
 class EmptyDirective(Statement):
     """
@@ -618,6 +926,15 @@ class EmptyDirective(Statement):
 
     def dump(self, fd, indent):
         print >>fd, "%sEmptyDirective: %s" % (indent, self.exp)
+
+    def to_source(self):
+        return self.exp.to_source()
+
+    def __eq__(self, other):
+        if not isinstance(other, EmptyDirective):
+            return False
+
+        return self.exp == other.exp
 
 class _EvalContext(object):
     __slots__ = ('currule', 'weak')
@@ -655,6 +972,9 @@ class StatementList(list):
         fd = StringIO()
         self.dump(fd, '')
         return fd.getvalue()
+
+    def to_source(self):
+        return '\n'.join([s.to_source() for s in self])
 
 def iterstatements(stmts):
     for s in stmts:
