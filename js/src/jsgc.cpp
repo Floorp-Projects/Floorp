@@ -2452,9 +2452,7 @@ Shape::Range::AutoRooter::trace(JSTracer *trc)
 void
 Bindings::AutoRooter::trace(JSTracer *trc)
 {
-    if (bindings->lastBinding)
-        MarkShapeRoot(trc, reinterpret_cast<Shape**>(&bindings->lastBinding),
-                      "Bindings::AutoRooter lastBinding");
+    bindings->trace(trc);
 }
 
 void

@@ -71,8 +71,13 @@ ArgumentsObject::element(uint32_t i) const
 {
     JS_ASSERT(!isElementDeleted(i));
     const Value &v = data()->args[i];
-    if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT))
-        return getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().formal(i);
+    if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
+        CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall();
+        for (AliasedFormalIter fi(callobj.callee().script()); ; fi++) {
+            if (fi.frameIndex() == i)
+                return callobj.aliasedVar(fi);
+        }
+    }
     return v;
 }
 
@@ -81,10 +86,16 @@ ArgumentsObject::setElement(uint32_t i, const Value &v)
 {
     JS_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
-    if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT))
-        getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().setFormal(i, v);
-    else
-        lhs = v;
+    if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
+        CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall();
+        for (AliasedFormalIter fi(callobj.callee().script()); ; fi++) {
+            if (fi.frameIndex() == i) {
+                callobj.setAliasedVar(fi, v);
+                return;
+            }
+        }
+    }
+    lhs = v;
 }
 
 inline bool

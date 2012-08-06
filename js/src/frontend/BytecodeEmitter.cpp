@@ -883,6 +883,20 @@ ClonedBlockDepth(BytecodeEmitter *bce)
     return clonedBlockDepth;
 }
 
+static uint16_t
+AliasedNameToSlot(JSScript *script, PropertyName *name)
+{
+    unsigned slot = CallObject::RESERVED_SLOTS;
+    BindingIter bi(script->bindings);
+    for (; bi->name() != name; bi++) {
+        if (bi->aliased())
+            slot++;
+    }
+
+    JS_ASSERT(bi->aliased());
+    return slot;
+}
+
 static bool
 EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 {
@@ -911,13 +925,13 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
     ScopeCoordinate sc;
     if (IsArgOp(pn->getOp())) {
         sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-        sc.slot = bceOfDef->script->bindings.formalIndexToSlot(pn->pn_cookie.slot());
+        sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
     } else {
         JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
             sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-            sc.slot = bceOfDef->script->bindings.varIndexToSlot(local);
+            sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
         } else {
             unsigned depth = local - bceOfDef->script->bindings.numVars();
             StaticBlockObject *b = bceOfDef->blockChain;
@@ -1011,12 +1025,43 @@ EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 bool
 BytecodeEmitter::isAliasedName(ParseNode *pn)
 {
-    if (sc->bindingsAccessedDynamically())
-        return true;
     Definition *dn = pn->resolve();
     JS_ASSERT(dn->isDefn());
     JS_ASSERT(!dn->isPlaceholder());
-    return dn->isClosed();
+    JS_ASSERT(dn->isBound());
+
+    /* If dn is in an enclosing function, it is definitely aliased. */
+    if (dn->pn_cookie.level() != script->staticLevel)
+        return true;
+
+    switch (dn->kind()) {
+      case Definition::LET:
+        /*
+         * There are two ways to alias a let variable: nested functions and
+         * dynamic scope operations. (This is overly conservative since the
+         * bindingsAccessedDynamically flag is function-wide.)
+         */
+        return dn->isClosed() || sc->bindingsAccessedDynamically();
+      case Definition::ARG:
+        /*
+         * Consult the bindings, since they already record aliasing. We might
+         * be tempted to use the same definition as VAR/CONST/LET, but there is
+         * a problem caused by duplicate arguments: only the last argument with
+         * a given name is aliased. This is necessary to avoid generating a
+         * shape for the call object with with more than one name for a given
+         * slot (which violates internal engine invariants). All this means that
+         * the '|| sc->bindingsAccessedDynamically' disjunct is incorrect since
+         * it will mark both parameters in function(x,x) as aliased.
+         */
+        return script->formalIsAliased(pn->pn_cookie.slot());
+      case Definition::VAR:
+      case Definition::CONST:
+        return script->varIsAliased(pn->pn_cookie.slot());
+      case Definition::PLACEHOLDER:
+      case Definition::NAMED_LAMBDA:
+        JS_NOT_REACHED("unexpected dn->kind");
+    }
+    return false;
 }
 
 /*
@@ -2568,10 +2613,10 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
         unsigned varIndex = bce->script->bindings.argumentsVarIndex(cx);
-        if (bce->sc->bindingsAccessedDynamically()) {
+        if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.slot = bce->script->bindings.varIndexToSlot(varIndex);
+            sc.slot = AliasedNameToSlot(bce->script, cx->runtime->atomState.argumentsAtom);
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
@@ -4817,7 +4862,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!script)
             return false;
 
-        script->bindings.transferFrom(&funbox->bindings);
+        script->bindings = funbox->bindings;
 
         BytecodeEmitter bce2(bce, bce->parser, &sc, script, bce->callerFrame, bce->hasGlobalScope,
                              pn->pn_pos.begin.lineno);
@@ -4865,8 +4910,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     } else {
 #ifdef DEBUG
-        BindingIter bi(cx, bce->script->bindings.lookup(cx, fun->atom->asPropertyName()));
-        JS_ASSERT(bi->kind == VARIABLE || bi->kind == CONSTANT || bi->kind == ARGUMENT);
+        BindingIter bi(bce->script->bindings);
+        while (bi->name() != fun->atom)
+            bi++;
+        JS_ASSERT(bi->kind() == VARIABLE || bi->kind() == CONSTANT || bi->kind() == ARGUMENT);
         JS_ASSERT(bi.frameIndex() < JS_BIT(20));
 #endif
         pn->pn_index = index;
@@ -5944,7 +5991,10 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             // It doesn't matter if this is correct with respect to aliasing or
             // not. Only the decompiler is going to see it.
-            BindingIter bi(cx, bce->script->bindings.lookup(cx, arg->pn_left->name()));
+            PropertyName *name = arg->pn_left->name();
+            BindingIter bi(bce->script->bindings);
+            while (bi->name() != name)
+                bi++;
             if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bi.frameIndex(), bce))
                 return false;
             SET_JUMP_OFFSET(bce->code(hop), bce->offset() - hop);

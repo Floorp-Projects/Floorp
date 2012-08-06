@@ -1000,7 +1000,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
         }
     }
 
-    if (!funtc->generateBindings(cx, &funbox->bindings))
+    if (!funtc->generateFunctionBindings(cx, &funbox->bindings))
         return false;
 
     funtc->lexdeps.releaseMap(cx);
