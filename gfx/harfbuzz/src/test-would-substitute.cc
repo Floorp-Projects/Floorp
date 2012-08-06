@@ -29,6 +29,7 @@
 #endif
 
 #include "hb.h"
+#include "hb-ot.h"
 
 #ifdef HAVE_GLIB
 #include <glib.h>
@@ -45,8 +46,8 @@ main (int argc, char **argv)
 {
   hb_blob_t *blob = NULL;
 
-  if (argc != 2) {
-    fprintf (stderr, "usage: %s font-file.ttf\n", argv[0]);
+  if (argc != 4 && argc != 5) {
+    fprintf (stderr, "usage: %s font-file lookup-index first-glyph [second-glyph]\n", argv[0]);
     exit (1);
   }
 
@@ -82,51 +83,12 @@ main (int argc, char **argv)
     blob = hb_blob_create (font_data, len, mm, user_data, destroy);
   }
 
-  printf ("Opened font file %s: %u bytes long\n", argv[1], hb_blob_get_length (blob));
-
   /* Create the face */
   hb_face_t *face = hb_face_create (blob, 0 /* first face */);
   hb_blob_destroy (blob);
   blob = NULL;
-  unsigned int upem = hb_face_get_upem (face);
 
-  hb_font_t *font = hb_font_create (face);
-  hb_font_set_scale (font, upem, upem);
-
-#ifdef HAVE_FREETYPE
-  hb_ft_font_set_funcs (font);
-#endif
-
-  hb_buffer_t *buffer = hb_buffer_create ();
-
-  hb_buffer_add_utf8 (buffer, "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\xb0\xe0\xa5\x8d\xe0\xa4\x95", -1, 0, -1);
-
-  hb_shape (font, buffer, NULL, 0);
-
-  unsigned int count = hb_buffer_get_length (buffer);
-  hb_glyph_info_t *infos = hb_buffer_get_glyph_infos (buffer, NULL);
-  hb_glyph_position_t *positions = hb_buffer_get_glyph_positions (buffer, NULL);
-
-  for (unsigned int i = 0; i < count; i++)
-  {
-    hb_glyph_info_t *info = &infos[i];
-    hb_glyph_position_t *pos = &positions[i];
-
-    printf ("cluster %d	glyph 0x%x at	(%d,%d)+(%d,%d)\n",
-	    info->cluster,
-	    info->codepoint,
-	    pos->x_offset,
-	    pos->x_offset,
-	    pos->x_advance,
-	    pos->y_advance);
-
-  }
-
-  hb_buffer_destroy (buffer);
-  hb_font_destroy (font);
-  hb_face_destroy (face);
-
-  return 0;
+  unsigned int len = argc - 3;
+  hb_codepoint_t glyphs[2] = {strtol (argv[3], NULL, 0), argc > 4 ? strtol (argv[4], NULL, 0) : (hb_codepoint_t) -1};
+  return !hb_ot_layout_would_substitute_lookup (face, glyphs, len, strtol (argv[2], NULL, 0));
 }
-
-

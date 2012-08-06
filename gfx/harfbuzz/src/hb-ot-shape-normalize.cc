@@ -62,10 +62,23 @@
  *     knowledge too.  We need to provide assistance to the itemizer.
  *
  *   - When a font does not support a character but supports its decomposition,
- *     well, use the decomposition.
+ *     well, use the decomposition (preferring the canonical decomposition, but
+ *     falling back to the compatibility decomposition if necessary).  The
+ *     compatibility decomposition is really nice to have, for characters like
+ *     ellipsis, or various-sized space characters.
  *
- *   - The Indic shaper requests decomposed output.  This will handle splitting
- *     matra for the Indic shaper.
+ *   - The complex shapers can customize the compose and decompose functions to
+ *     offload some of their requirements to the normalizer.  For example, the
+ *     Indic shaper may want to disallow recomposing of two matras.
+ *
+ *   - We try compatibility decomposition if decomposing through canonical
+ *     decomposition alone failed to find a sequence that the font supports.
+ *     We don't try compatibility decomposition recursively during the canonical
+ *     decomposition phase.  This has minimal impact.  There are only a handful
+ *     of Greek letter that have canonical decompositions that include characters
+ *     with compatibility decomposition.  Those can be found using this command:
+ *
+ *     egrep  "`echo -n ';('; grep ';<' UnicodeData.txt | cut -d';' -f1 | tr '\n' '|'; echo ') '`" UnicodeData.txt
  */
 
 static void
@@ -82,58 +95,74 @@ decompose (hb_font_t *font, hb_buffer_t *buffer,
 {
   hb_codepoint_t a, b, glyph;
 
-  if (!hb_unicode_decompose (buffer->unicode, ab, &a, &b) ||
-      (b && !hb_font_get_glyph (font, b, 0, &glyph)))
-    return FALSE;
+  if (!buffer->unicode->decompose (ab, &a, &b) ||
+      (b && !font->get_glyph (b, 0, &glyph)))
+    return false;
 
-  bool has_a = hb_font_get_glyph (font, a, 0, &glyph);
+  bool has_a = font->get_glyph (a, 0, &glyph);
   if (shortest && has_a) {
     /* Output a and b */
     output_glyph (buffer, a);
     if (b)
       output_glyph (buffer, b);
-    return TRUE;
+    return true;
   }
 
   if (decompose (font, buffer, shortest, a)) {
     if (b)
       output_glyph (buffer, b);
-    return TRUE;
+    return true;
   }
 
   if (has_a) {
     output_glyph (buffer, a);
     if (b)
       output_glyph (buffer, b);
-    return TRUE;
+    return true;
   }
 
-  return FALSE;
+  return false;
 }
 
-static void
-decompose_current_glyph (hb_font_t *font, hb_buffer_t *buffer,
-			 bool shortest)
+static bool
+decompose_compatibility (hb_font_t *font, hb_buffer_t *buffer,
+			 hb_codepoint_t u)
 {
-  if (decompose (font, buffer, shortest, buffer->cur().codepoint))
-    buffer->skip_glyph ();
-  else
-    buffer->next_glyph ();
+  unsigned int len, i;
+  hb_codepoint_t decomposed[HB_UNICODE_MAX_DECOMPOSITION_LEN];
+
+  len = buffer->unicode->decompose_compatibility (u, decomposed);
+  if (!len)
+    return false;
+
+  hb_codepoint_t glyph;
+  for (i = 0; i < len; i++)
+    if (!font->get_glyph (decomposed[i], 0, &glyph))
+      return false;
+
+  for (i = 0; i < len; i++)
+    output_glyph (buffer, decomposed[i]);
+
+  return true;
 }
 
 static void
-decompose_single_char_cluster (hb_font_t *font, hb_buffer_t *buffer,
-			       bool will_recompose)
+decompose_current_character (hb_font_t *font, hb_buffer_t *buffer,
+			     bool shortest)
 {
   hb_codepoint_t glyph;
 
-  /* If recomposing and font supports this, we're good to go */
-  if (will_recompose && hb_font_get_glyph (font, buffer->cur().codepoint, 0, &glyph)) {
+  /* Kind of a cute waterfall here... */
+  if (shortest && font->get_glyph (buffer->cur().codepoint, 0, &glyph))
     buffer->next_glyph ();
-    return;
-  }
-
-  decompose_current_glyph (font, buffer, will_recompose);
+  else if (decompose (font, buffer, shortest, buffer->cur().codepoint))
+    buffer->skip_glyph ();
+  else if (!shortest && font->get_glyph (buffer->cur().codepoint, 0, &glyph))
+    buffer->next_glyph ();
+  else if (decompose_compatibility (font, buffer, buffer->cur().codepoint))
+    buffer->skip_glyph ();
+  else
+    buffer->next_glyph ();
 }
 
 static void
@@ -142,14 +171,14 @@ decompose_multi_char_cluster (hb_font_t *font, hb_buffer_t *buffer,
 {
   /* TODO Currently if there's a variation-selector we give-up, it's just too hard. */
   for (unsigned int i = buffer->idx; i < end; i++)
-    if (unlikely (_hb_unicode_is_variation_selector (buffer->info[i].codepoint))) {
+    if (unlikely (buffer->unicode->is_variation_selector (buffer->info[i].codepoint))) {
       while (buffer->idx < end)
 	buffer->next_glyph ();
       return;
     }
 
   while (buffer->idx < end)
-    decompose_current_glyph (font, buffer, FALSE);
+    decompose_current_character (font, buffer, false);
 }
 
 static int
@@ -166,7 +195,7 @@ _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
 			hb_ot_shape_normalization_mode_t mode)
 {
   bool recompose = mode != HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED;
-  bool has_multichar_clusters = FALSE;
+  bool has_multichar_clusters = false;
   unsigned int count;
 
   /* We do a fairly straightforward yet custom normalization process in three
@@ -188,10 +217,10 @@ _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
         break;
 
     if (buffer->idx + 1 == end)
-      decompose_single_char_cluster (font, buffer, recompose);
+      decompose_current_character (font, buffer, recompose);
     else {
       decompose_multi_char_cluster (font, buffer, end);
-      has_multichar_clusters = TRUE;
+      has_multichar_clusters = true;
     }
   }
   buffer->swap_buffers ();
@@ -252,19 +281,21 @@ _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
 	(starter == buffer->out_len - 1 ||
 	 _hb_glyph_info_get_modified_combining_class (&buffer->prev()) < _hb_glyph_info_get_modified_combining_class (&buffer->cur())) &&
 	/* And compose. */
-	hb_unicode_compose (buffer->unicode,
-			    buffer->out_info[starter].codepoint,
-			    buffer->cur().codepoint,
-			    &composed) &&
+	buffer->unicode->compose (buffer->out_info[starter].codepoint,
+				  buffer->cur().codepoint,
+				  &composed) &&
 	/* And the font has glyph for the composite. */
-	hb_font_get_glyph (font, composed, 0, &glyph))
+	font->get_glyph (composed, 0, &glyph))
     {
-      /* Composes. Modify starter and carry on. */
-      buffer->out_info[starter].codepoint = composed;
-      /* XXX update cluster */
+      /* Composes. */
+      buffer->next_glyph (); /* Copy to out-buffer. */
+      if (unlikely (buffer->in_error))
+        return;
+      buffer->merge_out_clusters (starter, buffer->out_len);
+      buffer->out_len--; /* Remove the second composble. */
+      buffer->out_info[starter].codepoint = composed; /* Modify starter and carry on. */
       _hb_glyph_info_set_unicode_props (&buffer->out_info[starter], buffer->unicode);
 
-      buffer->skip_glyph ();
       continue;
     }
 
