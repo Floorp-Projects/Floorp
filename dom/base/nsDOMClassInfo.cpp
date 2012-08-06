@@ -10190,7 +10190,7 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
   nsINode *native_parent = declaration->GetParentObject();
   if (!native_parent) {
-    return NS_ERROR_FAILURE;
+    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
   }
 
   nsresult rv =

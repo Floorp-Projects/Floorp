@@ -307,10 +307,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual nsINode *GetParentObject()
-  {
-    return nullptr;
-  }
+  virtual nsINode* GetParentObject();
 
 protected:
   nsAutoRefCnt mRefCnt;

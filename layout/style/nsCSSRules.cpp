@@ -1597,7 +1597,7 @@ nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSProperty aPropID,
 nsINode*
 nsCSSFontFaceStyleDecl::GetParentObject()
 {
-  return nullptr;
+  return ContainingRule()->GetDocument();
 }
 
 // -------------------------------------------
@@ -1796,6 +1796,12 @@ nsIDocument*
 nsCSSKeyframeStyleDeclaration::DocToUpdate()
 {
   return nullptr;
+}
+
+nsINode*
+nsCSSKeyframeStyleDeclaration::GetParentObject()
+{
+  return mRule ? mRule->GetDocument() : nullptr;
 }
 
 // -------------------------------------------
