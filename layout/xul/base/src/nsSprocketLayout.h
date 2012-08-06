@@ -8,6 +8,7 @@
 
 #include "nsBoxLayout.h"
 #include "nsCOMPtr.h"
+#include "nsIFrame.h"
 
 class nsBoxSize
 {
@@ -66,16 +67,16 @@ public:
   friend nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
   static void Shutdown();
 
-  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState);
 
-  virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nscoord GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
 
   nsSprocketLayout();
 
-  static bool IsHorizontal(nsIBox* aBox);
+  static bool IsHorizontal(nsIFrame* aBox);
 
   static void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
   static void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
@@ -87,16 +88,16 @@ public:
 protected:
 
 
-  void ComputeChildsNextPosition(nsIBox* aBox,
+  void ComputeChildsNextPosition(nsIFrame* aBox,
                                  const nscoord& aCurX, 
                                  const nscoord& aCurY, 
                                  nscoord& aNextX, 
                                  nscoord& aNextY, 
                                  const nsRect& aChildSize);
 
-  void ChildResized(nsIBox* aBox,
+  void ChildResized(nsIFrame* aBox,
                     nsBoxLayoutState& aState, 
-                    nsIBox* aChild,
+                    nsIFrame* aChild,
                     nsBoxSize* aChildBoxSize, 
                     nsComputedBoxSize* aChildComputedBoxSize, 
                     nsBoxSize* aBoxSizes, 
@@ -107,24 +108,26 @@ protected:
                     PRInt32 aFlexes, 
                     bool& aFinished);
 
-  void AlignChildren(nsIBox* aBox,
+  void AlignChildren(nsIFrame* aBox,
                      nsBoxLayoutState& aState,
                      bool* aNeedsRedraw);
 
-  virtual void ComputeChildSizes(nsIBox* aBox, 
+  virtual void ComputeChildSizes(nsIFrame* aBox, 
                          nsBoxLayoutState& aState, 
                          nscoord& aGivenSize, 
                          nsBoxSize* aBoxSizes, 
                          nsComputedBoxSize*& aComputedBoxSizes);
 
 
-  virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
+  virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
+                                nsBoxSize*& aBoxSizes, nscoord& aMinSize,
+                                nscoord& aMaxSize, PRInt32& aFlexes);
 
   virtual void InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes);
 
   virtual bool GetDefaultFlex(PRInt32& aFlex);
 
-  virtual void GetFrameState(nsIBox* aBox, nsFrameState& aState);
+  virtual void GetFrameState(nsIFrame* aBox, nsFrameState& aState);
 
 private:
 
