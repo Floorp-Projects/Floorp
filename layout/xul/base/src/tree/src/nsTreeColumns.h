@@ -8,12 +8,16 @@
 
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
 #include "mozilla/Attributes.h"
+#include "nsCoord.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsAutoPtr.h"
 
 class nsTreeBodyFrame;
 class nsTreeColumns;
+class nsIFrame;
+class nsIContent;
+struct nsRect;
 
 #define NS_TREECOLUMN_IMPL_CID                       \
 { /* 02cd1963-4b5d-4a6c-9223-814d3ade93a3 */         \

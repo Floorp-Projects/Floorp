@@ -13,13 +13,13 @@
 #include "nsNativeWidget.h"
 #include "nsIWidget.h"
 #include "nsWidgetInitData.h"
-#include "nsIFrame.h"
 
 class nsIViewManager;
 class nsViewManager;
 class nsView;
 class nsWeakView;
 class nsIWidget;
+class nsIFrame;
 
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.

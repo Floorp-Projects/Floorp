@@ -14,7 +14,6 @@
 #include "nsSVGStylableElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGradientElement.h"
-#include "nsIFrame.h"
 
 using namespace mozilla;
 

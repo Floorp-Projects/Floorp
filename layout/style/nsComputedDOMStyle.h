@@ -16,12 +16,13 @@
 #include "nsCSSProps.h"
 
 #include "nsIContent.h"
-#include "nsIFrame.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsStyleStruct.h"
+#include "nsStyleContext.h"
 
+class nsIFrame;
 class nsIPresShell;
 
 class nsComputedDOMStyle : public nsDOMCSSDeclaration

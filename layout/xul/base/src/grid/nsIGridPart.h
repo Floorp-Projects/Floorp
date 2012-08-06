@@ -7,7 +7,6 @@
 #define nsIGridPart_h___
 
 #include "nsISupports.h"
-#include "nsFrame.h"
 
 class nsGridRowGroupLayout;
 class nsGrid;

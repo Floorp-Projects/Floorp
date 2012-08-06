@@ -10,7 +10,6 @@
 #define nsBidiPresUtils_h___
 
 #include "nsTArray.h"
-#include "nsIFrame.h"
 #include "nsBidi.h"
 #include "nsBidiUtils.h"
 #include "nsCOMPtr.h"
@@ -24,6 +23,7 @@
 
 struct BidiParagraphData;
 struct BidiLineData;
+class nsIFrame;
 
 /**
  * A structure representing some continuation state for each frame on the line,

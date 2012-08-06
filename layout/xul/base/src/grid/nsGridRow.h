@@ -13,10 +13,12 @@
 #ifndef nsGridRow_h___
 #define nsGridRow_h___
 
-#include "nsIFrame.h"
+#include "nsCoord.h"
 
 class nsGridLayout2;
 class nsBoxLayoutState;
+class nsIFrame;
+typedef class nsIFrame nsIBox;
 
 /**
  * The row (or column) data structure in the grid cellmap.

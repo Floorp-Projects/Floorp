@@ -22,7 +22,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsIContent.h"
-#include "nsIFrame.h"
 #include "nsRuleData.h"
 #include "nsRuleProcessorData.h"
 #include "nsTransitionManager.h"
