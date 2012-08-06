@@ -24,11 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=143220
 var leafName;
 var fullPath;
 
-
 function initVals() {
-  var dirSvc = SpecialPowers.wrap(Components)
-                            .classes["@mozilla.org/file/directory_service;1"]
-                            .getService(Components.interfaces.nsIProperties);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
   var file = dirSvc.get("XpcomLib", Components.interfaces.nsILocalFile);
   isnot(file, null, "Must have file here");
 
@@ -37,13 +36,15 @@ function initVals() {
 }
 
 function initControl1() {
-  SpecialPowers.wrap($("i1")).value = fullPath;
-  is(SpecialPowers.wrap($("i1")).value, fullPath, "Should have set full path 1");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  $("i1").value = fullPath;
+  is($("i1").value, fullPath, "Should have set full path 1");
 }
 
 function initControl2() {
-  SpecialPowers.wrap($("i2")).value = fullPath;
-  is(SpecialPowers.wrap($("i2")).value, fullPath, "Should have set full path 2");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  $("i2").value = fullPath;
+  is($("i2").value, fullPath, "Should have set full path 2");
 }
 
 initVals();
