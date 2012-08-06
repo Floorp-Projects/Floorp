@@ -24,13 +24,12 @@
 
 class nsIPresShell;
 
-class nsComputedDOMStyle : public nsDOMCSSDeclaration,
-                           public nsWrapperCache
+class nsComputedDOMStyle : public nsDOMCSSDeclaration
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsComputedDOMStyle,
-                                                     nsICSSDeclaration)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsComputedDOMStyle,
+                                                                   nsICSSDeclaration)
 
   NS_DECL_NSICSSDECLARATION
 
