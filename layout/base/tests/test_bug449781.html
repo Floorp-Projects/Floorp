@@ -36,9 +36,8 @@ addLoadEvent(function() {
   ok(equal, "Show/hide should have no effect",
      "got " + str1 + " but expected " + str2);
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var viewer =
-    $("ourFrame").contentWindow
+    SpecialPowers.wrap($("ourFrame")).contentWindow
                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                  .getInterface(Components.interfaces.nsIWebNavigation)
                  .QueryInterface(Components.interfaces.nsIDocShell)

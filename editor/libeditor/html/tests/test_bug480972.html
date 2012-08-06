@@ -8,8 +8,6 @@
 <script class="testbody" type="application/javascript">
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   function verifyContent(s) {
     var e = document.getElementById('i1');
     var doc = e.contentDocument;
@@ -30,7 +28,7 @@ function runTest() {
     selection.removeAllRanges();
     selection.selectAllChildren(e);
     selection.collapseToEnd();
-    doc.execCommand("paste", false, null);
+    SpecialPowers.wrap(doc).execCommand("paste", false, null);
    return e;
   }
 
@@ -54,7 +52,7 @@ function runTest() {
       range.selectNode(doc.getElementById(target_id));
       selection.addRange(range);
     }
-    doc.execCommand("copy", false, null);
+    SpecialPowers.wrap(doc).execCommand("copy", false, null);
     return e;
   }
 
