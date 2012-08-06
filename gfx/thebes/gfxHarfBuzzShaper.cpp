@@ -1194,14 +1194,12 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             // in our clump; if not, we have a discontinuous range, and should extend it
             // unless we've reached the end of the text
             bool allGlyphsAreWithinCluster = true;
-            PRInt32 prevGlyphCharIndex = charStart - 1;
             for (PRInt32 i = glyphStart; i < glyphEnd; ++i) {
                 PRInt32 glyphCharIndex = ginfo[i].cluster;
                 if (glyphCharIndex < charStart || glyphCharIndex >= charEnd) {
                     allGlyphsAreWithinCluster = false;
                     break;
                 }
-                prevGlyphCharIndex = glyphCharIndex;
             }
             if (allGlyphsAreWithinCluster) {
                 break;
