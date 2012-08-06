@@ -72,6 +72,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 
 == feComponentTransfer-03.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
+== feComposite-paint-01.svg feComposite-paint-01-ref.svg
 == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 

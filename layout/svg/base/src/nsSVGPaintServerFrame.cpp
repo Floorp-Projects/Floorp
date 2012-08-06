@@ -14,7 +14,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGPaintServerFrame)
 
 bool
 nsSVGPaintServerFrame::SetupPaintServer(gfxContext *aContext,
-                                        nsSVGGeometryFrame *aSource,
+                                        nsIFrame *aSource,
                                         nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                         float aOpacity)
 {

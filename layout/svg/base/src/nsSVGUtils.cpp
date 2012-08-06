@@ -50,6 +50,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
+#include "nsSVGPaintServerFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -1801,15 +1802,14 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 // ----------------------------------------------------------------------
 
-/* static */ void
+/* static */ nscolor
 nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
-                                    nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                    float *aOpacity, nscolor *color)
+                                    nsStyleSVGPaint nsStyleSVG::*aFillOrStroke)
 {
   const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   bool isServer = paint.mType == eStyleSVGPaintType_Server;
-  *color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
+  nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =
       styleIfVisited->GetStyleSVG()->*aFillOrStroke;
@@ -1822,10 +1822,78 @@ nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyle
     // another simple color.
     if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
         paint.mType == eStyleSVGPaintType_Color) {
-      nscolor colorIfVisited = paintIfVisited.mPaint.mColor;
-      nscolor colors[2] = { *color, colorIfVisited };
-      *color = nsStyleContext::CombineVisitedColors(colors,
-                                         aStyleContext->RelevantLinkVisited());
+      nscolor colors[2] = { color, paintIfVisited.mPaint.mColor };
+      return nsStyleContext::CombineVisitedColors(
+               colors, aStyleContext->RelevantLinkVisited());
     }
   }
+  return color;
+}
+
+static void
+SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
+                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                          float aOpacity)
+{
+  nscolor color = nsSVGUtils::GetFallbackOrPaintColor(
+    aContext, aStyleContext, aFillOrStroke);
+
+  aContext->SetColor(gfxRGBA(NS_GET_R(color)/255.0,
+                             NS_GET_G(color)/255.0,
+                             NS_GET_B(color)/255.0,
+                             NS_GET_A(color)/255.0 * aOpacity));
+}
+
+static float
+MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
+{
+  float opacity = aFrame->GetStyleDisplay()->mOpacity;
+  if (opacity < 1 && nsSVGUtils::CanOptimizeOpacity(aFrame)) {
+    return aFillOrStrokeOpacity * opacity;
+  }
+  return aFillOrStrokeOpacity;
+}
+
+bool
+nsSVGUtils::SetupCairoFill(gfxContext *aContext, nsIFrame *aFrame)
+{
+  const nsStyleSVG* style = aFrame->GetStyleSVG();
+  if (style->mFill.mType == eStyleSVGPaintType_None)
+    return false;
+  float opacity = MaybeOptimizeOpacity(aFrame, style->mFillOpacity);
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());
+  if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mFill, opacity))
+    return true;
+
+  // On failure, use the fallback colour in case we have an
+  // objectBoundingBox where the width or height of the object is zero.
+  // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  SetupFallbackOrPaintColor(aContext, aFrame->GetStyleContext(),
+                            &nsStyleSVG::mFill, opacity);
+
+  return true;
+}
+
+bool
+nsSVGUtils::SetupCairoStroke(gfxContext *aContext, nsIFrame *aFrame)
+{
+  const nsStyleSVG* style = aFrame->GetStyleSVG();
+  if (style->mStroke.mType == eStyleSVGPaintType_None)
+    return false;
+
+  float opacity = MaybeOptimizeOpacity(aFrame, style->mStrokeOpacity);
+
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &style->mStroke, nsSVGEffects::StrokeProperty());
+  if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mStroke, opacity))
+    return true;
+
+  // On failure, use the fallback colour in case we have an
+  // objectBoundingBox where the width or height of the object is zero.
+  // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  SetupFallbackOrPaintColor(aContext, aFrame->GetStyleContext(),
+                            &nsStyleSVG::mStroke, opacity);
+
+  return true;
 }
