@@ -361,7 +361,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         IsGenerator,
         IsGeneratorExp,
         OwnSource,
-        HasSourceData,
         ExplicitUseStrict
     };
 
@@ -521,11 +520,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                           ? (1 << ParentFilename)
                           : (1 << OwnFilename);
         }
-        if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource()) {
+        if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
             scriptBits |= (1 << OwnSource);
-            if (script->scriptSource()->hasSourceData())
-                scriptBits |= (1 << HasSourceData);
-        }
         if (script->isGenerator)
             scriptBits |= (1 << IsGenerator);
         if (script->isGeneratorExp)
@@ -646,8 +642,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->filename = enclosingScript->filename;
     }
 
-    if (scriptBits & (1 << HasSourceData)) {
-        JS_ASSERT(scriptBits & (1 << OwnSource));
+    if (scriptBits & (1 << OwnSource)) {
         if (!script->scriptSource()->performXDR<mode>(xdr))
             return false;
     }
@@ -1138,7 +1133,7 @@ JSScript::loadSource(JSContext *cx, bool *worked)
 {
     JS_ASSERT(!scriptSource_->hasSourceData());
     *worked = false;
-    if (!cx->runtime->sourceHook)
+    if (!cx->runtime->sourceHook || !scriptSource_->sourceRetrievable())
         return true;
     jschar *src = NULL;
     uint32_t length;
@@ -1314,7 +1309,12 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
     if (!xdr->codeUint8(&hasSource))
         return false;
 
-    if (hasSource) {
+    uint8_t retrievable = sourceRetrievable_;
+    if (!xdr->codeUint8(&retrievable))
+        return false;
+    sourceRetrievable_ = retrievable;
+
+    if (hasSource && !sourceRetrievable_) {
         // Only set members when we know decoding cannot fail. This prevents the
         // script source from being partially initialized.
         uint32_t length = length_;
