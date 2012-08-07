@@ -285,7 +285,6 @@ public class PanZoomController
             // transitions.
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(getValidViewportMetrics());
-                mTarget.notifyLayerClientOfGeometryChange();
             }
             break;
         }
@@ -323,7 +322,6 @@ public class PanZoomController
                     // page size changed such that we are now in overscroll. snap to the
                     // the nearest valid viewport
                     mTarget.setViewportMetrics(validated);
-                    mTarget.notifyLayerClientOfGeometryChange();
                 }
             }
         }
@@ -344,7 +342,6 @@ public class PanZoomController
             // case this touchstart is just a tap that doesn't end up triggering
             // a redraw
             mTarget.setForceRedraw();
-            mTarget.notifyLayerClientOfGeometryChange();
             // fall through
         case FLING:
         case BOUNCE:
@@ -550,7 +547,6 @@ public class PanZoomController
         viewportMetrics.setOrigin(origin);
 
         mTarget.setViewportMetrics(viewportMetrics);
-        mTarget.notifyLayerClientOfGeometryChange();
     }
 
     private void fling() {
@@ -718,7 +714,6 @@ public class PanZoomController
                 float t = ZOOM_ANIMATION_FRAMES[mBounceFrame];
                 ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
                 mTarget.setViewportMetrics(newMetrics);
-                mTarget.notifyLayerClientOfGeometryChange();
                 mBounceFrame++;
             }
         }
@@ -727,7 +722,6 @@ public class PanZoomController
         private void finishBounce() {
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(mBounceEndMetrics);
-                mTarget.notifyLayerClientOfGeometryChange();
                 mBounceFrame = -1;
             }
         }
@@ -789,7 +783,6 @@ public class PanZoomController
 
         // Force a viewport synchronisation
         mTarget.setForceRedraw();
-        mTarget.notifyLayerClientOfGeometryChange();
     }
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
@@ -976,7 +969,6 @@ public class PanZoomController
 
         // Force a viewport synchronisation
         mTarget.setForceRedraw();
-        mTarget.notifyLayerClientOfGeometryChange();
     }
 
     /**
@@ -987,7 +979,6 @@ public class PanZoomController
         ViewportMetrics viewportMetrics = getMutableMetrics();
         viewportMetrics.scaleTo(zoomFactor, focus);
         mTarget.setViewportMetrics(viewportMetrics);
-        mTarget.notifyLayerClientOfGeometryChange();
     }
 
     public boolean getRedrawHint() {
