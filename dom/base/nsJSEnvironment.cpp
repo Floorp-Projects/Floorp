@@ -2010,9 +2010,8 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
   if (!aScriptObject)
     return NS_ERROR_FAILURE;
 
-  return nsContentUtils::XPConnect()->WriteScript(aStream, mContext, aScriptObject);
-    xpc_UnmarkGrayScript(aScriptObject);
-
+  return nsContentUtils::XPConnect()->WriteScript(aStream, mContext,
+                                                  xpc_UnmarkGrayScript(aScriptObject));
 }
 
 nsresult
