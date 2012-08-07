@@ -1425,27 +1425,13 @@ ParseNode::test(unsigned flag) const
     return !!(pn_dflags & flag);
 }
 
-/*
- * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
- * but due to redefinition these nodes may become uses of other
- * definitions.  This is unusual, so we simply chase the pn_lexdef link to
- * find the final definition node. See functions called from
- * js::frontend::AnalyzeFunctions.
- *
- * FIXME: MakeAssignment mutates for want of a parent link...
- */
 inline Definition *
 ParseNode::resolve()
 {
-    ParseNode *pn = this;
-    while (!pn->isDefn()) {
-        if (pn->isAssignment()) {
-            pn = pn->pn_left;
-            continue;
-        }
-        pn = pn->lexdef();
-    }
-    return (Definition *) pn;
+    if (isDefn())
+        return (Definition *)this;
+    JS_ASSERT(lexdef()->isDefn());
+    return (Definition *)lexdef();
 }
 
 inline void
