@@ -106,7 +106,7 @@ class B2GRemoteAutomation(Automation):
         return nettools.getLanIp()
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime,
-                      debuggerInfo, symbolsPath, logger):
+                      debuggerInfo, symbolsPath):
         """ Wait for mochitest to finish (as evidenced by a signature string
             in logcat), or for a given amount of time to elapse with no
             output.
