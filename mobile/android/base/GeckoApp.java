@@ -1264,7 +1264,7 @@ abstract public class GeckoApp
     public void showToast(final int resId, final int duration) {
         mMainHandler.post(new Runnable() {
             public void run() {
-                Toast.makeText(mAppContext, resId, duration);
+                Toast.makeText(mAppContext, resId, duration).show();
             }
         });
     }
