@@ -602,31 +602,22 @@ abstract public class GeckoApp
             outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
     }
 
-    public void getAndProcessThumbnailForTab(final Tab tab) {
-        boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
-        final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
-
+    void getAndProcessThumbnailForTab(final Tab tab) {
         if ("about:home".equals(tab.getURL())) {
             tab.updateThumbnail(null);
             return;
         }
 
-        if (bitmap != null) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-            processThumbnail(tab, bitmap, bos.toByteArray());
-        } else {
-            if (tab.getState() == Tab.STATE_DELAYED) {
-                byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
-                if (thumbnail != null)
-                    processThumbnail(tab, null, thumbnail);
-                return;
-            }
-
-            int dw = tab.getThumbnailWidth();
-            int dh = tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, ScreenshotHandler.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
+        if (tab.getState() == Tab.STATE_DELAYED) {
+            byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
+            if (thumbnail != null)
+                processThumbnail(tab, null, thumbnail);
+            return;
         }
+
+        int dw = tab.getThumbnailWidth();
+        int dh = tab.getThumbnailHeight();
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, ScreenshotHandler.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
     }
 
     void handleThumbnailData(Tab tab, ByteBuffer data) {

@@ -20,7 +20,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -250,10 +249,6 @@ public class GeckoLayerClient
                                                              mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", ""));
-    }
-
-    public Bitmap getBitmap() {
-        return null;
     }
 
     void viewportSizeChanged() {
