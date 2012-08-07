@@ -551,8 +551,10 @@ public:
     NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
                  (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
                  "Can't be opaque and require component alpha");
-    mContentFlags = aFlags;
-    Mutated();
+    if (mContentFlags != aFlags) {
+      mContentFlags = aFlags;
+      Mutated();
+    }
   }
   /**
    * CONSTRUCTION PHASE ONLY
@@ -569,8 +571,10 @@ public:
    */
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
-    mVisibleRegion = aRegion;
-    Mutated();
+    if (!mVisibleRegion.IsEqual(aRegion)) {
+      mVisibleRegion = aRegion;
+      Mutated();
+    }
   }
 
   /**
@@ -580,8 +584,10 @@ public:
    */
   void SetOpacity(float aOpacity)
   {
-    mOpacity = aOpacity;
-    Mutated();
+    if (mOpacity != aOpacity) {
+      mOpacity = aOpacity;
+      Mutated();
+    }
   }
 
   /**
@@ -596,11 +602,25 @@ public:
    */
   void SetClipRect(const nsIntRect* aRect)
   {
-    mUseClipRect = aRect != nullptr;
-    if (aRect) {
-      mClipRect = *aRect;
+    if (mUseClipRect) {
+      if (!aRect) {
+        mUseClipRect = false;
+        Mutated();
+      } else {
+        if (!aRect->IsEqualEdges(mClipRect)) {
+          mClipRect = *aRect;
+          Mutated();
+        }
+      }
+    } else {
+      if (aRect) {
+        Mutated();
+        mUseClipRect = true;
+        if (!aRect->IsEqualEdges(mClipRect)) {
+          mClipRect = *aRect;
+        }
+      }
     }
-    Mutated();
   }
 
   /**
@@ -649,8 +669,10 @@ public:
     }
 #endif
 
-    mMaskLayer = aMaskLayer;
-    Mutated();
+    if (mMaskLayer != aMaskLayer) {
+      mMaskLayer = aMaskLayer;
+      Mutated();
+    }
   }
 
   /**
@@ -662,6 +684,9 @@ public:
    */
   void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
+    if (mTransform == aMatrix) {
+      return;
+    }
     mTransform = aMatrix;
     Mutated();
   }
@@ -1116,8 +1141,10 @@ public:
    */
   void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
   {
-    mFrameMetrics = aFrameMetrics;
-    Mutated();
+    if (mFrameMetrics != aFrameMetrics) {
+      mFrameMetrics = aFrameMetrics;
+      Mutated();
+    }
   }
 
   void SetPreScale(float aXScale, float aYScale)
