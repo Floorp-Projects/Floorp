@@ -67,7 +67,7 @@ public class LayerView extends FrameLayout {
 
         try {
             // and then we can only use it if we have a hardware accelerated window
-            Method m = View.class.getMethod("isHardwareAccelerated", new Class[0]);
+            Method m = View.class.getMethod("isHardwareAccelerated", (Class[]) null);
             return (Boolean) m.invoke(this);
         } catch (Exception e) {
             Log.i(LOGTAG, "Not using TextureView: caught exception checking for hw accel: " + e.toString());
