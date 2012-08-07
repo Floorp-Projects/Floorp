@@ -297,9 +297,7 @@ AudioParent::AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat)
 {
   mStream = nsAudioStream::AllocateStream();
   NS_ASSERTION(mStream, "AudioStream allocation failed.");
-  if (NS_FAILED(mStream->Init(aNumChannels,
-                              aRate,
-                              (nsAudioStream::SampleFormat) aFormat))) {
+  if (NS_FAILED(mStream->Init(aNumChannels, aRate))) {
       NS_WARNING("AudioStream initialization failed.");
       mStream = nullptr;
       return;

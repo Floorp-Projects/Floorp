@@ -60,7 +60,7 @@ class nsNativeAudioStream : public nsAudioStream
   ~nsNativeAudioStream();
   nsNativeAudioStream();
 
-  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate);
   void Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aFrames);
   PRUint32 Available();
@@ -95,7 +95,7 @@ class nsRemotedAudioStream : public nsAudioStream
   nsRemotedAudioStream();
   ~nsRemotedAudioStream();
 
-  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate);
   void Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aFrames);
   PRUint32 Available();
@@ -422,11 +422,11 @@ nsNativeAudioStream::~nsNativeAudioStream()
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsNativeAudioStream)
 
-nsresult nsNativeAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
+nsresult nsNativeAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate)
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = aFormat;
+  mFormat = MOZ_AUDIO_DATA_FORMAT;
 
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL,
@@ -474,53 +474,28 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, PRUint32 aFrames)
 
   if (s_data) {
     double scaled_volume = GetVolumeScale() * mVolume;
-    switch (mFormat) {
-      case FORMAT_U8: {
-        const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
-        PRInt32 volume = PRInt32((1 << 16) * scaled_volume);
-        for (PRUint32 i = 0; i < samples; ++i) {
-          s_data[i] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
-        }
-        break;
-      }
-      case FORMAT_S16_LE: {
-        const short* buf = static_cast<const short*>(aBuf);
-        PRInt32 volume = PRInt32((1 << 16) * scaled_volume);
-        for (PRUint32 i = 0; i < samples; ++i) {
-          short s = buf[i];
-#if defined(IS_BIG_ENDIAN)
-          s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
-#endif
-          s_data[i] = short((PRInt32(s) * volume) >> 16);
-        }
-        break;
-      }
-      case FORMAT_FLOAT32: {
-        const float* buf = static_cast<const float*>(aBuf);
-        for (PRUint32 i = 0; i <  samples; ++i) {
-          float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
-          if (buf[i] < 0.0) {
-            s_data[i] = (scaled_value < -32768.0) ?
-              -32768 :
-              short(scaled_value);
-          } else {
-            s_data[i] = (scaled_value > 32767.0) ?
-              32767 :
-              short(scaled_value);
-          }
-        }
-        break;
+    const SampleType* buf = static_cast<const SampleType*>(aBuf);
+    for (PRUint32 i = 0; i <  samples; ++i) {
+      float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
+      if (buf[i] < 0.0) {
+        s_data[i] = (scaled_value < -32768.0) ?
+          -32768 :
+          short(scaled_value);
+      } else {
+        s_data[i] = (scaled_value > 32767.0) ?
+          32767 :
+          short(scaled_value);
       }
     }
+  }
 
-    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
-                        s_data.get(),
-                        samples * sizeof(short)) != SA_SUCCESS)
-    {
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
-      mInError = true;
-      return NS_ERROR_FAILURE;
-    }
+  if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+                      s_data.get(),
+                      samples * sizeof(short)) != SA_SUCCESS)
+  {
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_write error"));
+    mInError = true;
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -644,26 +619,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsRemotedAudioStream)
 
 nsresult
 nsRemotedAudioStream::Init(PRInt32 aNumChannels,
-                           PRInt32 aRate,
-                           SampleFormat aFormat)
+                           PRInt32 aRate)
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = aFormat;
-
-  switch (mFormat) {
-    case FORMAT_U8: {
-      mBytesPerFrame = sizeof(PRUint8) * mChannels;
-      break;
-    }
-    case FORMAT_S16_LE: {
-      mBytesPerFrame = sizeof(short) * mChannels;
-      break;
-    }
-    case FORMAT_FLOAT32: {
-      mBytesPerFrame = sizeof(float) * mChannels;
-    }
-  }
+  mFormat = MOZ_AUDIO_DATA_FORMAT;
+  mBytesPerFrame = sizeof(SampleType) * mChannels;
 
   nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
   NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
@@ -861,7 +822,7 @@ class nsBufferedAudioStream : public nsAudioStream
   nsBufferedAudioStream();
   ~nsBufferedAudioStream();
 
-  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate);
   void Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aFrames);
   PRUint32 Available();
@@ -963,7 +924,7 @@ nsBufferedAudioStream::~nsBufferedAudioStream()
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
 
 nsresult
-nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
+nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate)
 {
   cubeb* cubebContext = GetCubebContext();
 
@@ -973,23 +934,13 @@ nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aF
 
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = aFormat;
+  mFormat = MOZ_AUDIO_DATA_FORMAT;
 
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
-  switch (aFormat) {
-  case FORMAT_S16_LE:
-    params.format = CUBEB_SAMPLE_S16LE;
-    mBytesPerFrame = sizeof(short) * aNumChannels;
-    break;
-  case FORMAT_FLOAT32:
-    params.format = CUBEB_SAMPLE_FLOAT32NE;
-    mBytesPerFrame = sizeof(float) * aNumChannels;
-    break;
-  default:
-    return NS_ERROR_FAILURE;
-  }
+  params.format = CUBEB_SAMPLE_FLOAT32NE;
+  mBytesPerFrame = sizeof(float) * aNumChannels;
 
   {
     cubeb_stream* stream;
@@ -1221,29 +1172,10 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
         output += input_size[i];
       } else {
         // Adjust volume as each sample is copied out.
-        switch (mFormat) {
-        case FORMAT_S16_LE: {
-          PRInt32 volume = PRInt32(1 << 16) * scaled_volume;
-
-          const short* src = static_cast<const short*>(input[i]);
-          short* dst = reinterpret_cast<short*>(output);
-          for (PRUint32 j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
-            dst[j] = short((PRInt32(src[j]) * volume) >> 16);
-          }
-          output += input_size[i];
-          break;
-        }
-        case FORMAT_FLOAT32: {
-          const float* src = static_cast<const float*>(input[i]);
-          float* dst = reinterpret_cast<float*>(output);
-          for (PRUint32 j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
-            dst[j] = src[j] * scaled_volume;
-          }
-          output += input_size[i];
-          break;
-        }
-        default:
-          return -1;
+        const float* src = static_cast<const float*>(input[i]);
+        float* dst = reinterpret_cast<float*>(output);
+        for (PRUint32 j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
+          dst[j] = src[j] * scaled_volume;
         }
       }
     }
