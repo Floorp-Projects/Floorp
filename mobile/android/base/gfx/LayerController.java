@@ -97,16 +97,8 @@ public class LayerController {
     public Context getContext()                   { return mContext; }
     public ImmutableViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
 
-    public RectF getViewport() {
-        return mViewportMetrics.getViewport();
-    }
-
     public FloatSize getViewportSize() {
         return mViewportMetrics.getSize();
-    }
-
-    public float getZoomFactor() {
-        return mViewportMetrics.zoomFactor;
     }
 
     public Bitmap getBackgroundPattern()    { return getDrawable("tabs_tray_selected_bg"); }
