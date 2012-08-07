@@ -2868,7 +2868,7 @@ ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
     }
 
     if (v.isInt32()) {
-        // Account for sign extension of negatives into the longer 64bit space.
+        /* Account for sign extension of negatives into the longer 64bit space. */
         *out = uint64_t(int64_t(v.toInt32()));
         return true;
     }
