@@ -25,11 +25,11 @@ nsresult auxLoad(char *uriBuf);
 //----------------------------------------------------------------------
 
 
-#define RETURN_IF_FAILED(rv, step) \
+#define RETURN_IF_FAILED(rv, ret, step) \
     PR_BEGIN_MACRO \
     if (NS_FAILED(rv)) { \
         printf(">>> %s failed: rv=%x\n", step, rv); \
-        return rv;\
+        return ret;\
     } \
     PR_END_MACRO
 
@@ -296,11 +296,11 @@ nsresult auxLoad(char *uriBuf)
     printf("\n");
     uriList.AppendObject(uri);
     rv = NS_NewChannel(getter_AddRefs(chan), uri, nullptr, nullptr, callbacks);
-    RETURN_IF_FAILED(rv, "NS_NewChannel");
+    RETURN_IF_FAILED(rv, rv, "NS_NewChannel");
 
     gKeepRunning++;
     rv = chan->AsyncOpen(listener, myBool);
-    RETURN_IF_FAILED(rv, "AsyncOpen");
+    RETURN_IF_FAILED(rv, rv, "AsyncOpen");
 
     return NS_OK;
 
@@ -337,17 +337,17 @@ int main(int argc, char **argv)
         nsCOMPtr<nsIInterfaceRequestor> callbacks = new MyNotifications();
 
         rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
-        RETURN_IF_FAILED(rv, "NS_NewURI");
+        RETURN_IF_FAILED(rv, -1, "NS_NewURI");
 
         rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nullptr, nullptr, callbacks);
-        RETURN_IF_FAILED(rv, "NS_OpenURI");
+        RETURN_IF_FAILED(rv, -1, "NS_OpenURI");
         gKeepRunning++;
 
         //TIMER STARTED-----------------------
         printf("Starting clock ... \n");
         start = PR_Now();
         rv = chan->AsyncOpen(listener, nullptr);
-        RETURN_IF_FAILED(rv, "AsyncOpen");
+        RETURN_IF_FAILED(rv, -1, "AsyncOpen");
 
         PumpEvents();
 
