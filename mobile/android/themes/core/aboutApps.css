@@ -10,6 +10,33 @@ html {
   -moz-text-size-adjust: none;
 }
 
+body {
+  margin: 0;
+}
+
+.header {
+  color: black;
+  padding: 15px 0px 0px;
+  -moz-padding-start: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 2px solid;
+  min-height: 44px;
+  -moz-border-bottom-colors: #ff9100 #f27900;
+  position: relative;
+}
+
+.header > .icon {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+}
+
+.app:active,
+.header > .icon:active {
+  background-color: #febc2b;
+}
+
 #main-container {
   margin: 1em;
   padding: 1em;
@@ -27,14 +54,14 @@ html {
   cursor: pointer;
   text-align: center;
   margin: 1em;
-  width: 70px;
-  height: 85px;
-  font-size: 10px;
+  width: 100px;
+  height: 121px;
+  font-size: 14px;
 }
 
 .app img {
-  width: 64px;
-  height: 64px;
+  width: 91px;
+  height: 91px;
   pointer-events: none;
 }
 
