@@ -129,13 +129,13 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         mView = view;
 
         mEventQueue = new LinkedList<MotionEvent>();
-        mGestureDetector = new GestureDetector(context, layerClient.getGestureListener());
-        mScaleGestureDetector = new SimpleScaleGestureDetector(layerClient.getScaleGestureListener());
         mPanZoomController = layerClient.getPanZoomController();
+        mGestureDetector = new GestureDetector(context, mPanZoomController);
+        mScaleGestureDetector = new SimpleScaleGestureDetector(mPanZoomController);
         mListenerTimeoutProcessor = new ListenerTimeoutProcessor();
         mDispatchEvents = true;
 
-        mGestureDetector.setOnDoubleTapListener(layerClient.getDoubleTapListener());
+        mGestureDetector.setOnDoubleTapListener(mPanZoomController);
 
         Tabs.registerOnTabsChangedListener(this);
     }
