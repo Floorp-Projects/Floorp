@@ -519,7 +519,6 @@ protected:
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
-  bool ParseUnicodeBidi(nsCSSValue& aValue);
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
   bool ParseShadowList(nsCSSProperty aProperty);
@@ -6171,8 +6170,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseTextDecorationLine(aValue);
       case eCSSProperty_text_overflow:
         return ParseTextOverflow(aValue);
-      case eCSSProperty_unicode_bidi:
-        return ParseUnicodeBidi(aValue);
       default:
         NS_ABORT_IF_FALSE(false, "should not reach here");
         return false;
@@ -9290,33 +9287,6 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
     aValue = left;
   }
   return true;
-}
-
-bool
-CSSParserImpl::ParseUnicodeBidi(nsCSSValue& aValue)
-{
-  if (ParseVariant(aValue, VARIANT_HK, nsCSSProps::kUnicodeBidiKTable)) {
-    if (eCSSUnit_Enumerated == aValue.GetUnit()) {
-      PRInt32 intValue = aValue.GetIntValue();
-      // unicode-bidi can have either one or two values, but the only legal
-      // combination of two values is 'isolate bidi-override'
-      if (intValue == NS_STYLE_UNICODE_BIDI_ISOLATE ||
-          intValue == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-        // look for more keywords
-        nsCSSValue second;
-        if (ParseEnum(second, nsCSSProps::kUnicodeBidiKTable)) {
-          intValue |= second.GetIntValue();
-          if (intValue != (NS_STYLE_UNICODE_BIDI_ISOLATE |
-                           NS_STYLE_UNICODE_BIDI_OVERRIDE)) {
-            return false;
-          }
-        }
-        aValue.SetIntValue(intValue, eCSSUnit_Enumerated);
-      }
-    }
-    return true;
-  }
-  return false;
 }
  
 bool
