@@ -168,6 +168,21 @@ Contact.prototype = {
       }
     };
 
+    function _checkBlobArray(aBlob) {
+      if (Array.isArray(aBlob)) {
+        for (let i = 0; i < aBlob.length; i++) {
+          if (typeof aBlob != 'object') {
+            return null;
+          }
+          if (!(aBlob[i] instanceof Components.interfaces.nsIDOMBlob)) {
+            return null;
+          }
+        }
+        return aBlob;
+      }
+      return null;
+    };
+
     this.name =            _create(aProp.name) || null;
     this.honorificPrefix = _create(aProp.honorificPrefix) || null;
     this.givenName =       _create(aProp.givenName) || null;
@@ -185,7 +200,7 @@ Contact.prototype = {
       this.email = null;
     }
 
-    this.photo =           _create(aProp.photo) || null;
+    this.photo =           _checkBlobArray(aProp.photo) || null;
     this.url =             _create(aProp.url) || null;
     this.category =        _create(aProp.category) || null;
 
