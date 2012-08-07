@@ -685,10 +685,7 @@ abstract public class GeckoApp
         tab.updateTitle(null);
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
-        tab.setAllowZoom(true);
-        tab.setDefaultZoom(0);
-        tab.setMinZoom(0);
-        tab.setMaxZoom(0);
+        tab.setZoomConstraints(new ZoomConstraints(true));
         tab.setHasTouchListeners(false);
         tab.setCheckerboardColor(Color.WHITE);
 
@@ -1004,17 +1001,11 @@ abstract public class GeckoApp
                 Tab tab = Tabs.getInstance().getTab(tabId);
                 if (tab == null)
                     return;
-                tab.setAllowZoom(message.getBoolean("allowZoom"));
-                tab.setDefaultZoom((float) message.getDouble("defaultZoom"));
-                tab.setMinZoom((float) message.getDouble("minZoom"));
-                tab.setMaxZoom((float) message.getDouble("maxZoom"));
+                tab.setZoomConstraints(new ZoomConstraints(message));
                 // Sync up the LayerController and the tab if the tab's currently displayed.
                 LayerController controller = getLayerController();
                 if (controller != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    controller.setAllowZoom(tab.getAllowZoom());
-                    controller.setDefaultZoom(tab.getDefaultZoom());
-                    controller.setMinZoom(tab.getMinZoom());
-                    controller.setMaxZoom(tab.getMaxZoom());
+                    controller.setZoomConstraints(tab.getZoomConstraints());
                 }
             } else if (event.equals("Tab:HasTouchListener")) {
                 int tabId = message.getInt("tabID");

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 
@@ -57,10 +58,7 @@ public class LayerController {
     private int mCheckerboardColor = Color.WHITE;
     private boolean mCheckerboardShouldShowChecks;
 
-    private boolean mAllowZoom;
-    private float mDefaultZoom;
-    private float mMinZoom;
-    private float mMaxZoom;
+    private ZoomConstraints mZoomConstraints;
 
     private boolean mForceRedraw;
 
@@ -71,6 +69,7 @@ public class LayerController {
         mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics(displayMetrics));
         mPanZoomController = new PanZoomController(this);
         mCheckerboardShouldShowChecks = true;
+        mZoomConstraints = new ZoomConstraints(false);
     }
 
     public void setView(LayerView v) {
@@ -312,35 +311,11 @@ public class LayerController {
         mView.requestRender();
     }
 
-    public void setAllowZoom(final boolean aValue) {
-        mAllowZoom = aValue;
+    public void setZoomConstraints(ZoomConstraints constraints) {
+        mZoomConstraints = constraints;
     }
 
-    public boolean getAllowZoom() {
-        return mAllowZoom;
-    }
-
-    public void setDefaultZoom(float aValue) {
-        mDefaultZoom = aValue;
-    }
-
-    public float getDefaultZoom() {
-        return mDefaultZoom;
-    }
-
-    public void setMinZoom(float aValue) {
-        mMinZoom = aValue;
-    }
-
-    public float getMinZoom() {
-        return mMinZoom;
-    }
-
-    public void setMaxZoom(float aValue) {
-        mMaxZoom = aValue;
-    }
-
-    public float getMaxZoom() {
-        return mMaxZoom;
+    public ZoomConstraints getZoomConstraints() {
+        return mZoomConstraints;
     }
 }
