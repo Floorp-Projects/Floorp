@@ -117,26 +117,12 @@ const ContentPanning = {
 
     let nodeContent = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
-      let style = nodeContent.getComputedStyle(node, null);
-
-      let overflow = [style.getPropertyValue('overflow'),
-                      style.getPropertyValue('overflow-x'),
-                      style.getPropertyValue('overflow-y')];
-
-      let rect = node.getBoundingClientRect();
-      let isAuto = (overflow.indexOf('auto') != -1 &&
-                   (rect.height < node.scrollHeight ||
-                    rect.width < node.scrollWidth));
-
-      let isScroll = (overflow.indexOf('scroll') != -1);
-
-      let isScrollableTextarea = (node.tagName == 'TEXTAREA' &&
-          (node.scrollHeight > node.clientHeight ||
-           node.scrollWidth > node.clientWidth ||
-           ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
-           ('scrollTopMax' in node && node.scrollTopMax > 0)));
-      if (isScroll || isAuto || isScrollableTextarea)
+      if (node.scrollHeight > node.clientHeight ||
+          node.scrollWidth > node.clientWidth ||
+          ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
+          ('scrollTopMax' in node && node.scrollTopMax > 0)) {
         return [node, this._generateCallback(node)];
+      }
 
       node = node.parentNode;
     }
