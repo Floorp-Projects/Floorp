@@ -552,7 +552,9 @@ SpdySession2::zlibInit()
   mUpstreamZlib.zfree = SpdyStream2::zlib_destructor;
   mUpstreamZlib.opaque = Z_NULL;
 
-  deflateInit(&mUpstreamZlib, Z_DEFAULT_COMPRESSION);
+  // mixing carte blanche compression with tls subjects us to traffic
+  // analysis attacks
+  deflateInit(&mUpstreamZlib, Z_NO_COMPRESSION);
   deflateSetDictionary(&mUpstreamZlib,
                        reinterpret_cast<const unsigned char *>
                        (SpdyStream2::kDictionary),
