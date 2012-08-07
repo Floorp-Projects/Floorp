@@ -1575,7 +1575,7 @@ nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
     nsresult error = NS_OK;
     bool selected = false;
     int32_t indx = val.ToInteger(&error, 10); // Get index from aValue
-    if (error == 0)
+    if (NS_SUCCEEDED(error))
        selected = IsContentSelectedByIndex(indx); 
   
     aValue.Assign(selected ? NS_LITERAL_STRING("1") : NS_LITERAL_STRING("0"));
