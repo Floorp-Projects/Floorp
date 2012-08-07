@@ -222,10 +222,10 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* 
 #elif defined(XP_MACOSX)
     intptr_t id;
 #elif defined(ANDROID)
-#warning Need Android impl
+    // TODO: Need Android impl
     int id;
 #elif defined(MOZ_WIDGET_QT)
-#  warning Need Qt non X impl
+    // TODO: Need Qt non X impl
     int id;
 #else
 #warning Implement me
@@ -1020,7 +1020,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
             mIOSurface = MacIOSurface::CreateIOSurface(window.width, window.height);
-        } else if (mShWidth * mShHeight != window.width * window.height) {
+        } else if (uint32_t(mShWidth * mShHeight) != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {
                 DeallocShmem(mShSurface);
                 mShWidth = 0;

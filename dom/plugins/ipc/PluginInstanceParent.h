@@ -27,6 +27,7 @@
 #ifdef MOZ_X11
 class gfxXlibSurface;
 #endif
+#include "mozilla/unused.h"
 #include "nsGUIEvent.h"
 
 namespace mozilla {
@@ -280,7 +281,7 @@ public:
     nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
 #endif
 
-    void DidComposite() { SendNPP_DidComposite(); }
+    void DidComposite() { unused << SendNPP_DidComposite(); }
 
 private:
     // Create an appropriate platform surface for a background of size
