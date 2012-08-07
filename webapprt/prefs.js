@@ -36,3 +36,16 @@ pref("full-screen-api.enabled", true);
 pref("general.smoothScroll", true);
 
 pref("plugin.allowed_types", "application/x-shockwave-flash,application/futuresplash");
+
+// The default for this pref reflects whether the build is capable of IPC.
+// (Turning it on in a no-IPC build will have no effect.)
+#ifdef XP_MACOSX
+// i386 ipc preferences
+pref("dom.ipc.plugins.enabled.i386", false);
+pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
+// x86_64 ipc preferences
+pref("dom.ipc.plugins.enabled.x86_64", true);
+#else
+pref("dom.ipc.plugins.enabled", true);
+#endif
+
