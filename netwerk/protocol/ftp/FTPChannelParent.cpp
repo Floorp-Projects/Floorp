@@ -11,6 +11,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsFtpProtocolHandler.h"
+#include "mozilla/LoadContext.h"
 
 #undef LOG
 #define LOG(args) PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
@@ -20,11 +21,6 @@ namespace net {
 
 FTPChannelParent::FTPChannelParent()
   : mIPCClosed(false)
-  , mHaveLoadContext(false)
-  , mIsContent(false)
-  , mUsePrivateBrowsing(false)
-  , mIsInBrowserElement(false)
-  , mAppId(0)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -48,11 +44,10 @@ FTPChannelParent::ActorDestroy(ActorDestroyReason why)
 // FTPChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS5(FTPChannelParent,
+NS_IMPL_ISUPPORTS4(FTPChannelParent,
                    nsIStreamListener,
                    nsIParentChannel,
                    nsIInterfaceRequestor,
-                   nsILoadContext,
                    nsIRequestObserver);
 
 //-----------------------------------------------------------------------------
@@ -64,12 +59,7 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
                                 const PRUint64& aStartPos,
                                 const nsCString& aEntityID,
                                 const IPC::InputStream& aUploadStream,
-                                const bool& haveLoadContext,
-                                const bool& isContent,
-                                const bool& usePrivateBrowsing,
-                                const bool& isInBrowserElement,
-                                const PRUint32& appId,
-                                const nsCString& extendedOrigin)
+                                const IPC::SerializedLoadContext& loadContext)
 {
   nsCOMPtr<nsIURI> uri(aURI);
 
@@ -104,14 +94,8 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  // fields needed to impersonate nsILoadContext
-  mHaveLoadContext = haveLoadContext;
-  mIsContent = isContent;
-  mUsePrivateBrowsing = usePrivateBrowsing;
-  mIsInBrowserElement = isInBrowserElement;
-  mAppId = appId;
-  mExtendedOrigin = extendedOrigin;
-  mChannel->SetNotificationCallbacks(this);
+  if (loadContext.IsNotNull())
+    mLoadContext = new LoadContext(loadContext);
 
   rv = mChannel->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))
@@ -248,89 +232,16 @@ NS_IMETHODIMP
 FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
 {
   // Only support nsILoadContext if child channel's callbacks did too
-  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && !mHaveLoadContext) {
-    return NS_NOINTERFACE;
+  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
+    NS_ADDREF(mLoadContext);
+    *result = static_cast<nsILoadContext*>(mLoadContext);
+    return NS_OK;
   }
 
   return QueryInterface(uuid, result);
 }
 
-//-----------------------------------------------------------------------------
-// FTPChannelParent::nsILoadContext
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-FTPChannelParent::GetAssociatedWindow(nsIDOMWindow**)
-{
-  // can't support this in the parent process
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetTopWindow(nsIDOMWindow**)
-{
-  // can't support this in the parent process
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::IsAppOfType(PRUint32, bool*)
-{
-  // don't expect we need this in parent (Thunderbird/SeaMonkey specific?)
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetIsContent(bool *aIsContent)
-{
-  NS_ENSURE_ARG_POINTER(aIsContent);
-
-  *aIsContent = mIsContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
-{
-  NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
-
-  *aUsePrivateBrowsing = mUsePrivateBrowsing;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
-{
-  // We shouldn't need this on parent...
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
-
-  *aIsInBrowserElement = mIsInBrowserElement;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetAppId(PRUint32* aAppId)
-{
-  NS_ENSURE_ARG_POINTER(aAppId);
-
-  *aAppId = mAppId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::GetExtendedOrigin(nsIURI *aUri, nsACString &aResult)
-{
-  aResult = mExtendedOrigin;
-  return NS_OK;
-}
-
-
+//---------------------
 } // namespace net
 } // namespace mozilla
 

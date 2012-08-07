@@ -17,6 +17,7 @@ using nsHttpResponseHead;
 using nsHttpAtom;
 using IPC::URI;
 using IPC::InputStream;
+using IPC::SerializedLoadContext;
 using PRNetAddr;
 
 namespace mozilla {
@@ -50,13 +51,7 @@ parent:
             bool                chooseApplicationCache,
             nsCString           appCacheClientID,
             bool                allowSpdy,
-            // Fields for imitating a nsILoadContext
-            bool                haveLoadContext,
-            bool                isContent,
-            bool                usePrivateBrowsing,
-            bool                isInBrowserElement,
-            PRUint32            appID,
-            nsCString           extendedOrigin);
+            SerializedLoadContext loadContext);
 
   // Used to connect redirected-to channel on the parent with redirected-to
   // channel on the child.
