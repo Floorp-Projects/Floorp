@@ -313,9 +313,8 @@ PluginModuleParent::CrashReporter()
 {
     return static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 }
-#endif
 
-#ifdef MOZ_CRASHREPORTER
+#ifdef MOZ_CRASHREPORTER_INJECTOR
 static void
 RemoveMinidump(nsIFile* minidump)
 {
@@ -329,6 +328,7 @@ RemoveMinidump(nsIFile* minidump)
         extraFile->Remove(true);
     }
 }
+#endif // MOZ_CRASHREPORTER_INJECTOR
 
 void
 PluginModuleParent::ProcessFirstMinidump()

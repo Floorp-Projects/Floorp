@@ -29,5 +29,6 @@ interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
   // XXX - temporary, pending implementation of scriptable, 
   //       mutable nsIDOMNodeList for selectedItems
   readonly attribute long selectedCount;
+  [binaryname(MultiGetSelectedItem)]
   nsIDOMXULSelectControlItemElement getSelectedItem(in long index);
 };

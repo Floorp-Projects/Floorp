@@ -1186,6 +1186,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
 
     uint32_t patlen = patstr->length();
     const jschar *pat = patstr->chars();
+    SkipRoot skipPat(cx, &pat);
 
     uint32_t start;
     if (args.length() > 1) {

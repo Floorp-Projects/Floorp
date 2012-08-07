@@ -6,20 +6,16 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
-#include "nsIDOMEventTarget.h"
-#include "nsEvent.h"
-#include "nsPropertyTable.h"
-#include "nsTObserverArray.h"
-#include "nsINodeInfo.h"
-#include "nsCOMPtr.h"
-#include "nsWrapperCache.h"
-#include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
-#include "nsDOMError.h"
-#include "nsDOMString.h"
-#include "jspubtd.h"
-#include "nsWindowMemoryReporter.h"
-#include "nsIVariant.h"
-#include "nsGkAtoms.h"
+#include "nsCOMPtr.h"               // for member, local
+#include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
+#include "nsIDOMEventTarget.h"      // for base class
+#include "nsINodeInfo.h"            // member (in nsCOMPtr)
+#include "nsIVariant.h"             // for use in GetUserData()
+#include "nsNodeInfoManager.h"      // for use in NodePrincipal()
+#include "nsPropertyTable.h"        // for typedefs
+#include "nsTObserverArray.h"       // for member
+#include "nsWindowMemoryReporter.h" // for NS_DECL_SIZEOF_EXCLUDING_THIS
+#include "nsWrapperCache.h"         // for base class
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -28,26 +24,23 @@
 #endif
 #endif
 
+class nsAttrAndChildArray;
+class nsChildContentList;
 class nsIContent;
 class nsIDocument;
-class nsIDOMEvent;
-class nsIDOMNode;
 class nsIDOMElement;
+class nsIDOMNode;
 class nsIDOMNodeList;
+class nsIDOMUserDataHandler;
+class nsIEditor;
+class nsIFrame;
+class nsIMutationObserver;
 class nsINodeList;
 class nsIPresShell;
-class nsEventChainVisitor;
-class nsEventChainPreVisitor;
-class nsEventChainPostVisitor;
-class nsEventListenerManager;
 class nsIPrincipal;
-class nsIMutationObserver;
-class nsChildContentList;
-class nsNodeWeakReference;
+class nsIURI;
 class nsNodeSupportsWeakRefTearoff;
-class nsIEditor;
-class nsIDOMUserDataHandler;
-class nsAttrAndChildArray;
+class nsNodeWeakReference;
 class nsXPCClassInfo;
 
 namespace mozilla {
@@ -55,6 +48,12 @@ namespace dom {
 class Element;
 } // namespace dom
 } // namespace mozilla
+
+namespace JS {
+class Value;
+}
+
+inline void SetDOMStringToNull(nsAString& aString);
 
 enum {
   // This bit will be set if the node has a listener manager.
@@ -149,19 +148,6 @@ enum {
   // Remaining bits are node type specific.
   NODE_TYPE_SPECIFIC_BITS_OFFSET =        20
 };
-
-// Useful inline function for getting a node given an nsIContent and an
-// nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
-// otherwise returns the second (which may be null).  We use type variables
-// instead of nsIContent* and nsIDocument* because the actual types must be
-// known for the cast to work.
-template<class C, class D>
-inline nsINode* NODE_FROM(C& aContent, D& aDocument)
-{
-  if (aContent)
-    return static_cast<nsINode*>(aContent);
-  return static_cast<nsINode*>(aDocument);
-}
 
 /**
  * Class used to detect unexpected mutations. To use the class create an
@@ -1558,6 +1544,19 @@ protected:
   // Storage for more members that are usually not needed; allocated lazily.
   nsSlots* mSlots;
 };
+
+// Useful inline function for getting a node given an nsIContent and an
+// nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
+// otherwise returns the second (which may be null).  We use type variables
+// instead of nsIContent* and nsIDocument* because the actual types must be
+// known for the cast to work.
+template<class C, class D>
+inline nsINode* NODE_FROM(C& aContent, D& aDocument)
+{
+  if (aContent)
+    return static_cast<nsINode*>(aContent);
+  return static_cast<nsINode*>(aDocument);
+}
 
 
 extern const nsIID kThisPtrOffsetsSID;

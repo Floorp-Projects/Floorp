@@ -5918,7 +5918,7 @@ var WebappsUI = {
         }).bind(this));
         break;
       case "webapps-sync-install":
-        // Wait until we know the app install worked, then make a homescreen shortcut
+        // Create a system notification allowing the user to launch the app
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
           if (!aManifest)
             return;
@@ -5930,21 +5930,6 @@ var WebappsUI = {
           let name = manifest.name ? converter.ConvertToUnicode(manifest.name) :
                                      converter.ConvertToUnicode(manifest.fullLaunchPath());
 
-          // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
-          // a unique ID for Android webapp allocation
-          this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(data.origin, null, null)),
-                              function(icon) {
-                                sendMessageToJava({
-                                  gecko: {
-                                    type: "WebApps:Install",
-                                    name: name,
-                                    launchPath: manifest.fullLaunchPath(),
-                                    iconURL: icon,
-                                    uniqueURI: data.origin
-                                  }
-                                })});
-
-          // Create a system notification allowing the user to launch the app
           let observer = {
             observe: function (aSubject, aTopic) {
               if (aTopic == "alertclickcallback") {
@@ -6005,10 +5990,32 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
-    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name))
-      DOMApplicationRegistry.confirmInstall(aData);
-    else
+    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
+      // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
+      // a unique ID for Android webapp allocation
+      this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
+        function(icon) {
+          var profilePath = sendMessageToJava({
+            gecko: {
+              type: "WebApps:Install",
+              name: manifest.name,
+              launchPath: manifest.fullLaunchPath(),
+              iconURL: icon,
+              uniqueURI: aData.app.origin
+            }
+          });
+  
+          // if java returned a profile path to us, try to use it to pre-populate the app cache
+          var file = null;
+          if (profilePath) {
+            var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+            file.initWithPath(profilePath);
+          }
+          DOMApplicationRegistry.confirmInstall(aData, false, file);
+        });
+    } else {
       DOMApplicationRegistry.denyInstall(aData);
+    }
   },
   
   openURL: function openURL(aURI, aOrigin) {

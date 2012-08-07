@@ -220,22 +220,14 @@ bool
 CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *aElement,
                                                            nsCSSProperty aProperty)
 {
-  static bool sShouldLog;
-  static bool sShouldLogPrefCached;
-
-  if (!sShouldLogPrefCached) {
-    sShouldLogPrefCached = true;
-    Preferences::AddBoolVarCache(&sShouldLog,
-                                 "layers.offmainthreadcomposition.log-animations");
-  }
-
+  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (aProperty == eCSSProperty_visibility) {
     return true;
   }
   if (aProperty == eCSSProperty_opacity) {
     bool enabled = nsLayoutUtils::AreOpacityAnimationsEnabled();
-    if (!enabled && sShouldLog) {
+    if (!enabled && shouldLog) {
       printf_stderr("Performance warning: Async animation of 'opacity' is disabled\n");
     }
     return enabled;
@@ -244,24 +236,24 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     if (frame &&
         frame->Preserves3D() &&
         frame->Preserves3DChildren()) {
-      if (sShouldLog) {
+      if (shouldLog) {
         printf_stderr("Gecko bug: Async animation of 'preserve-3d' transforms is not supported.  See bug 779598\n");
       }
       return false;
     }
     if (frame && frame->IsSVGTransformed()) {
-      if (sShouldLog) {
+      if (shouldLog) {
         printf_stderr("Gecko bug: Async 'transform' animations of frames with SVG transforms is not supported.  See bug 779599\n");
       }
       return false;
     }
     bool enabled = nsLayoutUtils::AreTransformAnimationsEnabled();
-    if (!enabled && sShouldLog) {
+    if (!enabled && shouldLog) {
       printf_stderr("Performance warning: Async animation of 'transform' is disabled\n");
     }
     return enabled;
   }
-  if (sShouldLog) {
+  if (shouldLog) {
     const nsAFlatCString propName = nsCSSProps::GetStringValue(aProperty);
     printf_stderr("Performance warning: Async animation cancelled because of unsupported property '%s'\n", propName.get());
   }

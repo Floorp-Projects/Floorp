@@ -5756,11 +5756,21 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
         JSObject* thisObject = &thisValue.toObject();
 
         // wrap parameters in the target compartment
+        // we also pass in the calling window as the first argument
+        ++argc;
         nsAutoArrayPtr<JS::Value> args(new JS::Value[argc]);
         JS::AutoArrayRooter rooter(cx, 0, args);
 
-        for (size_t i = 0; i < argc; ++i) {
-          args[i] = argv[i];
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
+        rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
+                        true, &args[0], getter_AddRefs(holder));
+        if (!JS_WrapValue(cx, &args[0]))
+          return NS_ERROR_FAILURE;
+        rooter.changeLength(1);
+
+        for (size_t i = 1; i < argc; ++i) {
+          args[i] = argv[i - 1];
           if (!JS_WrapValue(cx, &args[i]))
             return NS_ERROR_FAILURE;
           rooter.changeLength(i + 1);

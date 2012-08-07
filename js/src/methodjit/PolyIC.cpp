@@ -597,6 +597,23 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
     return true;
 }
 
+static bool
+IsCacheableListBase(JSObject *obj)
+{
+    if (!obj->isProxy())
+        return false;
+
+    BaseProxyHandler *handler = GetProxyHandler(obj);
+
+    if (handler->family() != GetListBaseHandlerFamily())
+        return false;
+
+    if (obj->numFixedSlots() <= GetListBaseExpandoSlot())
+        return false;
+
+    return true;
+}
+
 template <typename IC>
 struct GetPropHelper {
     // These fields are set in the constructor and describe a property lookup.
@@ -643,6 +660,9 @@ struct GetPropHelper {
         JSObject *aobj = obj;
         if (obj->isDenseArray())
             aobj = obj->getProto();
+        else if (IsCacheableListBase(obj))
+            aobj = obj->getProto();
+
         if (!aobj->isNative())
             return ic.disable(f, "non-native");
 
@@ -1240,6 +1260,53 @@ class GetPropCompiler : public PICStubCompiler
 
         if (!shapeMismatches.append(shapeGuardJump))
             return error();
+
+        // Guard on the proxy guts for ListBase accesses, if applicable.
+        if (IsCacheableListBase(obj)) {
+            // The shape check above ensures this is a proxy with the correct
+            // number of fixed slots, but we need further checks to ensure that
+            //
+            // (a) the object is a ListBase.
+            // (b) the object does not have any expando properties, or has an
+            //     expando which does not have the desired property.
+            //
+            // If both of these hold, all accesses on non-indexed PropertyName
+            // properties will go through the object's native prototype chain.
+
+            Address handler(pic.objReg, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
+            Jump handlerGuard = masm.testPrivate(Assembler::NotEqual, handler, GetProxyHandler(obj));
+            if (!shapeMismatches.append(handlerGuard))
+                return error();
+
+            Address expandoAddress(pic.objReg, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
+
+            Value expandoValue = obj->getFixedSlot(GetListBaseExpandoSlot());
+            JSObject *expando = expandoValue.isObject() ? &expandoValue.toObject() : NULL;
+
+            // Expando objects just hold any extra properties the object has
+            // been given by a script, and have no prototype or anything else
+            // that will complicate property lookups on them.
+            JS_ASSERT_IF(expando, expando->isNative() && expando->getProto() == NULL);
+
+            if (expando && expando->nativeLookupNoAllocation(name) == NULL) {
+                Jump expandoGuard = masm.testObject(Assembler::NotEqual, expandoAddress);
+                if (!shapeMismatches.append(expandoGuard))
+                    return error();
+
+                masm.loadPayload(expandoAddress, pic.shapeReg);
+                pic.shapeRegHasBaseShape = false;
+
+                Jump shapeGuard = masm.branchPtr(Assembler::NotEqual,
+                                                 Address(pic.shapeReg, JSObject::offsetOfShape()),
+                                                 ImmPtr(expando->lastProperty()));
+                if (!shapeMismatches.append(expandoGuard))
+                    return error();
+            } else {
+                Jump expandoGuard = masm.testUndefined(Assembler::NotEqual, expandoAddress);
+                if (!shapeMismatches.append(expandoGuard))
+                    return error();
+            }
+        }
 
         RegisterID holderReg = pic.objReg;
         if (obj != holder) {
@@ -2191,6 +2258,10 @@ GetElementIC::attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandleP
 {
     JS_ASSERT(v.isString());
     JSContext *cx = f.cx;
+
+    // don't handle special logic required for property access on proxies.
+    if (!obj->isNative())
+        return Lookup_Uncacheable;
 
     GetPropHelper<GetElementIC> getprop(cx, obj, name, *this, f);
     LookupStatus status = getprop.lookupAndTest();

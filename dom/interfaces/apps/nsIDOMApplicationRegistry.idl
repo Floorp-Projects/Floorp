@@ -74,7 +74,10 @@ interface mozIDOMApplicationRegistry : nsISupports
    *
    * @param manifestUrl : the URL of the webapps manifest.
    * @param parameters  : A structure with optional information.
-   *                      { receipts: ... } will be used to specify the payment receipts for this installation.
+   *                      {
+   *                       receipts: ...    Will be used to specify the payment receipts for this installation.
+   *                       categories: ...  Will be used to specify the categories of the webapp.
+   *                      }
    * @returns           : A DOMRequest object, returning the app object in |result| if install succeeds.
    */
   nsIDOMDOMRequest install(in DOMString manifestUrl, [optional] in jsval parameters);
@@ -100,7 +103,10 @@ interface mozIDOMApplicationRegistry : nsISupports
    *
    * @param packageUrl : the URL of the webapps manifest.
    * @param parameters : A structure with optional information.
-   *                     { receipts: ... } will be used to specify the payment receipts for this installation.
+   *                      {
+   *                       receipts: ...    Will be used to specify the payment receipts for this installation.
+   *                       categories: ...  Will be used to specify the categories of the webapp.
+   *                      }
    * @returns          : A DOMRequest object, returning the app object in |result| if install succeeds.
    */
   nsIDOMDOMRequest installPackage(in DOMString packageUrl, [optional] in jsval parameters);

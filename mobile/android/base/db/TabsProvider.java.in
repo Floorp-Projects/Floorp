@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoBackgroundThread;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.Clients;
@@ -20,6 +19,7 @@ import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.GeckoBackgroundThread;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;

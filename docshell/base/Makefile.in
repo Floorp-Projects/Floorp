@@ -56,12 +56,14 @@ EXPORTS = \
   nsDocShellLoadTypes.h \
   nsILinkHandler.h \
   nsIWebShellServices.h \
+  SerializedLoadContext.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
   IHistory.h \
+  LoadContext.h \
   $(NULL)
 
 CPPSRCS = \
@@ -75,6 +77,8 @@ CPPSRCS = \
   nsWebNavigationInfo.cpp \
   nsAboutRedirector.cpp \
   nsDownloadHistory.cpp \
+  SerializedLoadContext.cpp \
+  LoadContext.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

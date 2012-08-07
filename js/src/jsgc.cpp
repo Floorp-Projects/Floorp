@@ -3682,10 +3682,8 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReaso
          * script and calls rt->destroyScriptHook, the hook can still access the
          * script's filename. See bug 323267.
          */
-        if (rt->gcIsFull) {
+        if (rt->gcIsFull)
             SweepScriptFilenames(rt);
-            ScriptSource::sweep(rt);
-        }
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
