@@ -336,7 +336,9 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
       pipe_ = pipe_fds[0];
       client_pipe_ = pipe_fds[1];
 
-      Singleton<PipeMap>()->Insert(pipe_name_, client_pipe_);
+      if (pipe_name_.length()) {
+        Singleton<PipeMap>()->Insert(pipe_name_, client_pipe_);
+      }
     } else {
       pipe_ = ChannelNameToClientFD(pipe_name_);
       DCHECK(pipe_ > 0);
