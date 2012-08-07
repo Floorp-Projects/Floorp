@@ -82,8 +82,7 @@ public:
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
                                      LayerManager* aManager,
-                                     const nsIntRect& aVisibleRect,
-                                     nsDisplayItem* aItem);
+                                     const nsIntRect& aVisibleRect);
 
   void OwnerContentChanged(nsIContent* aContent);
 
