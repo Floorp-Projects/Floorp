@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventListener;
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
@@ -155,6 +156,10 @@ public class PanZoomController
         mState = state;
     }
 
+    private ImmutableViewportMetrics getMetrics() {
+        return mController.getViewportMetrics();
+    }
+
     // for debugging bug 713011; it can be taken out once that is resolved.
     private void checkMainThread() {
         if (mMainThread != Thread.currentThread()) {
@@ -177,9 +182,10 @@ public class PanZoomController
                     }
                 });
             } else if (MESSAGE_ZOOM_PAGE.equals(event)) {
-                RectF cssPageRect = mController.getCssPageRect();
+                ImmutableViewportMetrics metrics = getMetrics();
+                RectF cssPageRect = metrics.getCssPageRect();
 
-                RectF viewableRect = mController.getCssViewport();
+                RectF viewableRect = metrics.getCssViewport();
                 float y = viewableRect.top;
                 // attempt to keep zoom keep focused on the center of the viewport
                 float newHeight = viewableRect.height() * cssPageRect.width() / viewableRect.width();
@@ -309,7 +315,7 @@ public class PanZoomController
         if (mState == PanZoomState.NOTHING) {
             synchronized (mController) {
                 ViewportMetrics validated = getValidViewportMetrics();
-                if (! (new ViewportMetrics(mController.getViewportMetrics())).fuzzyEquals(validated)) {
+                if (! (new ViewportMetrics(getMetrics())).fuzzyEquals(validated)) {
                     // page size changed such that we are now in overscroll. snap to the
                     // the nearest valid viewport
                     mController.setViewportMetrics(validated);
@@ -549,7 +555,7 @@ public class PanZoomController
     private void bounce(ViewportMetrics metrics) {
         stopAnimationTimer();
 
-        ViewportMetrics bounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        ViewportMetrics bounceStartMetrics = new ViewportMetrics(getMetrics());
         if (bounceStartMetrics.fuzzyEquals(metrics)) {
             setState(PanZoomState.NOTHING);
             return;
@@ -774,7 +780,7 @@ public class PanZoomController
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
     private ViewportMetrics getValidViewportMetrics() {
-        return getValidViewportMetrics(new ViewportMetrics(mController.getViewportMetrics()));
+        return getValidViewportMetrics(new ViewportMetrics(getMetrics()));
     }
 
     private ViewportMetrics getValidViewportMetrics(ViewportMetrics viewportMetrics) {
@@ -837,25 +843,25 @@ public class PanZoomController
     private class AxisX extends Axis {
         AxisX(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
-        public float getOrigin() { return mController.getOrigin().x; }
+        public float getOrigin() { return getMetrics().viewportRectLeft; }
         @Override
-        protected float getViewportLength() { return mController.getViewportSize().width; }
+        protected float getViewportLength() { return getMetrics().getWidth(); }
         @Override
-        protected float getPageStart() { return mController.getPageRect().left; }
+        protected float getPageStart() { return getMetrics().pageRectLeft; }
         @Override
-        protected float getPageLength() { return mController.getPageRect().width(); }
+        protected float getPageLength() { return getMetrics().getPageWidth(); }
     }
 
     private class AxisY extends Axis {
         AxisY(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
-        public float getOrigin() { return mController.getOrigin().y; }
+        public float getOrigin() { return getMetrics().viewportRectTop; }
         @Override
-        protected float getViewportLength() { return mController.getViewportSize().height; }
+        protected float getViewportLength() { return getMetrics().getHeight(); }
         @Override
-        protected float getPageStart() { return mController.getPageRect().top; }
+        protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
-        protected float getPageLength() { return mController.getPageRect().height(); }
+        protected float getPageLength() { return getMetrics().getPageHeight(); }
     }
 
     /*
@@ -1057,7 +1063,7 @@ public class PanZoomController
 
         float finalZoom = viewport.width() / zoomToRect.width();
 
-        ViewportMetrics finalMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        ViewportMetrics finalMetrics = new ViewportMetrics(getMetrics());
         finalMetrics.setOrigin(new PointF(zoomToRect.left * finalMetrics.getZoomFactor(),
                                           zoomToRect.top * finalMetrics.getZoomFactor()));
         finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
