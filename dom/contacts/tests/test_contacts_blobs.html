@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
+-->
+<head>
+  <title>Test for Bug {674720} WebContacts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={674720}">Mozilla Bug {674720}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+var comp = SpecialPowers.wrap(Components);
+comp.utils.import("resource://gre/modules/ContactService.jsm");
+SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+SpecialPowers.addPermission("contacts", true, document);
+
+var utils = SpecialPowers.getDOMWindowUtils(window);
+
+function getView(size)
+{
+ var buffer = new ArrayBuffer(size);
+ var view = new Uint8Array(buffer);
+ is(buffer.byteLength, size, "Correct byte length");
+ return view;
+}
+
+function getRandomView(size)
+{
+ var view = getView(size);
+ for (var i = 0; i < size; i++) {
+   view[i] = parseInt(Math.random() * 255)
+ }
+ return view;
+}
+
+function getBlob(type, view)
+{
+  return utils.getBlob([view], {type: type});
+}
+
+function getRandomBlob(size)
+{
+  return getBlob("binary/random", getRandomView(size));
+}
+
+function compareBuffers(buffer1, buffer2)
+{
+  if (buffer1.byteLength != buffer2.byteLength) {
+    return false;
+  }
+  var view1 = new Uint8Array(buffer1);
+  var view2 = new Uint8Array(buffer2);
+  for (var i = 0; i < buffer1.byteLength; i++) {
+    if (view1[i] != view2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function verifyBuffers(buffer1, buffer2, isLast)
+{
+  ok(compareBuffers(buffer1, buffer2), "Correct blob data");
+  if (isLast)
+    next();
+}
+
+var randomBlob = getRandomBlob(1024);
+var randomBlob2 = getRandomBlob(1024);
+
+var properties1 = {
+  name: "xTestname1",
+  photo: [randomBlob]
+};
+
+var properties2 = {
+  name: "yTestname2",
+  photo: [randomBlob, randomBlob2]
+};
+
+var sample_id1;
+var createResult1;
+var findResult1;
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  ok(false, "in on Failure!");
+}
+
+function verifyBlob(blob1, blob2, isLast)
+{
+  dump("islast? " + isLast + "\n");
+  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
+     "Instance of nsIDOMBlob");
+  is(blob1 instanceof Components.interfaces.nsIDOMFile,
+     blob2 instanceof Components.interfaces.nsIDOMFile,
+     "Instance of nsIDOMFile");
+  is(blob1.size, blob2.size, "Correct size");
+  is(blob1.type, blob2.type, "Correct type");
+
+  var buffer1;
+  var buffer2;
+
+  var reader1 = new FileReader();
+  reader1.readAsArrayBuffer(blob2);
+  reader1.onload = function(event) {
+    buffer2 = event.target.result;
+    if (buffer1) {
+      verifyBuffers(buffer1, buffer2, isLast);
+    }
+  }
+  
+  var reader2 = new FileReader();
+  reader2.readAsArrayBuffer(blob1);
+  reader2.onload = function(event) {
+    buffer1 = event.target.result;
+    if (buffer2) {
+      verifyBuffers(buffer1, buffer2, isLast);
+    }
+  }
+}
+
+function verifyBlobArray(blobs1, blobs2)
+{
+  is(blobs1 instanceof Array, true, "Got an array object");
+  is(blobs1.length, blobs2.length, "Correct length");
+
+  if (!blobs1.length) {
+    next();
+    return;
+  }
+
+  for (var i = 0; i < blobs1.length; i++)
+    verifyBlob(blobs1[i], blobs2[i], i == blobs1.length - 1);
+}
+
+
+var req;
+var index = 0;
+
+var mozContacts = window.navigator.mozContacts
+
+var steps = [
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact with photo");
+    createResult1 = new mozContact();
+    createResult1.init(properties1);
+    dump("CreateResult1: " + JSON.stringify(createResult1));
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      verifyBlobArray(createResult1.photo, properties1.photo);
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact with 2 photos");
+    createResult1 = new mozContact();
+    createResult1.init(properties2);
+    dump("CreateResult1: " + JSON.stringify(createResult1));
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties2.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      verifyBlobArray(createResult1.photo, properties2.photo);
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding photo as String");
+    createResult1 = new mozContact();
+    createResult1.init({name: "asdf", photo: ["xyz"]});
+    dump("CreateResult1: " + JSON.stringify(createResult1));
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      is(createResult1.photo, null, "No photo")
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding photo as String");
+    createResult1 = new mozContact();
+    createResult1.init({name: "jkl", photo: "xyz"});
+    dump("CreateResult1: " + JSON.stringify(createResult1));
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      is(createResult1.photo, null, "No photo")
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: "asdf"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      is(findResult1.photo, null, "No photo");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding photo as Object");
+    createResult1 = new mozContact();
+    createResult1.init({photo: [{}]});
+    dump("CreateResult1: " + JSON.stringify(createResult1));
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      is(createResult1.photo, null, "No photo")
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+  index += 1;
+}
+
+function permissionTest() {
+  if (gContactsEnabled) {
+    next();
+  } else {
+    is(mozContacts, null, "mozContacts is null when not enabled.");
+    SimpleTest.finish();
+  }
+}
+
+var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(permissionTest);
+
+ok(true, "test passed");
+</script>
+</pre>
+</body>
+</html>

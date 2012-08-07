@@ -17,6 +17,7 @@ DIRS = \
 MOCHITEST_FILES = \
   test_contacts_basics.html \
   test_contacts_events.html \
+  test_contacts_blobs.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
