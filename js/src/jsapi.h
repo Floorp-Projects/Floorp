@@ -3221,12 +3221,11 @@ JS_StringToVersion(const char *string);
                                                    strict mode for all code
                                                    without requiring
                                                    "use strict" annotations. */
-/* JS_BIT(20) is taken in jsfriendapi.h! */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)
@@ -5081,6 +5080,11 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool compileAndGo;
     bool noScriptRval;
     bool allowIntrinsicsCalls;
+    enum SourcePolicy {
+        NO_SOURCE,
+        LAZY_SOURCE,
+        SAVE_SOURCE
+    } sourcePolicy;
 
     CompileOptions(JSContext *cx);
     CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
@@ -5093,6 +5097,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setAllowIntrinsicsCalls(bool aic) { allowIntrinsicsCalls = aic; return *this; }
+    CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 
 extern JS_PUBLIC_API(JSScript *)

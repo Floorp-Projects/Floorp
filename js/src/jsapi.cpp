@@ -5146,7 +5146,8 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       lineno(1),
       compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
       noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
-      allowIntrinsicsCalls(false)
+      allowIntrinsicsCalls(false),
+      sourcePolicy(SAVE_SOURCE)
 {
 }
 
