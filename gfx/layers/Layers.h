@@ -1407,7 +1407,10 @@ public:
   void SetReferentId(uint64_t aId)
   {
     MOZ_ASSERT(aId != 0);
-    mId = aId;
+    if (mId != aId) {
+      mId = aId;
+      Mutated();
+    }
   }
   /**
    * CONSTRUCTION PHASE ONLY
