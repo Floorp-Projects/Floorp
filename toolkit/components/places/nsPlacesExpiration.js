@@ -664,7 +664,7 @@ nsPlacesExpiration.prototype = {
           if (oldStatus == STATUS.DIRTY) {
             try {
               Services.telemetry
-                      .getHistogramById("PLACES_EXPIRATION_STEPS_TO_CLEAN")
+                      .getHistogramById("PLACES_EXPIRATION_STEPS_TO_CLEAN2")
                       .add(this._telemetrySteps);
             } catch (ex) {
               Components.utils.reportError("Unable to report telemetry.");
