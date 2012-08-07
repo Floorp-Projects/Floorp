@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.ui.PanZoomController;
+import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 
 import android.content.Context;
@@ -26,7 +27,7 @@ import android.view.GestureDetector;
  *
  * Many methods require that the monitor be held, with a synchronized (controller) { ... } block.
  */
-public class LayerController {
+public class LayerController implements PanZoomTarget {
     private static final String LOGTAG = "GeckoLayerController";
 
     private Layer mRootLayer;                   /* The root layer. */
@@ -96,6 +97,7 @@ public class LayerController {
     public LayerView getView()                    { return mView; }
     public Context getContext()                   { return mContext; }
     public ImmutableViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
+    public Object getLock()                       { return this; }
 
     public FloatSize getViewportSize() {
         return mViewportMetrics.getSize();

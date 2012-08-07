@@ -152,6 +152,7 @@ FENNEC_JAVA_FILES = \
   gfx/VirtualLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
+  ui/PanZoomTarget.java \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
