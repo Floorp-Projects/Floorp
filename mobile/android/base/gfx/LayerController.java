@@ -139,18 +139,6 @@ public class LayerController implements PanZoomTarget {
         }
     }
 
-    /** Scrolls the viewport by the given offset. You must hold the monitor while calling this. */
-    public void scrollBy(PointF point) {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        PointF origin = viewportMetrics.getOrigin();
-        origin.offset(point.x, point.y);
-        viewportMetrics.setOrigin(origin);
-        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
-
-        notifyLayerClientOfGeometryChange();
-        mView.requestRender();
-    }
-
     /** Sets the current page rect. You must hold the monitor while calling this. */
     public void setPageRect(RectF rect, RectF cssRect) {
         // Since the "rect" is always just a multiple of "cssRect" we don't need to
@@ -195,21 +183,6 @@ public class LayerController implements PanZoomTarget {
             DisplayPortMetrics displayPort = DisplayPortCalculator.calculate(metrics, null);
             mLayerClient.adjustViewport(displayPort);
         }
-    }
-
-    /**
-     * Scales the viewport, keeping the given focus point in the same place before and after the
-     * scale operation. You must hold the monitor while calling this.
-     */
-    public void scaleWithFocus(float zoomFactor, PointF focus) {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        viewportMetrics.scaleTo(zoomFactor, focus);
-        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
-
-        // We assume the zoom level will only be modified by the
-        // PanZoomController, so no need to notify it of this change.
-        notifyLayerClientOfGeometryChange();
-        mView.requestRender();
     }
 
     public boolean post(Runnable action) { return mView.post(action); }
