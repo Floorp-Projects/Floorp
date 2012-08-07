@@ -243,6 +243,12 @@ class GeckoInputConnection
         return super.setSelection(newSelection.start, newSelection.end);
     }
 
+    private static void postToUiThread(Runnable runnable) {
+        // postToUiThread() is called by the Gecko and TimerTask threads.
+        // The UI thread does not need to post Runnables to itself.
+        GeckoApp.mAppContext.mMainHandler.post(runnable);
+    }
+
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
         // Avoid underrunning text buffer.
@@ -991,16 +997,6 @@ class GeckoInputConnection
     }
 
     public void notifyIME(int type, int state) {
-        // For some input type we will use a  widget to display the ui, for those we must not
-        // display the ime. We can display a widget for date and time types and, if the sdk version
-        // is greater than 11, for datetime/month/week as well.
-        if (typeHint.equals("date") || typeHint.equals("time") ||
-            (Build.VERSION.SDK_INT > 10 &&
-            (typeHint.equals("datetime") || typeHint.equals("month") ||
-            typeHint.equals("week") || typeHint.equals("datetime-local")))) {
-            return;
-        }
-
         View v = getView();
         if (v == null)
             return;
@@ -1048,6 +1044,16 @@ class GeckoInputConnection
     }
 
     public void notifyIMEEnabled(int state, String typeHint, final String modeHint, String actionHint) {
+        // For some input type we will use a  widget to display the ui, for those we must not
+        // display the ime. We can display a widget for date and time types and, if the sdk version
+        // is greater than 11, for datetime/month/week as well.
+        if (typeHint.equals("date") || typeHint.equals("time") ||
+            (Build.VERSION.SDK_INT > 10 &&
+            (typeHint.equals("datetime") || typeHint.equals("month") ||
+            typeHint.equals("week") || typeHint.equals("datetime-local")))) {
+            return;
+        }
+
         View v = getView();
 
         if (v == null)
