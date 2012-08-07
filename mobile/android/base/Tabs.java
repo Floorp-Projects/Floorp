@@ -45,6 +45,7 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
         GeckoAppShell.registerGeckoEventListener("Reader:Added", this);
+        GeckoAppShell.registerGeckoEventListener("Reader:Removed", this);
         GeckoAppShell.registerGeckoEventListener("Reader:Share", this);
     }
 
@@ -273,6 +274,9 @@ public class Tabs implements GeckoEventListener {
                 final String title = message.getString("title");
                 final String url = message.getString("url");
                 handleReaderAdded(success, title, url);
+            } else if (event.equals("Reader:Removed")) {
+                final String url = message.getString("url");
+                handleReaderRemoved(url);
             } else if (event.equals("Reader:Share")) {
                 final String title = message.getString("title");
                 final String url = message.getString("url");
@@ -295,6 +299,15 @@ public class Tabs implements GeckoEventListener {
             public void run() {
                 BrowserDB.addReadingListItem(mActivity.getContentResolver(), title, url);
                 mActivity.showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
+            }
+        });
+    }
+
+    void handleReaderRemoved(final String url) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                BrowserDB.removeReadingListItemWithURL(mResolver, url);
+                mActivity.showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
             }
         });
     }
