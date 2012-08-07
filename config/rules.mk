@@ -1632,6 +1632,32 @@ endif
 endif
 
 ################################################################################
+# Install/copy rules
+#
+# The INSTALL_TARGETS variable contains a list of all install target
+# categories. Each category defines a list of files, an install destination,
+# and whether the files are executables or not.
+#
+# FOO_FILES := foo bar
+# FOO_EXECUTABLES := baz
+# FOO_DEST := target_path
+# INSTALL_TARGETS += FOO
+define install_file_template
+libs:: $(2)/$(notdir $(1))
+$(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2))
+	$(INSTALL) $(3) $$< $${@D}
+endef
+$(foreach category,$(INSTALL_TARGETS),\
+  $(if $($(category)_DEST),,$(error Missing $(category)_DEST))\
+  $(foreach file,$($(category)_FILES),\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS1)))\
+  )\
+  $(foreach file,$($(category)_EXECUTABLES),\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS2)))\
+  )\
+)
+
+################################################################################
 # Preprocessing rules
 #
 # The PP_TARGETS variable contains a list of all preprocessing target
@@ -1756,4 +1782,3 @@ include $(topsrcdir)/config/makefiles/autotargets.mk
 ifneq ($(NULL),$(AUTO_DEPS))
   default all libs tools export:: $(AUTO_DEPS)
 endif
-
