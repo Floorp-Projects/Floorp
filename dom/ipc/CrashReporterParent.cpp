@@ -127,7 +127,7 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
     mNotes.Put(NS_LITERAL_CSTRING("ProcessType"), type);
 
     char startTime[32];
-    sprintf(startTime, "%lld", static_cast<PRInt64>(mStartTime));
+    sprintf(startTime, "%lld", static_cast<long long>(mStartTime));
     mNotes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
     if (!mAppNotes.IsEmpty())

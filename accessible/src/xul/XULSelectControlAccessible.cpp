@@ -70,7 +70,7 @@ XULSelectControlAccessible::SelectedItems()
     xulMultiSelect->GetSelectedCount(&length);
     for (PRInt32 index = 0; index < length; index++) {
       nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
-      xulMultiSelect->GetSelectedItem(index, getter_AddRefs(itemElm));
+      xulMultiSelect->MultiGetSelectedItem(index, getter_AddRefs(itemElm));
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
       Accessible* item = mDoc->GetAccessible(itemNode);
       if (item)
@@ -78,15 +78,15 @@ XULSelectControlAccessible::SelectedItems()
                                      false);
     }
   } else {  // Single select?
-      nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
-      mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
-      nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
-      if(itemNode) {
-        Accessible* item = mDoc->GetAccessible(itemNode);
-        if (item)
-          selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
-                                     false);
-      }
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
+    mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
+    nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
+    if (itemNode) {
+      Accessible* item = mDoc->GetAccessible(itemNode);
+      if (item)
+        selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
+                                   false);
+    }
   }
 
   nsIMutableArray* items = nullptr;
@@ -102,7 +102,7 @@ XULSelectControlAccessible::GetSelectedItem(PRUint32 aIndex)
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
   if (multiSelectControl)
-    multiSelectControl->GetSelectedItem(aIndex, getter_AddRefs(itemElm));
+    multiSelectControl->MultiGetSelectedItem(aIndex, getter_AddRefs(itemElm));
   else if (aIndex == 0)
     mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
 

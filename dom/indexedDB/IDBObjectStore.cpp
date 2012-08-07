@@ -1393,8 +1393,7 @@ IDBObjectStore::ConvertActorsToBlobs(
   NS_ASSERTION(aFiles.IsEmpty(), "Should be empty!");
 
   if (!aActors.IsEmpty()) {
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    NS_ASSERTION(contentChild, "This should never be null!");
+    NS_ASSERTION(ContentChild::GetSingleton(), "This should never be null!");
 
     PRUint32 length = aActors.Length();
     aFiles.SetCapacity(length);

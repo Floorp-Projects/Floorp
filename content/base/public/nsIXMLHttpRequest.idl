@@ -395,7 +395,7 @@ interface nsIXHRSendable : nsISupports {
 /**
  * @deprecated
  */
-[deprecated, scriptable, uuid(8ae70a39-edf1-40b4-a992-472d23421c25)]
+[scriptable, uuid(8ae70a39-edf1-40b4-a992-472d23421c25)]
 interface nsIJSXMLHttpRequest : nsISupports {
 };
 
