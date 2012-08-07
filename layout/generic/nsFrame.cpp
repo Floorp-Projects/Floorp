@@ -5782,9 +5782,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       //resultFrame is not a block frame
       result = NS_ERROR_FAILURE;
 
-      PRUint32 flags = FrameIteratorFlags::FLAG_NONE;
+      PRUint32 flags = nsFrameIterator::FLAG_NONE;
       if (aPos->mScrollViewStop) {
-        flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+        flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
       }
       nsFrameIterator frameTraversal(aPresContext, resultFrame,
                                      ePostOrder, flags);
@@ -5873,9 +5873,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       if (!found){
         resultFrame = storeOldResultFrame;
 
-        PRUint32 flags = FrameIteratorFlags::FLAG_NONE;
+        PRUint32 flags = nsFrameIterator::FLAG_NONE;
         if (aPos->mScrollViewStop) {
-          flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+          flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
         }
         frameTraversal = nsFrameIterator(aPresContext, resultFrame,
                                          eLeaf, flags);
@@ -6634,12 +6634,12 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
         return NS_ERROR_FAILURE; //we are done. cannot jump lines
     }
 
-    PRUint32 flags = FrameIteratorFlags::FLAG_FOLLOW_OUT_OF_FLOW;
+    PRUint32 flags = nsFrameIterator::FLAG_FOLLOW_OUT_OF_FLOW;
     if (aScrollViewStop) {
-      flags |= FrameIteratorFlags::FLAG_LOCK_SCROLL;
+      flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
     }
     if (aVisual && presContext->BidiEnabled()) {
-      flags |= FrameIteratorFlags::FLAG_VISUAL;
+      flags |= nsFrameIterator::FLAG_VISUAL;
     }
     nsFrameIterator frameTraversal(presContext, traversedFrame,
                                    eLeaf, flags);

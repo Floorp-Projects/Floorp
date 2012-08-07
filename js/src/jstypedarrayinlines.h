@@ -159,11 +159,12 @@ DataViewObject::is(const Value &v)
 
 inline DataViewObject *
 DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
-                       Handle<ArrayBufferObject*> arrayBuffer, JSObject *proto)
+                       Handle<ArrayBufferObject*> arrayBuffer, JSObject *protoArg)
 {
     JS_ASSERT(byteOffset <= INT32_MAX);
     JS_ASSERT(byteLength <= INT32_MAX);
 
+    RootedObject proto(cx, protoArg);
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &DataViewClass));
     if (!obj)
         return NULL;

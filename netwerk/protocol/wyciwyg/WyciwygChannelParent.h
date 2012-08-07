@@ -19,14 +19,12 @@ namespace net {
 class WyciwygChannelParent : public PWyciwygChannelParent
                            , public nsIStreamListener
                            , public nsIInterfaceRequestor
-                           , public nsILoadContext
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSILOADCONTEXT
 
   WyciwygChannelParent();
   virtual ~WyciwygChannelParent();
@@ -35,12 +33,7 @@ protected:
   virtual bool RecvInit(const IPC::URI& uri);
   virtual bool RecvAsyncOpen(const IPC::URI& original,
                              const PRUint32& loadFlags,
-                             const bool& haveLoadContext,
-                             const bool& isContent,
-                             const bool& usingPrivateBrowsing,
-                             const bool& isInBrowserElement,
-                             const PRUint32& appId,
-                             const nsCString& extendedOrigin);
+                             const IPC::SerializedLoadContext& loadContext);
   virtual bool RecvWriteToCacheEntry(const nsString& data);
   virtual bool RecvCloseCacheEntry(const nsresult& reason);
   virtual bool RecvSetCharsetAndSource(const PRInt32& source,
@@ -52,15 +45,7 @@ protected:
 
   nsCOMPtr<nsIWyciwygChannel> mChannel;
   bool mIPCClosed;
-
-  // fields for impersonating nsILoadContext
-  bool mHaveLoadContext             : 1;
-  bool mIsContent                   : 1;
-  bool mUsePrivateBrowsing          : 1;
-  bool mIsInBrowserElement          : 1;
-
-  PRUint32 mAppId;
-  nsCString mExtendedOrigin;
+  nsCOMPtr<nsILoadContext> mLoadContext;
 };
 
 } // namespace net

@@ -195,10 +195,10 @@ if test -n "$gonkdir" ; then
     CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/$ARCH_DIR/include -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/kernel/$ARCH_DIR -isystem $gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system -I$gonkdir/system/core/include -isystem $gonkdir/bionic -I$gonkdir/frameworks/base/include -I$gonkdir/external/dbus $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice -I$gonkdir/frameworks/base/services/camera"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS $STLPORT_CPPFLAGS"
-    LIBS="$LIBS $STLPORT_LIBS"
-
     dnl Add -llog by default, since we use it all over the place.
-    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ -llog $LDFLAGS"
+    LIBS="$LIBS -llog $STLPORT_LIBS"
+
+    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
     if test -z "$HOST_CPPFLAGS" ; then
@@ -1993,16 +1993,6 @@ case "$target" in
     MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
     ;;
 
-*-freebsd*)
-    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo elf` != "elf"; then
-	DLL_SUFFIX=".so.1.0"
-	DSO_LDOPTS="-shared"
-    fi
-    if test ! "$GNU_CC"; then
-	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
-    fi
-    ;;
-
 ia64*-hpux*)
     DLL_SUFFIX=".so"
     if test ! "$GNU_CC"; then
@@ -3194,11 +3184,9 @@ then
 	    *-*-freebsd*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
-			dnl -pthread links in -lc_r, so don't specify it explicitly.
+			dnl -pthread links in -lpthread, so don't specify it explicitly.
 			if test "$ac_cv_have_dash_pthread" = "yes"; then
 				_PTHREAD_LDFLAGS="-pthread"
-			else
-				_PTHREAD_LDFLAGS="-lc_r"
 			fi
 			;;
 
@@ -4800,13 +4788,13 @@ if test "$MOZ_ENABLE_GTK2" -o "$MOZ_ENABLE_QT"
 then
     AC_SUBST(MOZ_PANGO)
 
-    PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
-    AC_SUBST(MOZ_PANGO_CFLAGS)
-    AC_SUBST(MOZ_PANGO_LIBS)
     if test "$MOZ_PANGO"
     then
+        PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
+
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
+        AC_SUBST(MOZ_PANGO_CFLAGS)
+        AC_SUBST(MOZ_PANGO_LIBS)
         AC_DEFINE(MOZ_PANGO)
     else
         PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0)
@@ -6970,7 +6958,11 @@ else
   *-android*|*-linuxandroid*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
-    _WRAP_MALLOC=1
+    if test -z "$gonkdir"; then
+      _WRAP_MALLOC=1
+    else
+      AC_DEFINE(MOZ_MEMORY_GONK)
+    fi
     MOZ_GLUE_LDFLAGS=
     ;;
   *-*linux*)
@@ -7788,17 +7780,6 @@ MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
 
 if test "$USE_FC_FREETYPE"; then
-    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig,
-    [
-        if test "$MOZ_PANGO"; then
-            MOZ_PANGO_CFLAGS="$MOZ_PANGO_CFLAGS $_FONTCONFIG_CFLAGS"
-            MOZ_PANGO_LIBS="$MOZ_PANGO_LIBS $_FONTCONFIG_LIBS"
-        else
-            FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
-            FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
-        fi
-    ])
-
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
         dnl = Check for freetype2 and its functionality
@@ -7843,6 +7824,17 @@ if test "$USE_FC_FREETYPE"; then
     else
         AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
     fi
+
+    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig,
+    [
+        if test "$MOZ_PANGO"; then
+            MOZ_PANGO_CFLAGS="$MOZ_PANGO_CFLAGS $_FONTCONFIG_CFLAGS"
+            MOZ_PANGO_LIBS="$MOZ_PANGO_LIBS $_FONTCONFIG_LIBS"
+        else
+            FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
+            FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
+        fi
+    ])
 fi
 
 dnl ========================================================
@@ -8990,7 +8982,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
 fi
 ac_configure_args="$ac_configure_args --with-dist-dir=../../dist"
 ac_configure_args="$ac_configure_args --prefix=$dist"
-ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
 fi

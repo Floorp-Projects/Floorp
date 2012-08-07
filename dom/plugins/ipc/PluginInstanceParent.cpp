@@ -12,12 +12,12 @@
 #include "StreamNotifyParent.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
-#include "mozilla/unused.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxSharedImageSurface.h"
 #include "nsNPAPIPluginInstance.h"
+#include "mozilla/StandardInteger.h" // for intptr_t
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -222,10 +222,10 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* 
 #elif defined(XP_MACOSX)
     intptr_t id;
 #elif defined(ANDROID)
-#warning Need Android impl
+    // TODO: Need Android impl
     int id;
 #elif defined(MOZ_WIDGET_QT)
-#  warning Need Qt non X impl
+    // TODO: Need Qt non X impl
     int id;
 #else
 #warning Implement me
@@ -331,9 +331,11 @@ bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginWindow(
     const bool& windowed, NPError* result)
 {
-    NPBool isWindowed = windowed;
+    // Yes, we are passing a boolean as a void*.  We have to cast to intptr_t
+    // first to avoid gcc warnings about casting to a pointer from a
+    // non-pointer-sized integer.
     *result = mNPNIface->setvalue(mNPP, NPPVpluginWindowBool,
-                                  (void*)isWindowed);
+                                  (void*)(intptr_t)windowed);
     return true;
 }
 
@@ -341,9 +343,8 @@ bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginTransparent(
     const bool& transparent, NPError* result)
 {
-    NPBool isTransparent = transparent;
     *result = mNPNIface->setvalue(mNPP, NPPVpluginTransparentBool,
-                                  (void*)isTransparent);
+                                  (void*)(intptr_t)transparent);
     return true;
 }
 
@@ -352,7 +353,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
     const bool& useDOMForCursor, NPError* result)
 {
     *result = mNPNIface->setvalue(mNPP, NPPVpluginUsesDOMForCursorBool,
-                                  (void*)(NPBool)useDOMForCursor);
+                                  (void*)(intptr_t)useDOMForCursor);
     return true;
 }
 
@@ -1020,7 +1021,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
             mIOSurface = MacIOSurface::CreateIOSurface(window.width, window.height);
-        } else if (mShWidth * mShHeight != window.width * window.height) {
+        } else if (uint32_t(mShWidth * mShHeight) != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {
                 DeallocShmem(mShSurface);
                 mShWidth = 0;

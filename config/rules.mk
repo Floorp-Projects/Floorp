@@ -32,7 +32,7 @@ ifdef SDK_HEADERS
 EXPORTS += $(SDK_HEADERS)
 endif
 
-REPORT_BUILD = @echo $(notdir $<)
+REPORT_BUILD = $(info $(notdir $<))
 
 ifeq ($(OS_ARCH),OS2)
 EXEC			=
@@ -45,12 +45,18 @@ ifdef SYSTEM_LIBXUL
   SKIP_COPY_XULRUNNER=1
 endif
 
-# ELOG prints out failed command when building silently (gmake -s).
+# ELOG prints out failed command when building silently (gmake -s). Pymake
+# prints out failed commands anyway, so ELOG just makes things worse by
+# forcing shell invocations.
+ifndef .PYMAKE
 ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
-endif
+endif # -s
+else
+  ELOG :=
+endif # ifndef .PYMAKE
 
 _VPATH_SRCS = $(abspath $<)
 
@@ -101,7 +107,7 @@ ifdef CPP_UNIT_TESTS
 CPPSRCS += $(CPP_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 INCLUDES += -I$(DIST)/include/testing
-LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS)
+LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS) $(if $(JS_SHARED_LIBRARY),,$(MOZ_ZLIB_LIBS))
 
 # ...and run them the usual way
 check::
@@ -336,8 +342,8 @@ XPIDL_GEN_DIR		= _xpidlgen
 ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
 # makes the make -s output easier to read.  Echo -n does not work on all
-# platforms, but we can trick sed into doing it.
-UPDATE_TITLE = sed -e "s!Y!$(1) in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2)!" $(MOZILLA_DIR)/config/xterm.str;
+# platforms, but we can trick printf into doing it.
+UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2) ;
 endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory)
@@ -1226,17 +1232,9 @@ PREF_PPFLAGS = --line-endings=crlf
 endif
 
 ifndef NO_DIST_INSTALL
-$(FINAL_TARGET)/$(PREF_DIR):
-	$(NSINSTALL) -D $@
-
-libs:: $(FINAL_TARGET)/$(PREF_DIR)
-libs:: $(PREF_JS_EXPORTS)
-	$(EXIT_ON_ERROR)  \
-	for i in $^; do \
-	  dest=$(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
-	  $(RM) -f $$dest; \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
-	done
+PREF_JS_EXPORTS_PATH := $(FINAL_TARGET)/$(PREF_DIR)
+PREF_JS_EXPORTS_FLAGS := $(PREF_PPFLAGS)
+PP_TARGETS += PREF_JS_EXPORTS
 endif
 endif
 
@@ -1316,6 +1314,7 @@ libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 	$(call install_cmd,$(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components)
 ifndef NO_INTERFACES_MANIFEST
+libs:: $(call mkdir_deps,$(FINAL_TARGET)/components)
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "manifest components/interfaces.manifest"
 endif
@@ -1366,22 +1365,15 @@ endif
 endif
 
 ifdef EXTRA_PP_COMPONENTS
-libs:: $(EXTRA_PP_COMPONENTS)
 ifndef NO_DIST_INSTALL
-	$(EXIT_ON_ERROR) \
-	$(NSINSTALL) -D $(FINAL_TARGET)/components; \
-	for i in $^; do \
-	  fname=`basename $$i`; \
-	  dest=$(FINAL_TARGET)/components/$${fname}; \
-	  $(RM) -f $$dest; \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
-	done
+EXTRA_PP_COMPONENTS_PATH := $(FINAL_TARGET)/components
+PP_TARGETS += EXTRA_PP_COMPONENTS
 endif
 endif
 
 EXTRA_MANIFESTS = $(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS))
 ifneq (,$(EXTRA_MANIFESTS))
-libs::
+libs:: $(call mkdir_deps,$(FINAL_TARGET))
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest $(patsubst %,"manifest components/%",$(notdir $(EXTRA_MANIFESTS)))
 endif
 
@@ -1399,17 +1391,10 @@ endif
 endif
 
 ifdef EXTRA_PP_JS_MODULES
-libs:: $(EXTRA_PP_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(EXIT_ON_ERROR) \
-	$(NSINSTALL) -D $(JS_MODULES_PATH); \
-	for i in $^; do \
-	  dest=$(JS_MODULES_PATH)/`basename $$i`; \
-	  $(RM) -f $$dest; \
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
-	done
+EXTRA_PP_JS_MODULES_PATH := $(JS_MODULES_PATH)
+PP_TARGETS += EXTRA_PP_JS_MODULES
 endif
-
 endif
 
 ################################################################################
@@ -1480,31 +1465,15 @@ endif
 endif
 
 ifneq ($(DIST_FILES),)
-$(DIST)/bin:
-	$(NSINSTALL) -D $@
-
-libs:: $(DIST)/bin
-libs:: $(DIST_FILES)
-	@$(EXIT_ON_ERROR) \
-	for f in $^; do \
-	  dest=$(FINAL_TARGET)/`basename $$f`; \
-	  $(RM) -f $$dest; \
-	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
-	    $(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
-	    $$f > $$dest; \
-	done
+DIST_FILES_PATH := $(FINAL_TARGET)
+DIST_FILES_FLAGS := $(XULAPP_DEFINES)
+PP_TARGETS += DIST_FILES
 endif
 
 ifneq ($(DIST_CHROME_FILES),)
-libs:: $(DIST_CHROME_FILES)
-	@$(EXIT_ON_ERROR) \
-	for f in $^; do \
-	  dest=$(FINAL_TARGET)/chrome/`basename $$f`; \
-	  $(RM) -f $$dest; \
-	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
-	    $(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
-	    $$f > $$dest; \
-	done
+DIST_CHROME_FILES_PATH := $(FINAL_TARGET)/chrome
+DIST_CHROME_FILES_FLAGS := $(XULAPP_DEFINES)
+PP_TARGETS += DIST_CHROME_FILES
 endif
 
 ifneq ($(XPI_PKGNAME),)
@@ -1663,6 +1632,58 @@ endif
 endif
 
 ################################################################################
+# Install/copy rules
+#
+# The INSTALL_TARGETS variable contains a list of all install target
+# categories. Each category defines a list of files, an install destination,
+# and whether the files are executables or not.
+#
+# FOO_FILES := foo bar
+# FOO_EXECUTABLES := baz
+# FOO_DEST := target_path
+# INSTALL_TARGETS += FOO
+define install_file_template
+libs:: $(2)/$(notdir $(1))
+$(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2))
+	$(INSTALL) $(3) $$< $${@D}
+endef
+$(foreach category,$(INSTALL_TARGETS),\
+  $(if $($(category)_DEST),,$(error Missing $(category)_DEST))\
+  $(foreach file,$($(category)_FILES),\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS1)))\
+  )\
+  $(foreach file,$($(category)_EXECUTABLES),\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS2)))\
+  )\
+)
+
+################################################################################
+# Preprocessing rules
+#
+# The PP_TARGETS variable contains a list of all preprocessing target
+# categories. Each category defines a target path, and optional extra flags
+# like the following:
+#
+# FOO_PATH := target_path
+# FOO_FLAGS := -Dsome_flag
+# PP_TARGETS += FOO
+
+# preprocess_file_template defines preprocessing rules.
+# $(call preprocess_file_template, source_file, target_path, extra_flags)
+define preprocess_file_template
+$(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2)) $$(GLOBAL_DEPS)
+	$$(RM) $$@
+	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(3) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) $$< > $$@
+libs:: $(2)/$(notdir $(1))
+endef
+
+$(foreach category,$(PP_TARGETS),\
+  $(foreach file,$($(category)),\
+    $(eval $(call preprocess_file_template,$(file),$($(category)_PATH),$($(category)_FLAGS)))\
+   )\
+ )
+
+################################################################################
 # Special gmake rules.
 ################################################################################
 
@@ -1761,4 +1782,3 @@ include $(topsrcdir)/config/makefiles/autotargets.mk
 ifneq ($(NULL),$(AUTO_DEPS))
   default all libs tools export:: $(AUTO_DEPS)
 endif
-

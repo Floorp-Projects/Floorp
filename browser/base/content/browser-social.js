@@ -113,7 +113,7 @@ let SocialUI = {
 
     // Check that the associated document's origin is in our whitelist
     let prePath = targetDoc.documentURIObject.prePath;
-    let whitelist = Services.prefs.getCharPref("browser.social.whitelist");
+    let whitelist = Services.prefs.getCharPref("social.activation.whitelist");
     if (whitelist.split(",").indexOf(prePath) == -1)
       return;
 

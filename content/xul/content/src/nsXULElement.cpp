@@ -781,7 +781,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
         controlElement->GetSelectedCount(&length);
         for (PRInt32 i = 0; i < length; i++) {
           nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
-          controlElement->GetSelectedItem(i, getter_AddRefs(node));
+          controlElement->MultiGetSelectedItem(i, getter_AddRefs(node));
           // we need to QI here to do an XPCOM-correct pointercompare
           nsCOMPtr<nsIDOMElement> selElem = do_QueryInterface(node);
           if (selElem == oldKidElem &&

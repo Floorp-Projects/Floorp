@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ActivityResultHandler;
+
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;

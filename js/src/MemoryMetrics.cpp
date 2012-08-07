@@ -22,11 +22,17 @@ namespace JS {
 
 using namespace js;
 
+typedef HashSet<ScriptSource *, DefaultHasher<ScriptSource *>, SystemAllocPolicy> SourceSet;
+
 struct IteratorClosure
 {
   RuntimeStats *rtStats;
   ObjectPrivateVisitor *opv;
+  SourceSet seenSources;
   IteratorClosure(RuntimeStats *rt, ObjectPrivateVisitor *v) : rtStats(rt), opv(v) {}
+  bool init() {
+      return seenSources.init();
+  }
 };
 
 size_t
@@ -177,6 +183,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->mjitData += script->ion->size();
 # endif
 #endif
+
+        ScriptSource *ss = script->scriptSource();
+        SourceSet::AddPtr entry = closure->seenSources.lookupForAdd(ss);
+        if (!entry) {
+            closure->seenSources.add(entry, ss); // Not much to be done on failure.
+            rtStats->runtime.scriptSources += ss->sizeOfIncludingThis(rtStats->mallocSizeOf);
+        }
         break;
     }
     case JSTRACE_IONCODE:
@@ -217,6 +230,9 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *
 
     // Take the per-compartment measurements.
     IteratorClosure closure(rtStats, opv);
+    if (!closure.init())
+        return false;
+    rtStats->runtime.scriptSources = 0;
     IterateCompartmentsArenasCells(rt, &closure, StatsCompartmentCallback,
                                    StatsArenaCallback, StatsCellCallback);
 

@@ -7,6 +7,7 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 relativesrcdir = @relativesrcdir@
 VPATH = @srcdir@
+FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -31,8 +32,7 @@ LOCAL_INCLUDES += \
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-# Bug 770046 - Cannot fail.
-# MOCHITEST_FILES = test_ipc.html
+MOCHITEST_FILES = test_ipc.html
 
 # Need to enable these tests sometime soon.
 #XPCSHELL_TESTS = unit

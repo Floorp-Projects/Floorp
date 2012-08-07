@@ -78,6 +78,7 @@ class MarionetteTestResult(unittest._TextTestResult):
                 else:
                     self.perfdata.join_results(testcase.perfdata)
 
+
 class MarionetteTextTestRunner(unittest.TextTestRunner):
 
     resultclass = MarionetteTestResult
@@ -309,6 +310,9 @@ class MarionetteTestRunner(object):
         if self.marionette.emulator:
             self.marionette.emulator.close()
             self.marionette.emulator = None
+        if self.marionette.instance:
+            self.marionette.instance.close()
+            self.marionette.instance = None
         self.marionette = None
 
         if self.xml_output:
@@ -364,10 +368,18 @@ class MarionetteTestRunner(object):
                     self.logger.info("Using machine_name: %s" % machine_name)
                 os_name = platform.system()
                 os_version = platform.release()
-                self.perfrequest = datazilla.DatazillaRequest(server=options.perfserv, machine_name=machine_name, os=os_name, os_version=os_version,
-                                         platform=manifest.get("platform")[0], build_name=manifest.get("build_name")[0], 
-                                         version=manifest.get("version")[0], revision=self.revision,
-                                         branch=manifest.get("branch")[0], id=os.getenv('BUILD_ID'), test_date=int(time.time()))
+                self.perfrequest = datazilla.DatazillaRequest(
+                             server=options.perfserv,
+                             machine_name=machine_name,
+                             os=os_name,
+                             os_version=os_version,
+                             platform=manifest.get("platform")[0],
+                             build_name=manifest.get("build_name")[0],
+                             version=manifest.get("version")[0],
+                             revision=self.revision,
+                             branch=manifest.get("branch")[0],
+                             id=os.getenv('BUILD_ID'),
+                             test_date=int(time.time()))
 
             manifest_tests = manifest.get(**testargs)
 

@@ -261,9 +261,9 @@ class KeyStringifier<uint32_t> {
 };
 
 template<>
-class KeyStringifier<jsid> {
+class KeyStringifier<HandleId> {
   public:
-    static JSString *toString(JSContext *cx, jsid id) {
+    static JSString *toString(JSContext *cx, HandleId id) {
         return IdToString(cx, id);
     }
 };
@@ -274,9 +274,9 @@ class KeyStringifier<jsid> {
  */
 template<typename KeyType>
 static bool
-PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, MutableHandleValue vp, StringifyContext *scx)
+PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleValue vp, StringifyContext *scx)
 {
-    JSString *keyStr = NULL;
+    RootedString keyStr(cx);
 
     /* Step 2. */
     if (vp.get().isObject()) {
@@ -417,7 +417,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
         RootedValue outputValue(cx);
         if (!obj->getGeneric(cx, id, &outputValue))
             return false;
-        if (!PreprocessValue(cx, obj, id.get(), &outputValue, scx))
+        if (!PreprocessValue(cx, obj, HandleId(id), &outputValue, scx))
             return false;
         if (IsFilteredValue(outputValue))
             continue;
@@ -737,7 +737,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     if (!scx.init())
         return false;
 
-    if (!PreprocessValue(cx, wrapper, emptyId.get(), vp, &scx))
+    if (!PreprocessValue(cx, wrapper, HandleId(emptyId), vp, &scx))
         return false;
     if (IsFilteredValue(vp))
         return true;
@@ -747,7 +747,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
 
 /* ES5 15.12.2 Walk. */
 static bool
-Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, MutableHandleValue vp)
+Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -830,7 +830,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Mu
     }
 
     /* Step 3. */
-    JSString *key = IdToString(cx, name);
+    RootedString key(cx, IdToString(cx, name));
     if (!key)
         return false;
 
@@ -850,7 +850,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Mu
 }
 
 static bool
-Revive(JSContext *cx, const Value &reviver, MutableHandleValue vp)
+Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
 {
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!obj)

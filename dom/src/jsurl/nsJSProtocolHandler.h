@@ -63,6 +63,8 @@ protected:
 class nsJSURI : public nsSimpleURI
 {
 public:
+    using nsSimpleURI::Read;
+    using nsSimpleURI::Write;
 
     nsJSURI() {}
 

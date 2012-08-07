@@ -112,8 +112,10 @@ Bindings::lookup(JSContext *cx, PropertyName *name) const
     if (!lastBinding)
         return BindingIter::Init(this, NULL);
 
+    const Bindings *self = this;
+    SkipRoot skipSelf(cx, &self);
     Shape **_;
-    return BindingIter::Init(this, Shape::search(cx, lastBinding, NameToId(name), &_));
+    return BindingIter::Init(self, Shape::search(cx, lastBinding, NameToId(name), &_));
 }
 
 unsigned
@@ -583,10 +585,9 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             JS_ASSERT(enclosingScript);
             ss = enclosingScript->scriptSource();
         }
+        ScriptSourceHolder ssh(cx->runtime, ss);
         script = JSScript::Create(cx, enclosingScope, !!(scriptBits & (1 << SavedCallerFun)),
                                   options, /* staticLevel = */ 0, ss, 0, 0);
-        if (scriptBits & (1 << OwnSource))
-            ss->attachToRuntime(cx->runtime);
         if (!script || !JSScript::partiallyInit(cx, script,
                                                 length, nsrcnotes, natoms, nobjects,
                                                 nregexps, ntrynotes, nconsts, nClosedArgs,
@@ -1093,7 +1094,6 @@ void
 SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
 {
     JS_ASSERT(userTok == tok);
-    JS_ASSERT(!tok->ss->onRuntime());
     PR_Lock(lock);
     if (state == COMPRESSING)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
@@ -1130,11 +1130,7 @@ void
 JSScript::setScriptSource(JSContext *cx, ScriptSource *ss)
 {
     JS_ASSERT(ss);
-#ifdef JSGC_INCREMENTAL
-    // During IGC, we need to barrier writing to scriptSource_.
-    if (cx->runtime->gcIncrementalState != NO_INCREMENTAL && cx->runtime->gcIsFull)
-        ss->mark();
-#endif
+    ss->incref();
     scriptSource_ = ss;
 }
 
@@ -1291,21 +1287,10 @@ SourceCompressionToken::abort()
 }
 
 void
-ScriptSource::attachToRuntime(JSRuntime *rt)
-{
-    JS_ASSERT(!onRuntime());
-    next = rt->scriptSources;
-    rt->scriptSources = this;
-    onRuntime_ = true;
-}
-
-void
 ScriptSource::destroy(JSRuntime *rt)
 {
     JS_ASSERT(ready());
-    JS_ASSERT(onRuntime());
     rt->free_(data.compressed);
-    onRuntime_ = marked = false;
 #ifdef DEBUG
     ready_ = false;
 #endif
@@ -1315,31 +1300,11 @@ ScriptSource::destroy(JSRuntime *rt)
 size_t
 ScriptSource::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    JS_ASSERT(onRuntime());
     JS_ASSERT(ready());
-    // data is a union, but both members are pointers to allocated memory, so
-    // just using compressed will work.
-    return mallocSizeOf(this) + mallocSizeOf(data.compressed);
-}
 
-void
-ScriptSource::sweep(JSRuntime *rt)
-{
-    JS_ASSERT(rt->gcIsFull);
-    ScriptSource *next = rt->scriptSources, **prev = &rt->scriptSources;
-    while (next) {
-        ScriptSource *cur = next;
-        next = cur->next;
-        JS_ASSERT(cur->ready());
-        JS_ASSERT(cur->onRuntime());
-        if (cur->marked) {
-            cur->marked = false;
-            prev = &cur->next;
-        } else {
-            *prev = next;
-            cur->destroy(rt);
-        }
-    }
+    // data is a union, but both members are pointers to allocated memory or
+    // NULL, so just using compressed will work.
+    return mallocSizeOf(this) + mallocSizeOf(data.compressed);
 }
 
 template<XDRMode mode>
@@ -1957,6 +1922,7 @@ JSScript::finalize(FreeOp *fop)
     destroyScriptCounts(fop);
     destroySourceMap(fop);
     destroyDebugScript(fop);
+    scriptSource_->decref(fop->runtime());
 
     if (data) {
         JS_POISON(data, 0xdb, computedSizeOfData());
@@ -2607,13 +2573,8 @@ JSScript::markChildren(JSTracer *trc)
     if (enclosingScope_)
         MarkObject(trc, &enclosingScope_, "enclosing");
 
-    if (IS_GC_MARKING_TRACER(trc)) {
-        if (filename)
-            MarkScriptFilename(trc->runtime, filename);
-
-        if (trc->runtime->gcIsFull)
-            scriptSource_->mark();
-    }
+    if (IS_GC_MARKING_TRACER(trc) && filename)
+        MarkScriptFilename(trc->runtime, filename);
 
     bindings.trace(trc);
 
