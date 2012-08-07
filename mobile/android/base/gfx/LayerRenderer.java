@@ -145,14 +145,12 @@ public class LayerRenderer {
     public LayerRenderer(LayerView view) {
         mView = view;
 
-        LayerController controller = view.getController();
-
-        CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
+        CairoImage backgroundImage = new BufferedCairoImage(view.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
 
         mCheckerboardLayer = ScreenshotLayer.create();
 
-        CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
+        CairoImage shadowImage = new BufferedCairoImage(view.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
 
         mHorizScrollLayer = ScrollbarLayer.create(this, false);

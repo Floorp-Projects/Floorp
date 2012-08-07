@@ -6,8 +6,11 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.R;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
@@ -235,6 +238,20 @@ public class LayerView extends FrameLayout {
 
     public GLController getGLController() {
         return mGLController;
+    }
+
+    private Bitmap getDrawable(int resId) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        return BitmapFactory.decodeResource(getContext().getResources(), resId, options);
+    }
+
+    Bitmap getBackgroundPattern() {
+        return getDrawable(R.drawable.tabs_tray_selected_bg);
+    }
+
+    Bitmap getShadowPattern() {
+        return getDrawable(R.drawable.shadow);
     }
 
     private void onSizeChanged(int width, int height) {
