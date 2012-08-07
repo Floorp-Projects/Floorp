@@ -2725,19 +2725,9 @@ nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetUnicodeBidi()
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  PRInt32 intValue = GetStyleTextReset()->mUnicodeBidi;
-
-  if (NS_STYLE_UNICODE_BIDI_NORMAL == intValue) {
-    val->SetIdent(eCSSKeyword_normal);
-  } else {
-    nsAutoString unicodeBidiString;
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_unicode_bidi, intValue,
-                                       NS_STYLE_UNICODE_BIDI_EMBED,
-                                       NS_STYLE_UNICODE_BIDI_PLAINTEXT,
-                                       unicodeBidiString);
-    val->SetString(unicodeBidiString);
-  }
-
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleTextReset()->mUnicodeBidi,
+                                   nsCSSProps::kUnicodeBidiKTable));
   return val;
 }
 

@@ -828,21 +828,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                            aResult);
       }
     }
-    else if (eCSSProperty_unicode_bidi == aProperty) {
-      MOZ_STATIC_ASSERT(NS_STYLE_UNICODE_BIDI_NORMAL == 0,
-                        "unicode-bidi style constants not as expected");
-      PRInt32 intValue = GetIntValue();
-      if (NS_STYLE_UNICODE_BIDI_NORMAL == intValue) {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
-                           aResult);
-      } else {
-        nsStyleUtil::AppendBitmaskCSSValue(
-          aProperty, intValue,
-          NS_STYLE_UNICODE_BIDI_EMBED,
-          NS_STYLE_UNICODE_BIDI_PLAINTEXT,
-          aResult);
-      }
-    }
     else {
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, GetIntValue());
       AppendASCIItoUTF16(name, aResult);
