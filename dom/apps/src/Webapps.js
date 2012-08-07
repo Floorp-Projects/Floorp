@@ -58,6 +58,14 @@ WebappsRegistry.prototype = {
                       mgmt: 'r'
                      },
 
+  /* Fires errors on the request object. Also fires a notification if preventDefault was
+   * not called on the event
+   */
+  _fireError: function fireError(aRequest, aError, aTopic) {
+    if (!Services.DOMRequest.fireError(aRequest, aError))
+      Services.obs.notifyObservers(this, aTopic, aError);
+  },
+
   /** from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
    * only the name property is mandatory
    */
@@ -87,7 +95,7 @@ WebappsRegistry.prototype = {
                                                                      app.installOrigin, app.installTime));
         break;
       case "Webapps:Install:Return:KO":
-        Services.DOMRequest.fireError(req, msg.error || "DENIED");
+        this._fireError(req, msg.error || "DENIED", "webapps-install-error");
         break;
       case "Webapps:GetSelf:Return:OK":
         if (msg.apps.length) {
@@ -132,7 +140,7 @@ WebappsRegistry.prototype = {
         try {
           let manifest = JSON.parse(xhr.responseText, installOrigin);
           if (!this.checkManifest(manifest, installOrigin)) {
-            Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+            this._fireError(request, "INVALID_MANIFEST", "webapps-install-error");
           } else {
             let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
             let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
@@ -147,16 +155,16 @@ WebappsRegistry.prototype = {
                                                               requestID: requestID });
           }
         } catch(e) {
-          Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
+          this._fireError(request, "MANIFEST_PARSE_ERROR", "webapps-install-error");
         }
       }
       else {
-        Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
+        this._fireError(request, "MANIFEST_URL_ERROR", "webapps-install-error");
       }      
     }).bind(this), false);
 
     xhr.addEventListener("error", (function() {
-      Services.DOMRequest.fireError(request, "NETWORK_ERROR");
+      this._fireError(request, "NETWORK_ERROR", "webapps-install-error");
     }).bind(this), false);
 
     xhr.send(null);
