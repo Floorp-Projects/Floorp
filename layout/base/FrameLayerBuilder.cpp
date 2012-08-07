@@ -2827,9 +2827,9 @@ FrameLayerBuilder::CheckDOMModified()
 
 #ifdef MOZ_DUMP_PAINTING
 /* static */ void
-FrameLayerBuilder::DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile)
+FrameLayerBuilder::DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile, bool aDumpHtml)
 {
-  aManager->Dump(aFile);
+  aManager->Dump(aFile, "", aDumpHtml);
 }
 #endif
 
