@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
@@ -154,7 +153,6 @@ abstract public class GeckoApp
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
 
-    private LayerController mLayerController;
     private GeckoLayerClient mLayerClient;
     private AbsoluteLayout mPluginContainer;
 
@@ -856,10 +854,10 @@ abstract public class GeckoApp
                     tab.setCheckerboardColor(Color.WHITE);
                 }
 
-                // Sync up the LayerController and the tab if the tab's
+                // Sync up the GeckoLayerClient and the tab if the tab's
                 // currently displayed.
-                if (getLayerController() != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    getLayerController().setCheckerboardColor(tab.getCheckerboardColor());
+                if (getLayerClient() != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    getLayerClient().setCheckerboardColor(tab.getCheckerboardColor());
                 }
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
@@ -1002,10 +1000,10 @@ abstract public class GeckoApp
                 if (tab == null)
                     return;
                 tab.setZoomConstraints(new ZoomConstraints(message));
-                // Sync up the LayerController and the tab if the tab's currently displayed.
-                LayerController controller = getLayerController();
-                if (controller != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    controller.setZoomConstraints(tab.getZoomConstraints());
+                // Sync up the GeckoLayerClient and the tab if the tab is currently displayed.
+                GeckoLayerClient layerClient = getLayerClient();
+                if (layerClient != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    layerClient.setZoomConstraints(tab.getZoomConstraints());
                 }
             } else if (event.equals("Tab:HasTouchListener")) {
                 int tabId = message.getInt("tabID");
@@ -1014,7 +1012,7 @@ abstract public class GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         if (Tabs.getInstance().isSelectedTab(tab))
-                            mLayerController.getView().getTouchEventHandler().setWaitForTouchListeners(true);
+                            mLayerClient.getView().getTouchEventHandler().setWaitForTouchListeners(true);
                     }
                 });
             } else if (event.equals("Session:StatePurged")) {
@@ -1214,7 +1212,7 @@ abstract public class GeckoApp
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
         if (Tabs.getInstance().isSelectedTab(tab))
-            getLayerController().getView().getRenderer().resetCheckerboard();
+            getLayerClient().getView().getRenderer().resetCheckerboard();
         mMainHandler.post(new Runnable() {
             public void run() {
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
@@ -1351,14 +1349,14 @@ abstract public class GeckoApp
 
                 PluginLayer layer = (PluginLayer) tab.getPluginLayer(view);
                 if (layer == null) {
-                    layer = new PluginLayer(view, rect, mLayerController.getView().getRenderer().getMaxTextureSize());
+                    layer = new PluginLayer(view, rect, mLayerClient.getView().getRenderer().getMaxTextureSize());
                     tab.addPluginLayer(view, layer);
                 } else {
                     layer.reset(rect);
                     layer.setVisible(true);
                 }
 
-                mLayerController.getView().addLayer(layer);
+                mLayerClient.getView().addLayer(layer);
             }
         });
     }
@@ -1380,7 +1378,7 @@ abstract public class GeckoApp
         // a deadlock, see comment below in FullScreenHolder
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mLayerController.getView().setVisibility(View.VISIBLE);
+                mLayerClient.getView().setVisibility(View.VISIBLE);
             }
         });
 
@@ -1435,19 +1433,19 @@ abstract public class GeckoApp
     }
     
     private void hidePluginLayer(Layer layer) {
-        LayerView layerView = mLayerController.getView();
+        LayerView layerView = mLayerClient.getView();
         layerView.removeLayer(layer);
         layerView.requestRender();
     }
 
     private void showPluginLayer(Layer layer) {
-        LayerView layerView = mLayerController.getView();
+        LayerView layerView = mLayerClient.getView();
         layerView.addLayer(layer);
         layerView.requestRender();
     }
 
     public void requestRender() {
-        mLayerController.getView().requestRender();
+        mLayerClient.getView().requestRender();
     }
     
     public void hidePlugins(Tab tab) {
@@ -1663,23 +1661,9 @@ abstract public class GeckoApp
             cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         }
 
-        if (mLayerController == null) {
-            /*
-             * Create a layer client, but don't hook it up to the layer controller yet.
-             */
+        if (mLayerClient == null) {
             mLayerClient = new GeckoLayerClient(this);
-
-            /*
-             * Hook a placeholder layer client up to the layer controller so that the user can pan
-             * and zoom a cached screenshot of the previous page. This call will return null if
-             * there is no cached screenshot; in that case, we have no choice but to display a
-             * checkerboard.
-             *
-             * TODO: Fall back to a built-in screenshot of the Fennec Start page for a nice first-
-             * run experience, perhaps?
-             */
-            mLayerController = new LayerController(this);
-            mLayerController.setView((LayerView)findViewById(R.id.layer_view));
+            mLayerClient.setView((LayerView)findViewById(R.id.layer_view));
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -2096,8 +2080,6 @@ abstract public class GeckoApp
 
         deleteTempFiles();
 
-        if (mLayerController != null)
-            mLayerController.destroy();
         if (mLayerClient != null)
             mLayerClient.destroy();
         if (mDoorHangerPopup != null)
@@ -2565,7 +2547,6 @@ abstract public class GeckoApp
 
     /* This method is referenced by Robocop via reflection. */
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
-    public LayerController getLayerController() { return mLayerController; }
 
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
@@ -2611,10 +2592,10 @@ abstract public class GeckoApp
     }
 
     private void connectGeckoLayerClient() {
-        LayerController layerController = getLayerController();
-        layerController.setLayerClient(mLayerClient);
+        GeckoLayerClient layerClient = getLayerClient();
+        layerClient.notifyGeckoReady();
 
-        layerController.getView().getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
+        layerClient.getView().getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
             private PointF initialPoint = null;
 
             @Override
@@ -2699,7 +2680,7 @@ abstract public class GeckoApp
 
             mMainHandler.post(new Runnable() { 
                 public void run() {
-                    mLayerController.getView().setVisibility(View.INVISIBLE);
+                    mLayerClient.getView().setVisibility(View.INVISIBLE);
                 }
             });
         }
