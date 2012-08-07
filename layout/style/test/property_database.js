@@ -3387,8 +3387,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "embed", "bidi-override", "-moz-isolate", "-moz-plaintext", "-moz-isolate bidi-override", "bidi-override -moz-isolate" ],
-		invalid_values: [ "auto", "none", "normal embed", "normal bidi-override", "normal -moz-isolate", "normal -moz-plaintext", "embed normal", "embed -moz-isolate", "embed bidi-override", "embed -moz-plaintext", "bidi-override normal", "bidi-override embed", "bidi-override -moz-plaintext", "-moz-isolate normal", "-moz-isolate embed", "-moz-isolate -moz-plaintext", "-moz-plaintext normal", "-moz-plaintext embed", "-moz-plaintext bidi-override", "-moz-plaintext -moz-isolate" ]
+		other_values: [ "embed", "bidi-override", "-moz-isolate", "-moz-plaintext", "-moz-isolate-override" ],
+		invalid_values: [ "auto", "none" ]
 	},
 	"vertical-align": {
 		domProp: "verticalAlign",
