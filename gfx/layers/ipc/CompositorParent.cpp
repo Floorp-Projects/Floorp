@@ -323,6 +323,18 @@ CompositorParent::ScheduleTask(CancelableTask* task, int time)
 }
 
 void
+CompositorParent::NotifyShadowTreeTransaction()
+{
+  if (mLayerManager) {
+    ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+    if (shadow) {
+      shadow->NotifyShadowTreeTransaction();
+    }
+  }
+  ScheduleComposition();
+}
+
+void
 CompositorParent::ScheduleComposition()
 {
   if (mCurrentCompositeTask) {
@@ -887,6 +899,10 @@ CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
     SetShadowProperties(root);
   }
   ScheduleComposition();
+  ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+  if (shadow) {
+    shadow->NotifyShadowTreeTransaction();
+  }
 }
 
 PLayersParent*
@@ -1194,7 +1210,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, isFirstPaint);
 
-  sCurrentCompositor->ScheduleComposition();
+  sCurrentCompositor->NotifyShadowTreeTransaction();
 }
 
 void
