@@ -1370,6 +1370,7 @@ const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
   eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
   eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
   eCSSKeyword__moz_isolate, NS_STYLE_UNICODE_BIDI_ISOLATE,
+  eCSSKeyword__moz_isolate_override, NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE,
   eCSSKeyword__moz_plaintext, NS_STYLE_UNICODE_BIDI_PLAINTEXT,
   eCSSKeyword_UNKNOWN,-1
 };
