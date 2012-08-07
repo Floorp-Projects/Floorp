@@ -5,33 +5,22 @@
 #ifndef nsIContent_h___
 #define nsIContent_h___
 
-#include "nsCOMPtr.h" // for already_AddRefed
-#include "nsStringGlue.h"
-#include "nsCaseTreatment.h"
-#include "nsChangeHint.h"
-#include "nsINode.h"
-#include "nsIDocument.h" // for IsInHTMLDocument
-#include "nsCSSProperty.h"
+#include "nsCaseTreatment.h" // for enum, cannot be forward-declared
+#include "nsCOMPtr.h"        // for already_AddRefed in constructor
+#include "nsIDocument.h"     // for use in inline function (IsInHTMLDocument)
+#include "nsINode.h"         // for base class
 
 // Forward declarations
+class nsAString;
 class nsIAtom;
-class nsIDOMEvent;
-class nsIContent;
-class nsEventListenerManager;
 class nsIURI;
 class nsRuleWalker;
 class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
-class nsIDocShell;
 class nsIFrame;
-class nsISMILAttr;
-class nsIDOMCSSStyleDeclaration;
 
 namespace mozilla {
-namespace css {
-class StyleRule;
-} // namespace css
 namespace widget {
 struct IMEState;
 } // namespace widget

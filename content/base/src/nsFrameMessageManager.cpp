@@ -10,6 +10,7 @@
 #include "ContentChild.h"
 #include "ContentParent.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "nsJSUtils.h"

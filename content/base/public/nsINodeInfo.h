@@ -23,20 +23,19 @@
 #ifndef nsINodeInfo_h___
 #define nsINodeInfo_h___
 
-#include "nsISupports.h"
-#include "nsIAtom.h"
-#include "nsINameSpaceManager.h"
-#include "nsNodeInfoManager.h"
-#include "nsCOMPtr.h"
+#include "nsCOMPtr.h"            // for member
+#include "nsIAtom.h"             // for member (in nsCOMPtr)
+#include "nsINameSpaceManager.h" // for kNameSpaceID_*
+#include "nsISupports.h"         // for base class
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsDOMString.h"
 #endif
 
-// Forward declarations
 class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
+class nsNodeInfoManager;
 
 // IID for the nsINodeInfo interface
 #define NS_INODEINFO_IID      \

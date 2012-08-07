@@ -6,6 +6,7 @@
 #include "SVGAnimatedTransformList.h"
 #include "DOMSVGAnimatedTransformList.h"
 
+#include "nsISMILAnimationElement.h"
 #include "nsSMILValue.h"
 #include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"

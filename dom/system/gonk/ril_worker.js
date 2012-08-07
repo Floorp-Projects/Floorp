@@ -610,6 +610,11 @@ let RIL = {
    */
   iccInfo: {},
 
+  /**
+   * Application identification for apps in ICC.
+   */
+  aid: null,
+
   voiceRegistrationState: {},
   dataRegistrationState: {},
 
@@ -793,11 +798,16 @@ let RIL = {
    *
    * @param pin
    *        String containing the PIN.
+   * @param [optional] aid
+   *        AID value.
    */
   enterICCPIN: function enterICCPIN(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN, options);
-    Buf.writeUint32(1);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 1 : 2);
     Buf.writeString(options.pin);
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -806,11 +816,16 @@ let RIL = {
    *
    * @param pin
    *        String containing the PIN2.
+   * @param [optional] aid
+   *        AID value.
    */
   enterICCPIN2: function enterICCPIN2(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN2, options);
-    Buf.writeUint32(1);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 1 : 2);
     Buf.writeString(options.pin);
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -821,12 +836,17 @@ let RIL = {
    *        String containing the old PIN value
    * @param newPin
    *        String containing the new PIN value
+   * @param [optional] aid
+   *        AID value.
    */
   changeICCPIN: function changeICCPIN(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN, options);
-    Buf.writeUint32(2);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 2 : 3);
     Buf.writeString(options.pin);
     Buf.writeString(options.newPin);
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -837,12 +857,17 @@ let RIL = {
    *        String containing the old PIN2 value
    * @param newPin
    *        String containing the new PIN2 value
+   * @param [optional] aid
+   *        AID value.
    */
   changeICCPIN2: function changeICCPIN2(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN2, options);
-    Buf.writeUint32(2);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 2 : 3);
     Buf.writeString(options.pin);
     Buf.writeString(options.newPin);
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
   /**
@@ -852,13 +877,17 @@ let RIL = {
    *        String containing the PUK value.
    * @param newPin
    *        String containing the new PIN value.
-   *
+   * @param [optional] aid
+   *        AID value.
    */
    enterICCPUK: function enterICCPUK(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK, options);
-     Buf.writeUint32(2);
+     Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 2 : 3);
      Buf.writeString(options.puk);
      Buf.writeString(options.newPin);
+     if (!RILQUIRKS_V5_LEGACY) {
+       Buf.writeString(options.aid ? options.aid : this.aid);
+     }
      Buf.sendParcel();
    },
 
@@ -869,13 +898,17 @@ let RIL = {
    *        String containing the PUK2 value.
    * @param newPin
    *        String containing the new PIN2 value.
-   *
+   * @param [optional] aid
+   *        AID value.
    */
    enterICCPUK2: function enterICCPUK2(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK2, options);
-     Buf.writeUint32(2);
+     Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 2 : 3);
      Buf.writeString(options.puk);
      Buf.writeString(options.newPin);
+     if (!RILQUIRKS_V5_LEGACY) {
+       Buf.writeString(options.aid ? options.aid : this.aid);
+     }
      Buf.sendParcel();
    },
 
@@ -895,21 +928,26 @@ let RIL = {
   },
 
   /**
-   *  Query ICC facility lock.
+   * Query ICC facility lock.
    *
-   *  @param facility
-   *         One of ICC_CB_FACILITY_*.
-   *  @param password
-   *         Password for the facility, or "" if not required.
-   *  @param serviceClass
-   *         One of ICC_SERVICE_CLASS_*.
+   * @param facility
+   *        One of ICC_CB_FACILITY_*.
+   * @param password
+   *        Password for the facility, or "" if not required.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_*.
+   * @param [optional] aid
+   *        AID value.
    */
   queryICCFacilityLock: function queryICCFacilityLock(options) {
     Buf.newParcel(REQUEST_QUERY_FACILITY_LOCK, options);
-    Buf.writeUint32(3);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 3 : 4);
     Buf.writeString(options.facility);
     Buf.writeString(options.password);
     Buf.writeString(options.serviceClass.toString());
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -944,14 +982,19 @@ let RIL = {
    *        Password for the facility, or "" if not required.
    * @param serviceClass
    *        One of ICC_SERVICE_CLASS_*.
+   * @param [optional] aid
+   *        AID value.
    */
   setICCFacilityLock: function setICCFacilityLock(options) {
     Buf.newParcel(REQUEST_SET_FACILITY_LOCK, options);
-    Buf.writeUint32(4);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 3 : 4);
     Buf.writeString(options.facility);
     Buf.writeString(options.enabled ? "1" : "0");
     Buf.writeString(options.password);
     Buf.writeString(options.serviceClass.toString());
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -972,10 +1015,10 @@ let RIL = {
    *         Arbitrary integer parameters for the command.
    *  @param data
    *         String parameter for the command.
-   *  @param pin2 [optional]
+   *  @param pin2
    *         String containing the PIN2.
-   *  @param aid
-   *         String for the AID.
+   *  @param [optional] aid
+   *         AID value.
    */
   iccIO: function iccIO(options) {
     let token = Buf.newParcel(REQUEST_SIM_IO, options);
@@ -987,8 +1030,9 @@ let RIL = {
     Buf.writeUint32(options.p3);
     Buf.writeString(options.data);
     Buf.writeString(options.pin2 ? options.pin2 : null);
-    let appIndex = this.iccStatus.gsmUmtsSubscriptionAppIndex;
-    Buf.writeString(this.iccStatus.apps[appIndex].aid);
+    if (!RILQUIRKS_V5_LEGACY) {
+      Buf.writeString(options.aid ? options.aid : this.aid);
+    }
     Buf.sendParcel();
   },
 
@@ -1011,15 +1055,20 @@ let RIL = {
     this.sendDOMMessage(this.iccInfo);
   },
 
-  getIMSI: function getIMSI() {
+  /**
+   * Get IMSI.
+   *
+   * @param [optional] aid
+   *        AID value.
+   */
+  getIMSI: function getIMSI(aid) {
     if (RILQUIRKS_V5_LEGACY) {
       Buf.simpleRequest(REQUEST_GET_IMSI);
       return;
     }
     let token = Buf.newParcel(REQUEST_GET_IMSI);
     Buf.writeUint32(1);
-    let appIndex = this.iccStatus.gsmUmtsSubscriptionAppIndex;
-    Buf.writeString(this.iccStatus.apps[appIndex].aid);
+    Buf.writeString(aid ? aid : this.aid);
     Buf.sendParcel();
   },
 
@@ -1969,6 +2018,11 @@ let RIL = {
     if (this.cardState == newCardState) {
       return;
     }
+
+    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
+    // fetchICCRecords will need to read aid, so read aid here.
+    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
+    this.aid = iccStatus.apps[index].aid;
 
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
