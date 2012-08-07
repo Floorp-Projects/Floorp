@@ -160,6 +160,10 @@ public class PanZoomController
         return mTarget.getViewportMetrics();
     }
 
+    private ViewportMetrics getMutableMetrics() {
+        return new ViewportMetrics(getMetrics());
+    }
+
     // for debugging bug 713011; it can be taken out once that is resolved.
     private void checkMainThread() {
         if (mMainThread != Thread.currentThread()) {
@@ -315,7 +319,7 @@ public class PanZoomController
         if (mState == PanZoomState.NOTHING) {
             synchronized (mTarget.getLock()) {
                 ViewportMetrics validated = getValidViewportMetrics();
-                if (! (new ViewportMetrics(getMetrics())).fuzzyEquals(validated)) {
+                if (! getMutableMetrics().fuzzyEquals(validated)) {
                     // page size changed such that we are now in overscroll. snap to the
                     // the nearest valid viewport
                     mTarget.setViewportMetrics(validated);
@@ -540,7 +544,7 @@ public class PanZoomController
     }
 
     private void scrollBy(PointF point) {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(getMetrics());
+        ViewportMetrics viewportMetrics = getMutableMetrics();
         PointF origin = viewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
         viewportMetrics.setOrigin(origin);
@@ -565,7 +569,7 @@ public class PanZoomController
     private void bounce(ViewportMetrics metrics) {
         stopAnimationTimer();
 
-        ViewportMetrics bounceStartMetrics = new ViewportMetrics(getMetrics());
+        ViewportMetrics bounceStartMetrics = getMutableMetrics();
         if (bounceStartMetrics.fuzzyEquals(metrics)) {
             setState(PanZoomState.NOTHING);
             return;
@@ -790,7 +794,7 @@ public class PanZoomController
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
     private ViewportMetrics getValidViewportMetrics() {
-        return getValidViewportMetrics(new ViewportMetrics(getMetrics()));
+        return getValidViewportMetrics(getMutableMetrics());
     }
 
     private ViewportMetrics getValidViewportMetrics(ViewportMetrics viewportMetrics) {
@@ -980,7 +984,7 @@ public class PanZoomController
      * scale operation. You must hold the monitor while calling this.
      */
     private void scaleWithFocus(float zoomFactor, PointF focus) {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(getMetrics());
+        ViewportMetrics viewportMetrics = getMutableMetrics();
         viewportMetrics.scaleTo(zoomFactor, focus);
         mTarget.setViewportMetrics(viewportMetrics);
         mTarget.notifyLayerClientOfGeometryChange();
@@ -1088,7 +1092,7 @@ public class PanZoomController
 
         float finalZoom = viewport.width() / zoomToRect.width();
 
-        ViewportMetrics finalMetrics = new ViewportMetrics(getMetrics());
+        ViewportMetrics finalMetrics = getMutableMetrics();
         finalMetrics.setOrigin(new PointF(zoomToRect.left * finalMetrics.getZoomFactor(),
                                           zoomToRect.top * finalMetrics.getZoomFactor()));
         finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
