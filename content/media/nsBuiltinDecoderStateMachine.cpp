@@ -1008,7 +1008,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   // are unsafe to call with the decoder monitor held are documented as such
   // in nsAudioStream.h.
   nsRefPtr<nsAudioStream> audioStream = nsAudioStream::AllocateStream();
-  audioStream->Init(channels, rate, MOZ_AUDIO_DATA_FORMAT);
+  audioStream->Init(channels, rate);
 
   {
     // We must hold the monitor while setting mAudioStream or whenever we query
