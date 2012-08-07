@@ -222,11 +222,19 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   attribute nsIDOMEventListener onussdreceived;
 };
 
-[scriptable, uuid(46321d6e-bbce-4b7b-aa32-d17b6aa984fe)]
+[scriptable, uuid(6601c20e-337f-4286-8d6e-0990fc1c2372)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
-   * Indicates whether the device is connected to a mobile network.
+   * State of the connection.
+   *
+   * Possible values: 'notSearching', 'searching', 'denied', 'registered'.
+   * null if the state is unknown.
+   */
+  readonly attribute DOMString state;
+
+  /**
+   * Indicates whether the connection is ready. This may be different 
    */
   readonly attribute bool connected;
 
