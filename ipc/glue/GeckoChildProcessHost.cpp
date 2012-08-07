@@ -238,6 +238,20 @@ uint32 GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProce
   return base::GetCurrentProcessArchitecture();
 }
 
+void
+GeckoChildProcessHost::PrepareLaunch()
+{
+#ifdef MOZ_CRASHREPORTER
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
+#endif
+
+#ifdef XP_WIN
+  InitWindowsGroupID();
+#endif
+}
+
 #ifdef XP_WIN
 void GeckoChildProcessHost::InitWindowsGroupID()
 {
@@ -262,15 +276,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
 bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs, base::ProcessArchitecture arch)
 {
-#ifdef MOZ_CRASHREPORTER
-  if (CrashReporter::GetEnabled()) {
-    CrashReporter::OOPInit();
-  }
-#endif
-
-#ifdef XP_WIN
-  InitWindowsGroupID();
-#endif
+  PrepareLaunch();
 
   PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ? 
     PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
@@ -309,15 +315,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
 bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
-#ifdef MOZ_CRASHREPORTER
-  if (CrashReporter::GetEnabled()) {
-    CrashReporter::OOPInit();
-  }
-#endif
-
-#ifdef XP_WIN
-  InitWindowsGroupID();
-#endif
+  PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
@@ -333,6 +331,26 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
   }
 
   return true;
+}
+
+bool
+GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
+{
+  PrepareLaunch();
+
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+  ioLoop->PostTask(FROM_HERE,
+                   NewRunnableMethod(this,
+                                     &GeckoChildProcessHost::PerformAsyncLaunch,
+                                     aExtraOpts, base::GetCurrentProcessArchitecture()));
+
+  MonitorAutoLock lock(mMonitor);
+  while (mProcessState < PROCESS_CREATED) {
+    lock.Wait();
+  }
+  MOZ_ASSERT(mProcessState == PROCESS_ERROR || mChildProcessHandle);
+
+  return mProcessState < PROCESS_ERROR;
 }
 
 void
