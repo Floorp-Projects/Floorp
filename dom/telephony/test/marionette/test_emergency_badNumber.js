@@ -3,8 +3,7 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-const WHITELIST_PREF = "dom.telephony.app.phone.url";
-SpecialPowers.setCharPref(WHITELIST_PREF, window.location.href);
+SpecialPowers.addPermission("telephony", true, document);
 
 let telephony = window.navigator.mozTelephony;
 let number = "not a valid emergency number";
@@ -57,7 +56,7 @@ function dial() {
 }
 
 function cleanUp() {
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  SpecialPowers.removePermission("telephony", document);
   finish();
 }
 
