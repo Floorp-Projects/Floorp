@@ -17,8 +17,6 @@ public interface PanZoomTarget {
 
     public void setAnimationTarget(ViewportMetrics viewport);
     public void setViewportMetrics(ViewportMetrics viewport);
-
-    public void notifyLayerClientOfGeometryChange();
     public void setForceRedraw();
 
     public boolean post(Runnable action);
