@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS4(FTPChannelParent,
                    nsIStreamListener,
                    nsIParentChannel,
                    nsIInterfaceRequestor,
-                   nsIRequestObserver);
+                   nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
 // FTPChannelParent::PFTPChannelParent
