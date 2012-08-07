@@ -742,20 +742,6 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
     }
 }
 
-static bool
-WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
-{
-    XPCWrappedNativeProto *proto = wrapper->GetProto();
-    if (proto && proto->ClassIsMainThreadOnly())
-        return false;
-
-    // If the native participates in cycle collection then we know it can only
-    // be used on the main thread. In that case we assume the wrapped native
-    // can only be used on the main thread too.
-    nsXPCOMCycleCollectionParticipant* participant;
-    return NS_FAILED(CallQueryInterface(wrapper->Native(), &participant));
-}
-
 static inline void
 DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
                 nsCycleCollectionTraversalCallback &cb)
@@ -872,53 +858,26 @@ TraverseGCThing(TraverseSelect ts, void *p, JSGCTraceKind traceKind,
                 nsCycleCollectionTraversalCallback &cb)
 {
     MOZ_ASSERT(traceKind == js_GetGCThingTraceKind(p));
-    JSObject *obj = nullptr;
-    js::Class *clasp = nullptr;
-
-    // We do not want to add wrappers to the cycle collector if they're not
-    // explicitly marked as main thread only, because the cycle collector isn't
-    // able to deal with objects that might be used off of the main thread. We
-    // do want to explicitly mark them for cycle collection if the wrapper has
-    // an external reference, because the wrapper would mark the JS object if
-    // we did add the wrapper to the cycle collector.
-    bool dontTraverse = false;
-    bool markJSObject = false;
-    if (traceKind == JSTRACE_OBJECT) {
-        obj = static_cast<JSObject*>(p);
-        clasp = js::GetObjectClass(obj);
-
-        if (clasp == &XPC_WN_Tearoff_JSClass) {
-            XPCWrappedNative *wrapper =
-                static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(js::GetObjectParent(obj)));
-            dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
-        } else if (IS_WRAPPER_CLASS(clasp) && IS_WN_WRAPPER_OBJECT(obj)) {
-            XPCWrappedNative *wrapper =
-                static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(obj));
-            dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
-            markJSObject = dontTraverse && wrapper->HasExternalReference();
-        }
-    }
-
-    bool isMarked = markJSObject || !xpc_IsGrayGCThing(p);
+    bool isMarkedGray = xpc_IsGrayGCThing(p);
 
     if (ts == TRAVERSE_FULL)
-        DescribeGCThing(isMarked, p, traceKind, cb);
+        DescribeGCThing(!isMarkedGray, p, traceKind, cb);
 
     // If this object is alive, then all of its children are alive. For JS objects,
     // the black-gray invariant ensures the children are also marked black. For C++
     // objects, the ref count from this object will keep them alive. Thus we don't
     // need to trace our children, unless we are debugging using WantAllTraces.
-    if (isMarked && !cb.WantAllTraces())
+    if (!isMarkedGray && !cb.WantAllTraces())
         return;
 
     if (ts == TRAVERSE_FULL)
         NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
                               p, traceKind, cb);
  
-    if (traceKind != JSTRACE_OBJECT || dontTraverse)
-        return;
-
-    NoteGCThingXPCOMChildren(clasp, obj, cb);
+    if (traceKind == JSTRACE_OBJECT) {
+        JSObject *obj = static_cast<JSObject*>(p);
+        NoteGCThingXPCOMChildren(js::GetObjectClass(obj), obj, cb);
+    }
 }
 
 NS_METHOD

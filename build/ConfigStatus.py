@@ -99,28 +99,32 @@ class ConfigEnvironment(object):
     directory. It preprocesses files from the source directory and stores
     the result in the object directory.
 
-     There are two types of files: config files and config headers,
-     each treated through a different member function.
+    There are two types of files: config files and config headers,
+    each treated through a different member function.
 
-     Creating a ConfigEnvironment requires a few arguments:
-       - topsrcdir and topobjdir are, respectively, the top source and
-         the top object directory.
-       - defines is a list of (name, value) tuples. In autoconf, these are
-         set with AC_DEFINE and AC_DEFINE_UNQUOTED
-       - non_global_defines are a list of names appearing in defines above
-         that are not meant to be exported in ACDEFINES and ALLDEFINES (see
-         below)
-       - substs is a list of (name, value) tuples. In autoconf, these are
-         set with AC_SUBST.
+    Creating a ConfigEnvironment requires a few arguments:
+      - topsrcdir and topobjdir are, respectively, the top source and
+        the top object directory.
+      - defines is a list of (name, value) tuples. In autoconf, these are
+        set with AC_DEFINE and AC_DEFINE_UNQUOTED
+      - non_global_defines are a list of names appearing in defines above
+        that are not meant to be exported in ACDEFINES and ALLDEFINES (see
+        below)
+      - substs is a list of (name, value) tuples. In autoconf, these are
+        set with AC_SUBST.
 
-     ConfigEnvironment automatically defines two additional substs variables
-     from all the defines not appearing in non_global_defines:
-       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
-         preprocessor command lines. The order in which defines were given
-         when creating the ConfigEnvironment is preserved.
-       - ALLDEFINES contains the defines in the form #define NAME VALUE, in
-         sorted order, for use in config files, for an automatic listing of
-         defines.
+    ConfigEnvironment automatically defines two additional substs variables
+    from all the defines not appearing in non_global_defines:
+      - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
+        preprocessor command lines. The order in which defines were given
+        when creating the ConfigEnvironment is preserved.
+      - ALLDEFINES contains the defines in the form #define NAME VALUE, in
+        sorted order, for use in config files, for an automatic listing of
+        defines.
+    and another additional subst variable from all the other substs:
+      - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
+        order, for use in autoconf.mk. It includes ACDEFINES, but doesn't
+        include ALLDEFINES.
 
     ConfigEnvironment expects a "top_srcdir" subst to be set with the top
     source directory, in msys format on windows. It is used to derive a
@@ -136,6 +140,7 @@ class ConfigEnvironment(object):
         self.topobjdir = topobjdir
         global_defines = [name for name, value in defines if not name in non_global_defines]
         self.substs['ACDEFINES'] = ' '.join(["-D%s=%s" % (name, shell_escape(self.defines[name])) for name in global_defines])
+        self.substs['ALLSUBSTS'] = '\n'.join(sorted(["%s = %s" % (name, self.substs[name]) for name in self.substs]))
         self.substs['ALLDEFINES'] = '\n'.join(sorted(["#define %s %s" % (name, self.defines[name]) for name in global_defines]))
 
     def get_relative_srcdir(self, file):

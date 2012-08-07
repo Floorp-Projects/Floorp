@@ -16,6 +16,7 @@ import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.GeckoBackgroundThread;
 
 import org.json.JSONObject;
 
@@ -540,7 +541,8 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = v.setInputConnectionHandler();
+        mInputConnection = GeckoInputConnection.create(v);
+        v.setInputConnectionHandler(mInputConnection);
         layerController.notifyLayerClientOfGeometryChange();
     }
 

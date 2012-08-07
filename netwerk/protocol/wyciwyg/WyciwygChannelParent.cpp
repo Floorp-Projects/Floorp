@@ -11,17 +11,13 @@
 #include "nsCharsetSource.h"
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
+#include "mozilla/LoadContext.h"
 
 namespace mozilla {
 namespace net {
 
 WyciwygChannelParent::WyciwygChannelParent()
  : mIPCClosed(false)
- , mHaveLoadContext(false)
- , mIsContent(false)
- , mUsePrivateBrowsing(false)
- , mIsInBrowserElement(false)
- , mAppId(0)
 {
 #if defined(PR_LOGGING)
   if (!gWyciwygLog)
@@ -45,10 +41,9 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 // WyciwygChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS4(WyciwygChannelParent,
+NS_IMPL_ISUPPORTS3(WyciwygChannelParent,
                    nsIStreamListener,
                    nsIInterfaceRequestor,
-                   nsILoadContext,
                    nsIRequestObserver);
 
 //-----------------------------------------------------------------------------
@@ -86,12 +81,7 @@ WyciwygChannelParent::RecvInit(const IPC::URI& aURI)
 bool
 WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
                                     const PRUint32& aLoadFlags,
-                                    const bool& haveLoadContext,
-                                    const bool& isContent,
-                                    const bool& usePrivateBrowsing,
-                                    const bool& isInBrowserElement,
-                                    const PRUint32& appId,
-                                    const nsCString& extendedOrigin)
+                                    const IPC::SerializedLoadContext& loadContext)
 {
   nsCOMPtr<nsIURI> original(aOriginal);
 
@@ -110,14 +100,8 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
 
-  // fields needed to impersonate nsILoadContext
-  mHaveLoadContext = haveLoadContext;
-  mIsContent = isContent;
-  mUsePrivateBrowsing = usePrivateBrowsing;
-  mIsInBrowserElement = isInBrowserElement;
-  mAppId = appId;
-  mExtendedOrigin = extendedOrigin;
-  mChannel->SetNotificationCallbacks(this);
+  if (loadContext.IsNotNull())
+    mLoadContext = new LoadContext(loadContext);
 
   rv = mChannel->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))
@@ -267,87 +251,13 @@ NS_IMETHODIMP
 WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result)
 {
   // Only support nsILoadContext if child channel's callbacks did too
-  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && !mHaveLoadContext) {
-    return NS_NOINTERFACE;
+  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
+    NS_ADDREF(mLoadContext);
+    *result = static_cast<nsILoadContext*>(mLoadContext);
+    return NS_OK;
   }
 
   return QueryInterface(uuid, result);
-}
-
-//-----------------------------------------------------------------------------
-// WyciwygChannelParent::nsILoadContext
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetAssociatedWindow(nsIDOMWindow**)
-{
-  // can't support this in the parent process
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetTopWindow(nsIDOMWindow**)
-{
-  // can't support this in the parent process
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::IsAppOfType(PRUint32, bool*)
-{
-  // don't expect we need this in parent (Thunderbird/SeaMonkey specific?)
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetIsContent(bool *aIsContent)
-{
-  NS_ENSURE_ARG_POINTER(aIsContent);
-
-  *aIsContent = mIsContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
-{
-  NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
-
-  *aUsePrivateBrowsing = mUsePrivateBrowsing;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
-{
-  // We shouldn't need this on parent...
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
-
-  *aIsInBrowserElement = mIsInBrowserElement;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetAppId(PRUint32* aAppId)
-{
-  NS_ENSURE_ARG_POINTER(aAppId);
-
-  *aAppId = mAppId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WyciwygChannelParent::GetExtendedOrigin(nsIURI *aUri,
-                                        nsACString &aResult)
-{
-  aResult = mExtendedOrigin;
-  return NS_OK;
 }
 
 

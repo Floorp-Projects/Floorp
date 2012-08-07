@@ -2,21 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.util;
 
 import java.util.HashMap;
 import java.util.Map;
 
-class ActivityResultHandlerMap {
+public final class ActivityResultHandlerMap {
     private Map<Integer, ActivityResultHandler> mMap = new HashMap<Integer, ActivityResultHandler>();
     private int mCounter = 0;
 
-    synchronized int put(ActivityResultHandler handler) {
+    public synchronized int put(ActivityResultHandler handler) {
         mMap.put(mCounter, handler);
         return mCounter++;
     }
 
-    synchronized ActivityResultHandler getAndRemove(int i) {
+    public synchronized ActivityResultHandler getAndRemove(int i) {
         return mMap.remove(i);
     }
 }

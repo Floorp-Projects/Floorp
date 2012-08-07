@@ -1516,6 +1516,11 @@ public:
   static bool AreTransformAnimationsEnabled();
 
   /**
+   * Checks if we should warn about animations that can't be async
+   */
+  static bool IsAnimationLoggingEnabled();
+
+  /**
    * Checks if we should forcibly use nearest pixel filtering for the
    * background.
    */

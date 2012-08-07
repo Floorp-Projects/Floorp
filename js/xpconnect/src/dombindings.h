@@ -78,19 +78,8 @@ class NoBase {
 public:
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
                                   JSObject *receiver);
-    static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache)
-    {
-        *shouldCache = true;
-        return true;
-    }
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
     {
-        return true;
-    }
-    static bool nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found,
-                          JS::Value *vp)
-    {
-        *found = false;
         return true;
     }
     static nsISupports* nativeToSupports(nsISupports* aNative)
@@ -143,9 +132,6 @@ private:
     static size_t sProtoMethodsCount;
 
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
-
-    static js::Shape *getProtoShape(JSObject *obj);
-    static void setProtoShape(JSObject *obj, js::Shape *shape);
 
     static JSBool length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
@@ -213,12 +199,8 @@ public:
 
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope,
                                   JSObject *receiver);
-    static inline bool protoIsClean(JSContext *cx, JSObject *proto, bool *isClean);
-    static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache);
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
                                   JSPropertyDescriptor *desc);
-    static bool nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found,
-                          JS::Value *vp);
     static ListType *getNative(JSObject *proxy);
     static nsISupports* nativeToSupports(ListType* aNative)
     {

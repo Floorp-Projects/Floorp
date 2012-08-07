@@ -335,8 +335,10 @@ public class AboutHomeContent extends ScrollView
         mNumberOfCols = getResources().getInteger(R.integer.number_of_top_sites_cols);
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    /**
+     * Reinflates and updates all components of this view.
+     */
+    public void refresh() {
         if (mTopSitesAdapter != null)
             mTopSitesAdapter.notifyDataSetChanged();
 
@@ -344,8 +346,6 @@ public class AboutHomeContent extends ScrollView
         inflate();
         mTopSitesGrid.setAdapter(mTopSitesAdapter); // mTopSitesGrid is a new instance (from loadTopSites()).
         update(AboutHomeContent.UpdateFlags.ALL); // Refresh all elements.
-
-        super.onConfigurationChanged(newConfig);
     }
 
     @Override
