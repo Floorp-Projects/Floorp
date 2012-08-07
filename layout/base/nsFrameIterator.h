@@ -16,13 +16,6 @@ enum nsIteratorType {
   ePostOrder
 };
 
-enum FrameIteratorFlags {
-  FLAG_NONE = 0,
-  FLAG_LOCK_SCROLL = 1 << 1,
-  FLAG_FOLLOW_OUT_OF_FLOW = 1 << 2,
-  FLAG_VISUAL = 1 << 3
-};
-
 class nsFrameIterator
 {
 public:
@@ -38,6 +31,13 @@ public:
 
   void Last();
   void Prev();
+
+  enum FrameIteratorFlags {
+    FLAG_NONE = 0,
+    FLAG_LOCK_SCROLL = 1 << 1,
+    FLAG_FOLLOW_OUT_OF_FLOW = 1 << 2,
+    FLAG_VISUAL = 1 << 3
+  };
 protected:
   void      setCurrent(nsIFrame *aFrame){mCurrent = aFrame;}
   nsIFrame *getCurrent(){return mCurrent;}
