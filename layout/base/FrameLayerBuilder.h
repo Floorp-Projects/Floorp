@@ -285,9 +285,9 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   /**
    * Dumps this FrameLayerBuilder's retained layer manager's retained
-   * layer tree to stderr.
+   * layer tree. Defaults to dumping to stdout in non-HTML format.
    */
-  static void DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile = stdout);
+  static void DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile = stdout, bool aDumpHtml = false);
 #endif
 
   /******* PRIVATE METHODS to FrameLayerBuilder.cpp ********/

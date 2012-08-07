@@ -1819,10 +1819,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     } else {
       gfxUtils::sDumpPaintFile = stdout;
     }
-    fprintf(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+    if (gfxUtils::sDumpPaintingToFile) {
+      fprintf(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+    }
     fprintf(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
+    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
     if (gfxUtils::sDumpPaintingToFile) {
       fprintf(gfxUtils::sDumpPaintFile, "<script>");
     }
@@ -1875,20 +1877,23 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
-    fprintf(gfxUtils::sDumpPaintFile, "</script>Painting --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
+    if (gfxUtils::sDumpPaintingToFile) {
+      fprintf(gfxUtils::sDumpPaintFile, "</script>");
+    }
+    fprintf(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
+    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
 
     fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
     nsIWidget* widget = aFrame->GetNearestWidget();
     if (widget) {
       nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
       if (layerManager) {
-        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, gfxUtils::sDumpPaintFile);
+        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, gfxUtils::sDumpPaintFile,
+                                                 gfxUtils::sDumpPaintingToFile);
       }
     }
-    fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
-    
     if (gfxUtils::sDumpPaintingToFile) {
+      fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
       fclose(gfxUtils::sDumpPaintFile);
     }
     gfxUtils::sDumpPaintFile = NULL;
