@@ -113,6 +113,7 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   WebAppAllocator.java \
+  ZoomConstraints.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
