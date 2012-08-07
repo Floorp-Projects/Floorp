@@ -8,5 +8,5 @@
 interface nsIDOMMozTimeManager : nsISupports
 {
   // jsval could be Date object or UTC seconds
-  void set(in jsval time);
+  [implicit_jscontext] void set(in jsval time);
 };
