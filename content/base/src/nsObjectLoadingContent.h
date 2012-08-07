@@ -363,16 +363,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
     /**
-     * For a classid, returns the MIME type that can be used to instantiate
-     * a plugin for this ID.
-     *
-     * @param aClassID The class ID in question
-     * @param aType    [out] The corresponding type, if the call is successful
-     * @return NS_ERROR_NOT_AVAILABLE Unsupported class ID.
-     */
-    nsresult TypeForClassID(const nsAString& aClassID, nsACString& aType);
-
-    /**
      * Gets the frame that's associated with this content node.
      * Does not flush.
      */
