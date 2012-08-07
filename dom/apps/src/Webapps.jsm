@@ -502,7 +502,7 @@ let DOMApplicationRegistry = {
         }
         // Build a data structure to call the webapps confirmation dialog :
         // - load the manifest from the zip
-        // - set data.app.(origin, install_origin, manifestURL, manifest, receipts)
+        // - set data.app.(origin, install_origin, manifestURL, manifest, receipts, categories)
         // - call notifyObservers(this, "webapps-ask-install", JSON.stringify(msg));
         let msg = {
           from: aData.from,
@@ -513,7 +513,8 @@ let DOMApplicationRegistry = {
             installOrigin: aData.installOrigin,
             origin: "app://" + id,
             manifestURL: manifestURL,
-            receipts: aData.receipts
+            receipts: aData.receipts,
+            categories: aData.categories
           }
         }
         let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
