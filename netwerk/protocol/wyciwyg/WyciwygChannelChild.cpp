@@ -21,7 +21,7 @@ namespace net {
 NS_IMPL_ISUPPORTS3(WyciwygChannelChild,
                    nsIRequest,
                    nsIChannel,
-                   nsIWyciwygChannel);
+                   nsIWyciwygChannel)
 
 
 WyciwygChannelChild::WyciwygChannelChild()

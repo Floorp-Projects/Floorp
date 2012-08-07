@@ -44,7 +44,7 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 NS_IMPL_ISUPPORTS3(WyciwygChannelParent,
                    nsIStreamListener,
                    nsIInterfaceRequestor,
-                   nsIRequestObserver);
+                   nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
 // WyciwygChannelParent::PWyciwygChannelParent
