@@ -1169,6 +1169,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
   nsCOMPtr<nsIURI> newURI;
   nsCOMPtr<nsIURI> newBaseURI;
   ObjectType newType;
+  bool isJava = false;
   // Set if this state can't be used to load anything, forces eType_Null
   bool stateInvalid = false;
   // Indicates what parameters changed.
@@ -1189,11 +1190,13 @@ nsObjectLoadingContent::UpdateObjectParameters()
   ///
   if (thisContent->NodeInfo()->Equals(nsGkAtoms::applet)) {
     newMime.AssignLiteral("application/x-java-vm");
+    isJava = true;
   } else {
     nsAutoString typeAttr;
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, typeAttr);
     if (!typeAttr.IsEmpty()) {
       CopyUTF16toUTF8(typeAttr, newMime);
+      isJava = nsPluginHost::IsJavaMIMEType(newMime.get());
     }
   }
 
@@ -1201,13 +1204,17 @@ nsObjectLoadingContent::UpdateObjectParameters()
   /// classID
   ///
 
-  bool usingClassID = false;
   if (caps & eSupportClassID) {
     nsAutoString classIDAttr;
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classIDAttr);
     if (!classIDAttr.IsEmpty()) {
-      usingClassID = true;
-      if (NS_FAILED(TypeForClassID(classIDAttr, newMime))) {
+      // Our classid support is limited to 'java:' ids
+      rv = IsPluginEnabledForType(NS_LITERAL_CSTRING("application/x-java-vm"));
+      if (NS_SUCCEEDED(rv) &&
+          StringBeginsWith(classIDAttr, NS_LITERAL_STRING("java:"))) {
+        newMime.Assign("application/x-java-vm");
+        isJava = true;
+      } else {
         // XXX(johns): Our de-facto behavior since forever was to refuse to load
         // Objects who don't have a classid we support, regardless of other type
         // or uri info leads to a valid plugin.
@@ -1261,13 +1268,16 @@ nsObjectLoadingContent::UpdateObjectParameters()
 
   nsAutoString uriStr;
   // Different elements keep this in various locations
-  if (thisContent->NodeInfo()->Equals(nsGkAtoms::object)) {
+  if (isJava) {
+    // Applet tags and embed/object with explicit java MIMEs have
+    // src/data attributes that are not parsed as URIs, so we will
+    // act as if URI is null
+  } else if (thisContent->NodeInfo()->Equals(nsGkAtoms::object)) {
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, uriStr);
   } else if (thisContent->NodeInfo()->Equals(nsGkAtoms::embed)) {
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, uriStr);
-  } else if (thisContent->NodeInfo()->Equals(nsGkAtoms::applet)) {
-    // Applet tags have no URI, and their 'code=' parameter is not parsed as one
   } else {
+    // Applet tags should always have a java MIME type at this point
     NS_NOTREACHED("Unrecognized plugin-loading tag");
   }
 
@@ -1369,20 +1379,21 @@ nsObjectLoadingContent::UpdateObjectParameters()
       mChannel->SetContentType(newMime);
     } else {
       newMime = channelType;
+      if (nsPluginHost::IsJavaMIMEType(newMime.get())) {
+        //   Java does not load with a channel, and being java retroactively changes
+        //   how we may have interpreted the codebase to construct this URI above.
+        //   Because the behavior here is more or less undefined, play it safe and
+        //   reject the load.
+        LOG(("OBJLC [%p]: Refusing to load with channel with java MIME",
+             this));
+        stateInvalid = true;
+      }
     }
   }
 
-  bool isJava = nsPluginHost::IsJavaMIMEType(newMime.get());
-  if (useChannel && (!mChannel || isJava)) {
-    // Sanity checks
-    // - Java does not load with a channel, and being java retroactively changes
-    //   how we may have interpreted the codebase to construct this URI above.
-    //   Because the behavior here is more or less undefined, play it safe and
-    //   reject the load.
-    //
-    // - (useChannel && !mChannel) is true if a channel was opened but was
-    //   subsequently invalidated
-    //   in that case.
+  if (useChannel && !mChannel) {
+    // - (useChannel && !mChannel) is true if a channel was opened but
+    //   is no longer around, in which case we can't load.
     stateInvalid = true;
   }
 
@@ -1395,13 +1406,10 @@ nsObjectLoadingContent::UpdateObjectParameters()
   //     use that type.
   //  3) Otherwise, See if we can load this as a plugin without a channel
   //     (image/document types always need a channel).
-  //     - If we have indication this is a plugin (mime, extension, or classID)
+  //     - If we have indication this is a plugin (mime, extension)
   //       AND:
   //       - We have eAllowPluginSkipChannel OR
-  //       - We have no URI in the first place OR
-  //       - We're loading based on classID
-  //         XXX(johns): Legacy behavior is to skip channel loading if we have
-  //                     a classID. I don't know why.
+  //       - We have no URI in the first place (including java)
   //  3) Otherwise, if we have a URI, set type to loading to indicate
   //     we'd need a channel to proceed.
   //  4) Otherwise, type null to indicate unloadable content (fallback)
@@ -1411,8 +1419,6 @@ nsObjectLoadingContent::UpdateObjectParameters()
   //   are not going to open a channel for it. The old objLC code did this (in a
   //   less obviously-intended way), so it's probably best not to change our
   //   behavior at this point.
-  //   We ALSO skip channel loading for objects whose type is found by ClassID
-  //   (We only support a tiny subset of classid: java and ActiveX, above)
   //
 
   if (stateInvalid) {
@@ -1421,7 +1427,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
       // If useChannel is set above, we considered it in setting newMime
       newType = GetTypeOfContent(newMime);
       LOG(("OBJLC [%p]: Using channel type", this));
-  } else if (((caps & eAllowPluginSkipChannel) || !newURI || usingClassID) &&
+  } else if (((caps & eAllowPluginSkipChannel) || !newURI) &&
              (GetTypeOfContent(newMime) == eType_Plugin)) {
     newType = eType_Plugin;
     LOG(("OBJLC [%p]: Skipping loading channel, type plugin", this));
@@ -2049,34 +2055,6 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
   }
 
   return eType_Null;
-}
-
-nsresult
-nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
-                                       nsACString& aType)
-{
-  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("java:"))) {
-    // Supported if we have a java plugin
-    aType.AssignLiteral("application/x-java-vm");
-    nsresult rv = IsPluginEnabledForType(NS_LITERAL_CSTRING("application/x-java-vm"));
-    return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // If it starts with "clsid:", this is ActiveX content
-  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("clsid:"), nsCaseInsensitiveStringComparator())) {
-    // Check if we have a plugin for that
-
-    if (NS_SUCCEEDED(IsPluginEnabledForType(NS_LITERAL_CSTRING("application/x-oleobject")))) {
-      aType.AssignLiteral("application/x-oleobject");
-      return NS_OK;
-    }
-    if (NS_SUCCEEDED(IsPluginEnabledForType(NS_LITERAL_CSTRING("application/oleobject")))) {
-      aType.AssignLiteral("application/oleobject");
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
 }
 
 nsObjectFrame*
