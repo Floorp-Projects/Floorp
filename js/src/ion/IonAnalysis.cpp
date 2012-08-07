@@ -85,6 +85,9 @@ IsPhiObservable(MPhi *phi)
     return false;
 }
 
+// Handles cases like:
+//    x is phi(a, x) --> a
+//    x is phi(a, a) --> a
 static inline MDefinition *
 IsPhiRedundant(MPhi *phi)
 {
@@ -142,14 +145,25 @@ ion::EliminatePhis(MIRGraph &graph)
 
         // The removal of Phis can produce newly redundant phis.
         if (MDefinition *redundant = IsPhiRedundant(phi)) {
+            // Add to the worklist the used phis which are impacted.
+            for (MUseDefIterator it(phi); it; it++) {
+                if (it.def()->isPhi()) {
+                    MPhi *use = it.def()->toPhi();
+                    if (!use->isUnused()) {
+                        use->setUnusedUnchecked();
+                        use->setInWorklist();
+                        if (!worklist.append(use))
+                            return false;
+                    }
+                }
+            }
             phi->replaceAllUsesWith(redundant);
-            if (redundant->isPhi())
-                redundant->setUnusedUnchecked();
         } else {
             // Otherwise flag them as used.
             phi->setNotUnused();
         }
 
+        // The current phi is/was used, so all its operands are used.
         for (size_t i = 0; i < phi->numOperands(); i++) {
             MDefinition *in = phi->getOperand(i);
             if (!in->isPhi() || !in->isUnused() || in->isInWorklist())
