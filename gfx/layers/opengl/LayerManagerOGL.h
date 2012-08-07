@@ -103,6 +103,7 @@ public:
   void EndConstruction();
 
   virtual bool EndEmptyTransaction();
+  virtual void NotifyShadowTreeTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
@@ -442,15 +443,22 @@ private:
       int fcount;
       TimeStamp last;
 
+      int contentFps;
+      int contentFCount;
+      TimeStamp contentLast;
+
       FPSState()
         : texture(0)
         , fps(0)
         , initialized(false)
         , fcount(0)
+        , contentFps(0)
+        , contentFCount(0)
       {
-        last = TimeStamp::Now();
+        contentLast = last = TimeStamp::Now();
       }
       void DrawFPS(GLContext*, ShaderProgramOGL*);
+      void NotifyShadowTreeTransaction();
   } mFPS;
 
   static bool sDrawFPS;
