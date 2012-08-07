@@ -699,17 +699,6 @@ GetProtoForClass(JSContext *cx, Class *clasp)
  * the subclasses.
  */
 
-static JSObject *
-getTypedArray(JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    do {
-        if (obj->isTypedArray())
-            return obj;
-    } while ((obj = obj->getProto()));
-    return NULL;
-}
-
 inline bool
 TypedArray::isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip)
 {
@@ -731,19 +720,18 @@ js::IsDataView(JSObject* obj)
 }
 
 JSBool
-TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject tarray, HandleId id,
                               MutableHandleObject objp, MutableHandleShape propp)
 {
-    JSObject *tarray = getTypedArray(obj);
-    JS_ASSERT(tarray);
+    JS_ASSERT(tarray->isTypedArray());
 
     if (isArrayIndex(cx, tarray, id)) {
-        MarkNonNativePropertyFound(obj, propp);
-        objp.set(obj);
+        MarkNonNativePropertyFound(tarray, propp);
+        objp.set(tarray);
         return true;
     }
 
-    JSObject *proto = obj->getProto();
+    JSObject *proto = tarray->getProto();
     if (!proto) {
         objp.set(NULL);
         propp.set(NULL);
@@ -762,19 +750,18 @@ TypedArray::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyNa
 }
 
 JSBool
-TypedArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+TypedArray::obj_lookupElement(JSContext *cx, HandleObject tarray, uint32_t index,
                               MutableHandleObject objp, MutableHandleShape propp)
 {
-    JSObject *tarray = getTypedArray(obj);
-    JS_ASSERT(tarray);
+    JS_ASSERT(tarray->isTypedArray());
 
     if (index < length(tarray)) {
-        MarkNonNativePropertyFound(obj, propp);
-        objp.set(obj);
+        MarkNonNativePropertyFound(tarray, propp);
+        objp.set(tarray);
         return true;
     }
 
-    if (JSObject *proto = obj->getProto())
+    if (JSObject *proto = tarray->getProto())
         return proto->lookupElement(cx, index, objp, propp);
 
     objp.set(NULL);
@@ -963,17 +950,17 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+    obj_getElement(JSContext *cx, HandleObject tarray, HandleObject receiver, uint32_t index,
                    MutableHandleValue vp)
     {
-        JSObject *tarray = getTypedArray(obj);
+        JS_ASSERT(tarray->isTypedArray());
 
         if (index < length(tarray)) {
             copyIndexToValue(cx, tarray, index, vp);
             return true;
         }
 
-        JSObject *proto = obj->getProto();
+        JSObject *proto = tarray->getProto();
         if (!proto) {
             vp.setUndefined();
             return true;
@@ -1021,12 +1008,12 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+    obj_getElementIfPresent(JSContext *cx, HandleObject tarray, HandleObject receiver, uint32_t index,
                             MutableHandleValue vp, bool *present)
     {
-        // Fast-path the common case of index < length
-        JSObject *tarray = getTypedArray(obj);
+        JS_ASSERT(tarray->isTypedArray());
 
+        // Fast-path the common case of index < length
         if (index < length(tarray)) {
             // this inline function is specialized for each type
             copyIndexToValue(cx, tarray, index, vp);
@@ -1034,7 +1021,7 @@ class TypedArrayTemplate
             return true;
         }
 
-        JSObject *proto = obj->getProto();
+        JSObject *proto = tarray->getProto();
         if (!proto) {
             vp.setUndefined();
             return true;
@@ -1109,11 +1096,10 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
+    obj_setGeneric(JSContext *cx, HandleObject tarray, HandleId id,
                    MutableHandleValue vp, JSBool strict)
     {
-        RootedObject tarray(cx, getTypedArray(obj));
-        JS_ASSERT(tarray);
+        JS_ASSERT(tarray->isTypedArray());
 
         uint32_t index;
         // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
@@ -1139,11 +1125,10 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
+    obj_setElement(JSContext *cx, HandleObject tarray, uint32_t index,
                    MutableHandleValue vp, JSBool strict)
     {
-        RootedObject tarray(cx, getTypedArray(obj));
-        JS_ASSERT(tarray);
+        JS_ASSERT(tarray->isTypedArray());
 
         if (index >= length(tarray)) {
             // Silent ignore is better than an exception here, because
@@ -1207,11 +1192,10 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
+    obj_deleteElement(JSContext *cx, HandleObject tarray, uint32_t index,
                       MutableHandleValue rval, JSBool strict)
     {
-        JSObject *tarray = getTypedArray(obj);
-        JS_ASSERT(tarray);
+        JS_ASSERT(tarray->isTypedArray());
 
         if (index < length(tarray)) {
             rval.setBoolean(false);
@@ -1223,7 +1207,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+    obj_deleteSpecial(JSContext *cx, HandleObject tarray, HandleSpecialId sid,
                       MutableHandleValue rval, JSBool strict)
     {
         rval.setBoolean(true);
@@ -1231,11 +1215,10 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+    obj_enumerate(JSContext *cx, HandleObject tarray, JSIterateOp enum_op,
                   Value *statep, jsid *idp)
     {
-        JSObject *tarray = getTypedArray(obj);
-        JS_ASSERT(tarray);
+        JS_ASSERT(tarray->isTypedArray());
 
         uint32_t index;
         switch (enum_op) {
@@ -1487,10 +1470,7 @@ class TypedArrayTemplate
     fun_subarray_impl(JSContext *cx, CallArgs args)
     {
         JS_ASSERT(IsThisClass(args.thisv()));
-
-        JSObject *tarray = getTypedArray(&args.thisv().toObject());
-        if (!tarray)
-            return true;
+        RootedObject tarray(cx, &args.thisv().toObject());
 
         // these are the default values
         uint32_t begin = 0, end = length(tarray);
@@ -1528,6 +1508,7 @@ class TypedArrayTemplate
     fun_move_impl(JSContext *cx, CallArgs args)
     {
         JS_ASSERT(IsThisClass(args.thisv()));
+        RootedObject tarray(cx, &args.thisv().toObject());
 
         if (args.length() < 3) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -1538,7 +1519,6 @@ class TypedArrayTemplate
         uint32_t srcEnd;
         uint32_t dest;
 
-        JSObject *tarray = getTypedArray(&args.thisv().toObject());
         uint32_t length = TypedArray::length(tarray);
         if (!ToClampedIndex(cx, args[0], length, &srcBegin) ||
             !ToClampedIndex(cx, args[1], length, &srcEnd) ||
@@ -1591,11 +1571,7 @@ class TypedArrayTemplate
     fun_set_impl(JSContext *cx, CallArgs args)
     {
         JS_ASSERT(IsThisClass(args.thisv()));
-
-        Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-        RootedObject tarray(cx, getTypedArray(thisObj));
-        if (!tarray)
-            return true;
+        RootedObject tarray(cx, &args.thisv().toObject());
 
         // first arg must be either a typed array or a JS array
         if (args.length() == 0 || !args[0].isObject()) {
@@ -1621,19 +1597,17 @@ class TypedArrayTemplate
         }
 
         RootedObject arg0(cx, args[0].toObjectOrNull());
-        RootedObject src(cx, getTypedArray(arg0));
-        if (src) {
-            if (length(src) > length(tarray) - offset) {
+        if (arg0->isTypedArray()) {
+            if (length(arg0) > length(tarray) - offset) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
                 return false;
             }
 
-            if (!copyFromTypedArray(cx, thisObj, src, offset))
+            if (!copyFromTypedArray(cx, tarray, arg0, offset))
                 return false;
         } else {
-            src = arg0;
             uint32_t len;
-            if (!js_GetLengthProperty(cx, src, &len))
+            if (!js_GetLengthProperty(cx, arg0, &len))
                 return false;
 
             // avoid overflow; we know that offset <= length
@@ -1642,7 +1616,7 @@ class TypedArrayTemplate
                 return false;
             }
 
-            if (!copyFromArray(cx, thisObj, src, len, offset))
+            if (!copyFromArray(cx, tarray, arg0, len, offset))
                 return false;
         }
 
@@ -1799,7 +1773,7 @@ class TypedArrayTemplate
                                  MutableHandleValue vp);
 
     static JSObject *
-    createSubarray(JSContext *cx, JSObject *tarray, uint32_t begin, uint32_t end)
+    createSubarray(JSContext *cx, HandleObject tarray, uint32_t begin, uint32_t end)
     {
         JS_ASSERT(tarray);
 
@@ -1847,8 +1821,9 @@ class TypedArrayTemplate
          * are treated identically.
          */
         if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
+            RootedValue primitive(cx, v);
             double dval;
-            JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
+            JS_ALWAYS_TRUE(ToNumber(cx, primitive, &dval));
             return nativeFromDouble(dval);
         }
 
@@ -1861,9 +1836,7 @@ class TypedArrayTemplate
     copyFromArray(JSContext *cx, JSObject *thisTypedArrayObj,
                   HandleObject ar, uint32_t len, uint32_t offset = 0)
     {
-        thisTypedArrayObj = getTypedArray(thisTypedArrayObj);
-        JS_ASSERT(thisTypedArrayObj);
-
+        JS_ASSERT(thisTypedArrayObj->isTypedArray());
         JS_ASSERT(offset <= length(thisTypedArrayObj));
         JS_ASSERT(len <= length(thisTypedArrayObj) - offset);
         NativeType *dest = static_cast<NativeType*>(viewData(thisTypedArrayObj)) + offset;
@@ -1873,6 +1846,7 @@ class TypedArrayTemplate
             JS_ASSERT(ar->getArrayLength() == len);
 
             const Value *src = ar->getDenseArrayElements();
+            SkipRoot skipSrc(cx, &src);
 
             /*
              * It is valid to skip the hole check here because nativeFromValue
@@ -1896,9 +1870,7 @@ class TypedArrayTemplate
     static bool
     copyFromTypedArray(JSContext *cx, JSObject *thisTypedArrayObj, JSObject *tarray, uint32_t offset)
     {
-        thisTypedArrayObj = getTypedArray(thisTypedArrayObj);
-        JS_ASSERT(thisTypedArrayObj);
-
+        JS_ASSERT(thisTypedArrayObj->isTypedArray());
         JS_ASSERT(offset <= length(thisTypedArrayObj));
         JS_ASSERT(length(tarray) <= length(thisTypedArrayObj) - offset);
         if (buffer(tarray) == buffer(thisTypedArrayObj))
@@ -2459,6 +2431,7 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
     }
 
     uint8_t *data;
+    SkipRoot skipData(cx, &data);
     if (!getDataPointer(cx, obj, args, sizeof(NativeType), &data))
         return false;
 

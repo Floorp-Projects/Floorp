@@ -110,6 +110,7 @@ def print_header_file(fd, conf):
              "#define _gen_mozilla_idl_dictionary_helpers_h_\n\n")
 
     fd.write("#include \"jsapi.h\"\n"
+             "#include \"nsDOMError.h\"\n"
              "#include \"nsString.h\"\n"
              "#include \"nsCOMPtr.h\"\n\n")
 

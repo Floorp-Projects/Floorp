@@ -10,6 +10,7 @@
 #include "nsTreeContentView.h"
 #include "nsChildIterator.h"
 #include "nsDOMClassInfoID.h"
+#include "nsDOMError.h"
 #include "nsEventStates.h"
 #include "nsINodeInfo.h"
 #include "nsIXULSortService.h"

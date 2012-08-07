@@ -32,7 +32,7 @@ ifdef SDK_HEADERS
 EXPORTS += $(SDK_HEADERS)
 endif
 
-REPORT_BUILD = @echo $(notdir $<)
+REPORT_BUILD = $(info $(notdir $<))
 
 ifeq ($(OS_ARCH),OS2)
 EXEC			=
@@ -45,12 +45,18 @@ ifdef SYSTEM_LIBXUL
   SKIP_COPY_XULRUNNER=1
 endif
 
-# ELOG prints out failed command when building silently (gmake -s).
+# ELOG prints out failed command when building silently (gmake -s). Pymake
+# prints out failed commands anyway, so ELOG just makes things worse by
+# forcing shell invocations.
+ifndef .PYMAKE
 ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
-endif
+endif # -s
+else
+  ELOG :=
+endif # ifndef .PYMAKE
 
 _VPATH_SRCS = $(abspath $<)
 

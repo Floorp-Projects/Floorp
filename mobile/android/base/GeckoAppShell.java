@@ -794,6 +794,13 @@ public class GeckoAppShell
         gRestartScheduled = true;
     }
 
+    public static File installWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
+        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        GeckoProfile profile = GeckoProfile.get(GeckoApp.mAppContext, "webapp" + index);
+        createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
+        return profile.getDir();
+    }
+
     public static Intent getWebAppIntent(String aURI, String aUniqueURI, boolean forInstall) {
         int index;
 

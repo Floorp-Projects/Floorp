@@ -5,80 +5,65 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "nsINode.h"
-#include "nsStringGlue.h"
-#include "nsIDocumentObserver.h" // for nsUpdateType
-#include "nsCOMPtr.h"
-#include "nsCOMArray.h"
-#include "nsIURI.h"
-#include "nsILoadGroup.h"
-#include "nsCRT.h"
-#include "mozFlushType.h"
-#include "nsIAtom.h"
-#include "nsCompatibility.h"
-#include "nsTObserverArray.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
-#include "nsIVariant.h"
-#include "nsIObserver.h"
-#include "nsGkAtoms.h"
-#include "nsAutoPtr.h"
-#include "nsPIDOMWindow.h"
-#include "nsSMILAnimationController.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocumentEncoder.h"
-#include "nsIFrameRequestCallback.h"
-#include "nsEventStates.h"
-#include "nsIStructuredCloneContainer.h"
-#include "nsILoadContext.h"
+#include "mozFlushType.h"                // for enum
+#include "nsAutoPtr.h"                   // for member
+#include "nsCOMArray.h"                  // for member
+#include "nsCRT.h"                       // for NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+#include "nsCompatibility.h"             // for member
+#include "nsCOMPtr.h"                    // for member
+#include "nsGkAtoms.h"                   // for static class members
+#include "nsIDocumentEncoder.h"          // for member (in nsCOMPtr)
+#include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
+#include "nsIFrameRequestCallback.h"     // for member (in nsCOMPtr)
+#include "nsILoadContext.h"              // for member (in nsCOMPtr)
+#include "nsILoadGroup.h"                // for member (in nsCOMPtr)
+#include "nsINode.h"                     // for base class
+#include "nsIScriptGlobalObject.h"       // for member (in nsCOMPtr)
+#include "nsIStructuredCloneContainer.h" // for member (in nsCOMPtr)
+#include "nsPIDOMWindow.h"               // for use in inline functions
+#include "nsPropertyTable.h"             // for member
+#include "nsTHashtable.h"                // for member
 
-class nsIRequest;
-class nsPIDOMWindow;
-class nsIStreamListener;
-class nsIBFCacheEntry;
-class nsIContent;
-class nsPresContext;
-class nsIPresShell;
-class nsIDocShell;
-class nsStyleSet;
-class nsIStyleSheet;
-class nsIStyleRule;
-class nsCSSStyleSheet;
-class nsIViewManager;
-class nsIDOMEvent;
-class nsIDOMEventTarget;
-class nsDeviceContext;
-class nsIParser;
-class nsIDOMNode;
-class nsIDOMElement;
-class nsIDOMDocumentFragment;
-class nsILineBreaker;
-class nsIWordBreaker;
-class nsISelection;
-class nsIChannel;
-class nsIPrincipal;
-class nsIDOMDocument;
-class nsIDOMDocumentType;
-class nsScriptLoader;
-class nsIContentSink;
-class nsHTMLStyleSheet;
-class nsHTMLCSSStyleSheet;
-class nsILayoutHistoryState;
-class nsIVariant;
-class nsIDOMUserDataHandler;
-template<class E> class nsCOMArray;
-class nsIDocumentObserver;
-class nsBindingManager;
-class nsIDOMNodeList;
-class mozAutoSubtreeModified;
-struct JSObject;
-class nsFrameLoader;
-class nsIBoxObject;
 class imgIRequest;
-class nsISHEntry;
+class nsAString;
+class nsBindingManager;
+class nsCSSStyleSheet;
 class nsDOMNavigationTiming;
-class nsWindowSizes;
+class nsEventStates;
+class nsFrameLoader;
+class nsHTMLCSSStyleSheet;
+class nsHTMLStyleSheet;
+class nsIAtom;
+class nsIBFCacheEntry;
+class nsIBoxObject;
+class nsIChannel;
+class nsIContent;
+class nsIContentSink;
+class nsIDocShell;
+class nsIDocumentObserver;
+class nsIDOMDocument;
+class nsIDOMDocumentFragment;
+class nsIDOMDocumentType;
+class nsIDOMElement;
+class nsIDOMEventTarget;
+class nsIDOMNodeList;
+class nsILayoutHistoryState;
 class nsIObjectLoadingContent;
+class nsIObserver;
+class nsIPresShell;
+class nsIPrincipal;
+class nsIRequest;
+class nsIStreamListener;
+class nsIStyleRule;
+class nsIStyleSheet;
+class nsIURI;
+class nsIVariant;
+class nsIViewManager;
+class nsPresContext;
+class nsScriptLoader;
+class nsSMILAnimationController;
+class nsStyleSet;
+class nsWindowSizes;
 
 namespace mozilla {
 namespace css {
