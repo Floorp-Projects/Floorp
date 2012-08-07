@@ -193,6 +193,7 @@ body {
 
 .toolbar > * {
   float: right;
+  width: 25%;
 }
 
 .button {
@@ -203,12 +204,15 @@ body {
 }
 
 .button:active {
-  background-color: rgba(170, 170, 170, 1.0);
+  background-color: #ff9500;
 }
 
 .dropdown {
   text-align: center;
   display: inline-block;
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
 }
 
 .dropdown li {
@@ -219,6 +223,7 @@ body {
 .dropdown-toggle {
   margin: 0px;
   padding: 0px;
+  padding-top: 4px;
 }
 
 .dropdown-popup {
@@ -234,6 +239,7 @@ body {
   padding-bottom: 8px;
   font-size: 14px;
   box-shadow: 0px -1px 12px #333;
+  visibility: hidden;
 }
 
 .dropdown-popup > hr {
@@ -242,13 +248,19 @@ body {
   border: 0px;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid white;
-  margin: 10px 0px 10px 0px;
+  margin: 0px 0px 10px 0px;
   float: left;
+}
+
+.dropdown-popup .button:active {
+  background-color: #ccc;
 }
 
 .open > .dropdown-popup {
   margin-top: 0px;
+  margin-bottom: 6px;
   bottom: 100%;
+  visibility: visible;
 }
 
 .dropdown-arrow {
@@ -305,6 +317,7 @@ body {
   color: black;
   margin: 0px;
   margin-top: 12px;
+  margin-bottom: 20px;
   margin-left: 10px;
   float: left;
 }
@@ -329,7 +342,6 @@ body {
 
 @media screen and (orientation: portrait) {
   .button {
-    width: 48px;
     height: 48px;
     background-size: 30px 24px
   }
@@ -337,6 +349,18 @@ body {
   .toolbar {
     background-size: 48px;
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-mdpi.png');
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-port-mdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-port-mdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-port-mdpi.png');
   }
 
   .share-button {
@@ -350,7 +374,6 @@ body {
 
 @media screen and (orientation: landscape) {
   .button {
-    width: 40px;
     height: 40px;
     background-size: 24px 20px
   }
@@ -358,6 +381,18 @@ body {
   .toolbar {
     background-size: 40px;
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-mdpi.png');
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-land-mdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-land-mdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-land-mdpi.png');
   }
 
   .share-button {
@@ -379,6 +414,22 @@ body {
   .toolbar {
     background-size: 56px;
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-mdpi.png');
+  }
+
+  .toolbar > * {
+    width: 56px;
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xlarge-mdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xlarge-mdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-xlarge-mdpi.png');
   }
 
   .share-button {
@@ -423,6 +474,18 @@ body {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-hdpi.png');
   }
 
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-port-hdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-port-hdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-port-hdpi.png');
+  }
+
   .share-button {
     background-image: url('chrome://browser/skin/images/reader-share-icon-port-hdpi.png');
   }
@@ -435,6 +498,18 @@ body {
 @media screen and (orientation: landscape) and (min-resolution: 200dpi) {
   .toolbar {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-hdpi.png');
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-land-hdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-land-hdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-land-hdpi.png');
   }
 
   .share-button {
@@ -451,6 +526,18 @@ body {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-xhdpi.png');
   }
 
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-port-xhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-port-xhdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-port-xhdpi.png');
+  }
+
   .share-button {
     background-image: url('chrome://browser/skin/images/reader-share-icon-port-xhdpi.png');
   }
@@ -463,6 +550,18 @@ body {
 @media screen and (orientation: landscape) and (min-resolution: 300dpi) {
   .toolbar {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-xhdpi.png');
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-land-xhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-land-xhdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-land-xhdpi.png');
   }
 
   .share-button {
@@ -479,6 +578,18 @@ body {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-hdpi.png');
   }
 
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xlarge-hdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xlarge-hdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-xlarge-hdpi.png');
+  }
+
   .share-button {
     background-image: url('chrome://browser/skin/images/reader-share-icon-xlarge-hdpi.png');
   }
@@ -491,6 +602,18 @@ body {
 @media screen and (min-width: 960px) and (min-resolution: 300dpi) {
   .toolbar {
     background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-xhdpi.png');
+  }
+
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xlarge-xhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xlarge-xhdpi.png');
+  }
+
+  .list-button {
+    background-image: url('chrome://browser/skin/images/reader-list-icon-xlarge-xhdpi.png');
   }
 
   .share-button {
