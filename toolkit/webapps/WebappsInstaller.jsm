@@ -680,7 +680,7 @@ LinuxNativeApp.prototype = {
     this.installDir.append("." + this.uniqueName);
 
     this.iconFile = this.installDir.clone();
-    this.iconFile.append(this.uniqueName + ".png");
+    this.iconFile.append("icon.png");
 
     this.webapprt = this.installDir.clone();
     this.webapprt.append("webapprt-stub");
