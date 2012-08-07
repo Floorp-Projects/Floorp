@@ -22,6 +22,7 @@ var InputWidgetHelper = {
   },
 
   show: function(aElement) {
+    let type = aElement.getAttribute('type');
     let msg = {
       type: "Prompt:Show",
       title: Strings.browser.GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
@@ -31,7 +32,7 @@ var InputWidgetHelper = {
         { label: Strings.browser.GetStringFromName("inputWidgetHelper.cancel") }
       ],
       inputs: [
-        { type: aElement.getAttribute('type'), value: aElement.value }
+        { type: type, value: aElement.value }
       ]
     };
 
@@ -50,8 +51,8 @@ var InputWidgetHelper = {
       }
     } else if (data.button == 0) {
       // Commit the new value.
-      if (aElement.value != data[aElement.getAttribute('type')]) {
-        aElement.value = data[aElement.getAttribute('type')];
+      if (aElement.value != data[type]) {
+        aElement.value = data[type];
         changed = true;
       }
     }
