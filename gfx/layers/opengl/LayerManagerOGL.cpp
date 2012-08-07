@@ -514,6 +514,12 @@ LayerManagerOGL::RootLayer() const
 
 bool LayerManagerOGL::sDrawFPS = false;
 
+void
+LayerManagerOGL::FPSState::NotifyShadowTreeTransaction()
+{
+  contentFCount++;
+}
+
 /* This function tries to stick to portable C89 as much as possible
  * so that it can be easily copied into other applications */
 void
@@ -528,6 +534,13 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, ShaderProgramOGL* copypro
     last = now;
     fps = rate / duration.ToSeconds() + .5;
     fcount = 0;
+  }
+  if (contentFCount >= rate) {
+    TimeStamp now = TimeStamp::Now();
+    TimeDuration duration = now - contentLast;
+    contentLast = now;
+    contentFps = contentFCount / duration.ToSeconds() + .5;
+    contentFCount = 0;
   }
 
   GLint viewport[4];
@@ -583,12 +596,33 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, ShaderProgramOGL* copypro
     { -1.0f + 44.f / viewport[2], 1.0f - 42.f / viewport[3] },
     { -1.0f + 44.f / viewport[2], 1.0f },
     { -1.0f + 66.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 66.f / viewport[2], 1.0f }
+    { -1.0f + 66.f / viewport[2], 1.0f },
+  };
+    
+  const Vertex2D vertices2[] = {
+    { -1.0f + 80.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 80.f / viewport[2], 1.0f },
+    { -1.0f + 102.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 102.f / viewport[2], 1.0f },
+    
+    { -1.0f + 102.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 102.f / viewport[2], 1.0f },
+    { -1.0f + 124.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 124.f / viewport[2], 1.0f },
+    
+    { -1.0f + 124.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 124.f / viewport[2], 1.0f },
+    { -1.0f + 146.f / viewport[2], 1.0f - 42.f / viewport[3] },
+    { -1.0f + 146.f / viewport[2], 1.0f },
   };
 
   int v1   = fps % 10;
   int v10  = (fps % 100) / 10;
   int v100 = (fps % 1000) / 100;
+
+  int content1 = contentFps % 10;
+  int content10  = (contentFps % 100) / 10;
+  int content100 = (contentFps % 1000) / 100;
 
   // Feel free to comment these texture coordinates out and use one
   // of the ones below instead, or play around with your own values.
@@ -607,6 +641,23 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, ShaderProgramOGL* copypro
     (v1 * 4.f) / 64, 0.0f,
     (v1 * 4.f + 4) / 64, 7.f / 8,
     (v1 * 4.f + 4) / 64, 0.0f,
+  };
+    
+  const GLfloat texCoords2[] = {
+    (content100 * 4.f) / 64, 7.f / 8,
+    (content100 * 4.f) / 64, 0.0f,
+    (content100 * 4.f + 4) / 64, 7.f / 8,
+    (content100 * 4.f + 4) / 64, 0.0f,
+
+    (content10 * 4.f) / 64, 7.f / 8,
+    (content10 * 4.f) / 64, 0.0f,
+    (content10 * 4.f + 4) / 64, 7.f / 8,
+    (content10 * 4.f + 4) / 64, 0.0f,
+
+    (content1 * 4.f) / 64, 7.f / 8,
+    (content1 * 4.f) / 64, 0.0f,
+    (content1 * 4.f + 4) / 64, 7.f / 8,
+    (content1 * 4.f + 4) / 64, 0.0f,
   };
 
   // Turn necessary features on
@@ -643,6 +694,18 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, ShaderProgramOGL* copypro
                                 2, LOCAL_GL_FLOAT,
                                 LOCAL_GL_FALSE,
                                 0, texCoords);
+
+  context->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 12);
+  
+  context->fVertexAttribPointer(vcattr,
+                                2, LOCAL_GL_FLOAT,
+                                LOCAL_GL_FALSE,
+                                0, vertices2);
+
+  context->fVertexAttribPointer(tcattr,
+                                2, LOCAL_GL_FLOAT,
+                                LOCAL_GL_FALSE,
+                                0, texCoords2);
 
   context->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 12);
 }
@@ -720,6 +783,12 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     }
     mGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
   }
+}
+
+void
+LayerManagerOGL::NotifyShadowTreeTransaction()
+{
+  mFPS.NotifyShadowTreeTransaction();
 }
 
 void

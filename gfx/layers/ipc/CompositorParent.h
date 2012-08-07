@@ -86,7 +86,8 @@ public:
   void ScheduleResumeOnCompositorThread(int width, int height);
 
   virtual void ScheduleComposition();
-  
+  void NotifyShadowTreeTransaction();
+
   /**
    * Returns a pointer to the compositor corresponding to the given ID. 
    */
