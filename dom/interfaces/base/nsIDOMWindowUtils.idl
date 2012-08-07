@@ -752,7 +752,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Synthesize a query content event.
    *
-   * @param aType  On of the following const values.  And see also each comment
+   * @param aType  One of the following const values.  And see also each comment
    *               for the other parameters and the result.
    */
   nsIQueryContentEventResult sendQueryContentEvent(in unsigned long aType,
@@ -760,29 +760,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                                    in unsigned long aLength,
                                                    in long aX,
                                                    in long aY);
-
-
-  /**
-   * Called when the remote child frame has changed its fullscreen state,
-   * when entering fullscreen, and when the origin which is fullscreen changes.
-   * aFrameElement is the iframe element which contains the child-process
-   * fullscreen document, and aNewOrigin is the origin of the new fullscreen
-   * document.
-   */
-  void remoteFrameFullscreenChanged(in nsIDOMElement aFrameElement,
-                                    in AString aNewOrigin);
-
-  /**
-   * Called when the remote frame has popped all fullscreen elements off its
-   * stack, so that the operation can complete on the parent side.
-   */
-  void remoteFrameFullscreenReverted();
-
-  /**
-   * Called when the child frame has fully exit fullscreen, so that the parent
-   * process can also fully exit.
-   */
-  void exitFullscreen();
 
   // NOTE: following values are same as NS_QUERY_* in nsGUIEvent.h
 
@@ -871,6 +848,28 @@ interface nsIDOMWindowUtils : nsISupports {
    *         result are available.
    */
   const unsigned long QUERY_CHARACTER_AT_POINT                  = 3208;
+
+  /**
+   * Called when the remote child frame has changed its fullscreen state,
+   * when entering fullscreen, and when the origin which is fullscreen changes.
+   * aFrameElement is the iframe element which contains the child-process
+   * fullscreen document, and aNewOrigin is the origin of the new fullscreen
+   * document.
+   */
+  void remoteFrameFullscreenChanged(in nsIDOMElement aFrameElement,
+                                    in AString aNewOrigin);
+
+  /**
+   * Called when the remote frame has popped all fullscreen elements off its
+   * stack, so that the operation can complete on the parent side.
+   */
+  void remoteFrameFullscreenReverted();
+
+  /**
+   * Called when the child frame has fully exit fullscreen, so that the parent
+   * process can also fully exit.
+   */
+  void exitFullscreen();
 
   /**
    * Synthesize a selection set event to the window.

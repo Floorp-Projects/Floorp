@@ -8,10 +8,7 @@
 #include <math.h>
 #include "DrawTargetD2D.h"
 #include "Logging.h"
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include "mozilla/Constants.h"
 
 namespace mozilla {
 namespace gfx {

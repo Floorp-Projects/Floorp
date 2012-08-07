@@ -1115,7 +1115,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // view port. Move range forward to first visible point,
   // this speeds us up a lot in long documents
   nsFrameIterator frameTraversal(aPresContext, frame,
-                                 eLeaf, FrameIteratorFlags::FLAG_NONE);
+                                 eLeaf, nsFrameIterator::FLAG_NONE);
 
   while (rectVisibility == nsRectVisibility_kAboveViewport) {
     frameTraversal.Next();

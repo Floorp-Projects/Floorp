@@ -276,8 +276,10 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 
     int attribs[] = { GLX_DOUBLEBUFFER, False,
                       GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
+                      GLX_ALPHA_SIZE, (withAlpha ? 1 : 0),
                       (withAlpha ? GLX_BIND_TO_TEXTURE_RGBA_EXT
                        : GLX_BIND_TO_TEXTURE_RGB_EXT), True,
+                      GLX_RENDER_TYPE, GLX_RGBA_BIT,
                       None };
 
     int numConfigs = 0;
@@ -297,18 +299,24 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         static_cast<unsigned long>(direct.greenMask) << direct.green;
     unsigned long blueMask =
         static_cast<unsigned long>(direct.blueMask) << direct.blue;
+    // XVisualInfo doesn't have information on the alpha channel, so just
+    // check the number of bits.
+    int alphaSize;
+    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
+    NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
+                 "Unexpected render format with non-adjacent alpha bits");
     ScopedXFree<XVisualInfo> vinfo;
 
     for (int i = 0; i < numConfigs; i++) {
         int size;
-        // The visual depth won't necessarily match as it may not include the
-        // alpha buffer, so check buffer size.
         if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
-                                           GLX_BUFFER_SIZE, &size) != Success ||
-            size != format->depth) {
+                                           GLX_ALPHA_SIZE, &size) != Success ||
+            size != alphaSize) {
             continue;
         }
 
+        // The visual depth won't necessarily match the render format depth as
+        // it may not include the alpha channel.
         vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
         if (!vinfo ||
             vinfo->c_class != TrueColor ||

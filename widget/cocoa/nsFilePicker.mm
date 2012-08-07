@@ -521,8 +521,7 @@ nsFilePicker::GetFilterList()
   NSMutableString* filterString = [[[NSMutableString alloc] initWithString:
                                     [NSString stringWithCharacters:filterWide.get()
 				              length:filterWide.Length()]] autorelease];
-  NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:
-                          [NSString stringWithString:@". *"]];
+  NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@". *"];
   NSRange range = [filterString rangeOfCharacterFromSet:set];
   while (range.length) {
     [filterString replaceCharactersInRange:range withString:@""];

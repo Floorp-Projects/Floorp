@@ -5023,7 +5023,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
      */
     pic.canCallHook = pic.forcedTypeBarrier =
         !forPrototype &&
-        JSOp(*PC) == JSOP_GETPROP &&
+        (JSOp(*PC) == JSOP_GETPROP || JSOp(*PC) == JSOP_LENGTH) &&
         analysis->getCode(PC).accessGetter;
 
     /* Guard that the type is an object. */
