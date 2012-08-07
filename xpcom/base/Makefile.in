@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsMemoryReporterManager.cpp \
 		ClearOnShutdown.cpp \
 		VisualEventTracer.cpp \
+		nsErrorAsserts.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Linux)

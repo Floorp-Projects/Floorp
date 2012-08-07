@@ -310,7 +310,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p);
 /**
  * Generic XPCOM result data type
  */
-typedef uint32_t nsresult;
+#include "nsError.h"
 
 /**
  * Reference count values
