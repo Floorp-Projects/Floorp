@@ -4499,10 +4499,6 @@ var ViewportHandler = {
     }
   },
 
-  resetMetadata: function resetMetadata(tab) {
-    tab.updateViewportMetadata(null);
-  },
-
   updateMetadata: function updateMetadata(tab) {
     let metadata = this.getViewportMetadata(tab.browser.contentWindow);
     tab.updateViewportMetadata(metadata);
