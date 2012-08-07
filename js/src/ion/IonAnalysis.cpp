@@ -394,7 +394,21 @@ void
 TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
 {
     MBasicBlock *block = phi->block();
-    js::Value v = (phi->type() == MIRType_Undefined) ? UndefinedValue() : NullValue();
+    js::Value v;
+    switch (phi->type()) {
+      case MIRType_Undefined:
+        v = UndefinedValue();
+        break;
+      case MIRType_Null:
+        v = NullValue();
+        break;
+      case MIRType_Magic:
+        v = MagicValue(JS_OPTIMIZED_ARGUMENTS);
+        break;
+      default:
+        JS_NOT_REACHED("unexpected type");
+        return;
+    }
     MConstant *c = MConstant::New(v);
     // The instruction pass will insert the box
     block->insertBefore(*(block->begin()), c);
@@ -409,7 +423,7 @@ TypeAnalyzer::insertConversions()
     // inputs of uses) does not conflict with input adjustment.
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd();) {
-            if (phi->type() <= MIRType_Null) {
+            if (phi->type() <= MIRType_Null || phi->type() == MIRType_Magic) {
                 replaceRedundantPhi(*phi);
                 phi = block->discardPhiAt(phi);
             } else {
