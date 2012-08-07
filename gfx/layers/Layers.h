@@ -539,10 +539,8 @@ public:
     NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
                  (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
                  "Can't be opaque and require component alpha");
-    if (mContentFlags != aFlags) {
-      mContentFlags = aFlags;
-      Mutated();
-    }
+    mContentFlags = aFlags;
+    Mutated();
   }
   /**
    * CONSTRUCTION PHASE ONLY
@@ -559,10 +557,8 @@ public:
    */
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
-    if (!mVisibleRegion.IsEqual(aRegion)) {
-      mVisibleRegion = aRegion;
-      Mutated();
-    }
+    mVisibleRegion = aRegion;
+    Mutated();
   }
 
   /**
@@ -572,10 +568,8 @@ public:
    */
   void SetOpacity(float aOpacity)
   {
-    if (mOpacity != aOpacity) {
-      mOpacity = aOpacity;
-      Mutated();
-    }
+    mOpacity = aOpacity;
+    Mutated();
   }
 
   /**
@@ -590,25 +584,11 @@ public:
    */
   void SetClipRect(const nsIntRect* aRect)
   {
-    if (mUseClipRect) {
-      if (!aRect) {
-        mUseClipRect = false;
-        Mutated();
-      } else {
-        if (!aRect->IsEqualEdges(mClipRect)) {
-          mClipRect = *aRect;
-          Mutated();
-        }
-      }
-    } else {
-      if (aRect) {
-        Mutated();
-        mUseClipRect = true;
-        if (!aRect->IsEqualEdges(mClipRect)) {
-          mClipRect = *aRect;
-        }
-      }
+    mUseClipRect = aRect != nullptr;
+    if (aRect) {
+      mClipRect = *aRect;
     }
+    Mutated();
   }
 
   /**
@@ -657,10 +637,8 @@ public:
     }
 #endif
 
-    if (mMaskLayer != aMaskLayer) {
-      mMaskLayer = aMaskLayer;
-      Mutated();
-    }
+    mMaskLayer = aMaskLayer;
+    Mutated();
   }
 
   /**
@@ -672,9 +650,6 @@ public:
    */
   void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
-    if (mTransform == aMatrix) {
-      return;
-    }
     mTransform = aMatrix;
     Mutated();
   }
@@ -1129,10 +1104,8 @@ public:
    */
   void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
   {
-    if (mFrameMetrics != aFrameMetrics) {
-      mFrameMetrics = aFrameMetrics;
-      Mutated();
-    }
+    mFrameMetrics = aFrameMetrics;
+    Mutated();
   }
 
   void SetPreScale(float aXScale, float aYScale)
@@ -1422,10 +1395,7 @@ public:
   void SetReferentId(uint64_t aId)
   {
     MOZ_ASSERT(aId != 0);
-    if (mId != aId) {
-      mId = aId;
-      Mutated();
-    }
+    mId = aId;
   }
   /**
    * CONSTRUCTION PHASE ONLY

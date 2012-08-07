@@ -305,7 +305,6 @@ private:
     ScrollingBehavior mScrolling;
     bool mDidFakeShow;
     bool mIsBrowserElement;
-    bool mNotified;
     PRUint32 mAppId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
