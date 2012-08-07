@@ -102,6 +102,7 @@ TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement,
   , mDidFakeShow(false)
   , mIsBrowserElement(aIsBrowserElement)
   , mAppId(aAppId)
+  , mNotified(false)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -1183,17 +1184,9 @@ TabChild::SetBackgroundColor(const nscolor& aColor)
 void
 TabChild::NotifyPainted()
 {
-    if (UseDirectCompositor()) {
-        // FIXME/bug XXXXXX: in theory, we should only have to push a
-        // txn to our remote frame once, and the
-        // display-list/FrameLayerBuilder code there will manage the
-        // tree from there on.  But in practice, that doesn't work for
-        // some unknown reason.  So for now, always notify the content
-        // thread in the parent process.  It's wasteful but won't
-        // result in unnecessary repainting or even composites
-        // (usually, unless timing is unlucky), since they're
-        // throttled.
+    if (UseDirectCompositor() && !mNotified) {
         mRemoteFrame->SendNotifyCompositorTransaction();
+        mNotified = true;
     }
 }
 
