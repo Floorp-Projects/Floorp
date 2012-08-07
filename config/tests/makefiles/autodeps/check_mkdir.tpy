@@ -68,7 +68,7 @@ def path2posix(src):
     drive = ''
     winpath = src.find(':')
     if -1 != winpath and 10 > winpath:
-        (drive, tail) = src.split(':', 2)
+        (drive, tail) = src.split(':', 1)
 
     if drive:
         todo = [ '', drive.rstrip(':').lstrip('/').lstrip('\\') ]
@@ -98,13 +98,19 @@ def checkMkdir(work, debug=False):
 
     logging.debug("Testing: checkMkdir")
 
-    if False:
-        path = os.path.abspath(__file__).split(os.sep)
+    # On Windows + Pymake, don't convert paths to POSIX
+    skipposix = sys.platform == "win32" and os.environ.get(".PYMAKE") == "1"
+    if skipposix:
+        path = os.path.abspath(__file__)
+        dirname_fun = os.path.dirname
     else:
-        path = path2posix(os.path.abspath(__file__)).split('/')
-        
-    root = os.path.join(os.sep, *path[:-5])
-    src = os.path.join(os.sep, *path[:-1])
+        path = path2posix(os.path.abspath(__file__))
+        import posixpath
+        dirname_fun = posixpath.dirname
+
+    src = dirname_fun(path)
+    # root is 5 directories up from path
+    root = reduce(lambda x, _: dirname_fun(x), xrange(5), path)
 
     rootP = path2posix(root)
     srcP  = path2posix(src)
@@ -114,37 +120,28 @@ def checkMkdir(work, debug=False):
     # [0] command paths use /c/foo
     # [1] os.path.exists() on mingw() requires C:\
     paths = [
-        [ # function generated
-            "%s/mkdir_bycall" % (workP),
-            "%s/mkdir_bycall" % (work),
-        ],
-        [ # explicit dependency
-            "%s/mkdir_bydep"  % (workP),
-            "%s/mkdir_bydep"  % (work),
-        ],
-        [ # by GENERATED_DIRS macro
-            "%s/mkdir_bygen"  % (workP),
-            "%s/mkdir_bygen"  % (work),
-        ]
-        ]
+        "mkdir_bycall", # function generated
+        "mkdir_bydep",  # explicit dependency
+        "mkdir_bygen",  # by GENERATED_DIRS macro
+    ]
 
     ## Use make from the parent "make check" call when available
     cmd = { 'make': 'make' }
-    shell0 = os.environ.get('MAKECMD')
+    shell0 = os.environ.get('MAKE')
     if shell0:
         shell = os.path.splitext(shell0)[0] # strip: .exe, .py
         if -1 != shell.find('make'):
             print "MAKE COMMAND FOUND: %s" % (shell0)
-            cmd['make'] = path2posix(shell0)
+            cmd['make'] = shell0 if skipposix else path2posix(shell0)
 
     args = []
     args.append('%s' % (cmd['make']))
-    args.append('-C %s'                % (workP))
-    args.append("-f %s/testor.tmpl"    % (srcP))
-    args.append('topsrcdir=%s'         % (rootP))
-    args.append('deps_mkdir_bycall=%s' % paths[0][0])
-    args.append('deps_mkdir_bydep=%s'  % paths[1][0])
-    args.append('deps_mkdir_bygen=%s'  % paths[2][0])
+    args.append('-C %s'                % (work if skipposix else workP))
+    args.append("-f %s/testor.tmpl"    % (src if skipposix else srcP))
+    args.append('topsrcdir=%s'         % (root if skipposix else rootP))
+    args.append('deps_mkdir_bycall=%s' % paths[0])
+    args.append('deps_mkdir_bydep=%s'  % paths[1])
+    args.append('deps_mkdir_bygen=%s'  % paths[2])
     args.append('checkup') # target
 
     # Call will fail on mingw with output redirected ?!?
@@ -160,9 +157,10 @@ def checkMkdir(work, debug=False):
         raise Exception("make failed ($?=%s): cmd=%s" % (rc, cmd))
 
     for i in paths:
-        logging.debug("Did testing mkdir(%s) succeed?" % (i[1]))
-        if not os.path.exists(i[1]):
-            raise Exception("Test path %s does not exist" % (i[1]))
+        path = os.path.join(work, i)
+        logging.debug("Did testing mkdir(%s) succeed?" % (path))
+        if not os.path.exists(path):
+            raise Exception("Test path %s does not exist" % (path))
 
 
 def parseargs():

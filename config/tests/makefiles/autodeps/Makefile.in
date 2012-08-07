@@ -27,6 +27,8 @@ tgts =\
   $(autotgt_tests)
   $(NULL)
 
+export MAKE
+export .PYMAKE
 
 ##------------------_##
 ##---]  TARGETS  [---##
@@ -37,5 +39,5 @@ check:: $(tgts)
 
 # Only run unit test when autotargets.mk is modified
 $(autotgt_tests): $(topsrcdir)/config/makefiles/autotargets.mk
-	MAKECMD=$(MAKE) $(PYTEST) $(srcdir)/check_mkdir.tpy
+	$(PYTEST) $(srcdir)/check_mkdir.tpy
 	@$(TOUCH) $@
