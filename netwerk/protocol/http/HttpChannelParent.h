@@ -31,7 +31,6 @@ class HttpChannelParent : public PHttpChannelParent
                         , public nsIParentRedirectingChannel
                         , public nsIProgressEventSink
                         , public nsIInterfaceRequestor
-                        , public nsILoadContext
 {
 public:
   NS_DECL_ISUPPORTS
@@ -41,7 +40,6 @@ public:
   NS_DECL_NSIPARENTREDIRECTINGCHANNEL
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSILOADCONTEXT
 
   HttpChannelParent(PBrowserParent* iframeEmbedding);
   virtual ~HttpChannelParent();
@@ -66,12 +64,7 @@ protected:
                              const bool&                chooseApplicationCache,
                              const nsCString&           appCacheClientID,
                              const bool&                allowSpdy,
-                             const bool &               haveLoadContext,
-                             const bool &               isContent,
-                             const bool&                usingPrivateBrowsing,
-                             const bool&                isInBrowserElement,
-                             const PRUint32&            appId,
-                             const nsCString&           extendedOrigin);
+                             const IPC::SerializedLoadContext& loadContext) MOZ_OVERRIDE;
 
   virtual bool RecvConnectChannel(const PRUint32& channelId);
   virtual bool RecvSetPriority(const PRUint16& priority);
@@ -115,14 +108,7 @@ private:
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
 
-  // fields for impersonating nsILoadContext
-  bool mHaveLoadContext             : 1;
-  bool mIsContent                   : 1;
-  bool mUsePrivateBrowsing          : 1;
-  bool mIsInBrowserElement          : 1;
-
-  PRUint32 mAppId;
-  nsCString mExtendedOrigin;
+  nsCOMPtr<nsILoadContext> mLoadContext;
 };
 
 } // namespace net
