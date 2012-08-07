@@ -36,6 +36,8 @@ pref("browser.cache.disk.enable",           true);
 pref("browser.cache.disk.smart_size.first_run", true);
 // Does the user want smart-sizing?
 pref("browser.cache.disk.smart_size.enabled", true);
+// Which max value should we use for smart-sizing?
+pref("browser.cache.disk.smart_size.use_old_max", true);
 // Size (in KB) explicitly set by the user. Used when smart_size.enabled == false
 pref("browser.cache.disk.capacity",         256000);
 // Max-size (in KB) for entries in disk cache. Set to -1 for no limit.
