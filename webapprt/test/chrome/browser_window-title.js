@@ -36,8 +36,8 @@ function test() {
       }
     };
 
-    appBrowser.webProgress.
-      addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_LOCATION);
+    appBrowser.addProgressListener(progressListener,
+                                   Ci.nsIWebProgress.NOTIFY_LOCATION);
 
     function testNext() {
       if (!tests.length) {
