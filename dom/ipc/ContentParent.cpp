@@ -489,13 +489,9 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
 
     bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
     if (useOffMainThreadCompositing) {
-        // FIXME.  Oh please fixme.  Somehow.
-        //
-        // We need the child process's ProcessHandle to do
-        // PCompositor::Open() below (on win32 ... sigh).  We don't
-        // get that until onconnect, but that's too late to open the
-        // compositor channel below.
-        mSubprocess->SyncLaunch();
+        // We need the subprocess's ProcessHandle to create the
+        // PCompositor channel below.  Block just until we have that.
+        mSubprocess->LaunchAndWaitForProcessHandle();
     } else {
         mSubprocess->AsyncLaunch();
     }
