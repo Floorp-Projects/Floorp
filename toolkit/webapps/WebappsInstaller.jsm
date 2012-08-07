@@ -110,8 +110,6 @@ function NativeApp(aData) {
 
   this.appcacheDefined = (app.manifest.appcache_path != undefined);
 
-  this.manifest = app.manifest;
-
   // The app registry is the Firefox profile from which the app
   // was installed.
   this.registryFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -766,6 +764,41 @@ LinuxNativeApp.prototype = {
     } catch (ex if ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {}
   },
 
+  /**
+   * Translate marketplace categories to freedesktop.org categories.
+   *
+   * @link http://standards.freedesktop.org/menu-spec/menu-spec-latest.html#category-registry
+   *
+   * @return an array of categories
+   */
+  _translateCategories: function() {
+    let translations = {
+      "books-reference": "Education;Literature",
+      "business": "Finance",
+      "education": "Education",
+      "entertainment-sports": "Amusement;Sports",
+      "games": "Game",
+      "health-fitness": "MedicalSoftware",
+      "lifestyle": "Amusement",
+      "music": "Audio;Music",
+      "news-weather": "News",
+      "photos-media": "AudioVideo",
+      "productivity": "Office",
+      "shopping": "Amusement",
+      "social": "Chat",
+      "travel": "Amusement",
+      "utilities": "Utility"
+    };
+
+    // The trailing semicolon is needed as written in the freedesktop specification
+    let categories = "";
+    for (let category of this.app.categories) {
+      categories += translations[category] + ";";
+    }
+
+    return categories;
+  },
+
   _createConfigFiles: function() {
     // ${InstallDir}/webapp.json
     writeToFile(this.configJson, JSON.stringify(this.webappJson), function() {});
@@ -790,6 +823,11 @@ LinuxNativeApp.prototype = {
     writer.setString("Desktop Entry", "Icon", this.iconFile.path);
     writer.setString("Desktop Entry", "Type", "Application");
     writer.setString("Desktop Entry", "Terminal", "false");
+
+    let categories = this._translateCategories();
+    if (categories)
+      writer.setString("Desktop Entry", "Categories", categories);
+
     writer.writeFile();
   },
 
