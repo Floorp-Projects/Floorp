@@ -1805,7 +1805,7 @@ var SelectionHandler = {
   // aX/aY are in top-level window browser coordinates
   endSelection: function sh_endSelection(aX, aY) {
     if (!this._active)
-      return;
+      return "";
 
     this._active = false;
     this.hideHandles();
