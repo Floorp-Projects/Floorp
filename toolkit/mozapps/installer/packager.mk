@@ -972,6 +972,7 @@ empty :=
 space = $(empty) $(empty)
 QUOTED_WILDCARD = $(if $(wildcard $(subst $(space),?,$(1))),"$(1)")
 ESCAPE_SPACE = $(subst $(space),\$(space),$(1))
+ESCAPE_WILDCARD = $(subst $(space),?,$(1))
 
 # This variable defines which OpenSSL algorithm to use to 
 # generate checksums for files that we upload

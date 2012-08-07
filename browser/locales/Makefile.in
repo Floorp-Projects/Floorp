@@ -154,9 +154,8 @@ libs-%:
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR) BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 
-
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
-repackage-win32-installer: $(call ESCAPE_SPACE,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
+repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
@@ -169,8 +168,10 @@ repackage-win32-installer: $(call ESCAPE_SPACE,$(WIN32_INSTALLER_IN)) $(SUBMAKEF
 	              $(topsrcdir)/browser/installer/windows/app.tag"
 
 ifeq (WINNT,$(OS_ARCH))
-repackage-win32-installer-%:
+repackage-win32-installer-%: $(STAGEDIST)
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN="$(WIN32_INSTALLER_IN)"
+
+repackage-zip-%: repackage-win32-installer-%
 else
 repackage-win32-installer-%: ;
 endif
