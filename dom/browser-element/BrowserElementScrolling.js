@@ -147,7 +147,11 @@ const ContentPanning = {
       // root scrollable frame, so don't use our synchronous fallback.
       return [null, null];
 
-    return [nodeContent, this._generateCallback(nodeContent)];
+    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
+      return [nodeContent, this._generateCallback(nodeContent)];
+    }
+
+    return [null, null];
   },
 
   _generateCallback: function cp_generateCallback(content) {
