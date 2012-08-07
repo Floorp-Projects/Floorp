@@ -539,6 +539,16 @@ public class PanZoomController
         updatePosition();
     }
 
+    private void scrollBy(PointF point) {
+        ViewportMetrics viewportMetrics = new ViewportMetrics(getMetrics());
+        PointF origin = viewportMetrics.getOrigin();
+        origin.offset(point.x, point.y);
+        viewportMetrics.setOrigin(origin);
+
+        mTarget.setViewportMetrics(viewportMetrics);
+        mTarget.notifyLayerClientOfGeometryChange();
+    }
+
     private void fling() {
         updatePosition();
 
@@ -629,7 +639,7 @@ public class PanZoomController
         }
         if (! mSubscroller.scrollBy(displacement)) {
             synchronized (mTarget.getLock()) {
-                mTarget.scrollBy(displacement);
+                scrollBy(displacement);
             }
         }
     }
@@ -941,10 +951,10 @@ public class PanZoomController
                 newZoomFactor = maxZoomFactor + excessZoom;
             }
 
-            mTarget.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
+            scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
                     mLastZoomFocus.y - detector.getFocusY()));
             PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
-            mTarget.scaleWithFocus(newZoomFactor, focus);
+            scaleWithFocus(newZoomFactor, focus);
         }
 
         mLastZoomFocus.set(detector.getFocusX(), detector.getFocusY());
@@ -962,6 +972,17 @@ public class PanZoomController
 
         // Force a viewport synchronisation
         mTarget.setForceRedraw();
+        mTarget.notifyLayerClientOfGeometryChange();
+    }
+
+    /**
+     * Scales the viewport, keeping the given focus point in the same place before and after the
+     * scale operation. You must hold the monitor while calling this.
+     */
+    private void scaleWithFocus(float zoomFactor, PointF focus) {
+        ViewportMetrics viewportMetrics = new ViewportMetrics(getMetrics());
+        viewportMetrics.scaleTo(zoomFactor, focus);
+        mTarget.setViewportMetrics(viewportMetrics);
         mTarget.notifyLayerClientOfGeometryChange();
     }
 
