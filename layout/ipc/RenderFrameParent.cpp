@@ -601,7 +601,8 @@ already_AddRefed<Layer>
 RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               LayerManager* aManager,
-                              const nsIntRect& aVisibleRect)
+                              const nsIntRect& aVisibleRect,
+                              nsDisplayItem* aItem)
 {
   NS_ABORT_IF_FALSE(aFrame,
                     "makes no sense to have a shadow tree without a frame");
@@ -624,13 +625,17 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (0 != id) {
     MOZ_ASSERT(!GetRootLayer());
 
-    nsRefPtr<RefLayer> layer = aManager->CreateRefLayer();
+    nsRefPtr<Layer> layer =
+      (GetLayerBuilderForManager(aManager)->GetLeafLayerFor(aBuilder, aManager, aItem));
+    if (!layer) {
+      layer = aManager->CreateRefLayer();
+    }
     if (!layer) {
       // Probably a temporary layer manager that doesn't know how to
       // use ref layers.
       return nullptr;
     }
-    layer->SetReferentId(id);
+    static_cast<RefLayer*>(layer.get())->SetReferentId(id);
     layer->SetVisibleRegion(aVisibleRect);
     nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
     layer->SetBaseTransform(
@@ -904,7 +909,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
-  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect);
+  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this);
   return layer.forget();
 }
 
