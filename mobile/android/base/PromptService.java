@@ -325,10 +325,10 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             try {
                 builder.setView(mInputs[0].getView());
             } catch(UnsupportedOperationException ex) {
-              // We cannot display these input widgets with this sdk version,
-              // do not display any dialog and finish the prompt now.
-              finishDialog("{\"button\": -1}");
-              return;
+                // We cannot display these input widgets with this sdk version,
+                // do not display any dialog and finish the prompt now.
+                finishDialog("{\"button\": -1}");
+                return;
             }
         } else if (length > 1) {
             LinearLayout linearLayout = new LinearLayout(GeckoApp.mAppContext);
@@ -339,21 +339,21 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                     linearLayout.addView(content);
                 }
             } catch(UnsupportedOperationException ex) {
-              // We cannot display these input widgets with this sdk version,
-              // do not display any dialog and finish the prompt now.
-              finishDialog("{\"button\": -1}");
-              return;
+                // We cannot display these input widgets with this sdk version,
+                // do not display any dialog and finish the prompt now.
+                finishDialog("{\"button\": -1}");
+                return;
             }
             builder.setView((View)linearLayout);
         }
 
         length = mButtons == null ? 0 : mButtons.length;
         if (length > 0) {
-            builder.setPositiveButton(mButtons[0].label, this);
+            builder.setPositiveButton(mButtons[0], this);
             if (length > 1) {
-                builder.setNeutralButton(mButtons[1].label, this);
+                builder.setNeutralButton(mButtons[1], this);
                 if (length > 2) {
-                    builder.setNegativeButton(mButtons[2].label, this);
+                    builder.setNegativeButton(mButtons[2], this);
                 }
             }
         }
@@ -440,7 +440,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         try {
             mPromptQueue.put(aReturn);
         } catch(Exception ex) {
-          Log.d(LOGTAG, "mPromptQueue not ready yet");
+            Log.d(LOGTAG, "mPromptQueue not ready yet");
         }
     }
 
@@ -562,11 +562,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         private static final int VIEW_TYPE_COUNT = 2;
 
         public ListView listView = null;
-    	private int mResourceId = -1;
-    	PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
+        private int mResourceId = -1;
+        PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
             super(context, textViewResourceId, objects);
             mResourceId = textViewResourceId;
-    	}
+        }
 
         @Override
         public int getItemViewType(int position) {
