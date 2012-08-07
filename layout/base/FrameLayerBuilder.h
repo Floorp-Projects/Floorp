@@ -252,6 +252,12 @@ public:
   static void InvalidateThebesLayersInSubtree(nsIFrame* aFrame);
 
   /**
+   * As InvalidateThebesLayersInSubtree, but don't trust frame geometry
+   * (e.g. because appunits-per-dev-pixel changed).
+   */
+  static void InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(nsIFrame* aFrame);
+
+  /**
    * Call this to force all retained layers to be discarded and recreated at
    * the next paint.
    */

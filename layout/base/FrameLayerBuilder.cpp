@@ -2425,16 +2425,23 @@ FrameLayerBuilder::InvalidateThebesLayerContents(nsIFrame* aFrame,
  * Returns true if we find a descendant with a container layer
  */
 static bool
-InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
+InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame, bool aTrustFrameGeometry)
 {
   if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT))
     return false;
 
   bool foundContainerLayer = false;
   if (aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
-    // Delete the invalid region to indicate that all Thebes contents
-    // need to be invalidated
-    FrameLayerBuilder::InvalidateThebesLayerContents(aFrame, aFrame->GetVisualOverflowRectRelativeToSelf());
+    if (aTrustFrameGeometry) {
+      // Just invalidate the area covered by the frame. This helps if a single
+      // region is being shared by multiple container layers.
+      FrameLayerBuilder::InvalidateThebesLayerContents(aFrame,
+        aFrame->GetVisualOverflowRectRelativeToSelf());
+    } else {
+      // Delete the invalid region to indicate that all Thebes contents
+      // need to be invalidated
+      aFrame->Properties().Delete(ThebesLayerInvalidRegionProperty());
+    }
     foundContainerLayer = true;
   }
 
@@ -2457,7 +2464,8 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
-      if (InternalInvalidateThebesLayersInSubtree(childFrames.get())) {
+      if (InternalInvalidateThebesLayersInSubtree(childFrames.get(),
+                                                  aTrustFrameGeometry)) {
         foundContainerLayer = true;
       }
     }
@@ -2472,7 +2480,13 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 /* static */ void
 FrameLayerBuilder::InvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 {
-  InternalInvalidateThebesLayersInSubtree(aFrame);
+  InternalInvalidateThebesLayersInSubtree(aFrame, true);
+}
+
+/* static */ void
+FrameLayerBuilder::InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(nsIFrame* aFrame)
+{
+  InternalInvalidateThebesLayersInSubtree(aFrame, false);
 }
 
 /* static */ void
