@@ -2422,7 +2422,8 @@ var gListView = {
       return;
 
     let prop = aIsInstall ? "mInstall" : "mAddon";
-    for (let item of this._listBox.childNodes) {
+    for (let i = 0; i < this._listBox.itemCount; i++) {
+      let item = this._listBox.childNodes[i];
       if (item[prop] == aObj)
         return;
     }
@@ -2435,7 +2436,8 @@ var gListView = {
   removeItem: function gListView_removeItem(aObj, aIsInstall) {
     let prop = aIsInstall ? "mInstall" : "mAddon";
 
-    for (let item of this._listBox.childNodes) {
+    for (let i = 0; i < this._listBox.itemCount; i++) {
+      let item = this._listBox.childNodes[i];
       if (item[prop] == aObj) {
         this._listBox.removeChild(item);
         this.showEmptyNotice(this._listBox.itemCount == 0);
@@ -2651,13 +2653,12 @@ var gDetailView = {
       !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
     
     var gridRows = document.querySelectorAll("#detail-grid rows row");
-    let first = true;
-    for (let gridRow of gridRows) {
-      if (first && window.getComputedStyle(gridRow, null).getPropertyValue("display") != "none") {
-        gridRow.setAttribute("first-row", true);
+    for (var i = 0, first = true; i < gridRows.length; ++i) {
+      if (first && window.getComputedStyle(gridRows[i], null).getPropertyValue("display") != "none") {
+        gridRows[i].setAttribute("first-row", true);
         first = false;
       } else {
-        gridRow.removeAttribute("first-row");
+        gridRows[i].removeAttribute("first-row");
       }
     }
 
