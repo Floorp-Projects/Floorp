@@ -3,8 +3,7 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-const WHITELIST_PREF = "dom.telephony.app.phone.url";
-SpecialPowers.setCharPref(WHITELIST_PREF, window.location.href);
+SpecialPowers.addPermission("telephony", true, document);
 
 let telephony = window.navigator.mozTelephony;
 let number = "5555552368";
@@ -71,7 +70,7 @@ function busy() {
 };
 
 function cleanUp() {
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  SpecialPowers.removePermission("telephony", document);
   finish();
 }
 
