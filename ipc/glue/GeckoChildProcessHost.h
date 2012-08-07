@@ -23,6 +23,7 @@ class GeckoChildProcessHost : public ChildProcessHost
 {
 protected:
   typedef mozilla::Monitor Monitor;
+  typedef std::vector<std::string> StringVector;
 
 public:
   typedef base::ProcessHandle ProcessHandle;
@@ -36,11 +37,33 @@ public:
 
   static uint32 GetSupportedArchitecturesForProcessType(GeckoProcessType type);
 
-  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(),
+  // Block until the IPC channel for our subprocess is initialized,
+  // but no longer.  The child process may or may not have been
+  // created when this method returns.
+  bool AsyncLaunch(StringVector aExtraOpts=StringVector());
+
+  // Block until the IPC channel for our subprocess is initialized and
+  // the OS process is created.  The subprocess may or may not have
+  // connected back to us when this method returns.
+  //
+  // NB: on POSIX, this method is relatively cheap, and doesn't
+  // require disk IO.  On win32 however, it requires at least the
+  // analogue of stat().  This difference induces a semantic
+  // difference in this method: on POSIX, when we return, we know the
+  // subprocess has been created, but we don't know whether its
+  // executable image can be loaded.  On win32, we do know that when
+  // we return.  But we don't know if dynamic linking succeeded on
+  // either platform.
+  bool LaunchAndWaitForProcessHandle(StringVector aExtraOpts=StringVector());
+
+  // Block until the child process has been created and it connects to
+  // the IPC channel, meaning it's fully initialized.  (Or until an
+  // error occurs.)
+  bool SyncLaunch(StringVector aExtraOpts=StringVector(),
                   int32 timeoutMs=0,
                   base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
-  bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
-  bool PerformAsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(),
+
+  bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
                           base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
 
   virtual void OnChannelConnected(int32 peer_pid);
@@ -95,6 +118,8 @@ protected:
   } mProcessState;
 
   static PRInt32 mChildCounter;
+
+  void PrepareLaunch();
 
 #ifdef XP_WIN
   void InitWindowsGroupID();
