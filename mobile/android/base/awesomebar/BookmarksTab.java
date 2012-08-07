@@ -39,6 +39,7 @@ public class BookmarksTab extends AwesomeBarTab {
     private String mFolderTitle;
     private BookmarksListAdapter mCursorAdapter = null;
     private BookmarksQueryTask mQueryTask = null;
+    private boolean mShowReadingList = false;
 
     public int getTitleStringId() {
         return R.string.awesomebar_bookmarks_title;
@@ -78,10 +79,19 @@ public class BookmarksTab extends AwesomeBarTab {
             list.setAdapter(null);
             list.setAdapter(getCursorAdapter());
 
-            BookmarksQueryTask task = getQueryTask();
-            task.execute();
+            if (mShowReadingList) {
+                String title = getResources().getString(R.string.bookmarks_folder_reading_list);
+                getCursorAdapter().moveToChildFolder(Bookmarks.FIXED_READING_LIST_ID, title);
+            } else {
+                BookmarksQueryTask task = getQueryTask();
+                task.execute();
+            }
         }
         return (ListView)mView;
+    }
+
+    public void setShowReadingList(boolean showReadingList) {
+        mShowReadingList = showReadingList;
     }
 
     public void destroy() {
