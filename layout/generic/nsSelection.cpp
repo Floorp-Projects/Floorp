@@ -1228,7 +1228,7 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
   nsIFrame *foundFrame = aFrameIn;
 
   nsFrameIterator frameTraversal(mShell->GetPresContext(), aFrameIn,
-                                 eLeaf, FrameIteratorFlags::FLAG_NONE);
+                                 eLeaf, nsFrameIterator::FLAG_NONE);
 
   do {
     *aFrameOut = foundFrame;

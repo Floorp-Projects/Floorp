@@ -2272,7 +2272,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
             startContent != aDocument->GetRootElement()) {
           // Yes, indeed we were at the end of the last node
           nsFrameIterator frameTraversal(presContext, startFrame,
-                                         eLeaf, FrameIteratorFlags::FLAG_FOLLOW_OUT_OF_FLOW);
+                                         eLeaf, nsFrameIterator::FLAG_FOLLOW_OUT_OF_FLOW);
 
           nsIFrame *newCaretFrame = nullptr;
           nsCOMPtr<nsIContent> newCaretContent = startContent;
@@ -2698,7 +2698,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
     }
 
     nsFrameIterator frameTraversal(presContext, startFrame,
-                                   ePreOrder, FrameIteratorFlags::FLAG_FOLLOW_OUT_OF_FLOW);
+                                   ePreOrder, nsFrameIterator::FLAG_FOLLOW_OUT_OF_FLOW);
 
     if (iterStartContent == aRootContent) {
       if (!aForward) {
