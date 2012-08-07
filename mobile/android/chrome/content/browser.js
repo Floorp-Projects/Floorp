@@ -3388,7 +3388,7 @@ var BrowserEventHandler = {
 
           if (isClickable) {
             [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
-            element = ElementTouchHelper.anyElementFromPoint(element.ownerDocument.defaultView, data.x, data.y);
+            element = ElementTouchHelper.anyElementFromPoint(element.ownerDocument.defaultView.top, data.x, data.y);
             isClickable = ElementTouchHelper.isElementClickable(element);
           }
 
