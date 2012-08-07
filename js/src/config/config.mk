@@ -562,12 +562,6 @@ export MACOSX_DEPLOYMENT_TARGET
 PBBUILD_SETTINGS += MACOSX_DEPLOYMENT_TARGET="$(MACOSX_DEPLOYMENT_TARGET)"
 endif # MACOSX_DEPLOYMENT_TARGET
 
-ifdef MOZ_USING_CCACHE
-ifdef CLANG_CXX
-export CCACHE_CPP2=1
-endif
-endif
-
 ifdef MOZ_OPTIMIZE
 ifeq (2,$(MOZ_OPTIMIZE))
 # Only override project defaults if the config specified explicit settings
@@ -576,6 +570,11 @@ endif # MOZ_OPTIMIZE=2
 endif # MOZ_OPTIMIZE
 endif # OS_ARCH=Darwin
 
+ifdef MOZ_USING_CCACHE
+ifdef CLANG_CXX
+export CCACHE_CPP2=1
+endif
+endif
 
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR =
