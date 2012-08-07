@@ -83,7 +83,9 @@ nsPKIParamBlock::SetISupportAtIndex(PRInt32 index, nsISupports *object)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  return mSupports->InsertElementAt(object, index-1);
+  // Ignore any InsertElementAt error, because this function always did that
+  mSupports->InsertElementAt(object, index-1);
+  return NS_OK;
 }
 
 /* nsISupports getISupportAtIndex (in PRInt32 index); */

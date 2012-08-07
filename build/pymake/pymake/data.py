@@ -62,10 +62,84 @@ def _if_else(c, t, f):
         return t()
     return f()
 
-class StringExpansion(object):
+
+class BaseExpansion(object):
+    """Base class for expansions.
+
+    A make expansion is the parsed representation of a string, which may
+    contain references to other elements.
+    """
+
+    @property
+    def is_static_string(self):
+        """Returns whether the expansion is composed of static string content.
+
+        This is always True for StringExpansion. It will be True for Expansion
+        only if all elements of that Expansion are static strings.
+        """
+        raise Exception('Must be implemented in child class.')
+
+    def functions(self, descend=False):
+        """Obtain all functions inside this expansion.
+
+        This is a generator for pymake.functions.Function instances.
+
+        By default, this only returns functions existing as the primary
+        elements of this expansion. If `descend` is True, it will descend into
+        child expansions and extract all functions in the tree.
+        """
+        # An empty generator. Yeah, it's weird.
+        for x in []:
+            yield x
+
+    def variable_references(self, descend=False):
+        """Obtain all variable references in this expansion.
+
+        This is a generator for pymake.functionsVariableRef instances.
+
+        To retrieve the names of variables, simply query the `vname` field on
+        the returned instances. Most of the time these will be StringExpansion
+        instances.
+        """
+        for f in self.functions(descend=descend):
+            if not isinstance(f, functions.VariableRef):
+                continue
+
+            yield f
+
+    @property
+    def is_filesystem_dependent(self):
+        """Whether this expansion may query the filesystem for evaluation.
+
+        This effectively asks "is any function in this expansion dependent on
+        the filesystem.
+        """
+        for f in self.functions(descend=True):
+            if f.is_filesystem_dependent:
+                return True
+
+        return False
+
+    @property
+    def is_shell_dependent(self):
+        """Whether this expansion may invoke a shell for evaluation."""
+
+        for f in self.functions(descend=True):
+            if isinstance(f, functions.ShellFunction):
+                return True
+
+        return False
+
+
+class StringExpansion(BaseExpansion):
+    """An Expansion representing a static string.
+
+    This essentially wraps a single str instance.
+    """
+
     __slots__ = ('loc', 's',)
     simple = True
-    
+
     def __init__(self, s, loc):
         assert isinstance(s, str)
         self.s = s
@@ -94,6 +168,10 @@ class StringExpansion(object):
         e.appendstr(self.s)
         return e
 
+    @property
+    def is_static_string(self):
+        return True
+
     def __len__(self):
         return 1
 
@@ -104,9 +182,31 @@ class StringExpansion(object):
     def __repr__(self):
         return "Exp<%s>(%r)" % (self.loc, self.s)
 
-class Expansion(list):
-    """
-    A representation of expanded data, such as that for a recursively-expanded variable, a command, etc.
+    def __eq__(self, other):
+        """We only compare the string contents."""
+        return self.s == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def to_source(self, escape_variables=False, escape_comments=False):
+        s = self.s
+
+        if escape_comments:
+            s = s.replace('#', '\\#')
+
+        if escape_variables:
+            return s.replace('$', '$$')
+
+        return s
+
+
+class Expansion(BaseExpansion, list):
+    """A representation of expanded data.
+
+    This is effectively an ordered list of StringExpansion and
+    pymake.function.Function instances. Every item in the collection appears in
+    the same context in a make file.
     """
 
     __slots__ = ('loc',)
@@ -232,8 +332,90 @@ class Expansion(list):
     def resolvesplit(self, makefile, variables, setting=[]):
         return self.resolvestr(makefile, variables, setting).split()
 
+    @property
+    def is_static_string(self):
+        """An Expansion is static if all its components are strings, not
+        functions."""
+        for e, is_func in self:
+            if is_func:
+                return False
+
+        return True
+
+    def functions(self, descend=False):
+        for e, is_func in self:
+            if is_func:
+                yield e
+
+            if descend:
+                for exp in e.expansions(descend=True):
+                    for f in exp.functions(descend=True):
+                        yield f
+
     def __repr__(self):
         return "<Expansion with elements: %r>" % ([e for e, isfunc in self],)
+
+    def to_source(self, escape_variables=False, escape_comments=False):
+        parts = []
+        for e, is_func in self:
+            if is_func:
+                parts.append(e.to_source())
+                continue
+
+            if escape_variables:
+                parts.append(e.replace('$', '$$'))
+                continue
+
+            parts.append(e)
+
+        return ''.join(parts)
+
+    def __eq__(self, other):
+        if not isinstance(other, (Expansion, StringExpansion)):
+            return False
+
+        # Expansions are equivalent if adjacent string literals normalize to
+        # the same value. So, we must normalize before any comparisons are
+        # made.
+        a = self.clone().finish()
+
+        if isinstance(other, StringExpansion):
+            if isinstance(a, StringExpansion):
+                return a == other
+
+            # A normalized Expansion != StringExpansion.
+            return False
+
+        b = other.clone().finish()
+
+        # b could be a StringExpansion now.
+        if isinstance(b, StringExpansion):
+            if isinstance(a, StringExpansion):
+                return a == b
+
+            # Our normalized Expansion != normalized StringExpansion.
+            return False
+
+        if len(a) != len(b):
+            return False
+
+        for i in xrange(len(self)):
+            e1, is_func1 = a[i]
+            e2, is_func2 = b[i]
+
+            if is_func1 != is_func2:
+                return False
+
+            if type(e1) != type(e2):
+                return False
+
+            if e1 != e2:
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class Variables(object):
     """
@@ -1541,6 +1723,10 @@ class Makefile(object):
         np = self.gettarget('.NOTPARALLEL')
         if len(np.rules):
             self.context = process.getcontext(1)
+
+        flavor, source, value = self.variables.get('.DEFAULT_GOAL')
+        if value is not None:
+            self.defaulttarget = value.resolvestr(self, self.variables, ['.DEFAULT_GOAL']).strip()
 
         self.error = False
 

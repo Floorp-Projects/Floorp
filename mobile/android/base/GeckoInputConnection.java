@@ -43,7 +43,7 @@ import android.view.inputmethod.InputMethodManager;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class GeckoInputConnection
+class GeckoInputConnection
     extends BaseInputConnection
     implements TextWatcher, InputConnectionHandler {
 

@@ -3708,7 +3708,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg)
     Rooted<GlobalObject*> parent(cx, parent_);
     RootedObject proto(cx, protoArg);
     if (protoArg)
-        PoisonPtr(reinterpret_cast<uintptr_t *>(protoArg));
+        PoisonPtr(&protoArg);
 
     if (!proto && !FindProto(cx, &ArrayClass, parent, &proto))
         return NULL;

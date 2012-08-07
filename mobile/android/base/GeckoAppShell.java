@@ -16,6 +16,7 @@ import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.GeckoBackgroundThread;
 
 import org.json.JSONObject;
 
@@ -540,7 +541,8 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = v.setInputConnectionHandler();
+        mInputConnection = GeckoInputConnection.create(v);
+        v.setInputConnectionHandler(mInputConnection);
         layerController.notifyLayerClientOfGeometryChange();
     }
 
@@ -792,6 +794,13 @@ public class GeckoAppShell
     static void scheduleRestart() {
         Log.i(LOGTAG, "scheduling restart");
         gRestartScheduled = true;
+    }
+
+    public static File installWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
+        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        GeckoProfile profile = GeckoProfile.get(GeckoApp.mAppContext, "webapp" + index);
+        createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
+        return profile.getDir();
     }
 
     public static Intent getWebAppIntent(String aURI, String aUniqueURI, boolean forInstall) {

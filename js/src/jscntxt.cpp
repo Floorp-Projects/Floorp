@@ -106,10 +106,6 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *run
     for (ScriptFilenameTable::Range r = scriptFilenameTable.all(); !r.empty(); r.popFront())
         runtime->scriptFilenames += mallocSizeOf(r.front());
 
-    runtime->scriptSources = 0;
-    for (ScriptSource *n = scriptSources; n; n = n->next)
-        runtime->scriptSources += n->sizeOfIncludingThis(mallocSizeOf);
-
     runtime->compartmentObjects = 0;
     CallbackData data(mallocSizeOf);
     JS_IterateCompartments(this, &data, CompartmentCallback);

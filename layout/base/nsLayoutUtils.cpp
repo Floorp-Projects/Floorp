@@ -189,6 +189,21 @@ nsLayoutUtils::AreTransformAnimationsEnabled()
 }
 
 bool
+nsLayoutUtils::IsAnimationLoggingEnabled()
+{
+  static bool sShouldLog;
+  static bool sShouldLogPrefCached;
+
+  if (!sShouldLogPrefCached) {
+    sShouldLogPrefCached = true;
+    Preferences::AddBoolVarCache(&sShouldLog,
+                                 "layers.offmainthreadcomposition.log-animations");
+  }
+
+  return sShouldLog;
+}
+
+bool
 nsLayoutUtils::UseBackgroundNearestFiltering()
 {
   static bool sUseBackgroundNearestFilteringEnabled;
