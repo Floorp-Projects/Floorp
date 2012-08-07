@@ -17,7 +17,7 @@
         ondialogaccept="return XPInstallConfirm.onOK();"
         ondialogcancel="return XPInstallConfirm.onCancel();">
 
-  <script src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js" type="application/javascript"/>
+  <script src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"/>
 
   <stringbundle id="xpinstallConfirmStrings" 
                 src="chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties"/>
