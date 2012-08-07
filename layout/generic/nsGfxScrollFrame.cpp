@@ -54,6 +54,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "mozilla/Attributes.h"
 #include "ScrollbarActivity.h"
+#include "nsRefreshDriver.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

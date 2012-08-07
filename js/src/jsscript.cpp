@@ -111,8 +111,10 @@ Bindings::lookup(JSContext *cx, PropertyName *name) const
     if (!lastBinding)
         return BindingIter::Init(this, NULL);
 
+    const Bindings *self = this;
+    SkipRoot skipSelf(cx, &self);
     Shape **_;
-    return BindingIter::Init(this, Shape::search(cx, lastBinding, NameToId(name), &_));
+    return BindingIter::Init(self, Shape::search(cx, lastBinding, NameToId(name), &_));
 }
 
 unsigned

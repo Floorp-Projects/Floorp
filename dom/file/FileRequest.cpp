@@ -10,6 +10,7 @@
 
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
+#include "nsDOMError.h"
 #include "nsDOMProgressEvent.h"
 #include "nsDOMClassInfoID.h"
 #include "FileHelper.h"

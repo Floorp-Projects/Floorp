@@ -23,6 +23,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSMILAnimationController.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSize.h"
 #include "gfxRect.h"

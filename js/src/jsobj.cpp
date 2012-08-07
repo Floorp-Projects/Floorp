@@ -335,6 +335,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
     size_t vlength;
     Value *val;
     JSString *gsop[2];
+    SkipRoot skipGsop(cx, &gsop, 2);
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
