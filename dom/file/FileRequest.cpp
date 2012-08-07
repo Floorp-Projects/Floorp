@@ -150,14 +150,20 @@ FileRequest::FireProgressEvent(PRUint64 aLoaded, PRUint64 aTotal)
   nsRefPtr<nsDOMProgressEvent> event = new nsDOMProgressEvent(nullptr, nullptr);
   nsresult rv = event->InitProgressEvent(NS_LITERAL_STRING("progress"),
                                          false, false, false, aLoaded, aTotal);
-  NS_ENSURE_SUCCESS(rv,);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv,);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   bool dummy;
   rv = DispatchEvent(static_cast<nsIDOMProgressEvent*>(event), &dummy);
-  NS_ENSURE_SUCCESS(rv,);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 }
 
 void

@@ -2201,7 +2201,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     // Avoid adding different versions of the same plugin if they are running 
     // in-process, otherwise we risk undefined behaviour.
     if (!nsNPAPIPlugin::RunPluginOOP(pluginTag)) {
-      if (nsPluginTag *duplicate = HaveSamePlugin(pluginTag)) {
+      if (HaveSamePlugin(pluginTag)) {
         continue;
       }
     }
