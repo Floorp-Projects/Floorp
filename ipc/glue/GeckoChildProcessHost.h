@@ -76,9 +76,23 @@ public:
 protected:
   GeckoProcessType mProcessType;
   Monitor mMonitor;
-  bool mLaunched;
-  bool mChannelInitialized;
   FilePath mProcessPath;
+  // This value must be accessed while holding mMonitor.
+  enum {
+    // This object has been constructed, but the OS process has not
+    // yet.
+    CREATING_CHANNEL = 0,
+    // The IPC channel for our subprocess has been created, but the OS
+    // process has still not been created.
+    CHANNEL_INITIALIZED,
+    // The OS process has been created, but it hasn't yet connected to
+    // our IPC channel.
+    PROCESS_CREATED,
+    // The process is launched and connected to our IPC channel.  All
+    // is well.
+    PROCESS_CONNECTED,
+    PROCESS_ERROR
+  } mProcessState;
 
   static PRInt32 mChildCounter;
 
@@ -104,6 +118,8 @@ private:
   // Does the actual work for AsyncLaunch, on the IO thread.
   bool PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts,
                                   base::ProcessArchitecture arch);
+
+  void OpenPrivilegedHandle(base::ProcessId aPid);
 
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
