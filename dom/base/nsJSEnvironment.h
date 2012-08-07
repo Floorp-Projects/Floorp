@@ -72,7 +72,8 @@ public:
                                  const char *aURL,
                                  PRUint32 aLineNo,
                                  PRUint32 aVersion,
-                                 nsScriptObjectHolder<JSScript>& aScriptObject);
+                                 nsScriptObjectHolder<JSScript>& aScriptObject,
+                                 bool aSaveSource = false);
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject,
                                  nsAString* aRetValue,
