@@ -160,29 +160,8 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
 
-  // Get info from nsILoadContext, if any
-  bool haveLoadContext = false;
-  bool isContent = false;
-  bool usePrivateBrowsing = false;
-  bool isInBrowserElement = false;
-  PRUint32 appId = 0;
-  nsCAutoString extendedOrigin;
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
-                                NS_GET_IID(nsILoadContext),
-                                getter_AddRefs(loadContext));
-  if (loadContext) {
-    haveLoadContext = true;
-    loadContext->GetIsContent(&isContent);
-    loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
-    loadContext->GetIsInBrowserElement(&isInBrowserElement);
-    loadContext->GetAppId(&appId);
-    loadContext->GetExtendedOrigin(mURI, extendedOrigin);
-  }
-
   SendAsyncOpen(nsBaseChannel::URI(), mStartPos, mEntityID,
-                IPC::InputStream(mUploadStream), haveLoadContext, isContent,
-                usePrivateBrowsing, isInBrowserElement, appId, extendedOrigin);
+                IPC::InputStream(mUploadStream), IPC::SerializedLoadContext(this));
 
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.

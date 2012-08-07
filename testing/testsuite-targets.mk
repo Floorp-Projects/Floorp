@@ -28,25 +28,27 @@ TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
 endif
 
 RUN_MOCHITEST = \
-	rm -f ./$@.log && \
-	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
-	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
-	  --failure-file=$(call core_abspath,_tests/testing/mochitest/makefailures.json)  \
-	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+  rm -f ./$@.log && \
+  $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO \
+    --failure-file=$(call core_abspath,_tests/testing/mochitest/makefailures.json) \
+    --testing-modules-dir=$(call core_abspath,_tests/modules) \
+    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RERUN_MOCHITEST = \
-	rm -f ./$@.log && \
-	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
-	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
-	  --run-only-tests=makefailures.json  \
-	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+  rm -f ./$@.log && \
+  $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO \
+    --run-only-tests=makefailures.json \
+    --testing-modules-dir=$(call core_abspath,_tests/modules) \
+    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RUN_MOCHITEST_REMOTE = \
-	rm -f ./$@.log && \
-	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
-	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
-	  --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+  rm -f ./$@.log && \
+  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
+    --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \

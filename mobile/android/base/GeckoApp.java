@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.ui.PanZoomController;
+import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -715,7 +716,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new GeckoAsyncTask<Void, Void, String>() {
+        (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
             @Override
             public String doInBackground(Void... params) {
                 return getFavicons().getFaviconUrlForPageUrl(url);

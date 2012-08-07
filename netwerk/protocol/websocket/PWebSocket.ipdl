@@ -12,6 +12,7 @@ include "mozilla/net/NeckoMessageUtils.h";
 
 using IPC::URI;
 using IPC::InputStream;
+using IPC::SerializedLoadContext;
 
 namespace mozilla {
 namespace net {
@@ -26,13 +27,7 @@ parent:
             nsCString aOrigin,
             nsCString aProtocol,
             bool aSecure,
-            // Fields for imitating a nsILoadContext
-            bool haveLoadContext,
-            bool isContent,
-            bool usePrivateBrowsing,
-            bool isInBrowserElement,
-            PRUint32 appID,
-            nsCString extendedOrigin);
+            SerializedLoadContext loadContext);
   Close(PRUint16 code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

@@ -8,6 +8,7 @@
  * JS math package.
  */
 
+#include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <stdlib.h>
@@ -42,9 +43,6 @@ using namespace js;
 #endif
 #ifndef M_LN10
 #define M_LN10          2.30258509299404568402
-#endif
-#ifndef M_PI
-#define M_PI            3.14159265358979323846
 #endif
 #ifndef M_SQRT2
 #define M_SQRT2         1.41421356237309504880
