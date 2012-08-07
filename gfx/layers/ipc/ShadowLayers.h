@@ -411,6 +411,8 @@ public:
   /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer() { return nullptr; }
 
+  virtual void NotifyShadowTreeTransaction() {}
+
   /**
    * Try to open |aDescriptor| for direct texturing.  If the
    * underlying surface supports direct texturing, a non-null
