@@ -50,7 +50,14 @@ public class GeckoLayerClient
 
     private VirtualLayer mRootLayer;
 
-    /* The Gecko viewport as per the UI thread. Must be touched only on the UI thread. */
+    /* The Gecko viewport as per the UI thread. Must be touched only on the UI thread.
+     * If any events being sent to Gecko that are relative to the Gecko viewport position,
+     * they must (a) be relative to this viewport, and (b) be sent on the UI thread to
+     * avoid races. As long as these two conditions are satisfied, and the events being
+     * sent to Gecko are processed in FIFO order, the events will properly be relative
+     * to the Gecko viewport position. Note that if Gecko updates its viewport independently,
+     * we get notified synchronously and also update this on the UI thread.
+     */
     private ViewportMetrics mGeckoViewport;
 
     /*
@@ -160,7 +167,7 @@ public class GeckoLayerClient
      * Returns true if this client is fine with performing a redraw operation or false if it
      * would prefer that the action didn't take place.
      */
-    public boolean getRedrawHint() {
+    private boolean getRedrawHint() {
         if (mForceRedraw) {
             mForceRedraw = false;
             return true;
@@ -174,7 +181,7 @@ public class GeckoLayerClient
                 mPanZoomController.getVelocityVector(), mDisplayPort);
     }
 
-    public Layer getRoot() {
+    Layer getRoot() {
         return mGeckoIsReady ? mRootLayer : null;
     }
 
@@ -194,29 +201,24 @@ public class GeckoLayerClient
      * to the layer client. That way, the layer client won't be tempted to call this, which might
      * result in an infinite loop.
      */
-    public void setViewportSize(FloatSize size) {
+    void setViewportSize(FloatSize size) {
         ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
         viewportMetrics.setSize(size);
         mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         if (mGeckoIsReady) {
-            viewportSizeChanged();
+            // here we send gecko a resize message. The code in browser.js is responsible for
+            // picking up on that resize event, modifying the viewport as necessary, and informing
+            // us of the new viewport.
+            sendResizeEventIfNecessary(true);
+            // the following call also sends gecko a message, which will be processed after the resize
+            // message above has updated the viewport. this message ensures that if we have just put
+            // focus in a text field, we scroll the content so that the text field is in view.
+            GeckoAppShell.viewSizeChanged();
         }
     }
 
     public PanZoomController getPanZoomController() {
-        return mPanZoomController;
-    }
-
-    public GestureDetector.OnGestureListener getGestureListener() {
-        return mPanZoomController;
-    }
-
-    public SimpleScaleGestureDetector.SimpleScaleGestureListener getScaleGestureListener() {
-        return mPanZoomController;
-    }
-
-    public GestureDetector.OnDoubleTapListener getDoubleTapListener() {
         return mPanZoomController;
     }
 
@@ -251,17 +253,6 @@ public class GeckoLayerClient
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", ""));
     }
 
-    void viewportSizeChanged() {
-        // here we send gecko a resize message. The code in browser.js is responsible for
-        // picking up on that resize event, modifying the viewport as necessary, and informing
-        // us of the new viewport.
-        sendResizeEventIfNecessary(true);
-        // the following call also sends gecko a message, which will be processed after the resize
-        // message above has updated the viewport. this message ensures that if we have just put
-        // focus in a text field, we scroll the content so that the text field is in view.
-        GeckoAppShell.viewSizeChanged();
-    }
-
     /** Sets the current page rect. You must hold the monitor while calling this. */
     private void setPageRect(RectF rect, RectF cssRect) {
         // Since the "rect" is always just a multiple of "cssRect" we don't need to
@@ -285,7 +276,7 @@ public class GeckoLayerClient
         });
     }
 
-    void adjustViewport(DisplayPortMetrics displayPort) {
+    private void adjustViewport(DisplayPortMetrics displayPort) {
         ImmutableViewportMetrics metrics = getViewportMetrics();
 
         ViewportMetrics clampedMetrics = new ViewportMetrics(metrics);
@@ -373,9 +364,9 @@ public class GeckoLayerClient
                 ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
                 mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
             } else if ("Checkerboard:Toggle".equals(event)) {
-                boolean showChecks = message.getBoolean("value");
-                setCheckerboardShowChecks(showChecks);
-                Log.i(LOGTAG, "Showing checks: " + showChecks);
+                mCheckerboardShouldShowChecks = message.getBoolean("value");
+                mView.requestRender();
+                Log.i(LOGTAG, "Showing checks: " + mCheckerboardShouldShowChecks);
             } else if ("Preferences:Data".equals(event)) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 Map<String, Integer> prefValues = new HashMap<String, Integer>();
@@ -418,29 +409,12 @@ public class GeckoLayerClient
         }
     }
 
-    /*
-     * This function returns the last viewport that we sent to Gecko. If any additional events are
-     * being sent to Gecko that are relative on the Gecko viewport position, they must (a) be relative
-     * to this viewport, and (b) be sent on the UI thread to avoid races. As long as these two
-     * conditions are satisfied, and the events being sent to Gecko are processed in FIFO order, the
-     * events will properly be relative to the Gecko viewport position. Note that if Gecko updates
-     * its viewport independently, we get notified synchronously and also update this on the UI thread.
-     */
-    public ViewportMetrics getGeckoViewportMetrics() {
-        return mGeckoViewport;
-    }
-
-    public boolean checkerboardShouldShowChecks() {
+    boolean checkerboardShouldShowChecks() {
         return mCheckerboardShouldShowChecks;
     }
 
-    public int getCheckerboardColor() {
+    int getCheckerboardColor() {
         return mCheckerboardColor;
-    }
-
-    public void setCheckerboardShowChecks(boolean showChecks) {
-        mCheckerboardShouldShowChecks = showChecks;
-        mView.requestRender();
     }
 
     public void setCheckerboardColor(int newColor) {
@@ -584,7 +558,7 @@ public class GeckoLayerClient
         mLayerRenderer.deactivateDefaultProgram();
     }
 
-    void geometryChanged() {
+    private void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false);
         if (getRedrawHint()) {
@@ -707,7 +681,7 @@ public class GeckoLayerClient
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         PointF origin = viewportMetrics.getOrigin();
         float zoom = viewportMetrics.zoomFactor;
-        ViewportMetrics geckoViewport = getGeckoViewportMetrics();
+        ViewportMetrics geckoViewport = mGeckoViewport;
         PointF geckoOrigin = geckoViewport.getOrigin();
         float geckoZoom = geckoViewport.getZoomFactor();
 
