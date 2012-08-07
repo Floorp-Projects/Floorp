@@ -366,10 +366,7 @@ class JSString : public js::gc::Cell
         return (d.lengthAndFlags & JS_BITMASK(3)) == DEPENDENT_FLAGS;
     }
 
-    inline JSLinearString *base() const {
-        JS_ASSERT(hasBase());
-        return d.s.u2.base;
-    }
+    inline JSLinearString *base() const;
 
     inline void markBase(JSTracer *trc);
 
@@ -470,8 +467,8 @@ class JSDependentString : public JSLinearString
     JSDependentString &asDependent() const MOZ_DELETE;
 
   public:
-    static inline JSDependentString *new_(JSContext *cx, JSLinearString *base,
-                                          const jschar *chars, size_t length);
+    static inline JSLinearString *new_(JSContext *cx, JSLinearString *base,
+                                       const jschar *chars, size_t length);
 };
 
 JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
@@ -816,6 +813,14 @@ JSString::ensureFixed(JSContext *cx)
     if (isExtensible())
         d.lengthAndFlags = buildLengthAndFlags(length(), FIXED_FLAGS);
     return &asFixed();
+}
+
+inline JSLinearString *
+JSString::base() const
+{
+    JS_ASSERT(hasBase());
+    JS_ASSERT(!d.s.u2.base->isInline());
+    return d.s.u2.base;
 }
 
 inline js::PropertyName *
