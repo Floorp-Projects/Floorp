@@ -187,6 +187,11 @@ public:
                 const nsAString& aDeviceAddress,
                 nsAString& aDevicePath) = 0;
 
+  virtual int
+  GetDeviceServiceChannelInternal(const nsAString& aObjectPath,
+                                  const nsAString& aPattern,
+                                  int aAttributeId) = 0;
+
 protected:
   BluetoothService()
   {

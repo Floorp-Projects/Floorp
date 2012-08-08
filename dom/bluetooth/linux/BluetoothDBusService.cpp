@@ -868,3 +868,24 @@ BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
   aDevicePath = GetObjectPathFromAddress(aAdapterPath, aDeviceAddress);
   return true;
 }
+
+int
+BluetoothDBusService::GetDeviceServiceChannelInternal(const nsAString& aObjectPath,
+                                                      const nsAString& aPattern,
+                                                      int aAttributeId)
+{
+  // This is a blocking call, should not be run on main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  const char* deviceObjectPath = NS_ConvertUTF16toUTF8(aObjectPath).get();
+  const char* pattern = NS_ConvertUTF16toUTF8(aPattern).get();
+
+  DBusMessage *reply =
+    dbus_func_args(mConnection, deviceObjectPath,
+                   DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
+                   DBUS_TYPE_STRING, &pattern,
+                   DBUS_TYPE_UINT16, &aAttributeId,
+                   DBUS_TYPE_INVALID);
+
+  return reply ? dbus_returns_int32(reply) : -1;
+}
