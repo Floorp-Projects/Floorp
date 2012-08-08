@@ -76,6 +76,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsStyleStructInlines.h"
 
 #include "mozilla/Preferences.h"
 
@@ -2118,7 +2119,7 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
                                        PRUint32 aFlags)
 {
   const nsStyleText* textStyle = aFrame->GetStyleText();
-  if (!textStyle->mTextShadow)
+  if (!textStyle->HasTextShadow(aFrame))
     return aTextAndDecorationsRect;
 
   nsRect resultRect = aTextAndDecorationsRect;
@@ -3224,7 +3225,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
                                void* aCallbackData)
 {
   const nsStyleText* textStyle = aFrame->GetStyleText();
-  if (!textStyle->mTextShadow)
+  if (!textStyle->HasTextShadow(aFrame))
     return;
 
   // Text shadow happens with the last value being painted at the back,
