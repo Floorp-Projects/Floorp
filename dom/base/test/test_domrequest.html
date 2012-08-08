@@ -35,7 +35,7 @@ var ev = null;
 req.onsuccess = function(e) {
   ev = e;
 }
-reqserv.fireSuccess(req, "my result");
+is(reqserv.fireSuccess(req, "my result"), true, "prevent default not detected");
 ok(ev, "got success event");
 is(ev.type, "success", "correct type during success");
 is(ev.target, req, "correct target during success");
@@ -49,13 +49,23 @@ ev = null;
 req.onerror = function(e) {
   ev = e;
 }
-reqserv.fireError(req, "OhMyError");
+is(reqserv.fireError(req, "OhMyError"), true, "prevent default not detected");
 ok(ev, "got success event");
 is(ev.type, "error", "correct type during error");
 is(ev.target, req, "correct target during error");
 is(req.readyState, "done", "correct readyState after error");
 is(req.error.name, "OhMyError", "correct error after error");
 is(req.result, undefined, "correct result after error");
+
+// Test calling preventDefault on events
+req.onsuccess = function(e) e.preventDefault();
+reqserv.fireSuccess(req, "my result");
+is(reqserv.fireSuccess(req, "my result"), false, "prevent default detected");
+
+// fire error
+req.onerror = function(e) e.preventDefault();
+reqserv.fireError(req, "OhMyError");
+is(reqserv.fireError(req, "OhMyError"), false, "prevent default detected");
 
 </script>
 </pre>

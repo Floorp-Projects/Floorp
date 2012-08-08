@@ -21,11 +21,11 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   attribute nsIDOMEventListener onerror;
 };
 
-[scriptable, builtinclass, uuid(eebcdf29-f8fa-4c36-bbc7-2146b1cbaf7b)]
+[scriptable, builtinclass, uuid(46afe27a-d407-4eb8-95c4-aefbd2b63540)]
 interface nsIDOMRequestService : nsISupports
 {
   nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
 
-  void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
-  void fireError(in nsIDOMDOMRequest request, in DOMString error);
+  bool fireSuccess(in nsIDOMDOMRequest request, in jsval result);
+  bool fireError(in nsIDOMDOMRequest request, in DOMString error);
 };
