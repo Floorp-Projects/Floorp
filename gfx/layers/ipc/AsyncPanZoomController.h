@@ -109,6 +109,16 @@ public:
    */
   void NotifyDOMTouchListenerAdded();
 
+  /**
+   * We have found a scrollable subframe, so disable our machinery until we hit
+   * a touch end or a new touch start. This prevents us from accidentally
+   * panning both the subframe and the parent frame.
+   *
+   * XXX/bug 775452: We should eventually be supporting async scrollable
+   * subframes.
+   */
+  void CancelDefaultPanZoom();
+
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //
@@ -407,6 +417,10 @@ private:
   // Whether or not we might have touch listeners. This is a conservative
   // approximation and may not be accurate.
   bool mMayHaveTouchListeners;
+
+  // Flag used to determine whether or not we should disable handling of the
+  // next batch of touch events. This is used for sync scrolling of subframes.
+  bool mDisableNextTouchBatch;
 
   friend class Axis;
 };

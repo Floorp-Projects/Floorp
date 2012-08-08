@@ -720,6 +720,15 @@ RenderFrameParent::RecvNotifyCompositorTransaction()
   return true;
 }
 
+bool
+RenderFrameParent::RecvCancelDefaultPanZoom()
+{
+  if (mPanZoomController) {
+    mPanZoomController->CancelDefaultPanZoom();
+  }
+  return true;
+}
+
 PLayersParent*
 RenderFrameParent::AllocPLayers()
 {

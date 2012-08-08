@@ -120,6 +120,12 @@ TabChild::Observe(nsISupports *aSubject,
     if (win == topSubject) {
       SendNotifyDOMTouchListenerAdded();
     }
+  } else if (!strcmp(aTopic, "cancel-default-pan-zoom")) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
+    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    if (tabChild == this) {
+      mRemoteFrame->CancelDefaultPanZoom();
+    }
   }
 
   return NS_OK;
@@ -147,6 +153,9 @@ TabChild::Init()
   if (observerService) {
     observerService->AddObserver(this,
                                  "dom-touch-listener-added",
+                                 false);
+    observerService->AddObserver(this,
+                                 "cancel-default-pan-zoom",
                                  false);
   }
 
