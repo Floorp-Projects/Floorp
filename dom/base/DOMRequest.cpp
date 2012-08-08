@@ -112,7 +112,7 @@ DOMRequest::GetError(nsIDOMDOMError** aError)
 }
 
 void
-DOMRequest::FireSuccess(jsval aResult, bool* aDefaultActionEnabled)
+DOMRequest::FireSuccess(jsval aResult)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -124,11 +124,11 @@ DOMRequest::FireSuccess(jsval aResult, bool* aDefaultActionEnabled)
   }
   mResult = aResult;
 
-  FireEvent(NS_LITERAL_STRING("success"), false, false, aDefaultActionEnabled);
+  FireEvent(NS_LITERAL_STRING("success"), false, false);
 }
 
 void
-DOMRequest::FireError(const nsAString& aError, bool* aDefaultActionEnabled)
+DOMRequest::FireError(const nsAString& aError)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -137,11 +137,11 @@ DOMRequest::FireError(const nsAString& aError, bool* aDefaultActionEnabled)
   mDone = true;
   mError = DOMError::CreateWithName(aError);
 
-  FireEvent(NS_LITERAL_STRING("error"), true, true, aDefaultActionEnabled);
+  FireEvent(NS_LITERAL_STRING("error"), true, true);
 }
 
 void
-DOMRequest::FireError(nsresult aError, bool* aDefaultActionEnabled)
+DOMRequest::FireError(nsresult aError)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -150,12 +150,11 @@ DOMRequest::FireError(nsresult aError, bool* aDefaultActionEnabled)
   mDone = true;
   mError = DOMError::CreateForNSResult(aError);
 
-  FireEvent(NS_LITERAL_STRING("error"), true, true, aDefaultActionEnabled);
+  FireEvent(NS_LITERAL_STRING("error"), true, true);
 }
 
 void
-DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable,
-                      bool* aDefaultActionEnabled)
+DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
 {
   if (NS_FAILED(CheckInnerWindowCorrectness())) {
     return;
@@ -172,7 +171,8 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable,
     return;
   }
 
-  DispatchEvent(event, aDefaultActionEnabled);
+  bool dummy;
+  DispatchEvent(event, &dummy);
 }
 
 void
@@ -205,24 +205,20 @@ DOMRequestService::CreateRequest(nsIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
-                               const jsval& aResult,
-                               bool* aDefaultActionEnabled)
+                               const jsval& aResult)
 {
-  NS_ENSURE_ARG_POINTER(aDefaultActionEnabled);
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult, aDefaultActionEnabled);
+  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
-                             const nsAString& aError,
-                             bool* aDefaultActionEnabled)
+                             const nsAString& aError)
 {
-  NS_ENSURE_ARG_POINTER(aDefaultActionEnabled);
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireError(aError, aDefaultActionEnabled);
+  static_cast<DOMRequest*>(aRequest)->FireError(aError);
 
   return NS_OK;
 }
