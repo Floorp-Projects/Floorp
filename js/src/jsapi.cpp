@@ -829,6 +829,7 @@ JSRuntime::JSRuntime()
     defaultFreeOp_(thisFromCtor(), false, false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
+    DOMcallbacks(NULL),
     destroyPrincipals(NULL),
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
