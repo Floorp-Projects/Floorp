@@ -342,7 +342,7 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 #ifdef USE_ZLIB
 class Compressor
 {
-    // Number of bytes we should hand to zlib each compressMore() call.
+    /* Number of bytes we should hand to zlib each compressMore() call. */
     static const size_t CHUNKSIZE = 2048;
     z_stream zs;
     const unsigned char *inp;
@@ -360,9 +360,9 @@ class Compressor
         zs.avail_out = inplen;
     }
     bool init();
-    // Compress some of the input. Return true if it should be called again.
+    /* Compress some of the input. Return true if it should be called again. */
     bool compressMore();
-    // Finalize compression. Return the length of the compressed input.
+    /* Finalize compression. Return the length of the compressed input. */
     size_t finish();
 };
 

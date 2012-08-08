@@ -447,9 +447,13 @@
 
       <method name="addProgressListener">
         <parameter name="aListener"/>
+        <parameter name="aNotifyMask"/>
         <body>
           <![CDATA[
-            this.webProgress.addProgressListener(aListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            if (!aNotifyMask) {
+              aNotifyMask = Components.interfaces.nsIWebProgress.NOTIFY_ALL;
+            }
+            this.webProgress.addProgressListener(aListener, aNotifyMask);
           ]]>
         </body>
       </method>

@@ -23,6 +23,11 @@
 // We use these flag bits for the new bindings.
 #define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1
 
+// NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
+// LSetDOMProperty. Those constants need to be changed accordingly if this value
+// changes.
+#define DOM_PROTO_INSTANCE_CLASS_SLOT 0
+
 namespace mozilla {
 namespace dom {
 

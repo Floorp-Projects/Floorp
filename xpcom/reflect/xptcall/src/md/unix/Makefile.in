@@ -70,7 +70,7 @@ endif
 endif
 endif
 # IA64 Linux
-ifneq (,$(filter Linux,$(OS_ARCH)))
+ifneq (,$(filter Linux FreeBSD,$(OS_ARCH)))
 ifneq (,$(findstring ia64,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_ipf64.cpp xptcstubs_ipf64.cpp
 ASFILES		:= xptcstubs_asm_ipf64.s xptcinvoke_asm_ipf64.s
@@ -269,7 +269,7 @@ endif
 #
 # Linux/PPC
 #
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxpowerpc)
+ifneq (,$(filter Linuxpowerpc FreeBSDpowerpc,$(OS_ARCH)$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
 ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
 AS		:= $(CC) -c -x assembler-with-cpp
@@ -278,7 +278,7 @@ endif
 #
 # Linux/PPC64
 #
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxpowerpc64)
+ifneq (,$(filter Linuxpowerpc64 FreeBSDpowerpc64,$(OS_ARCH)$(OS_TEST)))
 CPPSRCS                := xptcinvoke_ppc64_linux.cpp xptcstubs_ppc64_linux.cpp
 ASFILES                := xptcinvoke_asm_ppc64_linux.s xptcstubs_asm_ppc64_linux.s
 AS             := $(CC) -c -x assembler-with-cpp
@@ -350,7 +350,7 @@ endif
 #
 # OpenBSD/SPARC64
 #
-ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDsparc64)
+ifneq (,$(filter OpenBSDsparc64 FreeBSDsparc64,$(OS_ARCH)$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_sparc64_openbsd.cpp xptcstubs_sparc64_openbsd.cpp
 ASFILES		:= xptcinvoke_asm_sparc64_openbsd.s xptcstubs_asm_sparc64_openbsd.s
 endif

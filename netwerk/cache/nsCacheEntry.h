@@ -31,7 +31,7 @@ class nsCacheEntry : public PRCList
 {
 public:
 
-    nsCacheEntry(nsCString *          key,
+    nsCacheEntry(const nsACString &   key,
                  bool                 streamBased,
                  nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
@@ -43,7 +43,7 @@ public:
                              nsCacheDevice *       device,
                              nsCacheEntry **       result);
                                       
-    nsCString *  Key()  { return mKey; }
+    nsCString *  Key()  { return &mKey; }
 
     PRInt32  FetchCount()                              { return mFetchCount; }
     void     SetFetchCount( PRInt32   count)           { mFetchCount = count; }
@@ -59,7 +59,7 @@ public:
     void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires; }
 
     PRUint32 Size()                               
-        { return mDataSize + mMetaData.Size() + (mKey ? mKey->Length() : 0); }
+        { return mDataSize + mMetaData.Size() + mKey.Length() ; }
 
     nsCacheDevice * CacheDevice()                            { return mCacheDevice; }
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device; }
@@ -209,7 +209,7 @@ private:
     void MarkActive()          { mFlags |=  eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
 
-    nsCString *             mKey;            // 4  // XXX ask scc about const'ness
+    nsCString               mKey;
     PRUint32                mFetchCount;     // 4
     PRUint32                mLastFetched;    // 4
     PRUint32                mLastModified;   // 4

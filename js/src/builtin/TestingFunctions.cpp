@@ -847,7 +847,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Enables or disables the assertions related to SPS profiling. This is fairly\n"
 "  expensive, so it shouldn't be enabled normally."),
 
-    JS_FS_END
+    JS_FS_HELP_END
 };
 
 namespace js {

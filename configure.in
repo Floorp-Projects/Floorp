@@ -194,7 +194,7 @@ if test -n "$gonkdir" ; then
 
     CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/$ARCH_DIR/include -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/kernel/$ARCH_DIR -isystem $gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system -I$gonkdir/system/core/include -isystem $gonkdir/bionic -I$gonkdir/frameworks/base/include -I$gonkdir/external/dbus $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice -I$gonkdir/frameworks/base/services/camera"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS $STLPORT_CPPFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS $STLPORT_CPPFLAGS"
     dnl Add -llog by default, since we use it all over the place.
     LIBS="$LIBS -llog $STLPORT_LIBS"
 
@@ -4150,6 +4150,7 @@ MOZ_SPEEX_RESAMPLER=1
 MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
+MOZ_FLOATING_POINT_AUDIO=
 MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_OPUS=1
@@ -5200,6 +5201,24 @@ fi
 AC_SUBST(MOZ_WEBRTC)
 
 dnl ========================================================
+dnl = Disable floating point audio.
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(floating-point,
+[ --disable-floating-point     Disable floating point audio],
+    MOZ_FLOATING_POINT_AUDIO=,
+    MOZ_FLOATING_POINT_AUDIO=1)
+
+
+case "$target_cpu" in
+arm*)
+;;
+*)
+    AC_DEFINE(MOZ_FLOATING_POINT_AUDIO)
+    MOZ_FLOATING_POINT_AUDIO=1
+;;
+esac
+
+dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(raw,
@@ -5227,14 +5246,6 @@ if test -n "$MOZ_OGG"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
-        MOZ_VORBIS=1
-    ;;
-    esac
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5364,14 +5375,11 @@ if test "$MOZ_WEBM"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
+    if test -n "$MOZ_FLOATING_POINT_AUDIO"; then
         MOZ_VORBIS=1
-    ;;
-    esac
+    else
+        MOZ_TREMOR=1
+    fi
 fi
 
 if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
@@ -5549,6 +5557,26 @@ if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
          [echo "$MOZ_ALSA_PKG_ERRORS"
           AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
 fi
+
+dnl ========================================================
+dnl = Enable PulseAudio
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(pulseaudio,
+[  --enable-pulseaudio          Enable PulseAudio support (experimental)],
+MOZ_PULSEAUDIO=1,
+MOZ_PULSEAUDIO=)
+
+if test -n "$MOZ_PULSEAUDIO"; then
+    AC_DEFINE(MOZ_CUBEB)
+    PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
+         [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
+          AC_MSG_ERROR([pulseaudio audio backend requires libpulse package])])
+fi
+
+AC_SUBST(MOZ_PULSEAUDIO)
+AC_SUBST(MOZ_PULSEAUDIO_CFLAGS)
+AC_SUBST(MOZ_PULSEAUDIO_LIBS)
 
 dnl ========================================================
 dnl = Enable GStreamer
@@ -7690,9 +7718,6 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
-    dnl cl.py provides dependency generation for MSVC
-    CC_WRAPPER='$(PYTHON) -O $(topsrcdir)/build/cl.py'
-    CXX_WRAPPER='$(PYTHON) -O $(topsrcdir)/build/cl.py'
     COMPILER_DEPEND=1
   fi
 fi
@@ -7701,9 +7726,6 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
-AC_SUBST(CC_WRAPPER)
-AC_SUBST(CXX_WRAPPER)
-
 
 dnl ========================================================
 dnl =

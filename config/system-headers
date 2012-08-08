@@ -595,6 +595,7 @@ psap.h
 Pt.h
 pthread.h
 pthread_np.h
+pulse/pulseaudio.h
 pwd.h
 Python.h
 QDOffscreen.h

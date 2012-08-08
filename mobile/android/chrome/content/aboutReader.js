@@ -49,6 +49,8 @@ let AboutReader = {
     window.addEventListener("popstate", this, false);
 
     this._setupAllDropdowns();
+    this._setupButton("toggle-button", this._onReaderToggle.bind(this));
+    this._setupButton("list-button", this._onList.bind(this));
     this._setupButton("share-button", this._onShare.bind(this));
 
     let colorSchemeOptions = [
@@ -76,6 +78,9 @@ let AboutReader = {
 
     dump("Decoding query arguments");
     let queryArgs = this._decodeQueryString(window.location.href);
+
+    this._isReadingListItem = (queryArgs.readingList == "1");
+    this._updateToggleButton();
 
     let url = queryArgs.url;
     if (url) {
@@ -134,6 +139,61 @@ let AboutReader = {
     window.removeEventListener("popstate", this, false);
 
     this._hideContent();
+  },
+
+  _updateToggleButton: function Reader_updateToggleButton() {
+    let classes = document.getElementById("toggle-button").classList;
+
+    if (this._isReadingListItem) {
+      classes.add("on");
+    } else {
+      classes.remove("on");
+    }
+  },
+
+  _onReaderToggle: function Reader_onToggle() {
+    if (!this._article)
+      return;
+
+    this._isReadingListItem = !this._isReadingListItem;
+    this._updateToggleButton();
+
+    if (this._isReadingListItem) {
+      gChromeWin.Reader.storeArticleInCache(this._article, function(success) {
+        dump("Reader:Add (in reader) success=" + success);
+
+        gChromeWin.sendMessageToJava({
+          gecko: {
+            type: "Reader:Added",
+            success: success,
+            title: this._article.title,
+            url: this._article.url,
+          }
+        });
+      }.bind(this));
+    } else {
+      gChromeWin.Reader.removeArticleFromCache(this._article.url , function(success) {
+        dump("Reader:Remove (in reader) success=" + success);
+
+        gChromeWin.sendMessageToJava({
+          gecko: {
+            type: "Reader:Removed",
+            url: this._article.url
+          }
+        });
+      }.bind(this));
+    }
+  },
+
+  _onList: function Reader_onList() {
+    if (!this._article)
+      return;
+
+    gChromeWin.sendMessageToJava({
+      gecko: {
+        type: "Reader:GoToReadingList"
+      }
+    });
   },
 
   _onShare: function Reader_onShare() {
@@ -387,6 +447,7 @@ let AboutReader = {
     let button = document.getElementById(id);
 
     button.addEventListener("click", function(aEvent) {
+      aEvent.stopPropagation();
       callback();
     }, true);
   },

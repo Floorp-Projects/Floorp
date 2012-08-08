@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
+Cu.import("resource://testing-common/httpd.js");
 
 const nsIBLS = Ci.nsIBlocklistService;
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
@@ -105,15 +108,15 @@ registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"
 
 function do_update_blocklist(aDatafile, aNextPart) {
   gNextTestPart = aNextPart;
-  
+
   gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + aDatafile);
   gBlocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
 }
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-  
-  gTestserver = new nsHttpServer();
+
+  gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
   gTestserver.start(4444);
 

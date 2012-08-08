@@ -707,7 +707,8 @@ public:
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList,
-                               FILE* aFile = stdout);
+                               FILE* aFile = stdout,
+                               bool aDumpHtml = false);
 
 #endif
 };

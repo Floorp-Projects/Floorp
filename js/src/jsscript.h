@@ -989,6 +989,11 @@ struct ScriptSource
     uint32_t refs;
     uint32_t length_;
     uint32_t compressedLength_;
+
+    // True if we can call JSRuntime::sourceHook to load the source on
+    // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
+    // possible to get source at all.
+    bool sourceRetrievable_:1;
     bool argumentsNotIncluded_:1;
 #ifdef DEBUG
     bool ready_:1;
@@ -999,6 +1004,7 @@ struct ScriptSource
       : refs(0),
         length_(0),
         compressedLength_(0),
+        sourceRetrievable_(false),
         argumentsNotIncluded_(false)
 #ifdef DEBUG
        ,ready_(true)
@@ -1021,6 +1027,8 @@ struct ScriptSource
 #ifdef DEBUG
     bool ready() const { return ready_; }
 #endif
+    void setSourceRetrievable() { sourceRetrievable_ = true; }
+    bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !!data.source; }
     uint32_t length() const {
         JS_ASSERT(hasSourceData());

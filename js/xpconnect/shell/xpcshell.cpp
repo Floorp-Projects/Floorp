@@ -786,26 +786,26 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec glob_functions[] = {
-    {"print",           Print,          0,0},
-    {"readline",        ReadLine,       1,0},
-    {"load",            Load,           1,0},
-    {"quit",            Quit,           0,0},
-    {"version",         Version,        1,0},
-    {"build",           BuildDate,      0,0},
-    {"dumpXPC",         DumpXPC,        1,0},
-    {"dump",            Dump,           1,0},
-    {"gc",              GC,             0,0},
+    JS_FS("print",           Print,          0,0),
+    JS_FS("readline",        ReadLine,       1,0),
+    JS_FS("load",            Load,           1,0),
+    JS_FS("quit",            Quit,           0,0),
+    JS_FS("version",         Version,        1,0),
+    JS_FS("build",           BuildDate,      0,0),
+    JS_FS("dumpXPC",         DumpXPC,        1,0),
+    JS_FS("dump",            Dump,           1,0),
+    JS_FS("gc",              GC,             0,0),
 #ifdef JS_GC_ZEAL
-    {"gczeal",          GCZeal,         1,0},
+    JS_FS("gczeal",          GCZeal,         1,0),
 #endif
-    {"options",         Options,        0,0},
+    JS_FS("options",         Options,        0,0),
     JS_FN("parent",     Parent,         1,0),
 #ifdef DEBUG
-    {"dumpHeap",        DumpHeap,       5,0},
+    JS_FS("dumpHeap",        DumpHeap,       5,0),
 #endif
-    {"sendCommand",     SendCommand,    1,0},
-    {"getChildGlobalObject", GetChildGlobalObject, 0,0},
-    {nullptr,nullptr,0,0}
+    JS_FS("sendCommand",     SendCommand,    1,0),
+    JS_FS("getChildGlobalObject", GetChildGlobalObject, 0,0),
+    JS_FS_END
 };
 
 JSClass global_class = {

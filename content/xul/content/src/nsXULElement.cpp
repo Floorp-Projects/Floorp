@@ -2497,14 +2497,12 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // Ok, compile it to create a prototype script object!
 
     nsScriptObjectHolder<JSScript> newScriptObject(context);
-    uint32_t opts = JS_GetOptions(context->GetNativeContext());
-    if (!mOutOfLine) {
-        // If the script was inline, tell the JS parser to save source for
-        // Function.prototype.toSource(). If it's outline, we retrieve the
-        // source from the files on demand.
-        opts &= ~JSOPTION_ONLY_CNG_SOURCE;
-        JS_SetOptions(context->GetNativeContext(), opts);
-    }
+
+    // If the script was inline, tell the JS parser to save source for
+    // Function.prototype.toSource(). If it's out of line, we retrieve the
+    // source from the files on demand.
+    bool saveSource = !mOutOfLine;
+
     rv = context->CompileScript(aText,
                                 aTextLength,
                                 // Use the enclosing document's principal
@@ -2517,8 +2515,8 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 urlspec.get(),
                                 aLineNo,
                                 mLangVersion,
-                                newScriptObject);
-    JS_SetOptions(context->GetNativeContext(), opts);
+                                newScriptObject,
+                                saveSource);
     if (NS_FAILED(rv))
         return rv;
 

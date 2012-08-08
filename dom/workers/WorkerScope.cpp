@@ -612,16 +612,16 @@ JSClass WorkerGlobalScope::sClass = {
 };
 
 JSPropertySpec WorkerGlobalScope::sProperties[] = {
-  { "location", SLOT_location, PROPERTY_FLAGS, GetLocation, 
-    js_GetterOnlyPropertyStub },
+  { "location", SLOT_location, PROPERTY_FLAGS, JSOP_WRAPPER(GetLocation),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { sEventStrings[STRING_onerror], STRING_onerror, PROPERTY_FLAGS,
-    GetOnErrorListener, SetOnErrorListener },
+    JSOP_WRAPPER(GetOnErrorListener), JSOP_WRAPPER(SetOnErrorListener) },
   { sEventStrings[STRING_onclose], STRING_onclose, PROPERTY_FLAGS,
-    GetEventListener, SetEventListener },
-  { "navigator", SLOT_navigator, PROPERTY_FLAGS, GetNavigator, 
-    js_GetterOnlyPropertyStub },
-  { "self", 0, PROPERTY_FLAGS, GetSelf, js_GetterOnlyPropertyStub },
-  { 0, 0, 0, NULL, NULL }
+    JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
+  { "navigator", SLOT_navigator, PROPERTY_FLAGS, JSOP_WRAPPER(GetNavigator),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { "self", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetSelf), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 JSFunctionSpec WorkerGlobalScope::sFunctions[] = {
@@ -864,8 +864,8 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
   { sEventStrings[STRING_onmessage], STRING_onmessage, PROPERTY_FLAGS,
-    GetEventListener, SetEventListener },
-  { 0, 0, 0, NULL, NULL }
+    JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 JSFunctionSpec DedicatedWorkerGlobalScope::sFunctions[] = {

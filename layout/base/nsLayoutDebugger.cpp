@@ -119,18 +119,29 @@ nsLayoutDebugger::GetStyleSize(nsIPresShell* aPresentation,
 #endif
 
 #ifdef MOZ_DUMP_PAINTING
+static int sPrintDisplayListIndent = 0;
+
 static void
 PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
-                   FILE* aOutput)
+                   FILE* aOutput, bool aDumpHtml)
 {
-  fprintf(aOutput, "<ul>");
+  if (aDumpHtml) {
+    fprintf(aOutput, "<ul>");
+  }
 
   for (nsDisplayItem* i = aList.GetBottom(); i != nullptr; i = i->GetAbove()) {
 #ifdef DEBUG
     if (aList.DidComputeVisibility() && i->GetVisibleRect().IsEmpty())
       continue;
 #endif
-    fprintf(aOutput, "<li>");
+    if (aDumpHtml) {
+      fprintf(aOutput, "<li>");
+    } else {
+      sPrintDisplayListIndent ++;
+      for (int indent = 0; indent < sPrintDisplayListIndent; indent++) {
+        fprintf(aOutput, "  ");
+      }
+    }
     nsIFrame* f = i->GetUnderlyingFrame();
     nsAutoString fName;
 #ifdef DEBUG
@@ -164,7 +175,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       opaque = i->GetOpaqueRegion(aBuilder, &snap);
     }
 #endif
-    if (i->Painted()) {
+    if (aDumpHtml && i->Painted()) {
       nsCString string(i->Name());
       string.Append("-");
       string.AppendInt((PRUint64)i);
@@ -179,15 +190,19 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
       printf("(opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
-    } 
-    if (i->Painted()) {
+    }
+    if (aDumpHtml && i->Painted()) {
       fprintf(aOutput, "</a>");
     }
     if (f) {
       PRUint32 key = i->GetPerFrameKey();
       Layer* layer = mozilla::FrameLayerBuilder::GetDebugOldLayerFor(f, key);
       if (layer) {
-        fprintf(aOutput, " <a href=\"#%p\">layer=%p</a>", layer, layer);
+        if (aDumpHtml) {
+          fprintf(aOutput, " <a href=\"#%p\">layer=%p</a>", layer, layer);
+        } else {
+          fprintf(aOutput, " layer=%p", layer);
+        }
       }
     }
     if (i->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
@@ -195,20 +210,27 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
     fputc('\n', aOutput);
     if (list) {
-      PrintDisplayListTo(aBuilder, *list, aOutput);
+      PrintDisplayListTo(aBuilder, *list, aOutput, aDumpHtml);
     }
-    fprintf(aOutput, "</li>");
+    if (aDumpHtml) {
+      fprintf(aOutput, "</li>");
+    } else {
+      sPrintDisplayListIndent --;
+    }
   }
-  
-  fprintf(aOutput, "</ul>");
+
+  if (aDumpHtml) {
+    fprintf(aOutput, "</ul>");
+  }
 }
 
 void
 nsFrame::PrintDisplayList(nsDisplayListBuilder* aBuilder,
                           const nsDisplayList& aList,
-                          FILE* aFile)
+                          FILE* aFile,
+                          bool aDumpHtml)
 {
-  PrintDisplayListTo(aBuilder, aList, aFile);
+  PrintDisplayListTo(aBuilder, aList, aFile, aDumpHtml);
 }
 
 #endif

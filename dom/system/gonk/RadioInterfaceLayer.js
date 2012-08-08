@@ -446,36 +446,32 @@ RadioInterfaceLayer.prototype = {
     let selectionMessage = message[RIL.NETWORK_INFO_NETWORK_SELECTION_MODE];
 
     // Batch the *InfoChanged messages together
-    let voiceInfoChanged = false;
     if (voiceMessage) {
       voiceMessage.batch = true;
-      voiceInfoChanged = this.updateVoiceConnection(voiceMessage);
+      this.updateVoiceConnection(voiceMessage);
     }
 
     let dataInfoChanged = false;
     if (dataMessage) {
       dataMessage.batch = true;
-      dataInfoChanged = this.updateDataConnection(dataMessage);
+      this.updateDataConnection(dataMessage);
     }
 
     let voice = this.rilContext.voice;
     let data = this.rilContext.data;
     if (operatorMessage) {
       if (this.networkChanged(operatorMessage, voice.network)) {
-        voiceInfoChanged = true;
         voice.network = operatorMessage;
       }
-
       if (this.networkChanged(operatorMessage, data.network)) {
-        dataInfoChanged = true;
         data.network = operatorMessage;
       }
     }
 
-    if (voiceInfoChanged) {
+    if (voiceMessage || operatorMessage) {
       ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voice);
     }
-    if (dataInfoChanged) {
+    if (dataMessage || operatorMessage) {
       ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
     }
 
@@ -488,96 +484,88 @@ RadioInterfaceLayer.prototype = {
    * Sends the RIL:VoiceInfoChanged message when the voice
    * connection's state has changed.
    *
-   * @param state The new voice connection state. When state.batch is true,
-   *              the RIL:VoiceInfoChanged message will not be sent.
-   * @return Whether or not this.radioState.voice was updated
+   * @param newInfo The new voice connection information. When newInfo.batch is true,
+   *                the RIL:VoiceInfoChanged message will not be sent.
    */
-  updateVoiceConnection: function updateVoiceConnection(state) {
+  updateVoiceConnection: function updateVoiceConnection(newInfo) {
     let voiceInfo = this.rilContext.voice;
-    let regState = state.regState;
-    voiceInfo.type = "gsm"; //TODO see bug 726098.
-    if (!state || regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
-      voiceInfo.connected = false;
-      voiceInfo.emergencyCallsOnly = false;
-      voiceInfo.roaming = false;
+    voiceInfo.state = newInfo.state;
+    voiceInfo.connected = newInfo.connected;
+    voiceInfo.roaming = newInfo.roaming;
+    voiceInfo.emergencyCallsOnly = newInfo.emergencyCallsOnly;
+    // Unlike the data registration info, the voice info typically contains
+    // no (useful) radio tech information, so we have to manually set
+    // this here. (TODO GSM only for now, see bug 726098.)
+    voiceInfo.type = "gsm";
+
+    // Make sure we also reset the operator and signal strength information
+    // if we drop off the network.
+    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
       voiceInfo.network = null;
-      voiceInfo.type = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
+    }
+
+    if (!newInfo.batch) {
       ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
-      return false;
     }
-
-    let isRoaming = regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING;
-    let isHome = regState == RIL.NETWORK_CREG_STATE_REGISTERED_HOME;
-    let isConnected = isRoaming || isHome;
-    let radioTech = RIL.GECKO_RADIO_TECH[state.radioTech] || null;
-
-    // Ensure that we check for changes before sending the message
-    if (voiceInfo.emergencyCallsOnly != state.emergencyCallsOnly ||
-        voiceInfo.connected != isConnected ||
-        voiceInfo.roaming != isRoaming ||
-        voiceInfo.type != radioTech) {
-
-      voiceInfo.emergencyCallsOnly = state.emergencyCallsOnly;
-      voiceInfo.connected = isConnected;
-      voiceInfo.roaming = isRoaming;
-      voiceInfo.type = radioTech;
-
-      // When batch is true, hold off on firing VoiceInfoChanged events
-      if (!state.batch) {
-        ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
-      }
-      return true;
-    }
-    return false;
   },
 
-  updateDataConnection: function updateDataConnection(state) {
-    let data = this.rilContext.data;
-    if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
-      data.connected = false;
-      data.emergencyCallsOnly = false;
-      data.roaming = false;
-      data.network = null;
-      data.type = null;
-      data.signalStrength = null;
-      data.relSignalStrength = null;
-      ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
-      return false;
+  updateDataConnection: function updateDataConnection(newInfo) {
+    let dataInfo = this.rilContext.data;
+    dataInfo.state = newInfo.state;
+    dataInfo.roaming = newInfo.roaming;
+    dataInfo.emergencyCallsOnly = newInfo.emergencyCallsOnly;
+    dataInfo.type = newInfo.type;
+    // For the data connection, the `connected` flag indicates whether
+    // there's an active data call.
+    dataInfo.connected = RILNetworkInterface.connected;
+
+    // Make sure we also reset the operator and signal strength information
+    // if we drop off the network.
+    if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+      dataInfo.network = null;
+      dataInfo.signalStrength = null;
+      dataInfo.relSignalStrength = null;
     }
-    data.roaming =
-      (state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
-    data.type = RIL.GECKO_RADIO_TECH[state.radioTech] || null;
-    ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
+
+    if (!newInfo.batch) {
+      ppmm.sendAsyncMessage("RIL:DataInfoChanged", dataInfo);
+    }
 
     if (!this.dataCallSettings["enabled"]) {
-      return false;
+      return;
     }
 
     let isRegistered =
-      state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_HOME ||
-        (this.dataCallSettings["roaming_enabled"] &&
-         state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
+      newInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
+      (!newInfo.roaming || this._isDataRoamingEnabled());
     let haveDataConnection =
-      state.radioTech != RIL.NETWORK_CREG_TECH_UNKNOWN;
+      newInfo.type != GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
 
     if (isRegistered && haveDataConnection) {
       debug("Radio is ready for data connection.");
       this.updateRILNetworkInterface();
     }
-    return false;
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
+    let voiceInfo = this.rilContext.voice;
     // TODO CDMA, EVDO, LTE, etc. (see bug 726098)
-    this.rilContext.voice.signalStrength = message.gsmDBM;
-    this.rilContext.voice.relSignalStrength = message.gsmRelative;
-    ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", this.rilContext.voice);
+    if (voiceInfo.signalStrength != message.gsmDBM ||
+        voiceInfo.relSignalStrength != message.gsmRelative) {
+      voiceInfo.signalStrength = message.gsmDBM;
+      voiceInfo.relSignalStrength = message.gsmRelative;
+      ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
+    }
 
-    this.rilContext.data.signalStrength = message.gsmDBM;
-    this.rilContext.data.relSignalStrength = message.gsmRelative;
-    ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.rilContext.data);
+    let dataInfo = this.rilContext.data;
+    if (dataInfo.signalStrength != message.gsmDBM ||
+        dataInfo.relSignalStrength != message.gsmRelative) {
+      dataInfo.signalStrength = message.gsmDBM;
+      dataInfo.relSignalStrength = message.gsmRelative;
+      ppmm.sendAsyncMessage("RIL:DataInfoChanged", dataInfo);
+    }
   },
 
   networkChanged: function networkChanged(srcNetwork, destNetwork) {
