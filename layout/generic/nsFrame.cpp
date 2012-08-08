@@ -3872,7 +3872,6 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   }
   nscoord boxSizingToMarginEdgeWidth =
     aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
-
   // Compute width
 
   if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
@@ -3887,40 +3886,38 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
         aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
         stylePos->mMaxWidth);
-    if (maxWidth < result.width)
-      result.width = maxWidth;
+    result.width = NS_MIN(maxWidth, result.width);
   }
 
   nscoord minWidth =
     nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
       aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
       stylePos->mMinWidth);
-  if (minWidth > result.width)
-    result.width = minWidth;
+  result.width = NS_MAX(minWidth, result.width);
 
   // Compute height
-
   if (!nsLayoutUtils::IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
     result.height =
-      nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
-      boxSizingAdjust.height;
+      nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                                        boxSizingAdjust.height,
+                                        stylePos->mHeight);
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
     if (!nsLayoutUtils::IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
       nscoord maxHeight =
-        nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
-        boxSizingAdjust.height;
-      if (maxHeight < result.height)
-        result.height = maxHeight;
+        nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                                          boxSizingAdjust.height,
+                                          stylePos->mMaxHeight);
+      result.height = NS_MIN(maxHeight, result.height);
     }
 
     if (!nsLayoutUtils::IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
       nscoord minHeight =
-        nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
-        boxSizingAdjust.height;
-      if (minHeight > result.height)
-        result.height = minHeight;
+        nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                                          boxSizingAdjust.height, 
+                                          stylePos->mMinHeight);
+      result.height = NS_MAX(minHeight, result.height);
     }
   }
 
@@ -3947,11 +3944,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       result.width = size.width;
   }
 
-  if (result.width < 0)
-    result.width = 0;
-
-  if (result.height < 0)
-    result.height = 0;
+  result.width = NS_MAX(0, result.width);
+  result.height = NS_MAX(0, result.height);
 
   return result;
 }
