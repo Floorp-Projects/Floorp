@@ -16,15 +16,6 @@ EXPORT_LIBRARY   = 1
 
 include $(topsrcdir)/config/config.mk
 
-# Define USE_JSOP_ACCESSORS to a nonempty string like "yes" to use them
-USE_JSOP_ACCESSORS = 
-ifdef USE_JSOP_ACCESSORS
-DEFINES += -DUSE_JSOP_ACCESSORS
-ACCESSOR_OPT = --use-jsop-accessors
-else
-ACCESSOR_OPT =
-endif
-
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk
 
@@ -106,7 +97,7 @@ $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
                                      $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
-	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
+	  $(srcdir)/BindingGen.py header \
 	  $(srcdir)/Bindings.conf $*Binding \
 	  $*.webidl
 
@@ -115,7 +106,7 @@ $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
                                     $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
-	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp \
+	  $(srcdir)/BindingGen.py cpp \
 	  $(srcdir)/Bindings.conf $*Binding \
 	  $*.webidl
 
@@ -141,7 +132,7 @@ ParserResults.pkl: $(globalgen_dependencies) \
                    $(all_webidl_files)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
     $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf . \
+    $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
     --cachedir=$(CACHE_DIR) \
     $(all_webidl_files)
 
