@@ -1232,7 +1232,7 @@ ParseNodeToQName(Parser *parser, ParseNode *pn,
             return NULL;
         }
 
-        localName = js_AtomizeChars(parser->context, colon + 1, length - (offset + 1));
+        localName = AtomizeChars(parser->context, colon + 1, length - (offset + 1));
         if (!localName)
             return NULL;
     } else {
@@ -2887,7 +2887,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
             return NULL;
     }
 
-    atomizedName = js_AtomizeString(cx, name);
+    atomizedName = AtomizeString(cx, name);
     if (!atomizedName)
         return NULL;
 
@@ -5548,7 +5548,7 @@ ValueToIdForXML(JSContext *cx, jsval v, jsid *idp)
         else if (!ValueToId(cx, v, idp))
             return JS_FALSE;
     } else if (JSVAL_IS_STRING(v)) {
-        JSAtom *atom = js_AtomizeString(cx, JSVAL_TO_STRING(v));
+        JSAtom *atom = AtomizeString(cx, JSVAL_TO_STRING(v));
         if (!atom)
             return JS_FALSE;
         *idp = AtomToId(atom);
@@ -8000,7 +8000,7 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
         return NULL;
     xml = (JSXML *) obj->getPrivate();
     if (name) {
-        JSAtom *atomName = js_AtomizeString(cx, name);
+        JSAtom *atomName = AtomizeString(cx, name);
         if (!atomName)
             return NULL;
         qn = NewXMLQName(cx, cx->runtime->emptyString, NULL, atomName);

@@ -94,7 +94,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
                 JSString *str = js_NumberToString(cx, pn->pn_dval);
                 if (!str)
                     return false;
-                pn->pn_atom = js_AtomizeString(cx, str);
+                pn->pn_atom = AtomizeString(cx, str);
                 if (!pn->pn_atom)
                     return false;
                 pn->setKind(PNK_STRING);
@@ -277,7 +277,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
                 pn1->setKind(PNK_XMLTEXT);
                 pn1->setOp(JSOP_STRING);
                 pn1->setArity(PN_NULLARY);
-                pn1->pn_atom = js_AtomizeString(cx, accum);
+                pn1->pn_atom = AtomizeString(cx, accum);
                 if (!pn1->pn_atom)
                     return false;
                 JS_ASSERT(pnp != &pn1->pn_next);
@@ -329,7 +329,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         pn1->setKind(PNK_XMLTEXT);
         pn1->setOp(JSOP_STRING);
         pn1->setArity(PN_NULLARY);
-        pn1->pn_atom = js_AtomizeString(cx, accum);
+        pn1->pn_atom = AtomizeString(cx, accum);
         if (!pn1->pn_atom)
             return false;
         JS_ASSERT(pnp != &pn1->pn_next);
@@ -702,7 +702,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGen
             JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
-            pn->pn_atom = js_AtomizeString(cx, str);
+            pn->pn_atom = AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);
@@ -723,7 +723,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGen
             RootedString str(cx, js_ConcatStrings(cx, left, right));
             if (!str)
                 return false;
-            pn->pn_atom = js_AtomizeString(cx, str);
+            pn->pn_atom = AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);

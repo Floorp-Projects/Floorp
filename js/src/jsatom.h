@@ -325,27 +325,26 @@ extern const char   js_send_str[];
 extern const char   js_getter_str[];
 extern const char   js_setter_str[];
 
+namespace js {
+
 /*
  * Initialize atom state. Return true on success, false on failure to allocate
  * memory. The caller must zero rt->atomState before calling this function and
  * only call it after js_InitGC successfully returns.
  */
 extern JSBool
-js_InitAtomState(JSRuntime *rt);
+InitAtomState(JSRuntime *rt);
 
 /*
  * Free and clear atom state including any interned string atoms. This
  * function must be called before js_FinishGC.
  */
 extern void
-js_FinishAtomState(JSRuntime *rt);
+FinishAtomState(JSRuntime *rt);
 
 /*
  * Atom tracing and garbage collection hooks.
  */
-
-namespace js {
-
 extern void
 MarkAtomState(JSTracer *trc, bool markAll);
 
@@ -365,35 +364,17 @@ enum InternBehavior
     InternAtom = true
 };
 
-}  /* namespace js */
+extern JSAtom *
+Atomize(JSContext *cx, const char *bytes, size_t length,
+        js::InternBehavior ib = js::DoNotInternAtom,
+        js::FlationCoding fc = js::NormalEncoding);
 
 extern JSAtom *
-js_Atomize(JSContext *cx, const char *bytes, size_t length,
-           js::InternBehavior ib = js::DoNotInternAtom,
-           js::FlationCoding fc = js::NormalEncoding);
+AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
+             js::InternBehavior ib = js::DoNotInternAtom);
 
 extern JSAtom *
-js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
-                js::InternBehavior ib = js::DoNotInternAtom);
-
-extern JSAtom *
-js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
-
-/*
- * Return an existing atom for the given char array or null if the char
- * sequence is currently not atomized.
- */
-extern JSAtom *
-js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
-
-#ifdef DEBUG
-
-extern JS_FRIEND_API(void)
-js_DumpAtoms(JSContext *cx, FILE *fp);
-
-#endif
-
-namespace js {
+AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 inline JSAtom *
 ToAtom(JSContext *cx, const js::Value &v);
