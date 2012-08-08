@@ -286,7 +286,7 @@ RegExpObject *
 RegExpObject::createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
-    RootedAtom source(cx, js_AtomizeChars(cx, chars, length));
+    RootedAtom source(cx, AtomizeChars(cx, chars, length));
     if (!source)
         return NULL;
 
