@@ -131,10 +131,9 @@ TabChild::Observe(nsISupports *aSubject,
     nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
     if (tabChild == this) {
       gfxRect rect;
-      int numAssigned = sscanf(NS_ConvertUTF16toUTF8(aData).get(),
-                               "{\"x\":%lf,\"y\":%lf,\"w\":%lf,\"h\":%lf}",
-                               &rect.x, &rect.y, &rect.width, &rect.height);
-      MOZ_ASSERT(numAssigned == 4, "Invalid JSON format");
+      sscanf(NS_ConvertUTF16toUTF8(aData).get(),
+             "{\"x\":%lf,\"y\":%lf,\"w\":%lf,\"h\":%lf}",
+             &rect.x, &rect.y, &rect.width, &rect.height);
       SendZoomToRect(rect);
     }
   }
