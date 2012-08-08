@@ -108,7 +108,7 @@ MOCHITEST_FILES = \
 		test_seek2.html \
 		test_source.html \
 		test_source_write.html \
-		test_source_null.html \
+	        test_source_null.html \
 		test_standalone.html \
 		test_streams_element_capture.html \
 		test_streams_element_capture_reset.html \
@@ -127,8 +127,6 @@ MOCHITEST_FILES = \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
-		test_media_sniffer.html \
-		contentType.sjs \
 		$(NULL)
 
 # Tests disabled on Linux for frequent intermittent failures
@@ -215,9 +213,6 @@ MOCHITEST_FILES += \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \
-		short.mp4 \
-		notags.mp3 \
-		id3tags.mp3 \
 		$(NULL)
 
 # Wave sample files
