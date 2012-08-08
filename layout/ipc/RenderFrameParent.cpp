@@ -492,23 +492,6 @@ public:
     }
   }
 
-  virtual void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
-  {
-    if (MessageLoop::current() != mUILoop) {
-      // We have to send this message from the "UI thread" (main
-      // thread).
-      mUILoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &RemoteContentController::HandleDoubleTap,
-                          aPoint));
-      return;
-    }
-    if (mRenderFrame) {
-      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleDoubleTap(aPoint);
-    }
-  }
-
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
 private:
@@ -737,15 +720,6 @@ RenderFrameParent::RecvNotifyCompositorTransaction()
   return true;
 }
 
-bool
-RenderFrameParent::RecvCancelDefaultPanZoom()
-{
-  if (mPanZoomController) {
-    mPanZoomController->CancelDefaultPanZoom();
-  }
-  return true;
-}
-
 PLayersParent*
 RenderFrameParent::AllocPLayers()
 {
@@ -876,22 +850,6 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   return aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayClip(aBuilder, aFrame, &shadowTree,
                                  bounds));
-}
-
-void
-RenderFrameParent::NotifyDOMTouchListenerAdded()
-{
-  if (mPanZoomController) {
-    mPanZoomController->NotifyDOMTouchListenerAdded();
-  }
-}
-
-void
-RenderFrameParent::ZoomToRect(const gfxRect& aRect)
-{
-  if (mPanZoomController) {
-    mPanZoomController->ZoomToRect(aRect);
-  }
 }
 
 }  // namespace layout
