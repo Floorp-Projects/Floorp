@@ -44,6 +44,10 @@ public:
   GetDevicePath(const nsAString& aAdapterPath,
                 const nsAString& aDeviceAddress,
                 nsAString& aDevicePath);
+  virtual int
+  GetDeviceServiceChannelInternal(const nsAString& aObjectPath,
+                                  const nsAString& aPattern,
+                                  int aAttributeId);
 
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
