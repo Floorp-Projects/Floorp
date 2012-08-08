@@ -3268,11 +3268,30 @@ class CGNativeMethod(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
         CGAbstractBindingMethod.__init__(self, descriptor, baseName, args)
+
     def generate_code(self):
+        return CGIndenter(CGGeneric(
+            "return specialized_%s(cx, obj, self, argc, vp);" %
+            self.method.identifier.name))
+
+class CGSpecializedMethod(CGAbstractStaticMethod):
+    """
+    A class for generating the C++ code for a specialized method that the JIT
+    can call with lower overhead.
+    """
+    def __init__(self, descriptor, method):
+        self.method = method
+        name = 'specialized_' + method.identifier.name
+        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+                Argument('%s*' % descriptor.nativeType, 'self'),
+                Argument('unsigned', 'argc'), Argument('JS::Value*', 'vp')]
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+
+    def definition_body(self):
         name = self.method.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         return CGMethodCall([], nativeName, self.method.isStatic(),
-                            self.descriptor, self.method)
+                            self.descriptor, self.method).define()
 
 class CGNativeGetter(CGAbstractBindingMethod):
     """
@@ -3391,13 +3410,13 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
 def memberIsCreator(member):
     return member.getExtendedAttribute("Creator") is not None
 
-class CGPropertyJITInfo(CGThing):
+class CGMemberJITInfo(CGThing):
     """
     A class for generating the JITInfo for a property that points to
     our specialized getter and setter.
     """
-    def __init__(self, descriptor, attr):
-        self.attr = attr
+    def __init__(self, descriptor, member):
+        self.member = member
         self.descriptor = descriptor
 
     def declare(self):
@@ -3412,24 +3431,34 @@ class CGPropertyJITInfo(CGThing):
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,\n"
-                "  %s,  /* isInfallible. False for setters. */\n"
-                "  false  /* isConstant. False for setters. */\n"
+                "  %s,  /* isInfallible. Only relevant for getters. */\n"
+                "  false  /* isConstant. Only relevant for getters. */\n"
                 "};\n" % (infoName, opName, protoID, depth, failstr))
 
     def define(self):
-        getterinfo = ("%s_getterinfo" % self.attr.identifier.name)
-        getter = ("(JSJitPropertyOp)specialized_get_%s" %
-                  self.attr.identifier.name)
-        getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.attr, getter=True)
-        getterinfal = getterinfal and infallibleForAttr(self.attr, self.descriptor)
-        result = self.defineJitInfo(getterinfo, getter, getterinfal)
-        if not self.attr.readonly:
-            setterinfo = ("%s_setterinfo" % self.attr.identifier.name)
-            setter = ("(JSJitPropertyOp)specialized_set_%s" %
-                      self.attr.identifier.name)
-            # Setters are always fallible, since they have to do a typed unwrap.
-            result += self.defineJitInfo(setterinfo, setter, False)
-        return result
+        if self.member.isAttr():
+            getterinfo = ("%s_getterinfo" % self.member.identifier.name)
+            getter = ("(JSJitPropertyOp)specialized_get_%s" %
+                      self.member.identifier.name)
+            getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
+            getterinfal = getterinfal and infallibleForAttr(self.member, self.descriptor)
+            result = self.defineJitInfo(getterinfo, getter, getterinfal)
+            if not self.member.readonly:
+                setterinfo = ("%s_setterinfo" % self.member.identifier.name)
+                setter = ("(JSJitPropertyOp)specialized_set_%s" %
+                          self.member.identifier.name)
+                # Setters are always fallible, since they have to do a typed unwrap.
+                result += self.defineJitInfo(setterinfo, setter, False)
+            return result
+        if self.member.isMethod():
+            methodinfo = ("%s_methodinfo" % self.member.identifier.name)
+            #XXXefaust Should be JSJitMethodOp, after centralization, but lazy for now
+            method = ("(JSJitPropertyOp)specialized_%s" %
+                      self.member.identifier.name)
+            # Method, much like setters, are always fallible
+            result = self.defineJitInfo(methodinfo, method, False)
+            return result
+        raise TypeError("Illegal member type to CGPropertyJITInfo")
 
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
@@ -4169,14 +4198,16 @@ class CGDescriptor(CGThing):
         if descriptor.interface.hasInterfacePrototypeObject():
             for m in descriptor.interface.members:
                 if m.isMethod() and not m.isStatic():
+                    cgThings.append(CGSpecializedMethod(descriptor, m))
                     cgThings.append(CGNativeMethod(descriptor, m))
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
                 elif m.isAttr():
                     cgThings.append(CGSpecializedGetter(descriptor, m))
                     cgThings.append(CGNativeGetter(descriptor, m))
                     if not m.readonly:
                         cgThings.append(CGSpecializedSetter(descriptor, m))
                         cgThings.append(CGNativeSetter(descriptor, m))
-                    cgThings.append(CGPropertyJITInfo(descriptor, m))
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
 
         if descriptor.concrete:
             if not descriptor.workers and descriptor.wrapperCache:
