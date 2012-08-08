@@ -148,7 +148,7 @@ AsyncPanZoomController::HandleInputEvent(const nsInputEvent& aEvent,
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (mGestureEventListener) {
+  if (mGestureEventListener && !mDisableNextTouchBatch) {
     nsEventStatus rv = mGestureEventListener->HandleInputEvent(aEvent);
     if (rv == nsEventStatus_eConsumeNoDefault)
       return rv;
@@ -823,6 +823,9 @@ void AsyncPanZoomController::NotifyDOMTouchListenerAdded() {
 
 void AsyncPanZoomController::CancelDefaultPanZoom() {
   mDisableNextTouchBatch = true;
+  if (mGestureEventListener) {
+    mGestureEventListener->CancelGesture();
+  }
 }
 
 }
