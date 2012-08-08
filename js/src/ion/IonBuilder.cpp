@@ -3937,6 +3937,20 @@ IonBuilder::jsop_initelem_dense()
    return true;
 }
 
+static bool
+CanEffectlesslyCallLookupGenericOnObject(JSObject *obj)
+{
+    JSObject *pobj = obj;
+    while (pobj) {
+        if (!pobj->isNative())
+            return false;
+        if (pobj->getClass()->ops.lookupProperty)
+            return false;
+        pobj = pobj->getProto();
+    }
+    return true;
+}
+
 bool
 IonBuilder::jsop_initprop(HandlePropertyName name)
 {
@@ -3949,6 +3963,9 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
         // This should only happen for a few names like __proto__.
         return abort("INITPROP Monitored initprop");
     }
+
+    if (!CanEffectlesslyCallLookupGenericOnObject(templateObject))
+        return abort("INITPROP template object is special");
 
     RootedObject holder(cx);
     RootedShape shape(cx);
@@ -4266,14 +4283,8 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownCo
 
     *isKnownConstant = false;
 
-    JSObject *pobj = obj;
-    while (pobj) {
-        if (!pobj->isNative())
-            return true;
-        if (pobj->getClass()->ops.lookupProperty)
-            return true;
-        pobj = pobj->getProto();
-    }
+    if (!CanEffectlesslyCallLookupGenericOnObject(obj))
+        return true;
 
     RootedObject holder(cx);
     RootedShape shape(cx);
@@ -5251,12 +5262,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
 
         // Turns out that we need to check for a property lookup op, else we
         // will end up calling it mid-compilation.
-        JSObject *walker = curObj;
-        while (walker) {
-            if (!walker->isNative() || walker->getClass()->ops.lookupProperty)
-                return true;
-            walker = walker->getProto();
-        }
+        if (!CanEffectlesslyCallLookupGenericOnObject(curObj))
+            return true;
 
         RootedObject proto(cx);
         RootedShape shape(cx);
