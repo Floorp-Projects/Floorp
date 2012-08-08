@@ -274,7 +274,7 @@ let DOMApplicationRegistry = {
     let clone = {
       installOrigin: aApp.installOrigin,
       origin: aApp.origin,
-      receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
+      receipts: aApp.receipts,
       installTime: aApp.installTime,
       manifestURL: aApp.manifestURL,
       progress: aApp.progress || 0.0,
