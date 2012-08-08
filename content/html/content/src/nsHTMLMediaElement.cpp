@@ -1041,11 +1041,6 @@ nsresult nsHTMLMediaElement::LoadResource()
   if (other) {
     // Clone it.
     nsresult rv = InitializeDecoderAsClone(other->mDecoder);
-    // Get the mimetype from the element we clone, since we will not get it via
-    // the channel, and we won't be able to sniff for it, because we will not
-    // open a channel to get the beginning of the media (it is likely to already
-    // be in the cache).
-    mMimeType = other->mMimeType;
     if (NS_SUCCEEDED(rv))
       return rv;
   }
@@ -1084,8 +1079,7 @@ nsresult nsHTMLMediaElement::LoadResource()
                      nullptr,
                      loadGroup,
                      nullptr,
-                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
-                     nsIChannel::LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN,
+                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -2424,21 +2418,19 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
 
   nsCAutoString mimeType;
+  aChannel->GetContentType(mimeType);
 
-  aChannel->GetContentType(mMimeType);
-  NS_ASSERTION(!mMimeType.IsEmpty(), "We should have the Content-Type.");
-
-  nsRefPtr<nsMediaDecoder> decoder = CreateDecoder(mMimeType);
+  nsRefPtr<nsMediaDecoder> decoder = CreateDecoder(mimeType);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);
-    NS_ConvertUTF8toUTF16 mimeUTF16(mMimeType);
+    NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
     const PRUnichar* params[] = { mimeUTF16.get(), src.get() };
     ReportLoadError("MediaLoadUnsupportedMimeType", params, ArrayLength(params));
     return NS_ERROR_FAILURE;
   }
 
-  LOG(PR_LOG_DEBUG, ("%p Created decoder %p for type %s", this, decoder.get(), mMimeType.get()));
+  LOG(PR_LOG_DEBUG, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
   MediaResource* resource = MediaResource::Create(decoder, aChannel);
   if (!resource)
@@ -3512,11 +3504,6 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMozFragmentEnd(double *aTime)
   // duration, return the duration.
   *aTime = (mFragmentEnd < 0.0 || mFragmentEnd > duration) ? duration : mFragmentEnd;
   return NS_OK;
-}
-
-void nsHTMLMediaElement::GetMimeType(nsCString& aMimeType)
-{
-  aMimeType = mMimeType;
 }
 
 void nsHTMLMediaElement::NotifyAudioAvailableListener()
