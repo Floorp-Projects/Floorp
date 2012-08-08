@@ -180,15 +180,15 @@ FormAssistant.init();
 function getJSON(element) {
   let type = element.type || "";
 
-  // FIXME/bug 344616 is input type="number"
-  // Until then, let's return 'number' even if the platform returns 'text'
+  // Until the input type=date/datetime/time have been implemented
+  // let's return their real type even if the platform returns 'text'
   // Related to Bug 769352 - Implement <input type=date>
+  // Related to Bug 777279 - Implement <input type=time>
   let attributeType = element.getAttribute("type") || "";
 
   if (attributeType) {
     var typeLowerCase = attributeType.toLowerCase(); 
     switch (typeLowerCase) {
-      case "number":
       case "date":
       case "time":
       case "datetime":
