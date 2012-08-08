@@ -339,6 +339,24 @@ LIRGenerator::visitTest(MTest *test)
     if (opd->type() == MIRType_Object)
         return add(new LGoto(ifTrue));
 
+    // Constant Double operand.
+    if (opd->type() == MIRType_Double && opd->isConstant()) {
+        double dbl = opd->toConstant()->value().toDouble();
+        return add(new LGoto(dbl ? ifTrue : ifFalse));
+    }
+
+    // Constant Int32 operand.
+    if (opd->type() == MIRType_Int32 && opd->isConstant()) {
+        int32 num = opd->toConstant()->value().toInt32();
+        return add(new LGoto(num ? ifTrue : ifFalse));
+    }
+
+    // Constant Boolean operand.
+    if (opd->type() == MIRType_Boolean && opd->isConstant()) {
+        bool result = opd->toConstant()->value().toBoolean();
+        return add(new LGoto(result ? ifTrue : ifFalse));
+    }
+
     // Check if the operand for this test is a compare operation. If it is, we want
     // to emit an LCompare*AndBranch rather than an LTest*AndBranch, to fuse the
     // compare and jump instructions.
