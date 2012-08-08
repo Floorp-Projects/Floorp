@@ -48,6 +48,13 @@ public:
   nsEventStatus HandleInputEvent(const InputData& aEvent);
 
   /**
+   * Cancels any currently active gesture. May not properly handle situations
+   * that require extra work at the gesture's end, like a pinch which only
+   * requests a repaint once it has ended.
+   */
+  void CancelGesture();
+
+  /**
    * Returns the AsyncPanZoomController stored on this class and used for
    * callbacks.
    */
