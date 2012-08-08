@@ -3585,9 +3585,15 @@ IonBuilder::jsop_funapply(uint32 argc)
     if (argc != 2)
         return makeCall(native, argc, false);
 
-    // Reject when called with an Array or object.
+    // Disable compilation if the second argument to |apply| cannot be guaranteed
+    // to be either definitely |arguments| or definitely not |arguments|.
     types::TypeSet *argObjTypes = oracle->getCallArg(script, argc, 2, pc);
-    if (oracle->isArgumentObject(argObjTypes) != DefinitelyArguments)
+    LazyArgumentsType isArgObj = oracle->isArgumentObject(argObjTypes);
+    if (isArgObj == MaybeArguments)
+        return abort("NYI: Handle fun.apply with MaybeArguments.");
+
+    // Fallback to regular call if arg 2 is not definitely |arguments|.
+    if (isArgObj != DefinitelyArguments)
         return makeCall(native, argc, false);
 
     // Extract call target.
