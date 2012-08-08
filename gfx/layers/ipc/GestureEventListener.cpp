@@ -260,5 +260,10 @@ AsyncPanZoomController* GestureEventListener::GetAsyncPanZoomController() {
   return mAsyncPanZoomController;
 }
 
+void GestureEventListener::CancelGesture() {
+  mTouches.Clear();
+  mState = GESTURE_NONE;
+}
+
 }
 }
