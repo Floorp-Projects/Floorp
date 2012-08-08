@@ -852,6 +852,14 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                  bounds));
 }
 
+void
+RenderFrameParent::NotifyDOMTouchListenerAdded()
+{
+  if (mPanZoomController) {
+    mPanZoomController->NotifyDOMTouchListenerAdded();
+  }
+}
+
 }  // namespace layout
 }  // namespace mozilla
 

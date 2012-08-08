@@ -140,7 +140,8 @@ class TabChild : public PBrowserChild,
                  public nsIWindowProvider,
                  public nsSupportsWeakReference,
                  public nsIDialogCreator,
-                 public nsITabChild
+                 public nsITabChild,
+                 public nsIObserver
 {
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -166,6 +167,7 @@ public:
     NS_DECL_NSIWINDOWPROVIDER
     NS_DECL_NSIDIALOGCREATOR
     NS_DECL_NSITABCHILD
+    NS_DECL_NSIOBSERVER
 
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);
