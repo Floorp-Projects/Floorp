@@ -154,15 +154,22 @@ class GeckoInputConnection
 
     @Override
     public boolean finishComposingText() {
-        // finishComposingText() is sometimes called even when we are not composing text.
-        if (hasCompositionString()) {
-            if (DEBUG) Log.d(LOGTAG, ". . . finishComposingText: endComposition");
-            endComposition();
-        }
-
-        beginBatchEdit();
-        removeComposingSpans(mEditable);
-        endBatchEdit();
+        // finishComposingText() is called by the input method manager from the main
+        // thread so we have to make sure it's run in the ui thread.
+        postToUiThread(new Runnable() {
+            public void run() {
+                if (hasCompositionString()) {
+                    if (DEBUG) Log.d(LOGTAG, ". . . finishComposingText: endComposition");
+                    endComposition();
+                }
+                final Editable content = getEditable();
+                if (content != null) {
+                    beginBatchEdit();
+                    removeComposingSpans(content);
+                    endBatchEdit();
+                }
+            }
+        });
         return true;
     }
 
@@ -792,16 +799,10 @@ class GeckoInputConnection
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER
                                  | InputType.TYPE_NUMBER_FLAG_SIGNED
                                  | InputType.TYPE_NUMBER_FLAG_DECIMAL;
-        else if (mIMETypeHint.equalsIgnoreCase("datetime") ||
-                 mIMETypeHint.equalsIgnoreCase("datetime-local"))
-            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
-                                 | InputType.TYPE_DATETIME_VARIATION_NORMAL;
-        else if (mIMETypeHint.equalsIgnoreCase("date"))
-            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
-                                 | InputType.TYPE_DATETIME_VARIATION_DATE;
-        else if (mIMETypeHint.equalsIgnoreCase("time"))
-            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
-                                 | InputType.TYPE_DATETIME_VARIATION_TIME;
+        else if (mIMETypeHint.equalsIgnoreCase("week") ||
+                 mIMETypeHint.equalsIgnoreCase("month"))
+             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
+                                  | InputType.TYPE_DATETIME_VARIATION_DATE;
         else if (mIMEModeHint.equalsIgnoreCase("numeric"))
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
                                  InputType.TYPE_NUMBER_FLAG_SIGNED |
@@ -990,6 +991,16 @@ class GeckoInputConnection
     }
 
     public void notifyIME(int type, int state) {
+        // For some input type we will use a  widget to display the ui, for those we must not
+        // display the ime. We can display a widget for date and time types and, if the sdk version
+        // is greater than 11, for datetime/month/week as well.
+        if (typeHint.equals("date") || typeHint.equals("time") ||
+            (Build.VERSION.SDK_INT > 10 &&
+            (typeHint.equals("datetime") || typeHint.equals("month") ||
+            typeHint.equals("week") || typeHint.equals("datetime-local")))) {
+            return;
+        }
+
         View v = getView();
         if (v == null)
             return;
@@ -1231,6 +1242,8 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     @Override
     public boolean finishComposingText() {
         Log.d(LOGTAG, "IME: finishComposingText");
+        // finishComposingText will post itself to the ui thread,
+        // no need to assert it.
         return super.finishComposingText();
     }
 
