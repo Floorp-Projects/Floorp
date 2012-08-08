@@ -232,6 +232,8 @@ parent:
                                 nsString aName, nsString aFeatures)
       returns (bool windowOpened);
 
+    NotifyDOMTouchListenerAdded();
+
     __delete__();
 
 child:

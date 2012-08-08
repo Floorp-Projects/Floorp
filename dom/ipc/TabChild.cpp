@@ -20,6 +20,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
+#include "mozilla/unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -107,6 +108,24 @@ TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement,
 }
 
 nsresult
+TabChild::Observe(nsISupports *aSubject,
+                  const char *aTopic,
+                  const PRUnichar *aData)
+{
+  if (!strcmp(aTopic, "dom-touch-listener-added")) {
+    nsCOMPtr<nsIDOMWindow> subject(do_QueryInterface(aSubject));
+    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mWebNav));
+    nsCOMPtr<nsIDOMWindow> topSubject;
+    subject->GetTop(getter_AddRefs(topSubject));
+    if (win == topSubject) {
+      SendNotifyDOMTouchListenerAdded();
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 TabChild::Init()
 {
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
@@ -121,6 +140,16 @@ TabChild::Init()
 
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(mWebNav));
   docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
+  if (observerService) {
+    observerService->AddObserver(this,
+                                 "dom-touch-listener-added",
+                                 false);
+  }
+
   return NS_OK;
 }
 
