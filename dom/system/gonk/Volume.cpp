@@ -66,9 +66,15 @@ Volume::SetState(Volume::STATE aNewState)
   if (aNewState == mState) {
     return;
   }
-  LOG("Volume %s: changing state from %s to %s (%d observers)",
-      NameStr(), StateStr(mState),
-      StateStr(aNewState), mEventObserverList.Length());
+  if (aNewState == nsIVolume::STATE_MOUNTED) {
+    LOG("Volume %s: changing state from %s to %s @ '%s' (%d observers)",
+        NameStr(), StateStr(mState),
+        StateStr(aNewState), mMountPoint.get(), mEventObserverList.Length());
+  } else {
+    LOG("Volume %s: changing state from %s to %s (%d observers)",
+        NameStr(), StateStr(mState),
+        StateStr(aNewState), mEventObserverList.Length());
+  }
 
   if (aNewState == nsIVolume::STATE_NOMEDIA) {
     // Cover the startup case where we don't get insertion/removal events
