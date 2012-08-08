@@ -232,6 +232,7 @@ static inline bool IsEnabled(JSContext *cx)
 }
 
 void ForbidCompilation(JSScript *script);
+uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
 
 } // namespace ion
 } // namespace js

@@ -2808,17 +2808,23 @@ class MCheckOverRecursed : public MNullaryInstruction
 // calls when the script becomes hot.
 class MRecompileCheck : public MNullaryInstruction
 {
-    MRecompileCheck() {
+    uint32_t minUses_;
+
+    MRecompileCheck(uint32 minUses)
+      : minUses_(minUses)
+    {
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(RecompileCheck);
 
-    static MRecompileCheck *New() {
-        return new MRecompileCheck();
+    uint32_t minUses() const {
+        return minUses_;
     }
-
+    static MRecompileCheck *New(uint32_t minUses) {
+        return new MRecompileCheck(minUses);
+    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }

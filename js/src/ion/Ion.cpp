@@ -1425,5 +1425,24 @@ ion::ForbidCompilation(JSScript *script)
     script->ion = ION_DISABLED_SCRIPT;
 }
 
+uint32_t
+ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(pc == script->code || JSOp(*pc) == JSOP_LOOPENTRY);
+
+    uint32_t minUses = js_IonOptions.usesBeforeCompile;
+    if (JSOp(*pc) != JSOP_LOOPENTRY || !script->hasAnalysis() || js_IonOptions.eagerCompilation)
+        return minUses;
+
+    analyze::LoopAnalysis *loop = script->analysis()->getLoop(pc);
+    if (!loop)
+        return minUses;
+
+    // It's more efficient to enter outer loops, rather than inner loops, via OSR.
+    // To accomplish this, we use a slightly higher threshold for inner loops.
+    // Note that we use +1 to prefer non-OSR over OSR.
+    return minUses + (loop->depth + 1) * 100;
+}
+
 int js::ion::LabelBase::id_count = 0;
 

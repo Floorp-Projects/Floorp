@@ -125,7 +125,7 @@ class Bytecode
         /* If this is a JOF_TYPESET opcode, index into the observed types for the op. */
         types::TypeSet *observedTypes;
 
-        /* If this is a loop head (TRACE or NOTRACE), information about the loop. */
+        /* If this is a JSOP_LOOPHEAD or JSOP_LOOPENTRY, information about the loop. */
         LoopAnalysis *loop;
     };
 
@@ -507,6 +507,9 @@ class LoopAnalysis
      * backedge runs when the loop is initially entered.
      */
     uint32_t lastBlock;
+
+    /* Loop nesting depth, 0 for the outermost loop. */
+    uint16_t depth;
 
     /*
      * This loop contains safe points in its body which the interpreter might

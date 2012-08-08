@@ -1394,7 +1394,7 @@ CodeGeneratorARM::visitRecompileCheck(LRecompileCheck *lir)
     masm.store32(tmp, AbsoluteAddress(addr));
 
     // Bailout if the script is hot.
-    masm.ma_cmp(tmp, Imm32(js_IonOptions.usesBeforeInlining));
+    masm.ma_cmp(tmp, Imm32(lir->mir()->minUses()));
     if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
         return false;
     return true;

@@ -46,7 +46,7 @@ bool
 LIRGeneratorX86Shared::visitRecompileCheck(MRecompileCheck *ins)
 {
     LRecompileCheck *lir = new LRecompileCheck();
-    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir);
+    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir, ins);
 }
 
 bool

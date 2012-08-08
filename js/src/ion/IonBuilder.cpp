@@ -757,6 +757,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
     switch (op) {
       case JSOP_LOOPENTRY:
+        insertRecompileCheck();
         return true;
 
       case JSOP_NOP:
@@ -2449,7 +2450,6 @@ bool
 IonBuilder::jsop_loophead(jsbytecode *pc)
 {
     assertValidLoopHeadOp(pc);
-    insertRecompileCheck();
 
     current->add(MInterruptCheck::New());
 
@@ -4237,7 +4237,8 @@ IonBuilder::insertRecompileCheck()
     if (!oracle->canInlineCalls())
         return;
 
-    MRecompileCheck *check = MRecompileCheck::New();
+    uint32_t minUses = UsesBeforeIonRecompile(script, pc);
+    MRecompileCheck *check = MRecompileCheck::New(minUses);
     current->add(check);
 }
 
