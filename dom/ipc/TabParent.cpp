@@ -225,10 +225,12 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 void
 TabParent::UpdateFrame(const FrameMetrics& aFrameMetrics)
 {
-  unused << SendUpdateFrame(aFrameMetrics.mDisplayPort,
-                            aFrameMetrics.mViewportScrollOffset,
-                            aFrameMetrics.mResolution,
-                            aFrameMetrics.mViewport);
+  unused << SendUpdateFrame(aFrameMetrics);
+}
+
+void TabParent::HandleDoubleTap(const nsIntPoint& aPoint)
+{
+  unused << SendHandleDoubleTap(aPoint);
 }
 
 void
@@ -1095,6 +1097,15 @@ TabParent::RecvNotifyDOMTouchListenerAdded()
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->NotifyDOMTouchListenerAdded();
+  }
+  return true;
+}
+
+bool
+TabParent::RecvZoomToRect(const gfxRect& aRect)
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->ZoomToRect(aRect);
   }
   return true;
 }
