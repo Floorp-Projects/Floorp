@@ -1097,6 +1097,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
     FunctionBox *funbox = fn->pn_funbox;
     funbox->cxFlags = funtc->sc->cxFlags;   // copy all the flags
+    funbox->kids = funtc->functionList;
 
     if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
@@ -1726,8 +1727,6 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
                 return NULL;
         }
     }
-
-    funbox->kids = funtc.functionList;
 
     pn->pn_funbox = funbox;
     pn->setOp(op);

@@ -21,6 +21,7 @@
 
 const char kAPP_INI[] = "application.ini";
 const char kWEBAPP_INI[] = "webapp.ini";
+const char kWEBAPP_JSON[] = "webapp.json";
 const char kWEBAPPRT_INI[] = "webapprt.ini";
 const char kWEBAPPRT_PATH[] = "webapprt";
 const char kAPP_ENV_VAR[] = "XUL_APP_FILE";
@@ -226,6 +227,41 @@ void CopyAndRelaunch(const char* firefoxDir, const char* curExePath)
   ErrorDialog("Couldn't execute the new webapprt-stub executable");
 }
 
+void RemoveApplication(const char* curExeDir, const char* profile)  {
+  if (!isProfileOverridden) {
+    // Remove the desktop entry file.
+    char desktopEntryFilePath[MAXPATHLEN];
+
+    char* dataDir = getenv("XDG_DATA_HOME");
+
+    if (dataDir && *dataDir) {
+      snprintf(desktopEntryFilePath, MAXPATHLEN, "%s/applications/owa-%s.desktop", dataDir, profile);
+    } else {
+      char* home = getenv("HOME");
+      snprintf(desktopEntryFilePath, MAXPATHLEN, "%s/.local/share/applications/owa-%s.desktop", home, profile);
+    }
+
+    unlink(desktopEntryFilePath);
+  }
+
+  // Remove the files from the installation directory.
+  char webAppIniPath[MAXPATHLEN];
+  snprintf(webAppIniPath, MAXPATHLEN, "%s/%s", curExeDir, kWEBAPP_INI);
+  unlink(webAppIniPath);
+
+  char curExePath[MAXPATHLEN];
+  snprintf(curExePath, MAXPATHLEN, "%s/%s", curExeDir, kAPP_RT);
+  unlink(curExePath);
+
+  char webAppJsonPath[MAXPATHLEN];
+  snprintf(webAppJsonPath, MAXPATHLEN, "%s/%s", curExeDir, kWEBAPP_JSON);
+  unlink(webAppJsonPath);
+
+  char iconPath[MAXPATHLEN];
+  snprintf(iconPath, MAXPATHLEN, "%s/icon.png", curExeDir);
+  unlink(iconPath);
+}
+
 int main(int argc, char *argv[])
 {
   pargc = &argc;
@@ -240,10 +276,13 @@ int main(int argc, char *argv[])
   char curExeDir[MAXPATHLEN];
   GetDirFromPath(curExeDir, curExePath);
 
+  bool removeApp = false;
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-profile")) {
       isProfileOverridden = true;
-      break;
+    }
+    else if (!strcmp(argv[i], "-remove")) {
+      removeApp = true;
     }
   }
 
@@ -280,6 +319,11 @@ int main(int argc, char *argv[])
   if (NS_FAILED(parser.GetString("Webapp", "Profile", profile, MAXPATHLEN))) {
     ErrorDialog("Couldn't retrieve profile from web app INI file");
     return 255;
+  }
+
+  if (removeApp) {
+    RemoveApplication(curExeDir, profile);
+    return 0;
   }
 
   // Get the location of Firefox from our webapp.ini

@@ -117,12 +117,26 @@ const ContentPanning = {
 
     let nodeContent = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
-      if (node.scrollHeight > node.clientHeight ||
-          node.scrollWidth > node.clientWidth ||
-          ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
-          ('scrollTopMax' in node && node.scrollTopMax > 0)) {
+      let style = nodeContent.getComputedStyle(node, null);
+
+      let overflow = [style.getPropertyValue('overflow'),
+                      style.getPropertyValue('overflow-x'),
+                      style.getPropertyValue('overflow-y')];
+
+      let rect = node.getBoundingClientRect();
+      let isAuto = (overflow.indexOf('auto') != -1 &&
+                   (rect.height < node.scrollHeight ||
+                    rect.width < node.scrollWidth));
+
+      let isScroll = (overflow.indexOf('scroll') != -1);
+
+      let isScrollableTextarea = (node.tagName == 'TEXTAREA' &&
+          (node.scrollHeight > node.clientHeight ||
+           node.scrollWidth > node.clientWidth ||
+           ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
+           ('scrollTopMax' in node && node.scrollTopMax > 0)));
+      if (isScroll || isAuto || isScrollableTextarea)
         return [node, this._generateCallback(node)];
-      }
 
       node = node.parentNode;
     }
@@ -133,7 +147,11 @@ const ContentPanning = {
       // root scrollable frame, so don't use our synchronous fallback.
       return [null, null];
 
-    return [nodeContent, this._generateCallback(nodeContent)];
+    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
+      return [nodeContent, this._generateCallback(nodeContent)];
+    }
+
+    return [null, null];
   },
 
   _generateCallback: function cp_generateCallback(content) {

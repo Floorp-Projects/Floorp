@@ -9,7 +9,11 @@ const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://testing-common/httpd.js");
 var testserver;
 
 const profileDir = gProfD.clone();
@@ -302,7 +306,7 @@ function run_test() {
   }, profileDir);
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);

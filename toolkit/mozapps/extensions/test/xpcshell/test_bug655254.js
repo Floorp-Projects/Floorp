@@ -13,7 +13,7 @@ Services.prefs.setIntPref("extensions.enabledScopes",
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9.2");
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 var userDir = gProfD.clone();
@@ -50,7 +50,7 @@ function run_test() {
   do_test_pending();
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.start(4444);
 

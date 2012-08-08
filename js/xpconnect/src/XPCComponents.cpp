@@ -3002,10 +3002,10 @@ static JSClass SandboxClass = {
 };
 
 static JSFunctionSpec SandboxFunctions[] = {
-    {"dump",    SandboxDump,    1,0},
-    {"debug",   SandboxDebug,   1,0},
-    {"importFunction", SandboxImport, 1,0},
-    {nullptr,nullptr,0,0}
+    JS_FS("dump",    SandboxDump,    1,0),
+    JS_FS("debug",   SandboxDebug,   1,0),
+    JS_FS("importFunction", SandboxImport, 1,0),
+    JS_FS_END
 };
 
 /***************************************************************************/

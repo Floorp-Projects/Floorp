@@ -137,7 +137,7 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
       listener->OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, NS_OK);
     else
     {
-      listener->OnStatusChange(nullptr, nullptr, 0, m_pendingStatus.get());
+      listener->OnStatusChange(nullptr, nullptr, NS_OK, m_pendingStatus.get());
       if (m_pendingStateFlags != -1)
         listener->OnStateChange(nullptr, nullptr, m_pendingStateFlags, m_pendingStateValue);
     }

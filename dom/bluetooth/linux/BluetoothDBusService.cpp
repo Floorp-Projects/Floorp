@@ -338,7 +338,9 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
         // This happens when the array is 0-length. Apparently we get a
         // DBUS_TYPE_INVALID type.
         propertyValue = InfallibleTArray<nsString>();
+#ifdef DEBUG
         NS_WARNING("Received array type that's not a string array!");
+#endif
       }
       break;
     default:
@@ -605,7 +607,7 @@ BluetoothDBusService::StartInternal()
   }
   
   if (mConnection) {
-    return NS_OK;    
+    return NS_OK;
   }
 
   if (NS_FAILED(EstablishDBusConnection())) {
@@ -613,7 +615,23 @@ BluetoothDBusService::StartInternal()
     StopDBus();
     return NS_ERROR_FAILURE;
   }
-	
+
+  DBusError err;
+  dbus_error_init(&err);
+
+  // Set which messages will be processed by this dbus connection.
+  // Since we are maintaining a single thread for all the DBus bluez
+  // signals we want, register all of them in this thread at startup.
+  // The event handler will sort the destinations out as needed.
+  for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
+    dbus_bus_add_match(mConnection,
+                       sBluetoothDBusSignals[i],
+                       &err);
+    if (dbus_error_is_set(&err)) {
+      LOG_AND_FREE_DBUS_ERROR(&err);
+    }
+  }
+
   // Add a filter for all incoming messages_base
   if (!dbus_connection_add_filter(mConnection, EventFilter,
                                   NULL, NULL)) {
@@ -634,7 +652,20 @@ BluetoothDBusService::StopInternal()
     StopDBus();
     return NS_OK;
   }
-  dbus_connection_remove_filter(mConnection, EventFilter, NULL);
+
+  DBusError err;
+  dbus_error_init(&err);
+  for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
+    dbus_bus_remove_match(mConnection,
+                          sBluetoothDBusSignals[i],
+                          &err);
+    if (dbus_error_is_set(&err)) {
+      LOG_AND_FREE_DBUS_ERROR(&err);
+    }
+  }
+
+  dbus_connection_remove_filter(mConnection, EventFilter, nullptr);
+  
   mConnection = nullptr;
   mBluetoothSignalObserverTable.Clear();
   StopDBus();
@@ -836,4 +867,25 @@ BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
 {
   aDevicePath = GetObjectPathFromAddress(aAdapterPath, aDeviceAddress);
   return true;
+}
+
+int
+BluetoothDBusService::GetDeviceServiceChannelInternal(const nsAString& aObjectPath,
+                                                      const nsAString& aPattern,
+                                                      int aAttributeId)
+{
+  // This is a blocking call, should not be run on main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  const char* deviceObjectPath = NS_ConvertUTF16toUTF8(aObjectPath).get();
+  const char* pattern = NS_ConvertUTF16toUTF8(aPattern).get();
+
+  DBusMessage *reply =
+    dbus_func_args(mConnection, deviceObjectPath,
+                   DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
+                   DBUS_TYPE_STRING, &pattern,
+                   DBUS_TYPE_UINT16, &aAttributeId,
+                   DBUS_TYPE_INVALID);
+
+  return reply ? dbus_returns_int32(reply) : -1;
 }

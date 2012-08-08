@@ -242,7 +242,8 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, Prefable<JSFunctionSpec>* methods,
+                       unsigned ctorNargs, JSClass* instanceClass,
+                       Prefable<JSFunctionSpec>* methods,
                        Prefable<JSPropertySpec>* properties,
                        Prefable<ConstantSpec>* constants,
                        Prefable<JSFunctionSpec>* staticMethods, const char* name)
@@ -264,6 +265,9 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
     if (!proto) {
       return NULL;
     }
+
+    js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
+                        JS::PrivateValue(instanceClass));
   }
   else {
     proto = NULL;
@@ -321,6 +325,19 @@ DoHandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
   }
 
   return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+}
+
+// Can only be called with the immediate prototype of the instance object. Can
+// only be called on the prototype of an object known to be a DOM instance.
+JSBool
+InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID,
+                             uint32_t depth)
+{
+  JSClass* instanceClass = static_cast<JSClass*>(
+    js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
+  MOZ_ASSERT(IsDOMClass(instanceClass));
+  DOMJSClass* domClass = DOMJSClass::FromJSClass(instanceClass);
+  return (uint32_t)domClass->mInterfaceChain[depth] == protoID;
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
@@ -431,11 +448,12 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
       size_t i = methods[prefIdx].specs - methodSpecs;
       for ( ; methodIds[i] != JSID_VOID; ++i) {
         if (id == methodIds[i]) {
-          JSFunction *fun = JS_NewFunctionById(cx, methodSpecs[i].call,
+          JSFunction *fun = JS_NewFunctionById(cx, methodSpecs[i].call.op,
                                                methodSpecs[i].nargs, 0,
                                                wrapper, id);
           if (!fun)
               return false;
+          SET_JITINFO(fun, methodSpecs[i].call.info);
           JSObject *funobj = JS_GetFunctionObject(fun);
           desc->value.setObject(*funobj);
           desc->attrs = methodSpecs[i].flags;
@@ -456,10 +474,34 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
       size_t i = attributes[prefIdx].specs - attributeSpecs;
       for ( ; attributeIds[i] != JSID_VOID; ++i) {
         if (id == attributeIds[i]) {
-          desc->attrs = attributeSpecs[i].flags;
+          // Because of centralization, we need to make sure we fault in the
+          // JitInfos as well. At present, until the JSAPI changes, the easiest
+          // way to do this is wrap them up as functions ourselves.
+          desc->attrs = attributeSpecs[i].flags & ~JSPROP_NATIVE_ACCESSORS;
+          // They all have getters, so we can just make it.
+          JSObject *global = JS_GetGlobalForObject(cx, wrapper);
+          JSFunction *fun = JS_NewFunction(cx, (JSNative)attributeSpecs[i].getter.op,
+                                           0, 0, global, NULL);
+          if (!fun)
+            return false;
+          SET_JITINFO(fun, attributeSpecs[i].getter.info);
+          JSObject *funobj = JS_GetFunctionObject(fun);
+          desc->getter = js::CastAsJSPropertyOp(funobj);
+          desc->attrs |= JSPROP_GETTER;
+          if (attributeSpecs[i].setter.op) {
+            // We have a setter! Make it.
+            fun = JS_NewFunction(cx, (JSNative)attributeSpecs[i].setter.op,
+                                 1, 0, global, NULL);
+            if (!fun)
+              return false;
+            SET_JITINFO(fun, attributeSpecs[i].setter.info);
+            funobj = JS_GetFunctionObject(fun);
+            desc->setter = js::CastAsJSStrictPropertyOp(funobj);
+            desc->attrs |= JSPROP_SETTER;
+          } else {
+            desc->setter = NULL;
+          }
           desc->obj = wrapper;
-          desc->setter = attributeSpecs[i].setter;
-          desc->getter = attributeSpecs[i].getter;
           return true;
         }
       }

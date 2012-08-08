@@ -1683,13 +1683,14 @@ var SelectionHandler = {
       selectionController.wordMove(!this._isRTL, true);
     } catch(e) {
       // If we couldn't select the word at the given point, bail
-      Cu.reportError("Error selecting word: " + e);
+      this._cleanUp();
       return;
     }
 
     // If there isn't an appropriate selection, bail
     if (!selection.rangeCount || !selection.getRangeAt(0) || !selection.toString().trim().length) {
       selection.collapseToStart();
+      this._cleanUp();
       return;
     }
 
@@ -1805,7 +1806,7 @@ var SelectionHandler = {
   // aX/aY are in top-level window browser coordinates
   endSelection: function sh_endSelection(aX, aY) {
     if (!this._active)
-      return;
+      return "";
 
     this._active = false;
     this.hideHandles();
@@ -1838,13 +1839,17 @@ var SelectionHandler = {
       }
     }
 
+    this._cleanUp();
+
+    return selectedText;
+  },
+
+  _cleanUp: function sh_cleanUp() {
     this._view.removeEventListener("pagehide", this, false);
     this._view = null;
     this._target = null;
     this._isRTL = false;
     this.cache = null;
-
-    return selectedText;
   },
 
   _getViewOffset: function sh_getViewOffset() {
@@ -3127,6 +3132,19 @@ Tab.prototype = {
     // on the layout at that width.
     let oldBrowserWidth = this.browserWidth;
     this.setBrowserSize(viewportW, viewportH);
+
+    // if this page has not been painted yet, then this must be getting run
+    // because a meta-viewport element was added (via the DOMMetaAdded handler).
+    // in this case, we should not do anything that forces a reflow (see bug 759678)
+    // such as requesting the page size or sending a viewport update. this code
+    // will get run again in the before-first-paint handler and that point we
+    // will run though all of it. the reason we even bother executing up to this
+    // point on the DOMMetaAdded handler is so that scripts that use window.innerWidth
+    // before they are painted have a correct value (bug 771575).
+    if (!this.contentDocumentIsDisplayed) {
+      return;
+    }
+
     let minScale = 1.0;
     if (this.browser.contentDocument) {
       // this may get run during a Viewport:Change message while the document
@@ -3202,6 +3220,9 @@ Tab.prototype = {
         // Is it on the top level?
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
+          BrowserApp.displayedDocumentChanged();
+          this.contentDocumentIsDisplayed = true;
+
           // reset CSS viewport and zoom to default on new page, and then calculate
           // them properly using the actual metadata from the page. note that the
           // updateMetadata call takes into account the existing CSS viewport size
@@ -3228,9 +3249,6 @@ Tab.prototype = {
             this.setResolution(fitZoom, false);
             this.sendViewportUpdate();
           }
-
-          BrowserApp.displayedDocumentChanged();
-          this.contentDocumentIsDisplayed = true;
         }
         break;
       case "nsPref:changed":
@@ -3375,7 +3393,7 @@ var BrowserEventHandler = {
 
           if (isClickable) {
             [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
-            element = ElementTouchHelper.anyElementFromPoint(element.ownerDocument.defaultView, data.x, data.y);
+            element = ElementTouchHelper.anyElementFromPoint(element.ownerDocument.defaultView.top, data.x, data.y);
             isClickable = ElementTouchHelper.isElementClickable(element);
           }
 
@@ -4462,7 +4480,7 @@ var ViewportHandler = {
         let document = target.ownerDocument;
         let browser = BrowserApp.getBrowserForDocument(document);
         let tab = BrowserApp.getTabForBrowser(browser);
-        if (tab && tab.contentDocumentIsDisplayed)
+        if (tab)
           this.updateMetadata(tab);
         break;
     }
@@ -4484,10 +4502,6 @@ var ViewportHandler = {
           tabs[i].updateViewportSize(oldScreenWidth);
         break;
     }
-  },
-
-  resetMetadata: function resetMetadata(tab) {
-    tab.updateViewportMetadata(null);
   },
 
   updateMetadata: function updateMetadata(tab) {

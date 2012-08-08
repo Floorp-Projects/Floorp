@@ -317,7 +317,7 @@ void
 nsBrowserStatusFilter::MaybeSendStatus()
 {
     if (mStatusIsDirty) {
-        mListener->OnStatusChange(nullptr, nullptr, 0, mStatusMsg.get());
+        mListener->OnStatusChange(nullptr, nullptr, NS_OK, mStatusMsg.get());
         mCurrentStatusMsg = mStatusMsg;
         mStatusIsDirty = false;
     }

@@ -62,6 +62,9 @@ let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = false;
 let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = false;
 let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = false;
 
+// Marker object.
+let PENDING_NETWORK_TYPE = {};
+
 /**
  * This object contains helpers buffering incoming data & deconstructing it
  * into parcels as well as buffering outgoing data & constructing parcels.
@@ -614,6 +617,8 @@ let RIL = {
    * Application identification for apps in ICC.
    */
   aid: null,
+
+  networkSelectionMode: null,
 
   voiceRegistrationState: {},
   dataRegistrationState: {},
@@ -1504,10 +1509,7 @@ let RIL = {
    */
   requestNetworkInfo: function requestNetworkInfo() {
     if (this._processingNetworkInfo) {
-      if (DEBUG) {
-        debug("Already requesting network info: " +
-              JSON.stringify(this._pendingNetworkInfo));
-      }
+      if (DEBUG) debug("Network info requested, but we're already requesting network info.");
       return;
     }
 
@@ -2172,19 +2174,21 @@ let RIL = {
       return;
     }
 
+    if (DEBUG) debug("Queuing " + type + " network info message: " + JSON.stringify(message));
     this._pendingNetworkInfo[type] = message;
   },
 
   _receivedNetworkInfo: function _receivedNetworkInfo(type) {
+    if (DEBUG) debug("Received " + type + " network info.");
     if (!this._processingNetworkInfo) {
       return;
     }
 
     let pending = this._pendingNetworkInfo;
 
-    // We still need to track states for events that aren't fired
+    // We still need to track states for events that aren't fired.
     if (!(type in pending)) {
-      pending[type] = true;
+      pending[type] = PENDING_NETWORK_TYPE;
     }
 
     // Pending network info is ready to be sent when no more messages
@@ -2192,58 +2196,77 @@ let RIL = {
     for (let i = 0; i < NETWORK_INFO_MESSAGE_TYPES.length; i++) {
       let type = NETWORK_INFO_MESSAGE_TYPES[i];
       if (!(type in pending)) {
+        if (DEBUG) debug("Still missing some more network info, not notifying main thread.");
         return;
       }
     }
 
     // Do a pass to clean up the processed messages that didn't create
     // a response message, so we don't have unused keys in the outbound
-    // networkinfochanged message
-    let keys = Object.keys(pending);
-    for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
-      if (pending[key] === true) {
+    // networkinfochanged message.
+    for (let key in pending) {
+      if (pending[key] == PENDING_NETWORK_TYPE) {
         delete pending[key];
       }
     }
 
+    if (DEBUG) debug("All pending network info has been received: " + JSON.stringify(pending));
+
     // Send the message on the next tick of the worker's loop, so we give the
     // last message a chance to call _sendNetworkInfoMessage first.
-    setTimeout(this._sendPendingNetworkInfo.bind(this), 0);
+    setTimeout(this._sendPendingNetworkInfo, 0);
   },
 
   _sendPendingNetworkInfo: function _sendPendingNetworkInfo() {
-    this.sendDOMMessage(this._pendingNetworkInfo);
+    RIL.sendDOMMessage(RIL._pendingNetworkInfo);
 
-    this._processingNetworkInfo = false;
+    RIL._processingNetworkInfo = false;
     for (let i = 0; i < NETWORK_INFO_MESSAGE_TYPES.length; i++) {
-      delete this._pendingNetworkInfo[NETWORK_INFO_MESSAGE_TYPES[i]];
+      delete RIL._pendingNetworkInfo[NETWORK_INFO_MESSAGE_TYPES[i]];
     }
+  },
+
+  /**
+   * Process the network registration flags.
+   *
+   * @return true if the state changed, false otherwise.
+   */
+  _processCREG: function _processCREG(curState, newState) {
+    let changed = false;
+
+    let regState = RIL.parseInt(newState[0], NETWORK_CREG_STATE_UNKNOWN);
+    if (curState.regState != regState) {
+      changed = true;
+      curState.regState = regState;
+
+      curState.state = NETWORK_CREG_TO_GECKO_MOBILE_CONNECTION_STATE[regState];
+      curState.connected = regState == NETWORK_CREG_STATE_REGISTERED_HOME ||
+                           regState == NETWORK_CREG_STATE_REGISTERED_ROAMING;
+      curState.roaming = regState == NETWORK_CREG_STATE_REGISTERED_ROAMING;
+      curState.emergencyCallsOnly =
+        (regState >= NETWORK_CREG_STATE_NOT_SEARCHING_EMERGENCY_CALLS) &&
+        (regState <= NETWORK_CREG_STATE_UNKNOWN_EMERGENCY_CALLS);
+      if (RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE) {
+        curState.emergencyCallsOnly = !curState.connected;
+      }
+    }
+
+    let radioTech = RIL.parseInt(newState[3], NETWORK_CREG_TECH_UNKNOWN);
+    if (curState.radioTech != radioTech) {
+      changed = true;
+      curState.radioTech = radioTech;
+      curState.type = GECKO_RADIO_TECH[radioTech] || null;
+    }
+    return changed;
   },
 
   _processVoiceRegistrationState: function _processVoiceRegistrationState(state) {
     this.initRILQuirks();
 
     let rs = this.voiceRegistrationState;
-    let stateChanged = false;
-
-    let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
-    if (rs.regState != regState) {
-      rs.regState = regState;
-      if (RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE) {
-        rs.emergencyCallsOnly =
-          (regState != NETWORK_CREG_STATE_REGISTERED_HOME) &&
-          (regState != NETWORK_CREG_STATE_REGISTERED_ROAMING);
-      } else {
-        rs.emergencyCallsOnly =
-          (regState >= NETWORK_CREG_STATE_NOT_SEARCHING_EMERGENCY_CALLS) &&
-          (regState <= NETWORK_CREG_STATE_UNKNOWN_EMERGENCY_CALLS);
-      }
-      stateChanged = true;
-      if (regState == NETWORK_CREG_STATE_REGISTERED_HOME ||
-          regState == NETWORK_CREG_STATE_REGISTERED_ROAMING) {
-        RIL.getSMSCAddress();
-      }
+    let stateChanged = this._processCREG(rs, state);
+    if (stateChanged && rs.connected) {
+      RIL.getSMSCAddress();
     }
 
     let cell = this.cellLocation;
@@ -2266,12 +2289,6 @@ let RIL = {
     if (cellChanged) {
       cell.rilMessageType = "celllocationchanged";
       this.sendDOMMessage(cell);
-    }
-
-    let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
-    if (rs.radioTech != radioTech) {
-      rs.radioTech = radioTech;
-      stateChanged = true;
     }
 
     // TODO: This zombie code branch that will be raised from the dead once
@@ -2301,20 +2318,7 @@ let RIL = {
 
   _processDataRegistrationState: function _processDataRegistrationState(state) {
     let rs = this.dataRegistrationState;
-    let stateChanged = false;
-
-    let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
-    if (rs.regState != regState) {
-      rs.regState = regState;
-      stateChanged = true;
-    }
-
-    let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
-    if (rs.radioTech != radioTech) {
-      rs.radioTech = radioTech;
-      stateChanged = true;
-    }
-
+    let stateChanged = this._processCREG(rs, state);
     if (stateChanged) {
       rs.rilMessageType = "dataregistrationstatechange";
       this._sendNetworkInfoMessage(NETWORK_INFO_DATA_REGISTRATION_STATE, rs);
@@ -2333,7 +2337,7 @@ let RIL = {
     }
 
     let [longName, shortName, networkTuple] = operatorData;
-    let thisTuple = String(this.operator.mcc) + this.operator.mnc;
+    let thisTuple = "" + this.operator.mcc + this.operator.mnc;
 
     if (this.operator.longName !== longName ||
         this.operator.shortName !== shortName ||
@@ -3180,11 +3184,8 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
   }
 
   let operatorData = Buf.readStringList();
-  if (DEBUG) debug("operator: " + operatorData);
-
+  if (DEBUG) debug("Operator: " + operatorData);
   this._processOperator(operatorData);
-
-
 };
 RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = null;
@@ -3383,8 +3384,8 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
       break;
   }
 
-  if (this.mode != selectionMode) {
-    this.mode = options.mode = selectionMode;
+  if (this.networkSelectionMode != selectionMode) {
+    this.networkSelectionMode = options.mode = selectionMode;
     options.rilMessageType = "networkselectionmodechange";
     this._sendNetworkInfoMessage(NETWORK_INFO_NETWORK_SELECTION_MODE, options);
   }

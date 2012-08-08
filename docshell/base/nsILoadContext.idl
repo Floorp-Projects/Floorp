@@ -7,14 +7,13 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsIURI;
 
 /**
  * An nsILoadContext represents the context of a load.  This interface
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(386806c3-c4cb-4b3d-b05d-c08ea10f5585)]
+[scriptable, uuid(48b5bf16-e0c7-11e1-b28e-91726188709b)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -79,19 +78,4 @@ interface nsILoadContext : nsISupports
    */
   readonly attribute unsigned long appId;
 
-  /**
-   * Get the extended origin of a channel in this load context.
-   * The extended origin is a string that has more information than the origin
-   * and can be used to isolate data or permissions between different
-   * principals while taking into account parameters like the app id or the
-   * fact that the load is taking place in a mozbrowser.
-   *
-   * In some cases this function will simply return the origin for the
-   * channel's URI.
-   *
-   * The extendedOrigin is intended to be an opaque identifier. It is
-   * currently "human-readable" but no callers should assume it will stay
-   * as-is and it might be crypto-hashed at some point.
-   */
-  AUTF8String GetExtendedOrigin(in nsIURI channel);
 };

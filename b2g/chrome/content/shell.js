@@ -54,7 +54,6 @@ function getContentWindow() {
 function addPermissions(urls) {
   let permissions = [
     'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
-    'websettings-read', 'websettings-readwrite',
     'content-camera', 'wifi-manage', 'desktop-notification',
     'geolocation', 'device-storage', 'alarms'
   ];
