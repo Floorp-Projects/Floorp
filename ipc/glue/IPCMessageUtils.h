@@ -23,11 +23,13 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxPoint.h"
+#include "gfxRect.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
 #include "jsapi.h"
 #include "LayersTypes.h"
+#include "FrameMetrics.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -514,6 +516,28 @@ struct ParamTraits<gfxSize>
       return true;
 
     return false;
+  }
+};
+
+template<>
+struct ParamTraits<gfxRect>
+{
+  typedef gfxRect paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.x);
+    WriteParam(aMsg, aParam.y);
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->x) &&
+           ReadParam(aMsg, aIter, &aResult->y) &&
+           ReadParam(aMsg, aIter, &aResult->width) &&
+           ReadParam(aMsg, aIter, &aResult->height);
   }
 };
 
