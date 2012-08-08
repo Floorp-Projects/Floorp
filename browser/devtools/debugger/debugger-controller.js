@@ -51,15 +51,16 @@ let DebuggerController = {
     window.removeEventListener("DOMContentLoaded", this._startupDebugger, true);
 
     DebuggerView.initializePanes();
-    DebuggerView.initializeEditor();
-    DebuggerView.StackFrames.initialize();
-    DebuggerView.Breakpoints.initialize();
-    DebuggerView.Properties.initialize();
-    DebuggerView.Scripts.initialize();
-    DebuggerView.showCloseButton(!this._isRemoteDebugger && !this._isChromeDebugger);
+    DebuggerView.initializeEditor(function() {
+      DebuggerView.Scripts.initialize();
+      DebuggerView.StackFrames.initialize();
+      DebuggerView.Breakpoints.initialize();
+      DebuggerView.Properties.initialize();
+      DebuggerView.showCloseButton(!this._isRemoteDebugger && !this._isChromeDebugger);
 
-    this.dispatchEvent("Debugger:Loaded");
-    this._connect();
+      this.dispatchEvent("Debugger:Loaded");
+      this._connect();
+    }.bind(this));
   },
 
   /**
