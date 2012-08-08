@@ -103,7 +103,7 @@ const uint8_t PM_PATTRS =
     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
 
 #define GETTER(name)                            \
-    { #name, 0, PM_PATTRS, pm_get_##name, 0 }
+    { #name, 0, PM_PATTRS, JSOP_WRAPPER(pm_get_##name), JSOP_NULLWRAPPER }
 
 static JSPropertySpec pm_props[] = {
     GETTER(cpu_cycles),
@@ -118,7 +118,7 @@ static JSPropertySpec pm_props[] = {
     GETTER(context_switches),
     GETTER(cpu_migrations),
     GETTER(eventsMeasured),
-    {0,0,0,0,0}
+    {0,0,0,JSOP_NULLWRAPPER,JSOP_NULLWRAPPER}
 };
 
 #undef GETTER

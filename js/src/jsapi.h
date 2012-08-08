@@ -4335,17 +4335,42 @@ struct JSConstDoubleSpec {
     uint8_t         spare[3];
 };
 
+typedef struct JSJitInfo JSJitInfo;
+
+/*
+ * Wrappers to replace {Strict,}PropertyOp for JSPropertySpecs. This will allow
+ * us to pass one JSJitInfo per function with the property spec, without
+ * additional field overhead.
+ */
+typedef struct JSStrictPropertyOpWrapper {
+    JSStrictPropertyOp  op;
+    const JSJitInfo     *info;
+} JSStrictPropertyOpWrapper;
+
+typedef struct JSPropertyOpWrapper {
+    JSPropertyOp        op;
+    const JSJitInfo     *info;
+} JSPropertyOpWrapper;
+
+/*
+ * Macro static initializers which correspond to the old |op| and |NULL|
+ * respectively, and make it easy to pass no JSJitInfo as part of a
+ * JSPropertySpec.
+ */
+#define JSOP_WRAPPER(op) {op, NULL}
+#define JSOP_NULLWRAPPER JSOP_WRAPPER(NULL)
+
 /*
  * To define an array element rather than a named property member, cast the
  * element's index to (const char *) and initialize name with it, and set the
  * JSPROP_INDEX bit in flags.
  */
 struct JSPropertySpec {
-    const char            *name;
-    int8_t                tinyid;
-    uint8_t               flags;
-    JSPropertyOp          getter;
-    JSStrictPropertyOp    setter;
+    const char                  *name;
+    int8_t                      tinyid;
+    uint8_t                     flags;
+    JSPropertyOpWrapper         getter;
+    JSStrictPropertyOpWrapper   setter;
 };
 
 struct JSFunctionSpec {
