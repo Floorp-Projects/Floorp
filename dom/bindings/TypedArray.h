@@ -64,7 +64,7 @@ struct TypedArray : public TypedArray_base<T,UnboxArray> {
 
   static inline JSObject*
   Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
-         T* data = NULL) {
+         const T* data = NULL) {
     JSObject* creatorWrapper;
     JSAutoEnterCompartment ac;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
