@@ -9,7 +9,7 @@ var gComponentRegistrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRe
 var gCategoryManager = AM_Cc["@mozilla.org/categorymanager;1"].getService(AM_Ci.nsICategoryManager);
 
 // Get the HTTP server.
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 // Factory for our parameter handler
@@ -37,7 +37,7 @@ function initTest()
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerPathHandler("/update.rdf", function(aRequest, aResponse) {
     gSeenExpectedURL = aRequest.queryString == gExpectedQuery;
     aResponse.setStatusLine(null, 404, "Not Found");
