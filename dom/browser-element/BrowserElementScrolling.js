@@ -43,6 +43,16 @@ const ContentPanning = {
     let oldTarget = this.target;
     [this.target, this.scrollCallback] = this.getPannable(evt.target);
 
+    // If we found a target, that means we have found a scrollable subframe. In
+    // this case, and if we are using async panning and zooming on the parent
+    // frame, inform the pan/zoom controller that it should not attempt to
+    // handle any touch events it gets until the next batch (meaning the next
+    // time we get a touch end).
+    if (this.target != null && ContentPanning._asyncPanZoomForViewportFrame) {
+      var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+      os.notifyObservers(docShell, 'cancel-default-pan-zoom', null);
+    }
+
     // If there is a pan animation running (from a previous pan gesture) and
     // the user touch back the screen, stop this animation immediatly and
     // prevent the possible click action if the touch happens on the same
