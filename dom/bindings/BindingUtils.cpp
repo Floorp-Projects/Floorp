@@ -337,7 +337,7 @@ InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID,
     js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
   MOZ_ASSERT(IsDOMClass(instanceClass));
   DOMJSClass* domClass = DOMJSClass::FromJSClass(instanceClass);
-  return domClass->mInterfaceChain[depth] == protoID;
+  return (uint32_t)domClass->mInterfaceChain[depth] == protoID;
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
