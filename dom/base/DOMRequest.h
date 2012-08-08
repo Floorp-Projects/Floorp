@@ -37,9 +37,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(DOMRequest,
                                                          nsDOMEventTargetHelper)
 
-  void FireSuccess(jsval aResult, bool* aDefaultActionEnabled);
-  void FireError(const nsAString& aError, bool* aDefaultActionEnabled);
-  void FireError(nsresult aError, bool* aDefaultActionEnabled);
+  void FireSuccess(jsval aResult);
+  void FireError(const nsAString& aError);
+  void FireError(nsresult aError);
 
   DOMRequest(nsIDOMWindow* aWindow);
   DOMRequest();
@@ -52,8 +52,7 @@ public:
   }
 
 protected:
-  void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable,
-                 bool* aDefaultActionEnabled);
+  void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable);
 
   virtual void RootResultVal();
   virtual void UnrootResultVal();

@@ -21,10 +21,10 @@ BluetoothReplyRunnable::FireReply(const jsval& aVal)
     return NS_ERROR_FAILURE;
   }
   
-  bool allowDefault;
+  
   return mReply->type() == BluetoothReply::TBluetoothReplySuccess ?
-    rs->FireSuccess(mDOMRequest, aVal, &allowDefault) :
-    rs->FireError(mDOMRequest, mReply->get_BluetoothReplyError().error(), &allowDefault);
+    rs->FireSuccess(mDOMRequest, aVal) :
+    rs->FireError(mDOMRequest, mReply->get_BluetoothReplyError().error());
 }
 
 nsresult
@@ -37,8 +37,8 @@ BluetoothReplyRunnable::FireErrorString()
     NS_WARNING("No DOMRequest Service!");
     return NS_ERROR_FAILURE;
   }
-  bool allowDefault;
-  return rs->FireError(mDOMRequest, mErrorString, &allowDefault);
+  
+  return rs->FireError(mDOMRequest, mErrorString);
 }
 
 NS_IMETHODIMP
