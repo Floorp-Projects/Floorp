@@ -77,6 +77,10 @@ class HTMLElement(object):
     def is_displayed(self):
         return self.marionette._send_message('isElementDisplayed', 'value', element=self.id)
 
+    @property
+    def tag_name(self):
+        return self.marionette._send_message('getElementTagName', 'value', element=self.id)
+
 
 class Marionette(object):
 
