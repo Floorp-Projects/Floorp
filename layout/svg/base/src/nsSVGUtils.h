@@ -112,6 +112,7 @@ bool NS_SMILEnabled();
 
 bool NS_SVGDisplayListHitTestingEnabled();
 bool NS_SVGDisplayListPaintingEnabled();
+bool NS_SVGTextCSSFramesEnabled();
 
 /**
  * Sometimes we need to distinguish between an empty box and a box
