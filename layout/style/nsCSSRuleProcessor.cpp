@@ -1308,7 +1308,7 @@ struct NodeMatchContext {
   // event-state-dependent selector for any value of that event state.
   // So mStateMask contains the states that should NOT be tested.
   //
-  // NOTE: For |mStateMask| to work correctly, it's important that any
+  // NOTE: For |aStateMask| to work correctly, it's important that any
   // change that changes multiple state bits include all those state
   // bits in the notification.  Otherwise, if multiple states change but
   // we do separate notifications then we might determine the style is
@@ -1533,21 +1533,7 @@ checkGenericEmptyMatches(Element* aElement,
   return (child == nullptr);
 }
 
-// Arrays of the states that are relevant for various pseudoclasses.
-static const nsEventStates sPseudoClassStateDependences[] = {
-#define CSS_PSEUDO_CLASS(_name, _value) \
-  nsEventStates(),
-#define CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _states)  \
-  _states,
-#include "nsCSSPseudoClassList.h"
-#undef CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#undef CSS_PSEUDO_CLASS
-  // Add more entries for our fake values to make sure we can't
-  // index out of bounds into this array no matter what.
-  nsEventStates(),
-  nsEventStates()
-};
-
+// An array of the states that are relevant for various pseudoclasses.
 static const nsEventStates sPseudoClassStates[] = {
 #define CSS_PSEUDO_CLASS(_name, _value)         \
   nsEventStates(),
@@ -1570,7 +1556,7 @@ MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassStates) ==
 //  * when non-null, it indicates that we're processing a negation,
 //    which is done only when SelectorMatches calls itself recursively
 //  * what it points to should be set to true whenever a test is skipped
-//    because of aNodeMatchContent.mStateMask
+//    because of aStateMask
 static bool SelectorMatches(Element* aElement,
                               nsCSSSelector* aSelector,
                               NodeMatchContext& aNodeMatchContext,
@@ -2011,38 +1997,6 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_dir:
-        {
-          if (aDependence) {
-            nsEventStates states
-              = sPseudoClassStateDependences[pseudoClass->mType];
-            if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(states)) {
-              *aDependence = true;
-              return false;
-            }
-          }
-
-          // if we only had to consider HTML, directionality would be exclusively
-          // LTR or RTL, and this could be just
-          //
-          //  if (dirString.EqualsLiteral("rtl") !=
-          //    aElement->StyleState().HasState(NS_EVENT_STATE_RTL)
-          //
-          // However, in markup languages where there is no direction attribute
-          // we have to consider the possibility that neither dir(rtl) nor
-          // dir(ltr) matches.
-          nsEventStates state = aElement->StyleState();
-          bool elementIsRTL = state.HasState(NS_EVENT_STATE_RTL);
-          bool elementIsLTR = state.HasState(NS_EVENT_STATE_LTR);
-          nsDependentString dirString(pseudoClass->u.mString);
-
-          if ((dirString.EqualsLiteral("rtl") && !elementIsRTL) ||
-              (dirString.EqualsLiteral("ltr") && !elementIsLTR)) {
-            return false;
-          }
-        }
-        break;
-
       default:
         NS_ABORT_IF_FALSE(false, "How did that happen?");
       }
@@ -2174,10 +2128,10 @@ static bool SelectorMatches(Element* aElement,
       bool dependence = false;
       result = !SelectorMatches(aElement, negation, aNodeMatchContext,
                                 aTreeMatchContext, &dependence);
-      // If the selector does match due to the dependence on
-      // aNodeMatchContext.mStateMask, then we want to keep result true
-      // so that the final result of SelectorMatches is true.  Doing so
-      // tells StateEnumFunc that there is a dependence on the state.
+      // If the selector does match due to the dependence on aStateMask,
+      // then we want to keep result true so that the final result of
+      // SelectorMatches is true.  Doing so tells StateEnumFunc that
+      // there is a dependence on the state.
       result = result || dependence;
     }
   }
@@ -2711,7 +2665,7 @@ nsEventStates ComputeSelectorStateDependence(nsCSSSelector& aSelector)
     if (pseudoClass->mType >= nsCSSPseudoClasses::ePseudoClass_Count) {
       continue;
     }
-    states |= sPseudoClassStateDependences[pseudoClass->mType];
+    states |= sPseudoClassStates[pseudoClass->mType];
   }
   return states;
 }

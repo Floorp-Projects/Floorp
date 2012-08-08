@@ -49,8 +49,6 @@ public:
   {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
-    AddStatesSilently(NS_EVENT_STATE_LTR);
-    SetFlags(NODE_HAS_DIRECTION_LTR);
   }
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
@@ -203,8 +201,6 @@ public:
   void Compact() { mAttrsAndChildren.Compact(); }
 
   virtual void UpdateEditableState(bool aNotify);
-
-  virtual nsEventStates IntrinsicState() const;
 
   // Helper for setting our editable flag and notifying
   void DoSetEditableFlag(bool aEditable, bool aNotify) {
