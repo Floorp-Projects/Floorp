@@ -458,8 +458,8 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
         if (id == attributeIds[i]) {
           desc->attrs = attributeSpecs[i].flags;
           desc->obj = wrapper;
-          desc->setter = attributeSpecs[i].setter;
-          desc->getter = attributeSpecs[i].getter;
+          desc->setter = attributeSpecs[i].setter.op;
+          desc->getter = attributeSpecs[i].getter.op;
           return true;
         }
       }

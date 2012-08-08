@@ -961,12 +961,14 @@ class AttrDefiner(PropertyDefiner):
             return flags
 
         def getter(attr):
-            return "get_" + attr.identifier.name
+            return ("{(JSPropertyOp)get_%(name)s, &%(name)s_getterinfo}" 
+                    % {"name" : attr.identifier.name})
 
         def setter(attr):
             if attr.readonly:
-                return "NULL"
-            return "set_" + attr.identifier.name
+                return "JSOP_NULLWRAPPER"
+            return ("{(JSStrictPropertyOp)set_%(name)s, &%(name)s_setterinfo}"
+                    % {"name" : attr.identifier.name})
 
         def specData(attr):
             return (attr.identifier.name, flags(attr), getter(attr),
@@ -974,8 +976,8 @@ class AttrDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            '  { "%s", 0, %s, (JSPropertyOp)%s, (JSStrictPropertyOp)%s }',
-            '  { 0, 0, 0, 0, 0 }',
+            '  { "%s", 0, %s, %s, %s}',
+            '  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }',
             'JSPropertySpec',
             PropertyDefiner.getControllingPref, specData, doIdArrays)
 
@@ -3180,23 +3182,12 @@ class CGSetterCall(CGGetterSetterCall):
                                     nativeMethodName, descriptor, attr,
                                     setter=True)
     def wrap_return_value(self):
-        if generateNativeAccessors:
-            return CGGetterSetterCall.wrap_return_value(self)
         # We have no return value
         return "\nreturn true;"
     def getArgc(self):
-        if generateNativeAccessors:
-            return CGGetterSetterCall.getArgc(self)
         return "1"
     def getArgvDecl(self):
-        if generateNativeAccessors:
-            return (CGPerSignatureCall.getArgvDecl(self) +
-                    "jsval undef = JS::UndefinedValue();\n"
-                    "if (argc == 0) {\n"
-                    "  argv = &undef;\n"
-                    "  argc = 1;\n"
-                    "}")
-        # We just get our stuff from vp
+        # We just get our stuff from our last arg no matter what
         return ""
 
 class FakeCastableDescriptor():
@@ -3231,7 +3222,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
 
     def getThis(self):
         return CGIndenter(
-            CGGeneric("JSObject* obj = JS_THIS_OBJECT(cx, vp);\n"
+            CGGeneric("JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));\n"
                       "if (!obj) {\n"
                       "  return false;\n"
                       "}\n"
@@ -3282,10 +3273,29 @@ class CGNativeGetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
+        return CGIndenter(CGGeneric(
+                "return specialized_get_%s(cx, obj, self, vp);" %
+                self.attr.identifier.name))
+
+class CGSpecializedGetter(CGAbstractStaticMethod):
+    """
+    A class for generating the code for a specialized attribute getter
+    that the JIT can call with lower overhead.
+    """
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = 'specialized_get_' + attr.identifier.name
+        args = [ Argument('JSContext*', 'cx'),
+                 Argument('JSHandleObject', 'obj'),
+                 Argument('%s*' % descriptor.nativeType, 'self'),
+                 Argument('JS::Value*', 'vp') ]
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+
+    def definition_body(self):
         name = self.attr.identifier.name
         nativeName = "Get" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
-        return CGIndenter(CGGetterCall(self.attr.type, nativeName, self.descriptor,
-                                       self.attr))
+        return CGIndenter(CGGetterCall(self.attr.type, nativeName,
+                                       self.descriptor, self.attr)).define()
 
 class CGNativeSetter(CGAbstractBindingMethod):
     """
@@ -3311,10 +3321,89 @@ class CGNativeSetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
+        if generateNativeAccessors:
+            argv = ("JS::Value* argv = JS_ARGV(cx, vp);\n"
+                    "jsval undef = JS::UndefinedValue();\n"
+                    "if (argc == 0) {\n"
+                    "  argv = &undef;\n"
+                    "}\n")
+            retval = "*vp = JSVAL_VOID;\n"
+        else:
+            argv = "JS::Value* argv = vp;\n"
+            retval = ""
+
+        return CGIndenter(CGGeneric(
+                argv +
+                ("if (!specialized_set_%s(cx, obj, self, argv)) {\n"
+                 "  return false;\n"
+                 "}\n" % self.attr.identifier.name) +
+                retval +
+                "return true;"))
+
+class CGSpecializedSetter(CGAbstractStaticMethod):
+    """
+    A class for generating the code for a specialized attribute setter
+    that the JIT can call with lower overhead.
+    """
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = 'specialized_set_' + attr.identifier.name
+        args = [ Argument('JSContext*', 'cx'),
+                 Argument('JSHandleObject', 'obj'),
+                 Argument('%s*' % descriptor.nativeType, 'self') ]
+        # Our last argument is named differently depending on whether we're
+        # in the native accessors case or not
+        if generateNativeAccessors:
+            args.append(Argument('JS::Value*', 'argv'))
+        else:
+            args.append(Argument('JS::Value*', 'vp'))
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+
+    def definition_body(self):
         name = self.attr.identifier.name
         nativeName = "Set" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
-        return CGIndenter(CGSetterCall(self.attr.type, nativeName, self.descriptor,
-                                       self.attr))
+        return CGIndenter(CGSetterCall(self.attr.type, nativeName,
+                                       self.descriptor, self.attr)).define()
+
+class CGPropertyJITInfo(CGThing):
+    """
+    A class for generating the JITInfo for a property that points to
+    our specialized getter and setter.
+    """
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        self.descriptor = descriptor
+
+    def declare(self):
+        return ""
+
+    def defineJitInfo(self, infoName, opName, infallible):
+        protoID = "prototypes::id::%s" % self.descriptor.interface.identifier.name
+        depth = "PrototypeTraits<%s>::Depth" % protoID
+        failstr = "true" if infallible else "false"
+        return ("\n"
+                "const JSJitInfo %s = {\n"
+                "  %s,\n"
+                "  %s,\n"
+                "  %s,\n"
+                "  %s,  /* isInfallible. False for setters. */\n"
+                "  false  /* isConstant. False for setters. */\n"
+                "};\n" % (infoName, opName, protoID, depth, failstr))
+
+    def define(self):
+        getterinfo = ("%s_getterinfo" % self.attr.identifier.name)
+        getter = ("(JSJitPropertyOp)specialized_get_%s" %
+                  self.attr.identifier.name)
+        # For now, mark all getters fallible, until argument wrapping has been
+        # handled.
+        result = self.defineJitInfo(getterinfo, getter, False)
+        if not self.attr.readonly:
+            setterinfo = ("%s_setterinfo" % self.attr.identifier.name)
+            setter = ("(JSJitPropertyOp)specialized_set_%s" %
+                      self.attr.identifier.name)
+            # Setters are always fallible, since they have to do a typed unwrap.
+            result += self.defineJitInfo(setterinfo, setter, False)
+        return result
 
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
@@ -4052,14 +4141,16 @@ class CGDescriptor(CGThing):
 
         cgThings = []
         if descriptor.interface.hasInterfacePrototypeObject():
-            cgThings.extend([CGNativeMethod(descriptor, m) for m in
-                             descriptor.interface.members if
-                             m.isMethod() and not m.isStatic()])
-            cgThings.extend([CGNativeGetter(descriptor, a) for a in
-                             descriptor.interface.members if a.isAttr()])
-            cgThings.extend([CGNativeSetter(descriptor, a) for a in
-                             descriptor.interface.members if
-                             a.isAttr() and not a.readonly])
+            for m in descriptor.interface.members:
+                if m.isMethod() and not m.isStatic():
+                    cgThings.append(CGNativeMethod(descriptor, m))
+                elif m.isAttr():
+                    cgThings.append(CGSpecializedGetter(descriptor, m))
+                    cgThings.append(CGNativeGetter(descriptor, m))
+                    if not m.readonly:
+                        cgThings.append(CGSpecializedSetter(descriptor, m))
+                        cgThings.append(CGNativeSetter(descriptor, m))
+                    cgThings.append(CGPropertyJITInfo(descriptor, m))
 
         if descriptor.concrete:
             if not descriptor.workers and descriptor.wrapperCache:
