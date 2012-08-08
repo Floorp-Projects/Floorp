@@ -597,7 +597,12 @@ protected:
       return !mStrikes.IsEmpty();
     }
   };
+  enum TextDecorationColorResolution {
+    eResolvedColors,
+    eUnresolvedColors
+  };
   void GetTextDecorations(nsPresContext* aPresContext,
+                          TextDecorationColorResolution aColorResolution,
                           TextDecorations& aDecorations);
 
   void DrawTextRun(gfxContext* const aCtx,
