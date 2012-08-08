@@ -796,7 +796,7 @@ nsPresContext::InvalidateThebesLayers()
     // FrameLayerBuilder caches invalidation-related values that depend on the
     // appunits-per-dev-pixel ratio, so ensure that all ThebesLayer drawing
     // is completely flushed.
-    FrameLayerBuilder::InvalidateThebesLayersInSubtree(rootFrame);
+    FrameLayerBuilder::InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(rootFrame);
   }
 }
 

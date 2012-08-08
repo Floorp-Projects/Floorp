@@ -833,6 +833,16 @@ CrossCompartmentWrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned
 }
 
 bool
+CrossCompartmentWrapper::regexp_toShared(JSContext *cx, JSObject *wrapper, RegExpGuard *g)
+{
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    if (!call.enter())
+        return false;
+
+    return DirectWrapper::regexp_toShared(cx, wrapper, g);
+}
+
+bool
 CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
 {
     AutoCompartment call(cx, wrappedObject(wrapper));

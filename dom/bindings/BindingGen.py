@@ -40,11 +40,7 @@ def main():
     o = OptionParser(usage=usagestring)
     o.add_option("--verbose-errors", action='store_true', default=False,
                  help="When an error happens, display the Python traceback.")
-    o.add_option("--use-jsop-accessors", action='store_true', default=False,
-                 dest='useJSOPAccessors',
-                 help="Use JSPropertyOps instead of JSNatives for getters and setters")
     (options, args) = o.parse_args()
-    Codegen.generateNativeAccessors = not options.useJSOPAccessors
 
     if len(args) != 4 or (args[0] != "header" and args[0] != "cpp"):
         o.error(usagestring)

@@ -9,6 +9,7 @@ import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;

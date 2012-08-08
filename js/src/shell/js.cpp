@@ -3819,7 +3819,7 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
 "  heavily numeric code."),
 
-    JS_FS_END
+    JS_FS_HELP_END
 };
 #ifdef MOZ_PROFILING
 # define PROFILING_FUNCTION_COUNT 5
@@ -3930,21 +3930,21 @@ static JSBool
 its_set_customNative(JSContext *cx, unsigned argc, jsval *vp);
 
 static JSPropertySpec its_props[] = {
-    {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       NULL, NULL},
-    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE,       NULL, NULL},
-    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE,       NULL, NULL},
-    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE,       NULL, NULL},
-    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE,       NULL, NULL},
-    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY,        NULL, NULL},
+    {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY,        JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
     {"custom",          ITS_CUSTOM,     JSPROP_ENUMERATE,
-                        its_getter,     its_setter},
+                        JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
     {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
-                        its_getter,     its_setter},
+                        JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
     {"customNative",    ITS_CUSTOMNATIVE,
                         JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS,
-                        (JSPropertyOp)its_get_customNative,
-                        (JSStrictPropertyOp)its_set_customNative },
-    {NULL,0,0,NULL,NULL}
+                        JSOP_WRAPPER((JSPropertyOp)its_get_customNative),
+                        JSOP_WRAPPER((JSStrictPropertyOp)its_set_customNative)},
+    {NULL,0,0,JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
 };
 
 static JSBool its_noisy;    /* whether to be noisy when finalizing it */

@@ -252,6 +252,12 @@ public:
   static void InvalidateThebesLayersInSubtree(nsIFrame* aFrame);
 
   /**
+   * As InvalidateThebesLayersInSubtree, but don't trust frame geometry
+   * (e.g. because appunits-per-dev-pixel changed).
+   */
+  static void InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(nsIFrame* aFrame);
+
+  /**
    * Call this to force all retained layers to be discarded and recreated at
    * the next paint.
    */
@@ -279,9 +285,9 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   /**
    * Dumps this FrameLayerBuilder's retained layer manager's retained
-   * layer tree to stderr.
+   * layer tree. Defaults to dumping to stdout in non-HTML format.
    */
-  static void DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile = stdout);
+  static void DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile = stdout, bool aDumpHtml = false);
 #endif
 
   /******* PRIVATE METHODS to FrameLayerBuilder.cpp ********/

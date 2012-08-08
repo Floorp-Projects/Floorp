@@ -61,8 +61,8 @@ function onLoad() {
     // available beforehand.
     Services.obs.addObserver(function observeOnce(subj, topic, data) {
       Services.obs.removeObserver(observeOnce, "webapprt-test-did-install");
-      gAppBrowser.webProgress.
-        addProgressListener(progressListener,Ci.nsIWebProgress.NOTIFY_LOCATION);
+      gAppBrowser.addProgressListener(progressListener,
+                                      Ci.nsIWebProgress.NOTIFY_LOCATION);
     }, "webapprt-test-did-install", false);
 
     // This observer is present for the lifetime of the runtime.

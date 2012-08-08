@@ -28,6 +28,15 @@ var AppsUI = {
   shortcut: null
 };
 
+function openLink(aElement) {
+  try {
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    let url = formatter.formatURLPref(aElement.getAttribute("pref"));
+    let BrowserApp = gChromeWin.BrowserApp;
+    BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
+  } catch (ex) {}
+}
+
 function onLoad(aEvent) {
   try {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);

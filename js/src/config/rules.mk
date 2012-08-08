@@ -1774,6 +1774,7 @@ libs export::
 default all::
 	if test -d $(DIST)/bin ; then touch $(DIST)/bin/.purgecaches ; fi
 
+.DEFAULT_GOAL ?= default
 
 #############################################################################
 # Derived targets and dependencies

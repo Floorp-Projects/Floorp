@@ -795,6 +795,7 @@ struct JSRuntime : js::RuntimeFriendFields
     uint32_t            debuggerMutations;
 
     const JSSecurityCallbacks *securityCallbacks;
+    const js::DOMCallbacks *DOMcallbacks;
     JSDestroyPrincipalsOp destroyPrincipals;
 
     /* Structured data callbacks are runtime-wide. */

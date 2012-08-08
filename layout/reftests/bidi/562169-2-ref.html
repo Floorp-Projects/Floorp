@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>dir() selector</title>
+  <style>
+   .blue { color: blue; direction: ltr; }
+   .lime { color: lime; direction: rtl; }
+   div { text-align: left; }
+  </style>
+ </head>
+ <body>
+  <div class="lime">This element has default direction.</div>
+  <div class="blue">This element is ltr.</div>
+  <div class="lime">This element is rtl.</div>
+  <div class="blue">
+    <div>This element should inherit ltr.</div>
+    <div class="blue">This element is ltr.</div>
+    <div class="lime">This element is rtl.</div>
+  </div>
+  <div class="lime">
+    <div>This element should inherit rtl.</div>
+    <div class="blue">This element is ltr.</div>
+    <div class="lime">This element is rtl.</div>
+  </div>
+  <div class="lime">This element has an invalid dir attribute and
+    should have default direction.</div>
+ </body>
+</html>

@@ -922,6 +922,18 @@ EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
     rt->spsProfiler.enable(enabled);
 }
 
+JS_FRIEND_API(void)
+SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks)
+{
+    rt->DOMcallbacks = callbacks;
+}
+
+JS_FRIEND_API(const DOMCallbacks *)
+GetDOMCallbacks(JSRuntime *rt)
+{
+    return rt->DOMcallbacks;
+}
+
 static void *gListBaseHandlerFamily = NULL;
 static uint32_t gListBaseExpandoSlot = 0;
 

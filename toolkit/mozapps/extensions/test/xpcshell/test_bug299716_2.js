@@ -7,7 +7,7 @@
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 // Get the HTTP server.
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 var ADDON = {
@@ -24,7 +24,7 @@ function run_test() {
   const addonsDir = do_get_addon(ADDON.addon).parent;
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/addons/", addonsDir);
   testserver.registerDirectory("/data/", dataDir);
   testserver.start(4444);

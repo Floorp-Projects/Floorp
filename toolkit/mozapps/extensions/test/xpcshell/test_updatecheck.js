@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 
 var COMPATIBILITY_PREF;
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 function run_test() {
@@ -25,7 +25,7 @@ function run_test() {
   COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.start(4444);
 

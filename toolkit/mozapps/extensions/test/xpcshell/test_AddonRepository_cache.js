@@ -6,7 +6,7 @@
 
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 let gServer;
 
 const PORT      = 4444;
@@ -533,7 +533,7 @@ function run_test() {
   installAllFiles(ADDON_FILES, function() {
     restartManager();
 
-    gServer = new nsHttpServer();
+    gServer = new HttpServer();
     gServer.registerDirectory("/data/", do_get_file("data"));
     gServer.start(PORT);
 

@@ -11,7 +11,7 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -21,7 +21,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
