@@ -275,6 +275,8 @@ protected:
    * Cancels any currently running animation. Note that all this does is set the
    * state of the AsyncPanZoomController back to NOTHING, but it is the
    * animation's responsibility to check this before advancing.
+   *
+   * *** The monitor must be held while calling this.
    */
   void CancelAnimation();
 
@@ -376,6 +378,13 @@ private:
    CONTENT_PAINTING_AND_PAINT_PENDING
   };
 
+  /**
+   * Helper to set the current state. Holds the monitor before actually setting
+   * it. If the monitor is already held by the current thread, it is safe to
+   * instead use: |mState = NEWSTATE;|
+   */
+  void SetState(PanZoomState aState);
+
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
@@ -394,6 +403,10 @@ private:
   AxisX mX;
   AxisY mY;
 
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics| and |mState|. Before
+  // manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the monitor
+  // should be held. When setting |mState|, either the SetState() function can
+  // be used, or the monitor can be held and then |mState| updated.
   Monitor mMonitor;
 
   // The last time the compositor has sampled the content transform for this
@@ -405,7 +418,11 @@ private:
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
   nsIntPoint mLastZoomFocus;
+
+  // Stores the state of panning and zooming this frame. This is protected by
+  // |mMonitor|; that is, it should be held whenever this is updated.
   PanZoomState mState;
+
   int mDPI;
 
   // Stores the current paint status of the frame that we're managing. Repaints
