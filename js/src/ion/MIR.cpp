@@ -11,6 +11,7 @@
 #include "MIRGraph.h"
 #include "EdgeCaseAnalysis.h"
 #include "jsnum.h"
+#include "jsstr.h"
 #include "jstypedarrayinlines.h" // For ClampIntForUint8Array
 
 using namespace js;
@@ -1346,6 +1347,43 @@ MCompare::evaluateConstantOperands(bool *result)
 
     Value lhs = left->toConstant()->value();
     Value rhs = right->toConstant()->value();
+
+    // Fold away some String equality comparisons.
+    if (lhs.isString() && rhs.isString()) {
+        int32_t comp = 0; // Default to equal.
+        if (left != right) {
+            if (!CompareStrings(GetIonContext()->cx, lhs.toString(), rhs.toString(), &comp))
+                return false;
+        }
+        
+        switch (jsop_) {
+          case JSOP_LT:
+            *result = (comp < 0);
+            break;
+          case JSOP_LE:
+            *result = (comp <= 0);
+            break;
+          case JSOP_GT:
+            *result = (comp > 0);
+            break;
+          case JSOP_GE:
+            *result = (comp >= 0);
+            break;
+          case JSOP_STRICTEQ: // Fall through.
+          case JSOP_EQ:
+            *result = (comp == 0);
+            break;
+          case JSOP_STRICTNE: // Fall through.
+          case JSOP_NE:
+            *result = (comp != 0);
+            break;
+          default:
+            JS_NOT_REACHED("Unexpected op.");
+            return false;
+        }
+
+        return true;
+    }
 
     if (!lhs.isNumber() || !rhs.isNumber())
         return false;
