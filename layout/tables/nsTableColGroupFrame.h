@@ -9,8 +9,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTableColFrame.h"
-#include "nsTablePainter.h"
 
+class nsTableFrame;
 class nsTableColFrame;
 
 enum nsTableColGroupType {

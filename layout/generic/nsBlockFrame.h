@@ -14,7 +14,6 @@
 
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsLineBox.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"

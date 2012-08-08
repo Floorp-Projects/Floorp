@@ -19,7 +19,6 @@ FAIL_ON_WARNINGS = 1
 
 EXPORTS		= \
 		nsITableCellLayout.h \
-		nsITableLayout.h \
 		$(NULL)
 
 CPPSRCS		= \

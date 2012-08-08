@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
+#include "nsTableCellFrame.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -150,7 +151,7 @@ nsTableOuterFrame::~nsTableOuterFrame()
 }
 
 NS_QUERYFRAME_HEAD(nsTableOuterFrame)
-  NS_QUERYFRAME_ENTRY(nsITableLayout)
+  NS_QUERYFRAME_ENTRY(nsTableOuterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
@@ -1064,45 +1065,21 @@ nsTableOuterFrame::GetType() const
 
 /* ----- global methods ----- */
 
-/*------------------ nsITableLayout methods ------------------------------*/
-NS_IMETHODIMP 
-nsTableOuterFrame::GetCellDataAt(int32_t aRowIndex, int32_t aColIndex, 
-                                 nsIDOMElement* &aCell,   //out params
-                                 int32_t& aStartRowIndex, int32_t& aStartColIndex, 
-                                 int32_t& aRowSpan, int32_t& aColSpan,
-                                 int32_t& aActualRowSpan, int32_t& aActualColSpan,
-                                 bool& aIsSelected)
+nsIContent*
+nsTableOuterFrame::GetCellAt(uint32_t aRowIdx, uint32_t aColIdx) const
 {
-  return InnerTableFrame()->GetCellDataAt(aRowIndex, aColIndex, aCell,
-                                          aStartRowIndex, aStartColIndex, 
-                                          aRowSpan, aColSpan, aActualRowSpan,
-                                          aActualColSpan, aIsSelected);
-}
+  nsTableCellMap* cellMap = InnerTableFrame()->GetCellMap();
+  if (!cellMap) {
+    return nullptr;
+  }
 
-NS_IMETHODIMP
-nsTableOuterFrame::GetTableSize(int32_t& aRowCount, int32_t& aColCount)
-{
-  return InnerTableFrame()->GetTableSize(aRowCount, aColCount);
-}
+  nsTableCellFrame* cell = cellMap->GetCellInfoAt(aRowIdx, aColIdx);
+  if (!cell) {
+    return nullptr;
+  }
 
-NS_IMETHODIMP
-nsTableOuterFrame::GetIndexByRowAndColumn(int32_t aRow, int32_t aColumn,
-                                          int32_t *aIndex)
-{
-  NS_ENSURE_ARG_POINTER(aIndex);
-  return InnerTableFrame()->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+  return cell->GetContent();
 }
-
-NS_IMETHODIMP
-nsTableOuterFrame::GetRowAndColumnByIndex(int32_t aIndex,
-                                          int32_t *aRow, int32_t *aColumn)
-{
-  NS_ENSURE_ARG_POINTER(aRow);
-  NS_ENSURE_ARG_POINTER(aColumn);
-  return InnerTableFrame()->GetRowAndColumnByIndex(aIndex, aRow, aColumn);
-}
-
-/*---------------- end of nsITableLayout implementation ------------------*/
 
 
 nsIFrame*
