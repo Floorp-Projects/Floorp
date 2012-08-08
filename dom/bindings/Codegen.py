@@ -2404,6 +2404,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     "successCode" is the code to run once we have successfully done the
     conversion.  The resulting string should be used with string.Template, it
     needs the following keys when substituting: jsvalPtr/jsvalRef/obj.
+
+    Returns (templateString, infallibility of conversion template)
     """
     haveSuccessCode = successCode is not None
     if not haveSuccessCode:
@@ -2442,7 +2444,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         return str
     
     if type is None or type.isVoid():
-        return setValue("JSVAL_VOID")
+        return (setValue("JSVAL_VOID"), True)
 
     if type.isArray():
         raise TypeError("Can't handle array return values yet")
@@ -2450,14 +2452,14 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     if type.isSequence():
         if type.nullable():
             # Nullable sequences are Nullable< nsTArray<T> >
-            return """
+            (recTemplate, recInfall) = getWrapTemplateForType(type.inner, descriptorProvider,
+                                                              "%s.Value()" % result, successCode,
+                                                              isCreator)
+            return ("""
 if (%s.IsNull()) {
 %s
 }
-%s""" % (result, CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define(),
-         getWrapTemplateForType(type.inner, descriptorProvider,
-                                "%s.Value()" % result, successCode,
-                                isCreator))
+%s""" % (result, CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define(), recTemplate), recInfall)
 
         # Now do non-nullable sequences.  We use setting the element
         # in the array as our succcess code because when we succeed in
@@ -2476,7 +2478,7 @@ if (%s.IsNull()) {
                 }
             )
         innerTemplate = CGIndenter(CGGeneric(innerTemplate)).define()
-        return ("""
+        return (("""
 uint32_t length = %s.Length();
 JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
 if (!returnArray) {
@@ -2485,7 +2487,7 @@ if (!returnArray) {
 jsval tmp;
 for (uint32_t i = 0; i < length; ++i) {
 %s
-}\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)")
+}\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)"), False)
 
     if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
@@ -2527,26 +2529,27 @@ for (uint32_t i = 0; i < length; ++i) {
                 getIID = ""
             wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalPtr})" % (result, getIID)
             wrappingCode += wrapAndSetPtr(wrap)
-        return wrappingCode
+        return (wrappingCode, False)
 
     if type.isString():
         if type.nullable():
-            return wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalPtr})" % result)
+            return (wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalPtr})" % result), False)
         else:
-            return wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalPtr})" % result)
+            return (wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalPtr})" % result), False)
 
     if type.isEnum():
         if type.nullable():
             raise TypeError("We don't support nullable enumerated return types "
                             "yet")
-        return """MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
+        return ("""MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
 JSString* %(resultStr)s = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
 if (!%(resultStr)s) {
   return false;
 }
 """ % { "result" : result,
         "resultStr" : result + "_str",
-        "strings" : type.inner.identifier.name + "Values::strings" } + setValue("JS::StringValue(%s_str)" % result)
+        "strings" : type.inner.identifier.name + "Values::strings" } +
+        setValue("JS::StringValue(%s_str)" % result), False)
 
     if type.isCallback():
         assert not type.isInterface()
@@ -2554,12 +2557,14 @@ if (!%(resultStr)s) {
         # nullable and always have [TreatNonCallableAsNull] for now.
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        return setValue("JS::ObjectOrNullValue(%s)" % result, True)
+        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
 
     if type.tag() == IDLType.Tags.any:
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        return setValue(result, True)
+        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        return (setValue(result, True), False)
 
     if type.isObject():
         # See comments in WrapNewBindingObject explaining why we need
@@ -2568,36 +2573,37 @@ if (!%(resultStr)s) {
             toValue = "JS::ObjectOrNullValue(%s)"
         else:
             toValue = "JS::ObjectValue(*%s)"
-        return setValue(toValue % result, True)
+        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        return (setValue(toValue % result, True), False)
 
     if not type.isPrimitive():
         raise TypeError("Need to learn to wrap %s" % type)
 
     if type.nullable():
+        (recTemplate, recInfal) = getWrapTemplateForType(type.inner, descriptorProvider,
+                                                         "%s.Value()" % result, successCode,
+                                                         isCreator)
         return ("if (%s.IsNull()) {\n" % result +
                 CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
-                "}\n" +
-                getWrapTemplateForType(type.inner, descriptorProvider,
-                                       "%s.Value()" % result, successCode,
-                                       isCreator))
+                "}\n" + recTemplate, recInfal)
     
     tag = type.tag()
     
     if tag in [IDLType.Tags.int8, IDLType.Tags.uint8, IDLType.Tags.int16,
                IDLType.Tags.uint16, IDLType.Tags.int32]:
-        return setValue("INT_TO_JSVAL(int32_t(%s))" % result)
+        return (setValue("INT_TO_JSVAL(int32_t(%s))" % result), True)
 
     elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64, IDLType.Tags.float,
                  IDLType.Tags.double]:
         # XXXbz will cast to double do the "even significand" thing that webidl
         # calls for for 64-bit ints?  Do we care?
-        return setValue("JS_NumberValue(double(%s))" % result)
+        return (setValue("JS_NumberValue(double(%s))" % result), True)
 
     elif tag == IDLType.Tags.uint32:
-        return setValue("UINT_TO_JSVAL(%s)" % result)
+        return (setValue("UINT_TO_JSVAL(%s)" % result), True)
 
     elif tag == IDLType.Tags.bool:
-        return setValue("BOOLEAN_TO_JSVAL(%s)" % result)
+        return (setValue("BOOLEAN_TO_JSVAL(%s)" % result), True)
 
     else:
         raise TypeError("Need to learn to wrap primitive: %s" % type)
@@ -2626,10 +2632,24 @@ def wrapForType(type, descriptorProvider, templateValues):
     wrap = getWrapTemplateForType(type, descriptorProvider,
                                   templateValues.get('result', 'result'),
                                   templateValues.get('successCode', None),
-                                  templateValues.get('isCreator', False))
+                                  templateValues.get('isCreator', False))[0]
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
+
+def infallibleForAttr(attr, descriptorProvider):
+    """
+    Determine the fallibility of changing a C++ value of IDL type "type" into
+    JS for the given attribute. Apart from isCreator, all the defaults are used,
+    since the fallbility does not change based on the boolean values,
+    and the template will be discarded.
+
+    CURRENT ASSUMPTIONS:
+        We assume that successCode for wrapping up return values cannot contain
+        failure conditions.
+    """
+    return getWrapTemplateForType(attr.type, descriptorProvider, 'result', None,\
+                                  memberIsCreator(attr))[1]
 
 def typeNeedsCx(type):
     return (type is not None and
@@ -2825,7 +2845,7 @@ class CGPerSignatureCall(CGThing):
         return not 'infallible' in self.extendedAttributes
 
     def wrap_return_value(self):
-        isCreator = self.idlNode.getExtendedAttribute("Creator") is not None
+        isCreator = memberIsCreator(self.idlNode)
         if isCreator:
             # We better be returning addrefed things!
             assert isResultAlreadyAddRefed(self.descriptor,
@@ -3365,6 +3385,9 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         return CGIndenter(CGSetterCall(self.attr.type, nativeName,
                                        self.descriptor, self.attr)).define()
 
+def memberIsCreator(member):
+    return member.getExtendedAttribute("Creator") is not None
+
 class CGPropertyJITInfo(CGThing):
     """
     A class for generating the JITInfo for a property that points to
@@ -3394,9 +3417,9 @@ class CGPropertyJITInfo(CGThing):
         getterinfo = ("%s_getterinfo" % self.attr.identifier.name)
         getter = ("(JSJitPropertyOp)specialized_get_%s" %
                   self.attr.identifier.name)
-        # For now, mark all getters fallible, until argument wrapping has been
-        # handled.
-        result = self.defineJitInfo(getterinfo, getter, False)
+        getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.attr, getter=True)
+        getterinfal = getterinfal and infallibleForAttr(self.attr, self.descriptor)
+        result = self.defineJitInfo(getterinfo, getter, getterinfal)
         if not self.attr.readonly:
             setterinfo = ("%s_setterinfo" % self.attr.identifier.name)
             setter = ("(JSJitPropertyOp)specialized_set_%s" %
