@@ -79,7 +79,7 @@ var testObserver = {
     // check cpu usage field
     let extraData = parseKeyValuePairsFromFile(pluginExtraFile);
     ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
-    let cpuUsage = parseFloat(extraData["PluginCpuUsage"]);
+    let cpuUsage = parseFloat(extraData["PluginCpuUsage"].replace(',', '.'));
     if (this.idleHang) {
       ok(cpuUsage == 0, "plugin cpu usage is 0%");
     } else {
