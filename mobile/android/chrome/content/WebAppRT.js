@@ -6,6 +6,8 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function pref(name, value) {
   return {
@@ -15,6 +17,8 @@ function pref(name, value) {
 }
 
 var WebAppRT = {
+  DEFAULT_PREFS_FILENAME: "default-prefs.js",
+
   prefs: [
     // Disable all add-on locations other than the profile (which can't be disabled this way)
     pref("extensions.enabledScopes", 1),
@@ -26,30 +30,57 @@ var WebAppRT = {
     pref("toolkit.telemetry.prompted", 2)
   ],
 
-  init: function(isUpdate) {
+  init: function(isUpdate, url) {
     this.deck = document.getElementById("browsers");
     this.deck.addEventListener("click", this, false, true);
 
     // on first run, update any prefs
     if (isUpdate == "new") {
-      this.prefs.forEach(function(aPref) {
-        switch (typeof aPref.value) {
-          case "string":
-            Services.prefs.setCharPref(aPref.name, aPref.value);
-            break;
-          case "boolean":
-            Services.prefs.setBoolPref(aPref.name, aPref.value);
-            break;
-          case "number":
-            Services.prefs.setIntPref(aPref.name, aPref.value);
-            break;
-        }
-      });
+      this.getDefaultPrefs().forEach(this.addPref);
 
       // update the blocklist url to use a different app id
-      var blocklist = Services.prefs.getCharPref("extensions.blocklist.url");
+      let blocklist = Services.prefs.getCharPref("extensions.blocklist.url");
       blocklist = blocklist.replace(/%APP_ID%/g, "webapprt-mobile@mozilla.org");
       Services.prefs.setCharPref("extensions.blocklist.url", blocklist);
+    }
+  },
+
+  getDefaultPrefs: function() {
+    // read default prefs from the disk
+    try {
+      let defaultPrefs = [];
+      try {
+          defaultPrefs = this.readDefaultPrefs(FileUtils.getFile("ProfD", [this.DEFAULT_PREFS_FILENAME]));
+      } catch(ex) {
+          // this can throw if the defaultprefs.js file doesn't exist
+      }
+      for (let i = 0; i < defaultPrefs.length; i++) {
+        this.prefs.push(defaultPrefs[i]);
+      }
+    } catch(ex) {
+      console.log("Error reading defaultPrefs file: " + ex);
+    }
+    return this.prefs;
+  },
+
+  readDefaultPrefs: function webapps_readDefaultPrefs(aFile) {
+    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+    fstream.init(aFile, -1, 0, 0);
+    let prefsString = NetUtil.readInputStreamToString(fstream, fstream.available(), {});
+    return JSON.parse(prefsString);
+  },
+
+  addPref: function(aPref) {
+    switch (typeof aPref.value) {
+      case "string":
+        Services.prefs.setCharPref(aPref.name, aPref.value);
+        break;
+      case "boolean":
+        Services.prefs.setBoolPref(aPref.name, aPref.value);
+        break;
+      case "number":
+        Services.prefs.setIntPref(aPref.name, aPref.value);
+        break;
     }
   },
 
