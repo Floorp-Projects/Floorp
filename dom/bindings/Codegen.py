@@ -933,11 +933,13 @@ class MethodDefiner(PropertyDefiner):
             return m["pref"]
 
         def specData(m):
-            return (m["name"], m["name"], m["length"], m["flags"])
+            hasInfo = (m["name"] != 'QueryInterface')
+            jitinfo = ("&%s_methodinfo" % m["name"]) if hasInfo else "NULL"
+            return (m["name"], m["name"], jitinfo, m["length"], m["flags"])
 
         return self.generatePrefableArray(
             array, name,
-            '  JS_FN("%s", %s, %s, %s)',
+            '  JS_FNINFO("%s", %s, %s, %s, %s)',
             '  JS_FS_END',
             'JSFunctionSpec',
             pref, specData, doIdArrays)
