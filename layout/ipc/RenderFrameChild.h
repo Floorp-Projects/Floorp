@@ -19,8 +19,6 @@ public:
   RenderFrameChild() {}
   virtual ~RenderFrameChild() {}
 
-  void CancelDefaultPanZoom();
-
   void Destroy();
 
 protected:

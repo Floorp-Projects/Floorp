@@ -15,9 +15,6 @@ include protocol POfflineCacheUpdate;
 include protocol PIndexedDB;
 
 include "gfxMatrix.h";
-include "gfxRect.h";
-include "gfxipc/ShadowLayerUtils.h";
-include "FrameMetrics.h";
 include "IPC/nsGUIEventIPC.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
@@ -27,9 +24,7 @@ include DOMTypes;
 
 using IPC::URI;
 using gfxMatrix;
-using gfxRect;
 using gfxSize;
-using mozilla::layers::FrameMetrics;
 using mozilla::layers::LayersBackend;
 using mozilla::layout::ScrollingBehavior;
 using mozilla::WindowsHandle;
@@ -237,14 +232,6 @@ parent:
                                 nsString aName, nsString aFeatures)
       returns (bool windowOpened);
 
-    NotifyDOMTouchListenerAdded();
-
-    /**
-     * Instructs the TabParent to forward a request to zoom to a rect given in
-     * CSS pixels. This rect is relative to the document.
-     */
-    ZoomToRect(gfxRect aRect);
-
     __delete__();
 
 child:
@@ -263,14 +250,10 @@ child:
 
     UpdateDimensions(nsRect rect, nsIntSize size);
 
-    UpdateFrame(FrameMetrics frame);
-
-    /**
-     * Requests handling of a double tap. |point| is in CSS pixels, relative to
-     * the scroll offset. This message is expected to round-trip back to
-     * ZoomToRect() with a rect indicating where we should zoom to.
-     */
-    HandleDoubleTap(nsIntPoint point);
+    UpdateFrame(nsIntRect displayPort,
+                nsIntPoint scrollOffset,
+                gfxSize resolution,
+                nsIntRect screenSize);
 
     /**
      * Sending an activate message moves focus to the child.
