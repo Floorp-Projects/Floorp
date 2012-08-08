@@ -53,7 +53,8 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
      mDPI(72),
-     mContentPainterStatus(CONTENT_IDLE)
+     mContentPainterStatus(CONTENT_IDLE),
+     mMayHaveTouchListeners(false)
 {
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
@@ -784,6 +785,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     // we get a larger displayport. This is very bad because we're wasting a
     // paint and not initializating the displayport correctly.
     RequestContentRepaint();
+
+    // Assuming a first paint means a new page has been loaded, clear the flag
+    // indicating that we may have touch listeners.
+    mMayHaveTouchListeners = false;
   } else if (!mFrameMetrics.mContentRect.IsEqualEdges(aViewportFrame.mContentRect)) {
     mFrameMetrics.mCSSContentRect = aViewportFrame.mCSSContentRect;
     SetPageRect(mFrameMetrics.mCSSContentRect);
@@ -800,6 +805,10 @@ void AsyncPanZoomController::UpdateViewportSize(int aWidth, int aHeight) {
   FrameMetrics metrics = GetFrameMetrics();
   metrics.mViewport = nsIntRect(0, 0, aWidth, aHeight);
   mFrameMetrics = metrics;
+}
+
+void AsyncPanZoomController::NotifyDOMTouchListenerAdded() {
+  mMayHaveTouchListeners = true;
 }
 
 }
