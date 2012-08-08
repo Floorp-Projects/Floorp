@@ -111,7 +111,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mPlugin(NULL)
     , mTaskFactory(this)
 #ifdef XP_WIN
-    , mPluginCpuUsageOnHang(-1)
+    , mPluginCpuUsageOnHang()
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
@@ -179,13 +179,18 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
         if (!hangID.IsEmpty()) {
             notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(hangID));
 #ifdef XP_WIN
-            if (mPluginCpuUsageOnHang >= 0) {
-              char buf[7];
-              PR_cnvtf(buf, NS_ARRAY_LENGTH(buf), 2, mPluginCpuUsageOnHang);
-              notes.Put(CS("PluginCpuUsage"), CS(buf));
-              
+            if (mPluginCpuUsageOnHang.Length() > 0) {
               notes.Put(CS("NumberOfProcessors"),
                         nsPrintfCString("%d", PR_GetNumberOfProcessors()));
+
+              char buf[7];
+              PR_cnvtf(buf, NS_ARRAY_LENGTH(buf), 2, mPluginCpuUsageOnHang[0]);
+              notes.Put(CS("PluginCpuUsage"), CS(buf));
+
+              for (PRInt32 i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
+                PR_cnvtf(buf, NS_ARRAY_LENGTH(buf), 2, mPluginCpuUsageOnHang[i]);
+                notes.Put(nsPrintfCString("CpuUsageFlashProcess%d", i), CS(buf));
+              }
             }
 #endif
         }
@@ -230,41 +235,52 @@ FileTimeToUTC(const FILETIME& ftime)
   return li.QuadPart;
 }
 
-bool 
-GetProcessCpuUsage(const base::ProcessHandle& processHandle, float& cpuUsage)
+struct CpuUsageSamples
 {
+  PRUint64 sampleTimes[2];
+  PRUint64 cpuTimes[2];
+};
+
+bool 
+GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, InfallibleTArray<float>& cpuUsage)
+{
+  InfallibleTArray<CpuUsageSamples> samples(processHandles.Length());
   FILETIME creationTime, exitTime, kernelTime, userTime, currentTime;
   BOOL res;
 
-  ::GetSystemTimeAsFileTime(&currentTime);
-  res = ::GetProcessTimes(processHandle, &creationTime, &exitTime, &kernelTime, &userTime);
-  if (!res) {
-    NS_WARNING("failed to get process times");
-    return false;
-  }
-
-  PRUint64 sampleTimes[2];
-  PRUint64 cpuTimes[2];
+  for (PRUint32 i = 0; i < processHandles.Length(); ++i) {
+    ::GetSystemTimeAsFileTime(&currentTime);
+    res = ::GetProcessTimes(processHandles[i], &creationTime, &exitTime, &kernelTime, &userTime);
+    if (!res) {
+      NS_WARNING("failed to get process times");
+      return false;
+    }
   
-  sampleTimes[0] = FileTimeToUTC(currentTime);
-  cpuTimes[0]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);
+    samples[i].sampleTimes[0] = FileTimeToUTC(currentTime);
+    samples[i].cpuTimes[0]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);
+  }
 
   // we already hung for a while, a little bit longer won't matter
   ::Sleep(50);
 
-  ::GetSystemTimeAsFileTime(&currentTime);
-  res = ::GetProcessTimes(processHandle, &creationTime, &exitTime, &kernelTime, &userTime);
-  if (!res) {
-    NS_WARNING("failed to get process times");
-    return false;
+  const PRInt32 numberOfProcessors = PR_GetNumberOfProcessors();
+
+  for (PRUint32 i = 0; i < processHandles.Length(); ++i) {
+    ::GetSystemTimeAsFileTime(&currentTime);
+    res = ::GetProcessTimes(processHandles[i], &creationTime, &exitTime, &kernelTime, &userTime);
+    if (!res) {
+      NS_WARNING("failed to get process times");
+      return false;
+    }
+
+    samples[i].sampleTimes[1] = FileTimeToUTC(currentTime);
+    samples[i].cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);    
+
+    const PRUint64 deltaSampleTime = samples[i].sampleTimes[1] - samples[i].sampleTimes[0];
+    const PRUint64 deltaCpuTime    = samples[i].cpuTimes[1]    - samples[i].cpuTimes[0];
+    const float usage = 100.f * (float(deltaCpuTime) / deltaSampleTime) / numberOfProcessors;
+    cpuUsage.AppendElement(usage);
   }
-
-  sampleTimes[1] = FileTimeToUTC(currentTime);
-  cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);    
-
-  const PRUint64 deltaSampleTime = sampleTimes[1] - sampleTimes[0];
-  const PRUint64 deltaCpuTime    = cpuTimes[1]    - cpuTimes[0];
-  cpuUsage = 100.f * (float(deltaCpuTime) / deltaSampleTime) / PR_GetNumberOfProcessors();
 
   return true;
 }
@@ -291,9 +307,22 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
 #endif
 
 #ifdef XP_WIN
-    float cpuUsage;
-    if (GetProcessCpuUsage(OtherProcess(), cpuUsage)) {
-      mPluginCpuUsageOnHang = cpuUsage;
+    // collect cpu usage for plugin processes
+
+    InfallibleTArray<base::ProcessHandle> processHandles;
+    InfallibleTArray<float> cpuUsage;
+    base::ProcessHandle handle;
+
+    processHandles.AppendElement(OtherProcess());
+    if (mFlashProcess1 && base::OpenProcessHandle(mFlashProcess1, &handle)) {
+      processHandles.AppendElement(handle);
+    }
+    if (mFlashProcess2 && base::OpenProcessHandle(mFlashProcess2, &handle)) {
+      processHandles.AppendElement(handle);
+    }
+
+    if (!GetProcessCpuUsage(processHandles, cpuUsage)) {
+      mPluginCpuUsageOnHang.Clear();
     }
 #endif
 
