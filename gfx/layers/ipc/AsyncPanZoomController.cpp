@@ -243,12 +243,15 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
       ScheduleComposite();
       // Fall through.
     case FLING:
-      CancelAnimation();
+      {
+        MonitorAutoLock monitor(mMonitor);
+        CancelAnimation();
+      }
       // Fall through.
     case NOTHING:
       mX.StartTouch(xPos);
       mY.StartTouch(yPos);
-      mState = TOUCHING;
+      SetState(TOUCHING);
       break;
     case TOUCHING:
     case PANNING:
@@ -320,7 +323,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     return nsEventStatus_eIgnore;
 
   case TOUCHING:
-    mState = NOTHING;
+    SetState(NOTHING);
     return nsEventStatus_eIgnore;
 
   case PANNING:
@@ -329,10 +332,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
       ScheduleComposite();
       RequestContentRepaint();
     }
-    mState = FLING;
+    SetState(FLING);
     return nsEventStatus_eConsumeNoDefault;
   case PINCHING:
-    mState = NOTHING;
+    SetState(NOTHING);
     // Scale gesture listener should have handled this.
     NS_WARNING("Gesture listener should have handled pinching in OnTouchEnd.");
     return nsEventStatus_eIgnore;
@@ -342,12 +345,12 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEvent) {
-  mState = NOTHING;
+  SetState(NOTHING);
   return nsEventStatus_eConsumeNoDefault;
 }
 
 nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEvent) {
-  mState = PINCHING;
+  SetState(PINCHING);
   mLastZoomFocus = aEvent.mFocusPoint;
 
   return nsEventStatus_eConsumeNoDefault;
@@ -449,7 +452,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 }
 
 nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent) {
-  mState = PANNING;
+  SetState(PANNING);
   mX.StartTouch(aEvent.mFocusPoint.x);
   mY.StartTouch(aEvent.mFocusPoint.y);
   {
@@ -517,7 +520,7 @@ void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
 
   mX.StartTouch(touch.mScreenPoint.x);
   mY.StartTouch(touch.mScreenPoint.y);
-  mState = PANNING;
+  SetState(PANNING);
 
   if (angle < AXIS_LOCK_ANGLE || angle > (M_PI - AXIS_LOCK_ANGLE)) {
     mY.LockPanning();
@@ -925,10 +928,10 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
   gfx::Rect zoomToRect(gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height));
   gfx::Rect cssPageRect = mFrameMetrics.mCSSContentRect;
 
+  SetState(ANIMATING_ZOOM);
+
   {
     MonitorAutoLock mon(mMonitor);
-
-    mState = ANIMATING_ZOOM;
 
     nsIntRect viewport = mFrameMetrics.mViewport;
 
@@ -993,6 +996,11 @@ void AsyncPanZoomController::ZoomToRect(const gfxRect& aRect) {
 
     ScheduleComposite();
   }
+}
+
+void AsyncPanZoomController::SetState(PanZoomState aState) {
+  MonitorAutoLock monitor(mMonitor);
+  mState = aState;
 }
 
 }
