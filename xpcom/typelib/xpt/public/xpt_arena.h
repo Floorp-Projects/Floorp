@@ -12,6 +12,7 @@
 
 #include "prtypes.h"
 #include <stdlib.h>
+#include "mozilla/StandardInteger.h"
 
 
 /*

@@ -7,7 +7,7 @@
 #ifndef COMPATIBILITY_MANAGER_H
 #define COMPATIBILITY_MANAGER_H
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 class nsAccessNodeWrap;
 
