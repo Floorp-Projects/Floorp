@@ -933,9 +933,10 @@ class MethodDefiner(PropertyDefiner):
             return m["pref"]
 
         def specData(m):
-            hasInfo = (m["name"] != 'QueryInterface')
-            jitinfo = ("&%s_methodinfo" % m["name"]) if hasInfo else "NULL"
-            return (m["name"], m["name"], jitinfo, m["length"], m["flags"])
+            isQI = (m["name"] == 'QueryInterface')
+            jitinfo = ("&%s_methodinfo" % m["name"]) if not isQI else "NULL"
+            accessor = "genericMethod" if not isQI else "QueryInterface"
+            return (m["name"], accessor, jitinfo, m["length"], m["flags"])
 
         return self.generatePrefableArray(
             array, name,
@@ -959,13 +960,13 @@ class AttrDefiner(PropertyDefiner):
             return "JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS"
 
         def getter(attr):
-            return ("{(JSPropertyOp)get_%(name)s, &%(name)s_getterinfo}" 
+            return ("{(JSPropertyOp)genericGetter, &%(name)s_getterinfo}"
                     % {"name" : attr.identifier.name})
 
         def setter(attr):
             if attr.readonly:
                 return "JSOP_NULLWRAPPER"
-            return ("{(JSStrictPropertyOp)set_%(name)s, &%(name)s_setterinfo}"
+            return ("{(JSStrictPropertyOp)genericSetter, &%(name)s_setterinfo}"
                     % {"name" : attr.identifier.name})
 
         def specData(attr):
@@ -3231,21 +3232,20 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
 def MakeNativeName(name):
     return name[0].upper() + name[1:]
 
-class CGNativeMethod(CGAbstractBindingMethod):
+class CGGenericMethod(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL method..
     """
-    def __init__(self, descriptor, method):
-        self.method = method
-        baseName = method.identifier.name
+    def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, baseName, args)
+        CGAbstractBindingMethod.__init__(self, descriptor, 'genericMethod', args)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-            "return specialized_%s(cx, obj, self, argc, vp);" %
-            self.method.identifier.name))
+            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+            "JSJitMethodOp method = (JSJitMethodOp)info->op;\n"
+            "return method(cx, obj, self, argc, vp);"))
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
     """
@@ -3254,7 +3254,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, method):
         self.method = method
-        name = 'specialized_' + method.identifier.name
+        name = method.identifier.name
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('unsigned', 'argc'), Argument('JS::Value*', 'vp')]
@@ -3266,21 +3266,20 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         return CGMethodCall([], nativeName, self.method.isStatic(),
                             self.descriptor, self.method).define()
 
-class CGNativeGetter(CGAbstractBindingMethod):
+class CGGenericGetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute getter.
     """
-    def __init__(self, descriptor, attr):
-        self.attr = attr
-        name = 'get_' + attr.identifier.name
+    def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args)
+        CGAbstractBindingMethod.__init__(self, descriptor, 'genericGetter', args)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                "return specialized_get_%s(cx, obj, self, vp);" %
-                self.attr.identifier.name))
+            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+            "JSJitPropertyOp getter = info->op;\n"
+            "return getter(cx, obj, self, vp);"))
 
 class CGSpecializedGetter(CGAbstractStaticMethod):
     """
@@ -3289,7 +3288,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'specialized_get_' + attr.identifier.name
+        name = 'get_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
                  Argument('JSHandleObject', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
@@ -3302,30 +3301,29 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         return CGIndenter(CGGetterCall(self.attr.type, nativeName,
                                        self.descriptor, self.attr)).define()
 
-class CGNativeSetter(CGAbstractBindingMethod):
+class CGGenericSetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute setter.
     """
-    def __init__(self, descriptor, attr):
-        self.attr = attr
-        baseName = attr.identifier.name
-        name = 'set_' + attr.identifier.name
+    def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args)
+        CGAbstractBindingMethod.__init__(self, descriptor, 'genericSetter', args)
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                ("JS::Value* argv = JS_ARGV(cx, vp);\n"
-                 "JS::Value undef = JS::UndefinedValue();\n"
-                 "if (argc == 0) {\n"
-                 "  argv = &undef;\n"
-                 "}\n"
-                 "if (!specialized_set_%s(cx, obj, self, argv)) {\n"
-                 "  return false;\n"
-                 "}\n" % self.attr.identifier.name) +
-                 "*vp = JSVAL_VOID;\n"
-                 "return true;"))
+                "JS::Value* argv = JS_ARGV(cx, vp);\n"
+                "JS::Value undef = JS::UndefinedValue();\n"
+                "if (argc == 0) {\n"
+                "  argv = &undef;\n"
+                "}\n"
+                "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+                "JSJitPropertyOp setter = info->op;\n"
+                "if (!setter(cx, obj, self, argv)) {\n"
+                "  return false;\n"
+                "}\n"
+                "*vp = JSVAL_VOID;\n"
+                "return true;"))
 
 class CGSpecializedSetter(CGAbstractStaticMethod):
     """
@@ -3334,7 +3332,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'specialized_set_' + attr.identifier.name
+        name = 'set_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
                  Argument('JSHandleObject', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
@@ -3378,23 +3376,20 @@ class CGMemberJITInfo(CGThing):
     def define(self):
         if self.member.isAttr():
             getterinfo = ("%s_getterinfo" % self.member.identifier.name)
-            getter = ("(JSJitPropertyOp)specialized_get_%s" %
-                      self.member.identifier.name)
+            getter = ("(JSJitPropertyOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
             getterinfal = getterinfal and infallibleForAttr(self.member, self.descriptor)
             result = self.defineJitInfo(getterinfo, getter, getterinfal)
             if not self.member.readonly:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
-                setter = ("(JSJitPropertyOp)specialized_set_%s" %
-                          self.member.identifier.name)
+                setter = ("(JSJitPropertyOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, False)
             return result
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
-            #XXXefaust Should be JSJitMethodOp, after centralization, but lazy for now
-            method = ("(JSJitPropertyOp)specialized_%s" %
-                      self.member.identifier.name)
+            # Actually a JSJitMethodOp, but JSJitPropertyOp by struct definition.
+            method = ("(JSJitPropertyOp)%s" % self.member.identifier.name)
             # Method, much like setters, are always fallible
             result = self.defineJitInfo(methodinfo, method, False)
             return result
@@ -4136,18 +4131,23 @@ class CGDescriptor(CGThing):
 
         cgThings = []
         if descriptor.interface.hasInterfacePrototypeObject():
+            hasMethod, hasGetter, hasSetter = False, False, False
             for m in descriptor.interface.members:
                 if m.isMethod() and not m.isStatic():
                     cgThings.append(CGSpecializedMethod(descriptor, m))
-                    cgThings.append(CGNativeMethod(descriptor, m))
                     cgThings.append(CGMemberJITInfo(descriptor, m))
+                    hasMethod = True
                 elif m.isAttr():
                     cgThings.append(CGSpecializedGetter(descriptor, m))
-                    cgThings.append(CGNativeGetter(descriptor, m))
+                    hasGetter = True
                     if not m.readonly:
                         cgThings.append(CGSpecializedSetter(descriptor, m))
-                        cgThings.append(CGNativeSetter(descriptor, m))
+                        hasSetter = True
                     cgThings.append(CGMemberJITInfo(descriptor, m))
+            if hasMethod: cgThings.append(CGGenericMethod(descriptor))
+            if hasGetter: cgThings.append(CGGenericGetter(descriptor))
+            if hasSetter: cgThings.append(CGGenericSetter(descriptor))
+
 
         if descriptor.concrete:
             if not descriptor.workers and descriptor.wrapperCache:
