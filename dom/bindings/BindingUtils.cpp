@@ -448,7 +448,7 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
       size_t i = methods[prefIdx].specs - methodSpecs;
       for ( ; methodIds[i] != JSID_VOID; ++i) {
         if (id == methodIds[i]) {
-          JSFunction *fun = JS_NewFunctionById(cx, methodSpecs[i].call,
+          JSFunction *fun = JS_NewFunctionById(cx, methodSpecs[i].call.op,
                                                methodSpecs[i].nargs, 0,
                                                wrapper, id);
           if (!fun)

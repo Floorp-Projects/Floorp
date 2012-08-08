@@ -832,7 +832,7 @@ InitTypeConstructor(JSContext* cx,
                     MutableHandleObject typeProto,
                     MutableHandleObject dataProto)
 {
-  JSFunction* fun = js::DefineFunctionWithReserved(cx, parent, spec.name, spec.call, 
+  JSFunction* fun = js::DefineFunctionWithReserved(cx, parent, spec.name, spec.call.op,
                       spec.nargs, spec.flags);
   if (!fun)
     return false;

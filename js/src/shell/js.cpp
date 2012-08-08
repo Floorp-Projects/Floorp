@@ -3817,7 +3817,7 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
 "  heavily numeric code."),
 
-    JS_FS_END
+    JS_FS_HELP_END
 };
 #ifdef MOZ_PROFILING
 # define PROFILING_FUNCTION_COUNT 5
