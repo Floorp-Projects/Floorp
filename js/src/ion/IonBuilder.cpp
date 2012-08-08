@@ -3940,13 +3940,12 @@ IonBuilder::jsop_initelem_dense()
 static bool
 CanEffectlesslyCallLookupGenericOnObject(JSObject *obj)
 {
-    JSObject *pobj = obj;
-    while (pobj) {
-        if (!pobj->isNative())
+    while (obj) {
+        if (!obj->isNative())
             return false;
-        if (pobj->getClass()->ops.lookupProperty)
+        if (obj->getClass()->ops.lookupProperty)
             return false;
-        pobj = pobj->getProto();
+        obj = obj->getProto();
     }
     return true;
 }
