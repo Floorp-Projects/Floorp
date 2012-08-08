@@ -358,9 +358,21 @@ class TypeUnion(Node):
         Node.__init__(self)
         self.name = name
         self.components = [ ]           # [ Decl ]
+        # Expr -- evaluates to a constant value representing
+        # the maximum alignment of all types in the union
+        self.alignment = None
 
-    def addComponent(self, type, name):
-        self.components.append(Decl(type, name))
+    def addComponent(self, c):
+        self.components.append(Decl(c.unionType(), c.name))
+        alignme = ExprCall(ExprVar('MOZ_ALIGNOF'), [ c.internalType() ])
+        if self.alignment:
+            self.alignment = ExprCall(ExprVar('PR_MAX'), [ alignme, self.alignment ])
+        else:
+            self.alignment = alignme
+
+    def addAlignment(self):
+        if self.alignment:
+            self.components.append(Decl(Type('mozilla::AlignedElem', T=self.alignment), '__align'))
 
 class Typedef(Node):
     def __init__(self, fromtype, totypename):
