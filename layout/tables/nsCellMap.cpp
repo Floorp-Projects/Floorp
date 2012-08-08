@@ -7,6 +7,7 @@
 #include "nsCellMap.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
+#include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 
 

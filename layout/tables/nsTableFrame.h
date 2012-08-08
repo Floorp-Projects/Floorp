@@ -5,11 +5,11 @@
 #ifndef nsTableFrame_h__
 #define nsTableFrame_h__
 
+#include "celldata.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
-#include "nsITableLayout.h"
 #include "nsTableColFrame.h"
 #include "nsTableColGroupFrame.h"
 #include "nsCellMap.h"
@@ -17,7 +17,9 @@
 #include "nsDisplayList.h"
 
 class nsTableCellFrame;
+class nsTableCellMap;
 class nsTableColFrame;
+class nsColGroupFrame;
 class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class nsTableColGroupFrame;
@@ -103,7 +105,7 @@ private:
   * The principal child list contains row group frames. There is also an
   * additional child list, kColGroupList, which contains the col group frames.
   */
-class nsTableFrame : public nsContainerFrame, public nsITableLayout
+class nsTableFrame : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME
@@ -461,9 +463,6 @@ public:
                          bool                  aRemoveFromCache,
                          bool                  aRemoveFromCellMap);
 
-  NS_IMETHOD GetIndexByRowAndColumn(int32_t aRow, int32_t aColumn, int32_t *aIndex);
-  NS_IMETHOD GetRowAndColumnByIndex(int32_t aIndex, int32_t *aRow, int32_t *aColumn);
-
   bool ColumnHasCellSpacingBefore(int32_t aColIndex) const;
 
   bool HasPctCol() const;
@@ -721,24 +720,6 @@ public: /* ----- Cell Map public methods ----- */
 
   /** returns true if table-layout:auto  */
   virtual bool IsAutoLayout();
-
-  /*---------------- nsITableLayout methods ------------------------*/
-  
-  /** Get the cell and associated data for a table cell from the frame's cellmap */
-  NS_IMETHOD GetCellDataAt(int32_t aRowIndex, int32_t aColIndex, 
-                           nsIDOMElement* &aCell,   //out params
-                           int32_t& aStartRowIndex, int32_t& aStartColIndex, 
-                           int32_t& aRowSpan, int32_t& aColSpan,
-                           int32_t& aActualRowSpan, int32_t& aActualColSpan,
-                           bool& aIsSelected);
-
-  /** Get the number of rows and column for a table from the frame's cellmap 
-    *  Some rows may not have enough cells (the number returned is the maximum possible),
-    *  which displays as a ragged-right edge table
-    */
-  NS_IMETHOD GetTableSize(int32_t& aRowCount, int32_t& aColCount);
-
-  /*------------end of nsITableLayout methods -----------------------*/
 
 public:
  
