@@ -3416,39 +3416,10 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint,
       if (!SelfIsSelectable(kid, aFlags) || kid->IsEmpty())
         continue;
 
-      nsRect rect = kid->GetRect();
-
-      nscoord fromLeft = aPoint.x - rect.x;
-      nscoord fromRight = aPoint.x - rect.XMost();
-
-      nscoord xDistance;
-      if (fromLeft >= 0 && fromRight <= 0) {
-        xDistance = 0;
-      } else {
-        xDistance = NS_MIN(abs(fromLeft), abs(fromRight));
-      }
-
-      if (xDistance <= closestXDistance)
-      {
-        if (xDistance < closestXDistance)
-          closestYDistance = HUGE_DISTANCE;
-
-        nscoord fromTop = aPoint.y - rect.y;
-        nscoord fromBottom = aPoint.y - rect.YMost();
-
-        nscoord yDistance;
-        if (fromTop >= 0 && fromBottom <= 0)
-          yDistance = 0;
-        else
-          yDistance = NS_MIN(abs(fromTop), abs(fromBottom));
-
-        if (yDistance < closestYDistance)
-        {
-          closestXDistance = xDistance;
-          closestYDistance = yDistance;
-          closestFrame = kid;
-        }
-      }
+      if (nsLayoutUtils::PointIsCloserToRect(aPoint, kid->GetRect(),
+                                             closestXDistance,
+                                             closestYDistance))
+        closestFrame = kid;
     }
     if (closestFrame)
       return GetSelectionClosestFrameForChild(closestFrame, aPoint, aFlags);
