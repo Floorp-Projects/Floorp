@@ -90,6 +90,7 @@ DBusMessage*  dbus_func_args_error(DBusConnection* conn,
 
 DBusMessage*  dbus_func_args_timeout(DBusConnection* conn,
                                      int timeout_ms,
+                                     DBusError* err,
                                      const char* path,
                                      const char* ifc,
                                      const char* func,
