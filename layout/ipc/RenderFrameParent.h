@@ -93,6 +93,8 @@ public:
 
   void NotifyDimensionsChanged(int width, int height);
 
+  void NotifyDOMTouchListenerAdded();
+
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

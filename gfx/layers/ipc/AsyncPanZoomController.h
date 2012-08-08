@@ -99,6 +99,16 @@ public:
    */
   void UpdateViewportSize(int aWidth, int aHeight);
 
+  /**
+   * A DOM touch listener has been added. When called, we enable the machinery
+   * that allows touch listeners to preventDefault any touch inputs. This should
+   * not be called unless there are actually touch listeners as it introduces
+   * potentially unbounded lag because it causes a round-trip through content.
+   * Usually, if content is responding in a timely fashion, this only introduces
+   * a nearly constant few hundred ms of lag.
+   */
+  void NotifyDOMTouchListenerAdded();
+
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //
@@ -393,6 +403,10 @@ private:
   // this status will not be updated. It is only changed when this class
   // requests a repaint.
   ContentPainterStatus mContentPainterStatus;
+
+  // Whether or not we might have touch listeners. This is a conservative
+  // approximation and may not be accurate.
+  bool mMayHaveTouchListeners;
 
   friend class Axis;
 };
