@@ -495,6 +495,11 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
+    // We separate requestExit() and join() here so we can wake the EventHub's
+    // input loop, and stop it from polling for input events
+    mReaderThread->requestExit();
+    mEventHub->wake();
+
     status_t result = mReaderThread->requestExitAndWait();
     if (result)
         LOG("Could not stop reader thread - %d", result);
