@@ -507,16 +507,11 @@ class DeviceManagerSUT(DeviceManager):
     except AgentError:
       return None
 
-    # wait up to 30 seconds for process to start up
-    timeslept = 0
-    while (timeslept <= 30):
-      process = self.processExist(appname)
-      if (process is not None):
-        break
-      time.sleep(3)
-      timeslept += 3
-
+    # The 'exec' command may wait for the process to start and end, so checking
+    # for the process here may result in process = None.
+    process = self.processExist(appname)
     if (self.debug >= 4): print "got pid: %s for process: %s" % (process, appname)
+
     return process
 
   # external function
