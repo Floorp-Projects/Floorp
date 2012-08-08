@@ -242,7 +242,8 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, Prefable<JSFunctionSpec>* methods,
+                       unsigned ctorNargs, JSClass* instanceClass,
+                       Prefable<JSFunctionSpec>* methods,
                        Prefable<JSPropertySpec>* properties,
                        Prefable<ConstantSpec>* constants,
                        Prefable<JSFunctionSpec>* staticMethods, const char* name)
@@ -264,6 +265,9 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
     if (!proto) {
       return NULL;
     }
+
+    js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
+                        JS::PrivateValue(instanceClass));
   }
   else {
     proto = NULL;
@@ -321,6 +325,19 @@ DoHandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
   }
 
   return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+}
+
+// Can only be called with the immediate prototype of the instance object. Can
+// only be called on the prototype of an object known to be a DOM instance.
+JSBool
+InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID,
+                             uint32_t depth)
+{
+  JSClass* instanceClass = static_cast<JSClass*>(
+    js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
+  MOZ_ASSERT(IsDOMClass(instanceClass));
+  DOMJSClass* domClass = DOMJSClass::FromJSClass(instanceClass);
+  return domClass->mInterfaceChain[depth] == protoID;
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
