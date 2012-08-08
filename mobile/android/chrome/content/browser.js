@@ -5913,6 +5913,7 @@ var WebappsUI = {
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-sync-install", false);
     Services.obs.addObserver(this, "webapps-sync-uninstall", false);
+    Services.obs.addObserver(this, "webapps-install-error", false);
   },
   
   uninit: function unint() {
@@ -5920,13 +5921,33 @@ var WebappsUI = {
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-sync-install");
     Services.obs.removeObserver(this, "webapps-sync-uninstall");
+    Services.obs.removeObserver(this, "webapps-install-error", false);
   },
 
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
 
   observe: function observe(aSubject, aTopic, aData) {
-    let data = JSON.parse(aData);
+    let data = {};
+    try { data = JSON.parse(aData); }
+    catch(ex) { }
     switch (aTopic) {
+      case "webapps-install-error":
+        let msg = "";
+        switch (aData) {
+          case "INVALID_MANIFEST":
+          case "MANIFEST_PARSE_ERROR":
+            msg = Strings.browser.GetStringFromName("webapps.manifestInstallError");
+            break;
+          case "NETWORK_ERROR":
+          case "MANIFEST_URL_ERROR":
+            msg = Strings.browser.GetStringFromName("webapps.networkInstallError");
+            break;
+          default:
+            msg = Strings.browser.GetStringFromName("webapps.installError");
+        }
+        NativeWindow.toast.show(msg, "short");
+        console.log("Error installing app: " + aData);
+        break;
       case "webapps-ask-install":
         this.doInstall(data);
         break;
