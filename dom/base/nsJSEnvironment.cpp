@@ -2612,14 +2612,14 @@ TraceMallocDumpAllocations(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec TraceMallocFunctions[] = {
-    {"TraceMallocDisable",         TraceMallocDisable,         0, 0},
-    {"TraceMallocEnable",          TraceMallocEnable,          0, 0},
-    {"TraceMallocOpenLogFile",     TraceMallocOpenLogFile,     1, 0},
-    {"TraceMallocChangeLogFD",     TraceMallocChangeLogFD,     1, 0},
-    {"TraceMallocCloseLogFD",      TraceMallocCloseLogFD,      1, 0},
-    {"TraceMallocLogTimestamp",    TraceMallocLogTimestamp,    1, 0},
-    {"TraceMallocDumpAllocations", TraceMallocDumpAllocations, 1, 0},
-    {nullptr,                       nullptr,                     0, 0}
+    JS_FS("TraceMallocDisable",         TraceMallocDisable,         0, 0),
+    JS_FS("TraceMallocEnable",          TraceMallocEnable,          0, 0),
+    JS_FS("TraceMallocOpenLogFile",     TraceMallocOpenLogFile,     1, 0),
+    JS_FS("TraceMallocChangeLogFD",     TraceMallocChangeLogFD,     1, 0),
+    JS_FS("TraceMallocCloseLogFD",      TraceMallocCloseLogFD,      1, 0),
+    JS_FS("TraceMallocLogTimestamp",    TraceMallocLogTimestamp,    1, 0),
+    JS_FS("TraceMallocDumpAllocations", TraceMallocDumpAllocations, 1, 0),
+    JS_FS_END
 };
 
 #endif /* NS_TRACE_MALLOC */

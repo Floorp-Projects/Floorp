@@ -271,12 +271,12 @@ File(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec gGlobalFun[] = {
-    {"dump",    Dump,   1,0},
-    {"debug",   Debug,  1,0},
-    {"atob",    Atob,   1,0},
-    {"btoa",    Btoa,   1,0},
-    {"File",    File,   1,JSFUN_CONSTRUCTOR},
-    {nullptr,nullptr,0,0}
+    JS_FS("dump",    Dump,   1,0),
+    JS_FS("debug",   Debug,  1,0),
+    JS_FS("atob",    Atob,   1,0),
+    JS_FS("btoa",    Btoa,   1,0),
+    JS_FS("File",    File,   1,JSFUN_CONSTRUCTOR),
+    JS_FS_END
 };
 
 class JSCLContextHelper

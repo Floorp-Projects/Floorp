@@ -159,6 +159,8 @@ struct JSFunctionSpecWithHelp {
 
 #define JS_FN_HELP(name,call,nargs,flags,usage,help)                          \
     {name, call, nargs, (flags) | JSPROP_ENUMERATE | JSFUN_STUB_GSOPS, usage, help}
+#define JS_FS_HELP_END                                                        \
+    {NULL, NULL, 0, 0, NULL, NULL}
 
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);

@@ -107,8 +107,8 @@ netscape_security_enablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpec PrivilegeManager_static_methods[] = {
-    { "enablePrivilege",    netscape_security_enablePrivilege,      1,0},
-    {nullptr,nullptr,0,0}
+    JS_FS("enablePrivilege", netscape_security_enablePrivilege, 1, 0),
+    JS_FS_END
 };
 
 /*
