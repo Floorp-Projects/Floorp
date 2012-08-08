@@ -934,7 +934,7 @@ SourceScripts.prototype = {
 
     // Select the preferred script if one exists, the first entry otherwise.
     let preferredScriptUrl = DebuggerView.Scripts.preferredScriptUrl;
-    if (preferredScriptUrl) {
+    if (preferredScriptUrl && DebuggerView.Scripts.contains(preferredScriptUrl)) {
       DebuggerView.Scripts.selectScript(preferredScriptUrl);
     } else {
       DebuggerView.Scripts.selectIndex(0);
