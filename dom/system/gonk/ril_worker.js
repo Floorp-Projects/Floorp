@@ -4166,6 +4166,11 @@ let GsmPDUHelper = {
   readICCUCS2String: function readICCUCS2String(scheme, numOctets) {
     let str = "";
     switch (scheme) {
+      /**
+       * +------+---------+---------+---------+---------+------+------+
+       * | 0x80 | Ch1_msb | Ch1_lsb | Ch2_msb | Ch2_lsb | 0xff | 0xff |
+       * +------+---------+---------+---------+---------+------+------+
+       */
       case 0x80:
         let isOdd = numOctets % 2;
         let i;
@@ -4181,10 +4186,66 @@ let GsmPDUHelper = {
         // Skip trailing 0xff
         Buf.seekIncoming((numOctets - i) * PDU_HEX_OCTET_SIZE);
         break;
-      case 0x81:
+      case 0x81: // Fall through
       case 0x82:
-        //TODO Bug 780825
-        Buf.seekIncoming(numOctets * PDU_HEX_OCTET_SIZE);
+        /**
+         * +------+-----+--------+-----+-----+-----+--------+------+
+         * | 0x81 | len | offset | Ch1 | Ch2 | ... | Ch_len | 0xff |
+         * +------+-----+--------+-----+-----+-----+--------+------+
+         *
+         * len : The length of characters.
+         * offset : 0hhh hhhh h000 0000
+         * Ch_n: bit 8 = 0
+         *       GSM default alphabets
+         *       bit 8 = 1
+         *       UCS2 character whose char code is (Ch_n & 0x7f) + offset
+         *
+         * +------+-----+------------+------------+-----+-----+-----+--------+
+         * | 0x82 | len | offset_msb | offset_lsb | Ch1 | Ch2 | ... | Ch_len |
+         * +------+-----+------------+------------+-----+-----+-----+--------+
+         *
+         * len : The length of characters.
+         * offset_msb, offset_lsn: offset
+         * Ch_n: bit 8 = 0
+         *       GSM default alphabets
+         *       bit 8 = 1
+         *       UCS2 character whose char code is (Ch_n & 0x7f) + offset
+         */
+        let len = this.readHexOctet();
+        let offset, headerLen;
+        if (scheme == 0x81) {
+          offset = this.readHexOctet() << 7;
+          headerLen = 2;
+        } else {
+          offset = (this.readHexOctet() << 8) | this.readHexOctet();
+          headerLen = 3;
+        }
+
+        for (let i = 0; i < len; i++) {
+          let ch = this.readHexOctet();
+          if (ch & 0x80) {
+            // UCS2
+            str += String.fromCharCode((ch & 0x7f) + offset);
+          } else {
+            // GSM 8bit
+            let count = 0, gotUCS2 = 0;
+            while ((i + count + 1 < len)) {
+              count++;
+              if (this.readHexOctet() & 0x80) {
+                gotUCS2 = 1;
+                break;
+              };
+            }
+            // Unread.
+            // +1 for the GSM alphabet indexed at i,
+            Buf.seekIncoming(-1 * (count + 1) * PDU_HEX_OCTET_SIZE);
+            str += this.read8BitUnpackedToString(count + 1 - gotUCS2);
+            i += count - gotUCS2;
+          }
+        }
+
+        // Skipping trailing 0xff
+        Buf.seekIncoming((numOctets - len - headerLen) * PDU_HEX_OCTET_SIZE);
         break;
     }
     return str;
