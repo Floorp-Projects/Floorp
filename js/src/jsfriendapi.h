@@ -1292,11 +1292,23 @@ JS_GetDataViewByteLength(JSObject *obj, JSContext *cx);
 JS_FRIEND_API(void *)
 JS_GetDataViewData(JSObject *obj, JSContext *cx);
 
+#ifdef __cplusplus
 /*
  * This struct contains metadata passed from the DOM to the JS Engine for JIT
  * optimizations on DOM property accessors. Eventually, this should be made
  * available to general JSAPI users, but we are not currently ready to do so.
  */
-struct JSJitInfo;
+typedef bool
+(* JSJitPropertyOp)(JSContext *cx, JSObject *thisObj,
+                    void *specializedThis, JS::Value *vp);
+
+struct JSJitInfo {
+    JSJitPropertyOp op;
+    uint32_t protoID;
+    uint32_t depth;
+    bool isInfallible;    /* Is op fallible? Getters only */
+    bool isConstant;      /* Getting a construction-time constant? */
+};
+#endif
 
 #endif /* jsfriendapi_h___ */
