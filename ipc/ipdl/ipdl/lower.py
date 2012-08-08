@@ -2098,9 +2098,7 @@ def _generateCxxUnion(ud):
     # the C++ union the discunion use for storage
     valueunion = TypeUnion(valuetype.name)
     for c in ud.components:
-        valueunion.addComponent(c);
-    valueunion.addAlignment();
-
+        valueunion.addComponent(c.unionType(), c.name)
     cls.addstmts([ StmtDecl(Decl(valueunion,'')),
                        Whitespace.NL ])
 
