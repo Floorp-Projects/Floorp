@@ -957,6 +957,10 @@ DOMApplicationManifest.prototype = {
     return this._localeProp("appcache_path");
   },
 
+  get orientation() {
+    return this._localeProp("orientation");
+  },
+
   iconURLForSize: function(aSize) {
     let icons = this._localeProp("icons");
     if (!icons)
