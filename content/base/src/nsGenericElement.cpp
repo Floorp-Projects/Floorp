@@ -51,7 +51,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsNodeUtils.h"
-#include "mozilla/dom/DirectionalityUtils.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
 #ifdef MOZ_XUL
@@ -129,7 +128,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::directionality;
 
 nsEventStates
 Element::IntrinsicState() const
@@ -1360,13 +1358,6 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetSubtreeRootPointer(aParent->SubtreeRoot());
   }
 
-  // This has to be here, rather than in nsGenericHTMLElement::BindToTree, 
-  //  because it has to happen after updating the parent pointer, but before
-  //  recursively binding the kids.
-  if (IsHTML()) {
-    RecomputeDirectionality(this, false);
-  }
-
   // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children
   // that also need to be told that they are moving.
   nsresult rv;
@@ -1550,13 +1541,6 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
     if (slots) {
       slots->mBindingParent = nullptr;
     }
-  }
-
-  // This has to be here, rather than in nsGenericHTMLElement::UnbindFromTree, 
-  //  because it has to happen after unsetting the parent pointer, but before
-  //  recursively unbinding the kids.
-  if (IsHTML()) {
-    RecomputeDirectionality(this, false);
   }
 
   if (aDeep) {

@@ -145,16 +145,8 @@ enum {
   // Set if the node has had :hover selectors matched against it
   NODE_HAS_RELEVANT_HOVER_RULES = 0x00080000U,
 
-  // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL        = 0x00100000U,
-
-  // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR        = 0x00200000U,
-
-  NODE_ALL_DIRECTION_FLAGS      = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
-
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET =        22
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =        20
 };
 
 /**
@@ -1287,8 +1279,6 @@ private:
     NodeIsContent,
     // Set if the node has animations or transitions
     ElementHasAnimations,
-    // Set if node has a dir attribute with a valid value (ltr or rtl)
-    NodeHasValidDirAttribute,
     // Guard value
     BooleanFlagCount
   };
@@ -1356,9 +1346,6 @@ public:
   void ClearPointerLock() { ClearBoolFlag(ElementHasPointerLock); }
   bool MayHaveAnimations() { return GetBoolFlag(ElementHasAnimations); }
   void SetMayHaveAnimations() { SetBoolFlag(ElementHasAnimations); }
-  void SetHasValidDir() { SetBoolFlag(NodeHasValidDirAttribute); }
-  void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }
-  bool HasValidDir() const { return GetBoolFlag(NodeHasValidDirAttribute); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
