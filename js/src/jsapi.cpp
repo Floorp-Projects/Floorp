@@ -4977,7 +4977,7 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
     /* Clear the last parameter in case too few arguments were passed. */
     vp[2 + --argc].setUndefined();
 
-    return fs->call(cx, argc, vp);
+    return fs->call.op(cx, argc, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5025,9 +5025,11 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
-        fun = js_DefineFunction(cx, obj, id, fs->call, fs->nargs, flags);
+        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
+        if (fs->call.info)
+            fun->setJitInfo(fs->call.info);
     }
     return JS_TRUE;
 }

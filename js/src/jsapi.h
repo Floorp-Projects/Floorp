@@ -4353,9 +4353,16 @@ typedef struct JSPropertyOpWrapper {
 } JSPropertyOpWrapper;
 
 /*
- * Macro static initializers which correspond to the old |op| and |NULL|
- * respectively, and make it easy to pass no JSJitInfo as part of a
- * JSPropertySpec.
+ * Wrapper to do as above, but for JSNatives for JSFunctionSpecs.
+ */
+typedef struct JSNativeWrapper {
+    JSNative        op;
+    const JSJitInfo *info;
+} JSNativeWrapper;
+
+/*
+ * Macro static initializers which make it easy to pass no JSJitInfo as part of a
+ * JSPropertySpec or JSFunctionSpec.
  */
 #define JSOP_WRAPPER(op) {op, NULL}
 #define JSOP_NULLWRAPPER JSOP_WRAPPER(NULL)
@@ -4375,7 +4382,7 @@ struct JSPropertySpec {
 
 struct JSFunctionSpec {
     const char      *name;
-    JSNative        call;
+    JSNativeWrapper call;
     uint16_t        nargs;
     uint16_t        flags;
 };
@@ -4389,12 +4396,14 @@ struct JSFunctionSpec {
 /*
  * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name
  * pays homage to the old JSNative/JSFastNative split) simply adds the flag
- * JSFUN_STUB_GSOPS.
+ * JSFUN_STUB_GSOPS. JS_FNINFO allows the simple adding of JSJitInfos.
  */
 #define JS_FS(name,call,nargs,flags)                                          \
-    {name, call, nargs, flags}
+    {name, JSOP_WRAPPER(call), nargs, flags}
 #define JS_FN(name,call,nargs,flags)                                          \
-    {name, call, nargs, (flags) | JSFUN_STUB_GSOPS}
+    {name, JSOP_WRAPPER(call), nargs, (flags) | JSFUN_STUB_GSOPS}
+#define JS_FNINFO(name,call,info,nargs,flags)                                 \
+    {name,{call,info},nargs,flags}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
