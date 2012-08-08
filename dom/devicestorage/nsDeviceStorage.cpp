@@ -538,8 +538,7 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    bool allowDefault;
-    mRequest->FireError(mError, &allowDefault);
+    mRequest->FireError(mError);
     mRequest = nullptr;
     return NS_OK;
   }
@@ -580,8 +579,7 @@ ContinueCursorEvent::Run() {
     cursor->mOkToCallContinue = true;
   }
 
-  bool allowDefault;
-  mRequest->FireSuccess(val, &allowDefault);
+  mRequest->FireSuccess(val);
   mRequest = nullptr;
   return NS_OK;
 }
@@ -796,8 +794,7 @@ public:
       result = StringToJsval(mRequest->GetOwner(), mPath);
     }
 
-    bool allowDefault;
-    mRequest->FireSuccess(result, &allowDefault);
+    mRequest->FireSuccess(result);
     mRequest = nullptr;
     return NS_OK;
   }
