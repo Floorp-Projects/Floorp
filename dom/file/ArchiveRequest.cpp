@@ -51,6 +51,7 @@ ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
 : DOMRequest(aWindow),
   mArchiveReader(aReader)
 {
+  MOZ_COUNT_CTOR(ArchiveRequest);
   nsLayoutStatics::AddRef();
 
   /* An event to make this request asynchronous: */
@@ -60,6 +61,7 @@ ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
 
 ArchiveRequest::~ArchiveRequest()
 {
+  MOZ_COUNT_DTOR(ArchiveRequest);
   nsLayoutStatics::Release();
 }
 
