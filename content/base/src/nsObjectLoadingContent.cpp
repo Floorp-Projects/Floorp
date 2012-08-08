@@ -566,39 +566,41 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsresult rv;
   nsCOMPtr<nsIWebNavigationInfo> info(
-    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv));
-  PRUint32 supported;
-  if (info) {
-    nsCOMPtr<nsIWebNavigation> webNav;
-    nsIDocument* currentDoc = thisContent->GetCurrentDoc();
-    if (currentDoc) {
-      webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
-    }
-    rv = info->IsTypeSupported(aMimeType, webNav, &supported);
+    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID));
+  if (!info) {
+    return false;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    if (supported == nsIWebNavigationInfo::UNSUPPORTED) {
-      // Try a stream converter
-      // NOTE: We treat any type we can convert from as a supported type. If a
-      // type is not actually supported, the URI loader will detect that and
-      // return an error, and we'll fallback.
-      nsCOMPtr<nsIStreamConverterService> convServ =
-        do_GetService("@mozilla.org/streamConverters;1");
-      bool canConvert = false;
-      if (convServ) {
-        rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
-      }
-      return NS_SUCCEEDED(rv) && canConvert;
-    }
+  nsCOMPtr<nsIWebNavigation> webNav;
+  nsIDocument* currentDoc = thisContent->GetCurrentDoc();
+  if (currentDoc) {
+    webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
+  }
+  
+  PRUint32 supported;
+  nsresult rv = info->IsTypeSupported(aMimeType, webNav, &supported);
 
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (supported != nsIWebNavigationInfo::UNSUPPORTED) {
     // Don't want to support plugins as documents
     return supported != nsIWebNavigationInfo::PLUGIN;
   }
 
-  return false;
+  // Try a stream converter
+  // NOTE: We treat any type we can convert from as a supported type. If a
+  // type is not actually supported, the URI loader will detect that and
+  // return an error, and we'll fallback.
+  nsCOMPtr<nsIStreamConverterService> convServ =
+    do_GetService("@mozilla.org/streamConverters;1");
+  bool canConvert = false;
+  if (convServ) {
+    rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
+  }
+  return NS_SUCCEEDED(rv) && canConvert;
 }
 
 nsresult
