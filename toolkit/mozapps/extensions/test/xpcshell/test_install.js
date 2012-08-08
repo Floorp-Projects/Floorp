@@ -3,19 +3,22 @@
  */
 
 // This verifies that add-ons can be installed from XPI files
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 // Maximum error in file modification times. Some file systems don't store
 // modification times exactly. As long as we are closer than this then it
 // still passes.
 const MAX_TIME_DIFFERENCE = 3000;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
-
 // install.rdf size, icon.png, icon64.png size
 const ADDON1_SIZE = 705 + 16 + 16;
 
-do_load_httpd_js();
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+
 var testserver;
 var gInstallDate;
 var gInstall = null;
@@ -38,7 +41,7 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {

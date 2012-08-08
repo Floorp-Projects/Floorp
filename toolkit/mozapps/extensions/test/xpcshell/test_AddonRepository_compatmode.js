@@ -7,7 +7,7 @@
 
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer;
 var COMPATIBILITY_PREF;
 
@@ -29,7 +29,7 @@ function run_test() {
   COMPATIBILITY_PREF = "extensions.checkCompatibility." + version;
 
   // Create and configure the HTTP server.
-  gServer = new nsHttpServer();
+  gServer = new HttpServer();
   gServer.registerDirectory("/data/", do_get_file("data"));
   gServer.start(4444);
 

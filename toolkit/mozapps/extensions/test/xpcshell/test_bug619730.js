@@ -3,7 +3,11 @@
  */
 
 // Tests whether
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var gTestserver = null;
 
@@ -22,7 +26,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupManager();
 
-  gTestserver = new nsHttpServer();
+  gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
   gTestserver.start(4444);
 

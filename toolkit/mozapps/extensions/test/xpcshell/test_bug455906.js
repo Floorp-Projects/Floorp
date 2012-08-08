@@ -8,7 +8,11 @@ const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/bloc
 const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
 Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://localhost:4444/blocklist/%blockID%");
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var ADDONS = [{
   // Tests how the blocklist affects a disabled add-on
@@ -247,7 +251,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupManager();
 
-  gTestserver = new nsHttpServer();
+  gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
   gTestserver.start(4444);
 

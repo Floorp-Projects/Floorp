@@ -18,7 +18,7 @@ Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
                            BASE_URL + REQ_URL);
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer;
 
 
@@ -179,7 +179,7 @@ function run_test() {
   writeInstallRDFForExtension(addon9, profileDir);
   writeInstallRDFForExtension(addon10, profileDir);
 
-  gServer = new nsHttpServer();
+  gServer = new HttpServer();
   gServer.registerFile(REQ_URL, do_get_file("data/test_compatoverrides.xml"));
   gServer.start(PORT);
 

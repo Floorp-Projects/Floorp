@@ -6,7 +6,7 @@ Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var server;
 var RESULTS = [
   null,
@@ -44,13 +44,13 @@ function run_test()
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();
 
-  server = new nsHttpServer();
+  server = new HttpServer();
   server.registerDirectory("/", do_get_file("data"));
   server.start(4444);
 
   // Point the addons repository to the test server
   Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED, "http://localhost:4444/test_bug424262.xml");
-  
+
   do_check_neq(AddonRepository, null);
 
   do_test_pending();
