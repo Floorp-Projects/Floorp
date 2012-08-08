@@ -57,7 +57,8 @@ let DOMApplicationRegistry = {
                     "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                     "Webapps:Launch", "Webapps:GetAll",
                     "Webapps:InstallPackage", "Webapps:GetBasePath",
-                    "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL"];
+                    "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL",
+                    "WebApps:GetAppByLocalId", "Webapps:GetManifestURLByLocalId"];
 
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
@@ -248,6 +249,12 @@ let DOMApplicationRegistry = {
         break;
       case "WebApps:GetAppLocalIdByManifestURL":
         return { id: this.getAppLocalIdByManifestURL(msg.url) };
+        break;
+      case "WebApps:GetAppByLocalId":
+        return this.getAppByLocalId(msg.id);
+        break;
+      case "WebApps:GetManifestURLByLocalId":
+        return this.getManifestURLByLocalId(msg.id);
         break;
     }
   },
@@ -692,6 +699,28 @@ let DOMApplicationRegistry = {
       let app = this.webapps[id];
       if (app.manifestURL == aManifestURL) {
         return this._cloneAppObject(app);
+      }
+    }
+
+    return null;
+  },
+
+  getAppByLocalId: function(aLocalId) {
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.localId == aLocalId) {
+        return this._cloneAppObject(app);
+      }
+    }
+
+    return null;
+  },
+
+  getManifestURLByLocalId: function(aLocalId) {
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.localId == aLocalId) {
+        return app.manifestURL;
       }
     }
 

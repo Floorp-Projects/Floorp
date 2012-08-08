@@ -53,6 +53,26 @@ AppsService.prototype = {
     }
   },
 
+  getAppByLocalId: function getAppByLocalId(aLocalId) {
+    debug("getAppByLocalId( " + aLocalId + " )");
+    if (this.inParent) {
+      return DOMApplicationRegistry.getAppByLocalId(aLocalId);
+    } else {
+      return this.cpmm.sendSyncMessage("WebApps:GetAppByLocalId",
+                                       { id: aLocalId })[0];
+    }
+  },
+
+  getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
+    debug("getManifestURLByLocalId( " + aLocalId + " )");
+    if (this.inParent) {
+      return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
+    } else {
+      return this.cpmm.sendSyncMessage("WebApps:GetManifestURLByLocalId",
+                                       { id: aLocalId })[0];
+    }
+  },
+
   classID : APPS_SERVICE_CID,
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIAppsService])
 }
