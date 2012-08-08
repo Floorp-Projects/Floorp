@@ -381,8 +381,6 @@ MOCHITEST_FILES_B = \
 		test_bug562652.html \
 		test_bug562137.html \
 		file_bug562137.txt \
-		test_bug562169-1.html \
-		test_bug562169-2.html \
 		test_bug548193.html \
 		file_bug548193.sjs \
 		test_html_colors_quirks.html \
