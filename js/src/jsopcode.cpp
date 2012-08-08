@@ -6102,8 +6102,8 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
                     }
                 }
             }
-            chain = chain->enclosingScope();
-        } while (chain->isBlock());
+            chain = chain->getParent();
+        } while (chain && chain->isBlock());
     }
     return NULL;
 }
