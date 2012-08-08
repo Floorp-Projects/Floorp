@@ -302,7 +302,7 @@ private:
     nsString mBrowserDumpID;
     nsString mHangID;
 #ifdef XP_WIN
-    InfallibleTArray<float> mPluginCpuUsageOnHang;
+    float mPluginCpuUsageOnHang;
 #endif
 
 #ifdef MOZ_X11
