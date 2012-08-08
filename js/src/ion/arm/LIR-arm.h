@@ -231,6 +231,9 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 1>
     const LAllocation *tempInt() {
         return getTemp(0)->output();
     }
+    const MRecompileCheck *mir() const {
+        return mir_->toRecompileCheck();
+    }
 };
 
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>

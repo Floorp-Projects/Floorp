@@ -329,7 +329,7 @@ bool
 LIRGeneratorARM::visitRecompileCheck(MRecompileCheck *ins)
 {
     LRecompileCheck *lir = new LRecompileCheck(temp(LDefinition::GENERAL));
-    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir);
+    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir, ins);
 }
 
 bool
