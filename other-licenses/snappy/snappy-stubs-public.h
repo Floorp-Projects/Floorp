@@ -36,7 +36,7 @@
 #ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 #define UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 0

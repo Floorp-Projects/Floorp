@@ -7,7 +7,7 @@
 #ifndef _mozilla_a11y_aria_ARIAStateMap_h_
 #define _mozilla_a11y_aria_ARIAStateMap_h_
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 namespace mozilla {
 

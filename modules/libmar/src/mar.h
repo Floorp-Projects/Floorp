@@ -9,6 +9,7 @@
 
 /* We use NSPR here just to import the definition of uint32_t */
 #include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 #ifdef __cplusplus
 extern "C" {

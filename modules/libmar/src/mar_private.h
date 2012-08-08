@@ -9,6 +9,7 @@
 
 #include "prtypes.h"
 #include "limits.h"
+#include "mozilla/StandardInteger.h"
 
 /* Code in this module requires a guarantee that the size
    of uint32_t and uint64_t are 4 and 8 bytes respectively. */

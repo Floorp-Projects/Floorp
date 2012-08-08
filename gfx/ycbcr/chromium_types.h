@@ -6,6 +6,7 @@
 #define GFX_CHROMIUMTYPES_H
 
 #include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 typedef uint8_t uint8;
 typedef int8_t int8;

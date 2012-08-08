@@ -47,7 +47,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 /*
  * libidnkit result code.
