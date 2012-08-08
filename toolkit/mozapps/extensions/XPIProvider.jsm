@@ -6302,7 +6302,13 @@ DirectoryInstallLocation.prototype = {
         let newEntry = this._readDirectoryFromFile(entry);
         if (!newEntry) {
           LOG("Deleting stale pointer file " + entry.path);
-          entry.remove(true);
+          try {
+            entry.remove(true);
+          }
+          catch (e) {
+            WARN("Failed to remove stale pointer file " + entry.path, e);
+            // Failing to remove the stale pointer file is ignorable
+          }
           continue;
         }
 

@@ -12,7 +12,7 @@ import traceback
 
 from threading import RLock
 
-from tps import TPSFirefoxRunner, TPSPulseMonitor, TPSTestRunner
+from tps import TPSFirefoxRunner, TPSTestRunner
 
 def main():
   parser = optparse.OptionParser()
