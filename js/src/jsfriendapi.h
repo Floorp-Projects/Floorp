@@ -325,6 +325,16 @@ struct Object {
     }
 };
 
+struct Function {
+    Object base;
+    uint16_t nargs;
+    uint16_t flahs;
+    /* Used only for natives */
+    Native native;
+    const JSJitInfo *jitinfo;
+    void *_1;
+};
+
 struct Atom {
     size_t _;
     const jschar *chars;
@@ -1316,8 +1326,11 @@ JS_GetDataViewData(JSObject *obj, JSContext *cx);
  * available to general JSAPI users, but we are not currently ready to do so.
  */
 typedef bool
-(* JSJitPropertyOp)(JSContext *cx, JSObject *thisObj,
+(* JSJitPropertyOp)(JSContext *cx, JSHandleObject thisObj,
                     void *specializedThis, JS::Value *vp);
+typedef bool
+(* JSJitMethodOp)(JSContext *cx, JSHandleObject thisObj,
+                  void *specializedThis, unsigned argc, JS::Value *vp);
 
 struct JSJitInfo {
     JSJitPropertyOp op;
@@ -1326,6 +1339,13 @@ struct JSJitInfo {
     bool isInfallible;    /* Is op fallible? Getters only */
     bool isConstant;      /* Getting a construction-time constant? */
 };
-#endif
+
+static JS_ALWAYS_INLINE const JSJitInfo *
+FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
+{
+    JS_ASSERT(js::GetObjectClass(&v.toObject()) == &js::FunctionClass);
+    return reinterpret_cast<js::shadow::Function *>(&v.toObject())->jitinfo;
+}
+#endif /* __cplusplus */
 
 #endif /* jsfriendapi_h___ */
