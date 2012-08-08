@@ -929,6 +929,11 @@ IonFrameIterator::isConstructing() const
     }
 
     JS_ASSERT(parent.done());
+
+    // JM ICs do not inline Ion constructor calls.
+    if (activation_->entryfp()->callingIntoIon())
+        return false;
+    JS_ASSERT(activation_->entryfp()->runningInIon());
     return activation_->entryfp()->isConstructing();
 }
 
