@@ -43,6 +43,28 @@ JSFunction::initEnvironment(JSObject *obj)
 }
 
 inline void
+JSFunction::initNative(js::Native native, const JSJitInfo *data)
+{
+    JS_ASSERT(native);
+    u.n.native = native;
+    u.n.jitinfo = data;
+}
+
+inline const JSJitInfo *
+JSFunction::jitInfo() const
+{
+    JS_ASSERT(isNative());
+    return u.n.jitinfo;
+}
+
+inline void
+JSFunction::setJitInfo(const JSJitInfo *data)
+{
+    JS_ASSERT(isNative());
+    u.n.jitinfo = data;
+}
+
+inline void
 JSFunction::initializeExtended()
 {
     JS_ASSERT(isExtended());
