@@ -148,10 +148,10 @@ JSPropertySpec ImageData::sProperties[] = {
   // something about it in the mean time. So we use NULL, which defaults to the
   // class setter (JS_StrictPropertyStub), which is always a silent no-op,
   // regardless of strict mode. Not ideal, but good enough for now.
-  { "width", SLOT_width, PROPERTY_FLAGS, GetProperty, NULL },
-  { "height", SLOT_height, PROPERTY_FLAGS, GetProperty, NULL },
-  { "data", SLOT_data, PROPERTY_FLAGS, GetProperty, NULL },
-  { 0, 0, 0, NULL, NULL }
+  { "width", SLOT_width, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty), JSOP_NULLWRAPPER },
+  { "height", SLOT_height, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty), JSOP_NULLWRAPPER },
+  { "data", SLOT_data, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty), JSOP_NULLWRAPPER },
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 } // anonymous namespace

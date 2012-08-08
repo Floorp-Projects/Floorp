@@ -1292,4 +1292,11 @@ JS_GetDataViewByteLength(JSObject *obj, JSContext *cx);
 JS_FRIEND_API(void *)
 JS_GetDataViewData(JSObject *obj, JSContext *cx);
 
+/*
+ * This struct contains metadata passed from the DOM to the JS Engine for JIT
+ * optimizations on DOM property accessors. Eventually, this should be made
+ * available to general JSAPI users, but we are not currently ready to do so.
+ */
+struct JSJitInfo;
+
 #endif /* jsfriendapi_h___ */
