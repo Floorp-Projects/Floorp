@@ -3444,6 +3444,21 @@ nsTextPaintStyle::EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackCo
 nscolor
 nsTextPaintStyle::GetTextColor()
 {
+  if (mFrame->IsSVGText()) {
+    if (!mResolveColors)
+      return NS_SAME_AS_FOREGROUND_COLOR;
+
+    const nsStyleSVG* style = mFrame->GetStyleSVG();
+    switch (style->mFill.mType) {
+      case eStyleSVGPaintType_None:
+        return NS_RGBA(0, 0, 0, 0);
+      case eStyleSVGPaintType_Color:
+        return nsLayoutUtils::GetColor(mFrame, eCSSProperty_fill);
+      default:
+        NS_ERROR("cannot resolve SVG paint to nscolor");
+        return NS_RGBA(0, 0, 0, 255);
+    }
+  }
   return nsLayoutUtils::GetColor(mFrame, eCSSProperty_color);
 }
 
@@ -3654,7 +3669,9 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
   if (mResolveColors) {
     // On MacOS X, we don't exchange text color and BG color.
     if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
-      nscolor frameColor = mFrame->GetVisitedDependentColor(eCSSProperty_color);
+      nsCSSProperty property = mFrame->IsSVGText() ? eCSSProperty_fill :
+                                                     eCSSProperty_color;
+      nscoord frameColor = mFrame->GetVisitedDependentColor(property);
       mSelectionTextColor = EnsureDifferentColors(frameColor, mSelectionBGColor);
     } else {
       EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
@@ -4581,8 +4598,10 @@ PaintSelectionBackground(gfxContext* aCtx, nsPresContext* aPresContext,
 }
 
 void
-nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
-                                nsTextFrame::TextDecorations& aDecorations)
+nsTextFrame::GetTextDecorations(
+                    nsPresContext* aPresContext,
+                    nsTextFrame::TextDecorationColorResolution aColorResolution,
+                    nsTextFrame::TextDecorations& aDecorations)
 {
   const nsCompatibility compatMode = aPresContext->CompatibilityMode();
 
@@ -4651,8 +4670,23 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     const PRUint8 style = styleText->GetDecorationStyle();
     // Accumulate only elements that have decorations with a genuine style
     if (textDecorations && style != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-      const nscolor color = useOverride ? overrideColor
-        : nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
+      nscolor color;
+      if (useOverride) {
+        color = overrideColor;
+      } else if (IsSVGText()) {
+        // XXX We might want to do something with text-decoration-color when
+        //     painting SVG text, but it's not clear what we should do.  We
+        //     at least need SVG text decorations to paint with 'fill' if
+        //     text-decoration-color has its initial value currentColor.
+        //     We could choose to interpret currentColor as "currentFill"
+        //     for SVG text, and have e.g. text-decoration-color:red to
+        //     override the fill paint of the decoration.
+        color = aColorResolution == eResolvedColors ?
+                  nsLayoutUtils::GetColor(f, eCSSProperty_fill) :
+                  NS_SAME_AS_FOREGROUND_COLOR;
+      } else {
+        color = nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
+      }
 
       if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
         aDecorations.mUnderlines.AppendElement(
@@ -4744,7 +4778,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     // maxima and minima are required to reliably generate the rectangle for
     // them
     TextDecorations textDecs;
-    GetTextDecorations(aPresContext, textDecs);
+    GetTextDecorations(aPresContext, eResolvedColors, textDecs);
     if (textDecs.HasDecorationLines()) {
       nscoord inflationMinFontSize =
         nsLayoutUtils::InflationMinFontSizeFor(aBlockReflowState.frame);
@@ -5556,7 +5590,17 @@ nsTextFrame::GetCaretColorAt(PRInt32 aOffset)
     return result;
   }
 
+  bool isSolidTextColor = true;
+  if (IsSVGText()) {
+    const nsStyleSVG* style = GetStyleSVG();
+    if (style->mFill.mType != eStyleSVGPaintType_None &&
+        style->mFill.mType != eStyleSVGPaintType_Color) {
+      isSolidTextColor = false;
+    }
+  }
+
   nsTextPaintStyle textPaintStyle(this);
+  textPaintStyle.SetResolveColors(isSolidTextColor);
   SelectionDetails* details = GetSelectionDetails();
   SelectionDetails* sdptr = details;
   SelectionType type = 0;
@@ -5569,7 +5613,12 @@ nsTextFrame::GetCaretColorAt(PRInt32 aOffset)
       if (GetSelectionTextColors(sdptr->mType, textPaintStyle,
                                  sdptr->mTextRangeStyle,
                                  &foreground, &background)) {
-        result = foreground;
+        if (!isSolidTextColor &&
+            NS_IS_SELECTION_SPECIAL_COLOR(foreground)) {
+          result = NS_RGBA(0, 0, 0, 255);
+        } else {
+          result = foreground;
+        }
         type = sdptr->mType;
       }
     }
@@ -5930,7 +5979,9 @@ nsTextFrame::DrawText(
     nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   TextDecorations decorations;
-  GetTextDecorations(aTextStyle.PresContext(), decorations);
+  GetTextDecorations(aTextStyle.PresContext(),
+                     aCallbacks ? eUnresolvedColors : eResolvedColors,
+                     decorations);
 
   // Hide text decorations if we're currently hiding @font-face fallback text
   const bool drawDecorations = !aProvider.GetFontGroup()->ShouldSkipDrawing() &&
