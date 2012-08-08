@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562169
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 562169</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=562169">Mozilla Bug 562169</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+ <div dir="rtl" id="z"></div>  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 562169 **/
+/** Test that adding an child to an element with dir="rtl" makes the
+      child have rtl directionality, and removing the child makes it
+     go back to ltr directionality **/
+
+function checkSelector(element, expectedDir, expectedChild)
+{
+    ok(element.querySelector(":dir("+expectedDir+")") == expectedChild,
+       "direction should be " + expectedDir);
+}
+
+var x = document.createElement("div");
+var y = document.createElement("div");
+x.appendChild(y);
+checkSelector(x, "ltr", y);
+$(z).appendChild(x);
+checkSelector(x, "rtl", y);
+$(z).removeChild(x);
+checkSelector(x, "ltr", y);
+
+</script>
+</pre>
+</body>
+</html>

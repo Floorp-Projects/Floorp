@@ -871,17 +871,21 @@ void WriteSnapshotToDumpFile(LayerManager* aManager, gfxASurface* aSurf)
 #endif
 
 void
-Layer::Dump(FILE* aFile, const char* aPrefix)
+Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 {
-  fprintf(aFile, "<li><a id=\"%p\" ", this);
+  if (aDumpHtml) {
+    fprintf(aFile, "<li><a id=\"%p\" ", this);
 #ifdef MOZ_DUMP_PAINTING
-  if (GetType() == TYPE_CONTAINER || GetType() == TYPE_THEBES) {
-    WriteSnapshotLinkToDumpFile(this, aFile);
-  }
+    if (GetType() == TYPE_CONTAINER || GetType() == TYPE_THEBES) {
+      WriteSnapshotLinkToDumpFile(this, aFile);
+    }
 #endif
-  fprintf(aFile, ">");
+    fprintf(aFile, ">");
+  }
   DumpSelf(aFile, aPrefix);
-  fprintf(aFile, "</a>");
+  if (aDumpHtml) {
+    fprintf(aFile, "</a>");
+  }
 
   if (Layer* mask = GetMaskLayer()) {
     nsCAutoString pfx(aPrefix);
@@ -892,14 +896,20 @@ Layer::Dump(FILE* aFile, const char* aPrefix)
   if (Layer* kid = GetFirstChild()) {
     nsCAutoString pfx(aPrefix);
     pfx += "  ";
-    fprintf(aFile, "<ul>");
+    if (aDumpHtml) {
+      fprintf(aFile, "<ul>");
+    }
     kid->Dump(aFile, pfx.get());
-    fprintf(aFile, "</ul>");
+    if (aDumpHtml) {
+      fprintf(aFile, "</ul>");
+    }
   }
 
-  fprintf(aFile, "</li>");
+  if (aDumpHtml) {
+    fprintf(aFile, "</li>");
+  }
   if (Layer* next = GetNextSibling())
-    next->Dump(aFile, aPrefix);
+    next->Dump(aFile, aPrefix, aDumpHtml);
 }
 
 void
@@ -1059,30 +1069,42 @@ ReadbackLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 // LayerManager
 
 void
-LayerManager::Dump(FILE* aFile, const char* aPrefix)
+LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 {
   FILE* file = FILEOrDefault(aFile);
 
-  fprintf(file, "<ul><li><a ");
 #ifdef MOZ_DUMP_PAINTING
-  WriteSnapshotLinkToDumpFile(this, file);
+  if (aDumpHtml) {
+    fprintf(file, "<ul><li><a ");
+    WriteSnapshotLinkToDumpFile(this, file);
+    fprintf(file, ">");
+  }
 #endif
-  fprintf(file, ">");
   DumpSelf(file, aPrefix);
 #ifdef MOZ_DUMP_PAINTING
-  fprintf(file, "</a>");
+  if (aDumpHtml) {
+    fprintf(file, "</a>");
+  }
 #endif
 
   nsCAutoString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
-    fprintf(file, "%s(null)</li></ul>", pfx.get());
+    fprintf(file, "%s(null)", pfx.get());
+    if (aDumpHtml) {
+      fprintf(file, "</li></ul>");
+    }
     return;
   }
 
-  fprintf(file, "<ul>");
-  GetRoot()->Dump(file, pfx.get());
-  fprintf(file, "</ul></li></ul>");
+  if (aDumpHtml) {
+    fprintf(file, "<ul>");
+  }
+  GetRoot()->Dump(file, pfx.get(), aDumpHtml);
+  if (aDumpHtml) {
+    fprintf(file, "</ul></li></ul>");
+  }
+  fputc('\n', file);
 }
 
 void
@@ -1161,7 +1183,7 @@ PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
 
 #else  // !MOZ_LAYERS_HAVE_LOG
 
-void Layer::Dump(FILE* aFile, const char* aPrefix) {}
+void Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml) {}
 void Layer::DumpSelf(FILE* aFile, const char* aPrefix) {}
 void Layer::Log(const char* aPrefix) {}
 void Layer::LogSelf(const char* aPrefix) {}
@@ -1197,7 +1219,7 @@ nsACString&
 ReadbackLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 { return aTo; }
 
-void LayerManager::Dump(FILE* aFile, const char* aPrefix) {}
+void LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml) {}
 void LayerManager::DumpSelf(FILE* aFile, const char* aPrefix) {}
 void LayerManager::Log(const char* aPrefix) {}
 void LayerManager::LogSelf(const char* aPrefix) {}

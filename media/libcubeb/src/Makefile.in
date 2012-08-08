@@ -42,4 +42,15 @@ CSRCS           = \
                 $(NULL)
 endif
 
+ifdef MOZ_PULSEAUDIO
+CSRCS		= \
+		cubeb_pulse.c \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS += \
+	$(MOZ_ALSA_CFLAGS) \
+	$(MOZ_PULSEAUDIO_CFLAGS) \
+	$(NULL)

@@ -2472,6 +2472,22 @@ public:
     };
 
     /**
+     * Callback for Draw() to use when drawing text with mode
+     * gfxFont::GLYPH_PATH.
+     */
+    struct DrawCallbacks {
+
+        /**
+         * Called when a path has been emitted to the gfxContext when
+         * painting a text run.  This can be called up to three times:
+         * once for any partial ligature at the beginning of the text run,
+         * once for the main run of glyphs, and once for any partial ligature
+         * at the end of the text run.
+         */
+        virtual void NotifyGlyphPathEmitted() = 0;
+    };
+
+    /**
      * Draws a substring. Uses only GetSpacing from aBreakProvider.
      * The provided point is the baseline origin on the left of the string
      * for LTR, on the right of the string for RTL.
@@ -2496,7 +2512,8 @@ public:
               gfxFont::DrawMode aDrawMode,
               PRUint32 aStart, PRUint32 aLength,
               PropertyProvider *aProvider,
-              gfxFloat *aAdvanceWidth, gfxPattern *aStrokePattern);
+              gfxFloat *aAdvanceWidth, gfxPattern *aStrokePattern,
+              DrawCallbacks *aCallbacks = nullptr);
 
     /**
      * Computes the ReflowMetrics for a substring.
@@ -2918,7 +2935,8 @@ private:
                                          PropertyProvider *aProvider);
     void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
                              PRUint32 aStart, PRUint32 aEnd, gfxPoint *aPt,
-                             PropertyProvider *aProvider);
+                             PropertyProvider *aProvider,
+                             DrawCallbacks *aCallbacks);
     // Advance aStart to the start of the nearest ligature; back up aEnd
     // to the nearest ligature end; may result in *aStart == *aEnd
     void ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd);

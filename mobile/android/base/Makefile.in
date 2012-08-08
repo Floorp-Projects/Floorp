@@ -25,6 +25,8 @@ UTIL_JAVA_FILES := \
   ActivityResultHandlerMap.java \
   GeckoAsyncTask.java \
   GeckoBackgroundThread.java \
+  GeckoEventListener.java \
+  GeckoEventResponder.java \
   GeckoJarReader.java \
   INIParser.java \
   INISection.java \
@@ -69,8 +71,6 @@ FENNEC_JAVA_FILES = \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
   GeckoEvent.java \
-  GeckoEventListener.java \
-  GeckoEventResponder.java \
   GeckoHalDefines.java \
   GeckoInputConnection.java \
   GeckoMenu.java \
@@ -113,6 +113,7 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   WebAppAllocator.java \
+  ZoomConstraints.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -130,7 +131,6 @@ FENNEC_JAVA_FILES = \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \
-  gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
   gfx/PluginLayer.java \
@@ -151,6 +151,7 @@ FENNEC_JAVA_FILES = \
   gfx/VirtualLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
+  ui/PanZoomTarget.java \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \

@@ -144,7 +144,7 @@ SettingsLock.prototype = {
       throw Components.results.NS_ERROR_ABORT;
     }
 
-    if (this._settingsManager.hasReadPrivileges || this._settingsManager.hasReadWritePrivileges) {
+    if (this._settingsManager.hasPrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       this._requests.enqueue({ request: req, intent:"get", name: aName });
       this.createTransactionAndProcess();
@@ -161,7 +161,7 @@ SettingsLock.prototype = {
       throw Components.results.NS_ERROR_ABORT;
     }
 
-    if (this._settingsManager.hasReadWritePrivileges) {
+    if (this._settingsManager.hasPrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       debug("send: " + JSON.stringify(aSettings));
       this._requests.enqueue({request: req, intent: "set", settings: aSettings});
@@ -179,7 +179,7 @@ SettingsLock.prototype = {
       throw Components.results.NS_ERROR_ABORT;
     }
 
-    if (this._settingsManager.hasReadWritePrivileges) {
+    if (this._settingsManager.hasPrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       this._requests.enqueue({ request: req, intent: "clear"});
       this.createTransactionAndProcess();
@@ -227,7 +227,7 @@ SettingsManager.prototype = {
   },
 
   set onsettingchange(aCallback) {
-    if (this.hasReadPrivileges || this.hasReadWritePrivileges)
+    if (this.hasPrivileges)
       this._onsettingchange = aCallback;
     else
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -317,17 +317,9 @@ SettingsManager.prototype = {
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
 
-    let principal = aWindow.document.nodePrincipal;
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
-    let readPerm = principal == secMan.getSystemPrincipal()
-                     ? Ci.nsIPermissionManager.ALLOW_ACTION
-                     : Services.perms.testExactPermissionFromPrincipal(principal, "websettings-read");
-    let readwritePerm = principal == secMan.getSystemPrincipal()
-                          ? Ci.nsIPermissionManager.ALLOW_ACTION
-                          : Services.perms.testExactPermissionFromPrincipal(principal, "websettings-readwrite");
-    this.hasReadPrivileges = readPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    this.hasReadWritePrivileges = readwritePerm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    debug("has read privileges :" + this.hasReadPrivileges + ", has read-write privileges: " + this.hasReadWritePrivileges);
+    let perm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "settings");
+    this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
+    debug("has privileges :" + this.hasPrivileges);
   },
 
   observe: function(aSubject, aTopic, aData) {

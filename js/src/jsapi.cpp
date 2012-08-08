@@ -829,6 +829,7 @@ JSRuntime::JSRuntime()
     defaultFreeOp_(thisFromCtor(), false, false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
+    DOMcallbacks(NULL),
     destroyPrincipals(NULL),
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
@@ -3781,11 +3782,34 @@ JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, 
     return atom && JS_AlreadyHasOwnPropertyById(cx, obj, AtomToId(atom), foundp);
 }
 
+/* Wrapper functions to create wrappers with no corresponding JSJitInfo from API
+ * function arguments.
+ */
+static JSPropertyOpWrapper
+GetterWrapper(JSPropertyOp getter)
+{
+    JSPropertyOpWrapper ret;
+    ret.op = getter;
+    ret.info = NULL;
+    return ret;
+}
+
+static JSStrictPropertyOpWrapper
+SetterWrapper(JSStrictPropertyOp setter)
+{
+    JSStrictPropertyOpWrapper ret;
+    ret.op = setter;
+    ret.info = NULL;
+    return ret;
+}
+
 static JSBool
 DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                   PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-                   unsigned flags, int tinyid)
+                   const JSPropertyOpWrapper &get, const JSStrictPropertyOpWrapper &set,
+                   unsigned attrs, unsigned flags, int tinyid)
 {
+    PropertyOp getter = get.op;
+    StrictPropertyOp setter = set.op;
     /*
      * JSPROP_READONLY has no meaning when accessors are involved. Ideally we'd
      * throw if this happens, but we've accepted it for long enough that it's
@@ -3806,9 +3830,13 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
         attrs &= ~JSPROP_NATIVE_ACCESSORS;
         if (getter) {
             RootedObject global(cx, (JSObject*) &obj->global());
-            JSObject *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, global, NULL);
+            JSFunction *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, global, NULL);
             if (!getobj)
                 return false;
+
+            if (get.info)
+                getobj->setJitInfo(get.info);
+
             getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
             attrs |= JSPROP_GETTER;
         }
@@ -3816,9 +3844,13 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
             // Root just the getter, since the setter is not yet a JSObject.
             AutoRooterGetterSetter getRoot(cx, JSPROP_GETTER, &getter, NULL);
             RootedObject global(cx, (JSObject*) &obj->global());
-            JSObject *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, global, NULL);
+            JSFunction *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, global, NULL);
             if (!setobj)
                 return false;
+
+            if (set.info)
+                setobj->setJitInfo(set.info);
+
             setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
             attrs |= JSPROP_SETTER;
         }
@@ -3850,7 +3882,8 @@ JS_DefinePropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval value_,
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
     RootedValue value(cx, value_);
-    return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, 0, 0);
+    return DefinePropertyById(cx, obj, id, value, GetterWrapper(getter),
+                              SetterWrapper(setter), attrs, 0, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3865,16 +3898,18 @@ JS_DefineElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval valueArg
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
-    return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, 0, 0);
+    return DefinePropertyById(cx, obj, id, value, GetterWrapper(getter),
+                              SetterWrapper(setter), attrs, 0, 0);
 }
 
 static JSBool
 DefineProperty(JSContext *cx, JSHandleObject obj, const char *name, const Value &value_,
-               PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
-               unsigned flags, int tinyid)
+               const JSPropertyOpWrapper &getter, const JSStrictPropertyOpWrapper &setter,
+               unsigned attrs, unsigned flags, int tinyid)
 {
     RootedValue value(cx, value_);
-    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    AutoRooterGetterSetter gsRoot(cx, attrs, const_cast<JSPropertyOp *>(&getter.op),
+                                  const_cast<JSStrictPropertyOp *>(&setter.op));
     RootedId id(cx);
 
     if (attrs & JSPROP_INDEX) {
@@ -3895,7 +3930,8 @@ JS_DefineProperty(JSContext *cx, JSObject *objArg, const char *name, jsval value
                   PropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    return DefineProperty(cx, obj, name, value, getter, setter, attrs, 0, 0);
+    return DefineProperty(cx, obj, name, value, GetterWrapper(getter),
+                          SetterWrapper(setter), attrs, 0, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3903,7 +3939,8 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *objArg, const char *name, i
                             jsval value, PropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    return DefineProperty(cx, obj, name, value, getter, setter, attrs, Shape::HAS_SHORTID, tinyid);
+    return DefineProperty(cx, obj, name, value, GetterWrapper(getter),
+                          SetterWrapper(setter), attrs, Shape::HAS_SHORTID, tinyid);
 }
 
 static JSBool
@@ -3917,7 +3954,8 @@ DefineUCProperty(JSContext *cx, JSHandleObject obj, const jschar *name, size_t n
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
+    return DefinePropertyById(cx, obj, id, value, GetterWrapper(getter),
+                              SetterWrapper(setter), attrs, flags, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3968,8 +4006,11 @@ JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, JSClass *jscl
     if (!nobj)
         return NULL;
 
-    if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
+    if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), GetterWrapper(NULL),
+                        SetterWrapper(NULL), attrs, 0, 0))
+    {
         return NULL;
+    }
 
     return nobj;
 }
@@ -3983,12 +4024,14 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, JSConstDoubleSpec *cds)
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
+    JSPropertyOpWrapper noget = GetterWrapper(NULL);
+    JSStrictPropertyOpWrapper noset = SetterWrapper(NULL);
     for (ok = JS_TRUE; cds->name; cds++) {
         Value value = DoubleValue(cds->dval);
         attrs = cds->flags;
         if (!attrs)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-        ok = DefineProperty(cx, obj, cds->name, value, NULL, NULL, attrs, 0, 0);
+        ok = DefineProperty(cx, obj, cds->name, value, noget, noset, attrs, 0, 0);
         if (!ok)
             break;
     }
@@ -4934,7 +4977,7 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
     /* Clear the last parameter in case too few arguments were passed. */
     vp[2 + --argc].setUndefined();
 
-    return fs->call(cx, argc, vp);
+    return fs->call.op(cx, argc, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4982,9 +5025,11 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
-        fun = js_DefineFunction(cx, obj, id, fs->call, fs->nargs, flags);
+        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
+        if (fs->call.info)
+            fun->setJitInfo(fs->call.info);
     }
     return JS_TRUE;
 }
@@ -5146,7 +5191,8 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       lineno(1),
       compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
       noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
-      allowIntrinsicsCalls(false)
+      allowIntrinsicsCalls(false),
+      sourcePolicy(SAVE_SOURCE)
 {
 }
 

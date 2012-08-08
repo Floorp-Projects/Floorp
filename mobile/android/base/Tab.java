@@ -54,10 +54,7 @@ public final class Tab {
     private String mDocumentURI;
     private String mContentType;
     private boolean mHasTouchListeners;
-    private boolean mAllowZoom;
-    private float mDefaultZoom;
-    private float mMinZoom;
-    private float mMaxZoom;
+    private ZoomConstraints mZoomConstraints;
     private ArrayList<View> mPluginViews;
     private HashMap<Object, Layer> mPluginLayers;
     private ContentResolver mContentResolver;
@@ -92,6 +89,7 @@ public final class Tab {
         mFaviconLoadId = 0;
         mDocumentURI = "";
         mContentType = "";
+        mZoomConstraints = new ZoomConstraints(false);
         mPluginViews = new ArrayList<View>();
         mPluginLayers = new HashMap<Object, Layer>();
         mState = "about:home".equals(url) ? STATE_SUCCESS : STATE_LOADING;
@@ -282,36 +280,12 @@ public final class Tab {
         return mState;
     }
 
-    public void setAllowZoom(boolean aValue) {
-        mAllowZoom = aValue;
+    public void setZoomConstraints(ZoomConstraints constraints) {
+        mZoomConstraints = constraints;
     }
 
-    public boolean getAllowZoom() {
-        return mAllowZoom;
-    }
-
-    public void setDefaultZoom(float aValue) {
-        mDefaultZoom = aValue;
-    }
-
-    public float getDefaultZoom() {
-        return mDefaultZoom;
-    }
-
-    public void setMinZoom(float aValue) {
-        mMinZoom = aValue;
-    }
-
-    public float getMinZoom() {
-        return mMinZoom;
-    }
-
-    public void setMaxZoom(float aValue) {
-        mMaxZoom = aValue;
-    }
-
-    public float getMaxZoom() {
-        return mMaxZoom;
+    public ZoomConstraints getZoomConstraints() {
+        return mZoomConstraints;
     }
 
     public void setHasTouchListeners(boolean aValue) {
@@ -449,7 +423,8 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoApp.mAppContext.loadUrl("about:reader?url=" + Uri.encode(getURL()));
+        GeckoApp.mAppContext.loadUrl("about:reader?url=" + Uri.encode(getURL()) +
+                                     "&readingList=" + (mReadingListItem ? 1 : 0));
     }
 
     public void doReload() {
