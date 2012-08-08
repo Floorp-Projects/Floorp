@@ -49,6 +49,7 @@ public:
   {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
+    AddStatesSilently(NS_EVENT_STATE_LTR);
   }
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
