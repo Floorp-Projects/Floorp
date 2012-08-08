@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(8a74b011-667d-4cfa-b2a2-b27582ba5f38)]
+[scriptable, uuid(6df7d16d-5b26-42a1-b1f7-069d46c37aa8)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -230,13 +230,13 @@ interface nsIPrincipal : nsISerializable
 
     const short APP_STATUS_NOT_INSTALLED = 0;
     const short APP_STATUS_INSTALLED     = 1;
-    const short APP_STATUS_TRUSTED       = 2;
+    const short APP_STATUS_PRIVILEGED    = 2;
     const short APP_STATUS_CERTIFIED     = 3;
 
     /**
      * Shows the status of the app.
      * Can be: APP_STATUS_NOT_INSTALLED, APP_STATUS_INSTALLED,
-     *         APP_STATUS_TRUSTED or APP_STATUS_CERTIFIED.
+     *         APP_STATUS_PRIVILEGED or APP_STATUS_CERTIFIED.
      */
     readonly attribute unsigned short appStatus;
 
