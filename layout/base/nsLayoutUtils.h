@@ -40,6 +40,8 @@ class nsHTMLImageElement;
 #include "nsIFrameLoader.h"
 #include "FrameMetrics.h"
 
+#include <limits>
+
 class nsBlockFrame;
 class gfxDrawable;
 
@@ -1676,6 +1678,22 @@ public:
                                nsRestyleHint aRestyleHint,
                                nsChangeHint aMinChangeHint);
 
+  /**
+   * Updates a pair of x and y distances if a given point is closer to a given
+   * rectangle than the original distance values.  If aPoint is closer to
+   * aRect than aClosestXDistance and aClosestYDistance indicate, then those
+   * two variables are updated with the distance between aPoint and aRect,
+   * and true is returned.  If aPoint is not closer, then aClosestXDistance
+   * and aClosestYDistance are left unchanged, and false is returned.
+   *
+   * Distances are measured in the two dimensions separately; a closer x
+   * distance beats a closer y distance.
+   */
+  template<typename PointType, typename RectType, typename CoordType>
+  static bool PointIsCloserToRect(PointType aPoint, const RectType& aRect,
+                                  CoordType& aClosestXDistance,
+                                  CoordType& aClosestYDistance);
+
 #ifdef DEBUG
   /**
    * Assert that there are no duplicate continuations of the same frame
@@ -1699,6 +1717,47 @@ private:
   static PRUint32 sFontSizeInflationMinTwips;
   static PRUint32 sFontSizeInflationLineThreshold;
 };
+
+template<typename PointType, typename RectType, typename CoordType>
+/* static */ bool
+nsLayoutUtils::PointIsCloserToRect(PointType aPoint, const RectType& aRect,
+                                   CoordType& aClosestXDistance,
+                                   CoordType& aClosestYDistance)
+{
+  CoordType fromLeft = aPoint.x - aRect.x;
+  CoordType fromRight = aPoint.x - aRect.XMost();
+
+  CoordType xDistance;
+  if (fromLeft >= 0 && fromRight <= 0) {
+    xDistance = 0;
+  } else {
+    xDistance = NS_MIN(abs(fromLeft), abs(fromRight));
+  }
+
+  if (xDistance <= aClosestXDistance) {
+    if (xDistance < aClosestXDistance) {
+      aClosestYDistance = std::numeric_limits<CoordType>::max();
+    }
+
+    CoordType fromTop = aPoint.y - aRect.y;
+    CoordType fromBottom = aPoint.y - aRect.YMost();
+
+    CoordType yDistance;
+    if (fromTop >= 0 && fromBottom <= 0) {
+      yDistance = 0;
+    } else {
+      yDistance = NS_MIN(abs(fromTop), abs(fromBottom));
+    }
+
+    if (yDistance < aClosestYDistance) {
+      aClosestXDistance = xDistance;
+      aClosestYDistance = yDistance;
+      return true;
+    }
+  }
+
+  return false;
+}
 
 namespace mozilla {
   namespace layout {
