@@ -39,6 +39,10 @@
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_EXTENDED      0x2000  /* structure is FunctionExtended */
+/*
+ * NB: JSFUN_INTERPRETED is hardcode duplicated in SET_JITINFO() in
+ * jsfriendapi.h. If it changes, it must also be updated there.
+ */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.native */
 
 namespace js { class FunctionExtended; }
