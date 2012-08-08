@@ -33,9 +33,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
 
 #include "OSFileConstants.h"
 #include "nsIOSFileConstantsService.h"
@@ -56,34 +53,10 @@ namespace {
  */
 bool gInitialized = false;
 
-typedef struct {
-  /**
-   * The name of the directory holding all the libraries (libxpcom, libnss, etc.)
-   */
-  nsString libDir;
-  nsString tmpDir;
-  nsString profileDir;
-} Paths;
-
 /**
- * System directories.
+ * The name of the directory holding all the libraries (libxpcom, libnss, etc.)
  */
-Paths* gPaths = NULL;
-
-}
-
-/**
- * Return the path to one of the special directories.
- */
-nsresult GetPathToSpecialDir(const char *aKey, nsString& aOutPath)
-{
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(aKey, getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file) {
-    return rv;
-  }
-
-  return file->GetPath(aOutPath);
+nsString* gLibDirectory;
 }
 
 /**
@@ -99,43 +72,23 @@ nsresult InitOSFileConstants()
 
   gInitialized = true;
 
-  nsAutoPtr<Paths> paths(new Paths);
-
-  // Initialize paths->libDir
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory("XpcomLib", getter_AddRefs(file));
-  if (NS_FAILED(rv)) {
+  // Initialize gLibDirectory
+  nsCOMPtr<nsIFile> xpcomLib;
+  nsresult rv = NS_GetSpecialDirectory("XpcomLib", getter_AddRefs(xpcomLib));
+  if (NS_FAILED(rv) || !xpcomLib) {
     return rv;
   }
 
   nsCOMPtr<nsIFile> libDir;
-  rv = file->GetParent(getter_AddRefs(libDir));
+  rv = xpcomLib->GetParent(getter_AddRefs(libDir));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = libDir->GetPath(paths->libDir);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = GetPathToSpecialDir(NS_OS_TEMP_DIR, paths->tmpDir);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, paths->profileDir);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  gPaths = paths.forget();
-  return NS_OK;
+  gLibDirectory = new nsString();
+  return libDir->GetPath(*gLibDirectory);
 }
 
-/**
- * Perform the cleaning up that can only be executed on the main thread.
- */
 void CleanupOSFileConstants()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -144,7 +97,7 @@ void CleanupOSFileConstants()
   }
 
   gInitialized = false;
-  delete gPaths;
+  delete gLibDirectory;
 }
 
 
@@ -526,17 +479,6 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JSObject *aObject,
 }
 
 /**
- * Set a property of an object from a nsString.
- */
-bool SetStringProperty(JSContext *cx, JSObject *aObject, const char *aProperty,
-                       const nsString aValue)
-{
-  JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
-  jsval valValue = STRING_TO_JSVAL(strValue);
-  return JS_SetProperty(cx, aObject, aProperty, &valValue);
-}
-
-/**
  * Define OS-specific constants.
  *
  * This function creates or uses JS object |OS.Constants| to store
@@ -545,16 +487,6 @@ bool SetStringProperty(JSContext *cx, JSObject *aObject, const char *aProperty,
 bool DefineOSFileConstants(JSContext *cx, JSObject *global)
 {
   MOZ_ASSERT(gInitialized);
-
-  if (gPaths == NULL) {
-    // If an initialization error was ignored, we may end up with
-    // |gInitialized == true| but |gPaths == NULL|. We cannot
-    // |MOZ_ASSERT| this, as this would kill precompile_cache.js,
-    // so we simply return an error.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-      JSMSG_CANT_OPEN, "OSFileConstants", "initialization has failed");
-    return false;
-  }
 
   JSObject *objOS;
   if (!(objOS = GetOrCreateObjectProperty(cx, global, "OS"))) {
@@ -618,9 +550,10 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     return false;
   }
 
+
   // Locate libxul
   {
-    nsAutoString xulPath(gPaths->libDir);
+    nsAutoString xulPath(*gLibDirectory);
 
     xulPath.Append(PR_GetDirectorySeparator());
 
@@ -635,21 +568,11 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     xulPath.Append(NS_LITERAL_STRING(DLL_SUFFIX));
 #endif // defined(XP_MACOSX)
 
-    if (!SetStringProperty(cx, objPath, "libxul", xulPath)) {
+    JSString* strPathToLibXUL = JS_NewUCStringCopyZ(cx, xulPath.get());
+    jsval valXul = STRING_TO_JSVAL(strPathToLibXUL);
+    if (!JS_SetProperty(cx, objPath, "libxul", &valXul)) {
       return false;
     }
-  }
-
-  if (!SetStringProperty(cx, objPath, "libDir", gPaths->libDir)) {
-    return false;
-  }
-
-  if (!SetStringProperty(cx, objPath, "tmpDir", gPaths->tmpDir)) {
-    return false;
-  }
-
-  if (!SetStringProperty(cx, objPath, "profileDir", gPaths->profileDir)) {
-    return false;
   }
 
   return true;
