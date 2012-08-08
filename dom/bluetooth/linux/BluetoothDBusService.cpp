@@ -127,6 +127,13 @@ static const char* sBluetoothDBusSignals[] =
   "type='signal',interface='org.bluez.AudioSink'"
 };
 
+/**
+ * DBus Connection held for the BluetoothCommandThread to use. Should never be
+ * used by any other thread.
+ * 
+ */
+static nsAutoPtr<RawDBusConnection> gThreadConnection;
+
 class DistributeBluetoothSignalTask : public nsRunnable {
   BluetoothSignal mSignal;
 public:
@@ -632,6 +639,15 @@ BluetoothDBusService::StartInternal()
   }
 
   if (NS_FAILED(EstablishDBusConnection())) {
+    NS_WARNING("Cannot start Main Thread DBus connection!");
+    StopDBus();
+    return NS_ERROR_FAILURE;
+  }
+
+  gThreadConnection = new RawDBusConnection();
+  
+  if (NS_FAILED(gThreadConnection->EstablishDBusConnection())) {
+    NS_WARNING("Cannot start Sync Thread DBus connection!");
     StopDBus();
     return NS_ERROR_FAILURE;
   }
@@ -687,33 +703,95 @@ BluetoothDBusService::StopInternal()
   dbus_connection_remove_filter(mConnection, EventFilter, nullptr);
   
   mConnection = nullptr;
+  gThreadConnection = nullptr;
   mBluetoothSignalObserverTable.Clear();
   StopDBus();
   return NS_OK;
 }
 
+class DefaultAdapterPropertiesRunnable : public nsRunnable
+{
+public:
+  DefaultAdapterPropertiesRunnable(BluetoothReplyRunnable* aRunnable)
+    : mRunnable(dont_AddRef(aRunnable))
+  {
+  }
+
+  nsresult
+  Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    DBusError err;
+    dbus_error_init(&err);
+   
+    BluetoothValue v;
+    nsString replyError;
+
+    DBusMessage* msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
+                                              1000,
+                                              &err,
+                                              "/",
+                                              DBUS_MANAGER_IFACE,
+                                              "DefaultAdapter",
+                                              DBUS_TYPE_INVALID);
+    UnpackObjectPathMessage(msg, &err, v, replyError);
+    if(msg) {
+      dbus_message_unref(msg);
+    }
+    if(!replyError.IsEmpty()) {
+      DispatchBluetoothReply(mRunnable, v, replyError);
+      return NS_ERROR_FAILURE;
+    }
+
+    nsString path = v.get_nsString();
+    nsCString tmp_path = NS_ConvertUTF16toUTF8(path);
+    const char* object_path = tmp_path.get();
+   
+    v = InfallibleTArray<BluetoothNamedValue>();
+    msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
+                                 1000,
+                                 &err,
+                                 object_path,
+                                 "org.bluez.Adapter",
+                                 "GetProperties",
+                                 DBUS_TYPE_INVALID);
+    UnpackAdapterPropertiesMessage(msg, &err, v, replyError);
+   
+    if(!replyError.IsEmpty()) {
+      DispatchBluetoothReply(mRunnable, v, replyError);
+      return NS_ERROR_FAILURE;
+    }
+    if(msg) {
+      dbus_message_unref(msg);
+    }
+    // We have to manually attach the path to the rest of the elements
+    v.get_ArrayOfBluetoothNamedValue().AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("Path"),
+                                                                         path));
+    DispatchBluetoothReply(mRunnable, v, replyError);
+   
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+};
+
 nsresult
 BluetoothDBusService::GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable)
 {
-  if (!mConnection) {
+  if (!mConnection || !gThreadConnection) {
     NS_ERROR("Bluetooth service not started yet!");
     return NS_ERROR_FAILURE;
   }
   NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
-
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
-  if (!dbus_func_args_async(mConnection,
-                            1000,
-                            GetObjectPathCallback,
-                            (void*)aRunnable,
-                            "/",
-                            "org.bluez.Manager",
-                            "DefaultAdapter",
-                            DBUS_TYPE_INVALID)) {
-    NS_WARNING("Could not start async function!");
+  nsRefPtr<nsRunnable> func(new DefaultAdapterPropertiesRunnable(runnable));
+  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Cannot dispatch firmware loading task!");
     return NS_ERROR_FAILURE;
   }
+
   runnable.forget();
   return NS_OK;
 }
