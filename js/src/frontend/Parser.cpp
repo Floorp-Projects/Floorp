@@ -916,6 +916,7 @@ MakeAssignment(ParseNode *pn, ParseNode *rhs, Parser *parser)
     pn->setDefn(false);
     pn->pn_left = lhs;
     pn->pn_right = rhs;
+    pn->pn_pos.end = rhs->pn_pos.end;
     return lhs;
 }
 
@@ -1399,14 +1400,15 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 ParseNode *item = new_<BinaryNode>(PNK_ASSIGN, JSOP_NOP, lhs->pn_pos, lhs, rhs);
                 if (!item)
                     return false;
-                if (!list) {
+                if (list) {
+                    list->append(item);
+                } else {
                     list = ListNode::create(PNK_VAR, this);
                     if (!list)
                         return false;
-                    list->makeEmpty();
+                    list->initList(item);
                     *listp = list;
                 }
-                list->append(item);
                 break;
               }
 #endif /* JS_HAS_DESTRUCTURING */
@@ -2722,6 +2724,7 @@ Parser::letBlock(LetContext letContext)
             return NULL;
 
         semi->pn_kid = pnlet;
+        semi->pn_pos = pnlet->pn_pos;
 
         letContext = LetExpresion;
         ret = semi;
@@ -2742,6 +2745,9 @@ Parser::letBlock(LetContext letContext)
         if (!block->pn_expr)
             return NULL;
     }
+
+    ret->pn_pos.begin = pnlet->pn_pos.begin = pnlet->pn_left->pn_pos.begin;
+    ret->pn_pos.end = pnlet->pn_pos.end = pnlet->pn_right->pn_pos.end;
 
     PopStatementPC(context, pc);
     return ret;
@@ -2775,6 +2781,7 @@ NewBindingNode(JSAtom *atom, Parser *parser, VarContext varContext = HoistVars)
             if (lexdep->pn_blockid >= pc->blockid()) {
                 lexdep->pn_blockid = pc->blockid();
                 pc->lexdeps->remove(p);
+                lexdep->pn_pos = parser->tokenStream.currentToken().pos;
                 return lexdep;
             }
         }
@@ -2940,6 +2947,7 @@ Parser::forStatement()
             tokenStream.ungetToken();
     }
 
+    TokenPos lp_pos = tokenStream.currentToken().pos;
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
     /*
@@ -3133,6 +3141,7 @@ Parser::forStatement()
                               pn2->isKind(PNK_NAME));
                 }
 #endif
+                pnseq->pn_pos.begin = pn->pn_pos.begin;
                 pnseq->append(pn);
                 forParent = pnseq;
             }
@@ -3162,6 +3171,7 @@ Parser::forStatement()
                 return NULL;
             letStmt.isForLetBlock = true;
             block->pn_expr = pn1;
+            block->pn_pos = pn1->pn_pos;
             pn1 = block;
         }
 
@@ -3262,6 +3272,8 @@ Parser::forStatement()
     forHead->pn_kid1 = pn1;
     forHead->pn_kid2 = pn2;
     forHead->pn_kid3 = pn3;
+    forHead->pn_pos.begin = lp_pos.begin;
+    forHead->pn_pos.end   = tokenStream.currentToken().pos.end;
     pn->pn_left = forHead;
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
@@ -3426,6 +3438,8 @@ Parser::tryStatement()
             MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
             PopStatementPC(context, pc);
 
+            pnblock->pn_pos.end = pn2->pn_pos.end = tokenStream.currentToken().pos.end;
+
             catchList->append(pnblock);
             lastCatch = pn2;
             tt = tokenStream.getToken(TSF_OPERAND);
@@ -3449,6 +3463,7 @@ Parser::tryStatement()
         reportError(NULL, JSMSG_CATCH_OR_FINALLY);
         return NULL;
     }
+    pn->pn_pos.end = (pn->pn_kid3 ? pn->pn_kid3 : catchList)->pn_pos.end;
     return pn;
 }
 
@@ -5883,6 +5898,7 @@ Parser::attributeIdentifier()
     if (!pn2)
         return NULL;
     pn->pn_kid = pn2;
+    pn->pn_pos.end = pn2->pn_pos.end;
     return pn;
 }
 
@@ -5915,6 +5931,7 @@ Parser::xmlExpr(bool inTag)
     tokenStream.setXMLTagMode(oldflag);
     pn->pn_kid = pn2;
     pn->setOp(inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR);
+    pn->pn_pos.end = pn2->pn_pos.end;
     return pn;
 }
 
@@ -6052,7 +6069,6 @@ Parser::xmlTagContent(ParseNodeKind tagkind, JSAtom **namep)
         }
         if (!pn2)
             return NULL;
-        pn->pn_pos.end = pn2->pn_pos.end;
         pn->append(pn2);
     }
 
@@ -6092,7 +6108,6 @@ Parser::xmlElementContent(ParseNode *pn)
                                       JSOP_STRING);
             if (!pn2)
                 return false;
-            pn->pn_pos.end = pn2->pn_pos.end;
             pn->append(pn2);
         }
 
@@ -6125,7 +6140,6 @@ Parser::xmlElementContent(ParseNode *pn)
             if (!pn2)
                 return false;
         }
-        pn->pn_pos.end = pn2->pn_pos.end;
         pn->append(pn2);
     }
     tokenStream.setXMLTagMode(true);
@@ -6199,6 +6213,7 @@ Parser::xmlElementOrList(bool allowList)
                 pn = ListNode::create(PNK_XMLTAGC, this);
                 if (!pn)
                     return NULL;
+                pn->pn_pos = pn2->pn_pos;
             }
 
             /* Now make pn a nominal-root TOK_XMLELEM list containing pn2. */
