@@ -138,6 +138,9 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       fprintf(aOutput, "<li>");
     } else {
       sPrintDisplayListIndent ++;
+      for (int indent = 0; indent < sPrintDisplayListIndent; indent++) {
+        fprintf(aOutput, "  ");
+      }
     }
     nsIFrame* f = i->GetUnderlyingFrame();
     nsAutoString fName;
