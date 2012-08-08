@@ -277,12 +277,15 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      UpdateWithTouchAtDevicePoint(aEvent);
       float panThreshold = TOUCH_START_TOLERANCE * mDPI;
+      UpdateWithTouchAtDevicePoint(aEvent);
+
       if (PanDistance() < panThreshold) {
         return nsEventStatus_eIgnore;
       }
+
       StartPanning(aEvent);
+
       return nsEventStatus_eConsumeNoDefault;
     }
 
@@ -492,7 +495,8 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
 }
 
 float AsyncPanZoomController::PanDistance() {
-  return NS_hypot(mX.PanDistance(), mY.PanDistance()) * mFrameMetrics.mResolution.width;
+  MonitorAutoLock monitor(mMonitor);
+  return NS_hypot(mX.PanDistance(), mY.PanDistance());
 }
 
 const nsPoint AsyncPanZoomController::GetVelocityVector() {
