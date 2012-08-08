@@ -1090,5 +1090,14 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
   return true;
 }
 
+bool
+TabParent::RecvNotifyDOMTouchListenerAdded()
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->NotifyDOMTouchListenerAdded();
+  }
+  return true;
+}
+
 } // namespace tabs
 } // namespace mozilla
