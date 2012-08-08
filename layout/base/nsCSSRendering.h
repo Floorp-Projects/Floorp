@@ -435,6 +435,26 @@ struct nsCSSRendering {
                                   const gfxFloat aDescentLimit = -1.0);
 
   /**
+   * Adds a path corresponding to the outline of the decoration line to
+   * the specified context.  Arguments have the same meaning as for
+   * PaintDecorationLine.  Currently this only works for solid
+   * decorations; for other decoration styles, an empty path is added
+   * to the context.
+   */
+  static void DecorationLineToPath(nsIFrame* aFrame,
+                                   gfxContext* aGfxContext,
+                                   const gfxRect& aDirtyRect,
+                                   const nscolor aColor,
+                                   const gfxPoint& aPt,
+                                   const gfxFloat aXInFrame,
+                                   const gfxSize& aLineSize,
+                                   const gfxFloat aAscent,
+                                   const gfxFloat aOffset,
+                                   const PRUint8 aDecoration,
+                                   const PRUint8 aStyle,
+                                   const gfxFloat aDescentLimit = -1.0);
+
+  /**
    * Function for getting the decoration line rect for the text.
    * NOTE: aLineSize, aAscent and aOffset are non-rounded device pixels,
    *       not app units.
