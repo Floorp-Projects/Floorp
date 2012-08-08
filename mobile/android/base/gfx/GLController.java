@@ -72,10 +72,13 @@ public class GLController {
     }
 
     // This function is invoked by JNI
-    public synchronized void resumeCompositorIfValid() {
-        if (mSurfaceValid) {
-            mView.getListener().compositionResumeRequested(mWidth, mHeight);
+    public void resumeCompositorIfValid() {
+        synchronized (this) {
+            if (!mSurfaceValid) {
+                return;
+            }
         }
+        mView.getListener().compositionResumeRequested(mWidth, mHeight);
     }
 
     // Wait until we are allowed to use EGL functions on the Surface backing
