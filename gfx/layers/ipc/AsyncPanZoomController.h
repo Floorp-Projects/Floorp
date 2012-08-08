@@ -291,7 +291,7 @@ protected:
   /**
    * Gets a vector of the velocities of each axis.
    */
-  const nsPoint GetVelocityVector();
+  const gfx::Point GetVelocityVector();
 
   /**
    * Gets a reference to the first SingleTouchData from a MultiTouchInput.  This
@@ -325,6 +325,17 @@ protected:
    * checkerboard immediately.
    */
   const nsIntRect CalculatePendingDisplayPort();
+
+  /**
+   * Attempts to enlarge the displayport along a single axis. Returns whether or
+   * not the displayport was enlarged. This will fail in circumstances where the
+   * velocity along that axis is not high enough to need any changes. The
+   * displayport metrics are expected to be passed into |aDisplayPortOffset| and
+   * |aDisplayPortLength|. If enlarged, these will be updated with the new
+   * metrics.
+   */
+  bool EnlargeDisplayPortAlongAxis(float aViewport, float aVelocity,
+                                   float* aDisplayPortOffset, float* aDisplayPortLength);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
