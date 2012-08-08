@@ -13,8 +13,8 @@
 #include "BluetoothReplyRunnable.h"
 
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 #include "nsIDOMDOMRequest.h"
-#include "nsIPermissionManager.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsThreadUtils.h"
@@ -22,7 +22,10 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
 
+#define DOM_BLUETOOTH_URL_PREF "dom.mozBluetooth.whitelist"
+
 using namespace mozilla;
+using mozilla::Preferences;
 
 USING_BLUETOOTH_NAMESPACE
 
@@ -273,27 +276,11 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-
-  // Need the document for security check.
-  nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
-
-  PRUint32 permission;
-  nsresult rv =
-    permMgr->TestPermissionFromPrincipal(principal, "mozBluetooth", &permission);
+  bool allowed;
+  nsresult rv = nsContentUtils::IsOnPrefWhitelist(aWindow, DOM_BLUETOOTH_URL_PREF, &allowed);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+  if (!allowed) {
     *aBluetoothManager = nullptr;
     return NS_OK;
   }
@@ -303,7 +290,6 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
     NS_ERROR("Cannot create bluetooth manager!");
     return NS_ERROR_FAILURE;
   }
-
   bluetoothManager.forget(aBluetoothManager);
   return NS_OK;
 }
