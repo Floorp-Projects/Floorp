@@ -38,7 +38,6 @@
 #include "Connection.h"
 #include "MobileConnection.h"
 #include "nsIIdleObserver.h"
-#include "TimeManager.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -116,7 +115,6 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorCamera)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorTime)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -199,9 +197,6 @@ Navigator::Invalidate()
   }
   mDeviceStorageStores.Clear();
 
-  if (mTimeManager) {
-    mTimeManager = nsnull;
-  }
 }
 
 nsPIDOMWindow *
@@ -1246,9 +1241,21 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
 
   if (!mMobileConnection) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-    if (!CheckPermission("dom.mobileconnection.whitelist")) {
-      return NS_OK;
-     }
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    // Chrome is always allowed access, so do the permission check only
+    // for non-chrome pages.
+    if (!nsContentUtils::IsCallerChrome()) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+      NS_ENSURE_TRUE(doc, NS_OK);
+
+      nsCOMPtr<nsIURI> uri;
+      doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+
+      if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.mobileconnection.whitelist")) {
+        return NS_OK;
+      }
+    }
 
     mMobileConnection = new network::MobileConnection();
     mMobileConnection->Init(window);
@@ -1345,25 +1352,6 @@ Navigator::MozSetMessageHandler(const nsAString& aType,
 }
 
 //*****************************************************************************
-//    Navigator::nsIDOMNavigatorTime
-//*****************************************************************************
-NS_IMETHODIMP
-Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
-{
-  if (!CheckPermission("dom.time.whitelist")) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if (!mTimeManager) {
-    *aTime = nsnull;
-    mTimeManager = new time::TimeManager();
-  }
-
-  NS_ADDREF(*aTime = mTimeManager);
-  return NS_OK;
-}
-
-//*****************************************************************************
 //    nsNavigator::nsIDOMNavigatorCamera
 //*****************************************************************************
 
@@ -1426,21 +1414,6 @@ Navigator::OnNavigation()
   }
 }
 
-bool
-Navigator::CheckPermission(const char* aPref)
-{
-  if (!nsContentUtils::IsCallerChrome()) {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
-    NS_ENSURE_TRUE(win, false);
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
-    NS_ENSURE_TRUE(doc, false);
-    nsCOMPtr<nsIURI> uri;
-    doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    return nsContentUtils::URIIsChromeOrInPref(uri, aPref);
-  }
-
-  return true;
-}
 } // namespace dom
 } // namespace mozilla
 

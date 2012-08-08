@@ -177,8 +177,7 @@ public:
     eDOMEvents_deviceorientation,
     eDOMEvents_deviceproximity,
     eDOMEvents_userproximity,
-    eDOMEvents_devicelight,
-    eDOMEvents_moztimechange
+    eDOMEvents_devicelight
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

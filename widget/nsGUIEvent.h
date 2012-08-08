@@ -537,9 +537,6 @@ class nsHashKey;
 #define NS_POINTERLOCKCHANGE         (NS_POINTERLOCK_START)
 #define NS_POINTERLOCKERROR          (NS_POINTERLOCK_START + 1)
 
-//System time is changed
-#define NS_MOZ_TIME_CHANGE_EVENT     5400
-
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.

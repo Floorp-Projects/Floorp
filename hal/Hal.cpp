@@ -417,28 +417,7 @@ bool GetLight(LightType light, hal::LightConfiguration* aConfig)
   RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig));
 }
 
-static ObserverList<SystemTimeChange> sSystemTimeObserver;
 
-void
-RegisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
-{
-  AssertMainThread();
-  sSystemTimeObserver.AddObserver(aObserver);
-}
-
-void
-UnregisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
-{
-  AssertMainThread();
-  sSystemTimeObserver.RemoveObserver(aObserver);
-}
-
-void
-NotifySystemTimeChange(const hal::SystemTimeChange& aReason)
-{
-  sSystemTimeObserver.Broadcast(aReason);
-}
- 
 void 
 AdjustSystemClock(int32_t aDeltaMilliseconds)
 {
