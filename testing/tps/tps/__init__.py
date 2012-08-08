@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from firefoxrunner import TPSFirefoxRunner
-from pulse import TPSPulseMonitor
 from testrunner import TPSTestRunner
 from mozhttpd import MozHttpd
 

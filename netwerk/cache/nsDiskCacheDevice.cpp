@@ -989,11 +989,13 @@ nsDiskCacheDevice::OpenDiskCache()
         nsDiskCache::CorruptCacheInfo corruptInfo;
         rv = mCacheMap.Open(mCacheDirectory, &corruptInfo);
 
-        // move "corrupt" caches to trash
         if (NS_SUCCEEDED(rv)) {
             Telemetry::Accumulate(Telemetry::DISK_CACHE_CORRUPT_DETAILS,
                                   corruptInfo);
-        } else if (rv == NS_ERROR_FILE_CORRUPTED) {
+        } else if (rv == NS_ERROR_ALREADY_INITIALIZED) {
+          NS_WARNING("nsDiskCacheDevice::OpenDiskCache: already open!");
+        } else {
+            // Consider cache corrupt: delete it
             Telemetry::Accumulate(Telemetry::DISK_CACHE_CORRUPT_DETAILS,
                                   corruptInfo);
             // delay delete by 1 minute to avoid IO thrash at startup
@@ -1001,15 +1003,12 @@ nsDiskCacheDevice::OpenDiskCache()
             if (NS_FAILED(rv))
                 return rv;
             exists = false;
-        } else {
-            // don't gather telemetry for "corrupt cache" for new profile
-            // where cache doesn't exist (most likely case if we're here).
-            return rv;
         }
     }
 
     // if we don't have a cache directory, create one and open it
     if (!exists) {
+        nsCacheService::MarkStartingFresh();
         rv = mCacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
         CACHE_LOG_PATH(PR_LOG_ALWAYS, "\ncreate cache directory: %s\n", mCacheDirectory);
         CACHE_LOG_ALWAYS(("mCacheDirectory->Create() = %x\n", rv));

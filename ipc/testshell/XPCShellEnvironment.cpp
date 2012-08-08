@@ -492,21 +492,21 @@ DumpHeap(JSContext *cx,
 
 JSFunctionSpec gGlobalFunctions[] =
 {
-    {"print",           Print,          0,0},
-    {"load",            Load,           1,0},
-    {"quit",            Quit,           0,0},
-    {"version",         Version,        1,0},
-    {"build",           BuildDate,      0,0},
-    {"dumpXPC",         DumpXPC,        1,0},
-    {"dump",            Dump,           1,0},
-    {"gc",              GC,             0,0},
-#ifdef JS_GC_ZEAL
-    {"gczeal",          GCZeal,         1,0},
-#endif
-#ifdef DEBUG
-    {"dumpHeap",        DumpHeap,       5,0},
-#endif
-    {nullptr,nullptr,0,0}
+    JS_FS("print",           Print,          0,0),
+    JS_FS("load",            Load,           1,0),
+    JS_FS("quit",            Quit,           0,0),
+    JS_FS("version",         Version,        1,0),
+    JS_FS("build",           BuildDate,      0,0),
+    JS_FS("dumpXPC",         DumpXPC,        1,0),
+    JS_FS("dump",            Dump,           1,0),
+    JS_FS("gc",              GC,             0,0),
+ #ifdef JS_GC_ZEAL
+    JS_FS("gczeal",          GCZeal,         1,0),
+ #endif
+ #ifdef DEBUG
+    JS_FS("dumpHeap",        DumpHeap,       5,0),
+ #endif
+    JS_FS_END
 };
 
 typedef enum JSShellErrNum

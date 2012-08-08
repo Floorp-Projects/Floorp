@@ -12,38 +12,38 @@ const INSTALLERROR_SOFTBLOCKED           = -10;
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 // Get the HTTP server.
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 // This allows the EM to attempt to display errors to the user without failing
 var promptService = {
   alert: function(aParent, aDialogTitle, aText) {
   },
-  
+
   alertCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState) {
   },
-  
+
   confirm: function(aParent, aDialogTitle, aText) {
   },
-  
+
   confirmCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState) {
   },
-  
+
   confirmEx: function(aParent, aDialogTitle, aText, aButtonFlags, aButton0Title, aButton1Title, aButton2Title, aCheckMsg, aCheckState) {
   },
-  
+
   prompt: function(aParent, aDialogTitle, aText, aValue, aCheckMsg, aCheckState) {
   },
-  
+
   promptUsernameAndPassword: function(aParent, aDialogTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
   },
 
   promptPassword: function(aParent, aDialogTitle, aText, aPassword, aCheckMsg, aCheckState) {
   },
-  
+
   select: function(aParent, aDialogTitle, aText, aCount, aSelectList, aOutSelection) {
   },
-  
+
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIPromptService)
      || iid.equals(Components.interfaces.nsISupports))
@@ -130,7 +130,7 @@ function run_test() {
   blocklist.copyTo(gProfD, "blocklist.xml");
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/", do_get_file("data"));
   testserver.start(4444);
 

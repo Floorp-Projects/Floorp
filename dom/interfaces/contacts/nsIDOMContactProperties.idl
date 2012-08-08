@@ -54,7 +54,7 @@ interface nsIDOMContactProperties : nsISupports
   attribute jsval         honorificSuffix;    // DOMString[]
   attribute jsval         nickname;           // DOMString[]
   attribute jsval         email;              // ContactEmail[]
-  attribute jsval         photo;              // DOMString[]
+  attribute jsval         photo;              // nsIDOMBlob[]
   attribute jsval         url;                // DOMString[]
   attribute jsval         category;           // DOMString[]
   attribute jsval         adr;                // ContactAddress[]

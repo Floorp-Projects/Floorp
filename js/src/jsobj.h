@@ -72,13 +72,13 @@ CastAsObjectJsval(StrictPropertyOp op)
  * JSNatives. To avoid widespread casting, have JS_PSG and JS_PSGS perform
  * type-safe casts.
  */
-#define JS_PSG(name,getter,flags)                                             \
-    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS,              \
-     (JSPropertyOp)getter, NULL}
-#define JS_PSGS(name,getter,setter,flags)                                     \
-    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS,              \
-     (JSPropertyOp)getter, (JSStrictPropertyOp)setter}
-#define JS_PS_END {0, 0, 0, 0, 0}
+#define JS_PSG(name,getter,flags)                                               \
+    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS,                \
+     JSOP_WRAPPER((JSPropertyOp)getter), JSOP_NULLWRAPPER}
+#define JS_PSGS(name,getter,setter,flags)                                       \
+    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS,                \
+     JSOP_WRAPPER((JSPropertyOp)getter), JSOP_WRAPPER((JSStrictPropertyOp)setter)}
+#define JS_PS_END {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
 
 /******************************************************************************/
 

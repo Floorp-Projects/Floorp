@@ -4,7 +4,10 @@
  */
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-do_load_httpd_js();
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var ADDONS = [{
   id: "test_bug449027_1@tests.mozilla.org",
@@ -372,10 +375,10 @@ var PluginHost = {
   },
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIPluginHost)
-     || iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIPluginHost)
+     || iid.equals(Ci.nsISupports))
       return this;
-  
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 }
@@ -408,8 +411,8 @@ var WindowWatcher = {
   },
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIWindowWatcher)
-     || iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIWindowWatcher)
+     || iid.equals(Ci.nsISupports))
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -423,7 +426,7 @@ var WindowWatcherFactory = {
     return WindowWatcher.QueryInterface(iid);
   }
 };
-var registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 registrar.registerFactory(Components.ID("{721c3e73-969e-474b-a6dc-059fd288c428}"),
                           "Fake Plugin Host",
                           "@mozilla.org/plugin/host;1", PluginHostFactory);
@@ -455,7 +458,7 @@ function create_addon(addon) {
   target.append("install.rdf");
   target.create(target.NORMAL_FILE_TYPE, 0644);
   var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                         .createInstance(Components.interfaces.nsIFileOutputStream);
+                         .createInstance(Ci.nsIFileOutputStream);
   stream.init(target, 0x04 | 0x08 | 0x20, 0664, 0); // write, create, truncate
   stream.write(installrdf, installrdf.length);
   stream.close();
@@ -506,7 +509,7 @@ function check_state(test, lastTest, callback) {
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
   var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Components.interfaces.nsITimerCallback);
+                            .getService(Ci.nsITimerCallback);
   blocklist.notify(null);
 }
 
@@ -521,7 +524,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupManager();
 
-  gTestserver = new nsHttpServer();
+  gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
   gTestserver.start(4444);
 

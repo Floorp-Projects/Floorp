@@ -128,6 +128,7 @@ $(check-export-targets): $(check-export-targets-preqs)
 ##{ <CHECK: xpidl.mk>
 check-xpidl-preqs=\
   $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/config.mk \
   $(topsrcdir)/config/makefiles/makeutils.mk \
   $(topsrcdir)/config/makefiles/xpidl.mk \
   $(srcdir)/check-xpidl.mk \

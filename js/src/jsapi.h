@@ -2869,7 +2869,7 @@ ToUint64(JSContext *cx, const js::Value &v, uint64_t *out)
     }
 
     if (v.isInt32()) {
-        // Account for sign extension of negatives into the longer 64bit space.
+        /* Account for sign extension of negatives into the longer 64bit space. */
         *out = uint64_t(int64_t(v.toInt32()));
         return true;
     }
@@ -3222,14 +3222,13 @@ JS_StringToVersion(const char *string);
                                                    strict mode for all code
                                                    without requiring
                                                    "use strict" annotations. */
-/* JS_BIT(20) is taken in jsfriendapi.h! */
 
-#define JSOPTION_ION            JS_BIT(21)      /* IonMonkey */
+#define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(22) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)
@@ -4339,22 +4338,54 @@ struct JSConstDoubleSpec {
     uint8_t         spare[3];
 };
 
+typedef struct JSJitInfo JSJitInfo;
+
+/*
+ * Wrappers to replace {Strict,}PropertyOp for JSPropertySpecs. This will allow
+ * us to pass one JSJitInfo per function with the property spec, without
+ * additional field overhead.
+ */
+typedef struct JSStrictPropertyOpWrapper {
+    JSStrictPropertyOp  op;
+    const JSJitInfo     *info;
+} JSStrictPropertyOpWrapper;
+
+typedef struct JSPropertyOpWrapper {
+    JSPropertyOp        op;
+    const JSJitInfo     *info;
+} JSPropertyOpWrapper;
+
+/*
+ * Wrapper to do as above, but for JSNatives for JSFunctionSpecs.
+ */
+typedef struct JSNativeWrapper {
+    JSNative        op;
+    const JSJitInfo *info;
+} JSNativeWrapper;
+
+/*
+ * Macro static initializers which make it easy to pass no JSJitInfo as part of a
+ * JSPropertySpec or JSFunctionSpec.
+ */
+#define JSOP_WRAPPER(op) {op, NULL}
+#define JSOP_NULLWRAPPER JSOP_WRAPPER(NULL)
+
 /*
  * To define an array element rather than a named property member, cast the
  * element's index to (const char *) and initialize name with it, and set the
  * JSPROP_INDEX bit in flags.
  */
 struct JSPropertySpec {
-    const char            *name;
-    int8_t                tinyid;
-    uint8_t               flags;
-    JSPropertyOp          getter;
-    JSStrictPropertyOp    setter;
+    const char                  *name;
+    int8_t                      tinyid;
+    uint8_t                     flags;
+    JSPropertyOpWrapper         getter;
+    JSStrictPropertyOpWrapper   setter;
 };
 
 struct JSFunctionSpec {
     const char      *name;
-    JSNative        call;
+    JSNativeWrapper call;
     uint16_t        nargs;
     uint16_t        flags;
 };
@@ -4368,12 +4399,14 @@ struct JSFunctionSpec {
 /*
  * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name
  * pays homage to the old JSNative/JSFastNative split) simply adds the flag
- * JSFUN_STUB_GSOPS.
+ * JSFUN_STUB_GSOPS. JS_FNINFO allows the simple adding of JSJitInfos.
  */
 #define JS_FS(name,call,nargs,flags)                                          \
-    {name, call, nargs, flags}
+    {name, JSOP_WRAPPER(call), nargs, flags}
 #define JS_FN(name,call,nargs,flags)                                          \
-    {name, call, nargs, (flags) | JSFUN_STUB_GSOPS}
+    {name, JSOP_WRAPPER(call), nargs, (flags) | JSFUN_STUB_GSOPS}
+#define JS_FNINFO(name,call,info,nargs,flags)                                 \
+    {name,{call,info},nargs,flags}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
@@ -5084,6 +5117,11 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool compileAndGo;
     bool noScriptRval;
     bool allowIntrinsicsCalls;
+    enum SourcePolicy {
+        NO_SOURCE,
+        LAZY_SOURCE,
+        SAVE_SOURCE
+    } sourcePolicy;
 
     CompileOptions(JSContext *cx);
     CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
@@ -5096,6 +5134,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setAllowIntrinsicsCalls(bool aic) { allowIntrinsicsCalls = aic; return *this; }
+    CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 
 extern JS_PUBLIC_API(JSScript *)

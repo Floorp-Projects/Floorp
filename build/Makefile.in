@@ -36,7 +36,7 @@ TEST_DIRS += mobile/sutagent/android \
 endif
 
 ifdef MOZ_APP_BASENAME
-DIST_FILES = application.ini
+DIST_FILES = $(srcdir)/application.ini
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_UPDATER
@@ -132,12 +132,10 @@ leaktest.py: leaktest.py.in
 GARBAGE += leaktest.py
 
 ifdef MOZ_APP_BASENAME
-application.ini: application.ini.in $(APP_INI_DEPS)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
-GARBAGE += application.ini
+$(FINAL_TARGET)/application.ini: $(APP_INI_DEPS)
 
 ifdef MOZ_APP_STATIC_INI
-application.ini.h: appini_header.py application.ini 
+application.ini.h: appini_header.py $(FINAL_TARGET)/application.ini
 	$(PYTHON) $^ > $@
 export:: application.ini.h
 GARBAGE += application.ini.h

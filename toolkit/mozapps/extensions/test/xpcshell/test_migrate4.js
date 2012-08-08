@@ -91,7 +91,7 @@ var defaultTheme = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 let oldSyncGUIDs = {};
@@ -100,7 +100,7 @@ function prepare_profile() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Create and configure the HTTP server.
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);

@@ -193,6 +193,8 @@ MOCHITEST_FILES +=	\
 		test_flexbox_align_self_auto.html \
 		test_flexbox_flex_grow_and_shrink.html \
 		test_flexbox_flex_shorthand.html \
+		test_flexbox_layout.html \
+		flexbox_layout_testcases.js \
 		$(NULL)
 endif
 

@@ -210,9 +210,9 @@ JSClass Blob::sClass = {
 };
 
 JSPropertySpec Blob::sProperties[] = {
-  { "size", 0, PROPERTY_FLAGS, GetSize, js_GetterOnlyPropertyStub },
-  { "type", 0, PROPERTY_FLAGS, GetType, js_GetterOnlyPropertyStub },
-  { 0, 0, 0, NULL, NULL }
+  { "size", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetSize), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { "type", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetType), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 JSFunctionSpec Blob::sFunctions[] = {
@@ -360,10 +360,11 @@ JSClass File::sClass = {
 };
 
 JSPropertySpec File::sProperties[] = {
-  { "name", 0, PROPERTY_FLAGS, GetName, js_GetterOnlyPropertyStub },
-  { "mozFullPath", 0, PROPERTY_FLAGS, GetMozFullPath,
-    js_GetterOnlyPropertyStub },
-  { 0, 0, 0, NULL, NULL }
+  { "name", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetName),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { "mozFullPath", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetMozFullPath),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 nsIDOMBlob*

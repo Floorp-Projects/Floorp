@@ -3554,6 +3554,53 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
   }
 }
 
+void
+nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
+                                     gfxContext* aGfxContext,
+                                     const gfxRect& aDirtyRect,
+                                     const nscolor aColor,
+                                     const gfxPoint& aPt,
+                                     const gfxFloat aXInFrame,
+                                     const gfxSize& aLineSize,
+                                     const gfxFloat aAscent,
+                                     const gfxFloat aOffset,
+                                     const PRUint8 aDecoration,
+                                     const PRUint8 aStyle,
+                                     const gfxFloat aDescentLimit)
+{
+  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
+
+  aGfxContext->NewPath();
+
+  gfxRect rect =
+    GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
+                                  aDecoration, aStyle, aDescentLimit);
+  if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
+    return;
+  }
+
+  if (aDecoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+    NS_ERROR("Invalid decoration value!");
+    return;
+  }
+
+  if (aStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+    // For the moment, we support only solid text decorations.
+    return;
+  }
+
+  gfxFloat lineHeight = NS_MAX(NS_round(aLineSize.height), 1.0);
+
+  // The y position should be set to the middle of the line.
+  rect.y += lineHeight / 2;
+
+  aGfxContext->Rectangle
+    (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineHeight / 2)),
+             gfxSize(rect.Width(), lineHeight)));
+}
+
 nsRect
 nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
                                       const gfxSize& aLineSize,
