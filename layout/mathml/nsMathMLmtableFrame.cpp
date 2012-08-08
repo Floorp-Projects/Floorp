@@ -9,6 +9,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsTableRowFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsRenderingContext.h"
 
@@ -511,8 +512,7 @@ nsIFrame*
 nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
                                         int32_t         aRowIndex)
 {
-  int32_t rowCount, colCount;
-  GetTableSize(rowCount, colCount);
+  int32_t rowCount = GetRowCount();
 
   // Negative indices mean to find upwards from the end.
   if (aRowIndex < 0) {

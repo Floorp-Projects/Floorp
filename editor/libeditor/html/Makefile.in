@@ -60,3 +60,9 @@ INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
                    -I$(topsrcdir)/content/base/src \
                    -I$(topsrcdir)/layout/style \
                    $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/layout/generic \
+  -I$(topsrcdir)/layout/tables \
+  -I$(topsrcdir)/layout/xul/base/src \
+  $(null)
