@@ -1691,7 +1691,7 @@ OpenDatabaseHelper::DoDatabaseWork()
   NS_ENSURE_TRUE(mFileManager, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (!mFileManager->Inited()) {
-    rv = mFileManager->Init(fileManagerDirectory, connection);
+    rv = mFileManager->Init(fileManagerDirectory, connection, mPrivilege);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
