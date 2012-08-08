@@ -1827,6 +1827,7 @@ class MTypeOf
       : MUnaryInstruction(def), inputType_(inputType)
     {
         setResultType(MIRType_String);
+        setMovable();
     }
 
   public:
@@ -2131,6 +2132,7 @@ class MAbs
     {
         JS_ASSERT(type == MIRType_Double || type == MIRType_Int32);
         setResultType(type);
+        setMovable();
         specialization_ = type;
     }
 
@@ -2174,6 +2176,7 @@ class MSqrt
       : MUnaryInstruction(num)
     {
         setResultType(MIRType_Double);
+        setMovable();
     }
 
   public:
