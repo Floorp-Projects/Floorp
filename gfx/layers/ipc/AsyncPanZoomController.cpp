@@ -54,7 +54,8 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mState(NOTHING),
      mDPI(72),
      mContentPainterStatus(CONTENT_IDLE),
-     mMayHaveTouchListeners(false)
+     mMayHaveTouchListeners(false),
+     mDisableNextTouchBatch(false)
 {
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
@@ -223,6 +224,10 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent) {
+  if (mDisableNextTouchBatch) {
+    return nsEventStatus_eIgnore;
+  }
+
   switch (mState) {
     case FLING:
     case NOTHING:
@@ -254,6 +259,11 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) {
+  if (mDisableNextTouchBatch) {
+    mDisableNextTouchBatch = false;
+    return nsEventStatus_eIgnore;
+  }
+
   switch (mState) {
   case FLING:
     // Should never happen.
@@ -809,6 +819,10 @@ void AsyncPanZoomController::UpdateViewportSize(int aWidth, int aHeight) {
 
 void AsyncPanZoomController::NotifyDOMTouchListenerAdded() {
   mMayHaveTouchListeners = true;
+}
+
+void AsyncPanZoomController::CancelDefaultPanZoom() {
+  mDisableNextTouchBatch = true;
 }
 
 }
