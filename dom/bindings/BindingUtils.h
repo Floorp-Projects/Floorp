@@ -287,6 +287,8 @@ struct Prefable {
  *             object of constructorClass, unless that's also null, in which
  *             case we should not create an interface object at all.
  * ctorNargs is the length of the constructor function; 0 if no constructor
+ * instanceClass is the JSClass of instance objects for this class.  This can
+ *               be null if this is not a concrete proto.
  * methods and properties are to be defined on the interface prototype object;
  *                        these arguments are allowed to be null if there are no
  *                        methods or properties respectively.
@@ -307,7 +309,8 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, Prefable<JSFunctionSpec>* methods,
+                       unsigned ctorNargs, JSClass* instanceClass,
+                       Prefable<JSFunctionSpec>* methods,
                        Prefable<JSPropertySpec>* properties,
                        Prefable<ConstantSpec>* constants,
                        Prefable<JSFunctionSpec>* staticMethods, const char* name);
@@ -551,6 +554,12 @@ GetParentPointer(const ParentObject& aObject)
 {
   return ToSupports(aObject.mObject);
 }
+
+// Can only be called with the immediate prototype of the instance object. Can
+// only be called on the prototype of an object known to be a DOM instance.
+JSBool
+InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID,
+                             uint32_t depth);
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
 // doubt use true. Setting it to false disables security wrappers.

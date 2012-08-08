@@ -736,6 +736,21 @@ SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback);
 extern JS_FRIEND_API(bool)
 WasIncrementalGC(JSRuntime *rt);
 
+typedef JSBool
+(* DOMInstanceClassMatchesProto)(JSHandleObject protoObject, uint32_t protoID,
+                                 uint32_t depth);
+
+struct JSDOMCallbacks {
+    DOMInstanceClassMatchesProto instanceClassMatchesProto;
+};
+typedef struct JSDOMCallbacks DOMCallbacks;
+
+extern JS_FRIEND_API(void)
+SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks);
+
+extern JS_FRIEND_API(const DOMCallbacks *)
+GetDOMCallbacks(JSRuntime *rt);
+
 /*
  * Signals a good place to do an incremental slice, because the browser is
  * drawing a frame.

@@ -138,7 +138,8 @@ class CGPrototypeJSClass(CGThing):
     def define(self):
         return """
 static JSClass PrototypeClass = {
-  "%sPrototype", 0,
+  "%sPrototype",
+  JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub,       /* addProperty */
   JS_PropertyStub,       /* delProperty */
   JS_PropertyStub,       /* getProperty */
@@ -1125,12 +1126,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         call = CGGeneric(("return dom::CreateInterfaceObjects(aCx, aGlobal, aReceiver, parentProto,\n"
                           "                                   %s, %s, %s, %d,\n"
+                          "                                   %s,\n"
                           "                                   %%(methods)s, %%(attrs)s, %%(consts)s, %%(staticMethods)s,\n"
                           "                                   %s);") % (
             "&PrototypeClass" if needInterfacePrototypeObject else "NULL",
             "&InterfaceObjectClass" if needInterfaceObjectClass else "NULL",
             constructHook if needConstructor else "NULL",
             constructArgs,
+            "&Class.mBase" if self.descriptor.concrete else "NULL",
             '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "NULL"))
 
         if self.properties.hasChromeOnly():

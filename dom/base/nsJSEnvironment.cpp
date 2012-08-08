@@ -3958,7 +3958,6 @@ SourceHook(JSContext *cx, JSScript *script, jschar **src, uint32_t *length)
   return true;
 }
 
-
 //static
 nsresult
 nsJSRuntime::Init()
@@ -4011,6 +4010,11 @@ nsJSRuntime::Init()
     NS_DOMStructuredCloneError
   };
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
+
+  static js::DOMCallbacks DOMcallbacks = {
+    InstanceClassHasProtoAtDepth
+  };
+  SetDOMCallbacks(sRuntime, &DOMcallbacks);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallback(MaxScriptRunTimePrefChangedCallback,
