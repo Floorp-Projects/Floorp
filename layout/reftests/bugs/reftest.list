@@ -1711,3 +1711,11 @@ needs-focus == 731726-1.html 731726-1-ref.html
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,19) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
+== 776265-1a.html 776265-1-ref.html
+== 776265-1b.html 776265-1-ref.html
+== 776265-1c.html 776265-1-ref.html
+== 776265-1d.html 776265-1-ref.html
+== 776265-2a.html 776265-2-ref.html
+== 776265-2b.html 776265-2-ref.html
+== 776265-2c.html 776265-2-ref.html
+== 776265-2d.html 776265-2-ref.html
