@@ -474,7 +474,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
         return;
 
     report->filename = iter.script()->filename;
-    report->lineno = PCToLineNumber(iter.script(), iter.pc());
+    report->lineno = PCToLineNumber(iter.script(), iter.pc(), &report->column);
     report->originPrincipals = iter.script()->originPrincipals;
 }
 
