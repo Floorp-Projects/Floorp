@@ -5,7 +5,7 @@
 #ifndef NSFRAMEITERATOR_H
 #define NSFRAMEITERATOR_H
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 class nsPresContext;
 class nsIFrame;

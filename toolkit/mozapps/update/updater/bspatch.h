@@ -32,8 +32,7 @@
 #ifndef bspatch_h__
 #define bspatch_h__
 
-// We use the NSPR types, but we don't link with NSPR
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 #include <stdio.h>
 
 typedef struct MBSPatchHeader_ {

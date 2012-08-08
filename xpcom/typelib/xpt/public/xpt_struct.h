@@ -12,6 +12,7 @@
 #define __xpt_struct_h__
 
 #include "xpt_arena.h"
+#include "mozilla/StandardInteger.h"
 
 PR_BEGIN_EXTERN_C
 

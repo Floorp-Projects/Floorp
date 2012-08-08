@@ -12,6 +12,7 @@
  */
 
 #include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 /*
  * Define BITS_IN_JSAMPLE as either
