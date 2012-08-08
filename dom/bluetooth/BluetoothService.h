@@ -192,6 +192,19 @@ public:
                                   const nsAString& aPattern,
                                   int aAttributeId) = 0;
 
+  /**
+   * Due to the fact that some operations require multiple calls, a
+   * CommandThread is created that can run blocking, platform-specific calls
+   * where either no asynchronous equivilent exists, or else where multiple
+   * asynchronous calls would require excessive runnable bouncing between main
+   * thread and IO thread.
+   *
+   * For instance, when we retrieve an Adapter object, we would like it to come
+   * with all of its properties filled in and registered as an agent, which
+   * requires a minimum of 3 calls to platform specific code on some platforms.
+   *
+   */
+  nsCOMPtr<nsIThread> mBluetoothCommandThread;
 protected:
   BluetoothService()
   {
