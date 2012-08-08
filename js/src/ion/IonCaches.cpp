@@ -329,6 +329,10 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Mu
 
         topScript->invalidatedIdempotentCache = true;
 
+        // Do not re-invalidate if the lookup already caused invalidation.
+        if (!topScript->hasIonScript())
+            return true;
+
         return Invalidate(cx, topScript);
     }
 
