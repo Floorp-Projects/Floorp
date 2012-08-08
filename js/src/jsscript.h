@@ -1180,10 +1180,11 @@ js_GetScriptLineExtent(JSScript *script);
 namespace js {
 
 extern unsigned
-PCToLineNumber(JSScript *script, jsbytecode *pc);
+PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp = NULL);
 
 extern unsigned
-PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc);
+PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc,
+               unsigned *columnp = NULL);
 
 extern unsigned
 CurrentLine(JSContext *cx);

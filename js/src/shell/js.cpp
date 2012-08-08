@@ -1583,6 +1583,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
            "ofs", "line", "pc", "delta", "desc", "args");
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
     unsigned offset = 0;
+    unsigned colspan = 0;
     unsigned lineno = script->lineno;
     jssrcnote *notes = script->notes();
     unsigned switchTableEnd = 0, switchTableStart = 0;
@@ -1598,6 +1599,12 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
+          case SRC_COLSPAN:
+            colspan = js_GetSrcNoteOffset(sn, 0);
+            if (colspan >= SN_COLSPAN_DOMAIN / 2)
+                colspan -= SN_COLSPAN_DOMAIN;
+            Sprint(sp, "%d", colspan);
+            break;
           case SRC_SETLINE:
             lineno = js_GetSrcNoteOffset(sn, 0);
             Sprint(sp, " lineno %u", lineno);
@@ -4290,7 +4297,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
         prefix = JS_smprintf("%s:", report->filename);
     if (report->lineno) {
         tmp = prefix;
-        prefix = JS_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
+        prefix = JS_smprintf("%s%u:%u ", tmp ? tmp : "", report->lineno, report->column);
         JS_free(cx, tmp);
     }
     if (JSREPORT_IS_WARNING(report->flags)) {
