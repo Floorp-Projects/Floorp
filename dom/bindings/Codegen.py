@@ -956,12 +956,7 @@ class AttrDefiner(PropertyDefiner):
             return ""
 
         def flags(attr):
-            flags = "JSPROP_SHARED | JSPROP_ENUMERATE"
-            if generateNativeAccessors:
-                flags = "JSPROP_NATIVE_ACCESSORS | " + flags
-            elif attr.readonly:
-                return "JSPROP_READONLY | " + flags
-            return flags
+            return "JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS"
 
         def getter(attr):
             return ("{(JSPropertyOp)get_%(name)s, &%(name)s_getterinfo}" 
@@ -3156,39 +3151,15 @@ class CGMethodCall(CGThing):
     def define(self):
         return self.cgRoot.define()
 
-class CGGetterSetterCall(CGPerSignatureCall):
-    """
-    A class to generate a native object getter or setter call for a
-    particular IDL getter or setter.
-    """
-    def __init__(self, returnType, arguments, nativeMethodName, descriptor,
-                 attr, getter=False, setter=False):
-        assert bool(getter) != bool(setter)
-        CGPerSignatureCall.__init__(self, returnType, [], arguments,
-                                    nativeMethodName, False, descriptor, attr,
-                                    getter=getter, setter=setter)
-    def getArgv(self):
-        if generateNativeAccessors:
-            return CGPerSignatureCall.getArgv(self)
-        return "vp"
-
-class CGGetterCall(CGGetterSetterCall):
+class CGGetterCall(CGPerSignatureCall):
     """
     A class to generate a native object getter call for a particular IDL
     getter.
     """
     def __init__(self, returnType, nativeMethodName, descriptor, attr):
-        CGGetterSetterCall.__init__(self, returnType, [], nativeMethodName,
-                                    descriptor, attr, getter=True)
-    def getArgc(self):
-        if generateNativeAccessors:
-            return CGGetterSetterCall.getArgc()
-        return "0"
-    def getArgvDecl(self):
-        if generateNativeAccessors:
-            return CGPerSignatureCall.getArgvDecl(self)
-        # We just get our stuff from vp
-        return ""
+        CGPerSignatureCall.__init__(self, returnType, [], [],
+                                    nativeMethodName, False, descriptor,
+                                    attr, getter=True)
 
 class FakeArgument():
     def __init__(self, type):
@@ -3197,14 +3168,14 @@ class FakeArgument():
         self.variadic = False
         self.defaultValue = None
 
-class CGSetterCall(CGGetterSetterCall):
+class CGSetterCall(CGPerSignatureCall):
     """
     A class to generate a native object setter call for a particular IDL
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGGetterSetterCall.__init__(self, None, [FakeArgument(argType)],
-                                    nativeMethodName, descriptor, attr,
+        CGPerSignatureCall.__init__(self, None, [], [FakeArgument(argType)],
+                                    nativeMethodName, False, descriptor, attr,
                                     setter=True)
     def wrap_return_value(self):
         # We have no return value
@@ -3302,19 +3273,9 @@ class CGNativeGetter(CGAbstractBindingMethod):
     def __init__(self, descriptor, attr):
         self.attr = attr
         name = 'get_' + attr.identifier.name
-        if generateNativeAccessors:
-            args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
-                    Argument('JS::Value*', 'vp')]
-        else:
-            args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                    Argument('JSHandleId', 'id'), Argument('JS::Value*', 'vp')]
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
         CGAbstractBindingMethod.__init__(self, descriptor, name, args)
-
-    def getThis(self):
-        if generateNativeAccessors:
-            return CGAbstractBindingMethod.getThis(self)
-        return CGIndenter(
-            CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -3349,40 +3310,22 @@ class CGNativeSetter(CGAbstractBindingMethod):
         self.attr = attr
         baseName = attr.identifier.name
         name = 'set_' + attr.identifier.name
-        if generateNativeAccessors:
-            args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
-                    Argument('JS::Value*', 'vp')]
-        else:
-            args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                    Argument('JSHandleId', 'id'), Argument('JSBool', 'strict'),
-                    Argument('JS::Value*', 'vp')]
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
         CGAbstractBindingMethod.__init__(self, descriptor, name, args)
 
-    def getThis(self):
-        if generateNativeAccessors:
-            return CGAbstractBindingMethod.getThis(self)
-        return CGIndenter(
-            CGGeneric("%s* self;" % self.descriptor.nativeType))
-
     def generate_code(self):
-        if generateNativeAccessors:
-            argv = ("JS::Value* argv = JS_ARGV(cx, vp);\n"
-                    "jsval undef = JS::UndefinedValue();\n"
-                    "if (argc == 0) {\n"
-                    "  argv = &undef;\n"
-                    "}\n")
-            retval = "*vp = JSVAL_VOID;\n"
-        else:
-            argv = "JS::Value* argv = vp;\n"
-            retval = ""
-
         return CGIndenter(CGGeneric(
-                argv +
-                ("if (!specialized_set_%s(cx, obj, self, argv)) {\n"
+                ("JS::Value* argv = JS_ARGV(cx, vp);\n"
+                 "JS::Value undef = JS::UndefinedValue();\n"
+                 "if (argc == 0) {\n"
+                 "  argv = &undef;\n"
+                 "}\n"
+                 "if (!specialized_set_%s(cx, obj, self, argv)) {\n"
                  "  return false;\n"
                  "}\n" % self.attr.identifier.name) +
-                retval +
-                "return true;"))
+                 "*vp = JSVAL_VOID;\n"
+                 "return true;"))
 
 class CGSpecializedSetter(CGAbstractStaticMethod):
     """
@@ -3394,13 +3337,8 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         name = 'specialized_set_' + attr.identifier.name
         args = [ Argument('JSContext*', 'cx'),
                  Argument('JSHandleObject', 'obj'),
-                 Argument('%s*' % descriptor.nativeType, 'self') ]
-        # Our last argument is named differently depending on whether we're
-        # in the native accessors case or not
-        if generateNativeAccessors:
-            args.append(Argument('JS::Value*', 'argv'))
-        else:
-            args.append(Argument('JS::Value*', 'vp'))
+                 Argument('%s*' % descriptor.nativeType, 'self'),
+                 Argument('JS::Value*', 'argv')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
