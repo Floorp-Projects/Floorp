@@ -15,7 +15,6 @@
 #include "nsINavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
 #include "nsIDOMNavigatorNetwork.h"
-#include "nsIDOMNavigatorTime.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
 #include "DeviceStorage.h"
@@ -70,10 +69,6 @@ namespace power {
 class PowerManager;
 } // namespace power
 
-namespace time {
-class TimeManager;
-} // namespace time
-
 class Navigator : public nsIDOMNavigator
                 , public nsIDOMClientInformation
                 , public nsIDOMNavigatorDeviceStorage
@@ -93,7 +88,6 @@ class Navigator : public nsIDOMNavigator
 #endif
                 , public nsIDOMNavigatorCamera
                 , public nsIDOMNavigatorSystemMessages
-                , public nsIDOMMozNavigatorTime
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -119,7 +113,6 @@ public:
   NS_DECL_NSIDOMNAVIGATORBLUETOOTH
 #endif
   NS_DECL_NSIDOMNAVIGATORSYSTEMMESSAGES
-  NS_DECL_NSIDOMMOZNAVIGATORTIME
 
   static void Init();
 
@@ -151,7 +144,6 @@ public:
 private:
   bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
-  bool CheckPermission(const char* aPref);
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
@@ -172,7 +164,6 @@ private:
   nsRefPtr<nsDOMCameraManager> mCameraManager;
   nsCOMPtr<nsIDOMNavigatorSystemMessages> mMessagesManager;
   nsTArray<nsRefPtr<nsDOMDeviceStorage> > mDeviceStorageStores;
-  nsRefPtr<time::TimeManager> mTimeManager;
   nsWeakPtr mWindow;
 };
 

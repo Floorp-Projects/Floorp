@@ -19,7 +19,6 @@ DOM_SRCDIRS = \
   dom/src/geolocation \
   dom/src/notification \
   dom/workers \
-  dom/time \
   content/xbl/src \
   content/xul/document/src \
   content/events/src \

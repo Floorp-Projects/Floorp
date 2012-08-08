@@ -61,7 +61,6 @@ DIRS += \
   sms \
   mms \
   src \
-  time \
   locales \
   network \
   plugins/base \
