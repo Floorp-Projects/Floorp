@@ -92,7 +92,7 @@ abstract public class AwesomeBarTab {
     protected String getReaderForUrl(String url) {
         // FIXME: still need to define the final way to open items from
         // reading list. For now, we're using an about:reader page.
-        return "about:reader?url=" + Uri.encode(url);
+        return "about:reader?url=" + Uri.encode(url) + "&readingList=1";
     }
 
     protected void updateFavicon(ImageView faviconView, Cursor cursor) {

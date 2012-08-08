@@ -13,6 +13,7 @@ import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.LayerController;
 
 import org.json.JSONObject;
 
@@ -83,15 +83,15 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         mLeft = mLeft + newX - mTouchStartX;
         mTop = mTop + newY - mTouchStartY;
 
-        LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        if (layerController == null) {
-            Log.e(LOGTAG, "Can't move selection because layerController is null");
+        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
+        if (layerClient == null) {
+            Log.e(LOGTAG, "Can't move selection because layerClient is null");
             return;
         }
         // Send x coordinate on the right side of the start handle, left side of the end handle.
         float left = (float) mLeft + (mHandleType.equals(HandleType.START) ? mWidth - mShadow : mShadow);
         PointF geckoPoint = new PointF(left, (float) mTop);
-        geckoPoint = layerController.convertViewPointToLayerPoint(geckoPoint);
+        geckoPoint = layerClient.convertViewPointToLayerPoint(geckoPoint);
 
         JSONObject args = new JSONObject();
         try {
@@ -107,14 +107,14 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     }
 
     void positionFromGecko(int left, int top) {
-        LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        if (layerController == null) {
-            Log.e(LOGTAG, "Can't position handle because layerController is null");
+        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
+        if (layerClient == null) {
+            Log.e(LOGTAG, "Can't position handle because layerClient is null");
             return;
         }
 
         mGeckoPoint = new PointF((float) left, (float) top);
-        ImmutableViewportMetrics metrics = layerController.getViewportMetrics();
+        ImmutableViewportMetrics metrics = layerClient.getViewportMetrics();
         repositionWithViewport(metrics.viewportRectLeft, metrics.viewportRectTop, metrics.zoomFactor);
     }
 

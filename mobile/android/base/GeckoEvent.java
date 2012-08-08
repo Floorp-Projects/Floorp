@@ -227,7 +227,7 @@ public class GeckoEvent {
     public void addMotionPoint(int index, int eventIndex, MotionEvent event) {
         try {
             PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
-            geckoPoint = GeckoApp.mAppContext.getLayerController().convertViewPointToLayerPoint(geckoPoint);
+            geckoPoint = GeckoApp.mAppContext.getLayerClient().convertViewPointToLayerPoint(geckoPoint);
     
             mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
             mPointIndicies[index] = event.getPointerId(eventIndex);

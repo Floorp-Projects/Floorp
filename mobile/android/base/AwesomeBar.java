@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import android.app.Activity;
@@ -58,6 +59,7 @@ public class AwesomeBar extends GeckoActivity {
     static final String TARGET_KEY = "target";
     static final String SEARCH_KEY = "search";
     static final String USER_ENTERED_KEY = "user_entered";
+    static final String READING_LIST_KEY = "reading_list";
     static enum Target { NEW_TAB, CURRENT_TAB };
 
     private String mTarget;
@@ -233,6 +235,13 @@ public class AwesomeBar extends GeckoActivity {
                 }
             }
         });
+
+        boolean showReadingList = intent.getBooleanExtra(READING_LIST_KEY, false);
+        if (showReadingList) {
+            BookmarksTab bookmarksTab = mAwesomeTabs.getBookmarksTab();
+            bookmarksTab.setShowReadingList(true);
+            mAwesomeTabs.setCurrentTabByTag(bookmarksTab.getTag());
+        }
     }
 
     @Override

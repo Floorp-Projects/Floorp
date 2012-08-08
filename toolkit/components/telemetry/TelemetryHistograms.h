@@ -208,6 +208,7 @@ HISTOGRAM(HTTP_DISK_CACHE_OVERHEAD, 1, 32000000, 100, EXPONENTIAL, "HTTP Disk ca
 HISTOGRAM(CACHE_LM_INCONSISTENT, 0, 1, 2, BOOLEAN,  "Cache discovered inconsistent last-modified entry")
 HISTOGRAM(CACHE_SERVICE_LOCK_WAIT, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock (ms)")
 HISTOGRAM(CACHE_SERVICE_LOCK_WAIT_MAINTHREAD, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock on the main thread (ms)")
+HISTOGRAM(DISK_CACHE_SMART_SIZE_USING_OLD_MAX, 0, 1, 2, BOOLEAN, "Whether we are using the old default cache smart size")
 
 #define CACHE_LOCK_HISTOGRAM(x) \
   HISTOGRAM(CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_##x, 1, 10 * 1000, 50, EXPONENTIAL, "Time spent waiting on the cache service lock (ms) on the main thread in " #x)

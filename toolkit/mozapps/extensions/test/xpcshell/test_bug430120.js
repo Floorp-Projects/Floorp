@@ -13,7 +13,7 @@ const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const CATEGORY_UPDATE_TIMER           = "update-timer";
 
 // Get the HTTP server.
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 var gOSVersion;
 var gBlocklist;
@@ -103,7 +103,7 @@ function run_test() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  testserver = new nsHttpServer();
+  testserver = new HttpServer();
   testserver.registerPathHandler("/1", failHandler);
   testserver.registerPathHandler("/2", pathHandler);
   testserver.start(4444);

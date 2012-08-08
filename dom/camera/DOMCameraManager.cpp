@@ -7,7 +7,7 @@
 #include "nsDOMClassInfo.h"
 #include "DictionaryHelpers.h"
 
-#define DOM_CAMERA_LOG_LEVEL  3
+#define DOM_CAMERA_LOG_LEVEL  DOM_CAMERA_LOG_NOTHING
 #include "CameraCommon.h"
 
 using namespace mozilla;

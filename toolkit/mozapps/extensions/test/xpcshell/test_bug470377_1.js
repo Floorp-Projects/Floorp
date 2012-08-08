@@ -15,14 +15,14 @@ var ADDONS = [
   "test_bug470377_5",
 ];
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var server;
 
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
-  server = new nsHttpServer();
+  server = new HttpServer();
   server.registerDirectory("/", do_get_file("data/test_bug470377"));
   server.start(4444);
 

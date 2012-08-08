@@ -1306,7 +1306,7 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
 
   // The list of cells we will change rowspan in
   //  and the new rowspan values for each
-  nsTArray<nsIDOMElement*> spanCellList;
+  nsTArray<nsCOMPtr<nsIDOMElement> > spanCellList;
   nsTArray<PRInt32> newSpanList;
 
   // Scan through cells in row to do rowspan adjustments
@@ -2144,7 +2144,7 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     }
   
     // The list of cells we will delete after joining
-    nsTArray<nsIDOMElement*> deleteList;
+    nsTArray<nsCOMPtr<nsIDOMElement> > deleteList;
 
     // 2nd pass: Do the joining and merging
     for (rowIndex = 0; rowIndex < rowCount; rowIndex++)

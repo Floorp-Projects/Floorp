@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>dir() selector</title>
+  <style>
+   :not(:dir(rtl)) + div { color: blue }
+   div { color: lime; text-align: left; }
+  </style>
+  <script type="text/javascript">
+function switchDir()
+{
+    theDiv = document.getElementById("d");
+    if (theDiv.dir == "ltr") {
+        theDiv.dir = "rtl";
+    } else if (theDiv.dir == "rtl") {
+        theDiv.dir = "ltr";
+    }
+}
+  </script>
+ </head>
+ <body onload="switchDir()">
+  <div id="d" dir="ltr">This element is rtl.</div>
+  <div>This element has default direction.</div>
+ </body>
+</html>

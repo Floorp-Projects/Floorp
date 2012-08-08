@@ -85,6 +85,7 @@ MobileConnectionInfo.prototype = {
   // nsIDOMMozMobileConnectionInfo
 
   connected: false,
+  state: null,
   emergencyCallsOnly: false,
   roaming: false,
   network: null,

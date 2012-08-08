@@ -7,8 +7,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.util;
 
 public interface GeckoEventResponder extends GeckoEventListener {
-    public String getResponse();
+    String getResponse();
 }

@@ -10,6 +10,7 @@
 #include "mozilla/dom/FragmentOrElement.h" // for base class
 #include "nsChangeHint.h"                  // for enum
 #include "nsEventStates.h"                 // for member
+#include "mozilla/dom/DirectionalityUtils.h"
 
 class nsEventStateManager;
 class nsFocusManager;
@@ -215,6 +216,18 @@ public:
    * "class" attribute for this type of content node.
    */
   virtual nsIAtom *GetClassAttributeName() const = 0;
+
+  inline mozilla::directionality::Directionality GetDirectionality() const {
+    if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
+      return mozilla::directionality::eDir_RTL;
+    }
+
+    if (HasFlag(NODE_HAS_DIRECTION_LTR)) {
+      return mozilla::directionality::eDir_LTR;
+    }
+
+    return mozilla::directionality::eDir_NotSet;
+  }
 
 protected:
   /**

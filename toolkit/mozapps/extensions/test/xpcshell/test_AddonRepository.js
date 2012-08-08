@@ -6,7 +6,7 @@
 
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer;
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
@@ -364,7 +364,7 @@ function run_test() {
   installAllFiles([do_get_addon("test_AddonRepository_1")], function() {
     restartManager();
 
-    gServer = new nsHttpServer();
+    gServer = new HttpServer();
 
     // Register other add-on XPI files
     gServer.registerFile(INSTALL_URL2,
