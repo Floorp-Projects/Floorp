@@ -97,8 +97,7 @@ static const char* const sEventNames[] = {
   "deviceorientation",
   "deviceproximity",
   "userproximity",
-  "devicelight",
-  "moztimechange"
+  "devicelight"
 };
 
 static char *sPopupAllowedEvents;

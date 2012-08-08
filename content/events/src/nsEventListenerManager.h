@@ -261,9 +261,6 @@ protected:
   void EnableDevice(PRUint32 aType);
   void DisableDevice(PRUint32 aType);
 
-  void EnableTimeChangeNotifications();
-  void DisableTimeChangeNotifications();
-
 public:
   /**
    * Set the "inline" event listener for aEventName to |v|.  This
