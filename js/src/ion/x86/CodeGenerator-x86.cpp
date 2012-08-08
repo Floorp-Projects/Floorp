@@ -282,7 +282,7 @@ CodeGeneratorX86::visitRecompileCheck(LRecompileCheck *lir)
     // Without this assumption we'd need a temp register here.
     Operand addr(gen->info().script()->addressOfUseCount());
     masm.addl(Imm32(1), addr);
-    masm.cmpl(addr, Imm32(js_IonOptions.usesBeforeInlining));
+    masm.cmpl(addr, Imm32(lir->mir()->minUses()));
     if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
         return false;
     return true;

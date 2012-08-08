@@ -839,6 +839,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 loop->hasCallsLoops = true;
             break;
 
+          case JSOP_LOOPENTRY:
+            getCode(offset).loop = loop;
+            break;
+
           default:;
         }
 
@@ -881,8 +885,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 }
                 PodZero(nloop);
 
-                if (loop)
+                if (loop) {
                     loop->hasCallsLoops = true;
+                    nloop->depth = loop->depth + 1;
+                }
 
                 nloop->parent = loop;
                 loop = nloop;
