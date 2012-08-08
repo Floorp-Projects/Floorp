@@ -989,7 +989,6 @@ class MNewArray : public MNullaryInstruction
 
 class MNewObject : public MNullaryInstruction
 {
-    CompilerRootObject baseObj_;
     CompilerRootObject templateObject_;
 
     MNewObject(JSObject *templateObject)
@@ -3932,20 +3931,27 @@ class MStoreFixedSlot
 
 class InlinePropertyTable : public TempObject
 {
-    struct Entry {
+    struct Entry : public TempObject {
         CompilerRoot<types::TypeObject *> typeObj;
         CompilerRootFunction func;
 
         Entry(types::TypeObject *typeObj, JSFunction *func)
-            : typeObj(typeObj), func(func) {}
+          : typeObj(typeObj),
+            func(func)
+        {
+        }
     };
     jsbytecode *pc_;
     MResumePoint *priorResumePoint_;
-    Vector<Entry, 4, IonAllocPolicy> entries_;
+    Vector<Entry *, 4, IonAllocPolicy> entries_;
 
   public:
     InlinePropertyTable(jsbytecode *pc)
-        : pc_(pc), priorResumePoint_(NULL), entries_() {}
+      : pc_(pc),
+        priorResumePoint_(NULL),
+        entries_()
+    {
+    }
 
     void setPriorResumePoint(MResumePoint *resumePoint) {
         JS_ASSERT(priorResumePoint_ == NULL);
@@ -3961,7 +3967,7 @@ class InlinePropertyTable : public TempObject
     }
 
     bool addEntry(types::TypeObject *typeObj, JSFunction *func) {
-        return entries_.append(Entry(typeObj, func));
+        return entries_.append(new Entry(typeObj, func));
     }
 
     size_t numEntries() const {
@@ -3970,12 +3976,12 @@ class InlinePropertyTable : public TempObject
 
     types::TypeObject *getTypeObject(size_t i) const {
         JS_ASSERT(i < numEntries());
-        return entries_[i].typeObj;
+        return entries_[i]->typeObj;
     }
 
     JSFunction *getFunction(size_t i) const {
         JS_ASSERT(i < numEntries());
-        return entries_[i].func;
+        return entries_[i]->func;
     }
 
     void trimToTargets(AutoObjectVector &targets) {
@@ -3983,7 +3989,7 @@ class InlinePropertyTable : public TempObject
         while (i < numEntries()) {
             bool foundFunc = false;
             for (size_t j = 0; j < targets.length(); j++) {
-                if (entries_[i].func == targets[j]) {
+                if (entries_[i]->func == targets[j]) {
                     foundFunc = true;
                     break;
                 }
