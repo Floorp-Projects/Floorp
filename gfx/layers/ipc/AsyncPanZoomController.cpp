@@ -584,7 +584,8 @@ void AsyncPanZoomController::ScaleWithFocus(float aScale, const nsIntPoint& aFoc
   FrameMetrics metrics(mFrameMetrics);
 
   // Don't set the scale to the inputted value, but rather multiply it in.
-  float scaleFactor = aScale / metrics.mResolution.width;
+  float scaleFactor = aScale / metrics.mResolution.width,
+        oldScale = metrics.mResolution.width;
 
   metrics.mResolution.width = metrics.mResolution.height = aScale;
 
@@ -594,8 +595,8 @@ void AsyncPanZoomController::ScaleWithFocus(float aScale, const nsIntPoint& aFoc
 
   nsIntPoint scrollOffset = metrics.mViewportScrollOffset;
 
-  scrollOffset.x += aFocus.x * (scaleFactor - 1.0f);
-  scrollOffset.y += aFocus.y * (scaleFactor - 1.0f);
+  scrollOffset.x += NS_lround(float(aFocus.x) * (scaleFactor - 1.0f) / oldScale);
+  scrollOffset.y += NS_lround(float(aFocus.y) * (scaleFactor - 1.0f) / oldScale);
 
   metrics.mViewportScrollOffset = scrollOffset;
 
