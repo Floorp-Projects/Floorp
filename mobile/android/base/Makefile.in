@@ -52,7 +52,6 @@ FENNEC_JAVA_FILES = \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   SyncPreference.java \
-  db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
