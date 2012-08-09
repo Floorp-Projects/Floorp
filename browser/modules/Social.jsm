@@ -31,7 +31,6 @@ let Social = {
       if (providers.length)
         this.provider = providers[0];
       callback();
-      Services.obs.notifyObservers(null, "test-social-ui-ready", "");
     }.bind(this));
   },
 
