@@ -23,7 +23,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsComponentManagerUtils.h"
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 void
@@ -479,62 +479,4 @@ nsAccUtils::MustPrune(Accessible* aAccessible)
     role == roles::SLIDER ||
     role == roles::PROGRESSBAR ||
     role == roles::SEPARATOR;
-}
-
-nsresult
-nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
-                              nsIAccessibleTableCell *aCell,
-                              int32_t aRowOrColHeaderCells, nsIArray **aCells)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIMutableArray> cells = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t rowIdx = -1;
-  rv = aCell->GetRowIndex(&rowIdx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t colIdx = -1;
-  rv = aCell->GetColumnIndex(&colIdx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool moveToLeft = aRowOrColHeaderCells == eRowHeaderCells;
-
-  // Move to the left or top to find row header cells or column header cells.
-  int32_t index = (moveToLeft ? colIdx : rowIdx) - 1;
-  for (; index >= 0; index--) {
-    int32_t curRowIdx = moveToLeft ? rowIdx : index;
-    int32_t curColIdx = moveToLeft ? index : colIdx;
-
-    nsCOMPtr<nsIAccessible> cell;
-    rv = aTable->GetCellAt(curRowIdx, curColIdx, getter_AddRefs(cell));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIAccessibleTableCell> tableCellAcc =
-      do_QueryInterface(cell);
-
-    // GetCellAt should always return an nsIAccessibleTableCell (XXX Bug 587529)
-    NS_ENSURE_STATE(tableCellAcc);
-
-    int32_t origIdx = 1;
-    if (moveToLeft)
-      rv = tableCellAcc->GetColumnIndex(&origIdx);
-    else
-      rv = tableCellAcc->GetRowIndex(&origIdx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (origIdx == index) {
-      // Append original header cells only.
-      uint32_t role = Role(cell);
-      bool isHeader = moveToLeft ?
-        role == nsIAccessibleRole::ROLE_ROWHEADER :
-        role == nsIAccessibleRole::ROLE_COLUMNHEADER;
-
-      if (isHeader)
-        cells->AppendElement(cell, false);
-    }
-  }
-
-  NS_ADDREF(*aCells = cells);
-  return NS_OK;
 }
