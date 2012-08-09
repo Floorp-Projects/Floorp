@@ -213,9 +213,11 @@ nsAppShell::NotifyNativeEvent()
 
 #define PREFNAME_MATCH_OS  "intl.locale.matchOS"
 #define PREFNAME_UA_LOCALE "general.useragent.locale"
+#define PREFNAME_COALESCE_TOUCHES "dom.event.touch.coalescing.enabled"
 static const char* kObservedPrefs[] = {
   PREFNAME_MATCH_OS,
   PREFNAME_UA_LOCALE,
+  PREFNAME_COALESCE_TOUCHES,
   nullptr
 };
 
@@ -262,6 +264,7 @@ nsAppShell::Init()
     }
 
     bridge->SetSelectedLocale(locale);
+    mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
     return rv;
 }
 
@@ -278,6 +281,8 @@ nsAppShell::Observe(nsISupports* aSubject,
     } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData && (
                    nsDependentString(aData).Equals(
                        NS_LITERAL_STRING(PREFNAME_UA_LOCALE)) ||
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES)) ||
                    nsDependentString(aData).Equals(
                        NS_LITERAL_STRING(PREFNAME_MATCH_OS)))) {
         AndroidBridge* bridge = AndroidBridge::Bridge();
@@ -301,6 +306,8 @@ nsAppShell::Observe(nsISupports* aSubject,
         }
 
         bridge->SetSelectedLocale(locale);
+
+        mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
         return NS_OK;
     }
     return NS_OK;
@@ -761,7 +768,7 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::MOTION_EVENT:
-            if (ae->Action() == AndroidMotionEvent::ACTION_MOVE) {
+            if (ae->Action() == AndroidMotionEvent::ACTION_MOVE && mAllowCoalescingTouches) {
                 int len = mEventQueue.Length();
                 if (len > 0) {
                     AndroidGeckoEvent* event = mEventQueue[len - 1];
