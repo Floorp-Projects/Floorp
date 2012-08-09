@@ -526,6 +526,8 @@ JSCompartment::discardJitCode(FreeOp *fop)
              */
             script->resetUseCount();
         }
+
+        types.sweepCompilerOutputs(fop);
     }
 
 #endif /* JS_METHODJIT */
@@ -618,20 +620,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
                 JSScript *script = i.get<JSScript>();
                 script->clearAnalysis();
             }
-
-            if (types.constrainedOutputs) {
-                fop->delete_(types.constrainedOutputs);
-                types.constrainedOutputs = NULL;
-            }
         }
 
         {
             gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
             rt->freeLifoAlloc.transferFrom(&oldAlloc);
-            if (types.constrainedOutputs) {
-                fop->delete_(types.constrainedOutputs);
-                types.constrainedOutputs = NULL;
-            }
         }
     }
 
