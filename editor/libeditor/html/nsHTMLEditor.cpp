@@ -3523,9 +3523,6 @@ nsHTMLEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
   }
 
   PRInt32 parentTagEnum = parserService->HTMLAtomTagToId(aParentTag);
-  NS_ASSERTION(parentTagEnum < NS_HTML_TAG_MAX,
-               "Fix the caller, this type of node can never contain children.");
-
   return nsHTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
 }
 
