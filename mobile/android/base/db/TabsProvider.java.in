@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -42,7 +43,7 @@ public class TabsProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "tabs.db";
 
-    static final int DATABASE_VERSION = 1;
+    static final int DATABASE_VERSION = 2;
 
     static final String TABLE_TABS = "tabs";
     static final String TABLE_CLIENTS = "clients";
@@ -155,12 +156,38 @@ public class TabsProvider extends ContentProvider {
             // Index on GUID.
             db.execSQL("CREATE INDEX " + INDEX_CLIENTS_GUID + " ON " + TABLE_CLIENTS + "("
                     + Clients.GUID + ")");
+
+            createLocalClient(db);
+        }
+
+        // Insert a client row for our local Fennec client.
+        private void createLocalClient(SQLiteDatabase db) {
+            debug("Inserting local Fennec client into " + TABLE_CLIENTS + " table");
+
+            ContentValues values = new ContentValues();
+            values.put(BrowserContract.Clients.LAST_MODIFIED, System.currentTimeMillis());
+            db.insertOrThrow(TABLE_CLIENTS, null, values);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading tabs.db: " + db.getPath() + " from " +
                     oldVersion + " to " + newVersion);
+
+            db.beginTransaction();
+
+            // We have to do incremental upgrades until we reach the current
+            // database schema version.
+            for (int v = oldVersion + 1; v <= newVersion; v++) {
+                switch(v) {
+                    case 2:
+                        createLocalClient(db);
+                        break;
+                 }
+             }
+
+             db.setTransactionSuccessful();
+             db.endTransaction();
         }
 
         @Override
@@ -589,5 +616,39 @@ public class TabsProvider extends ContentProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
 
         return db.delete(table, selection, selectionArgs);
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        if (values == null)
+            return 0;
+
+        int numValues = values.length;
+        int successes = 0;
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        db.beginTransaction();
+        try {
+            for (int i = 0; i < numValues; i++) {
+                try {
+                    insertInTransaction(uri, values[i]);
+                    successes++;
+                } catch (SQLException e) {
+                    Log.e(LOGTAG, "SQLException in bulkInsert", e);
+
+                    // Restart the transaction to continue insertions.
+                    db.setTransactionSuccessful();
+                    db.endTransaction();
+                    db.beginTransaction();
+                }
+            }
+            trace("Flushing DB bulkinsert...");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+
+        return successes;
     }
 }
