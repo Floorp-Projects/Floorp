@@ -19,10 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=422537
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 422537 **/
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var isupports_string = Components.classes["@mozilla.org/supports-string;1"]
-                                 .createInstance(Components.interfaces.nsISupportsString);
+var isupports_string = SpecialPowers.wrap(Components)
+                                    .classes["@mozilla.org/supports-string;1"]
+                                    .createInstance(Components.interfaces.nsISupportsString);
 isupports_string.data = "foo";
 
 const url = "http://mochi.test:8888";
@@ -35,12 +34,15 @@ var body = [
 for each (var i in body) {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
-  xhr.send(i);
-  var chan = SpecialPowers.unwrap(SpecialPowers.wrap(xhr).channel);
-  if (!(chan instanceof Components.interfaces.nsIUploadChannel))
+  if (i == isupports_string)
+    SpecialPowers.wrap(xhr).send(i);
+  else
+    xhr.send(i);
+  var chan = SpecialPowers.wrap(xhr).channel;
+  if (!SpecialPowers.call_Instanceof(chan, Components.interfaces.nsIUploadChannel))
     throw "Must be an upload channel";
   var stream = chan.uploadStream;
-  if (!stream || !(stream instanceof Components.interfaces.nsISeekableStream))
+  if (!stream || !SpecialPowers.call_Instanceof(stream, Components.interfaces.nsISeekableStream))
     throw "Stream must be seekable";
   // the following is a no-op, but should not throw an exception
   stream.seek(Components.interfaces.nsISeekableStream.NS_SEEK_CUR, 0);

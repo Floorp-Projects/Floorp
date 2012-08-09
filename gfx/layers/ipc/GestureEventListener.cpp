@@ -63,6 +63,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     size_t length = mTouches.Length();
     if (length == 1) {
       mTapStartTime = event.mTime;
+      mTouchStartPosition = event.mTouches[0].mScreenPoint;
       if (mState == GESTURE_NONE) {
         mState = GESTURE_WAITING_SINGLE_TAP;
       }
@@ -74,9 +75,14 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     break;
   }
   case MultiTouchInput::MULTITOUCH_MOVE: {
-    // If we move at all, just bail out of the tap. We need to change this so
-    // that there's some tolerance in the future.
-    HandleTapCancel(event);
+    // If we move too much, bail out of the tap.
+    nsIntPoint touch = (nsIntPoint&)event.mTouches[0].mScreenPoint;
+    if (mTouches.Length() == 1 &&
+        NS_hypot(mTouchStartPosition.x - touch.x, mTouchStartPosition.y - touch.y) >
+          mAsyncPanZoomController->GetDPI() * AsyncPanZoomController::TOUCH_START_TOLERANCE)
+    {
+      HandleTapCancel(event);
+    }
 
     bool foundAlreadyExistingTouch = false;
     for (size_t i = 0; i < mTouches.Length(); i++) {
@@ -258,6 +264,11 @@ void GestureEventListener::TimeoutDoubleTap()
 
 AsyncPanZoomController* GestureEventListener::GetAsyncPanZoomController() {
   return mAsyncPanZoomController;
+}
+
+void GestureEventListener::CancelGesture() {
+  mTouches.Clear();
+  mState = GESTURE_NONE;
 }
 
 }

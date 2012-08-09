@@ -376,7 +376,7 @@ js_DumpPC(JSContext *cx)
     return ok;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_DumpScript(JSContext *cx, JSScript *script_)
 {
     Sprinter sprinter(cx);
@@ -4819,7 +4819,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * syntactically appear.
                      */
                     jsbytecode *nextpc = pc + JSOP_LAMBDA_LENGTH;
-                    LOCAL_ASSERT(*nextpc == JSOP_SETLOCAL || *nextpc == JSOP_SETALIASEDVAR);
+                    LOCAL_ASSERT(*nextpc == JSOP_SETLOCAL || *nextpc == JSOP_SETALIASEDVAR || *nextpc == JSOP_SETARG);
                     nextpc += js_CodeSpec[*nextpc].length;
                     LOCAL_ASSERT(*nextpc == JSOP_POP);
                     nextpc += JSOP_POP_LENGTH;

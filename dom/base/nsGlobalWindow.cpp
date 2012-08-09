@@ -1956,6 +1956,17 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         if (newInnerWindow->mNavigator) {
           newInnerWindow->mNavigator->SetWindow(newInnerWindow);
         }
+
+        // Make a copy of the old window's performance object on document.open.
+        // Note that we have to force eager creation of it here, because we need
+        // to grab the current document channel and whatnot before that changes.
+        currentInner->CreatePerformanceObjectIfNeeded();
+        if (currentInner->mPerformance) {
+          newInnerWindow->mPerformance =
+            new nsPerformance(newInnerWindow,
+                              currentInner->mPerformance->GetDOMTiming(),
+                              currentInner->mPerformance->GetChannel());
+        }
       }
 
       // Don't free objects on our current inner window if it's going to be
@@ -2931,25 +2942,29 @@ nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
   *aPerformance = nullptr;
 
   if (nsGlobalWindow::HasPerformanceSupport()) {
-    if (!mPerformance) {
-      if (!mDoc) {
-        return NS_OK;
-      }
-      nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
-      nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(mDoc->GetChannel()));
-      bool timingEnabled = false;
-      if (!timedChannel ||
-          !NS_SUCCEEDED(timedChannel->GetTimingEnabled(&timingEnabled)) ||
-          !timingEnabled) {
-        timedChannel = nullptr;
-      }
-      if (timing) {
-        mPerformance = new nsPerformance(this, timing, timedChannel);
-      }
-    }
+    CreatePerformanceObjectIfNeeded();
     NS_IF_ADDREF(*aPerformance = mPerformance);
   }
   return NS_OK;
+}
+
+void
+nsGlobalWindow::CreatePerformanceObjectIfNeeded()
+{
+  if (mPerformance || !mDoc) {
+    return;
+  }
+  nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
+  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(mDoc->GetChannel()));
+  bool timingEnabled = false;
+  if (!timedChannel ||
+      !NS_SUCCEEDED(timedChannel->GetTimingEnabled(&timingEnabled)) ||
+      !timingEnabled) {
+    timedChannel = nullptr;
+  }
+  if (timing) {
+    mPerformance = new nsPerformance(this, timing, timedChannel);
+  }
 }
 
 /**

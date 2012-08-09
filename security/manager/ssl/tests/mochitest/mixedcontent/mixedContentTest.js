@@ -159,13 +159,11 @@ function todoSecurityState(expectedState, message)
 
 function isSecurityState(expectedState, message, test)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
   if (!test)
     test = ok;
 
   // Quit nasty but working :)
-  var ui = window
+  var ui = SpecialPowers.wrap(window)
     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
     .getInterface(Components.interfaces.nsIWebNavigation)
     .QueryInterface(Components.interfaces.nsIDocShell)

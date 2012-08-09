@@ -242,7 +242,7 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
     
   run->bidiLevel = 0;
   run->fontFace = aFont->mFontFace;
-  run->fontEmSize = aFont->mSize;
+  run->fontEmSize = aFont->GetSize();
   run->glyphCount = aGlyphs.mNumGlyphs;
   run->isSideways = FALSE;
 }

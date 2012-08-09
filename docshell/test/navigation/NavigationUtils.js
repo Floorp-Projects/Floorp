@@ -98,17 +98,18 @@ function isInaccessible(wnd, message) {
 ///////////////////////////////////////////////////////////////////////////
 
 function xpcEnumerateContentWindows(callback) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
   var Ci = Components.interfaces;
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Ci.nsIWindowWatcher);
+  var ww = SpecialPowers.wrap(Components)
+                        .classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Ci.nsIWindowWatcher);
   var enumerator = ww.getWindowEnumerator();
 
   var contentWindows = [];
 
   while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
-    if (typeof ChromeWindow != "undefined" && win instanceof ChromeWindow) {
+    if (typeof ChromeWindow != "undefined" && SpecialPowers.call_Instanceof(win, ChromeWindow)) {
       var docshellTreeNode = win.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsIDocShellTreeNode);
