@@ -59,64 +59,57 @@
        /**
         * A file descriptor.
         */
-       Types.fd =
-         new Type("fd",
-                  ctypes.int,
-                  function(fd_int) {
-                    return ctypes.CDataFinalizer(fd_int, _close);
-                  });
+       Types.fd = Type.int.withName("fd");
+       Types.fd.importFromC = function importFromC(fd_int) {
+         return ctypes.CDataFinalizer(fd_int, _close);
+       };
+
 
        /**
         * A C integer holding -1 in case of error or a file descriptor
         * in case of success.
         */
-       Types.negativeone_or_fd =
-         new Type("negativeone_or_fd",
-                  ctypes.int,
-                  function(fd_int, operation) {
-                    if (fd_int == -1) {
-                      return -1;
-                    }
-                    return ctypes.CDataFinalizer(fd_int, _close);
-                  });
+       Types.negativeone_or_fd = Types.fd.withName("negativeone_or_fd");
+       Types.negativeone_or_fd.importFromC =
+         function importFromC(fd_int) {
+           if (fd_int == -1) {
+             return -1;
+           }
+           return ctypes.CDataFinalizer(fd_int, _close);
+         };
 
        /**
         * A C integer holding -1 in case of error or a meaningless value
         * in case of success.
         */
        Types.negativeone_or_nothing =
-         new Type("negativeone_or_nothing",
-                  ctypes.int);
+         Types.int.withName("negativeone_or_nothing");
 
        /**
         * A C integer holding -1 in case of error or a positive integer
         * in case of success.
         */
        Types.negativeone_or_ssize_t =
-         new Type("negativeone_or_ssize_t",
-                  ctypes.ssize_t,
-                  Type.ssize_t.convert_from_c);
+         Types.ssize_t.withName("negativeone_or_ssize_t");
 
        /**
         * A C string
         */
        Types.null_or_string =
-         new Type("null_or_string",
-                  ctypes.char.ptr);
+         Types.char.in_ptr.withName("null_or_string");
 
        Types.string =
-         new Type("string",
-                  ctypes.char.ptr);
-
-       // Note: support for strings in js-ctypes is very limited.
-       // Once bug 552551 has progressed, we should extend this
-       // type using ctypes.readString/ctypes.writeString
+         Types.char.in_ptr.withName("string");
 
        /**
-        * Type |mode_t|
+        * Various libc integer types
         */
        Types.mode_t =
          Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_MODE_T).withName("mode_t");
+       Types.uid_t =
+         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_UID_T).withName("uid_t");
+       Types.gid_t =
+         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_GID_T).withName("gid_t");
 
        /**
         * Type |time_t|
@@ -129,14 +122,13 @@
                   ctypes.StructType("DIR"));
 
        Types.null_or_DIR_ptr =
-         new Type("null_or_DIR*",
-                  Types.DIR.out_ptr.implementation,
-                  function(dir, operation) {
-                    if (dir == null || dir.isNull()) {
-                      return null;
-                    }
-                    return ctypes.CDataFinalizer(dir, _close_dir);
-                  });
+         Types.DIR.out_ptr.withName("null_or_DIR*");
+       Types.null_or_DIR_ptr.importFromC = function importFromC(dir) {
+         if (dir == null || dir.isNull()) {
+           return null;
+         }
+         return ctypes.CDataFinalizer(dir, _close_dir);
+       };
 
        // Structure |dirent|
        // Building this type is rather complicated, as its layout varies between
@@ -158,7 +150,6 @@
 
          // We now have built |dirent|.
          Types.dirent = dirent.getType();
-         LOG("dirent is: " + Types.dirent.implementation.toSource());
        }
        Types.null_or_dirent_ptr =
          new Type("null_of_dirent",
@@ -172,9 +163,9 @@
          stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_MODE,
                         "st_mode", Types.mode_t.implementation);
          stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_UID,
-                          "st_uid", ctypes.int);
+                          "st_uid", Types.uid_t.implementation);
          stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_GID,
-                          "st_gid", ctypes.int);
+                          "st_gid", Types.gid_t.implementation);
 
          // Here, things get complicated with different data structures.
          // Some platforms have |time_t st_atime| and some platforms have
@@ -542,9 +533,10 @@
        // pipe cannot be directly defined as a C function.
 
        let _pipe =
-         libc.declare("pipe", ctypes.default_abi,
-                    /*return*/ ctypes.int,
-                    /*fds*/    ctypes.ArrayType(ctypes.int, 2));
+         declareFFI("pipe", ctypes.default_abi,
+           /*return*/ Types.negativeone_or_nothing,
+           /*fds*/    new Type("two file descriptors",
+             ctypes.ArrayType(ctypes.int, 2)));
 
        // A shared per-thread buffer used to communicate with |pipe|
        let _pipebuf = new (ctypes.ArrayType(ctypes.int, 2))();
