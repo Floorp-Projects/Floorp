@@ -962,13 +962,16 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 PDeviceStorageRequestParent*
 ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
 {
-  return new DeviceStorageRequestParent(aParams);
+  DeviceStorageRequestParent* result = new DeviceStorageRequestParent(aParams);
+  NS_ADDREF(result);
+  return result;
 }
 
 bool
 ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
 {
-  delete doomed;
+  DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
+  NS_RELEASE(parent);
   return true;
 }
 

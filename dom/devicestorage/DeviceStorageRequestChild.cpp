@@ -7,6 +7,7 @@
 #include "DeviceStorageRequestChild.h"
 #include "nsDeviceStorage.h"
 #include "nsDOMFile.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,6 +29,7 @@ DeviceStorageRequestChild::DeviceStorageRequestChild(DOMRequest* aRequest,
 DeviceStorageRequestChild::~DeviceStorageRequestChild() {
   MOZ_COUNT_DTOR(DeviceStorageRequestChild);
 }
+
 bool
 DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aValue)
 {
@@ -50,19 +52,8 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TBlobResponse:
     {
       BlobResponse r = aValue;
-
-      // I am going to hell for this.  bent says he'll save me.
-      const InfallibleTArray<PRUint8> bits = r.bits();
-      void* buffer = PR_Malloc(bits.Length());
-      memcpy(buffer, (void*) bits.Elements(), bits.Length());
-
-      nsString mimeType;
-      mimeType.AssignWithConversion(r.contentType());
-
-      nsCOMPtr<nsIDOMBlob> blob = new nsDOMMemoryFile(buffer,
-                                                      bits.Length(),
-                                                      mFile->mPath,
-                                                      mimeType);
+      BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
+      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
 
       jsval result = BlobToJsval(mRequest->GetOwner(), blob);
       mRequest->FireSuccess(result);
@@ -80,7 +71,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
         NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
 
         nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(f);
-        dsf->SetPath(r.paths()[i].path());
+        dsf->SetPath(r.paths()[i].name());
         cursor->mFiles.AppendElement(dsf);
       }
 
