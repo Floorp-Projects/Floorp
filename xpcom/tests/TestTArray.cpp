@@ -556,7 +556,7 @@ static bool test_heap() {
 
 #define IS_USING_AUTO(arr) \
   ((uintptr_t) &(arr) < (uintptr_t) arr.Elements() && \
-   ((PRPtrdiff)arr.Elements() - (PRPtrdiff)&arr) <= 16)
+   ((ptrdiff_t)arr.Elements() - (ptrdiff_t)&arr) <= 16)
 
 #define CHECK_IS_USING_AUTO(arr) \
   do {                                                    \

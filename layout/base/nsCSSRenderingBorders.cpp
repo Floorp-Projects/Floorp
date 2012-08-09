@@ -130,7 +130,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
                                          gfxCornerSizes& aBorderRadii,
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
-                                         PRIntn aSkipSides,
+                                         int aSkipSides,
                                          nscolor aBackgroundColor)
   : mContext(aDestContext),
     mOuterRect(aOuterRect),
@@ -523,7 +523,7 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
                                      const gfxRect& aInnerRect,
                                      const gfxCornerSizes& aBorderRadii,
                                      const gfxFloat *aBorderSizes,
-                                     PRIntn aSides,
+                                     int aSides,
                                      const gfxRGBA& aColor)
 {
   mContext->SetColor(aColor);
@@ -683,7 +683,7 @@ ComputeCompositeColorForLine(PRUint32 aLineIndex,
 }
 
 void
-nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorderColors *aCompositeColors)
+nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderColors *aCompositeColors)
 {
   gfxCornerSizes radii = mBorderRadii;
 
@@ -731,7 +731,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
 }
 
 void
-nsCSSBorderRenderer::DrawBorderSides(PRIntn aSides)
+nsCSSBorderRenderer::DrawBorderSides(int aSides)
 {
   if (aSides == 0 || (aSides & ~SIDE_BITS_ALL) != 0) {
     NS_WARNING("DrawBorderSides: invalid sides!");
@@ -1543,7 +1543,7 @@ nsCSSBorderRenderer::DrawBorders()
     return;
 
   mInnerRect.Condition();
-  PRIntn dashedSides = 0;
+  int dashedSides = 0;
 
   NS_FOR_CSS_SIDES(i) {
     PRUint8 style = mBorderStyles[i];
@@ -1596,8 +1596,8 @@ nsCSSBorderRenderer::DrawBorders()
       if (IsZeroSize(mBorderCornerDimensions[corner]))
         continue;
 
-      const PRIntn sides[2] = { corner, PREV_SIDE(corner) };
-      PRIntn sideBits = (1 << sides[0]) | (1 << sides[1]);
+      const int sides[2] = { corner, PREV_SIDE(corner) };
+      int sideBits = (1 << sides[0]) | (1 << sides[1]);
 
       bool simpleCornerStyle = mCompositeColors[sides[0]] == NULL &&
                                  mCompositeColors[sides[1]] == NULL &&
@@ -1672,7 +1672,7 @@ nsCSSBorderRenderer::DrawBorders()
     // We need to check for mNoBorderRadius, because when there is
     // one, FillSolidBorder always draws the full rounded rectangle
     // and expects there to be a clip in place.
-    PRIntn alreadyDrawnSides = 0;
+    int alreadyDrawnSides = 0;
     if (mOneUnitBorder &&
         mNoBorderRadius &&
         (dashedSides & (SIDE_BIT_TOP | SIDE_BIT_LEFT)) == 0)

@@ -184,7 +184,7 @@ void nsBidi::Init()
  * which we know we don't need any more;
  * is this the best way to do this??
  */
-bool nsBidi::GetMemory(void **aMemory, PRSize *aSize, bool aMayAllocate, PRSize aSizeNeeded)
+bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t aSizeNeeded)
 {
   /* check for existing memory */
   if(*aMemory==NULL) {

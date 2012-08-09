@@ -13,8 +13,14 @@ USING_FILE_NAMESPACE
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(ArchiveItem)
 
+ArchiveItem::ArchiveItem()
+{
+  MOZ_COUNT_CTOR(ArchiveItem);
+}
+
 ArchiveItem::~ArchiveItem()
 {
+  MOZ_COUNT_DTOR(ArchiveItem);
 }
 
 

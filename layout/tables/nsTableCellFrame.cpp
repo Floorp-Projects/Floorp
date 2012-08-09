@@ -494,10 +494,10 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
-PRIntn
+int
 nsTableCellFrame::GetSkipSides() const
 {
-  PRIntn skip = 0;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }

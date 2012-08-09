@@ -12,12 +12,12 @@
 #include "jsalloc.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
-#include "jshash.h"
 #include "jspubtd.h"
 #include "jslock.h"
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
+#include "mozilla/HashFunctions.h"
 
 struct JSIdArray {
     int length;
@@ -83,23 +83,15 @@ JSID_TO_ATOM(jsid id)
     return (JSAtom *)JSID_TO_STRING(id);
 }
 
-JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
+JS_STATIC_ASSERT(sizeof(js::HashNumber) == 4);
 JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 
 namespace js {
 
-static JS_ALWAYS_INLINE JSHashNumber
+static JS_ALWAYS_INLINE js::HashNumber
 HashId(jsid id)
 {
-    JSHashNumber n =
-#if JS_BYTES_PER_WORD == 4
-        JSHashNumber(JSID_BITS(id));
-#elif JS_BYTES_PER_WORD == 8
-        JSHashNumber(JSID_BITS(id)) ^ JSHashNumber(JSID_BITS(id) >> 32);
-#else
-# error "Unsupported configuration"
-#endif
-    return n * JS_GOLDEN_RATIO;
+    return HashGeneric(JSID_BITS(id));
 }
 
 static JS_ALWAYS_INLINE Value
@@ -134,15 +126,6 @@ struct DefaultHasher<jsid>
 };
 
 }
-
-#if JS_BYTES_PER_WORD == 4
-# define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
-#elif JS_BYTES_PER_WORD == 8
-# define ATOM_HASH(atom)          (((JSHashNumber)(uintptr_t)(atom) >> 3) ^   \
-                                   (JSHashNumber)((uintptr_t)(atom) >> 32))
-#else
-# error "Unsupported configuration"
-#endif
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.

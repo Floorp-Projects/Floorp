@@ -23,11 +23,13 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxPoint.h"
+#include "gfxRect.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
 #include "jsapi.h"
 #include "LayersTypes.h"
+#include "FrameMetrics.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -518,6 +520,28 @@ struct ParamTraits<gfxSize>
 };
 
 template<>
+struct ParamTraits<gfxRect>
+{
+  typedef gfxRect paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.x);
+    WriteParam(aMsg, aParam.y);
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->x) &&
+           ReadParam(aMsg, aIter, &aResult->y) &&
+           ReadParam(aMsg, aIter, &aResult->width) &&
+           ReadParam(aMsg, aIter, &aResult->height);
+  }
+};
+
+template<>
 struct ParamTraits<gfx3DMatrix>
 {
   typedef gfx3DMatrix paramType;
@@ -899,6 +923,34 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
     LogParam(aParam.dataLength, aLog);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::FrameMetrics>
+{
+  typedef mozilla::layers::FrameMetrics paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mCSSContentRect);
+    WriteParam(aMsg, aParam.mViewport);
+    WriteParam(aMsg, aParam.mContentRect);
+    WriteParam(aMsg, aParam.mViewportScrollOffset);
+    WriteParam(aMsg, aParam.mDisplayPort);
+    WriteParam(aMsg, aParam.mScrollId);
+    WriteParam(aMsg, aParam.mResolution);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mCSSContentRect) &&
+            ReadParam(aMsg, aIter, &aResult->mViewport) &&
+            ReadParam(aMsg, aIter, &aResult->mContentRect) &&
+            ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
+            ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollId) &&
+            ReadParam(aMsg, aIter, &aResult->mResolution));
   }
 };
 

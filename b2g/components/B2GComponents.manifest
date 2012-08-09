@@ -7,8 +7,8 @@ contract @mozilla.org/b2g-camera-content;1 {eff4231b-abce-4f7f-a40a-d646e8fde3ce
 category JavaScript-navigator-property mozCamera @mozilla.org/b2g-camera-content;1
 
 # AlertsService.js
-component {5dce03b2-8faa-4b6e-9242-6ddb0411750c} AlertsService.js
-contract @mozilla.org/alerts-service;1 {5dce03b2-8faa-4b6e-9242-6ddb0411750c}
+component {fe33c107-82a4-41d6-8c64-5353267e04c9} AlertsService.js
+contract @mozilla.org/system-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e04c9}
 
 # ContentPermissionPrompt.js
 component {8c719f03-afe0-4aac-91ff-6c215895d467} ContentPermissionPrompt.js
