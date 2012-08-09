@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=703855
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 703855</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=703855">Mozilla Bug 703855</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="f" src="file_bug703855.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 703855 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var timingAttributes = [
+  'connectEnd',
+  'connectStart',
+  'domComplete',
+  'domContentLoadedEventEnd',
+  'domContentLoadedEventStart',
+  'domInteractive',
+  'domLoading',
+  'domainLookupEnd',
+  'domainLookupStart',
+  'fetchStart',
+  'loadEventEnd',
+  'loadEventStart',
+  'navigationStart',
+  'redirectEnd',
+  'redirectStart',
+  'requestStart',
+  'responseEnd',
+  'responseStart',
+  'unloadEventEnd',
+  'unloadEventStart'
+];
+var originalTiming = {};
+
+function runTest() {
+  var timing = $("f").contentWindow.performance.timing;
+  for (i in timingAttributes) {
+    originalTiming[timingAttributes[i]] = timing[timingAttributes[i]];
+  }
+
+  var doc = $("f").contentDocument;
+  doc.open();
+  doc.write("<!DOCTYPE html>");
+  doc.close();
+
+  SimpleTest.executeSoon(function() {
+    var newTiming = $("f").contentWindow.performance.timing;
+    for (var i in timingAttributes) {
+      is(timing[timingAttributes[i]], originalTiming[timingAttributes[i]],
+         "document.open should not affect value of " + timingAttributes[i]);
+    }
+    SimpleTest.finish();
+  });
+}
+
+addLoadEvent(function() {
+  SimpleTest.executeSoon(runTest);
+});
+
+
+
+</script>
+</pre>
+</body>
+</html>
