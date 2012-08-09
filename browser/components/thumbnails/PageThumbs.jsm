@@ -151,8 +151,6 @@ let PageThumbs = {
     let telemetry = Services.telemetry;
     telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
       .add(new Date() - telemetryCaptureTime);
-
-    return aCanvas;
   },
 
   /**
