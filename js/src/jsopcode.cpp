@@ -6440,6 +6440,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
     unsigned hpcdepth = unsigned(-1);
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
+        JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(pc),
+                     script->analysis()->getCode(pc).stackDepth ==
+                     ((hpcdepth == unsigned(-1)) ? pcdepth : hpcdepth));
         JSOp op = JSOp(*pc);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         oplen = GetBytecodeLength(pc);
@@ -6452,6 +6455,10 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             if (0 < jmpoff && pc + jmpoff < target) {
                 pc += jmpoff;
                 oplen = 0;
+                if (hpcdepth != unsigned(-1)) {
+                    pcdepth = hpcdepth;
+                    hpcdepth = unsigned(-1);
+                }
                 continue;
             }
         }
