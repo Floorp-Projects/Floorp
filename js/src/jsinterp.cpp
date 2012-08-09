@@ -3996,6 +3996,12 @@ js::Throw(JSContext *cx, const Value &v)
 bool
 js::GetProperty(JSContext *cx, const Value &value, PropertyName *name, MutableHandleValue vp)
 {
+    if (name == cx->runtime->atomState.lengthAtom) {
+        // Fast path for strings, arrays and arguments.
+        if (GetLengthProperty(value, vp))
+            return true;
+    }
+
     JSObject *obj = ValueToObject(cx, value);
     if (!obj)
         return false;
