@@ -147,7 +147,8 @@ public:
                            const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
-    virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
+    virtual PContentPermissionRequestParent*
+    AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 
     virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdate(

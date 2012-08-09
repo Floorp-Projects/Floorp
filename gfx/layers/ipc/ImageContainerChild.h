@@ -161,7 +161,7 @@ protected:
    * Removes a shared image from the pool and returns it.
    * Returns nullptr if the pool is empty.
    */
-  SharedImage* PopSharedImageFromPool();
+  SharedImage* GetSharedImageFor(Image* aImage);
   /**
    * Seallocates all the shared images from the pool and clears the pool.
    */
@@ -190,9 +190,7 @@ protected:
   SharedImage * CreateSharedImageFromData(Image* aImage);
 
 private:
-
   PRUint64 mImageContainerID;
-  nsIntSize mSize;
   nsTArray<SharedImage*> mSharedImagePool;
   int mActiveImageCount;
   bool mStop;

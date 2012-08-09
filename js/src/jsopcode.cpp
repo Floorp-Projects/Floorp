@@ -6093,17 +6093,12 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
             if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
                 for (Shape::Range r(block.lastProperty()); !r.empty(); r.popFront()) {
                     const Shape &shape = r.front();
-                    if (shape.shortid() == int(depth - blockDepth)) {
-                        // !JSID_IS_ATOM(shape.propid()) happens for empty
-                        // destructuring variables in lets. They can be safely
-                        // ignored.
-                        if (JSID_IS_ATOM(shape.propid()))
-                            return JSID_TO_ATOM(shape.propid());
-                    }
+                    if (shape.shortid() == int(depth - blockDepth))
+                        return JSID_TO_ATOM(shape.propid());
                 }
             }
-            chain = chain->enclosingScope();
-        } while (chain->isBlock());
+            chain = chain->getParent();
+        } while (chain && chain->isBlock());
     }
     return NULL;
 }

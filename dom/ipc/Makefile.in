@@ -33,6 +33,7 @@ EXPORTS_mozilla/dom = \
   ContentProcess.h \
   CrashReporterChild.h \
   CrashReporterParent.h \
+  PermissionMessageUtils.h \
   StructuredCloneUtils.h \
   TabParent.h \
   TabChild.h \
@@ -52,6 +53,7 @@ CPPSRCS = \
   ContentChild.cpp \
   CrashReporterParent.cpp \
   CrashReporterChild.cpp \
+  PermissionMessageUtils.cpp \
   ProcessPriorityManager.cpp \
   StructuredCloneUtils.cpp \
   TabParent.cpp \
