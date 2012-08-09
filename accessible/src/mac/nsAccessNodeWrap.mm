@@ -38,5 +38,6 @@ void nsAccessNodeWrap::InitAccessibility()
 
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
+  nsAccessNode::ShutdownXPAccessibility();
 }
 
