@@ -225,17 +225,17 @@ private:
         Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
                               Elf32_Word addend, unsigned int addr)
         {
-            /* Follows description of b.w instructions as per
+            /* Follows description of b.w and bl instructions as per
                ARM Architecture Reference Manual ARM® v7-A and ARM® v7-R edition, A8.6.16
-               We limit ourselves to Encoding T3.
+               We limit ourselves to Encoding T4 of b.w and Encoding T1 of bl.
                We don't care about sign_extend because the only case where this is
                going to be used only jumps forward. */
             Elf32_Addr tmp = (Elf32_Addr) (addr - offset - base_addr);
             unsigned int word0 = addend & 0xffff,
                          word1 = addend >> 16;
 
-            if (((word0 & 0xf800) != 0xf000) || ((word1 & 0xd000) != 0x9000))
-                throw std::runtime_error("R_ARM_THM_JUMP24 relocation only supported for B.W <label>");
+            if (((word0 & 0xf800) != 0xf000) || ((word1 & 0x9000) != 0x9000))
+                throw std::runtime_error("R_ARM_THM_JUMP24/R_ARM_THM_CALL relocation only supported for B.W <label> and BL <label>");
 
             unsigned int s = (word0 & (1 << 10)) >> 10;
             unsigned int j1 = (word1 & (1 << 13)) >> 13;
@@ -249,8 +249,8 @@ private:
             j1 = ((tmp & (1 << 23)) >> 23) ^ !s;
             j2 = ((tmp & (1 << 22)) >> 22) ^ !s;
 
-            return 0xf000 | (s << 10) | ((tmp & (0x3ff << 12)) >> 12) | 
-                   (0x9000 << 16) | (j1 << 29) | (j2 << 27) | ((tmp & 0xffe) << 15);
+            return 0xf000 | (s << 10) | ((tmp & (0x3ff << 12)) >> 12) |
+                   ((word1 & 0xd000) << 16) | (j1 << 29) | (j2 << 27) | ((tmp & 0xffe) << 15);
         }
     };
 
@@ -329,6 +329,7 @@ private:
             case REL(ARM, PLT32):
                 apply_relocation<arm_plt32_relocation>(the_code, buf, &*r, addr);
                 break;
+            case REL(ARM, THM_PC22 /* THM_CALL */):
             case REL(ARM, THM_JUMP24):
                 apply_relocation<arm_thm_jump24_relocation>(the_code, buf, &*r, addr);
                 break;
