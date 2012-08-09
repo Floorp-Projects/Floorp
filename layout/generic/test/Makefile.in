@@ -65,6 +65,8 @@ MOCHITEST_FILES = \
   test_invalidate_during_plugin_paint.html \
   test_movement_by_characters.html \
   test_movement_by_words.html \
+  test_page_scroll_with_fixed_pos.html \
+    page_scroll_with_fixed_pos_window.html \
   test_plugin_clipping.xhtml \
   test_plugin_clipping2.xhtml \
   test_plugin_clipping_transformed.xhtml \
