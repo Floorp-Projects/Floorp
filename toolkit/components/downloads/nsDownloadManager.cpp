@@ -2914,7 +2914,7 @@ nsDownload::SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes)
   else if (maxBytes <= 0)
     mPercentComplete = -1;
   else
-    mPercentComplete = (PRInt32)((PRFloat64)currBytes / maxBytes * 100 + .5);
+    mPercentComplete = (PRInt32)((double)currBytes / maxBytes * 100 + .5);
 }
 
 nsresult

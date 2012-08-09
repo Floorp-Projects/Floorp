@@ -240,7 +240,7 @@ protected:
                             nsTableCellReflowState& aReflowState);
   
   /** implement abstract method on nsContainerFrame */
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   // row-specific methods
 

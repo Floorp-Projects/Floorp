@@ -203,7 +203,7 @@ nsSubDocumentFrame::ShowViewer()
   }
 }
 
-PRIntn
+int
 nsSubDocumentFrame::GetSkipSides() const
 {
   return 0;

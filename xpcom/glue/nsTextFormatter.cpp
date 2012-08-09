@@ -708,7 +708,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 		nas[cn].type = TYPE_UINT32;
 	    } else if (sizeof(void *) == sizeof(PRInt64)) {
 	        nas[cn].type = TYPE_UINT64;
-	    } else if (sizeof(void *) == sizeof(PRIntn)) {
+	    } else if (sizeof(void *) == sizeof(int)) {
 	        nas[cn].type = TYPE_UINTN;
 	    } else {
 	        nas[cn].type = TYPE_UNKNOWN;
@@ -771,7 +771,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	case TYPE_INT16:
 	case TYPE_UINT16:
 	case TYPE_INTN:
-	case TYPE_UINTN:     (void)va_arg(ap, PRIntn);      break;
+	case TYPE_UINTN:     (void)va_arg(ap, int);         break;
 
 	case TYPE_INT32:     (void)va_arg(ap, PRInt32);     break;
 
@@ -783,7 +783,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 
 	case TYPE_STRING:    (void)va_arg(ap, char*);       break;
 
-	case TYPE_INTSTR:    (void)va_arg(ap, PRIntn*);     break;
+	case TYPE_INTSTR:    (void)va_arg(ap, int*);        break;
 
 	case TYPE_DOUBLE:    (void)va_arg(ap, double);      break;
 

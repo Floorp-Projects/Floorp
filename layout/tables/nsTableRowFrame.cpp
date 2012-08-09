@@ -578,10 +578,10 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
-PRIntn
+int
 nsTableRowFrame::GetSkipSides() const
 {
-  PRIntn skip = 0;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }

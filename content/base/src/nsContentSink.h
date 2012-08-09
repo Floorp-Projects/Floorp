@@ -53,7 +53,7 @@ extern PRLogModuleInfo* gContentSinkLogModuleInfo;
 #define SINK_TRACE_REFLOW             0x2
 #define SINK_ALWAYS_REFLOW            0x4
 
-#define SINK_LOG_TEST(_lm, _bit) (PRIntn((_lm)->level) & (_bit))
+#define SINK_LOG_TEST(_lm, _bit) (int((_lm)->level) & (_bit))
 
 #define SINK_TRACE(_lm, _bit, _args) \
   PR_BEGIN_MACRO                     \

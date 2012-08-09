@@ -256,7 +256,7 @@ protected:
   nsMathMLmtdInnerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
   virtual ~nsMathMLmtdInnerFrame();
 
-  virtual PRIntn GetSkipSides() const { return 0; }
+  virtual int GetSkipSides() const { return 0; }
 };  // class nsMathMLmtdInnerFrame
 
 #endif /* nsMathMLmtableFrame_h___ */

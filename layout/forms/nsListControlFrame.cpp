@@ -1093,7 +1093,7 @@ nsListControlFrame::OnOptionSelected(PRInt32 aIndex, bool aSelected)
   return NS_OK;
 }
 
-PRIntn
+int
 nsListControlFrame::GetSkipSides() const
 {    
     // Don't skip any sides during border rendering

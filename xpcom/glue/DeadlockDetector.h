@@ -203,7 +203,7 @@ private:
         HashEntryArray mOrderedLT; // this <_o Other
     };
 
-    static void* TableAlloc(void* /*pool*/, PRSize size)
+    static void* TableAlloc(void* /*pool*/, size_t size)
     {
         return operator new(size);
     }

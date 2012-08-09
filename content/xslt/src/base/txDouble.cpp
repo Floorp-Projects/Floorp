@@ -156,7 +156,7 @@ void txDouble::toString(double aValue, nsAString& aDest)
     const int buflen = 20;
     char buf[buflen];
 
-    PRIntn intDigits, sign;
+    int intDigits, sign;
     char* endp;
     PR_dtoa(aValue, 0, 0, &intDigits, &sign, &endp, buf, buflen - 1);
 

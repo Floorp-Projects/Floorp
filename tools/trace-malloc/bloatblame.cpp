@@ -190,7 +190,7 @@ bad:
         }                                                                     \
     PR_END_MACRO
 
-static PRIntn tabulate_node(PLHashEntry *he, PRIntn i, void *arg)
+static int tabulate_node(PLHashEntry *he, int i, void *arg)
 {
     tmgraphnode *node = (tmgraphnode*) he;
     tmgraphnode **table = (tmgraphnode**) arg;

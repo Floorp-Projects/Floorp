@@ -406,7 +406,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
 
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
-                                        (void*)drawingModel);
+                                      reinterpret_cast<void*>(static_cast<uintptr_t>(drawingModel)));
 
 
         if (*result != NPERR_NO_ERROR) {

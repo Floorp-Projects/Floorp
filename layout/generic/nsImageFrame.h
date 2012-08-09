@@ -125,7 +125,7 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 #endif
 
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   nsresult GetIntrinsicImageSize(nsSize& aSize);
 

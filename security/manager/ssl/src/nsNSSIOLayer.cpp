@@ -698,12 +698,12 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy(
    specifically tailored to SSLTRACE. Sigh. */
 #define DUMPBUF_LINESIZE 24
 static void
-nsDumpBuffer(unsigned char *buf, PRIntn len)
+nsDumpBuffer(unsigned char *buf, int len)
 {
   char hexbuf[DUMPBUF_LINESIZE*3+1];
   char chrbuf[DUMPBUF_LINESIZE+1];
   static const char *hex = "0123456789abcdef";
-  PRIntn i = 0, l = 0;
+  int i = 0, l = 0;
   char ch, *c, *h;
   if (len == 0)
     return;
@@ -997,7 +997,7 @@ nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = 
 bool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = false;
 PRInt32 nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
 
-static PRIntn _PSM_InvalidInt(void)
+static int _PSM_InvalidInt(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
@@ -1064,7 +1064,7 @@ static PRStatus PR_CALLBACK PSMSetsocketoption(PRFileDesc *fd,
 }
 
 static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
-    PRIntn flags, PRIntervalTime timeout)
+    int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
   nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, reading, locker);
@@ -1089,7 +1089,7 @@ static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
 }
 
 static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
-    PRIntn flags, PRIntervalTime timeout)
+    int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
   nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, writing, locker);
@@ -1136,7 +1136,7 @@ static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, PRInt16 out_flags
   return fd->lower->methods->connectcontinue(fd, out_flags);
 }
 
-static PRIntn PSMAvailable(void)
+static int PSMAvailable(void)
 {
   // This is called through PR_Available(), but is not implemented in PSM
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
@@ -1436,7 +1436,7 @@ typedef struct {
     SECItem derConstraint;
     SECItem derPort;
     CERTGeneralName* constraint; /* decoded constraint */
-    PRIntn port; /* decoded port number */
+    int port; /* decoded port number */
 } CERTCertificateScopeEntry;
 
 typedef struct {
@@ -1562,7 +1562,7 @@ static char* _str_to_lower(char* string)
  * the port) does not satisfy the restriction
  */
 static bool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
-                                     char* hostIP, PRIntn port)
+                                     char* hostIP, int port)
 {
     bool rv = true; /* whether the cert can be presented */
     SECStatus srv;
@@ -1888,7 +1888,7 @@ void ClientAuthDataRunnable::RunOnTargetThread()
   CERTCertListNode* node;
   CERTCertNicknames* nicknames = NULL;
   char* extracted = NULL;
-  PRIntn keyError = 0; /* used for private key retrieval error */
+  int keyError = 0; /* used for private key retrieval error */
   SSM_UserCertChoice certChoice;
   PRInt32 NumberOfCerts = 0;
   void * wincx = mSocketInfo;

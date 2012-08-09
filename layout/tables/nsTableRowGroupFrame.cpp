@@ -231,10 +231,10 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                                aLists, item, DisplayRows);
 }
 
-PRIntn
+int
 nsTableRowGroupFrame::GetSkipSides() const
 {
-  PRIntn skip = 0;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }

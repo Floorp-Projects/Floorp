@@ -135,7 +135,7 @@ protected:
 
   nsInlineFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   nsresult ReflowFrames(nsPresContext* aPresContext,
                         const nsHTMLReflowState& aReflowState,
