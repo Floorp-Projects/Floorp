@@ -57,6 +57,14 @@ public:
     USE_GESTURE_DETECTOR
   };
 
+  /**
+   * Constant describing the tolerance in distance we use, multiplied by the
+   * device DPI, before we start panning the screen. This is to prevent us from
+   * accidentally processing taps as touch moves, and from very short/accidental
+   * touches moving the screen.
+   */
+  static const float TOUCH_START_TOLERANCE;
+
   AsyncPanZoomController(GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
   ~AsyncPanZoomController();
@@ -178,6 +186,12 @@ public:
    * whenever it changes.
    */
   void SetDPI(int aDPI);
+
+  /**
+   * Gets the DPI of the device for use outside the panning and zooming logic.
+   * It defaults to 72 if not set using SetDPI() at any point.
+   */
+  int GetDPI();
 
 protected:
   /**
