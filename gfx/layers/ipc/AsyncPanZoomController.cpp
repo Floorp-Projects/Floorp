@@ -24,6 +24,8 @@ using namespace mozilla::css;
 namespace mozilla {
 namespace layers {
 
+const float AsyncPanZoomController::TOUCH_START_TOLERANCE = 1.0f/16.0f;
+
 static const float EPSILON = 0.0001;
 
 /**
@@ -275,7 +277,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      float panThreshold = 1.0f/2.0f * mDPI;
+      float panThreshold = TOUCH_START_TOLERANCE * mDPI;
       UpdateWithTouchAtDevicePoint(aEvent);
 
       if (PanDistance() < panThreshold) {
@@ -736,6 +738,10 @@ const nsIntRect AsyncPanZoomController::CalculatePendingDisplayPort() {
 
 void AsyncPanZoomController::SetDPI(int aDPI) {
   mDPI = aDPI;
+}
+
+int AsyncPanZoomController::GetDPI() {
+  return mDPI;
 }
 
 void AsyncPanZoomController::ScheduleComposite() {
