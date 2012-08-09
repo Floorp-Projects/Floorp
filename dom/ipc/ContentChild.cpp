@@ -220,10 +220,10 @@ ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
  :
-#ifdef ANDROID
-   mScreenSize(0, 0),
-#endif
    mID(PRUint64(-1))
+#ifdef ANDROID
+   ,mScreenSize(0, 0)
+#endif
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
