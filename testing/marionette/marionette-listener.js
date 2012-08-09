@@ -100,6 +100,7 @@ function startListeners() {
   addMessageListenerId("Marionette:clickElement", clickElement);
   addMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
   addMessageListenerId("Marionette:getElementText", getElementText);
+  addMessageListenerId("Marionette:getElementTagName", getElementTagName);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -159,7 +160,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:findElementsContent", findElementsContent);
   removeMessageListenerId("Marionette:clickElement", clickElement);
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
-  removeMessageListenerId("Marionette:getElementText", getElementText);
+  removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -609,6 +610,19 @@ function getElementText(msg) {
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     sendResponse({value: utils.getElementText(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+  }
+}
+
+/**
+ * Get the tag name of an element.
+ */
+function getElementTagName(msg) {
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    sendResponse({value: el.tagName.toLowerCase()});
   }
   catch (e) {
     sendError(e.message, e.code, e.stack);

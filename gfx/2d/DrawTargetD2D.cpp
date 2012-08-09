@@ -1803,7 +1803,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
   DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
   if (params) {
     hr = aFont->mFontFace->GetRecommendedRenderingMode(
-      (FLOAT)aFont->mSize,
+      (FLOAT)aFont->GetSize(),
       1.0f,
       DWRITE_MEASURING_MODE_NATURAL,
       params,
@@ -1822,7 +1822,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
   case DWRITE_RENDERING_MODE_DEFAULT:
     // As per DWRITE_RENDERING_MODE documentation, pick Natural for font
     // sizes under 16 ppem
-    if (aFont->mSize < 16.0f) {
+    if (aFont->GetSize() < 16.0f) {
       renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL;
     } else {
       renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;

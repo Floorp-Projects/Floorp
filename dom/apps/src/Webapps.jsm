@@ -221,6 +221,7 @@ let DOMApplicationRegistry = {
         this.getSelf(msg);
         break;
       case "Webapps:Uninstall":
+        Services.obs.notifyObservers(this, "webapps-uninstall", JSON.stringify(msg));
         this.uninstall(msg);
         break;
       case "Webapps:Launch":
@@ -698,7 +699,25 @@ let DOMApplicationRegistry = {
     for (let id in this.webapps) {
       let app = this.webapps[id];
       if (app.manifestURL == aManifestURL) {
-        return this._cloneAppObject(app);
+        let res = this._cloneAppObject(app);
+        res.hasPermission = function(permission) {
+          let localId = DOMApplicationRegistry.getAppLocalIdByManifestURL(
+            this.manifestURL);
+          let uri = Services.io.newURI(this.manifestURL, null, null);
+          let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                       .getService(Ci.nsIScriptSecurityManager);
+          // XXX for the purposes of permissions checking, this helper
+          // should always be called on !isBrowser frames, so we
+          // assume false here.
+          let principal = secMan.getAppCodebasePrincipal(uri, localId,
+                                                         /*mozbrowser*/false);
+          let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+                                                                     permission);
+          return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
+        };
+        res.QueryInterface = XPCOMUtils.generateQI([Ci.mozIDOMApplication,
+                                                    Ci.mozIApplication]);
+        return res;
       }
     }
 
@@ -955,6 +974,10 @@ DOMApplicationManifest.prototype = {
 
   get appcache_path() {
     return this._localeProp("appcache_path");
+  },
+
+  get orientation() {
+    return this._localeProp("orientation");
   },
 
   iconURLForSize: function(aSize) {

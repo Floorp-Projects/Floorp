@@ -57,6 +57,14 @@ public:
     USE_GESTURE_DETECTOR
   };
 
+  /**
+   * Constant describing the tolerance in distance we use, multiplied by the
+   * device DPI, before we start panning the screen. This is to prevent us from
+   * accidentally processing taps as touch moves, and from very short/accidental
+   * touches moving the screen.
+   */
+  static const float TOUCH_START_TOLERANCE;
+
   AsyncPanZoomController(GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
   ~AsyncPanZoomController();
@@ -98,6 +106,33 @@ public:
    * XXX: Use nsIntRect instead.
    */
   void UpdateViewportSize(int aWidth, int aHeight);
+
+  /**
+   * A DOM touch listener has been added. When called, we enable the machinery
+   * that allows touch listeners to preventDefault any touch inputs. This should
+   * not be called unless there are actually touch listeners as it introduces
+   * potentially unbounded lag because it causes a round-trip through content.
+   * Usually, if content is responding in a timely fashion, this only introduces
+   * a nearly constant few hundred ms of lag.
+   */
+  void NotifyDOMTouchListenerAdded();
+
+  /**
+   * We have found a scrollable subframe, so disable our machinery until we hit
+   * a touch end or a new touch start. This prevents us from accidentally
+   * panning both the subframe and the parent frame.
+   *
+   * XXX/bug 775452: We should eventually be supporting async scrollable
+   * subframes.
+   */
+  void CancelDefaultPanZoom();
+
+  /**
+   * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
+   * in. The actual animation is done on the compositor thread after being set
+   * up. |aRect| must be given in CSS pixels, relative to the document.
+   */
+  void ZoomToRect(const gfxRect& aRect);
 
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
@@ -151,6 +186,12 @@ public:
    * whenever it changes.
    */
   void SetDPI(int aDPI);
+
+  /**
+   * Gets the DPI of the device for use outside the panning and zooming logic.
+   * It defaults to 72 if not set using SetDPI() at any point.
+   */
+  int GetDPI();
 
 protected:
   /**
@@ -255,6 +296,8 @@ protected:
    * Cancels any currently running animation. Note that all this does is set the
    * state of the AsyncPanZoomController back to NOTHING, but it is the
    * animation's responsibility to check this before advancing.
+   *
+   * *** The monitor must be held while calling this.
    */
   void CancelAnimation();
 
@@ -269,7 +312,7 @@ protected:
   /**
    * Gets a vector of the velocities of each axis.
    */
-  const nsPoint GetVelocityVector();
+  const gfx::Point GetVelocityVector();
 
   /**
    * Gets a reference to the first SingleTouchData from a MultiTouchInput.  This
@@ -305,6 +348,17 @@ protected:
   const nsIntRect CalculatePendingDisplayPort();
 
   /**
+   * Attempts to enlarge the displayport along a single axis. Returns whether or
+   * not the displayport was enlarged. This will fail in circumstances where the
+   * velocity along that axis is not high enough to need any changes. The
+   * displayport metrics are expected to be passed into |aDisplayPortOffset| and
+   * |aDisplayPortLength|. If enlarged, these will be updated with the new
+   * metrics.
+   */
+  bool EnlargeDisplayPortAlongAxis(float aViewport, float aVelocity,
+                                   float* aDisplayPortOffset, float* aDisplayPortLength);
+
+  /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
    * work. Note that only one paint request can be active at a time. If a paint
@@ -335,6 +389,7 @@ private:
     TOUCHING,       /* one touch-start event received */
     PANNING,        /* panning without axis lock */
     PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
+    ANIMATING_ZOOM  /* animated zoom to a new rect */
   };
 
   enum ContentPainterStatus {
@@ -356,6 +411,13 @@ private:
    CONTENT_PAINTING_AND_PAINT_PENDING
   };
 
+  /**
+   * Helper to set the current state. Holds the monitor before actually setting
+   * it. If the monitor is already held by the current thread, it is safe to
+   * instead use: |mState = NEWSTATE;|
+   */
+  void SetState(PanZoomState aState);
+
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
@@ -371,9 +433,23 @@ private:
   // If we don't do this check, we don't get a ShadowLayersUpdated back.
   FrameMetrics mLastPaintRequestMetrics;
 
+  // Old metrics from before we started a zoom animation. This is only valid
+  // when we are in the "ANIMATED_ZOOM" state. This is used so that we can
+  // interpolate between the start and end frames. We only use the
+  // |mViewportScrollOffset| and |mResolution| fields on this.
+  FrameMetrics mStartZoomToMetrics;
+  // Target metrics for a zoom to animation. This is only valid when we are in
+  // the "ANIMATED_ZOOM" state. We only use the |mViewportScrollOffset| and
+  // |mResolution| fields on this.
+  FrameMetrics mEndZoomToMetrics;
+
   AxisX mX;
   AxisY mY;
 
+  // Protects |mFrameMetrics|, |mLastContentPaintMetrics| and |mState|. Before
+  // manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the monitor
+  // should be held. When setting |mState|, either the SetState() function can
+  // be used, or the monitor can be held and then |mState| updated.
   Monitor mMonitor;
 
   // The last time the compositor has sampled the content transform for this
@@ -382,10 +458,18 @@ private:
   // The last time a touch event came through on the UI thread.
   PRInt32 mLastEventTime;
 
+  // Start time of an animation. This is used for a zoom to animation to mark
+  // the beginning.
+  TimeStamp mAnimationStartTime;
+
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
   nsIntPoint mLastZoomFocus;
+
+  // Stores the state of panning and zooming this frame. This is protected by
+  // |mMonitor|; that is, it should be held whenever this is updated.
   PanZoomState mState;
+
   int mDPI;
 
   // Stores the current paint status of the frame that we're managing. Repaints
@@ -393,6 +477,14 @@ private:
   // this status will not be updated. It is only changed when this class
   // requests a repaint.
   ContentPainterStatus mContentPainterStatus;
+
+  // Whether or not we might have touch listeners. This is a conservative
+  // approximation and may not be accurate.
+  bool mMayHaveTouchListeners;
+
+  // Flag used to determine whether or not we should disable handling of the
+  // next batch of touch events. This is used for sync scrolling of subframes.
+  bool mDisableNextTouchBatch;
 
   friend class Axis;
 };
