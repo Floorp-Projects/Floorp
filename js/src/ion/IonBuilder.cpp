@@ -3737,7 +3737,11 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
 
     // Pass |this| and function.
     call->addArg(0, thisArg);
-    call->initFunction(current->pop());
+
+    MDefinition *fun = current->pop();
+    if (fun->isDOMFunction())
+        call->setDOMFunction();
+    call->initFunction(fun);
 
     current->add(call);
     current->push(call);
@@ -4342,28 +4346,45 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
         break;
 
       case JSVAL_TYPE_OBJECT:
-      case JSVAL_TYPE_UNKNOWN:
+      case JSVAL_TYPE_UNKNOWN: {
         // For property accesses which may be on many objects, we just need to
         // find a prototype common to all the objects; if that prototype
-        // has the property, the access will not be on a missing property.
-        if (types->getObjectCount() == 1) {
-            types::TypeObject *object = types->getTypeObject(0);
-            if (!object)
-                return true;
-            if (object && object->proto) {
-                if (!TestSingletonProperty(cx, object->proto, id, isKnownConstant))
-                    return false;
-                if (*isKnownConstant) {
-                    types->addFreeze(cx);
+        // has the singleton property, the access will not be on a missing property.
+        bool thoughtConstant = true;
+        for (unsigned i = 0; i < types->getObjectCount(); i++) {
+            types::TypeObject *object = types->getTypeObject(i);
+            if (!object) {
+                // Try to get it through the singleton.
+                JSObject *curObj = types->getSingleObject(i);
+                // As per the comment in jsinfer.h, there can be holes in
+                // TypeSets, so just skip over them.
+                if (!curObj)
+                    continue;
+                object = curObj->getType(cx);
+            }
 
-                    // If this is not a known object, a test will be needed.
-                    *testObject = (type != JSVAL_TYPE_OBJECT);
-                }
-                return true;
+            if (object->proto) {
+                // Test this type.
+                if (!TestSingletonProperty(cx, object->proto, id, &thoughtConstant))
+                    return false;
+                // Short circuit
+                if (!thoughtConstant)
+                    break;
+            } else {
+                // Can't be on the prototype chain with no prototypes...
+                thoughtConstant = false;
+                break;
             }
         }
-        return true;
+        if (thoughtConstant) {
+                types->addFreeze(cx);
 
+                // If this is not a known object, a test will be needed.
+                *testObject = (type != JSVAL_TYPE_OBJECT);
+        }
+        *isKnownConstant = thoughtConstant;
+        return true;
+      }
       default:
         return true;
     }
@@ -5435,6 +5456,68 @@ TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func)
     return true;
 }
 
+static bool
+TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
+{
+    if (inTypes->unknown())
+        return false;
+
+    // First iterate to make sure they all are DOM objects, then freeze all of
+    // them as such if they are.
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            // Skip holes in TypeSets.
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        if (curType->unknownProperties())
+            return false;
+
+        // Unlike TypeSet::HasObjectFlags, TypeObject::hasAnyFlags doesn't add a
+        // freeze.
+        if (curType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM))
+            return false;
+    }
+
+    // If we didn't check anything, no reason to say yes.
+    if (inTypes->getObjectCount() > 0)
+        return true;
+
+    return false;
+}
+
+static void
+FreezeDOMTypes(JSContext *cx, types::TypeSet *inTypes)
+{
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            // Skip holes in TypeSets.
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        // Add freeze by asking the question.
+        DebugOnly<bool> wasntDOM = types::TypeSet::HasObjectFlags(cx, curType,
+                                                                  types::OBJECT_FLAG_NON_DOM);
+        JS_ASSERT(!wasntDOM);
+    }
+
+    inTypes->addFreeze(cx);
+}
+
 bool
 IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
                                     types::TypeSet *objTypes, types::TypeSet *pushedTypes)
@@ -5641,7 +5724,19 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
                 MGuardObject *guard = MGuardObject::New(obj);
                 current->add(guard);
             }
-            return pushConstant(ObjectValue(*singleton));
+            MConstant *known = MConstant::New(ObjectValue(*singleton));
+            current->add(known);
+            current->push(known);
+            if (singleton->isFunction()) {
+                RootedFunction singletonFunc(cx, singleton->toFunction());
+                if (TestAreKnownDOMTypes(cx, unaryTypes.inTypes) &&
+                    TestShouldDOMCall(cx, unaryTypes.inTypes, singletonFunc))
+                {
+                    FreezeDOMTypes(cx, unaryTypes.inTypes);
+                    known->setDOMFunction();
+                }
+            }
+            return true;
         }
     }
 
