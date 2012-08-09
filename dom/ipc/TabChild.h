@@ -158,6 +158,8 @@ public:
     virtual ~TabChild();
     nsresult Init();
 
+    PRUint32 GetAppId() { return mAppId; }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2

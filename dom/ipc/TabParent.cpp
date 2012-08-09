@@ -11,6 +11,7 @@
 #include "Blob.h"
 #include "IDBFactory.h"
 #include "IndexedDBParent.h"
+#include "mozIApplication.h"
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
@@ -27,6 +28,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIContent.h"
+#include "nsIDOMApplicationRegistry.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -36,6 +38,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
 #include "nsIMozBrowserFrame.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
@@ -52,6 +55,7 @@ using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
+using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::dom::indexedDB;
 
@@ -66,8 +70,9 @@ TabParent *TabParent::mIMETabParent = nullptr;
 
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
-TabParent::TabParent()
+TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
   : mFrameElement(NULL)
+  , mApp(aApp)
   , mIMESelectionAnchor(0)
   , mIMESelectionFocus(0)
   , mIMEComposing(false)
@@ -76,6 +81,7 @@ TabParent::TabParent()
   , mIMESeqno(0)
   , mDPI(0)
   , mActive(false)
+  , mIsBrowserElement(aIsBrowserElement)
   , mShown(false)
 {
 }
