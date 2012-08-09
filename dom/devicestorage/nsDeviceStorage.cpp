@@ -280,6 +280,21 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
+#ifdef MOZ_WIDGET_GONK
+static void
+RegisterForSDCardChanges(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->AddObserver(aObserver, NS_VOLUME_STATE_CHANGED, false);
+}
+
+static void
+UnregisterForSDCardChanges(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->RemoveObserver(aObserver, NS_VOLUME_STATE_CHANGED);
+}
+#endif
 
 void
 nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
@@ -287,29 +302,6 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
   nsCOMPtr<nsIFile> f;
   nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   NS_ASSERTION(dirService, "Must have directory service");
-
-#ifdef MOZ_WIDGET_GONK
-  mFile = nullptr;
-
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
-  if (!vs) {
-    return;
-  }
-
-  nsCOMPtr<nsIVolume> v;
-  vs->GetVolumeByPath(NS_LITERAL_STRING("/sdcard"), getter_AddRefs(v));
-  
-  if (!v) {
-    return;
-  }
-
-  PRInt32 state;
-  v->GetState(&state);
-
-  if (state != nsIVolume::STATE_MOUNTED) {
-    return;
-  }
-#endif
 
   // Picture directory
   if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
@@ -323,7 +315,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
   }
 
   // Video directory
-  if (aType.Equals(NS_LITERAL_STRING("videos"))) {
+  else if (aType.Equals(NS_LITERAL_STRING("videos"))) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Movies"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -334,7 +326,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
   }
 
   // Music directory
-  if (aType.Equals(NS_LITERAL_STRING("music"))) {
+  else if (aType.Equals(NS_LITERAL_STRING("music"))) {
 #ifdef MOZ_WIDGET_GONK
     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Music"), false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
@@ -351,13 +343,16 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
     if (aType.Equals(NS_LITERAL_STRING("testing"))) {
       dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
       if (f) {
-	f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
-	f->Create(nsIFile::DIRECTORY_TYPE, 0777);
-       f->Normalize();
+        f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
+        f->Create(nsIFile::DIRECTORY_TYPE, 0777);
+        f->Normalize();
       }
     }
   } 
 
+#ifdef MOZ_WIDGET_GONK
+  RegisterForSDCardChanges(this);
+#endif
   mFile = f;
 }
 
@@ -1213,6 +1208,10 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage()
   : mIsWatchingFile(false)
+#ifdef MOZ_WIDGET_GONK
+  , mLastVolumeState(nsIVolume::STATE_INIT)
+#endif
+
 { }
 
 nsresult
@@ -1247,6 +1246,9 @@ nsDOMDeviceStorage::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+#ifdef MOZ_WIDGET_GONK
+  UnregisterForSDCardChanges(this);
+#endif
   if (mIsWatchingFile) {
     if (XRE_GetProcessType() != GeckoProcessType_Default) {
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -1524,39 +1526,95 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
   return NS_OK;
 }
 
+#ifdef MOZ_WIDGET_GONK
+void
+nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
+                                                 true, false,
+                                                 NS_LITERAL_STRING(""), 
+                                                 aMounted ? NS_LITERAL_STRING("available")
+                                                          : NS_LITERAL_STRING("unavailable"));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  bool ignore;
+  DispatchEvent(ce, &ignore);
+}
+#endif
+
 NS_IMETHODIMP
 nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  // data strings will have the format of
-  //  reason:path
-  nsDependentString data(aData);
+  if (!strcmp(aTopic, "file-watcher-update")) {
 
-  nsAString::const_iterator start, end;
-  nsAString::const_iterator colon;
+    // data strings will have the format of
+    //  reason:path
+    nsDependentString data(aData);
 
-  data.BeginReading(start);
-  data.EndReading(end);
-  colon = end;
+    nsAString::const_iterator start, end;
+    nsAString::const_iterator colon;
 
-  nsString reason;
-  nsString filepath;
-  if (!FindInReadable(NS_LITERAL_STRING(":"), start, colon)) {
+    data.BeginReading(start);
+    data.EndReading(end);
+    colon = end;
+
+    nsString reason;
+    nsString filepath;
+    if (!FindInReadable(NS_LITERAL_STRING(":"), start, colon)) {
+      return NS_OK;
+    }
+   
+    filepath = Substring(colon, end);
+    data.BeginReading(start);
+    reason = Substring(start, --colon);
+
+    nsCOMPtr<nsIFile> f;
+    NS_NewLocalFile(filepath, false, getter_AddRefs(f));
+ 
+    nsCString creason;
+    CopyUTF16toUTF8(reason, creason);
+
+    Update(creason.get(), f);
     return NS_OK;
   }
-   
-  filepath = Substring(colon, end);
-  data.BeginReading(start);
-  reason = Substring(start, --colon);
 
-  nsCOMPtr<nsIFile> f;
-  NS_NewLocalFile(filepath, false, getter_AddRefs(f));
- 
-  nsCString creason;
-  creason.AssignWithConversion(reason);
-  CopyUTF16toUTF8(reason, creason);
+#ifdef MOZ_WIDGET_GONK
+  if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
+    nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
+    if (!vol) {
+      return NS_OK;
+    }
+    nsString volName;
+    vol->GetName(volName);
+    if (!volName.Equals(NS_LITERAL_STRING("sdcard"))) {
+      return NS_OK;
+    }
 
-  Update(creason.get(), f);
- 
+    PRInt32 state;
+    nsresult rv = vol->GetState(&state);
+    if (NS_FAILED(rv)) {
+      return NS_OK;
+    }
+
+    if (mLastVolumeState != state) {
+      mLastVolumeState = state;
+      if (state == nsIVolume::STATE_MOUNTED ||
+	  state == nsIVolume::STATE_NOMEDIA ||
+	  state == nsIVolume::STATE_SHARED  ) {
+	bool mounted = (state == nsIVolume::STATE_MOUNTED);
+	DispatchMountChangeEvent(mounted);
+      }
+      return NS_OK;
+    }
+    return NS_OK;
+  }
+#endif
   return NS_OK;
 }
 
