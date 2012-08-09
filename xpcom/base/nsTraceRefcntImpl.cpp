@@ -155,7 +155,7 @@ AssertActivityIsLegal()
 // the BloatEntry.
 
 static void *
-DefaultAllocTable(void *pool, PRSize size)
+DefaultAllocTable(void *pool, size_t size)
 {
     return PR_MALLOC(size);
 }

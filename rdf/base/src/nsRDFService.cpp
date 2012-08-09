@@ -82,7 +82,7 @@ class BlobImpl;
 // XXX sigh, why were DefaultAllocTable et. al. declared static, anyway?
 
 static void *
-DataSourceAllocTable(void *pool, PRSize size)
+DataSourceAllocTable(void *pool, size_t size)
 {
     return PR_MALLOC(size);
 }
