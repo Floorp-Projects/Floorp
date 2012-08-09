@@ -505,7 +505,7 @@ public:
 
     ElfValue *getValueForType(unsigned int tag);
     ElfSection *getSectionForType(unsigned int tag);
-    void setValueForType(unsigned int tag, ElfValue *val);
+    bool setValueForType(unsigned int tag, ElfValue *val);
 private:
     std::vector<Elf_DynValue> dyns;
 };
