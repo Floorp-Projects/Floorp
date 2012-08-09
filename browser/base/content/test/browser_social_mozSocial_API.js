@@ -5,11 +5,6 @@
 let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 function test() {
-  // XXX Bug 775779
-  if (Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2).isDebugBuild) {
-    ok(true, "can't run social sidebar test in debug builds because they falsely report leaks");
-    return;
-  }
   waitForExplicitFinish();
 
   let manifest = { // normal provider
