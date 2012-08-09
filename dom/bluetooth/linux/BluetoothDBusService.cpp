@@ -979,7 +979,8 @@ BluetoothDBusService::GetDeviceServiceChannelInternal(const nsAString& aObjectPa
   const char* pattern = NS_ConvertUTF16toUTF8(aPattern).get();
 
   DBusMessage *reply =
-    dbus_func_args(mConnection, deviceObjectPath,
+    dbus_func_args(gThreadConnection->GetConnection(),
+                   deviceObjectPath,
                    DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
                    DBUS_TYPE_STRING, &pattern,
                    DBUS_TYPE_UINT16, &aAttributeId,
