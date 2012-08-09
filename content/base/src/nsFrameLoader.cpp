@@ -13,7 +13,6 @@
 
 #include "prenv.h"
 
-#include "mozIApplication.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMMozBrowserFrame.h"
@@ -32,7 +31,6 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsIDOMApplicationRegistry.h"
 #include "nsIBaseWindow.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
@@ -1975,8 +1973,9 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
+  PRUint32 appId = 0;
   bool isBrowserElement = false;
-  nsCOMPtr<mozIApplication> app;
+
   if (OwnerIsBrowserFrame()) {
     isBrowserElement = true;
 
@@ -1990,21 +1989,24 @@ nsFrameLoader::TryRemoteBrowser()
         return false;
       }
 
-      nsCOMPtr<mozIDOMApplication> domApp;
-      appsService->GetAppByManifestURL(manifest, getter_AddRefs(domApp));
-      // If the frame is actually an app, we should not mark it as a
-      // browser.  This is to identify the data store: since <app>s
-      // and <browser>s-within-<app>s have different stores, we want
-      // to ensure the <app> uses its store, not the one for its
-      // <browser>s.
-      app = do_QueryInterface(domApp);
-      if (app) {
+      appsService->GetAppLocalIdByManifestURL(manifest, &appId);
+
+      // If the frame is actually an app, we should not mark it as a browser.
+      if (appId != nsIScriptSecurityManager::NO_APP_ID) {
         isBrowserElement = false;
       }
     }
   }
 
-  if ((mRemoteBrowser = ContentParent::CreateBrowser(app, isBrowserElement))) {
+  // If our owner has no app manifest URL, then this is equivalent to
+  // ContentParent::GetNewOrUsed().
+  nsAutoString appManifest;
+  GetOwnerAppManifestURL(appManifest);
+  ContentParent* parent = ContentParent::GetForApp(appManifest);
+
+  NS_ASSERTION(parent->IsAlive(), "Process parent should be alive; something is very wrong!");
+  mRemoteBrowser = parent->CreateTab(chromeFlags, isBrowserElement, appId);
+  if (mRemoteBrowser) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mRemoteBrowser->SetOwnerElement(element);
 
@@ -2017,8 +2019,8 @@ nsFrameLoader::TryRemoteBrowser()
     nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
     mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
-
-    mChildHost = static_cast<ContentParent*>(mRemoteBrowser->Manager());
+    
+    mChildHost = parent;
   }
   return true;
 }
