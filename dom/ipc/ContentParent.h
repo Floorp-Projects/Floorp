@@ -26,7 +26,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 
-class mozIApplication;
 class nsFrameMessageManager;
 class nsIDOMBlob;
 
@@ -61,16 +60,13 @@ public:
     static ContentParent* GetNewOrUsed();
 
     /**
-     * Get or create a content process for the given app descriptor,
-     * which may be null.  This function will assign processes to app
-     * or non-app browsers by internal heuristics.
+     * Get or create a content process for the given app.  A given app
+     * (identified by its manifest URL) gets one process all to itself.
      *
-     * Currently apps are given their own process, and browser tabs
-     * share processes.
+     * If the given manifest is the empty string, then this method is equivalent
+     * to GetNewOrUsed().
      */
-    static TabParent* CreateBrowser(mozIApplication* aApp,
-                                    bool aIsBrowserFrame);
-
+    static ContentParent* GetForApp(const nsAString& aManifestURL);
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
     NS_DECL_ISUPPORTS
@@ -78,6 +74,14 @@ public:
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIDOMGEOPOSITIONCALLBACK
 
+    /**
+     * Create a new tab.
+     *
+     * |aIsBrowserElement| indicates whether this tab is part of an
+     * <iframe mozbrowser>.
+     * |aAppId| indicates which app the tab belongs to.
+     */
+    TabParent* CreateTab(PRUint32 aChromeFlags, bool aIsBrowserElement, PRUint32 aAppId);
     /** Notify that a tab was destroyed during normal operation. */
     void NotifyTabDestroyed(PBrowserParent* aTab);
 
@@ -139,9 +143,7 @@ private:
     PCompositorParent* AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                         base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags,
-                                          const bool& aIsBrowserElement,
-                                          const AppId& aApp);
+    virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserElement, const PRUint32& aAppId);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);
