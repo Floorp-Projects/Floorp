@@ -58,7 +58,7 @@ let DOMContactManager = {
   receiveMessage: function(aMessage) {
     debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
     let mm = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
-    let msg = aMessage.json;
+    let msg = aMessage.data;
 
     /*
      * Sorting the contacts by sortBy field. sortBy can either be familyName or givenName.
@@ -69,8 +69,10 @@ let DOMContactManager = {
       let x, y;
       let sortByNameSet = true;
       let result = 0;
-      let sortBy = msg.findOptions.sortBy;
-      let sortOrder = msg.findOptions.sortOrder;
+      let findOptions = msg.options.findOptions;
+      let sortBy = findOptions.sortBy;
+      let sortOrder = findOptions.sortOrder;
+      
       if (!a.properties[sortBy] || !(x = a.properties[sortBy][0].toLowerCase())) {
         sortByNameSet = false;
       }
@@ -107,30 +109,33 @@ let DOMContactManager = {
           function(contacts) {
             for (let i in contacts)
               result.push(contacts[i]);
-            if (msg.findOptions.sortOrder !== 'undefined' && msg.findOptions.sortBy !== 'undefined') {
-              debug('sortBy: ' + msg.findOptions.sortBy + ', sortOrder: ' + msg.findOptions.sortOrder );
-              result.sort(sortfunction);
-              if (msg.findOptions.filterLimit)
-                result = result.slice(0, msg.findOptions.filterLimit);
+            if (msg.options && msg.options.findOptions) {
+              let findOptions = msg.options.findOptions;
+              if (findOptions.sortOrder !== 'undefined' && findOptions.sortBy !== 'undefined') {
+                debug('sortBy: ' + findOptions.sortBy + ', sortOrder: ' + findOptions.sortOrder );
+                result.sort(sortfunction);
+                if (findOptions.filterLimit)
+                  result = result.slice(0, findOptions.filterLimit);
+              }
             }
 
             debug("result:" + JSON.stringify(result));
             mm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
           }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this),
-          msg.findOptions);
+          msg.options.findOptions);
         break;
       case "Contact:Save":
         this._db.saveContact(
-          msg.contact, 
-          function() { mm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID, contactID: msg.contact.id }); }.bind(this),
+          msg.options.contact,
+          function() { mm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID, contactID: msg.options.contact.id }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contact:Save:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
         break;
       case "Contact:Remove":
         this._db.removeContact(
-          msg.id, 
-          function() { mm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID, contactID: msg.id }); }.bind(this),
+          msg.options.id,
+          function() { mm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID, contactID: msg.options.id }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contact:Remove:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
         break;
@@ -139,6 +144,8 @@ let DOMContactManager = {
           function() { mm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
+      default:
+        debug("WRONG MESSAGE NAME: " + aMessage.name);
     }
   }
 }
