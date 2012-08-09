@@ -216,12 +216,22 @@ public class SyncConfiguration implements CredentialsSource {
   public String          prefsPath;
   public PrefsSource     prefsSource;
 
+  public static final String PREF_PREFS_VERSION = "prefs.version";
+  public static final long CURRENT_PREFS_VERSION = 1;
+
   public static final String CLIENTS_COLLECTION_TIMESTAMP = "serverClientsTimestamp";  // When the collection was touched.
   public static final String CLIENT_RECORD_TIMESTAMP = "serverClientRecordTimestamp";  // When our record was touched.
 
   public static final String PREF_CLUSTER_URL = "clusterURL";
   public static final String PREF_SYNC_ID = "syncID";
   public static final String PREF_ENABLED_ENGINE_NAMES = "enabledEngineNames";
+
+  public static final String PREF_EARLIEST_NEXT_SYNC = "earliestnextsync";
+  public static final String PREF_CLUSTER_URL_IS_STALE = "clusterurlisstale";
+
+  public static final String PREF_ACCOUNT_GUID = "account.guid";
+  public static final String PREF_CLIENT_NAME = "account.clientName";
+  public static final String PREF_NUM_CLIENTS = "account.numClients";
 
   /**
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to

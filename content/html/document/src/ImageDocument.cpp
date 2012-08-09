@@ -92,7 +92,9 @@ public:
 
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
+  NS_IMETHOD OnStopContainer(imgIRequest* aRequest, imgIContainer* aImage);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult aStatus, const PRUnichar *aStatusArg);
+  NS_IMETHOD OnDiscard(imgIRequest *aRequest);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -520,17 +522,25 @@ ImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 }
 
 NS_IMETHODIMP
+ImageDocument::OnStopContainer(imgIRequest* aRequest, imgIContainer* aImage)
+{
+  if (mImageContent) {
+    // Update the background-color of the image only after the
+    // image has been decoded to prevent flashes of just the
+    // background-color.
+    mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                           NS_LITERAL_STRING("decoded"), true);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ImageDocument::OnStopDecode(imgIRequest *aRequest,
                             nsresult aStatus,
                             const PRUnichar *aStatusArg)
 {
   UpdateTitleAndCharset();
-
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
-  if (imageLoader) {
-    mObservingImageLoader = false;
-    imageLoader->RemoveObserver(this);
-  }
 
   // mImageContent can be null if the document is already destroyed
   if (NS_FAILED(aStatus) && mStringBundle && mImageContent) {
@@ -546,6 +556,18 @@ ImageDocument::OnStopDecode(imgIRequest *aRequest,
     mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, false);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageDocument::OnDiscard(imgIRequest *aRequest)
+{
+  // mImageContent can be null if the document is already destroyed
+  if (mImageContent) {
+    // Remove any decoded-related styling when the image is unloaded.
+    mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                             true);
+  }
   return NS_OK;
 }
 

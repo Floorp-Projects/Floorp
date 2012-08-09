@@ -186,9 +186,9 @@ var gNextTest = 0;
 
 function runNextTest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.wrap(Components)
+                           .classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
 
   if (gNextTest < gTests.length) {
     gCurrentTest = gTests[gNextTest++];
@@ -214,9 +214,9 @@ function runNextTest()
 
 function finishTest()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-      getService(Components.interfaces.nsIPrefBranch);
+    var prefs = SpecialPowers.wrap(Components)
+                             .classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
     prefs.setBoolPref("network.jar.open-unsafe-types", false);
 
   if (gNumPokes == 0) {
@@ -228,9 +228,9 @@ function finishTest()
 
 function startTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.wrap(Components)
+                           .classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
   gPrefValue = prefs.getBoolPref("network.jar.open-unsafe-types");
 }
 

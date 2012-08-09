@@ -68,7 +68,7 @@ public:
 
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags,
                                          const bool& aIsBrowserElement,
-                                         const PRUint32& aAppId);
+                                         const AppId& aAppId);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
     virtual PDeviceStorageRequestChild* AllocPDeviceStorageRequest(const DeviceStorageParams&);

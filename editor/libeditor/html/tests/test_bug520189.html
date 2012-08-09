@@ -550,7 +550,8 @@ function doNextTest() {
 
 function getLoadContext() {
   const Ci = Components.interfaces;
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+  return SpecialPowers.wrap(window)
+               .QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .QueryInterface(Ci.nsILoadContext);
 }
@@ -563,13 +564,11 @@ function runTest(test) {
   } else
     elem.focus();
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
-                        .createInstance(Components.interfaces.nsITransferable);
+  var trans = SpecialPowers.wrap(Components).classes["@mozilla.org/widget/transferable;1"]
+                           .createInstance(Components.interfaces.nsITransferable);
   trans.init(getLoadContext());
-  var data = Components.classes["@mozilla.org/supports-string;1"]
-                       .createInstance(Components.interfaces.nsISupportsString);
+  var data = SpecialPowers.wrap(Components).classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
   data.data = test.payload;
   trans.addDataFlavor("text/html");
   trans.setTransferData("text/html", data, data.data.length * 2);
@@ -582,14 +581,14 @@ function runTest(test) {
       getSelection().collapse(elem, 0);
       win = window;
     }
-    editor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebNavigation)
-                .QueryInterface(Components.interfaces.nsIEditorDocShell)
-                .editor;
+    editor = SpecialPowers.wrap(win).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                          .getInterface(Components.interfaces.nsIWebNavigation)
+                          .QueryInterface(Components.interfaces.nsIEditorDocShell)
+                          .editor;
     editor.pasteTransferable(trans);
   } else {
-    var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
-                              .getService(Components.interfaces.nsIClipboard);
+    var clipboard = SpecialPowers.wrap(Components).classes["@mozilla.org/widget/clipboard;1"]
+                                 .getService(Components.interfaces.nsIClipboard);
 
     clipboard.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
 

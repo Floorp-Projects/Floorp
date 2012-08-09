@@ -31,9 +31,10 @@ function eventHandler(evt) {
 
 function test(trusted, type, removeAddedListener, removeSetListener, allowUntrusted) {
   if (trusted) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var x1 = SpecialPowers.wrap(new XMLHttpRequest());
+  } else {
+    x1 = new XMLHttpRequest();
   }
-  var x1 = new XMLHttpRequest();
 
   var handlerCount = 0;
   if (trusted || allowUntrusted || allowUntrusted == undefined) {

@@ -136,6 +136,17 @@ private:
   DOMTimeMilliSec mDOMContentLoadedEventStart;
   DOMTimeMilliSec mDOMContentLoadedEventEnd;
   DOMTimeMilliSec mDOMComplete;
+
+  // Booleans to keep track of what things we've already been notified
+  // about.  We don't update those once we've been notified about them
+  // once.
+  bool mLoadEventStartSet : 1;
+  bool mLoadEventEndSet : 1;
+  bool mDOMLoadingSet : 1;
+  bool mDOMInteractiveSet : 1;
+  bool mDOMContentLoadedEventStartSet : 1;
+  bool mDOMContentLoadedEventEndSet : 1;
+  bool mDOMCompleteSet : 1;
 };
 
 #endif /* nsDOMNavigationTiming_h___ */
