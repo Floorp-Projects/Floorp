@@ -188,7 +188,7 @@ def checkStubMember(member, isCustom):
     if member.noscript:
         raise UserError("%s %s is noscript."
                         % (member.kind.capitalize(), memberId))
-    if member.notxpcom:
+    if member.kind == 'method' and member.notxpcom:
         raise UserError(
             "%s %s: notxpcom methods are not supported."
             % (member.kind.capitalize(), memberId))

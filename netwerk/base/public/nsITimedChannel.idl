@@ -19,23 +19,23 @@ interface nsITimedChannel : nsISupports {
   // false.
   attribute boolean timingEnabled;
 
-  [notxpcom] readonly attribute TimeStamp channelCreation;
-  [notxpcom] readonly attribute TimeStamp asyncOpen;
+  [noscript] readonly attribute TimeStamp channelCreation;
+  [noscript] readonly attribute TimeStamp asyncOpen;
 
   // The following are only set when the document is not (only) read from the
   // cache
-  [notxpcom] readonly attribute TimeStamp domainLookupStart;
-  [notxpcom] readonly attribute TimeStamp domainLookupEnd;
-  [notxpcom] readonly attribute TimeStamp connectStart;
-  [notxpcom] readonly attribute TimeStamp connectEnd;
-  [notxpcom] readonly attribute TimeStamp requestStart;
-  [notxpcom] readonly attribute TimeStamp responseStart;
-  [notxpcom] readonly attribute TimeStamp responseEnd;
+  [noscript] readonly attribute TimeStamp domainLookupStart;
+  [noscript] readonly attribute TimeStamp domainLookupEnd;
+  [noscript] readonly attribute TimeStamp connectStart;
+  [noscript] readonly attribute TimeStamp connectEnd;
+  [noscript] readonly attribute TimeStamp requestStart;
+  [noscript] readonly attribute TimeStamp responseStart;
+  [noscript] readonly attribute TimeStamp responseEnd;
 
   // The following are only set if the document is (partially) read from the
   // cache
-  [notxpcom] readonly attribute TimeStamp cacheReadStart;
-  [notxpcom] readonly attribute TimeStamp cacheReadEnd;
+  [noscript] readonly attribute TimeStamp cacheReadStart;
+  [noscript] readonly attribute TimeStamp cacheReadEnd;
 
   // All following are PRTime versions of the above.
   readonly attribute PRTime channelCreationTime;
