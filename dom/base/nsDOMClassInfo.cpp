@@ -9001,15 +9001,16 @@ GetDocumentAllHelper(JSObject *obj)
 static inline void *
 FlagsToPrivate(PRUint32 flags)
 {
-  JS_ASSERT((flags & (1 << 31)) == 0);
-  return (void *)(flags << 1);
+  MOZ_ASSERT((flags & (1 << 31)) == 0);
+  return reinterpret_cast<void*>(static_cast<uintptr_t>(flags << 1));
 }
 
 static inline PRUint32
 PrivateToFlags(void *priv)
 {
-  JS_ASSERT(size_t(priv) <= PR_UINT32_MAX && (size_t(priv) & 1) == 0);
-  return (PRUint32)(size_t(priv) >> 1);
+  uintptr_t intPriv = reinterpret_cast<uintptr_t>(priv);
+  MOZ_ASSERT(intPriv <= PR_UINT32_MAX && (intPriv & 1) == 0);
+  return static_cast<PRUint32>(intPriv >> 1);
 }
 
 JSBool
