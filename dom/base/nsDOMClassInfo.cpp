@@ -7052,68 +7052,66 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsIScriptContext *my_context = win->GetContextInternal();
 
-  nsresult rv = NS_OK;
-
   // Resolve standard classes on my_context's JSContext (or on cx,
   // if we don't have a my_context yet), in case the two contexts
   // have different origins.  We want lazy standard class
   // initialization to behave as if it were done eagerly, on each
   // window's own context (not on some other window-caller's
   // context).
-
-  JSBool did_resolve = JS_FALSE;
-  JSContext *my_cx;
-
-  JSBool ok = JS_TRUE;
-  jsval exn = JSVAL_VOID;
   if (!ObjectIsNativeWrapper(cx, obj)) {
-    JSAutoEnterCompartment ac;
+    JSBool did_resolve = JS_FALSE;
+    JSBool ok = JS_TRUE;
+    JS::Value exn = JSVAL_VOID;
 
-    if (!my_context) {
-      my_cx = cx;
-    } else {
-      my_cx = my_context->GetNativeContext();
+    {
+      JSAutoEnterCompartment ac;
 
-      if (my_cx != cx) {
-        if (!ac.enter(my_cx, obj)) {
-          return NS_ERROR_UNEXPECTED;
+      JSContext* my_cx;
+      if (!my_context) {
+        my_cx = cx;
+      } else {
+        my_cx = my_context->GetNativeContext();
+
+        if (my_cx != cx) {
+          if (!ac.enter(my_cx, obj)) {
+            return NS_ERROR_UNEXPECTED;
+          }
         }
       }
+
+      JSAutoRequest transfer(my_cx);
+
+      // Don't resolve standard classes on XPCNativeWrapper etc, only
+      // resolve them if we're resolving on the real global object.
+      ok = JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
+
+      if (!ok) {
+        // Trust the JS engine (or the script security manager) to set
+        // the exception in the JS engine.
+
+        if (!JS_GetPendingException(my_cx, &exn)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        // Return NS_OK to avoid stomping over the exception that was passed
+        // down from the ResolveStandardClass call.
+        // Note that the order of the JS_ClearPendingException and
+        // JS_SetPendingException is important in the case that my_cx == cx.
+
+        JS_ClearPendingException(my_cx);
+      }
     }
-
-    JSAutoRequest transfer(my_cx);
-
-    // Don't resolve standard classes on XPCNativeWrapper etc, only
-    // resolve them if we're resolving on the real global object.
-    ok = JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
 
     if (!ok) {
-      // Trust the JS engine (or the script security manager) to set
-      // the exception in the JS engine.
-
-      if (!JS_GetPendingException(my_cx, &exn)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      // Return NS_OK to avoid stomping over the exception that was passed
-      // down from the ResolveStandardClass call.
-      // Note that the order of the JS_ClearPendingException and
-      // JS_SetPendingException is important in the case that my_cx == cx.
-
-      JS_ClearPendingException(my_cx);
+      JS_SetPendingException(cx, exn);
+      *_retval = JS_FALSE;
+      return NS_OK;
     }
-  }
 
-  if (!ok) {
-    JS_SetPendingException(cx, exn);
-    *_retval = JS_FALSE;
-    return NS_OK;
-  }
-
-  if (did_resolve) {
-    *objp = obj;
-
-    return NS_OK;
+    if (did_resolve) {
+      *objp = obj;
+      return NS_OK;
+    }
   }
 
   if (!(flags & JSRESOLVE_ASSIGNING)) {
@@ -7132,6 +7130,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
+  nsresult rv = NS_OK;
   if (sLocation_id == id) {
     // This must be done even if we're just getting the value of
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
