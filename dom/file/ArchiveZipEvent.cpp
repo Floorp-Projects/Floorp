@@ -22,6 +22,12 @@ ArchiveZipItem::ArchiveZipItem(const char* aFilename,
 : mFilename(aFilename),
   mCentralStruct(aCentralStruct)
 {
+  MOZ_COUNT_CTOR(ArchiveZipItem);
+}
+
+ArchiveZipItem::~ArchiveZipItem()
+{
+  MOZ_COUNT_DTOR(ArchiveZipItem);
 }
 
 // Getter/Setter for the filename

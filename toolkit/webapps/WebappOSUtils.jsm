@@ -57,9 +57,9 @@ let WebappOSUtils = {
     return false;
 #elifdef XP_UNIX
     let origin = Services.io.newURI(aData.origin, null, null);
-    let installDir = "." + origin.scheme + ";" + origin.host;
-    if (origin.port != -1)
-      installDir += ";" + origin.port;
+    let installDir = "." + origin.scheme + ";" +
+                     origin.host +
+                     (origin.port != -1 ? ";" + origin.port : "");
 
     let exeFile = Services.dirsvc.get("Home", Ci.nsIFile);
     exeFile.append(installDir);
@@ -76,6 +76,32 @@ let WebappOSUtils = {
     } catch (e) {}
 
     return false;
+#endif
+  },
+
+  uninstall: function(aData) {
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+    let origin = Services.io.newURI(aData.origin, null, null);
+    let installDir = "." + origin.scheme + ";" +
+                     origin.host +
+                     (origin.port != -1 ? ";" + origin.port : "");
+
+    let exeFile = Services.dirsvc.get("Home", Ci.nsIFile);
+    exeFile.append(installDir);
+    exeFile.append("webapprt-stub");
+
+    try {
+      if (exeFile.exists()) {
+        var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+        process.init(exeFile);
+        process.runAsync(["-remove"], 1);
+        return true;
+      }
+    } catch(e) {}
+
+    return false;
+#endif
 #endif
   }
 }

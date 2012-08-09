@@ -41,6 +41,8 @@ parent:
 
     async NotifyCompositorTransaction();
 
+    async CancelDefaultPanZoom();
+
     async __delete__();
 
 state EMPTY_OR_DIRECT_COMPOSITOR:

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAlertsService.h"
+#include "nsGrowlAlertsService.h"
 #include "nsStringAPI.h"
 #include "nsAlertsImageLoadListener.h"
 #include "nsIURI.h"
@@ -97,19 +97,19 @@ DispatchNamedNotification(const nsAString &aName,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// nsAlertsService
+//// nsGrowlAlertsService
 
-NS_IMPL_THREADSAFE_ADDREF(nsAlertsService)
-NS_IMPL_THREADSAFE_RELEASE(nsAlertsService)
+NS_IMPL_THREADSAFE_ADDREF(nsGrowlAlertsService)
+NS_IMPL_THREADSAFE_RELEASE(nsGrowlAlertsService)
 
-NS_INTERFACE_MAP_BEGIN(nsAlertsService)
+NS_INTERFACE_MAP_BEGIN(nsGrowlAlertsService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAlertsService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIAlertsService)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsresult
-nsAlertsService::Init()
+nsGrowlAlertsService::Init()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -142,9 +142,9 @@ nsAlertsService::Init()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsAlertsService::nsAlertsService() : mDelegate(nullptr) {}
+nsGrowlAlertsService::nsGrowlAlertsService() : mDelegate(nullptr) {}
 
-nsAlertsService::~nsAlertsService()
+nsGrowlAlertsService::~nsGrowlAlertsService()
 {
   delete mDelegate;
 }
@@ -153,13 +153,13 @@ nsAlertsService::~nsAlertsService()
 //// nsIAlertsService
 
 NS_IMETHODIMP
-nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
-                                       const nsAString& aAlertTitle,
-                                       const nsAString& aAlertText,
-                                       bool aAlertClickable,
-                                       const nsAString& aAlertCookie,
-                                       nsIObserver* aAlertListener,
-                                       const nsAString& aAlertName)
+nsGrowlAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
+                                            const nsAString& aAlertTitle,
+                                            const nsAString& aAlertText,
+                                            bool aAlertClickable,
+                                            const nsAString& aAlertCookie,
+                                            nsIObserver* aAlertListener,
+                                            const nsAString& aAlertName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -199,8 +199,8 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
 //// nsIObserver
 
 NS_IMETHODIMP
-nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
-                         const PRUnichar* aData)
+nsGrowlAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
+                              const PRUnichar* aData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

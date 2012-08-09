@@ -194,32 +194,42 @@ class B2GMochitest(Mochitest):
         self.remoteProfile = options.remoteTestRoot + '/profile'
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
+        self.localLog = None
         self.userJS = '/data/local/user.js'
         self.remoteMozillaPath = '/data/b2g/mozilla'
         self.remoteProfilesIniPath = os.path.join(self.remoteMozillaPath, 'profiles.ini')
         self.originalProfilesIni = None
 
-    def cleanup(self, manifest, options):
-        # Restore the original profiles.ini.
-        if self.originalProfilesIni:
-            try:
-                if not options.emulator:
-                    self.restoreProfilesIni()
-                os.remove(self.originalProfilesIni)
-            except:
-                pass
+    def copyRemoteFile(self, src, dest):
+        if self._dm.useDDCopy:
+            self._dm.checkCmdAs(['shell', 'dd', 'if=%s' % src,'of=%s' % dest])
+        else:
+            self._dm.checkCmdAs(['shell', 'cp', src, dest])
 
-        if not options.emulator:
+    def origUserJSExists(self):
+        return self._dm.fileExists('/data/local/user.js.orig')
+
+    def cleanup(self, manifest, options):
+        if self.localLog:
             self._dm.getFile(self.remoteLog, self.localLog)
             self._dm.removeFile(self.remoteLog)
-            self._dm.removeDir(self.remoteProfile)
 
-            # Restore the original user.js.
-            self._dm.checkCmdAs(['shell', 'rm', '-f', self.userJS])
-            if self._dm.useDDCopy:
-                self._dm.checkCmdAs(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
-            else:
-                self._dm.checkCmdAs(['shell', 'cp', '%s.orig' % self.userJS, self.userJS])
+        if not options.emulator:
+            # Remove the test profile
+            self._dm.checkCmdAs(['shell', 'rm', '-r', self.remoteProfile])
+
+            if self.origUserJSExists():
+                # Restore the original user.js
+                self._dm.removeFile(self.userJS)
+                self.copyRemoteFile('%s.orig' % self.userJS, self.userJS)
+                self._dm.removeFile("%s.orig" % self.userJS)
+
+            if self._dm.fileExists('%s.orig' % self.remoteProfilesIniPath):
+                # Restore the original profiles.ini
+                self._dm.removeFile(self.remoteProfilesIniPath)
+                self.copyRemoteFile('%s.orig' % self.remoteProfilesIniPath,
+                                    self.remoteProfilesIniPath)
+                self._dm.removeFile("%s.orig" % self.remoteProfilesIniPath)
 
             # We've restored the original profile, so reboot the device so that
             # it gets picked up.
@@ -313,14 +323,6 @@ class B2GMochitest(Mochitest):
         options.profilePath = self.remoteProfile
         return manifest
 
-    def restoreProfilesIni(self):
-        # restore profiles.ini on the device to its previous state
-        if not self.originalProfilesIni or not os.access(self.originalProfilesIni, os.F_OK):
-            raise DMError('Unable to install original profiles.ini; file not found: %s',
-                          self.originalProfilesIni)
-
-        self._dm.pushFile(self.originalProfilesIni, self.remoteProfilesIniPath)
-
     def updateProfilesIni(self, profilePath):
         # update profiles.ini on the device to point to the test profile
         self.originalProfilesIni = tempfile.mktemp()
@@ -338,8 +340,11 @@ class B2GMochitest(Mochitest):
             config.write(configfile)
 
         self._dm.pushFile(newProfilesIni, self.remoteProfilesIniPath)
+        self._dm.pushFile(self.originalProfilesIni, '%s.orig' % self.remoteProfilesIniPath)
+
         try:
             os.remove(newProfilesIni)
+            os.remove(self.originalProfilesIni)
         except:
             pass
 
@@ -369,21 +374,16 @@ user_pref("network.dns.localDomains","app://system.gaiamobile.org");\n
         f.close()
 
         # Copy the profile to the device.
-        self._dm.removeDir(self.remoteProfile)
+        self._dm.checkCmdAs(['shell', 'rm', '-r', self.remoteProfile])
         if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
             raise devicemanager.FileError("Unable to copy profile to device.")
 
         # In B2G, user.js is always read from /data/local, not the profile
         # directory.  Backup the original user.js first so we can restore it.
-        self._dm.checkCmdAs(['shell', 'rm', '-f', '%s.orig' % self.userJS])
-        if self._dm.useDDCopy:
-            self._dm.checkCmdAs(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
-        else:
-            self._dm.checkCmdAs(['shell', 'cp', self.userJS, '%s.orig' % self.userJS])
+        if not self._dm.fileExists('%s.orig' % self.userJS):
+            self.copyRemoteFile(self.userJS, '%s.orig' % self.userJS)
         self._dm.pushFile(os.path.join(options.profilePath, "user.js"), self.userJS)
-
         self.updateProfilesIni(self.remoteProfile)
-
         options.profilePath = self.remoteProfile
         options.logFile = self.localLog
         return retVal
@@ -419,7 +419,6 @@ def main():
         kwargs.update({'host': options.deviceIP,
                        'port': options.devicePort})
     dm = devicemanagerADB.DeviceManagerADB(**kwargs)
-
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
@@ -435,12 +434,12 @@ def main():
         sys.exit(1)
 
     logParent = os.path.dirname(options.remoteLogFile)
-    dm.mkDir(logParent);
+    dm.mkDir(logParent)
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
-
     retVal = 1
     try:
+        mochitest.cleanup(None, options)
         retVal = mochitest.runTests(options)
     except:
         print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]

@@ -8,7 +8,7 @@
 
 #include "xpcprivate.h"
 
-#include "jshash.h"
+#include "js/HashTable.h"
 
 /***************************************************************************/
 // static shared...
@@ -19,7 +19,7 @@
 static JSDHashNumber
 HashIIDPtrKey(JSDHashTable *table, const void *key)
 {
-    return *((JSHashNumber*)key);
+    return *((js::HashNumber*)key);
 }
 
 static JSBool
@@ -56,7 +56,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         NS_ASSERTION(Addition, "bad key");
         // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
-        h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+        h = (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
     } else {
         XPCNativeInterface** Current = Set->GetInterfaceArray();
         PRUint16 count = Set->GetInterfaceCount();
@@ -64,13 +64,13 @@ HashNativeKey(JSDHashTable *table, const void *key)
             count++;
             for (PRUint16 i = 0; i < count; i++) {
                 if (i == Position)
-                    h ^= (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+                    h ^= (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
                 else
-                    h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                    h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
             }
         } else {
             for (PRUint16 i = 0; i < count; i++)
-                h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                h ^= (js::HashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
         }
     }
 

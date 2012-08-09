@@ -21,7 +21,6 @@
 #include "jsclass.h"
 #include "jsfriendapi.h"
 #include "jsinfer.h"
-#include "jshash.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
 #include "jslock.h"

@@ -487,6 +487,18 @@ FlowsIntoNext(JSOp op)
 }
 
 inline bool
+IsArgOp(JSOp op)
+{
+    return JOF_OPTYPE(op) == JOF_QARG;
+}
+
+inline bool
+IsLocalOp(JSOp op)
+{
+    return JOF_OPTYPE(op) == JOF_LOCAL;
+}
+
+inline bool
 IsGetterPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);

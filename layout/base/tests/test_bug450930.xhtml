@@ -126,26 +126,21 @@ function runTest1() {
 function runTest2(frameID, containerID) {
   // test reporting of painting in subdocuments
   var fired = 0;
-  var gotSubdocPrivileged = false;
-  var gotSubdocNonprivileged = false;
+  var gotSubdoc = false;
   var iframe = document.getElementById(frameID);
   var container = document.getElementById(containerID);
 
   function listener(event) {
     if (checkGotSubdoc(event.clientRects, container))
-      gotSubdocNonprivileged = true;
+      gotSubdoc = true;
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (checkGotSubdoc(event.clientRects, container))
-      gotSubdocPrivileged = true;
     if (++fired == 1)
       setTimeout(check, 100);
   }
 
   function check() {
     is(fired, 1, "Wrong event count (" + frameID + ")");
-    ok(gotSubdocPrivileged, "Didn't get subdoc invalidation while we were privileged (" + frameID + ")");
-    ok(!gotSubdocNonprivileged, "Got subdoc invalidation while we were not privileged (" + frameID + ")");
+    ok(!gotSubdoc, "Got subdoc invalidation (" + frameID + ")");
     window.removeEventListener("MozAfterPaint", listener, false);
     runNext();
   }
@@ -168,7 +163,6 @@ function runTest3() {
   var iframe = document.getElementById("iframe");
 
   function listener(event) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (checkGotSubdoc(event.clientRects, iframe))
       gotScrolledOutInMainDoc = true;
   }

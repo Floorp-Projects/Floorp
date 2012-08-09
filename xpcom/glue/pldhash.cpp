@@ -97,7 +97,7 @@ PL_DHashStringKey(PLDHashTable *table, const void *key)
 PLDHashNumber
 PL_DHashVoidPtrKeyStub(PLDHashTable *table, const void *key)
 {
-    return (PLDHashNumber)(PRPtrdiff)key >> 2;
+    return (PLDHashNumber)(ptrdiff_t)key >> 2;
 }
 
 bool

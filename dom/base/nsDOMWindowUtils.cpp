@@ -1006,7 +1006,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          float aX,
                                          float aY,
                                          PRUint32 aDirection,
-                                         PRFloat64 aDelta,
+                                         double aDelta,
                                          PRInt32 aModifiers,
                                          PRUint32 aClickCount)
 {

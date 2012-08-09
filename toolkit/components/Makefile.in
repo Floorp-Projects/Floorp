@@ -17,6 +17,7 @@ endif
 
 PARALLEL_DIRS += \
   aboutmemory \
+  alerts \
   apppicker \
   commandlines \
   console \
@@ -49,12 +50,6 @@ ifdef BUILD_CTYPES
 PARALLEL_DIRS += \
   ctypes \
   $(NULL)
-endif
-
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-TOOL_DIRS += alerts
-else
-PARALLEL_DIRS += alerts
 endif
 
 ifdef MOZ_FEEDS

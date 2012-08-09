@@ -1299,7 +1299,7 @@ class GetPropCompiler : public PICStubCompiler
                 Jump shapeGuard = masm.branchPtr(Assembler::NotEqual,
                                                  Address(pic.shapeReg, JSObject::offsetOfShape()),
                                                  ImmPtr(expando->lastProperty()));
-                if (!shapeMismatches.append(expandoGuard))
+                if (!shapeMismatches.append(shapeGuard))
                     return error();
             } else {
                 Jump expandoGuard = masm.testUndefined(Assembler::NotEqual, expandoAddress);

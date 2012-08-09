@@ -2081,7 +2081,7 @@ nsWindow::OnGestureEvent(QGestureEvent* event, bool &handled) {
             mPinchEvent.needDispatch = false;
 
             double distance = DistanceBetweenPoints(swipe->hotSpot(), mPinchEvent.touchPoint) * 2;
-            PRFloat64 delta = distance - mPinchEvent.startDistance;
+            double delta = distance - mPinchEvent.startDistance;
 
             DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY, 0, delta / 2, hotspot);
 

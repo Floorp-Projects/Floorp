@@ -68,8 +68,8 @@ typedef bool       (* CStringGetIsVoidFunc)(const nsACString &);
 typedef nsresult   (* CStringToUTF16)(const nsACString &, nsCStringEncoding, nsAString &);
 typedef nsresult   (* UTF16ToCString)(const nsAString &, nsCStringEncoding, nsACString &);
 
-typedef void*      (* AllocFunc)(PRSize size);
-typedef void*      (* ReallocFunc)(void* ptr, PRSize size);
+typedef void*      (* AllocFunc)(size_t size);
+typedef void*      (* ReallocFunc)(void* ptr, size_t size);
 typedef void       (* FreeFunc)(void* ptr);
 
 typedef void       (* DebugBreakFunc)(PRUint32 aSeverity,

@@ -221,7 +221,7 @@ private:
                                    nsCString  &key);
 
     // hash table allocation functions
-    static void*        AllocTable(void *, PRSize size);
+    static void*        AllocTable(void *, size_t size);
     static void         FreeTable(void *, void *item);
     static PLHashEntry* AllocEntry(void *, const void *key);
     static void         FreeEntry(void *, PLHashEntry *he, PRUintn flag);
