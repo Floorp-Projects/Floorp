@@ -450,7 +450,10 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
     ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
-    dyn->setValueForType(DT_INIT, init);
+    if (!dyn->setValueForType(DT_INIT, init)) {
+        fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
+        return -1;
+    }
     // TODO: adjust the value according to the remaining number of relative relocations
     if (dyn->getValueForType(Rel_Type::d_tag_count))
         dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
