@@ -24,6 +24,7 @@
 struct gfxMatrix;
 struct JSContext;
 struct JSObject;
+class mozIApplication;
 class nsFrameLoader;
 class nsIDOMElement;
 class nsIURI;
@@ -53,7 +54,7 @@ class TabParent : public PBrowserParent
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-    TabParent();
+    TabParent(mozIApplication* aApp, bool aIsBrowserElement);
     virtual ~TabParent();
     nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement);
@@ -62,6 +63,9 @@ public:
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
  
+    mozIApplication* GetApp() { return mApp; }
+    bool IsBrowserElement() { return mIsBrowserElement; }
+
     void Destroy();
 
     virtual bool RecvMoveFocus(const bool& aForward);
@@ -227,6 +231,7 @@ protected:
                                                   uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
+    nsCOMPtr<mozIApplication> mApp;
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;
@@ -242,6 +247,7 @@ protected:
 
     float mDPI;
     bool mActive;
+    bool mIsBrowserElement;
     bool mShown;
 
 private:
