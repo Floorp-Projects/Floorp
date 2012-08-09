@@ -400,7 +400,7 @@ class IonBuilder : public MIRGenerator
     bool makeInliningDecision(AutoObjectVector &targets);
 
     bool jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
-                               uint32 argc, 
+                               uint32 argc,
                                bool constructing,
                                types::TypeSet *types,
                                types::TypeSet *barrier);
@@ -408,8 +408,8 @@ class IonBuilder : public MIRGenerator
                          types::TypeSet *types, types::TypeSet *barrier);
 
     inline bool TestCommonPropFunc(JSContext *cx, types::TypeSet *types,
-                                   HandleId id, JSFunction **funcp, 
-                                   bool isGetter);
+                                   HandleId id, JSFunction **funcp,
+                                   bool isGetter, bool *isDOM);
 
     bool annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
                                   types::TypeSet *objTypes, types::TypeSet *pushedTypes);

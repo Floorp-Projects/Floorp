@@ -1809,6 +1809,33 @@ LIRGenerator::visitProfilingExit(MProfilingExit *ins)
     return add(new LProfilingExit(temp()), ins);
 }
 
+bool
+LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
+{
+    MDefinition *val = ins->value();
+
+    LSetDOMProperty *lir = new LSetDOMProperty(tempFixed(CallTempReg0),
+                                               useFixed(ins->object(), CallTempReg1),
+                                               tempFixed(CallTempReg2),
+                                               tempFixed(CallTempReg3));
+    if (!useBox(lir, LSetDOMProperty::Value, val))
+        return false;
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitGetDOMProperty(MGetDOMProperty *ins)
+{
+    LGetDOMProperty *lir = new LGetDOMProperty(tempFixed(CallTempReg0),
+                                               useFixed(ins->object(), CallTempReg1),
+                                               tempFixed(CallTempReg2),
+                                               tempFixed(CallTempReg3));
+
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

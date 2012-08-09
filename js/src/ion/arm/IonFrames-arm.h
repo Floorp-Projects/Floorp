@@ -8,6 +8,8 @@
 #ifndef jsion_ionframes_arm_h__
 #define jsion_ionframes_arm_h__
 
+#include "ion/shared/IonFrames-shared.h"
+
 namespace js {
 namespace ion {
 
@@ -154,6 +156,7 @@ class IonOsrFrameLayout : public IonJSFrameLayout
 };
 
 class IonNativeExitFrameLayout;
+class IonDOMExitFrameLayout;
 
 // this is the frame layout when we are exiting ion code, and about to enter EABI code
 class IonExitFrameLayout : public IonCommonFrameLayout
@@ -187,9 +190,14 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         JS_ASSERT(footer()->ionCode() == NULL);
         return reinterpret_cast<IonNativeExitFrameLayout *>(footer());
     }
+    inline IonDOMExitFrameLayout *DOMExit() {
+        JS_ASSERT(footer()->ionCode() == ION_FRAME_DOMGETTER ||
+                  footer()->ionCode() == ION_FRAME_DOMSETTER);
+        return reinterpret_cast<IonDOMExitFrameLayout *>(footer());
+    }
 };
 
-// Cannot inherit implementation since we need to extend the top of
+// Cannot inherit implementa<tion since we need to extend the top of
 // IonExitFrameLayout.
 class IonNativeExitFrameLayout
 {
@@ -215,6 +223,36 @@ class IonNativeExitFrameLayout
     }
     inline uintptr_t argc() const {
         return argc_;
+    }
+};
+
+class IonDOMExitFrameLayout
+{
+    IonExitFooterFrame footer_;
+    IonExitFrameLayout exit_;
+    JSObject *thisObj;
+
+    // We need to split the Value in 2 field of 32 bits, otherwise the C++
+    // compiler may add some padding between the fields.
+    uint32_t loCalleeResult_;
+    uint32_t hiCalleeResult_;
+
+  public:
+    static inline size_t Size() {
+        return sizeof(IonDOMExitFrameLayout);
+    }
+
+    static size_t offsetOfResult() {
+        return offsetof(IonDOMExitFrameLayout, loCalleeResult_);
+    }
+    inline Value *vp() {
+        return reinterpret_cast<Value*>(&loCalleeResult_);
+    }
+    inline JSObject **thisObjAddress() {
+        return &thisObj;
+    }
+    inline bool isSetterFrame() {
+        return footer_.ionCode() == ION_FRAME_DOMSETTER;
     }
 };
 

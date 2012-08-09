@@ -159,7 +159,9 @@
     _(InstanceOfV)                  \
     _(InterruptCheck)               \
     _(ProfilingEnter)               \
-    _(ProfilingExit)
+    _(ProfilingExit)                \
+    _(GetDOMProperty)               \
+    _(SetDOMProperty)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

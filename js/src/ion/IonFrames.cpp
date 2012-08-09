@@ -118,6 +118,15 @@ IonFrameIterator::isNative() const
 }
 
 bool
+IonFrameIterator::isDOMExit() const
+{
+    if (type_ != IonFrame_Exit)
+        return false;
+    IonCode *code = exitFrame()->footer()->ionCode();
+    return code == ION_FRAME_DOMGETTER || code == ION_FRAME_DOMSETTER;
+}
+
+bool
 IonFrameIterator::isFunctionFrame() const
 {
     return js::ion::CalleeTokenIsFunction(calleeToken());
@@ -495,6 +504,14 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         size_t len = native->argc() + 2;
         Value *vp = native->vp();
         gc::MarkValueRootRange(trc, len, vp, "ion-native-args");
+        return;
+    }
+
+    if (frame.isDOMExit()) {
+        IonDOMExitFrameLayout *dom = frame.exitFrame()->DOMExit();
+        gc::MarkObjectRoot(trc, dom->thisObjAddress(), "ion-dom-args");
+        if (dom->isSetterFrame())
+            gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
         return;
     }
 
