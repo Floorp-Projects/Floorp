@@ -89,8 +89,13 @@ function waitForCondition(condition, nextTest, errorMsg) {
 }
 
 function runSocialTestWithProvider(manifest, callback) {
+  let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+
+  info("runSocialTestWithProvider: " + manifest.toSource());
+
   let oldProvider;
-  function saveOldProviderAndStartTestWith(provider) {
+  SocialService.addProvider(manifest, function(provider) {
+    info("runSocialTestWithProvider: provider added");
     oldProvider = Social.provider;
     Social.provider = provider;
 
@@ -102,20 +107,10 @@ function runSocialTestWithProvider(manifest, callback) {
       Services.prefs.clearUserPref("social.enabled");
     });
 
-    callback();
-  }
-
-  SocialService.addProvider(manifest, function(provider) {
-    // If the UI is already active, run the test immediately, otherwise wait
-    // for initialization.
-    if (Social.provider) {
-      saveOldProviderAndStartTestWith(provider);
-    } else {
-      Services.obs.addObserver(function obs() {
-        Services.obs.removeObserver(obs, "test-social-ui-ready");
-        saveOldProviderAndStartTestWith(provider);
-      }, "test-social-ui-ready", false);
+    function finishSocialTest() {
+      SocialService.removeProvider(provider.origin, finish);
     }
+    callback(finishSocialTest);
   });
 }
 
