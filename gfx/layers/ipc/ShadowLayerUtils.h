@@ -9,7 +9,6 @@
 #define IPC_ShadowLayerUtils_h
 
 #include "IPC/IPCMessageUtils.h"
-#include "FrameMetrics.h"
 #include "GLContext.h"
 #include "mozilla/WidgetUtils.h"
 
@@ -38,34 +37,6 @@ struct MagicGrallocBufferHandle {
 #endif
 
 namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::layers::FrameMetrics>
-{
-  typedef mozilla::layers::FrameMetrics paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mCSSContentRect);
-    WriteParam(aMsg, aParam.mViewport);
-    WriteParam(aMsg, aParam.mContentRect);
-    WriteParam(aMsg, aParam.mViewportScrollOffset);
-    WriteParam(aMsg, aParam.mDisplayPort);
-    WriteParam(aMsg, aParam.mScrollId);
-    WriteParam(aMsg, aParam.mResolution);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return (ReadParam(aMsg, aIter, &aResult->mCSSContentRect) &&
-            ReadParam(aMsg, aIter, &aResult->mViewport) &&
-            ReadParam(aMsg, aIter, &aResult->mContentRect) &&
-            ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollId) &&
-            ReadParam(aMsg, aIter, &aResult->mResolution));
-  }
-};
 
 #if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
 template <>
