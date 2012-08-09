@@ -122,6 +122,11 @@ union BlobConstructorParams
   MysteryBlobConstructorParams;
 };
 
+union AppId {
+  uint32_t;
+  nullable PBrowser;
+};
+
 rpc protocol PContent
 {
     parent opens PCompositor;
@@ -145,9 +150,16 @@ both:
     // created from either the child or parent process!
     //
     // The child creates the PBrowser as part of
-    // TabChild::BrowserFrameProvideWindow, and the parent creates the PBrowser
-    // as part of ContentParent::CreateTab.
-    async PBrowser(PRUint32 chromeFlags, bool isBrowserElement, PRUint32 appId);
+    // TabChild::BrowserFrameProvideWindow, and the parent creates the
+    // PBrowser as part of ContentParent::CreateTab.
+    //
+    // When the parent constructs a PBrowser, the app ID handed to the
+    // child side is trusted.  In that case, |appId| is uint32_t.
+    // However, when the child side constructs a PBrowser, for
+    // window.open(), the parent must validate the app ID used on the
+    // parent side.  To do so, the child process must pass a valid
+    // PBrowser as its |AppId|.
+    async PBrowser(PRUint32 chromeFlags, bool isBrowserElement, AppId appId);
 
     async PBlob(BlobConstructorParams params);
 
