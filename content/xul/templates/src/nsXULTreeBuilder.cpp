@@ -1850,7 +1850,7 @@ nsXULTreeBuilder::CompareResults(nsIXULTemplateResult* aLeft, nsIXULTemplateResu
         nsCOMPtr<nsISupports> ref;
         nsresult rv = aLeft->GetBindingObjectFor(mRefVariable, getter_AddRefs(ref));
         if (NS_FAILED(rv))
-            return rv;
+            return 0;
 
         nsCOMPtr<nsIRDFResource> container = do_QueryInterface(ref);
         if (container) {
