@@ -2,30 +2,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH     := @DEPTH@
+topsrcdir := @top_srcdir@
+srcdir    := @srcdir@
+VPATH     := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
+EXTRA_COMPONENTS := \
   NotificationsComponents.manifest \
   $(NULL)
 
-PREF_JS_EXPORTS = $(srcdir)/services-notifications.js
+PREF_JS_EXPORTS := $(srcdir)/services-notifications.js
 
 modules := \
   service.js \
   $(NULL)
 
-source_modules = $(foreach module,$(modules),$(srcdir)/$(module))
-module_dir = $(FINAL_TARGET)/modules/services-notifications
-
-GENERATED_DIRS += $(module_dir)
-
-libs::
-	$(NSINSTALL) $(source_modules) $(module_dir)
+NOTIFICATION_MODULE_FILES := $(modules)
+NOTIFICATION_MODULE_DEST = $(FINAL_TARGET)/modules/services-notifications
+INSTALL_TARGETS += NOTIFICATION_MODULE
 
 TEST_DIRS += tests
 
