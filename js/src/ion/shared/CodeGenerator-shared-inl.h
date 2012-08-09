@@ -102,6 +102,19 @@ GetValueOutput(LInstruction *ins)
 #endif
 }
 
+static inline ValueOperand
+GetTempValue(const Register &type, const Register &payload)
+{
+#if defined(JS_NUNBOX32)
+    return ValueOperand(type, payload);
+#elif defined(JS_PUNBOX64)
+    (void)type;
+    return ValueOperand(payload);
+#else
+#error "Unknown"
+#endif
+}
+
 static inline Assembler::Condition
 JSOpToCondition(JSOp op)
 {

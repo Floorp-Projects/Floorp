@@ -127,7 +127,9 @@ namespace ion {
     _(InstanceOf)                                                           \
     _(InterruptCheck)                                                       \
     _(ProfilingEnter)                                                       \
-    _(ProfilingExit)
+    _(ProfilingExit)                                                        \
+    _(GetDOMProperty)                                                       \
+    _(SetDOMProperty)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

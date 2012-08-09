@@ -71,7 +71,7 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 
     if (fails.used() && !bailoutFrom(&fails, lir->snapshot()))
         return false;
-    
+
     // The value is null - just emit 0.
     masm.mov(Imm32(0), output);
     masm.jump(&done);
@@ -3648,15 +3648,15 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
 {
     Register rhsTmp = ToRegister(ins->getTemp(1));
     Register output = ToRegister(ins->getDef(0));
-    
-    // This temporary is used in other parts of the code. 
+
+    // This temporary is used in other parts of the code.
     // Different names are used so the purpose is clear.
     Register rhsFlags = ToRegister(ins->getTemp(0));
     Register lhsTmp = ToRegister(ins->getTemp(0));
 
-    Label callHasInstance;    
-    Label boundFunctionCheck;    
-    Label boundFunctionDone;    
+    Label callHasInstance;
+    Label boundFunctionCheck;
+    Label boundFunctionDone;
     Label done;
     Label loopPrototypeChain;
 
@@ -3695,10 +3695,10 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
 
     // Get Bound Function
     masm.loadPtr(Address(output, BaseShape::offsetOfParent()), rhsTmp);
-    masm.jump(&boundFunctionCheck); 
+    masm.jump(&boundFunctionCheck);
 
     // 2. CODE FOR HASINSTANCE_FUNCTION
-    masm.bind(&boundFunctionDone); 
+    masm.bind(&boundFunctionDone);
 
     // ASM-equivalent of following code
     //  if (!lhs->isObject()) {
@@ -3713,19 +3713,19 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     //      goto done;
     //    if (lhs != rhs) {
     //      output = true;
-    //      goto done; 
+    //      goto done;
     //    }
     //  }
 
     // When lhs is a value: The HasInstance for function objects always
-    // return false when lhs isn't an object. So check if 
+    // return false when lhs isn't an object. So check if
     // lhs is an object and otherwise return false
     if (ins->isInstanceOfV()) {
         Label isObject;
         ValueOperand lhsValue = ToValue(ins, LInstanceOfV::LHS);
         masm.branchTestObject(Assembler::Equal, lhsValue, &isObject);
         masm.mov(Imm32(0), output);
-        masm.jump(&done); 
+        masm.jump(&done);
 
         masm.bind(&isObject);
         Register tmp = masm.extractObject(lhsValue, lhsTmp);
@@ -3734,7 +3734,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
         masm.mov(ToRegister(ins->getOperand(0)), lhsTmp);
     }
 
-    // Get prototype-class by using a OutOfLine GetProperty Cache    
+    // Get prototype-class by using a OutOfLine GetProperty Cache
     // It will use register 'rhsTmp' as input and register 'output' as output, see r1889
     OutOfLineCache *ool = new OutOfLineCache(ins);
     if (!addOutOfLineCode(ool))
@@ -3762,10 +3762,134 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     masm.j(Assembler::NotEqual, &loopPrototypeChain);
 
     // return true
-    masm.mov(Imm32(1), output); 
+    masm.mov(Imm32(1), output);
 
     masm.bind(call->rejoin());
     masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
+{
+    const Register JSContextReg = ToRegister(ins->getJSContextReg());
+    const Register ObjectReg = ToRegister(ins->getObjectReg());
+    const Register PrivateReg = ToRegister(ins->getPrivReg());
+    const Register ValueReg = ToRegister(ins->getValueReg());
+
+    DebugOnly<uint32> initialStack = masm.framePushed();
+
+    masm.checkStackAlignment();
+
+    /* Make Space for the outparam */
+    masm.adjustStack((int)-sizeof(Value));
+    masm.movePtr(StackPointer, ValueReg);
+
+    masm.Push(ObjectReg);
+
+    // GetReservedSlot(obj, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate()
+    masm.loadPrivate(Address(ObjectReg, JSObject::getFixedSlotOffset(0)), PrivateReg);
+
+    // Rooting will happen at GC time.
+    masm.movePtr(StackPointer, ObjectReg);
+
+    uint32 safepointOffset;
+    if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
+        return false;
+    masm.enterFakeDOMFrame(ION_FRAME_DOMGETTER);
+
+    if (!markSafepointAt(safepointOffset, ins))
+        return false;
+
+    masm.setupUnalignedABICall(4, JSContextReg);
+
+    masm.loadJSContext(JSContextReg);
+
+    masm.passABIArg(JSContextReg);
+    masm.passABIArg(ObjectReg);
+    masm.passABIArg(PrivateReg);
+    masm.passABIArg(ValueReg);
+    masm.callWithABI((void *)ins->mir()->fun());
+
+    if (ins->mir()->isInfallible()) {
+        masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
+                       JSReturnOperand);
+    } else {
+        Label success, exception;
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+
+        masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
+                    JSReturnOperand);
+        masm.jump(&success);
+
+        {
+            masm.bind(&exception);
+            masm.handleException();
+        }
+        masm.bind(&success);
+    }
+    masm.adjustStack(IonDOMExitFrameLayout::Size());
+
+    JS_ASSERT(masm.framePushed() == initialStack);
+    return true;
+}
+
+bool
+CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
+{
+    const Register JSContextReg = ToRegister(ins->getJSContextReg());
+    const Register ObjectReg = ToRegister(ins->getObjectReg());
+    const Register PrivateReg = ToRegister(ins->getPrivReg());
+    const Register ValueReg = ToRegister(ins->getValueReg());
+
+    DebugOnly<uint32> initialStack = masm.framePushed();
+
+    masm.checkStackAlignment();
+
+    // Push thei argument. Rooting will happen at GC time.
+    ValueOperand argVal = ToValue(ins, LSetDOMProperty::Value);
+    masm.Push(argVal);
+    masm.movePtr(StackPointer, ValueReg);
+
+    masm.Push(ObjectReg);
+
+    // GetReservedSlot(obj, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate()
+    masm.loadPrivate(Address(ObjectReg, JSObject::getFixedSlotOffset(0)), PrivateReg);
+
+    // Rooting will happen at GC time.
+    masm.movePtr(StackPointer, ObjectReg);
+
+    uint32 safepointOffset;
+    if (!masm.buildFakeExitFrame(JSContextReg, &safepointOffset))
+        return false;
+    masm.enterFakeDOMFrame(ION_FRAME_DOMSETTER);
+
+    if (!markSafepointAt(safepointOffset, ins))
+        return false;
+
+    masm.setupUnalignedABICall(4, JSContextReg);
+
+    masm.loadJSContext(JSContextReg);
+
+    masm.passABIArg(JSContextReg);
+    masm.passABIArg(ObjectReg);
+    masm.passABIArg(PrivateReg);
+    masm.passABIArg(ValueReg);
+    masm.callWithABI((void *)ins->mir()->fun());
+
+    Label success, exception;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+
+    masm.jump(&success);
+
+    {
+        masm.bind(&exception);
+        masm.handleException();
+    }
+    masm.bind(&success);
+    masm.adjustStack(IonDOMExitFrameLayout::Size());
+
+    JS_ASSERT(masm.framePushed() == initialStack);
     return true;
 }
 
