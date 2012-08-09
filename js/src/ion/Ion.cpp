@@ -37,6 +37,10 @@
 #include "ion/CompilerRoot.h"
 #include "methodjit/Retcon.h"
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace js;
 using namespace js::ion;
 
@@ -845,6 +849,13 @@ template <bool Compiler(IonBuilder &, MIRGraph &)>
 static bool
 IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::ION_COMPILE_START,
+                        TraceLogging::ION_COMPILE_STOP,
+                        script);
+#endif
+
     TempAllocator temp(&cx->tempLifoAlloc());
     IonContext ictx(cx, cx->compartment, &temp);
 
@@ -1177,7 +1188,27 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
-    return EnterIon(cx, fp, jitcode);
+#if JS_TRACE_LOGGING
+    TraceLog(TraceLogging::defaultLogger(),
+             TraceLogging::ION_CANNON_START,
+             script);
+#endif
+
+    IonExecStatus status = EnterIon(cx, fp, jitcode);
+
+#if JS_TRACE_LOGGING
+    if (status == IonExec_Bailout) {
+        TraceLog(TraceLogging::defaultLogger(),
+                 TraceLogging::ION_CANNON_BAIL,
+                 script);
+    } else {
+        TraceLog(TraceLogging::defaultLogger(),
+                 TraceLogging::ION_CANNON_STOP,
+                 script);
+    }
+#endif
+
+    return status;
 }
 
 IonExecStatus
@@ -1190,7 +1221,27 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 
     JS_ASSERT(ion->osrPc() == pc);
 
-    return EnterIon(cx, fp, osrcode);
+#if JS_TRACE_LOGGING
+    TraceLog(TraceLogging::defaultLogger(),
+             TraceLogging::ION_SIDE_CANNON_START,
+             script);
+#endif
+
+    IonExecStatus status = EnterIon(cx, fp, osrcode);
+
+#if JS_TRACE_LOGGING
+    if (status == IonExec_Bailout) {
+        TraceLog(TraceLogging::defaultLogger(),
+                 TraceLogging::ION_SIDE_CANNON_BAIL,
+                 script);
+    } else {
+        TraceLog(TraceLogging::defaultLogger(),
+                 TraceLogging::ION_SIDE_CANNON_STOP,
+                 script);
+    }
+#endif
+
+    return status;
 }
 
 static void

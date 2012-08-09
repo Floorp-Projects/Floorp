@@ -3483,6 +3483,20 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
+dnl = Enable trace logging
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(trace-logging,
+[  --enable-trace-logging   Enable trace logging],
+    ENABLE_TRACE_LOGGING=1,
+    ENABLE_TRACE_LOGGING= )
+
+AC_SUBST(ENABLE_TRACE_LOGGING)
+
+if test "$ENABLE_TRACE_LOGGING"; then
+    AC_DEFINE(JS_TRACE_LOGGING)
+fi
+
+dnl ========================================================
 dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(warnings-as-errors,

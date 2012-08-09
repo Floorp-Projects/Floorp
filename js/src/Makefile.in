@@ -228,6 +228,16 @@ MFBT_ROOT = $(srcdir)/../../mfbt
 VPATH += $(MFBT_ROOT)
 include $(MFBT_ROOT)/exported_headers.mk
 
+
+ifdef ENABLE_TRACE_LOGGING
+
+###############################################
+# BEGIN include sources for trace logging
+#
+CPPSRCS += 	TraceLogging.cpp
+
+endif
+
 ifdef ENABLE_METHODJIT
 
 ###############################################

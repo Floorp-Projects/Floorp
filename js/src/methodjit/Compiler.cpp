@@ -34,6 +34,10 @@
 
 #include "ion/Ion.h"
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace js;
 using namespace js::mjit;
 #if defined(JS_POLYIC) || defined(JS_MONOIC)
@@ -110,6 +114,13 @@ CompileStatus
 mjit::Compiler::compile()
 {
     JS_ASSERT(!outerChunkRef().chunk);
+
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::JM_COMPILE_START,
+                        TraceLogging::JM_COMPILE_STOP,
+                        outerScript);
+#endif
 
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
