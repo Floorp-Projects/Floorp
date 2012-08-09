@@ -444,7 +444,7 @@ mai_util_get_root(void)
     return nullptr;
   }
 
-  return nsAccessNode::GetApplicationAccessible()->GetAtkObject();
+  return ApplicationAcc()->GetAtkObject();
 }
 
 G_CONST_RETURN gchar *

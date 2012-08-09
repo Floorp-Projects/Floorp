@@ -82,6 +82,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nullptr;
+ApplicationAccessible* nsAccessibilityService::gApplicationAccessible = nullptr;
 bool nsAccessibilityService::gIsShutdown = true;
 
 nsAccessibilityService::nsAccessibilityService() :
@@ -94,6 +95,7 @@ nsAccessibilityService::~nsAccessibilityService()
 {
   NS_ASSERTION(gIsShutdown, "Accessibility wasn't shutdown!");
   gAccessibilityService = nullptr;
+  gApplicationAccessible = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -602,7 +604,7 @@ nsAccessibilityService::GetApplicationAccessible(nsIAccessible** aAccessibleAppl
 {
   NS_ENSURE_ARG_POINTER(aAccessibleApplication);
 
-  NS_IF_ADDREF(*aAccessibleApplication = nsAccessNode::GetApplicationAccessible());
+  NS_IF_ADDREF(*aAccessibleApplication = ApplicationAcc());
   return NS_OK;
 }
 
@@ -1201,6 +1203,16 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
+  // Initialize application accessible
+  ApplicationAccessibleWrap::PreCreate();
+
+  gApplicationAccessible = new ApplicationAccessibleWrap();
+
+  // Addref on create. Will Release in Shutdown()
+  NS_ADDREF(gApplicationAccessible);
+
+  gApplicationAccessible->Init();
+
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
 
@@ -1239,7 +1251,10 @@ nsAccessibilityService::Shutdown()
 
   gIsShutdown = true;
 
-  nsAccessNodeWrap::ShutdownAccessibility();
+  ApplicationAccessibleWrap::Unload();
+  gApplicationAccessible->Shutdown();
+  NS_RELEASE(gApplicationAccessible);
+  gApplicationAccessible = nullptr;
 }
 
 bool
@@ -1668,7 +1683,7 @@ nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
 {
 #ifdef MOZ_ACCESSIBILITY_ATK
   ApplicationAccessible* applicationAcc =
-    nsAccessNode::GetApplicationAccessible();
+    ApplicationAcc();
   if (!applicationAcc)
     return nullptr;
 
@@ -1689,7 +1704,7 @@ nsAccessibilityService::RemoveNativeRootAccessible(Accessible* aAccessible)
 {
 #ifdef MOZ_ACCESSIBILITY_ATK
   ApplicationAccessible* applicationAcc =
-    nsAccessNode::GetApplicationAccessible();
+    ApplicationAcc();
 
   if (applicationAcc)
     applicationAcc->RemoveChild(aAccessible);
@@ -1806,6 +1821,12 @@ FocusManager*
 FocusMgr()
 {
   return nsAccessibilityService::gAccessibilityService;
+}
+
+ApplicationAccessible*
+ApplicationAcc()
+{
+  return nsAccessibilityService::gApplicationAccessible;
 }
 
 EPlatformDisabledState
