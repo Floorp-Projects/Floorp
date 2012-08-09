@@ -576,7 +576,7 @@ struct PRFilePrivate {
     bool nonblocking;
     _PRTriStateBool inheritable;
     PRFileDesc *next;
-    PRIntn lockCount;   /*   0: not locked
+    int lockCount;      /*   0: not locked
                          *  -1: a native lockfile call is in progress
                          * > 0: # times the file is locked */
     bool    appendMode; 
@@ -594,7 +594,7 @@ struct PRFilePrivate {
 // copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} : 
 // PR_Open and _PR_MD_OPEN
 static nsresult
-OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
+OpenFile(const nsAFlatString &name, int osflags, int mode,
          PRFileDesc **fd)
 {
     // XXX : 'mode' is not translated !!!

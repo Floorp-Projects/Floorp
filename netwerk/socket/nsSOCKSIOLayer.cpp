@@ -1180,7 +1180,7 @@ nsSOCKSIOLayerGetPeerName(PRFileDesc *fd, PRNetAddr *addr)
 }
 
 static PRStatus
-nsSOCKSIOLayerListen(PRFileDesc *fd, PRIntn backlog)
+nsSOCKSIOLayerListen(PRFileDesc *fd, int backlog)
 {
     // TODO: implement SOCKS support for listen
     return fd->lower->methods->listen(fd->lower, backlog);

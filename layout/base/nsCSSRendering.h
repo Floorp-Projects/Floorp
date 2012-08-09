@@ -173,7 +173,7 @@ struct nsCSSRendering {
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
                           nsStyleContext* aStyleContext,
-                          PRIntn aSkipSides = 0);
+                          int aSkipSides = 0);
 
   /**
    * Like PaintBorder, but taking an nsStyleBorder argument instead of
@@ -186,7 +186,7 @@ struct nsCSSRendering {
                                          const nsRect& aBorderArea,
                                          const nsStyleBorder& aBorderStyle,
                                          nsStyleContext* aStyleContext,
-                                         PRIntn aSkipSides = 0);
+                                         int aSkipSides = 0);
 
 
   /**

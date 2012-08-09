@@ -911,7 +911,7 @@ nsIFrame::GetUsedPadding() const
 void
 nsIFrame::ApplySkipSides(nsMargin& aMargin) const
 {
-  PRIntn skipSides = GetSkipSides();
+  int skipSides = GetSkipSides();
   if (skipSides & (1 << NS_SIDE_TOP))
     aMargin.top = 0;
   if (skipSides & (1 << NS_SIDE_RIGHT))
@@ -1041,7 +1041,7 @@ bool
 nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                              const nsSize& aFrameSize,
                              const nsSize& aBorderArea,
-                             PRIntn aSkipSides,
+                             int aSkipSides,
                              nscoord aRadii[8])
 {
   // Percentages are relative to whichever side they're on.
@@ -8143,7 +8143,7 @@ nsFrame::GetBoxName(nsAutoString& aName)
 
 #ifdef DEBUG
 static void
-GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
+GetTagName(nsFrame* aFrame, nsIContent* aContent, int aResultSize,
            char* aResult)
 {
   if (aContent) {

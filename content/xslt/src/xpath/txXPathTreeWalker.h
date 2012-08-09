@@ -94,8 +94,8 @@ public:
                               const txXPathNode& aBase, nsAString& aResult);
     static void release(txXPathNode* aNode);
     static void getBaseURI(const txXPathNode& aNode, nsAString& aURI);
-    static PRIntn comparePosition(const txXPathNode& aNode,
-                                  const txXPathNode& aOtherNode);
+    static int comparePosition(const txXPathNode& aNode,
+                               const txXPathNode& aOtherNode);
     static bool localNameEquals(const txXPathNode& aNode,
                                   nsIAtom* aLocalName);
     static bool isRoot(const txXPathNode& aNode);

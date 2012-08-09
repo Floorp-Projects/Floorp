@@ -147,7 +147,7 @@ nsHTMLScrollFrame::GetSplittableType() const
   return NS_FRAME_NOT_SPLITTABLE;
 }
 
-PRIntn
+int
 nsHTMLScrollFrame::GetSkipSides() const
 {
   return 0;
@@ -1087,7 +1087,7 @@ nsXULScrollFrame::GetPadding(nsMargin& aMargin)
    return NS_OK;
 }
 
-PRIntn
+int
 nsXULScrollFrame::GetSkipSides() const
 {
   return 0;
