@@ -274,6 +274,11 @@ class Marionette(object):
         response = self._send_message('getWindows', 'value')
         return response
 
+    @property
+    def page_source(self):
+        response = self._send_message('getPageSource', 'value')
+        return response
+
     def close(self, window_id=None):
         if not window_id:
             window_id = self.current_window_handle
