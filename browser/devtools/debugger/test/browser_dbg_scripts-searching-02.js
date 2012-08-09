@@ -96,12 +96,57 @@ function secondSearch() {
       window.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
+        append("#" + token);
+
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 8 + token.length,
           "The editor didn't jump to the correct line. (2)");
         is(gScripts.visibleItemsCount, 1,
           "Not all the correct scripts are shown after the search. (2)");
+
+        waitForFirstScript();
+      });
+    }
+  });
+  gScripts.selectIndex(1);
+}
+
+function waitForFirstScript() {
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    info("Current script url:\n" + aEvent.detail.url + "\n");
+    info("Debugger editor text:\n" + gEditor.getText() + "\n");
+
+    let url = aEvent.detail.url;
+    if (url.indexOf("-01.js") != -1) {
+      window.removeEventListener(aEvent.type, _onEvent);
+
+      executeSoon(function() {
+        thirdSearch();
+      });
+    }
+  });
+  gScripts.selectIndex(0);
+}
+
+function thirdSearch() {
+  let token = "deb";
+
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    info("Current script url:\n" + aEvent.detail.url + "\n");
+    info("Debugger editor text:\n" + gEditor.getText() + "\n");
+
+    let url = aEvent.detail.url;
+    if (url.indexOf("-02.js") != -1) {
+      window.removeEventListener(aEvent.type, _onEvent);
+
+      executeSoon(function() {
+        info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
+        ok(gEditor.getCaretPosition().line == 5 &&
+           gEditor.getCaretPosition().col == 8 + token.length,
+          "The editor didn't jump to the correct line. (3)");
+        is(gScripts.visibleItemsCount, 1,
+          "Not all the correct scripts are shown after the search. (3)");
 
         finalCheck(0, "ugger;", token);
       });
@@ -115,7 +160,7 @@ function finalCheck(i, string, token) {
 
   ok(gEditor.getCaretPosition().line == 5 &&
      gEditor.getCaretPosition().col == 8 + token.length + i,
-    "The editor didn't remain at the correct token. (3)");
+    "The editor didn't remain at the correct token. (4)");
 
   if (string[i]) {
     EventUtils.sendChar(string[i]);
@@ -126,7 +171,7 @@ function finalCheck(i, string, token) {
   clear();
   ok(gEditor.getCaretPosition().line == 5 &&
      gEditor.getCaretPosition().col == 8 + token.length + i,
-    "The editor didn't remain at the correct token. (4)");
+    "The editor didn't remain at the correct token. (5)");
 
   executeSoon(function() {
     let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
@@ -139,7 +184,7 @@ function finalCheck(i, string, token) {
     write("BOGUS");
     ok(gEditor.getCaretPosition().line == 5 &&
        gEditor.getCaretPosition().col == 8 + token.length + i,
-      "The editor didn't remain at the correct token. (5)");
+      "The editor didn't remain at the correct token. (6)");
 
     is(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should display a notice that no scripts match the searched token.");
@@ -151,7 +196,7 @@ function finalCheck(i, string, token) {
     clear();
     ok(gEditor.getCaretPosition().line == 5 &&
        gEditor.getCaretPosition().col == 8 + token.length + i,
-      "The editor didn't remain at the correct token. (6)");
+      "The editor didn't remain at the correct token. (7)");
 
     isnot(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should not display a notice after the searchbox was emptied.");
@@ -171,6 +216,11 @@ function clear() {
 
 function write(text) {
   clear();
+  append(text);
+}
+
+function append(text) {
+  gSearchBox.focus();
 
   for (let i = 0; i < text.length; i++) {
     EventUtils.sendChar(text[i]);
