@@ -919,7 +919,7 @@ TabChild::DeallocPContentDialog(PContentDialogChild* aDialog)
 }
 
 PContentPermissionRequestChild*
-TabChild::AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI&)
+TabChild::AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal&)
 {
   NS_RUNTIMEABORT("unused");
   return nullptr;

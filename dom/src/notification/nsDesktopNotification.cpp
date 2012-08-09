@@ -67,11 +67,11 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
                                                    const nsAString & description,
                                                    const nsAString & iconURL,
                                                    nsPIDOMWindow *aWindow,
-                                                   nsIURI* uri)
+                                                   nsIPrincipal* principal)
   : mTitle(title)
   , mDescription(description)
   , mIconURL(iconURL)
-  , mURI(uri)
+  , mPrincipal(principal)
   , mAllow(false)
   , mShowHasBeenCalled(false)
 {
@@ -102,14 +102,14 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild for this docshell.
     TabChild* child = GetTabChildFrom(GetOwner()->GetDocShell());
-    
+
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     nsRefPtr<nsDesktopNotificationRequest> copy = request;
 
     nsCString type = NS_LITERAL_CSTRING("desktop-notification");
-    child->SendPContentPermissionRequestConstructor(copy.forget().get(), type, IPC::URI(mURI));
-    
+    child->SendPContentPermissionRequestConstructor(copy.forget().get(), type, IPC::Principal(mPrincipal));
+
     request->Sendprompt();
     return;
   }
@@ -232,7 +232,7 @@ nsDesktopNotificationCenter::CreateNotification(const nsAString & title,
                                                                                   description,
                                                                                   iconURL,
                                                                                   mOwner,
-                                                                                  mURI);
+                                                                                  mPrincipal);
   notification.forget(aResult);
   return NS_OK;
 }
@@ -247,12 +247,12 @@ NS_IMPL_ISUPPORTS2(nsDesktopNotificationRequest,
                    nsIRunnable)
 
 NS_IMETHODIMP
-nsDesktopNotificationRequest::GetUri(nsIURI * *aRequestingURI)
+nsDesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 {
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
 
-  NS_IF_ADDREF(*aRequestingURI = mDesktopNotification->mURI);
+  NS_IF_ADDREF(*aRequestingPrincipal = mDesktopNotification->mPrincipal);
   return NS_OK;
 }
 
