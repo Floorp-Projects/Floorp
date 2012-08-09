@@ -376,7 +376,7 @@ js_DumpPC(JSContext *cx)
     return ok;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_DumpScript(JSContext *cx, JSScript *script_)
 {
     Sprinter sprinter(cx);
@@ -4829,7 +4829,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * syntactically appear.
                      */
                     jsbytecode *nextpc = pc + JSOP_LAMBDA_LENGTH;
-                    LOCAL_ASSERT(*nextpc == JSOP_SETLOCAL || *nextpc == JSOP_SETALIASEDVAR);
+                    LOCAL_ASSERT(*nextpc == JSOP_SETLOCAL || *nextpc == JSOP_SETALIASEDVAR || *nextpc == JSOP_SETARG);
                     nextpc += js_CodeSpec[*nextpc].length;
                     LOCAL_ASSERT(*nextpc == JSOP_POP);
                     nextpc += JSOP_POP_LENGTH;
@@ -6111,17 +6111,12 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
             if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
                 for (Shape::Range r(block.lastProperty()); !r.empty(); r.popFront()) {
                     const Shape &shape = r.front();
-                    if (shape.shortid() == int(depth - blockDepth)) {
-                        // !JSID_IS_ATOM(shape.propid()) happens for empty
-                        // destructuring variables in lets. They can be safely
-                        // ignored.
-                        if (JSID_IS_ATOM(shape.propid()))
-                            return JSID_TO_ATOM(shape.propid());
-                    }
+                    if (shape.shortid() == int(depth - blockDepth))
+                        return JSID_TO_ATOM(shape.propid());
                 }
             }
-            chain = chain->enclosingScope();
-        } while (chain->isBlock());
+            chain = chain->getParent();
+        } while (chain && chain->isBlock());
     }
     return NULL;
 }

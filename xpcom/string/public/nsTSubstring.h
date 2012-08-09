@@ -765,7 +765,7 @@ class nsTSubstring_CharT
           mFlags = dataFlags | (mFlags & 0xFFFF0000);
         }
 
-      static PRIntn AppendFunc( void* arg, const char* s, PRUint32 len);
+      static int AppendFunc( void* arg, const char* s, PRUint32 len);
       void AppendPrintf( const char* format, va_list ap );
 
     public:

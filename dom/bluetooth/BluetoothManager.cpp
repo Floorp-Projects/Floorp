@@ -64,10 +64,9 @@ public:
     nsCOMPtr<nsIDOMBluetoothAdapter> adapter;
     *aValue = JSVAL_VOID;
 
-    const nsString& path =
-      mReply->get_BluetoothReplySuccess().value().get_nsString();
-    adapter = BluetoothAdapter::Create(mManagerPtr->GetOwner(),
-                                       path);
+    const InfallibleTArray<BluetoothNamedValue>& v =
+      mReply->get_BluetoothReplySuccess().value().get_ArrayOfBluetoothNamedValue();
+    adapter = BluetoothAdapter::Create(mManagerPtr->GetOwner(), v);
 
     nsresult rv;
     nsIScriptContext* sc = mManagerPtr->GetContextForEventHandlers(&rv);

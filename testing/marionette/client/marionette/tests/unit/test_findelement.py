@@ -22,6 +22,7 @@ class TestElements(MarionetteTestCase):
         el = self.marionette.find_element("id", "divLink")
         div = self.marionette.find_element("id", "testDiv")
         found_el = div.find_element("tag name", "a")
+        self.assertEqual("a", found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el.id, found_el.id)
 
@@ -38,9 +39,11 @@ class TestElements(MarionetteTestCase):
         self.marionette.navigate(test_html)
         el = self.marionette.execute_script("return window.document.getElementsByTagName('body')[0];")
         found_el = self.marionette.find_element("tag name", "body")
+        self.assertEqual('body', found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el.id, found_el.id)
         found_el = self.marionette.find_elements("tag name", "body")[0]
+        self.assertEqual('body', found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el.id, found_el.id)
 
@@ -157,6 +160,7 @@ class TestElementsChrome(MarionetteTestCase):
     def test_tag_name(self):
         el = self.marionette.execute_script("return window.document.getElementsByTagName('vbox')[0];")
         found_el = self.marionette.find_element("tag name", "vbox")
+        self.assertEquals('vbox', found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el.id, found_el.id)
 

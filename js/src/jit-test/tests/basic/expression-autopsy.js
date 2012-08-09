@@ -91,6 +91,7 @@ check("o[- (o)]");
 check_one("6", (function () { 6() }), " is not a function");
 check_one("Array.prototype.reverse.call(...)", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
 check_one("null", function () { var [{ x }] = [null, {}]; }, " has no properties");
+check_one("x", function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 
 // Check fallback behavior
 check_one("undefined", (function () { for (let x of undefined) {} }), " has no properties");

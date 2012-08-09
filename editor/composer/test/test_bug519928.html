@@ -22,11 +22,10 @@ var iframe = document.getElementById("load-frame");
 function enableJS() allowJS(true, iframe);
 function disableJS() allowJS(false, iframe);
 function allowJS(allow, frame) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  frame.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIWebNavigation)
-                     .QueryInterface(Components.interfaces.nsIDocShell)
-                     .allowJavascript = allow;
+  SpecialPowers.wrap(frame.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor))
+               .getInterface(Components.interfaces.nsIWebNavigation)
+               .QueryInterface(Components.interfaces.nsIDocShell)
+               .allowJavascript = allow;
 }
 function expectJSAllowed(allowed, testCondition, callback) {
   window.ICanRunMyJS = false;

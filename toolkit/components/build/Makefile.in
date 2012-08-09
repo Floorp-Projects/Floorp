@@ -18,11 +18,6 @@ IS_COMPONENT = 1
 MODULE_NAME = nsToolkitCompsModule
 LIBXUL_LIBRARY = 1
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk2 qt android))
-ALERTS_SERVICE=1
-DEFINES += -DALERTS_SERVICE
-endif
-
 EXPORTS = nsToolkitCompsCID.h
 
 CPPSRCS = nsToolkitCompsModule.cpp
@@ -30,6 +25,7 @@ CPPSRCS = nsToolkitCompsModule.cpp
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
+  -I$(srcdir)/../alerts \
   -I$(srcdir)/../downloads \
   -I$(srcdir)/../feeds \
   -I$(srcdir)/../find \
@@ -41,13 +37,8 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../../xre \
   $(NULL)
 
-ifdef ALERTS_SERVICE
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../alerts \
-  $(NULL)
-endif
-
 SHARED_LIBRARY_LIBS = \
+  ../alerts/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
   ../find/$(LIB_PREFIX)mozfind_s.$(LIB_SUFFIX) \
   ../typeaheadfind/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
   ../startup/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
@@ -63,14 +54,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../parentalcontrols \
   $(NULL)
 endif
-endif
-
-ifdef ALERTS_SERVICE
-SHARED_LIBRARY_LIBS += ../alerts/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
-endif
-ifdef ALERTS_SERVICE_MAC
-SHARED_LIBRARY_LIBS += ../alerts/mac/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
-SHARED_LIBRARY_LIBS += ../alerts/mac/growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_URL_CLASSIFIER

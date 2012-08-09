@@ -130,10 +130,6 @@ bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
     nsRefPtr<gfxSharedImageSurface> surfV =
       gfxSharedImageSurface::Open(yuv.Vdata());
 
-    gfxIntSize size = surfY->GetSize();
-
-    NS_ABORT_IF_FALSE(size == mSize, "Sizes must match to copy image data.");
-
     for (int i = 0; i < data->mYSize.height; i++) {
       memcpy(surfY->Data() + i * surfY->Stride(),
              data->mYChannel + i * data->mYStride,
@@ -218,24 +214,56 @@ bool ImageContainerChild::AddSharedImageToPool(SharedImage* img)
     return false;
   }
   if (img->type() == SharedImage::TYUVImage) {
-    nsIntRect rect = img->get_YUVImage().picture();
-    if ((rect.Width() != mSize.width) || (rect.Height() != mSize.height)) {
-      ClearSharedImagePool();
-      mSize.width = rect.Width();
-      mSize.height = rect.Height();
-    }
     mSharedImagePool.AppendElement(img);
     return true;
   }
   return false; // TODO accept more image formats in the pool
 }
 
-SharedImage* ImageContainerChild::PopSharedImageFromPool()
+static bool
+SharedImageCompatibleWith(SharedImage* aSharedImage, Image* aImage)
 {
-  if (mSharedImagePool.Length() > 0) {
-    SharedImage* img = mSharedImagePool[mSharedImagePool.Length()-1];
-    mSharedImagePool.RemoveElement(mSharedImagePool.LastElement());
-    return img;
+  // TODO accept more image formats
+  switch (aImage->GetFormat()) {
+  case Image::PLANAR_YCBCR: {
+    if (aSharedImage->type() != SharedImage::TYUVImage) {
+      return false;
+    }
+    const PlanarYCbCrImage::Data* data =
+      static_cast<PlanarYCbCrImage*>(aImage)->GetData();
+    const YUVImage& yuv = aSharedImage->get_YUVImage();
+
+    nsRefPtr<gfxSharedImageSurface> surfY =
+      gfxSharedImageSurface::Open(yuv.Ydata());
+    if (surfY->GetSize() != data->mYSize) {
+      return false;
+    }
+
+    nsRefPtr<gfxSharedImageSurface> surfU =
+      gfxSharedImageSurface::Open(yuv.Udata());
+    if (surfU->GetSize() != data->mCbCrSize) {
+      return false;
+    }
+    return true;
+  }
+  default:
+    return false;
+  }
+}
+
+SharedImage*
+ImageContainerChild::GetSharedImageFor(Image* aImage)
+{
+  while (mSharedImagePool.Length() > 0) {
+    // i.e., img = mPool.pop()
+    nsAutoPtr<SharedImage> img(mSharedImagePool.LastElement());
+    mSharedImagePool.RemoveElementAt(mSharedImagePool.Length() - 1);
+
+    if (SharedImageCompatibleWith(img, aImage)) {
+      return img.forget();
+    }
+    // The cached image is stale, throw it out.
+    DeallocSharedImageData(this, *img);
   }
   
   return nullptr;
@@ -285,7 +313,7 @@ SharedImage* ImageContainerChild::ImageToSharedImage(Image* aImage)
 
   NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                     "Should be in ImageBridgeChild thread.");
-  SharedImage *img = PopSharedImageFromPool();
+  SharedImage *img = GetSharedImageFor(aImage);
   if (img) {
     CopyDataIntoSharedImage(aImage, img);  
   } else {

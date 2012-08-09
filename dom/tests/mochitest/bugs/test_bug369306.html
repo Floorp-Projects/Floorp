@@ -116,9 +116,8 @@ function test5()
     SimpleTest.executeSoon(function() {
       // We have to focus back the originating window but we can't do that with
       // .focus() or .blur() anymore.
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                          getService(Components.interfaces.nsIFocusManager);
+      var fm = SpecialPowers.wrap(Components).classes["@mozilla.org/focus-manager;1"]
+                            .getService(Components.interfaces.nsIFocusManager);
       fm.focusedWindow = window;
     });
   }, w, true);
@@ -126,10 +125,9 @@ function test5()
 
 function finished()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch)
-            .setBoolPref("dom.disable_window_flip", gOldPrefValue);
+  SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
+               .getService(Components.interfaces.nsIPrefBranch)
+               .setBoolPref("dom.disable_window_flip", gOldPrefValue);
   SimpleTest.finish();
 }
 
@@ -137,9 +135,8 @@ SimpleTest.waitForExplicitFinish();
 
 
 // dom.disable_window_flip has to be set to true for this test.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
+var prefs = SpecialPowers.wrap(Components).classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
 gOldPrefValue = prefs.getBoolPref("dom.disable_window_flip");
 prefs.setBoolPref("dom.disable_window_flip", true);
 

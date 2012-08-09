@@ -408,7 +408,7 @@ NS_UTF16ToCString(const nsAString &aSrc, nsCStringEncoding aDestEncoding, nsACSt
 }
 
 XPCOM_API(void*)
-NS_Alloc(PRSize size)
+NS_Alloc(size_t size)
 {
     if (!xpcomFunctions.allocFunc)
         return nullptr;
@@ -416,7 +416,7 @@ NS_Alloc(PRSize size)
 }
 
 XPCOM_API(void*)
-NS_Realloc(void* ptr, PRSize size)
+NS_Realloc(void* ptr, size_t size)
 {
     if (!xpcomFunctions.reallocFunc)
         return nullptr;
