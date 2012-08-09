@@ -3,6 +3,8 @@ sync/CollectionKeys.java
 sync/CommandProcessor.java
 sync/CommandRunner.java
 sync/config/AccountPickler.java
+sync/config/ConfigurationMigrator.java
+sync/CredentialException.java
 sync/CredentialsSource.java
 sync/crypto/CryptoException.java
 sync/crypto/CryptoInfo.java

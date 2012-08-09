@@ -49,6 +49,87 @@ public class SyncAuthenticatorService extends Service {
     return sAccountAuthenticator;
   }
 
+  /**
+   * Generate a "plain" auth token.
+   * <p>
+   * Android caches only the value of the key
+   * <code>AccountManager.KEY_AUTHTOKEN</code>, so if a caller needs the other
+   * keys in this bundle, it needs to invalidate the token (so that the bundle
+   * is re-generated).
+   *
+   * @param context
+   *          Android context.
+   * @param account
+   *          Android account.
+   * @return a <code>Bundle</code> instance containing a subset of the following
+   *         keys: (caller's must check for missing keys)
+   *         <ul>
+   *         <li><code>AccountManager.KEY_ACCOUNT_TYPE</code>: the Android
+   *         Account's type</li>
+   *
+   *         <li><code>AccountManager.KEY_ACCOUNT_NAME</code>: the Android
+   *         Account's name</li>
+   *
+   *         <li><code>AccountManager.KEY_AUTHTOKEN</code>: the Sync account's
+   *         password </li>
+   *
+   *         <li><code> Constants.OPTION_USERNAME</code>: the Sync account's
+   *         hashed username</li>
+   *
+   *         <li><code>Constants.OPTION_SERVER</code>: the Sync account's
+   *         server</li>
+   *
+   *         <li><code> Constants.OPTION_SYNCKEY</code>: the Sync account's
+   *         sync key</li>
+   *
+   *         </ul>
+   * @throws NetworkErrorException
+   */
+  public static Bundle getPlainAuthToken(final Context context, final Account account)
+      throws NetworkErrorException {
+    // Extract the username and password from the Account Manager, and ask
+    // the server for an appropriate AuthToken.
+    final AccountManager am = AccountManager.get(context);
+    final String password = am.getPassword(account);
+    if (password == null) {
+      Logger.warn(LOG_TAG, "Returning null bundle for getPlainAuthToken since Account password is null.");
+      return null;
+    }
+
+    final Bundle result = new Bundle();
+
+    // This is a Sync account.
+    result.putString(AccountManager.KEY_ACCOUNT_TYPE, GlobalConstants.ACCOUNTTYPE_SYNC);
+
+    // Server.
+    String serverURL = am.getUserData(account, Constants.OPTION_SERVER);
+    result.putString(Constants.OPTION_SERVER, serverURL);
+
+    // Full username, before hashing.
+    result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+
+    // Username after hashing.
+    try {
+      String username = Utils.usernameFromAccount(account.name);
+      Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username + ".");
+      Logger.debug(LOG_TAG, "Setting username. Null? " + (username == null));
+      result.putString(Constants.OPTION_USERNAME, username);
+    } catch (NoSuchAlgorithmException e) {
+      // Do nothing. Calling code must check for missing value.
+    } catch (UnsupportedEncodingException e) {
+      // Do nothing. Calling code must check for missing value.
+    }
+
+    // Sync key.
+    final String syncKey = am.getUserData(account, Constants.OPTION_SYNCKEY);
+    Logger.debug(LOG_TAG, "Setting sync key. Null? " + (syncKey == null));
+    result.putString(Constants.OPTION_SYNCKEY, syncKey);
+
+    // Password.
+    result.putString(AccountManager.KEY_AUTHTOKEN, password);
+    return result;
+  }
+
   private static class SyncAccountAuthenticator extends AbstractAccountAuthenticator {
     private Context mContext;
     public SyncAccountAuthenticator(Context context) {
@@ -93,53 +174,14 @@ public class SyncAuthenticatorService extends Service {
         Account account, String authTokenType, Bundle options)
         throws NetworkErrorException {
       Logger.debug(LOG_TAG, "getAuthToken()");
-      if (!authTokenType.equals(Constants.AUTHTOKEN_TYPE_PLAIN)) {
-        final Bundle result = new Bundle();
-        result.putString(AccountManager.KEY_ERROR_MESSAGE,
-            "invalid authTokenType");
-        return result;
+
+      if (Constants.AUTHTOKEN_TYPE_PLAIN.equals(authTokenType)) {
+        return getPlainAuthToken(mContext, account);
       }
 
-      // Extract the username and password from the Account Manager, and ask
-      // the server for an appropriate AuthToken.
-      final AccountManager am = AccountManager.get(mContext);
-      final String password = am.getPassword(account);
-      if (password != null) {
-        final Bundle result = new Bundle();
-
-        // This is a Sync account.
-        result.putString(AccountManager.KEY_ACCOUNT_TYPE, GlobalConstants.ACCOUNTTYPE_SYNC);
-
-        // Server.
-        String serverURL = am.getUserData(account, Constants.OPTION_SERVER);
-        result.putString(Constants.OPTION_SERVER, serverURL);
-
-        // Full username, before hashing.
-        result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-
-        // Username after hashing.
-        try {
-          String username = Utils.usernameFromAccount(account.name);
-          Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username + ".");
-          Logger.debug(LOG_TAG, "Setting username. Null? " + (username == null));
-          result.putString(Constants.OPTION_USERNAME, username);
-        } catch (NoSuchAlgorithmException e) {
-          // Do nothing. Calling code must check for missing value.
-        } catch (UnsupportedEncodingException e) {
-          // Do nothing. Calling code must check for missing value.
-        }
-
-        // Sync key.
-        final String syncKey = am.getUserData(account, Constants.OPTION_SYNCKEY);
-        Logger.debug(LOG_TAG, "Setting sync key. Null? " + (syncKey == null));
-        result.putString(Constants.OPTION_SYNCKEY, syncKey);
-
-        // Password.
-        result.putString(AccountManager.KEY_AUTHTOKEN, password);
-        return result;
-      }
-      Logger.warn(LOG_TAG, "Returning null bundle for getAuthToken.");
-      return null;
+      final Bundle result = new Bundle();
+      result.putString(AccountManager.KEY_ERROR_MESSAGE, "invalid authTokenType");
+      return result;
     }
 
     @Override
