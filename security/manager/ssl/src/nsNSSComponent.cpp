@@ -123,7 +123,7 @@ static PLHashNumber PR_CALLBACK certHashtable_keyHash(const void *key)
   return hash;
 }
 
-static PRIntn PR_CALLBACK certHashtable_keyCompare(const void *k1, const void *k2)
+static int PR_CALLBACK certHashtable_keyCompare(const void *k1, const void *k2)
 {
   // return type is a bool, answering the question "are the keys equal?"
 
@@ -150,7 +150,7 @@ static PRIntn PR_CALLBACK certHashtable_keyCompare(const void *k1, const void *k
   return true;
 }
 
-static PRIntn PR_CALLBACK certHashtable_valueCompare(const void *v1, const void *v2)
+static int PR_CALLBACK certHashtable_valueCompare(const void *v1, const void *v2)
 {
   // two values are identical if their keys are identical
   
@@ -163,7 +163,7 @@ static PRIntn PR_CALLBACK certHashtable_valueCompare(const void *v1, const void 
   return certHashtable_keyCompare(&cert1->certKey, &cert2->certKey);
 }
 
-static PRIntn PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, PRIntn /*index*/, void * /*userdata*/)
+static int PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, int /*index*/, void * /*userdata*/)
 {
   if (he && he->value) {
     CERT_DestroyCertificate((CERTCertificate*)he->value);

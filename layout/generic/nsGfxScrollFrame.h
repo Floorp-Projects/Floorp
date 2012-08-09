@@ -541,7 +541,7 @@ public:
 
 protected:
   nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot);
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
   
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mInner.mSupppressScrollbarUpdate = aSuppress;
@@ -788,7 +788,7 @@ public:
 
 protected:
   nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot);
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   void ClampAndSetBounds(nsBoxLayoutState& aState, 
                          nsRect& aRect,

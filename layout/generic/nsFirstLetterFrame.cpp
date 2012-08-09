@@ -46,7 +46,7 @@ nsFirstLetterFrame::GetType() const
   return nsGkAtoms::letterFrame;
 }
 
-PRIntn
+int
 nsFirstLetterFrame::GetSkipSides() const
 {
   return 0;

@@ -1297,7 +1297,7 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
 
   if (GetStyleVisibility()->IsVisible()) {
     if (!IsBorderCollapse()) {
-      PRIntn skipSides = GetSkipSides();
+      int skipSides = GetSkipSides();
       nsRect rect(aPt, mRect.Size());
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext, skipSides);
@@ -1311,10 +1311,10 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
   }
 }
 
-PRIntn
+int
 nsTableFrame::GetSkipSides() const
 {
-  PRIntn skip = 0;
+  int skip = 0;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
   if (nullptr != GetPrevInFlow()) {
