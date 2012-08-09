@@ -74,6 +74,10 @@
 #include "methodjit/MonoIC.h"
 #endif
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -1236,6 +1240,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSRuntime *const rt = cx->runtime;
     Rooted<JSScript*> script(cx);
     SET_SCRIPT(regs.fp()->script());
+
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::INTERPRETER_START,
+                        TraceLogging::INTERPRETER_STOP,
+                        script);
+#endif
 
     /*
      * Pool of rooters for use in this interpreter frame. References to these
