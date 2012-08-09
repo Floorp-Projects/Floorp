@@ -140,11 +140,6 @@ public:
     return mDOMTiming;
   }
 
-  nsITimedChannel* GetChannel() const
-  {
-    return mChannel;
-  }
-
   nsIDOMWindow* GetParentObject() const
   {
     return mWindow.get();

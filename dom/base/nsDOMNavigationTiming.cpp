@@ -41,14 +41,6 @@ nsDOMNavigationTiming::Clear()
   mDOMContentLoadedEventEnd = 0;
   mDOMComplete = 0;
   mRedirectCheck = NOT_CHECKED;
-
-  mLoadEventStartSet = false;
-  mLoadEventEndSet = false;
-  mDOMLoadingSet = false;
-  mDOMInteractiveSet = false;
-  mDOMContentLoadedEventStart = false;
-  mDOMContentLoadedEventEnd = false;
-  mDOMCompleteSet = false;
 }
 
 DOMTimeMilliSec
@@ -136,19 +128,13 @@ nsDOMNavigationTiming::NotifyUnloadEventEnd()
 void
 nsDOMNavigationTiming::NotifyLoadEventStart()
 {
-  if (!mLoadEventStartSet) {
-    mLoadEventStart = DurationFromStart();
-    mLoadEventStartSet = true;
-  }
+  mLoadEventStart = DurationFromStart();
 }
 
 void
 nsDOMNavigationTiming::NotifyLoadEventEnd()
 {
-  if (!mLoadEventEndSet) {
-    mLoadEventEnd = DurationFromStart();
-    mLoadEventEndSet = true;
-  }
+  mLoadEventEnd = DurationFromStart();
 }
 
 bool
@@ -180,61 +166,43 @@ nsDOMNavigationTiming::ReportRedirects()
 void
 nsDOMNavigationTiming::SetDOMLoadingTimeStamp(nsIURI* aURI, mozilla::TimeStamp aValue)
 {
-  if (!mDOMLoadingSet) {
-    mLoadedURI = aURI;
-    mDOMLoading = TimeStampToDOM(aValue);
-    mDOMLoadingSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMLoading = TimeStampToDOM(aValue);
 }
 
 void
 nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI)
 {
-  if (!mDOMLoadingSet) {
-    mLoadedURI = aURI;
-    mDOMLoading = DurationFromStart();
-    mDOMLoadingSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMLoading = DurationFromStart();
 }
 
 void
 nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI)
 {
-  if (!mDOMInteractiveSet) {
-    mLoadedURI = aURI;
-    mDOMInteractive = DurationFromStart();
-    mDOMInteractiveSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMInteractive = DurationFromStart();
 }
 
 void
 nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI)
 {
-  if (!mDOMCompleteSet) {
-    mLoadedURI = aURI;
-    mDOMComplete = DurationFromStart();
-    mDOMCompleteSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMComplete = DurationFromStart();
 }
 
 void
 nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
 {
-  if (!mDOMContentLoadedEventStartSet) {
-    mLoadedURI = aURI;
-    mDOMContentLoadedEventStart = DurationFromStart();
-    mDOMContentLoadedEventStartSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMContentLoadedEventStart = DurationFromStart();
 }
 
 void
 nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
 {
-  if (!mDOMContentLoadedEventEndSet) {
-    mLoadedURI = aURI;
-    mDOMContentLoadedEventEnd = DurationFromStart();
-    mDOMContentLoadedEventEndSet = true;
-  }
+  mLoadedURI = aURI;
+  mDOMContentLoadedEventEnd = DurationFromStart();
 }
 
 PRUint16
