@@ -412,7 +412,9 @@ def write_interface(iface, fd):
 
     fd.write(iface_forward % names)
 
-    def emitTemplate(tmpl):
+    def emitTemplate(tmpl, tmpl_notxpcom=None):
+        if tmpl_notxpcom == None:
+            tmpl_notxpcom = tmpl
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
                 fd.write(tmpl % {'asNative': attributeAsNative(member, True),
@@ -423,9 +425,14 @@ def write_interface(iface, fd):
                                      'nativeName': attributeNativeName(member, False),
                                      'paramList': attributeParamNames(member)})
             elif isinstance(member, xpidl.Method):
-                fd.write(tmpl % {'asNative': methodAsNative(member),
-                                 'nativeName': methodNativeName(member),
-                                 'paramList': paramlistNames(member)})
+                if member.notxpcom:
+                    fd.write(tmpl_notxpcom % {'asNative': methodAsNative(member),
+                                              'nativeName': methodNativeName(member),
+                                              'paramList': paramlistNames(member)})
+                else:
+                    fd.write(tmpl % {'asNative': methodAsNative(member),
+                                     'nativeName': methodNativeName(member),
+                                     'paramList': paramlistNames(member)})
         if len(iface.members) == 0:
             fd.write('\\\n  /* no methods! */')
         elif not member.kind in ('attribute', 'method'):
@@ -435,7 +442,11 @@ def write_interface(iface, fd):
 
     fd.write(iface_forward_safe % names)
 
-    emitTemplate("\\\n  %(asNative)s { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ")
+    # Don't try to safely forward notxpcom functions, because we have no
+    # sensible default error return.  Instead, the caller will have to
+    # implement them.
+    emitTemplate("\\\n  %(asNative)s { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
+                 "\\\n  %(asNative)s; ")
 
     fd.write(iface_template_prolog % names)
 
