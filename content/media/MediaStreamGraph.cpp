@@ -99,11 +99,12 @@ public:
   // When we're shutting down the application, most messages are ignored but
   // some cleanup messages should still be processed (on the main thread).
   virtual void RunDuringShutdown() {}
+  MediaStream* GetStream() { return mStream; }
 
 protected:
-  // We do not hold a reference to mStream. The main thread will be holding
-  // a reference to the stream while this message is in flight. The last message
-  // referencing a stream is the Destroy message for that stream.
+  // We do not hold a reference to mStream. The graph will be holding
+  // a reference to the stream until the Destroy message is processed. The
+  // last message referencing a stream is the Destroy message for that stream.
   MediaStream* mStream;
 };
 
@@ -1537,6 +1538,9 @@ void
 MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
 {
   NS_ASSERTION(NS_IsMainThread(), "main thread only");
+  NS_ASSERTION(!aMessage->GetStream() ||
+               !aMessage->GetStream()->IsDestroyed(),
+               "Stream already destroyed");
 
   if (mDetectedNotRunning &&
       mLifecycleState > LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
@@ -1599,6 +1603,7 @@ MediaStream::Destroy()
   };
   mWrapper = nullptr;
   GraphImpl()->AppendMessage(new Message(this));
+  mMainThreadDestroyed = true;
 }
 
 void
