@@ -9578,14 +9578,18 @@ nsHTMLSelectElementSH::SetOption(JSContext *cx, JS::Value *vp, PRUint32 aIndex,
   JSAutoRequest ar(cx);
 
   // vp must refer to an object
-  if (!vp->isObject()) {
+  if (!vp->isObjectOrNull()) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIDOMHTMLOptionElement> new_option = do_QueryWrapper(cx, &vp->toObject());
-  if (!new_option) {
-    // Someone is trying to set an option to a non-option object.
-    return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMHTMLOptionElement> new_option;
+
+  if (JSObject* obj = vp->toObjectOrNull()) {
+    new_option = do_QueryWrapper(cx, obj);
+    if (!new_option) {
+      // Someone is trying to set an option to a non-option object.
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   return aOptCollection->SetOption(aIndex, new_option);
