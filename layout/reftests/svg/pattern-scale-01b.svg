@@ -11,5 +11,5 @@
   <g transform="scale(200)">
     <rect width="1" height="1" fill="url(#pattern)" />
   </g>
-  <circle cx="100" cy="100" r="100" fill="none" stroke="lime" stroke-width="2" shape-rendering="crispEdges" />
+  <circle cx="100" cy="100" r="100" fill="none" stroke="lime" stroke-width="3.5" shape-rendering="crispEdges" />
 </svg>

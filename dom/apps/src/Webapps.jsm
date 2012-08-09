@@ -124,7 +124,7 @@ let DOMApplicationRegistry = {
       cpmm.sendAsyncMessage("Activities:Register", json);
 
       let launchPath =
-        Services.io.newURI(manifest.fullLaunchPath(description.href), null, null);
+        Services.io.newURI(manifest.resolveFromOrigin(description.href), null, null);
       let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
       msgmgr.registerPage("activity", launchPath, manifestURL);
     }
@@ -1000,6 +1000,10 @@ DOMApplicationManifest.prototype = {
     let startPoint = aStartPoint || "";
     let launchPath = this._localeProp("launch_path") || "";
     return this._origin.resolve(launchPath + startPoint);
+  },
+
+  resolveFromOrigin: function(aURI) {
+    return this._origin.resolve(aURI);
   },
 
   fullAppcachePath: function() {

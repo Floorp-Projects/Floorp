@@ -61,6 +61,10 @@ public class DoorHangerPopup extends PopupWindow
         Tabs.unregisterOnTabsChangedListener(this);
     }
 
+    void setAnchor(View aAnchor) {
+        mAnchor = aAnchor;
+    }
+
     public void handleMessage(String event, JSONObject geckoObject) {
         try {
             if (event.equals("Doorhanger:Add")) {
