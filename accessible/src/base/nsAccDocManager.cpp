@@ -45,7 +45,7 @@ nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
     return nullptr;
 
   // Ensure CacheChildren is called before we query cache.
-  nsAccessNode::GetApplicationAccessible()->EnsureChildren();
+  ApplicationAcc()->EnsureChildren();
 
   DocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (docAcc)
@@ -393,7 +393,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 
   // Bind the document to the tree.
   if (isRootDoc) {
-    Accessible* appAcc = nsAccessNode::GetApplicationAccessible();
+    Accessible* appAcc = ApplicationAcc();
     if (!appAcc->AppendChild(docAcc)) {
       docAcc->Shutdown();
       return nullptr;
