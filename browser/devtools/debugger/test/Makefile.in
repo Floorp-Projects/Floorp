@@ -44,6 +44,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_stack-04.js \
 	browser_dbg_stack-05.js \
 	browser_dbg_location-changes.js \
+	browser_dbg_location-changes-new.js \
 	browser_dbg_location-changes-blank.js \
 	browser_dbg_script-switching.js \
 	browser_dbg_scripts-sorting.js \
