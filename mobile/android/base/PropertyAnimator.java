@@ -141,29 +141,35 @@ public class PropertyAnimator extends TimerTask {
     }
 
     private void invalidate(final ElementHolder element, final int delta) {
-        if (element == null || element.view == null)
+        View v = (element == null ? null : element.view);
+        if (v == null)
             return;
 
         // Post the layout changes on the view's UI thread.
-        element.view.getHandler().post(new Runnable() {
+        v.getHandler().post(new Runnable() {
             @Override
             public void run() {
+                // Check if the element and view still exist
+                View view = (element == null ? null : element.view);
+                if (view == null)
+                     return;
+            
                 if (element.property == Property.SLIDE_TOP) {
-                    element.view.scrollTo(element.view.getScrollX(), delta);
+                    view.scrollTo(view.getScrollX(), delta);
                     return;
                 } else if (element.property == Property.SLIDE_LEFT) {
-                    element.view.scrollTo(delta, element.view.getScrollY());
+                    view.scrollTo(delta, view.getScrollY());
                     return;
                 }
 
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) element.view.getLayoutParams();
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
 
                 if (element.property == Property.SHRINK_TOP)
                     params.setMargins(params.leftMargin, delta, params.rightMargin, params.bottomMargin);
                 else if (element.property == Property.SHRINK_LEFT)
                     params.setMargins(delta, params.topMargin, params.rightMargin, params.bottomMargin);
 
-                element.view.requestLayout();
+                view.requestLayout();
             }
         });
     }
