@@ -229,7 +229,10 @@ class B2GRemoteAutomation(Automation):
                                           'tcp:%s' % self.marionette.port,
                                           'tcp:%s' % self.marionette.port])
 
-        time.sleep(5)
+        if self._is_emulator:
+            self.marionette.emulator.wait_for_port()
+        else:
+            time.sleep(5)
 
         # start a marionette session
         session = self.marionette.start_session()
@@ -274,7 +277,7 @@ class B2GRemoteAutomation(Automation):
             self.stdout_proc.run()
             if hasattr(self.stdout_proc, 'processOutput'):
                 self.stdout_proc.processOutput()
-            self.stdout_proc.waitForFinish(timeout=10)
+            self.stdout_proc.waitForFinish()
             self.stdout_proc = None
 
         @property
