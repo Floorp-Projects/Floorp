@@ -221,6 +221,7 @@ let DOMApplicationRegistry = {
         this.getSelf(msg);
         break;
       case "Webapps:Uninstall":
+        Services.obs.notifyObservers(this, "webapps-uninstall", JSON.stringify(msg));
         this.uninstall(msg);
         break;
       case "Webapps:Launch":
