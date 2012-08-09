@@ -164,7 +164,7 @@ private:
     void init(const char *buf, size_t len, char ei_data)
     {
         R e;
-        assert(len <= sizeof(e));
+        assert(len >= sizeof(e));
         memcpy(&e, buf, sizeof(e));
         if (ei_data == ELFDATA2LSB) {
             T::template swap<little_endian>(e, *this);
@@ -194,23 +194,13 @@ public:
         if (ei_class == ELFCLASS32) {
             typename T::Type32 e;
             file.read((char *)&e, sizeof(e));
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(e, *this);
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(e, *this);
-                return;
-            }
+            init<typename T::Type32>((char *)&e, sizeof(e), ei_data);
+            return;
         } else if (ei_class == ELFCLASS64) {
             typename T::Type64 e;
             file.read((char *)&e, sizeof(e));
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(e, *this);
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(e, *this);
-                return;
-            }
+            init<typename T::Type64>((char *)&e, sizeof(e), ei_data);
+            return;
         }
         throw std::runtime_error("Unsupported ELF class or data encoding");
     }
