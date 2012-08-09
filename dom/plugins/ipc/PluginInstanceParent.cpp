@@ -450,7 +450,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
 
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
-                                      (void*)(intptr_t)drawingModel);
+                                      (void*)drawingModel);
 
         if (mRemoteImageDataShmem.IsWritable()) {
             container->SetRemoteImageData(nullptr, nullptr);
