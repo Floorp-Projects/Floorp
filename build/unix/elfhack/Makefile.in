@@ -87,7 +87,7 @@ endif
 inject:
 	$(NSINSTALL) -D $@
 
-inject/%.c: inject.c | inject
+inject/%.c: inject.c $(call mkdir_deps,inject)
 	cp $< $@
 
 GARBAGE_DIRS += inject
