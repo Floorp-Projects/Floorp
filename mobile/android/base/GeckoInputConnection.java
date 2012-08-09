@@ -96,7 +96,7 @@ class GeckoInputConnection
     private boolean mCommittingText;
     private KeyCharacterMap mKeyCharacterMap;
     private final Editable mEditable;
-    private boolean mBatchMode;
+    protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
 
@@ -118,13 +118,17 @@ class GeckoInputConnection
 
     @Override
     public boolean beginBatchEdit() {
-        mBatchMode = true;
+        mBatchEditCount++;
         return true;
     }
 
     @Override
     public boolean endBatchEdit() {
-        mBatchMode = false;
+        if (mBatchEditCount > 0) {
+            mBatchEditCount--;
+        } else {
+            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
+        }
         return true;
     }
 
@@ -436,7 +440,7 @@ class GeckoInputConnection
 
     protected void notifyTextChange(InputMethodManager imm, String text,
                                     int start, int oldEnd, int newEnd) {
-        if (!mBatchMode) {
+        if (mBatchEditCount == 0) {
             if (!text.contentEquals(mEditable)) {
                 if (DEBUG) Log.d(LOGTAG, ". . . notifyTextChange: current mEditable="
                                          + prettyPrintString(mEditable));
@@ -479,7 +483,7 @@ class GeckoInputConnection
     }
 
     protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
-        if (!mBatchMode) {
+        if (mBatchEditCount == 0) {
             final Editable content = getEditable();
 
             Span newSelection = Span.clamp(start, end, content);
@@ -525,9 +529,14 @@ class GeckoInputConnection
     }
 
     protected void resetCompositionState() {
+        if (mBatchEditCount > 0) {
+            Log.d(LOGTAG, "resetCompositionState: resetting mBatchEditCount "
+                          + mBatchEditCount + " -> 0");
+            mBatchEditCount = 0;
+        }
+
         removeComposingSpans(mEditable);
         mCompositionStart = NO_COMPOSITION_STRING;
-        mBatchMode = false;
         mUpdateRequest = null;
     }
 
@@ -1229,15 +1238,21 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
 
     @Override
     public boolean beginBatchEdit() {
-        Log.d(LOGTAG, "IME: beginBatchEdit");
+        Log.d(LOGTAG, "IME: beginBatchEdit: mBatchEditCount " + mBatchEditCount
+                                                     + " -> " + (mBatchEditCount+1));
         GeckoApp.assertOnUiThread();
         return super.beginBatchEdit();
     }
 
     @Override
     public boolean endBatchEdit() {
-        Log.d(LOGTAG, "IME: endBatchEdit");
+        Log.d(LOGTAG, "IME: endBatchEdit: mBatchEditCount " + mBatchEditCount
+                                                   + " -> " + (mBatchEditCount-1));
         GeckoApp.assertOnUiThread();
+        if (mBatchEditCount <= 0) {
+            throw new IllegalStateException("Expected positive mBatchEditCount, but got "
+                                            + mBatchEditCount);
+        }
         return super.endBatchEdit();
     }
 
