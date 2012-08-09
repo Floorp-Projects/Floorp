@@ -50,7 +50,7 @@ protected:
   nsMathMLmrootFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmrootFrame();
   
-  virtual PRIntn GetSkipSides() const { return 0; }
+  virtual int GetSkipSides() const { return 0; }
 
   nsMathMLChar mSqrChar;
   nsRect       mBarRect;

@@ -180,8 +180,11 @@ public:
 };
 
 
-#define NS_IS_SPACE(VAL) \
-  (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && isspace((intn)(VAL)) )
+inline bool
+NS_IS_SPACE(PRUnichar c)
+{
+  return ((int(c) & 0x7f) == int(c)) && isspace(int(c));
+}
 
 #define NS_IS_CNTRL(i)   ((((unsigned int) (i)) > 0x7f) ? (int) 0 : iscntrl(i))
 #define NS_IS_DIGIT(i)   ((((unsigned int) (i)) > 0x7f) ? (int) 0 : isdigit(i))

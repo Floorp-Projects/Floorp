@@ -91,7 +91,7 @@ public:
 
 protected:
 
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
   void ReparentFrameList(const nsFrameList& aFrameList);
 
   // mLegendFrame is a nsLegendFrame or a nsHTMLScrollFrame with the
@@ -245,7 +245,7 @@ void
 nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags)
 {
-  PRIntn skipSides = GetSkipSides();
+  int skipSides = GetSkipSides();
   const nsStyleBorder* borderStyle = GetStyleBorder();
        
   nscoord topBorder = borderStyle->GetComputedBorderWidth(NS_SIDE_TOP);
@@ -590,7 +590,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-PRIntn
+int
 nsFieldSetFrame::GetSkipSides() const
 {
   return 0;

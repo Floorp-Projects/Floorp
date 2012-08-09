@@ -490,7 +490,7 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     if (!data_return)
       continue;
 
-    PRFloat64 version = PR_strtod((char*) data_return, nullptr);
+    double version = PR_strtod((char*) data_return, nullptr);
     XFree(data_return);
 
     if (aSupportsCommandLine && !(version >= 5.1 && version < 6))

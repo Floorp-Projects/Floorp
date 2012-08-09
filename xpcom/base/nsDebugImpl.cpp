@@ -255,7 +255,7 @@ struct FixedBuffer
   PRUint32 curlen;
 };
 
-static PRIntn
+static int
 StuffFixedBuffer(void *closure, const char *buf, PRUint32 len)
 {
   if (!len)

@@ -35,14 +35,14 @@ public:
     static NS_HIDDEN_(void*) Alloc(size_t size)
         { return NS_Alloc(size); }
 
-    static NS_HIDDEN_(void*) Realloc(void* ptr, PRSize size)
+    static NS_HIDDEN_(void*) Realloc(void* ptr, size_t size)
         { return NS_Realloc(ptr, size); }
 
     static NS_HIDDEN_(void) Free(void* ptr)
         { NS_Free(ptr); }
 
     static NS_COM_GLUE nsresult   HeapMinimize(bool aImmediate);
-    static NS_COM_GLUE void*      Clone(const void* ptr, PRSize size);
+    static NS_COM_GLUE void*      Clone(const void* ptr, size_t size);
     static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 

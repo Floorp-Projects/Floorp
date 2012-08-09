@@ -328,7 +328,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   aDesiredSize.ascent += yoff;
 }
 
-PRIntn
+int
 nsHTMLButtonControlFrame::GetSkipSides() const
 {
   return 0;

@@ -444,11 +444,11 @@ static bool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
   }
   nsAutoString addOn, decStr;
   decStr.AppendInt(ordinal, 10);
-  PRIntn len = decStr.Length();
+  int len = decStr.Length();
   const PRUnichar* dp = decStr.get();
   const PRUnichar* end = dp + len;
-  PRIntn romanPos = len;
-  PRIntn n;
+  int romanPos = len;
+  int n;
 
   for (; dp < end; dp++) {
     romanPos--;

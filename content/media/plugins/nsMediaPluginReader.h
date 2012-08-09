@@ -16,8 +16,8 @@ class nsMediaPluginReader : public nsBuiltinDecoderReader
 {
   nsCString mType;
   MPAPI::Decoder *mPlugin;
-  PRBool mHasAudio;
-  PRBool mHasVideo;
+  bool mHasAudio;
+  bool mHasVideo;
   nsIntRect mPicture;
   nsIntSize mInitialFrame;
   int64_t mVideoSeekTimeUs;
