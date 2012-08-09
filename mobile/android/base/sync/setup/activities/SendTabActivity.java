@@ -9,13 +9,18 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
+import org.mozilla.gecko.sync.CredentialException;
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.SyncConfiguration;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 import org.mozilla.gecko.sync.syncadapter.SyncAdapter;
 
@@ -24,6 +29,7 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -106,17 +112,47 @@ public class SendTabActivity extends Activity {
    * @return Return null if there is no account set up. Return the account GUID otherwise.
    */
   private String getAccountGUID() {
-    if (accountManager == null || localAccount == null) {
+    if (localAccount == null) {
+      Logger.warn(LOG_TAG, "Null local account; aborting.");
       return null;
     }
-    return accountManager.getUserData(localAccount, Constants.ACCOUNT_GUID);
+
+    SyncAccountParameters params;
+    try {
+      params = SyncAccounts.blockingFromAndroidAccountV0(this, accountManager, localAccount);
+    } catch (CredentialException e) {
+      Logger.warn(LOG_TAG, "Could not get sync account parameters; aborting.");
+      return null;
+    }
+
+    SharedPreferences prefs;
+    try {
+      final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
+      final String profile = Constants.DEFAULT_PROFILE;
+      final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
+      prefs = Utils.getSharedPreferences(getApplicationContext(), product, params.username, params.serverURL, profile, version);
+      return prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public void sendClickHandler(View view) {
     Logger.info(LOG_TAG, "Send was clicked.");
     Bundle extras = this.getIntent().getExtras();
+    if (extras == null) {
+      Logger.warn(LOG_TAG, "extras was null; aborting without sending tab.");
+      notifyAndFinish(false);
+      return;
+    }
+
     final String uri = extras.getString(Intent.EXTRA_TEXT);
     final String title = extras.getString(Intent.EXTRA_SUBJECT);
+    final List<String> guids = arrayAdapter.getCheckedGUIDs();
+
+    if (title == null) {
+      Logger.warn(LOG_TAG, "title was null; ignoring and sending tab anyway.");
+    }
 
     if (uri == null) {
       Logger.warn(LOG_TAG, "uri was null; aborting without sending tab.");
@@ -124,37 +160,43 @@ public class SendTabActivity extends Activity {
       return;
     }
 
-    if (title == null) {
-      Logger.warn(LOG_TAG, "title was null; ignoring and sending tab anyway.");
-    }
-
-    final String clientGUID = getAccountGUID();
-    final List<String> guids = arrayAdapter.getCheckedGUIDs();
-
-    if (clientGUID == null || guids == null) {
+    if (guids == null) {
       // Should never happen.
-      Logger.warn(LOG_TAG, "clientGUID? " + (clientGUID == null) + " or guids? " + (guids == null) +
-          " was null; aborting without sending tab.");
+      Logger.warn(LOG_TAG, "guids was null; aborting without sending tab.");
       notifyAndFinish(false);
       return;
     }
 
-    // Perform tab sending on another thread.
-    new Thread() {
+    // Fetching local client GUID hits the DB, and we want to update the UI
+    // afterward, so we perform the tab sending on another thread.
+    new AsyncTask<Void, Void, Boolean>() {
+
       @Override
-      public void run() {
+      protected Boolean doInBackground(Void... params) {
         final CommandProcessor processor = CommandProcessor.getProcessor();
 
+        final String accountGUID = getAccountGUID();
+        Logger.debug(LOG_TAG, "Retrieved local account GUID '" + accountGUID + "'.");
+        if (accountGUID == null) {
+          return false;
+        }
+
         for (String guid : guids) {
-          processor.sendURIToClientForDisplay(uri, guid, title, clientGUID, getApplicationContext());
+          processor.sendURIToClientForDisplay(uri, guid, title, accountGUID, getApplicationContext());
         }
 
         Logger.info(LOG_TAG, "Requesting immediate clients stage sync.");
         SyncAdapter.requestImmediateSync(localAccount, new String[] { SyncClientsEngineStage.COLLECTION_NAME });
-      }
-    }.start();
 
-    notifyAndFinish(true);
+        return true;
+      }
+
+      @Override
+      protected void onPostExecute(final Boolean success) {
+        // We're allowed to update the UI from here.
+        notifyAndFinish(success.booleanValue());
+      }
+    }.execute();
   }
 
   /**
