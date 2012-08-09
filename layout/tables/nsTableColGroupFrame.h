@@ -202,7 +202,7 @@ protected:
                         const nsFrameList::Slice& aCols);
 
   /** implement abstract method on nsContainerFrame */
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   // data members
   PRInt32 mColCount;

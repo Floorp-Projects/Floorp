@@ -544,7 +544,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     LOG(("\tRead: %lld bytes.\n", info->mBytesRead));
     if (info->mBytesRead == PRInt64(0)) {
     } else if (readTime > 0.0) {
-      LOG(("\tThroughput: %.0f bps.\n", (PRFloat64)(info->mBytesRead*PRInt64(8))/readTime));
+      LOG(("\tThroughput: %.0f bps.\n", (double)(info->mBytesRead*PRInt64(8))/readTime));
     } else {
       LOG(("\tThroughput: REAL FAST!!\n"));
     }

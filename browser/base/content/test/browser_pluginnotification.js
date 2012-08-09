@@ -146,8 +146,7 @@ function test3() {
   var manageLink = gTestBrowser.contentDocument.getAnonymousElementByAttribute(pluginNode, "class", "managePluginsLink");
   ok(manageLink, "Test 3, found 'manage' link in plugin-problem binding");
 
-  EventUtils.synthesizeMouse(manageLink,
-                             5, 5, {}, gTestBrowser.contentWindow);
+  EventUtils.synthesizeMouseAtCenter(manageLink, {}, gTestBrowser.contentWindow);
 }
 
 function test4(tab, win) {
@@ -237,7 +236,7 @@ function test9a() {
   var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 9a, Plugin with id=" + plugin2.id + " should not be activated");
 
-  EventUtils.synthesizeMouse(plugin1, 100, 100, { });
+  EventUtils.synthesizeMouseAtCenter(plugin1, {}, gTestBrowser.contentWindow);
   var objLoadingContent = plugin1.QueryInterface(Ci.nsIObjectLoadingContent);
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test9b, "Test 9a, Waited too long for plugin to activate");
@@ -266,7 +265,7 @@ function test9b() {
   var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 9b, Plugin with id=" + plugin2.id + " should not be activated");
 
-  EventUtils.synthesizeMouse(plugin2, 100, 100, { });
+  EventUtils.synthesizeMouseAtCenter(plugin2, {}, gTestBrowser.contentWindow);
   var objLoadingContent = plugin2.QueryInterface(Ci.nsIObjectLoadingContent);
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test9c, "Test 9b, Waited too long for plugin to activate");
@@ -482,7 +481,7 @@ function test16b() {
   var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 16b, Plugin should not be activated");
-  EventUtils.synthesizeMouse(plugin, 100, 100, { });
+  EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
   var condition = function() objLoadingContent.activated;
   waitForCondition(condition, test16c, "Test 16b, Waited too long for plugin to activate");
 }
@@ -590,10 +589,18 @@ function test18a() {
       test18b();
     }
   };
-  EventUtils.synthesizeMouse(updateLink, 5, 5, {}, gTestBrowser.contentWindow);
+  EventUtils.synthesizeMouseAtCenter(updateLink, {}, gTestBrowser.contentWindow);
 }
 
 function test18b() {
+  // clicking the update link should not activate the plugin
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 18b, Plugin should not be activated");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(overlay.style.visibility != "hidden", "Test 18b, Plugin overlay should exist, not be hidden");
+
   unregisterFakeBlocklistService();
   registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
   prepareTest(test18c, gTestRoot + "plugin_test.html");
@@ -615,6 +622,72 @@ function test18c() {
   unregisterFakeBlocklistService();
   var plugin = get_test_plugin();
   plugin.clicktoplay = false;
+
+  prepareTest(test19a, gTestRoot + "plugin_test.html");
+}
+
+// Tests that clicking the icon of the overlay activates the plugin
+function test19a() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 19a, Plugin should not be activated");
+
+  var icon = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
+  EventUtils.synthesizeMouseAtCenter(icon, {}, gTestBrowser.contentWindow);
+  var condition = function() objLoadingContent.activated;
+  waitForCondition(condition, test19b, "Test 19a, Waited too long for plugin to activate");
+}
+
+function test19b() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 19b, Plugin should be activated");
+
+  prepareTest(test19c, gTestRoot + "plugin_test.html");
+}
+
+// Tests that clicking the text of the overlay activates the plugin
+function test19c() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 19c, Plugin should not be activated");
+
+  var text = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgClickToPlay");
+  EventUtils.synthesizeMouseAtCenter(text, {}, gTestBrowser.contentWindow);
+  var condition = function() objLoadingContent.activated;
+  waitForCondition(condition, test19d, "Test 19c, Waited too long for plugin to activate");
+}
+
+function test19d() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 19d, Plugin should be activated");
+
+  prepareTest(test19e, gTestRoot + "plugin_test.html");
+}
+
+// Tests that clicking the box of the overlay activates the plugin
+// (just to be thorough)
+function test19e() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 19e, Plugin should not be activated");
+
+  EventUtils.synthesizeMouse(plugin, 50, 50, {}, gTestBrowser.contentWindow);
+  var condition = function() objLoadingContent.activated;
+  waitForCondition(condition, test19f, "Test 19e, Waited too long for plugin to activate");
+}
+
+function test19f() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 19f, Plugin should be activated");
 
   finishTest();
 }

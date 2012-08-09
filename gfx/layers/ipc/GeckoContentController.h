@@ -23,6 +23,14 @@ public:
    */
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 
+  /**
+   * Requests handling of a double tap. |aPoint| is in CSS pixels, relative to
+   * the current scroll offset. This should eventually round-trip back to
+   * AsyncPanZoomController::ZoomToRect with the dimensions that we want to zoom
+   * to.
+   */
+  virtual void HandleDoubleTap(const nsIntPoint& aPoint) = 0;
+
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
 };

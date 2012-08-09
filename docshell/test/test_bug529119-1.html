@@ -43,7 +43,6 @@ function pollForPage(f, w)
 
 function windowLoaded()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   switch (phase)
   {
     case 0:
@@ -57,18 +56,16 @@ function windowLoaded()
       pollForPage(function(succeeded) {
         ok(succeeded, "Waiting for error page succeeded");
         
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         /* 3. now, while we are on the error page, try to reload it, actually 
            click the "Try Again" button */
-        w.location.reload();
+        SpecialPowers.wrap(w).location.reload();
 
         pollForPage(function(succeeded) {
           ok(succeeded, "Waiting for error page succeeded");
           
-          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
           /* 4-finish, check we are still on the error page */
-          is(w.location.href, faultyURL, "Is on an error page");
-          isnot(w.location.href, workingURL, "Is not on the previous page");
+          is(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");
+          isnot(SpecialPowers.wrap(w).location.href, workingURL, "Is not on the previous page");
           is(gotWrongPageOnTryAgainClick, false, 
             "Must not get www.example.com page on reload of an error page");
           w.close();

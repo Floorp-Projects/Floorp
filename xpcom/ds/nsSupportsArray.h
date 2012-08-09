@@ -118,7 +118,7 @@ public:
 protected:
   void DeleteArray(void);
 
-  NS_IMETHOD_(bool) GrowArrayBy(PRInt32 aGrowBy);
+  NS_IMETHOD_(void) GrowArrayBy(PRInt32 aGrowBy);
 
   nsISupports** mArray;
   PRUint32 mArraySize;

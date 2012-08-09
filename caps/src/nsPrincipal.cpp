@@ -1043,7 +1043,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
 
   const char* ordinalBegin = PL_strpbrk(aPrefName, "1234567890");
   if (ordinalBegin) {
-    PRIntn n = atoi(ordinalBegin);
+    int n = atoi(ordinalBegin);
     if (sCapabilitiesOrdinal <= n) {
       sCapabilitiesOrdinal = n + 1;
     }
@@ -1122,7 +1122,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 
   const char* ordinalBegin = PL_strpbrk(mPrefName.get(), "1234567890");
   if (ordinalBegin) {
-    PRIntn n = atoi(ordinalBegin);
+    int n = atoi(ordinalBegin);
     if (sCapabilitiesOrdinal <= n) {
       sCapabilitiesOrdinal = n + 1;
     }

@@ -212,7 +212,7 @@ public:
 
 protected:
   /** implement abstract method on nsContainerFrame */
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend

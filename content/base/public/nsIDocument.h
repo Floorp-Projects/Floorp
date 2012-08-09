@@ -23,7 +23,6 @@
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
-#include "mozilla/dom/DirectionalityUtils.h"
 
 class imgIRequest;
 class nsAString;
@@ -397,10 +396,6 @@ public:
   void SetBidiOptions(PRUint32 aBidiOptions)
   {
     mBidiOptions = aBidiOptions;
-  }
-
-  inline mozilla::directionality::Directionality GetDocumentDirectionality() {
-    return mDirectionality;
   }
   
   /**
@@ -1857,9 +1852,6 @@ protected:
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
-
-  // The root directionality of this document.
-  mozilla::directionality::Directionality mDirectionality;
 
   nsCString mContentLanguage;
 private:
