@@ -24,7 +24,7 @@ nsMemory::HeapMinimize(bool aImmediate)
 }
 
 NS_COM_GLUE void*
-nsMemory::Clone(const void* ptr, PRSize size)
+nsMemory::Clone(const void* ptr, size_t size)
 {
     void* newPtr = NS_Alloc(size);
     if (newPtr)

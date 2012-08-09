@@ -823,7 +823,7 @@ protected:
   PRInt32 mLength;
 
   /** memory sizes in bytes */
-  PRSize mDirPropsSize, mLevelsSize, mRunsSize;
+  size_t mDirPropsSize, mLevelsSize, mRunsSize;
 
   /** allocated memory */
   DirProp* mDirPropsMemory;
@@ -860,7 +860,7 @@ private:
 
   void Init();
 
-  bool GetMemory(void **aMemory, PRSize* aSize, bool aMayAllocate, PRSize aSizeNeeded);
+  bool GetMemory(void **aMemory, size_t* aSize, bool aMayAllocate, size_t aSizeNeeded);
 
   void Free();
 
