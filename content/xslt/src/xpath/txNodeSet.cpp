@@ -567,7 +567,7 @@ txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
         // If we search 2 nodes or less there is no point in further divides
         txXPathNode* pos = aFirst;
         for (; pos < aLast; ++pos) {
-            PRIntn cmp = txXPathNodeUtils::comparePosition(aNode, *pos);
+            int cmp = txXPathNodeUtils::comparePosition(aNode, *pos);
             if (cmp < 0) {
                 return pos;
             }
@@ -583,7 +583,7 @@ txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
 
     // (cannot add two pointers)
     txXPathNode* midpos = aFirst + (aLast - aFirst) / 2;
-    PRIntn cmp = txXPathNodeUtils::comparePosition(aNode, *midpos);
+    int cmp = txXPathNodeUtils::comparePosition(aNode, *midpos);
     if (cmp == 0) {
         aDupe = true;
 

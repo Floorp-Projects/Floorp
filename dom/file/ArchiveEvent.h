@@ -24,6 +24,7 @@ class ArchiveItem : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
+  ArchiveItem();
   virtual ~ArchiveItem();
 
   // Getter/Setter for the type

@@ -190,7 +190,7 @@ nsHttpAuthCache::LookupAuthNode(const char *scheme,
 }
 
 void *
-nsHttpAuthCache::AllocTable(void *self, PRSize size)
+nsHttpAuthCache::AllocTable(void *self, size_t size)
 {
     return malloc(size);
 }

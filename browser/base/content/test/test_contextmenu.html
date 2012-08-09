@@ -18,9 +18,7 @@ Browser context menu tests.
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+SpecialPowers.wrap(Components).utils.import("resource://gre/modules/InlineSpellChecker.jsm", window);
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -729,7 +727,7 @@ function runTest(testNum) {
 
     case 24:
         // Context menu for selected text
-        if (Services.appinfo.OS == "Darwin") {
+        if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
           checkContextMenu(["context-copy",                        true,
                             "context-selectall",                   true,
@@ -745,7 +743,7 @@ function runTest(testNum) {
 
     case 25:
         // Context menu for selected text which matches valid URL pattern
-        if (Services.appinfo.OS == "Darwin") {
+        if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
           checkContextMenu(["context-openlinkincurrent",           true,
                             "context-openlinkintab",               true,
@@ -790,8 +788,7 @@ var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video;
 
 function startTest() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    chromeWin = subwindow
+    chromeWin = SpecialPowers.wrap(subwindow)
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)
                     .QueryInterface(Ci.nsIDocShellTreeItem)

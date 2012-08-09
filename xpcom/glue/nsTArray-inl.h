@@ -87,7 +87,7 @@ bool nsTArray_base<Alloc>::UsesAutoArrayBuffer() const {
                     "see comment above");
 
 #ifdef DEBUG
-  PRPtrdiff diff = reinterpret_cast<const char*>(GetAutoArrayBuffer(8)) -
+  ptrdiff_t diff = reinterpret_cast<const char*>(GetAutoArrayBuffer(8)) -
                    reinterpret_cast<const char*>(GetAutoArrayBuffer(4));
   NS_ABORT_IF_FALSE(diff >= 0 && diff <= 4, "GetAutoArrayBuffer doesn't do what we expect.");
 #endif

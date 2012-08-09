@@ -6,13 +6,14 @@
 <script>
 
 SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.wrap(Components).classes;
+const Cr = SpecialPowers.wrap(Components).results;
 
 function IsD2DEnabled() {
     var enabled = false;
 
     try {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        enabled = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled;
+        enabled = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled;
     } catch(e) {}
     
     return enabled;
@@ -26,10 +27,9 @@ function IsMacOSX10_5orOlder() {
     var is105orOlder = false;
 
     if (navigator.platform.indexOf("Mac") == 0) {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        var version = Components.classes["@mozilla.org/system-info;1"]
-                            .getService(Components.interfaces.nsIPropertyBag2)
-                            .getProperty("version");
+        var version = Cc["@mozilla.org/system-info;1"]
+                        .getService(Components.interfaces.nsIPropertyBag2)
+                        .getProperty("version");
         // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
         // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
         // is the Darwin version.
@@ -43,8 +43,7 @@ function IsAzureEnabled() {
   var enabled = false;
 
   try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend != "none");
   } catch (e) { }
 
@@ -55,8 +54,7 @@ function IsAzureSkia() {
   var enabled = false;
   
   try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "skia");
   } catch (e) { }
 
@@ -67,8 +65,7 @@ function IsAzureCairo() {
   var enabled = false;
   
   try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
+    var backend = Cc["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "cairo");
   } catch (e) { }
 
@@ -126,7 +123,8 @@ ok(ctx.canvas === canvas, "ctx.canvas === canvas");
 function isPixel(ctx, x,y, r,g,b,a, d) {
 	var pos = x + "," + y;
 	var colour = r + "," + g + "," + b + "," + a;
-    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pixel = SpecialPowers.unwrap(SpecialPowers.wrap(ctx)
+                                                  .getImageData(x, y, 1, 1));
     var pr = pixel.data[0],
         pg = pixel.data[1],
         pb = pixel.data[2],
@@ -19804,9 +19802,8 @@ function test_bug397524() {
 <script>
 function test_bug405982() {
 
-var canvas = document.getElementById('c614');
+var canvas = SpecialPowers.wrap(document.getElementById('c614'));
 var ctx = canvas.getContext('2d');
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 var _threw = false;
 try {
@@ -21123,7 +21120,6 @@ img.onload = wrapFunction(function ()
     ctx667.drawImage(img, 0, 25);
     // (The alpha values do not really survive float->int conversion, so just
     // do approximate comparisons)
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     isPixel(ctx667, 12,40, 1,3,254,255, 0);
     isPixel(ctx667, 37,40, 8,252,248,191, 2);
     isPixel(ctx667, 62,40, 6,10,250,127, 4);
@@ -21250,7 +21246,6 @@ deferTest();
 img.onload = wrapFunction(function ()
 {
     ctx672.drawImage(img, 0, 0);
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     isPixel(ctx672, 12,20, 255,255,0,255, 0);
     isPixel(ctx672, 50,20, 0,255,255,255, 0);
     isPixel(ctx672, 87,20, 0,0,255,255, 0);

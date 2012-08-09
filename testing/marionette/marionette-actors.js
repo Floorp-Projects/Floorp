@@ -1057,6 +1057,28 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Get the tag name of the element.
+   *
+   * @param object aRequest
+   *        'element' member holds the reference id to
+   *        the element that will be inspected 
+   */
+  getElementTagName: function MDA_getElementTagName(aRequest) {
+    if (this.context == "chrome") {
+      try {
+        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        this.sendResponse(el.tagName.toLowerCase());
+      }
+      catch (e) {
+        this.sendError(e.message, e.code, e.stack);
+      }
+    }
+    else {
+      this.sendAsync("getElementTagName", {element: aRequest.element});
+    }
+  },
+
+  /**
    * Check if element is displayed
    *
    * @param object aRequest
@@ -1421,6 +1443,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "clickElement": MarionetteDriverActor.prototype.clickElement,
   "getElementAttribute": MarionetteDriverActor.prototype.getElementAttribute,
   "getElementText": MarionetteDriverActor.prototype.getElementText,
+  "getElementTagName": MarionetteDriverActor.prototype.getElementTagName,
   "isElementDisplayed": MarionetteDriverActor.prototype.isElementDisplayed,
   "isElementEnabled": MarionetteDriverActor.prototype.isElementEnabled,
   "isElementSelected": MarionetteDriverActor.prototype.isElementSelected,

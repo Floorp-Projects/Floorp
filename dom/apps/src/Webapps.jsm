@@ -57,7 +57,8 @@ let DOMApplicationRegistry = {
                     "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                     "Webapps:Launch", "Webapps:GetAll",
                     "Webapps:InstallPackage", "Webapps:GetBasePath",
-                    "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL"];
+                    "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL",
+                    "WebApps:GetAppByLocalId", "Webapps:GetManifestURLByLocalId"];
 
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
@@ -220,6 +221,7 @@ let DOMApplicationRegistry = {
         this.getSelf(msg);
         break;
       case "Webapps:Uninstall":
+        Services.obs.notifyObservers(this, "webapps-uninstall", JSON.stringify(msg));
         this.uninstall(msg);
         break;
       case "Webapps:Launch":
@@ -248,6 +250,12 @@ let DOMApplicationRegistry = {
         break;
       case "WebApps:GetAppLocalIdByManifestURL":
         return { id: this.getAppLocalIdByManifestURL(msg.url) };
+        break;
+      case "WebApps:GetAppByLocalId":
+        return this.getAppByLocalId(msg.id);
+        break;
+      case "WebApps:GetManifestURLByLocalId":
+        return this.getManifestURLByLocalId(msg.id);
         break;
     }
   },
@@ -691,7 +699,47 @@ let DOMApplicationRegistry = {
     for (let id in this.webapps) {
       let app = this.webapps[id];
       if (app.manifestURL == aManifestURL) {
+        let res = this._cloneAppObject(app);
+        res.hasPermission = function(permission) {
+          let localId = DOMApplicationRegistry.getAppLocalIdByManifestURL(
+            this.manifestURL);
+          let uri = Services.io.newURI(this.manifestURL, null, null);
+          let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                       .getService(Ci.nsIScriptSecurityManager);
+          // XXX for the purposes of permissions checking, this helper
+          // should always be called on !isBrowser frames, so we
+          // assume false here.
+          let principal = secMan.getAppCodebasePrincipal(uri, localId,
+                                                         /*mozbrowser*/false);
+          let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+                                                                     permission);
+          return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
+        };
+        res.QueryInterface = XPCOMUtils.generateQI([Ci.mozIDOMApplication,
+                                                    Ci.mozIApplication]);
+        return res;
+      }
+    }
+
+    return null;
+  },
+
+  getAppByLocalId: function(aLocalId) {
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.localId == aLocalId) {
         return this._cloneAppObject(app);
+      }
+    }
+
+    return null;
+  },
+
+  getManifestURLByLocalId: function(aLocalId) {
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.localId == aLocalId) {
+        return app.manifestURL;
       }
     }
 
@@ -926,6 +974,10 @@ DOMApplicationManifest.prototype = {
 
   get appcache_path() {
     return this._localeProp("appcache_path");
+  },
+
+  get orientation() {
+    return this._localeProp("orientation");
   },
 
   iconURLForSize: function(aSize) {

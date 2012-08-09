@@ -3407,7 +3407,20 @@
         // Set the cursor to an arrow during tab drags.
         dt.mozCursor = "default";
 
-        let canvas = tabPreviews.capture(tab, false);
+        // Create a canvas to which we capture the current tab.
+        let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+        canvas.mozOpaque = true;
+
+        // We want drag images to be about 1/6th of the available screen width.
+        const widthFactor = 0.1739; // 1:5.75 inverse
+        canvas.width = Math.ceil(screen.availWidth * widthFactor);
+
+        // Maintain a 16:9 aspect ratio for drag images.
+        const aspectRatio = 0.5625; // 16:9 inverse
+        canvas.height = Math.round(canvas.width * aspectRatio);
+
+        let browser = tab.linkedBrowser;
+        PageThumbs.captureToCanvas(browser.contentWindow, canvas);
         dt.setDragImage(canvas, 0, 0);
 
         // _dragOffsetX/Y give the coordinates that the mouse should be

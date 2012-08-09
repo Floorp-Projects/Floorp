@@ -28,6 +28,7 @@ const PR_WRONLY = 0x2;
 const PR_CREATE_FILE = 0x8;
 const PR_TRUNCATE = 0x20;
 const RW_OWNER = 0600;
+const RWX_OWNER = 0700;
 
 // MEM_HISTOGRAMS lists the memory reporters we turn into histograms.
 //
@@ -863,13 +864,16 @@ TelemetryPing.prototype = {
     directory.append("saved-telemetry-pings");
     if (directory.exists()) {
       if (directory.isDirectory()) {
+        // We used to wrongly create the directory with mode 0600.
+        // Fix that.
+        directory.permissions = RWX_OWNER;
         return directory;
       } else {
         directory.remove(true);
       }
     }
 
-    directory.create(Ci.nsIFile.DIRECTORY_TYPE, RW_OWNER);
+    directory.create(Ci.nsIFile.DIRECTORY_TYPE, RWX_OWNER);
     return directory;
   },
 

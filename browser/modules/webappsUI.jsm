@@ -18,11 +18,13 @@ let webappsUI = {
   init: function webappsUI_init() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
+    Services.obs.addObserver(this, "webapps-uninstall", false);
   },
   
   uninit: function webappsUI_uninit() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
+    Services.obs.removeObserver(this, "webapps-uninstall");
   },
 
   observe: function webappsUI_observe(aSubject, aTopic, aData) {
@@ -36,6 +38,9 @@ let webappsUI = {
         break;
       case "webapps-launch":
         WebappOSUtils.launch(data);
+        break;
+      case "webapps-uninstall":
+        WebappOSUtils.uninstall(data);
         break;
     }
   },

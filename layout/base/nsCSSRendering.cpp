@@ -385,7 +385,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             const nsRect& aDirtyRect,
                             const nsRect& aBorderArea,
                             nsStyleContext* aStyleContext,
-                            PRIntn aSkipSides)
+                            int aSkipSides)
 {
   SAMPLE_LABEL("nsCSSRendering", "PaintBorder");
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
@@ -428,7 +428,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                            const nsRect& aBorderArea,
                                            const nsStyleBorder& aStyleBorder,
                                            nsStyleContext* aStyleContext,
-                                           PRIntn aSkipSides)
+                                           int aSkipSides)
 {
   nsMargin            border;
   nscoord             twipsRadii[8];
@@ -2527,8 +2527,8 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
 
   state.mDestArea = nsRect(imageTopLeft + aBorderArea.TopLeft(), imageSize);
   state.mFillArea = state.mDestArea;
-  PRIntn repeatX = aLayer.mRepeat.mXRepeat;
-  PRIntn repeatY = aLayer.mRepeat.mYRepeat;
+  int repeatX = aLayer.mRepeat.mXRepeat;
+  int repeatY = aLayer.mRepeat.mYRepeat;
   if (repeatX == NS_STYLE_BG_REPEAT_REPEAT) {
     state.mFillArea.x = bgClipRect.x;
     state.mFillArea.width = bgClipRect.width;

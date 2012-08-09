@@ -117,7 +117,7 @@ protected:
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();
 
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   // Hide or show our document viewer
   void HideViewer();

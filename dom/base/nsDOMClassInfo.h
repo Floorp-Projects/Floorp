@@ -157,7 +157,6 @@ protected:
   }
 
   static nsresult Init();
-  static nsresult RegisterClassName(PRInt32 aDOMClassInfoID);
   static nsresult RegisterClassProtos(PRInt32 aDOMClassInfoID);
   static nsresult RegisterExternalClasses();
   nsresult ResolveConstructor(JSContext *cx, JSObject *obj,

@@ -48,7 +48,7 @@ public:
     nsCOMPtr<nsIDOMDocument> domdoc;
     mOwner->GetDocument(getter_AddRefs(domdoc));
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    doc->NodePrincipal()->GetURI(getter_AddRefs(mURI));
+    mPrincipal = doc->NodePrincipal();
   }
 
   virtual ~nsDesktopNotificationCenter()
@@ -61,7 +61,7 @@ public:
 
 private:
   nsCOMPtr<nsPIDOMWindow> mOwner;
-  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
@@ -79,7 +79,7 @@ public:
                            const nsAString & description,
                            const nsAString & iconURL,
                            nsPIDOMWindow *aWindow,
-                           nsIURI* uri);
+                           nsIPrincipal* principal);
 
   virtual ~nsDOMDesktopNotification();
 
@@ -87,9 +87,9 @@ public:
    * PostDesktopNotification
    * Uses alert service to display a notification
    */
-  void PostDesktopNotification();
+  nsresult PostDesktopNotification();
 
-  void SetAllow(bool aAllow);
+  nsresult SetAllow(bool aAllow);
 
   /*
    * Creates and dispatches a dom event of type aName
@@ -108,7 +108,7 @@ protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnCloseCallback;
 
   nsRefPtr<AlertServiceObserver> mObserver;
-  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   bool mAllow;
   bool mShowHasBeenCalled;
 };

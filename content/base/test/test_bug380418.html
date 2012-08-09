@@ -22,14 +22,13 @@
 	request.send(null);
 	
 	// Try reading headers in privileged context
-	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-	is(request.getResponseHeader("Set-Cookie"), "test", "Reading Set-Cookie response header in privileged context");
-	is(request.getResponseHeader("Set-Cookie2"), "test2", "Reading Set-Cookie2 response header in privileged context");
-	is(request.getResponseHeader("X-Dummy"), "test", "Reading X-Dummy response header in privileged context");
+	is(SpecialPowers.wrap(request).getResponseHeader("Set-Cookie"), "test", "Reading Set-Cookie response header in privileged context");
+	is(SpecialPowers.wrap(request).getResponseHeader("Set-Cookie2"), "test2", "Reading Set-Cookie2 response header in privileged context");
+	is(SpecialPowers.wrap(request).getResponseHeader("X-Dummy"), "test", "Reading X-Dummy response header in privileged context");
 	
-	ok(/\bSet-Cookie:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie in all response headers in privileged context");
-	ok(/\bSet-Cookie2:/i.test(request.getAllResponseHeaders()), "Looking for Set-Cookie2 in all response headers in privileged context");
-	ok(/\bX-Dummy:/i.test(request.getAllResponseHeaders()), "Looking for X-Dummy in all response headers in privileged context");
+	ok(/\bSet-Cookie:/i.test(SpecialPowers.wrap(request).getAllResponseHeaders()), "Looking for Set-Cookie in all response headers in privileged context");
+	ok(/\bSet-Cookie2:/i.test(SpecialPowers.wrap(request).getAllResponseHeaders()), "Looking for Set-Cookie2 in all response headers in privileged context");
+	ok(/\bX-Dummy:/i.test(SpecialPowers.wrap(request).getAllResponseHeaders()), "Looking for X-Dummy in all response headers in privileged context");
 	
 	// Try reading headers in unprivileged context
 	setTimeout(function() {
