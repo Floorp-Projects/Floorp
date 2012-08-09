@@ -40,9 +40,9 @@ nsUUIDGenerator::Init()
     /* initialize random number generator using NSPR random noise */
     unsigned int seed;
 
-    PRSize bytes = 0;
+    size_t bytes = 0;
     while (bytes < sizeof(seed)) {
-        PRSize nbytes = PR_GetRandomNoise(((unsigned char *)&seed)+bytes,
+        size_t nbytes = PR_GetRandomNoise(((unsigned char *)&seed)+bytes,
                                           sizeof(seed)-bytes);
         if (nbytes == 0) {
             return NS_ERROR_FAILURE;
@@ -120,7 +120,7 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
     setstate(mState);
 #endif
 
-    PRSize bytesLeft = sizeof(nsID);
+    size_t bytesLeft = sizeof(nsID);
     while (bytesLeft > 0) {
 #ifdef ANDROID
         long rval = arc4random();
@@ -137,8 +137,8 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
         src += sizeof(rval) - mRBytes;
 #endif
         PRUint8 *dst = ((PRUint8*) id) + (sizeof(nsID) - bytesLeft);
-        PRSize toWrite = (bytesLeft < mRBytes ? bytesLeft : mRBytes);
-        for (PRSize i = 0; i < toWrite; i++)
+        size_t toWrite = (bytesLeft < mRBytes ? bytesLeft : mRBytes);
+        for (size_t i = 0; i < toWrite; i++)
             dst[i] = src[i];
 
         bytesLeft -= toWrite;

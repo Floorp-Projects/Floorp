@@ -1959,7 +1959,7 @@ WriteExtraData(nsIFile* extraFile,
                bool truncate=false)
 {
   PRFileDesc* fd;
-  PRIntn truncOrAppend = truncate ? PR_TRUNCATE : PR_APPEND;
+  int truncOrAppend = truncate ? PR_TRUNCATE : PR_APPEND;
   nsresult rv = 
     extraFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | truncOrAppend,
                                 0600, &fd);

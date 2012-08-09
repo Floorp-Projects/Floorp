@@ -544,7 +544,7 @@ nsInputStreamWrapper::LazyInit()
 
     CACHE_LOG_DEBUG(("nsInputStreamWrapper::LazyInit "
                       "[entry=%p, wrapper=%p, mInput=%p, rv=%d]",
-                      mDescriptor, this, mInput.get(), PRIntn(rv)));
+                      mDescriptor, this, mInput.get(), int(rv)));
 
     if (NS_FAILED(rv)) return rv;
 

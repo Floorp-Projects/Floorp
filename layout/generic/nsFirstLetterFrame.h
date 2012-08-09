@@ -80,7 +80,7 @@ public:
 protected:
   nscoord mBaseline;
 
-  virtual PRIntn GetSkipSides() const;
+  virtual int GetSkipSides() const;
 
   void DrainOverflowFrames(nsPresContext* aPresContext);
 };

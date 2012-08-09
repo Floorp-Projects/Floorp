@@ -571,7 +571,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-PRIntn
+int
 nsCanvasFrame::GetSkipSides() const
 {
   return 0;

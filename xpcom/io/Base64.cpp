@@ -20,7 +20,7 @@ static void
 Encode3to4(const unsigned char *src, T *dest)
 {
     PRUint32 b32 = (PRUint32)0;
-    PRIntn i, j = 18;
+    int i, j = 18;
 
     for( i = 0; i < 3; i++ )
     {

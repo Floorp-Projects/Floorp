@@ -196,14 +196,14 @@ NS_GetTraceRefcnt(nsITraceRefcnt **result)
 
 #undef NS_Alloc
 EXPORT_XPCOM_API(void*)
-NS_Alloc(PRSize size)
+NS_Alloc(size_t size)
 {
   return NS_Alloc_P(size);
 }
 
 #undef NS_Realloc
 EXPORT_XPCOM_API(void*)
-NS_Realloc(void* ptr, PRSize size)
+NS_Realloc(void* ptr, size_t size)
 {
   return NS_Realloc_P(ptr, size);
 }

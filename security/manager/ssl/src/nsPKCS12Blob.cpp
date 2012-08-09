@@ -585,7 +585,7 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 
 OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 {
-  PRIntn len;
+  int len;
   char *cursor;
   
   len = PL_strlen(macPath);

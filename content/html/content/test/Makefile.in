@@ -265,6 +265,7 @@ MOCHITEST_FILES = \
 		test_bug745685.html \
 		test_input_file_picker.html \
 		test_bug763626.html \
+		test_bug780993.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

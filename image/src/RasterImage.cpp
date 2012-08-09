@@ -1531,7 +1531,7 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
 /* Note!  buf must be declared as char buf[9]; */
 // just used for logging and hashing the header
 static void
-get_header_str (char *buf, char *data, PRSize data_len)
+get_header_str (char *buf, char *data, size_t data_len)
 {
   int i;
   int n;

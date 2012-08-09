@@ -1931,7 +1931,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
                                      nsRenderingContext* aCtx)
 {
   // for visual debug
-  PRIntn skipSides = 0;
+  int skipSides = 0;
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext* styleContext = mFrame->GetStyleContext();
   nsRect rect = mRect + ToReferenceFrame();
