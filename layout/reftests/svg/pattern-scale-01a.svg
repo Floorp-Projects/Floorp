@@ -9,5 +9,5 @@
     </pattern>
   </defs>
   <rect width="200" height="200" fill="url(#pattern)" />
-  <circle cx="100" cy="100" r="100" fill="none" stroke="lime" stroke-width="2" shape-rendering="crispEdges" />
+  <circle cx="100" cy="100" r="100" fill="none" stroke="lime" stroke-width="3.5" shape-rendering="crispEdges" />
 </svg>
