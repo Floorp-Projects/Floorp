@@ -711,7 +711,6 @@ AssertParserServiceIsCorrect(nsIAtom* aTag, bool aIsBlock)
       aTag==nsEditProperty::table      ||
       aTag==nsEditProperty::fieldset   ||
       aTag==nsEditProperty::address    ||
-      aTag==nsEditProperty::caption    ||
       aTag==nsEditProperty::col        ||
       aTag==nsEditProperty::colgroup   ||
       aTag==nsEditProperty::li         ||
