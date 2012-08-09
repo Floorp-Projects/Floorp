@@ -176,6 +176,7 @@ class nsPartialFileInputStream : public nsFileInputStream,
                                  public nsIPartialFileInputStream
 {
 public:
+    using nsFileInputStream::Init;
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPARTIALFILEINPUTSTREAM
     NS_DECL_NSIIPCSERIALIZABLE
