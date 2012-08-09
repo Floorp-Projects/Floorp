@@ -205,44 +205,54 @@ GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleI
 }
 
 inline bool
+GetLengthProperty(const Value &lval, MutableHandleValue vp)
+{
+    /* Optimize length accesses on strings, arrays, and arguments. */
+    if (lval.isString()) {
+        vp.setInt32(lval.toString()->length());
+        return true;
+    }
+    if (lval.isObject()) {
+        JSObject *obj = &lval.toObject();
+        if (obj->isArray()) {
+            uint32_t length = obj->getArrayLength();
+            vp.setNumber(length);
+            return true;
+        }
+
+        if (obj->isArguments()) {
+            ArgumentsObject *argsobj = &obj->asArguments();
+            if (!argsobj->hasOverriddenLength()) {
+                uint32_t length = argsobj->initialLength();
+                JS_ASSERT(length < INT32_MAX);
+                vp.setInt32(int32_t(length));
+                return true;
+            }
+        }
+
+        if (obj->isTypedArray()) {
+            vp.setInt32(TypedArray::length(obj));
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool
 GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value &lval,
                      MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_LENGTH) {
-        /* Optimize length accesses on strings, arrays, and arguments. */
-        if (lval.isString()) {
-            vp.setInt32(lval.toString()->length());
-            return true;
-        }
         if (IsOptimizedArguments(cx->fp(), &lval)) {
             vp.setInt32(cx->fp()->numActualArgs());
             return true;
         }
-        if (lval.isObject()) {
-            JSObject *obj = &lval.toObject();
-            if (obj->isArray()) {
-                uint32_t length = obj->getArrayLength();
-                vp.setNumber(length);
-                return true;
-            }
 
-            if (obj->isArguments()) {
-                ArgumentsObject *argsobj = &obj->asArguments();
-                if (!argsobj->hasOverriddenLength()) {
-                    uint32_t length = argsobj->initialLength();
-                    JS_ASSERT(length < INT32_MAX);
-                    vp.setInt32(int32_t(length));
-                    return true;
-                }
-            }
-
-            if (obj->isTypedArray()) {
-                vp.setInt32(TypedArray::length(obj));
-                return true;
-            }
-        }
+        if (GetLengthProperty(lval, vp))
+            return true;
     }
 
     RootedObject obj(cx, ValueToObject(cx, lval));
