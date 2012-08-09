@@ -238,6 +238,7 @@ public:
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
+    , mMainThreadDestroyed(false)
   {
     for (PRUint32 i = 0; i < ArrayLength(mFirstActiveTracks); ++i) {
       mFirstActiveTracks[i] = TRACK_NONE;
@@ -275,9 +276,22 @@ public:
   void Destroy();
   // Returns the main-thread's view of how much data has been processed by
   // this stream.
-  StreamTime GetCurrentTime() { return mMainThreadCurrentTime; }
+  StreamTime GetCurrentTime()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadCurrentTime;
+  }
   // Return the main thread's view of whether this stream has finished.
-  bool IsFinished() { return mMainThreadFinished; }
+  bool IsFinished()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadFinished;
+  }
+  bool IsDestroyed()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadDestroyed;
+  }
 
   friend class MediaStreamGraphImpl;
 
@@ -400,6 +414,7 @@ protected:
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
+  bool mMainThreadDestroyed;
 };
 
 /**
