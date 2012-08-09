@@ -119,6 +119,13 @@ public:
    */
   void CancelDefaultPanZoom();
 
+  /**
+   * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
+   * in. The actual animation is done on the compositor thread after being set
+   * up. |aRect| must be given in CSS pixels, relative to the document.
+   */
+  void ZoomToRect(const gfxRect& aRect);
+
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //
@@ -368,6 +375,7 @@ private:
     TOUCHING,       /* one touch-start event received */
     PANNING,        /* panning without axis lock */
     PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
+    ANIMATING_ZOOM  /* animated zoom to a new rect */
   };
 
   enum ContentPainterStatus {
@@ -411,6 +419,16 @@ private:
   // If we don't do this check, we don't get a ShadowLayersUpdated back.
   FrameMetrics mLastPaintRequestMetrics;
 
+  // Old metrics from before we started a zoom animation. This is only valid
+  // when we are in the "ANIMATED_ZOOM" state. This is used so that we can
+  // interpolate between the start and end frames. We only use the
+  // |mViewportScrollOffset| and |mResolution| fields on this.
+  FrameMetrics mStartZoomToMetrics;
+  // Target metrics for a zoom to animation. This is only valid when we are in
+  // the "ANIMATED_ZOOM" state. We only use the |mViewportScrollOffset| and
+  // |mResolution| fields on this.
+  FrameMetrics mEndZoomToMetrics;
+
   AxisX mX;
   AxisY mY;
 
@@ -425,6 +443,10 @@ private:
   TimeStamp mLastSampleTime;
   // The last time a touch event came through on the UI thread.
   PRInt32 mLastEventTime;
+
+  // Start time of an animation. This is used for a zoom to animation to mark
+  // the beginning.
+  TimeStamp mAnimationStartTime;
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).

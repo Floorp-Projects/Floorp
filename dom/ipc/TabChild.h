@@ -47,6 +47,7 @@
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "mozilla/Attributes.h"
+#include "FrameMetrics.h"
 
 struct gfxMatrix;
 
@@ -172,10 +173,8 @@ public:
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size);
-    virtual bool RecvUpdateFrame(const nsIntRect& aDisplayPort,
-                                      const nsIntPoint& aScrollOffset,
-                                      const gfxSize& aResolution,
-                                      const nsIntRect& aScreenSize);
+    virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
+    virtual bool RecvHandleDoubleTap(const nsIntPoint& aPoint);
     virtual bool RecvActivate();
     virtual bool RecvDeactivate();
     virtual bool RecvMouseEvent(const nsString& aType,
@@ -288,6 +287,14 @@ private:
 
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow();
+
+    // Wraps up a JSON object as a structured clone and sends it to the browser
+    // chrome script.
+    //
+    // XXX/bug 780335: Do the work the browser chrome script does in C++ instead
+    // so we don't need things like this.
+    void DispatchMessageManagerMessage(const nsAString& aMessageName,
+                                       const nsACString& aJSONData);
 
     nsresult
     BrowserFrameProvideWindow(nsIDOMWindow* aOpener,

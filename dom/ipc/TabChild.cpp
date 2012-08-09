@@ -126,6 +126,16 @@ TabChild::Observe(nsISupports *aSubject,
     if (tabChild == this) {
       mRemoteFrame->CancelDefaultPanZoom();
     }
+  } else if (!strcmp(aTopic, "browser-zoom-to-rect")) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
+    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    if (tabChild == this) {
+      gfxRect rect;
+      sscanf(NS_ConvertUTF16toUTF8(aData).get(),
+             "{\"x\":%lf,\"y\":%lf,\"w\":%lf,\"h\":%lf}",
+             &rect.x, &rect.y, &rect.width, &rect.height);
+      SendZoomToRect(rect);
+    }
   }
 
   return NS_OK;
@@ -156,6 +166,9 @@ TabChild::Init()
                                  false);
     observerService->AddObserver(this,
                                  "cancel-default-pan-zoom",
+                                 false);
+    observerService->AddObserver(this,
+                                 "browser-zoom-to-rect",
                                  false);
   }
 
@@ -682,41 +695,17 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
     return true;
 }
 
-bool
-TabChild::RecvUpdateFrame(const nsIntRect& aDisplayPort,
-                          const nsIntPoint& aScrollOffset,
-                          const gfxSize& aResolution,
-                          const nsIntRect& aScreenSize)
+void
+TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
+                                        const nsACString& aJSONData)
 {
-    if (!mCx || !mTabChildGlobal) {
-        return true;
-    }
-    nsCString data;
-    data += nsPrintfCString("{ \"x\" : %d", aScrollOffset.x);
-    data += nsPrintfCString(", \"y\" : %d", aScrollOffset.y);
-    // We don't treat the x and y scales any differently for this
-    // semi-platform-specific code.
-    data += nsPrintfCString(", \"zoom\" : %f", aResolution.width);
-    data += nsPrintfCString(", \"displayPort\" : ");
-        data += nsPrintfCString("{ \"left\" : %d", aDisplayPort.X());
-        data += nsPrintfCString(", \"top\" : %d", aDisplayPort.Y());
-        data += nsPrintfCString(", \"width\" : %d", aDisplayPort.Width());
-        data += nsPrintfCString(", \"height\" : %d", aDisplayPort.Height());
-        data += nsPrintfCString(", \"resolution\" : %f", aResolution.width);
-        data += nsPrintfCString(" }");
-    data += nsPrintfCString(", \"screenSize\" : ");
-        data += nsPrintfCString("{ \"width\" : %d", aScreenSize.width);
-        data += nsPrintfCString(", \"height\" : %d", aScreenSize.height);
-        data += nsPrintfCString(" }");
-    data += nsPrintfCString(" }");
-
     JSAutoRequest ar(mCx);
     jsval json = JSVAL_NULL;
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
     if (JS_ParseJSON(mCx,
-                      static_cast<const jschar*>(NS_ConvertUTF8toUTF16(data).get()),
-                      data.Length(),
+                      static_cast<const jschar*>(NS_ConvertUTF8toUTF16(aJSONData).get()),
+                      aJSONData.Length(),
                       &json)) {
         WriteStructuredClone(mCx, json, buffer, cloneData.mClosure);
         cloneData.mData = buffer.data();
@@ -729,8 +718,60 @@ TabChild::RecvUpdateFrame(const nsIntRect& aDisplayPort,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
-                       NS_LITERAL_STRING("Viewport:Change"), false,
-                       &cloneData, nullptr, nullptr);
+                       aMessageName, false, &cloneData, nullptr, nullptr);
+}
+
+bool
+TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
+{
+    if (!mCx || !mTabChildGlobal) {
+        return true;
+    }
+
+    nsCString data;
+    data += nsPrintfCString("{ \"x\" : %d", aFrameMetrics.mViewportScrollOffset.x);
+    data += nsPrintfCString(", \"y\" : %d", aFrameMetrics.mViewportScrollOffset.y);
+    // We don't treat the x and y scales any differently for this
+    // semi-platform-specific code.
+    data += nsPrintfCString(", \"zoom\" : %f", aFrameMetrics.mResolution.width);
+    data += nsPrintfCString(", \"displayPort\" : ");
+        data += nsPrintfCString("{ \"left\" : %d", aFrameMetrics.mDisplayPort.X());
+        data += nsPrintfCString(", \"top\" : %d", aFrameMetrics.mDisplayPort.Y());
+        data += nsPrintfCString(", \"width\" : %d", aFrameMetrics.mDisplayPort.Width());
+        data += nsPrintfCString(", \"height\" : %d", aFrameMetrics.mDisplayPort.Height());
+        data += nsPrintfCString(", \"resolution\" : %f", aFrameMetrics.mResolution.width);
+        data += nsPrintfCString(" }");
+    data += nsPrintfCString(", \"screenSize\" : ");
+        data += nsPrintfCString("{ \"width\" : %d", aFrameMetrics.mViewport.width);
+        data += nsPrintfCString(", \"height\" : %d", aFrameMetrics.mViewport.height);
+        data += nsPrintfCString(" }");
+    data += nsPrintfCString(", \"cssPageRect\" : ");
+        data += nsPrintfCString("{ \"x\" : %f", aFrameMetrics.mCSSContentRect.x);
+        data += nsPrintfCString(", \"y\" : %f", aFrameMetrics.mCSSContentRect.y);
+        data += nsPrintfCString(", \"width\" : %f", aFrameMetrics.mCSSContentRect.width);
+        data += nsPrintfCString(", \"height\" : %f", aFrameMetrics.mCSSContentRect.height);
+        data += nsPrintfCString(" }");
+    data += nsPrintfCString(" }");
+
+    DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
+
+    return true;
+}
+
+bool
+TabChild::RecvHandleDoubleTap(const nsIntPoint& aPoint)
+{
+    if (!mCx || !mTabChildGlobal) {
+        return true;
+    }
+
+    nsCString data;
+    data += nsPrintfCString("{ \"x\" : %d", aPoint.x);
+    data += nsPrintfCString(", \"y\" : %d", aPoint.y);
+    data += nsPrintfCString(" }");
+
+    DispatchMessageManagerMessage(NS_LITERAL_STRING("Gesture:DoubleTap"), data);
+
     return true;
 }
 

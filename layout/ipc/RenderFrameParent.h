@@ -95,6 +95,8 @@ public:
 
   void NotifyDOMTouchListenerAdded();
 
+  void ZoomToRect(const gfxRect& aRect);
+
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
