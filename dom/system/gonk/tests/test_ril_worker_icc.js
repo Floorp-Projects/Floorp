@@ -48,6 +48,24 @@ add_test(function test_read_icc_ucs2_string() {
   }
   do_check_eq(helper.readICCUCS2String(0x80, (2 * text.length) + ffLen), text);
 
+  // 0x81
+  let array = [0x08, 0xd2, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61, 0xca,
+               0xff, 0xff];
+  let len = array.length;
+  for (let i = 0; i < len; i++) {
+    helper.writeHexOctet(array[i]);
+  }
+  do_check_eq(helper.readICCUCS2String(0x81, len), "Mozilla\u694a");
+
+  // 0x82
+  let array2 = [0x08, 0x69, 0x00, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61,
+                0xca, 0xff, 0xff];
+  let len2 = array2.length;
+  for (let i = 0; i < len2; i++) {
+    helper.writeHexOctet(array2[i]);
+  }
+  do_check_eq(helper.readICCUCS2String(0x82, len2), "Mozilla\u694a");
+
   run_next_test();
 });
 
