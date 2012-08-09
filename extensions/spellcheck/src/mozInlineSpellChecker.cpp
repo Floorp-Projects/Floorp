@@ -103,7 +103,7 @@ mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
 
 nsresult
 mozInlineSpellStatus::InitForEditorChange(
-    PRInt32 aAction,
+    OperationID aAction,
     nsIDOMNode* aAnchorNode, PRInt32 aAnchorOffset,
     nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
     nsIDOMNode* aStartNode, PRInt32 aStartOffset,
@@ -120,7 +120,7 @@ mozInlineSpellStatus::InitForEditorChange(
                                 getter_AddRefs(mAnchorRange));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aAction == nsEditor::kOpDeleteSelection) {
+  if (aAction == OperationID::deleteSelection) {
     // Deletes are easy, the range is just the current anchor. We set the range
     // to check to be empty, FinishInitOnEvent will fill in the range to be
     // the current word.
@@ -153,7 +153,7 @@ mozInlineSpellStatus::InitForEditorChange(
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this NULL.
-  if (aAction == nsEditor::kOpInsertText)
+  if (aAction == OperationID::insertText)
     mCreatedRange = mRange;
 
   // if we were given a range, we need to expand our range to encompass it
@@ -731,7 +731,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozInlineSpellStatus status(this);
-  rv = status.InitForEditorChange(aAction,
+  rv = status.InitForEditorChange((OperationID)aAction,
                                   anchorNode, anchorOffset,
                                   aPreviousSelectedNode, aPreviousSelectedOffset,
                                   aStartNode, aStartOffset,

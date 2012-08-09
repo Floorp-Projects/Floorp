@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern __attribute__((visibility("default"), weak)) int print_status();
+#include "test.c"
 
-int main() {
-    return print_status();
-}
+__attribute__((section(".init_array"), used))
+static void (*init_array[])() = { end_test, test };

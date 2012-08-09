@@ -135,6 +135,7 @@ public:
     ElfLocation(unsigned int location, Elf *elf);
     unsigned int getValue();
     ElfSection *getSection() { return section; }
+    const char *getBuffer();
 };
 
 class ElfSize: public ElfValue {
@@ -164,13 +165,27 @@ private:
     void init(const char *buf, size_t len, char ei_data)
     {
         R e;
-        assert(len <= sizeof(e));
+        assert(len >= sizeof(e));
         memcpy(&e, buf, sizeof(e));
         if (ei_data == ELFDATA2LSB) {
             T::template swap<little_endian>(e, *this);
             return;
         } else if (ei_data == ELFDATA2MSB) {
             T::template swap<big_endian>(e, *this);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF data encoding");
+    }
+
+    template <typename R>
+    void serialize(const char *buf, size_t len, char ei_data)
+    {
+        assert(len >= sizeof(R));
+        if (ei_data == ELFDATA2LSB) {
+            T::template swap<little_endian>(*this, *(R *)buf);
+            return;
+        } else if (ei_data == ELFDATA2MSB) {
+            T::template swap<big_endian>(*this, *(R *)buf);
             return;
         }
         throw std::runtime_error("Unsupported ELF data encoding");
@@ -194,23 +209,13 @@ public:
         if (ei_class == ELFCLASS32) {
             typename T::Type32 e;
             file.read((char *)&e, sizeof(e));
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(e, *this);
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(e, *this);
-                return;
-            }
+            init<typename T::Type32>((char *)&e, sizeof(e), ei_data);
+            return;
         } else if (ei_class == ELFCLASS64) {
             typename T::Type64 e;
             file.read((char *)&e, sizeof(e));
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(e, *this);
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(e, *this);
-                return;
-            }
+            init<typename T::Type64>((char *)&e, sizeof(e), ei_data);
+            return;
         }
         throw std::runtime_error("Unsupported ELF class or data encoding");
     }
@@ -219,28 +224,28 @@ public:
     {
         if (ei_class == ELFCLASS32) {
             typename T::Type32 e;
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            }
+            serialize<typename T::Type32>((char *)&e, sizeof(e), ei_data);
+            file.write((char *)&e, sizeof(e));
+            return;
         } else if (ei_class == ELFCLASS64) {
             typename T::Type64 e;
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            }
+            serialize<typename T::Type64>((char *)&e, sizeof(e), ei_data);
+            file.write((char *)&e, sizeof(e));
+            return;
         }
         throw std::runtime_error("Unsupported ELF class or data encoding");
+    }
+
+    void serialize(char *buf, size_t len, char ei_class, char ei_data)
+    {
+        if (ei_class == ELFCLASS32) {
+            serialize<typename T::Type32>(buf, len, ei_data);
+            return;
+        } else if (ei_class == ELFCLASS64) {
+            serialize<typename T::Type64>(buf, len, ei_data);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF class");
     }
 
     static inline unsigned int size(char ei_class)
@@ -269,6 +274,7 @@ public:
 
     ElfDynamic_Section *getDynSection();
 
+    void normalize();
     void write(std::ofstream &file);
 
     char getClass();
@@ -505,7 +511,7 @@ public:
 
     ElfValue *getValueForType(unsigned int tag);
     ElfSection *getSectionForType(unsigned int tag);
-    void setValueForType(unsigned int tag, ElfValue *val);
+    bool setValueForType(unsigned int tag, ElfValue *val);
 private:
     std::vector<Elf_DynValue> dyns;
 };
@@ -659,6 +665,10 @@ inline ElfLocation::ElfLocation(unsigned int location, Elf *elf) {
 
 inline unsigned int ElfLocation::getValue() {
     return (section ? section->getAddr() : 0) + offset;
+}
+
+inline const char *ElfLocation::getBuffer() {
+    return section ? section->getData() + offset : NULL;
 }
 
 inline unsigned int ElfSize::getValue() {

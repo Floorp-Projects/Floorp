@@ -77,9 +77,9 @@ public:
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor);
   NS_IMETHOD DetachEditor();
-  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+  NS_IMETHOD BeforeEdit(OperationID action,
                         nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+  NS_IMETHOD AfterEdit(OperationID action,
                        nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(mozilla::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled);
@@ -128,7 +128,7 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
-  nsresult WillInsertText(  nsEditor::OperationID aAction,
+  nsresult WillInsertText(  OperationID aAction,
                             mozilla::Selection* aSelection,
                             bool            *aCancel,
                             bool            *aHandled,
@@ -208,7 +208,7 @@ protected:
                           nsCOMPtr<nsIDOMNode> *aSelNode, 
                           PRInt32 *aOffset);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
-  nsresult AfterEditInner(nsEditor::OperationID action,
+  nsresult AfterEditInner(OperationID action,
                           nsIEditor::EDirection aDirection);
   nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
                              nsIDOMNode *aStartChild, 
@@ -253,25 +253,25 @@ protected:
   bool IsLastNode(nsIDOMNode *aNode);
   nsresult NormalizeSelection(nsISelection *inSelection);
   void GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
-                        PRInt32 aOffset, nsEditor::OperationID actionID,
+                        PRInt32 aOffset, OperationID actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, PRInt32* outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
                              nsCOMArray<nsIDOMRange> &outArrayOfRanges, 
-                             nsEditor::OperationID inOperationType);
+                             OperationID inOperationType);
   nsresult PromoteRange(nsIDOMRange *inRange,
-                        nsEditor::OperationID inOperationType);
+                        OperationID inOperationType);
   nsresult GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges, 
                                 nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
-                                nsEditor::OperationID inOperationType,
+                                OperationID inOperationType,
                                 bool aDontTouchContent=false);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes);
   nsresult GetNodesFromPoint(DOMPoint point,
-                             nsEditor::OperationID operation,
+                             OperationID operation,
                              nsCOMArray<nsIDOMNode>& arrayOfNodes,
                              bool dontTouchContent);
   nsresult GetNodesFromSelection(nsISelection *selection,
-                                 nsEditor::OperationID operation,
+                                 OperationID operation,
                                  nsCOMArray<nsIDOMNode>& arrayOfNodes,
                                  bool aDontTouchContent=false);
   nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);

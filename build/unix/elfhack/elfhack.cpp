@@ -38,6 +38,8 @@ public:
     }
 };
 
+typedef serializable<Elf_Addr_Traits> Elf_Addr;
+
 class Elf_RelHack_Traits {
 public:
     typedef Elf32_Rel Type32;
@@ -81,10 +83,9 @@ private:
 
 class ElfRelHackCode_Section: public ElfSection {
 public:
-    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e)
-    : ElfSection(s, NULL, NULL), parent(e) {
+    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, unsigned int init)
+    : ElfSection(s, NULL, NULL), parent(e), init(init) {
         std::string file(rundir);
-        init = parent.getDynSection()->getSectionForType(DT_INIT);
         file += "/inject/";
         switch (parent.getMachine()) {
         case EM_386:
@@ -99,7 +100,7 @@ public:
         default:
             throw std::runtime_error("unsupported architecture");
         }
-        if (init == NULL)
+        if (!init)
             file += "-noinit";
         file += ".o";
         std::ifstream inject(file.c_str(), std::ios::in|std::ios::binary);
@@ -224,17 +225,17 @@ private:
         Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
                               Elf32_Word addend, unsigned int addr)
         {
-            /* Follows description of b.w instructions as per
+            /* Follows description of b.w and bl instructions as per
                ARM Architecture Reference Manual ARM® v7-A and ARM® v7-R edition, A8.6.16
-               We limit ourselves to Encoding T3.
+               We limit ourselves to Encoding T4 of b.w and Encoding T1 of bl.
                We don't care about sign_extend because the only case where this is
                going to be used only jumps forward. */
             Elf32_Addr tmp = (Elf32_Addr) (addr - offset - base_addr);
             unsigned int word0 = addend & 0xffff,
                          word1 = addend >> 16;
 
-            if (((word0 & 0xf800) != 0xf000) || ((word1 & 0xd000) != 0x9000))
-                throw std::runtime_error("R_ARM_THM_JUMP24 relocation only supported for B.W <label>");
+            if (((word0 & 0xf800) != 0xf000) || ((word1 & 0x9000) != 0x9000))
+                throw std::runtime_error("R_ARM_THM_JUMP24/R_ARM_THM_CALL relocation only supported for B.W <label> and BL <label>");
 
             unsigned int s = (word0 & (1 << 10)) >> 10;
             unsigned int j1 = (word1 & (1 << 13)) >> 13;
@@ -248,8 +249,8 @@ private:
             j1 = ((tmp & (1 << 23)) >> 23) ^ !s;
             j2 = ((tmp & (1 << 22)) >> 22) ^ !s;
 
-            return 0xf000 | (s << 10) | ((tmp & (0x3ff << 12)) >> 12) | 
-                   (0x9000 << 16) | (j1 << 29) | (j2 << 27) | ((tmp & 0xffe) << 15);
+            return 0xf000 | (s << 10) | ((tmp & (0x3ff << 12)) >> 12) |
+                   ((word1 & 0xd000) << 16) | (j1 << 29) | (j2 << 27) | ((tmp & 0xffe) << 15);
         }
     };
 
@@ -299,7 +300,7 @@ private:
                     ElfSection *ehdr = parent.getSection(1)->getPrevious()->getPrevious();
                     addr = ehdr->getAddr();
                 } else if (strcmp(name, "original_init") == 0) {
-                    addr = init->getAddr();
+                    addr = init;
                 } else if (strcmp(name, "_GLOBAL_OFFSET_TABLE_") == 0) {
                     // We actually don't need a GOT, but need it as a reference for
                     // GOTOFF relocations. We'll just use the start of the ELF file
@@ -328,6 +329,7 @@ private:
             case REL(ARM, PLT32):
                 apply_relocation<arm_plt32_relocation>(the_code, buf, &*r, addr);
                 break;
+            case REL(ARM, THM_PC22 /* THM_CALL */):
             case REL(ARM, THM_JUMP24):
                 apply_relocation<arm_thm_jump24_relocation>(the_code, buf, &*r, addr);
                 break;
@@ -346,12 +348,36 @@ private:
 
     Elf *elf, &parent;
     std::vector<ElfSection *> code;
-    ElfSection *init;
+    unsigned int init;
     int entry_point;
 };
 
+unsigned int get_addend(Elf_Rel *rel, Elf *elf) {
+    ElfLocation loc(rel->r_offset, elf);
+    Elf_Addr addr(loc.getBuffer(), Elf_Addr::size(elf->getClass()), elf->getClass(), elf->getData());
+    return addr.value;
+}
+
+unsigned int get_addend(Elf_Rela *rel, Elf *elf) {
+    return rel->r_addend;
+}
+
+void set_relative_reloc(Elf_Rel *rel, Elf *elf, unsigned int value) {
+    ElfLocation loc(rel->r_offset, elf);
+    Elf_Addr addr;
+    addr.value = value;
+    addr.serialize(const_cast<char *>(loc.getBuffer()), Elf_Addr::size(elf->getClass()), elf->getClass(), elf->getData());
+}
+
+void set_relative_reloc(Elf_Rela *rel, Elf *elf, unsigned int value) {
+    // ld puts the value of relocated relocations both in the addend and
+    // at r_offset. For consistency, keep it that way.
+    set_relative_reloc((Elf_Rel *)rel, elf, value);
+    rel->r_addend = value;
+}
+
 template <typename Rel_Type>
-int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2)
+int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force)
 {
     ElfDynamic_Section *dyn = elf->getDynSection();
     if (dyn ==NULL) {
@@ -370,10 +396,35 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     Elf32_Shdr relhackcode32_section =
         { 0, SHT_PROGBITS, SHF_ALLOC | SHF_EXECINSTR, 0, (Elf32_Off)-1, 0,
           SHN_UNDEF, 0, 1, 0 };
+
+    unsigned int entry_sz = Elf_Addr::size(elf->getClass());
+
+    // The injected code needs to be executed before any init code in the
+    // binary. There are three possible cases:
+    // - The binary has no init code at all. In this case, we will add a
+    //   DT_INIT entry pointing to the injected code.
+    // - The binary has a DT_INIT entry. In this case, we will interpose:
+    //   we change DT_INIT to point to the injected code, and have the
+    //   injected code call the original DT_INIT entry point.
+    // - The binary has no DT_INIT entry, but has a DT_INIT_ARRAY. In this
+    //   case, we interpose as well, by replacing the first entry in the
+    //   array to point to the injected code, and have the injected code
+    //   call the original first entry.
+    // The binary may have .ctors instead of DT_INIT_ARRAY, for its init
+    // functions, but this falls into the second case above, since .ctors
+    // are actually run by DT_INIT code.
+    ElfValue *value = dyn->getValueForType(DT_INIT);
+    unsigned int original_init = value ? value->getValue() : 0;
+    ElfSection *init_array = NULL;
+    if (!value || !value->getValue()) {
+        value = dyn->getValueForType(DT_INIT_ARRAYSZ);
+        if (value && value->getValue() >= entry_sz)
+            init_array = dyn->getSectionForType(DT_INIT_ARRAY);
+    }
+
     Elf_Shdr relhack_section(relhack32_section);
     Elf_Shdr relhackcode_section(relhackcode32_section);
     ElfRelHack_Section *relhack = new ElfRelHack_Section(relhack_section);
-    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf);
 
     ElfSymtab_Section *symtab = (ElfSymtab_Section *) section->getLink();
     Elf_SymValue *sym = symtab->lookup("__cxa_pure_virtual");
@@ -381,13 +432,13 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
     relhack_entry.r_offset = relhack_entry.r_info = 0;
-    int entry_sz = (elf->getClass() == ELFCLASS32) ? 4 : 8;
+    size_t init_array_reloc = 0;
     for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
          i != section->rels.end(); i++) {
         // We don't need to keep R_*_NONE relocations
         if (!ELF32_R_TYPE(i->r_info))
             continue;
-        ElfSection *section = elf->getSectionAt(i->r_offset);
+        ElfLocation loc(i->r_offset, elf);
         // __cxa_pure_virtual is a function used in vtables to point at pure
         // virtual methods. The __cxa_pure_virtual function usually abort()s.
         // These functions are however normally never called. In the case
@@ -401,9 +452,9 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
                 // __cxa_pure_virtual symbol is defined in our lib, and we
                 // have relative relocations (rel_type) for it.
                 if (ELF32_R_TYPE(i->r_info) == rel_type) {
-                    serializable<Elf_Addr_Traits> addr(&section->getData()[i->r_offset - section->getAddr()], entry_sz, elf->getClass(), elf->getData());
+                    Elf_Addr addr(loc.getBuffer(), entry_sz, elf->getClass(), elf->getData());
                     if (addr.value == sym->value.getValue()) {
-                        memset((char *)&section->getData()[i->r_offset - section->getAddr()], 0, entry_sz);
+                        memset((char *)loc.getBuffer(), 0, entry_sz);
                         continue;
                     }
                 }
@@ -413,18 +464,26 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
                 // have absolute relocations (rel_type2) for it.
                 if ((ELF32_R_TYPE(i->r_info) == rel_type2) &&
                     (sym == &symtab->syms[ELF32_R_SYM(i->r_info)])) {
-                    memset((char *)&section->getData()[i->r_offset - section->getAddr()], 0, entry_sz);
+                    memset((char *)loc.getBuffer(), 0, entry_sz);
                     continue;
                 }
             }
         }
-        // Don't pack relocations happening in non writable sections.
-        // Our injected code is likely not to be allowed to write there.
-        if (!(section->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
-            (relro && (i->r_offset >= relro->getAddr()) &&
-                      (i->r_offset < relro->getAddr() + relro->getMemSize())))
+        // Keep track of the relocation associated with the first init_array entry.
+        if (init_array && i->r_offset == init_array->getAddr()) {
+            if (init_array_reloc) {
+                fprintf(stderr, "Found multiple relocations for the first init_array entry. Skipping\n");
+                return -1;
+            }
             new_rels.push_back(*i);
-        else {
+            init_array_reloc = new_rels.size();
+        } else if (!(loc.getSection()->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
+                   (relro && (i->r_offset >= relro->getAddr()) &&
+                   (i->r_offset < relro->getAddr() + relro->getMemSize()))) {
+            // Don't pack relocations happening in non writable sections.
+            // Our injected code is likely not to be allowed to write there.
+            new_rels.push_back(*i);
+        } else {
             // TODO: check that i->r_addend == *i->r_offset
             if (i->r_offset == relhack_entry.r_offset + relhack_entry.r_info * entry_sz) {
                 relhack_entry.r_info++;
@@ -444,21 +503,54 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
 
     unsigned int old_end = section->getOffset() + section->getSize();
 
+    if (init_array) {
+        if (! init_array_reloc) {
+            fprintf(stderr, "Didn't find relocation for DT_INIT_ARRAY's first entry. Skipping\n");
+            return -1;
+        }
+        Rel_Type *rel = &new_rels[init_array_reloc - 1];
+        unsigned int addend = get_addend(rel, elf);
+        // Use relocated value of DT_INIT_ARRAY's first entry for the
+        // function to be called by the injected code.
+        if (ELF32_R_TYPE(rel->r_info) == rel_type) {
+            original_init = addend;
+        } else if (ELF32_R_TYPE(rel->r_info) == rel_type2) {
+            ElfSymtab_Section *symtab = (ElfSymtab_Section *)section->getLink();
+            original_init = symtab->syms[ELF32_R_SYM(rel->r_info)].value.getValue() + addend;
+        } else {
+            fprintf(stderr, "Unsupported relocation type for DT_INIT_ARRAY's first entry. Skipping\n");
+            return -1;
+        }
+    }
+
+    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init);
     relhackcode->insertBefore(section);
     relhack->insertAfter(relhackcode);
 
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
-    ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
-    dyn->setValueForType(DT_INIT, init);
-    // TODO: adjust the value according to the remaining number of relative relocations
-    if (dyn->getValueForType(Rel_Type::d_tag_count))
-        dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
-
     if (section->getOffset() + section->getSize() >= old_end) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }
+    // Ensure Elf sections will be at their final location.
+    elf->normalize();
+    ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
+    if (init_array) {
+        // Adjust the first DT_INIT_ARRAY entry to point at the injected code
+        // by transforming its relocation into a relative one pointing to the
+        // address of the injected code.
+        Rel_Type *rel = &section->rels[init_array_reloc - 1];
+        rel->r_info = ELF32_R_INFO(0, rel_type); // Set as a relative relocation
+        set_relative_reloc(&section->rels[init_array_reloc - 1], elf, init->getValue());
+    } else if (!dyn->setValueForType(DT_INIT, init)) {
+        fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
+        return -1;
+    }
+    // TODO: adjust the value according to the remaining number of relative relocations
+    if (dyn->getValueForType(Rel_Type::d_tag_count))
+        dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+
     return 0;
 }
 
@@ -494,13 +586,13 @@ void do_file(const char *name, bool backup = false, bool force = false)
     int exit = -1;
     switch (elf->getMachine()) {
     case EM_386:
-        exit = do_relocation_section<Elf_Rel>(elf, R_386_RELATIVE, R_386_32);
+        exit = do_relocation_section<Elf_Rel>(elf, R_386_RELATIVE, R_386_32, force);
         break;
     case EM_X86_64:
-        exit = do_relocation_section<Elf_Rela>(elf, R_X86_64_RELATIVE, R_X86_64_64);
+        exit = do_relocation_section<Elf_Rela>(elf, R_X86_64_RELATIVE, R_X86_64_64, force);
         break;
     case EM_ARM:
-        exit = do_relocation_section<Elf_Rel>(elf, R_ARM_RELATIVE, R_ARM_ABS32);
+        exit = do_relocation_section<Elf_Rel>(elf, R_ARM_RELATIVE, R_ARM_ABS32, force);
         break;
     }
     if (exit == 0) {
