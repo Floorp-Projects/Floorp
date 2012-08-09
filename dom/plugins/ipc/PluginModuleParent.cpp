@@ -179,8 +179,10 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
             notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(hangID));
 #ifdef XP_WIN
             if (mPluginCpuUsageOnHang >= 0) {
-              notes.Put(CS("PluginCpuUsage"), 
-                        nsPrintfCString("%.2f", mPluginCpuUsageOnHang));
+              nsCString cpuUsageStr;
+              cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang * 100) / 100);
+              notes.Put(CS("PluginCpuUsage"), cpuUsageStr);
+
               notes.Put(CS("NumberOfProcessors"),
                         nsPrintfCString("%d", PR_GetNumberOfProcessors()));
             }
