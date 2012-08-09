@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=771429
       function f() {}
       function g() { return this; }
       function h() { "use strict"; return this; }
+      function ctor() { this.x = 1; }
       f.x = 2;
       f.g = g;
       var Cu = Components.utils;
@@ -40,6 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=771429
         // on g instead of whatever our proxies happen to return.
         is(Cu.evalInSandbox('var x = { z: 7 }; Function.prototype.call.call(g, x).z', s), 7,
            "Should not rebind calls that are already bound");
+        is(Cu.evalInSandbox('new ctor();', s).x, 1,
+           "Should get a properly constructed object out of the sandbox");
       } catch (e) {
         ok(false, "Should not get an exception: " + e);
       }
