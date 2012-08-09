@@ -628,6 +628,59 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
     }
 };
 
+class LCallDOMNative : public LCallInstructionHelper<BOX_PIECES, 0, 5>
+{
+    uint32 argslot_;
+
+  public:
+    LIR_HEADER(CallDOMNative);
+
+    LCallDOMNative(uint32 argslot,
+                   const LDefinition &argJSContext, const LDefinition &argObj,
+                   const LDefinition &argPrivate, const LDefinition &argArgc,
+                   const LDefinition &argVp)
+      : argslot_(argslot)
+    {
+        setTemp(0, argJSContext);
+        setTemp(1, argObj);
+        setTemp(2, argPrivate);
+        setTemp(3, argArgc);
+        setTemp(4, argVp);
+    }
+
+    JSFunction *func() const {
+        return mir()->getSingleTarget();
+    }
+    uint32 argslot() const {
+        return argslot_;
+    }
+    MCall *mir() const {
+        return mir_->toCall();
+    }
+
+    // Named for consistency with LCallNative. Actually should be argc().
+    uint32 numStackArgs() const {
+        JS_ASSERT(mir()->numStackArgs() >= 1);
+        return mir()->numStackArgs() - 1;
+    }
+
+    const LAllocation *getArgJSContext() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *getArgObj() {
+        return getTemp(1)->output();
+    }
+    const LAllocation *getArgPrivate() {
+        return getTemp(2)->output();
+    }
+    const LAllocation *getArgArgc() {
+        return getTemp(3)->output();
+    }
+    const LAllocation *getArgVp() {
+        return getTemp(4)->output();
+    }
+};
+
 // Generates a polymorphic callsite for |new|, where |this| has not been
 // pre-allocated by the caller.
 class LCallConstructor : public LCallInstructionHelper<BOX_PIECES, 1, 0>

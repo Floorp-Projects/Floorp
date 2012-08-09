@@ -161,7 +161,8 @@
     _(ProfilingEnter)               \
     _(ProfilingExit)                \
     _(GetDOMProperty)               \
-    _(SetDOMProperty)
+    _(SetDOMProperty)               \
+    _(CallDOMNative)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

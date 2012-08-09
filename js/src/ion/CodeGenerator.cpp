@@ -552,6 +552,101 @@ CodeGenerator::visitCallNative(LCallNative *call)
 }
 
 bool
+CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
+{
+    JSFunction *target = call->func();
+    JS_ASSERT(target);
+    JS_ASSERT(target->isNative());
+    JS_ASSERT(target->jitInfo());
+    JS_ASSERT(call->mir()->isDOMFunction());
+
+    int callargslot = call->argslot();
+    int unusedStack = StackOffsetOfPassedArg(callargslot);
+
+    // Registers used for callWithABI() argument-passing.
+    const Register argJSContext = ToRegister(call->getArgJSContext());
+    const Register argObj       = ToRegister(call->getArgObj());
+    const Register argPrivate   = ToRegister(call->getArgPrivate());
+    const Register argArgc      = ToRegister(call->getArgArgc());
+    const Register argVp        = ToRegister(call->getArgVp());
+
+    DebugOnly<uint32> initialStack = masm.framePushed();
+
+    masm.checkStackAlignment();
+
+    // DOM methods have the signature:
+    //  bool (*)(JSContext *, HandleObject, void *private, unsigned argc, Value *vp)
+    // Where vp[0] is space for an outparam and the callee, vp[1] is |this|, and vp[2] onward
+    // are the function arguments.
+
+    // Nestle the stack up against the pushed arguments, leaving StackPointer at
+    // &vp[1]
+    masm.adjustStack(unusedStack);
+    masm.movePtr(StackPointer, argObj);
+
+    // Push a Value containing the callee object: natives are allowed to access their callee before
+    // setitng the return value. The StackPointer is moved to &vp[0].
+    masm.Push(ObjectValue(*target));
+    masm.movePtr(StackPointer, argVp);
+
+    // Use argArgc as scratch.
+    Register obj = masm.extractObject(Address(argObj, 0), argArgc);
+    // GetReservedSlot(obj, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate()
+    masm.loadPrivate(Address(obj, JSObject::getFixedSlotOffset(0)), argPrivate);
+
+    // Load argc from the call instruction.
+    masm.move32(Imm32(call->numStackArgs()), argArgc);
+    // Push argument into what will become the IonExitFrame
+    masm.Push(argArgc);
+
+    // Construct native exit frame.
+    uint32 safepointOffset;
+    if (!masm.buildFakeExitFrame(argJSContext, &safepointOffset))
+        return false;
+    masm.enterFakeExitFrame();
+
+    if (!markSafepointAt(safepointOffset, call))
+        return false;
+
+    // Construct and execute call.
+    masm.setupUnalignedABICall(5, argJSContext);
+
+    masm.loadJSContext(argJSContext);
+
+    masm.passABIArg(argJSContext);
+    masm.passABIArg(argObj);
+    masm.passABIArg(argPrivate);
+    masm.passABIArg(argArgc);
+    masm.passABIArg(argVp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->jitInfo()->op));
+
+    // Test for failure.
+    Label success, exception;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+
+    // Load the outparam vp[0] into output register(s).
+    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
+    masm.jump(&success);
+
+    // Handle exception case.
+    {
+        masm.bind(&exception);
+        masm.handleException();
+    }
+    masm.bind(&success);
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
+
+    // Move the StackPointer back to its original location, unwinding the native exit frame.
+    masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    return true;
+}
+
+
+bool
 CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
 {
     typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
