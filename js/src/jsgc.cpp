@@ -105,6 +105,10 @@
 # include <unistd.h>
 #endif
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace mozilla;
 using namespace js;
 using namespace js::gc;
@@ -4218,6 +4222,12 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JS_AbortIfWrongThread(rt);
+
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::GC_START,
+                        TraceLogging::GC_STOP);
+#endif
 
     ContextIter cx(rt);
     if (!cx.done())

@@ -25,6 +25,10 @@
 #include "jsgcinlines.h"
 #include "jsinterpinlines.h"
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace js;
 using namespace js::mjit;
 
@@ -1103,12 +1107,25 @@ mjit::JaegerShot(JSContext *cx, bool partial)
 
     JS_ASSERT(cx->regs().pc == script->code);
 
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::JM_START,
+                        TraceLogging::JM_STOP,
+                        script);
+#endif
+
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry, partial);
 }
 
 JaegerStatus
 js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint, bool partial)
 {
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::JM_SAFEPOINT_START,
+                        TraceLogging::JM_SAFEPOINT_STOP,
+                        cx->fp()->script());
+#endif
     return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint, partial);
 }
 

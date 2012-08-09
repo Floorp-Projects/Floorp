@@ -73,6 +73,10 @@
 #include "jswin.h"
 #endif
 
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
+#endif
+
 using namespace mozilla;
 using namespace js;
 using namespace js::cli;
@@ -1171,6 +1175,9 @@ PrintInternal(JSContext *cx, unsigned argc, jsval *vp, FILE *file)
         if (!bytes)
             return false;
         fprintf(file, "%s%s", i ? " " : "", bytes);
+#if JS_TRACE_LOGGING
+        TraceLog(TraceLogging::defaultLogger(), bytes);
+#endif
         JS_free(cx, bytes);
     }
 
