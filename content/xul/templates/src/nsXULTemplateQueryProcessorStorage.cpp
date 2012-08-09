@@ -335,7 +335,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
             rv = NS_ERROR_ILLEGAL_VALUE;
             PRInt32 valInt32 = 0;
             PRInt64 valInt64 = 0;
-            PRFloat64 valFloat = 0;
+            double valFloat = 0;
 
             switch (typeValue) {
               case 0:

@@ -19,7 +19,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prinrval.h"
 #endif
 
-const PRFloat64 growthRate = 1.2;
+const double growthRate = 1.2;
 
 // Bug 183111, editor now replaces multiple spaces with leading
 // 0xA0's and a single ending space, so need to treat 0xA0's as spaces.
