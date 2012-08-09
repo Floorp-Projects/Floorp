@@ -4773,6 +4773,83 @@ class MCallSetElement
     }
 };
 
+class MSetDOMProperty
+  : public MAryInstruction<2>,
+    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
+{
+    const JSJitPropertyOp func_;
+
+    MSetDOMProperty(const JSJitPropertyOp func, MDefinition *obj, MDefinition *val)
+      : func_(func)
+    {
+        initOperand(0, obj);
+        initOperand(1, val);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetDOMProperty);
+
+    static MSetDOMProperty *New(const JSJitPropertyOp func, MDefinition *obj, MDefinition *val)
+    {
+        return new MSetDOMProperty(func, obj, val);
+    }
+
+    const JSJitPropertyOp fun() {
+        return func_;
+    }
+
+    MDefinition *object() {
+        return getOperand(0);
+    }
+
+    MDefinition *value()
+    {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MGetDOMProperty
+  : public MAryInstruction<1>,
+    public ObjectPolicy<0>
+{
+    const JSJitPropertyOp func_;
+    bool isInfallible_;
+
+    MGetDOMProperty(const JSJitPropertyOp func, MDefinition *obj, bool isInfallible)
+      : func_(func), isInfallible_(isInfallible)
+    {
+        initOperand(0, obj);
+
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetDOMProperty);
+
+    static MGetDOMProperty *New(const JSJitPropertyOp func, MDefinition *obj, bool isInfallible)
+    {
+        return new MGetDOMProperty(func, obj, isInfallible);
+    }
+
+    const JSJitPropertyOp fun() {
+        return func_;
+    }
+    bool isInfallible() {
+        return isInfallible_;
+    }
+    MDefinition *object() {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MStringLength
   : public MUnaryInstruction,
     public StringPolicy

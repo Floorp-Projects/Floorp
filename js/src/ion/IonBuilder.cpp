@@ -5216,12 +5216,15 @@ IonBuilder::jsop_not()
 
 inline bool
 IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id,
-                   JSFunction **funcp, bool isGetter)
+                               JSFunction **funcp, bool isGetter, bool *isDOM)
 {
     JSObject *found = NULL;
     JSObject *foundProto = NULL;
 
     *funcp = NULL;
+    *isDOM = false;
+
+    bool thinkDOM = true;
 
     // No sense looking if we don't know what's going on.
     if (!types || types->unknownObject())
@@ -5251,12 +5254,19 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             if (propSet->isOwnProperty(false))
                 return true;
 
+            // Check the DOM status of the instance type
+            thinkDOM = thinkDOM && !typeObj->hasAnyFlags(types::OBJECT_FLAG_NON_DOM);
+
             // Otherwise try using the prototype.
             curObj = typeObj->proto;
         } else {
             // Can't optimize setters on watched singleton objects.
             if (!isGetter && curObj->watched())
                 return true;
+
+            // Check the DOM-ness of the singleton.
+            types::TypeObject *objType = curObj->getType(cx);
+            thinkDOM = thinkDOM && !objType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM);
         }
 
         // Turns out that we need to check for a property lookup op, else we
@@ -5355,6 +5365,14 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             curType = obj->getType(cx);
         }
 
+        // Freeze the types as being DOM objects if they are
+        if (thinkDOM) {
+            // Asking the question adds the freeze
+            DebugOnly<bool> wasntDOM = types::TypeSet::HasObjectFlags(cx, curType,
+                                                           types::OBJECT_FLAG_NON_DOM);
+            JS_ASSERT(!wasntDOM);
+        }
+
         // If we found a Singleton object's own-property, there's nothing to
         // freeze.
         if (obj != foundProto) {
@@ -5364,8 +5382,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             while (true) {
                 types::TypeSet *propSet = curType->getProperty(cx, typeId, false);
                 JS_ASSERT(propSet);
-                // Asking the question adds the freeze
-                bool isOwn = propSet->isOwnProperty(cx, curType, false);
+                // Asking, freeze by asking.
+                DebugOnly<bool> isOwn = propSet->isOwnProperty(cx, curType, false);
                 JS_ASSERT(!isOwn);
                 // Don't mark the proto. It will be held down by the shape
                 // guard. This allows us tp use properties found on prototypes
@@ -5378,6 +5396,41 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     }
 
     *funcp = found->toFunction();
+    *isDOM = thinkDOM;
+
+    return true;
+}
+
+static bool
+TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func)
+{
+    if (!func->isNative() || !func->jitInfo())
+        return false;
+    // If all the DOM objects flowing through are legal with this
+    // property, we can bake in a call to the bottom half of the DOM
+    // accessor
+    DOMInstanceClassMatchesProto instanceChecker =
+        GetDOMCallbacks(cx->runtime)->instanceClassMatchesProto;
+
+    const JSJitInfo *jinfo = func->jitInfo();
+
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        JSObject *typeProto = curType->proto;
+        RootedObject proto(cx, typeProto);
+        if (!instanceChecker(proto, jinfo->protoID, jinfo->depth))
+            return false;
+    }
 
     return true;
 }
@@ -5611,17 +5664,29 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
 
     // Attempt to inline common property getter. At least patch to call instead.
     JSFunction *commonGetter;
-    if (!TestCommonPropFunc(cx, unaryTypes.inTypes, id, &commonGetter, true))
-        return false;
-    if (commonGetter) {
+    bool isDOM;
+    if (!TestCommonPropFunc(cx, unaryTypes.inTypes, id, &commonGetter, true, &isDOM))
+         return false;
+     if (commonGetter) {
+        RootedFunction getter(cx, commonGetter);
+        if (isDOM && TestShouldDOMCall(cx, unaryTypes.inTypes, getter)) {
+            const JSJitInfo *jitinfo = getter->jitInfo();
+            MGetDOMProperty *get = MGetDOMProperty::New(jitinfo->op, obj, jitinfo->isInfallible);
+
+            current->add(get);
+            current->push(get);
+
+            if (!resumeAfter(get))
+                return false;
+
+            return pushTypeBarrier(get, types, barrier);
+        }
         // Spoof stack to expected state for call.
         pushConstant(ObjectValue(*commonGetter));
 
         MPassArg *wrapper = MPassArg::New(obj);
         current->push(wrapper);
         current->add(wrapper);
-
-        RootedFunction getter(cx, commonGetter);
 
         return makeCallBarrier(getter, 0, false, types, barrier);
     }
@@ -5701,13 +5766,27 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     RootedId id(cx, NameToId(name));
+    types::TypeSet *types = binaryTypes.lhsTypes;
 
     JSFunction *commonSetter;
-    if (!TestCommonPropFunc(cx, binaryTypes.lhsTypes, id, &commonSetter, false))
+    bool isDOM;
+    if (!TestCommonPropFunc(cx, types, id, &commonSetter, false, &isDOM))
         return false;
     if (!monitored && commonSetter) {
+        RootedFunction setter(cx, commonSetter);
+        if (isDOM && TestShouldDOMCall(cx, types, setter)) {
+            MSetDOMProperty *set = MSetDOMProperty::New(setter->jitInfo()->op, obj, value);
+            if (!set)
+                return false;
+
+            current->add(set);
+            current->push(value);
+
+            return resumeAfter(set);
+        }
+
         // Dummy up the stack, as in getprop
-        pushConstant(ObjectValue(*commonSetter));
+        pushConstant(ObjectValue(*setter));
 
         MPassArg *wrapper = MPassArg::New(obj);
         current->push(wrapper);
@@ -5716,8 +5795,6 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         MPassArg *arg = MPassArg::New(value);
         current->push(arg);
         current->add(arg);
-
-        RootedFunction setter(cx, commonSetter);
 
         return makeCallBarrier(setter, 1, false, NULL, NULL);
     }

@@ -501,6 +501,77 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     }
 };
 
+template <size_t defs, size_t ops>
+class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
+{
+  protected:
+    LDOMPropertyInstructionHelper(const LDefinition &JSContextReg,
+                                  const LAllocation &ObjectReg,
+                                  const LDefinition &PrivReg,
+                                  const LDefinition &ValueReg)
+    {
+        this->setTemp(0, JSContextReg);
+        this->setTemp(1, PrivReg);
+        this->setTemp(2, ValueReg);
+
+        this->setOperand(0, ObjectReg);
+    }
+
+  public:
+
+    const LAllocation *getJSContextReg() {
+        return this->getTemp(0)->output();
+    }
+    const LAllocation *getObjectReg() {
+        return this->getOperand(0);
+    }
+    const LAllocation *getPrivReg() {
+        return this->getTemp(1)->output();
+    }
+    const LAllocation *getValueReg() {
+        return this->getTemp(2)->output();
+    }
+};
+
+
+class LGetDOMProperty : public LDOMPropertyInstructionHelper<BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(GetDOMProperty);
+
+    LGetDOMProperty(const LDefinition &JSContextReg,
+                    const LAllocation &ObjectReg,
+                    const LDefinition &PrivReg,
+                    const LDefinition &ValueReg)
+      : LDOMPropertyInstructionHelper<BOX_PIECES, 0>(JSContextReg, ObjectReg,
+                                                     PrivReg, ValueReg)
+    { }
+
+    MGetDOMProperty *mir() const {
+        return mir_->toGetDOMProperty();
+    }
+};
+
+class LSetDOMProperty : public LDOMPropertyInstructionHelper<0, BOX_PIECES>
+{
+  public:
+    LIR_HEADER(SetDOMProperty);
+
+    LSetDOMProperty(const LDefinition &JSContextReg,
+                    const LAllocation &ObjectReg,
+                    const LDefinition &PrivReg,
+                    const LDefinition &ValueReg)
+      : LDOMPropertyInstructionHelper<0, BOX_PIECES>(JSContextReg, ObjectReg,
+                                                     PrivReg, ValueReg)
+    { }
+
+    static const size_t Value = 1;
+
+    MSetDOMProperty *mir() const {
+        return mir_->toSetDOMProperty();
+    }
+};
+
 // Generates a monomorphic callsite for a known, native target.
 class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
 {

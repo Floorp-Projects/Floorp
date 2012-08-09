@@ -433,6 +433,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(ImmWord(uintptr_t(NULL)));
     }
 
+    void enterFakeDOMFrame(void *codeVal) {
+        linkExitFrame();
+        Push(ImmWord(uintptr_t(codeVal)));
+        Push(ImmWord(uintptr_t(NULL)));
+    }
+
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
     }
