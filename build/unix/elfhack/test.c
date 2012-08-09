@@ -125,14 +125,14 @@ int print_status() {
  * following sections as part of the PT_TLS segment. */
 __thread int foo[1024];
 
-__attribute__((constructor)) void end_test() {
+void end_test() {
     static int count = 0;
     /* Only exit when both constructors have been called */
     if (++count == 2)
         ret = 0;
 }
 
-__attribute__((constructor)) void test() {
+void test() {
     int i = 0, j = 0;
 #define DEF_(a,i,w) \
     if (a[i++] != str_ ## w) return;
