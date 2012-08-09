@@ -39,7 +39,6 @@
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
 #include "nsIObserver.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "nsWeakReference.h"
@@ -403,11 +402,10 @@ ContentChild::AllocPCompositor(mozilla::ipc::Transport* aTransport,
 
 PBrowserChild*
 ContentChild::AllocPBrowser(const PRUint32& aChromeFlags,
-                            const bool& aIsBrowserElement, const AppId& aApp)
+                            const bool& aIsBrowserElement,
+                            const PRUint32& aAppId)
 {
-    PRUint32 appId = aApp.get_uint32_t();
-    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement,
-                                             appId);
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement, aAppId);
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 

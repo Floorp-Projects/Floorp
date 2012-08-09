@@ -422,13 +422,10 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
 {
   *aReturn = nullptr;
 
-  PRUint32 chromeFlags = 0;
-  nsRefPtr<TabChild> newChild = new TabChild(chromeFlags,
-                                             mIsBrowserElement, mAppId);
-  static_cast<TabChild*>(Manager()->SendPBrowserConstructor(
-                             // We release this ref in DeallocPBrowserChild
-                             nsRefPtr<TabChild>(newChild).forget().get(),
-                             chromeFlags, mIsBrowserElement, this));
+  nsRefPtr<TabChild> newChild =
+    static_cast<TabChild*>(Manager()->SendPBrowserConstructor(
+      /* aChromeFlags = */ 0, mIsBrowserElement, mAppId));
+
   nsCAutoString spec;
   if (aURI) {
     aURI->GetSpec(spec);
