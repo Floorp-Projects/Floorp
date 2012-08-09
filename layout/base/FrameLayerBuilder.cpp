@@ -1014,7 +1014,7 @@ GetTranslationForThebesLayer(ThebesLayer* aLayer)
 
 static const double SUBPIXEL_OFFSET_EPSILON = 0.02;
 
-static PRBool
+static bool
 SubpixelOffsetFuzzyEqual(gfxPoint aV1, gfxPoint aV2)
 {
   return fabs(aV2.x - aV1.x) < SUBPIXEL_OFFSET_EPSILON &&

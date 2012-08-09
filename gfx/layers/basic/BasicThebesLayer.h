@@ -198,7 +198,7 @@ private:
   OptionalThebesBuffer mROFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   nsIntRegion mFrontValidRegion;
-  PRPackedBool mFrontAndBackBufferDiffer;
+  bool mFrontAndBackBufferDiffer;
 };
 
 }
