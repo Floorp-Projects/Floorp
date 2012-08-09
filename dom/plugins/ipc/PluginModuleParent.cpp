@@ -33,7 +33,6 @@
 #include "nsPrintfCString.h"
 
 #include "prsystem.h"
-#include "prdtoa.h"
 
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
@@ -180,10 +179,8 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
             notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(hangID));
 #ifdef XP_WIN
             if (mPluginCpuUsageOnHang >= 0) {
-              char buf[7];
-              PR_cnvtf(buf, NS_ARRAY_LENGTH(buf), 2, mPluginCpuUsageOnHang);
-              notes.Put(CS("PluginCpuUsage"), CS(buf));
-              
+              notes.Put(CS("PluginCpuUsage"), 
+                        nsPrintfCString("%.2f", mPluginCpuUsageOnHang));
               notes.Put(CS("NumberOfProcessors"),
                         nsPrintfCString("%d", PR_GetNumberOfProcessors()));
             }
