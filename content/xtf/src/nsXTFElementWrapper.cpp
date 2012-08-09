@@ -854,6 +854,16 @@ nsXTFElementWrapper::HandledByInner(nsIAtom *attr) const
   return retval;
 }
 
+/* [notxpcom,nostdcall] uint32_t getScriptableFlags(); */
+// This method isn't automatically forwarded safely because it's notxpcom, so
+// the IDL binding doesn't know what value to return.
+uint32_t
+nsXTFElementWrapper::GetScriptableFlags()
+{
+  return GetBaseXPCClassInfo() ? GetBaseXPCClassInfo()->GetScriptableFlags()
+                               : 0;
+}
+
 nsresult
 nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
