@@ -132,7 +132,7 @@ void nsPNGDecoder::SetAnimFrameInfo()
     // Need to cast delay_num to float to have a proper division and
     // the result to int to avoid compiler warning
     timeout = static_cast<PRInt32>
-              (static_cast<PRFloat64>(delay_num) * 1000 / delay_den);
+              (static_cast<double>(delay_num) * 1000 / delay_den);
   }
 
   PRUint32 numFrames = mImage.GetNumFrames();
