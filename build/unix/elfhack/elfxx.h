@@ -176,6 +176,20 @@ private:
         throw std::runtime_error("Unsupported ELF data encoding");
     }
 
+    template <typename R>
+    void serialize(const char *buf, size_t len, char ei_data)
+    {
+        assert(len >= sizeof(R));
+        if (ei_data == ELFDATA2LSB) {
+            T::template swap<little_endian>(*this, *(R *)buf);
+            return;
+        } else if (ei_data == ELFDATA2MSB) {
+            T::template swap<big_endian>(*this, *(R *)buf);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF data encoding");
+    }
+
 public:
     serializable(const char *buf, size_t len, char ei_class, char ei_data)
     {
@@ -209,28 +223,28 @@ public:
     {
         if (ei_class == ELFCLASS32) {
             typename T::Type32 e;
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            }
+            serialize<typename T::Type32>((char *)&e, sizeof(e), ei_data);
+            file.write((char *)&e, sizeof(e));
+            return;
         } else if (ei_class == ELFCLASS64) {
             typename T::Type64 e;
-            if (ei_data == ELFDATA2LSB) {
-                T::template swap<little_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            } else if (ei_data == ELFDATA2MSB) {
-                T::template swap<big_endian>(*this, e);
-                file.write((char *)&e, sizeof(e));
-                return;
-            }
+            serialize<typename T::Type64>((char *)&e, sizeof(e), ei_data);
+            file.write((char *)&e, sizeof(e));
+            return;
         }
         throw std::runtime_error("Unsupported ELF class or data encoding");
+    }
+
+    void serialize(char *buf, size_t len, char ei_class, char ei_data)
+    {
+        if (ei_class == ELFCLASS32) {
+            serialize<typename T::Type32>(buf, len, ei_data);
+            return;
+        } else if (ei_class == ELFCLASS64) {
+            serialize<typename T::Type64>(buf, len, ei_data);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF class");
     }
 
     static inline unsigned int size(char ei_class)
