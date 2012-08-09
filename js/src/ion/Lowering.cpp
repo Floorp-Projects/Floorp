@@ -226,13 +226,26 @@ LIRGenerator::visitCall(MCall *call)
     JSFunction *target = call->getSingleTarget();
 
     if (target && target->isNative()) {
-        LCallNative *lir = new LCallNative(argslot, tempFixed(CallTempReg0),
-                tempFixed(CallTempReg1), tempFixed(CallTempReg2), tempFixed(CallTempReg3));
-
-        if (!defineReturn(lir, call))
-            return false;
-        if (!assignSafepoint(lir, call))
-            return false;
+        if (call->isDOMFunction()) {
+            LCallDOMNative *lir = new LCallDOMNative(argslot,
+                                                     tempFixed(CallTempReg0),
+                                                     tempFixed(CallTempReg1),
+                                                     tempFixed(CallTempReg2),
+                                                     tempFixed(CallTempReg3),
+                                                     tempFixed(CallTempReg4));
+            if (!defineReturn(lir, call))
+                return false;
+            if (!assignSafepoint(lir, call))
+                return false;
+        } else {
+            LCallNative *lir = new LCallNative(argslot, tempFixed(CallTempReg0),
+                                               tempFixed(CallTempReg1), tempFixed(CallTempReg2),
+                                               tempFixed(CallTempReg3));
+            if (!defineReturn(lir, call))
+                return false;
+            if (!assignSafepoint(lir, call))
+                return false;
+        }
     } else if (!target && call->isConstructing()) {
         LCallConstructor *lir = new LCallConstructor(useFixed(call->getFunction(), CallTempReg0),
                                                        argslot);

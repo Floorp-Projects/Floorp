@@ -164,6 +164,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitProfilingExit(LProfilingExit *lir);
     bool visitGetDOMProperty(LGetDOMProperty *lir);
     bool visitSetDOMProperty(LSetDOMProperty *lir);
+    bool visitCallDOMNative(LCallDOMNative *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
