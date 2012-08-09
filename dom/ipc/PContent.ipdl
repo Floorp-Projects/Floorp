@@ -73,12 +73,14 @@ struct FontListEntry {
 
 struct DeviceStorageAddParams
 {
+  PBlob blob;
+  nsString name;
   nsString fullpath;
-  PRUint8[] bits;
 };
 
 struct DeviceStorageGetParams
 {
+  nsString name;
   nsString fullpath;
 };
 

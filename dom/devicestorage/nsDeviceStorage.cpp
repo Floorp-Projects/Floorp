@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
@@ -146,17 +147,19 @@ DeviceStorageFile::AppendRelativePath() {
 }
 
 nsresult
-DeviceStorageFile::Write(nsIDOMBlob* aBlob)
+DeviceStorageFile::Write(nsIInputStream* aInputStream)
 {
+  if (!aInputStream) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = mFile->Create(nsIFile::NORMAL_FILE_TYPE, 00600);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsIInputStream> stream;
-  aBlob->GetInternalStream(getter_AddRefs(stream));
 
   PRUint32 bufSize;
-  stream->Available(&bufSize);
+  aInputStream->Available(&bufSize);
 
   nsCOMPtr<nsIOutputStream> outputStream;
   NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mFile);
@@ -175,7 +178,7 @@ DeviceStorageFile::Write(nsIDOMBlob* aBlob)
   }
 
   PRUint32 wrote;
-  bufferedOutputStream->WriteFrom(stream, bufSize, &wrote);
+  bufferedOutputStream->WriteFrom(aInputStream, bufSize, &wrote);
   bufferedOutputStream->Close();
   outputStream->Close();
   if (bufSize != wrote) {
@@ -532,7 +535,6 @@ public:
   NS_IMETHOD Run()
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
     mRequest->FireError(mError);
     mRequest = nullptr;
     return NS_OK;
@@ -560,7 +562,6 @@ ContinueCursorEvent::Run() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   jsval val;
-
   nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
   if (cursor->mFiles.Length() == 0) {
     val = JSVAL_NULL;
@@ -818,7 +819,10 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-    nsresult rv = mFile->Write(mBlob);
+    nsCOMPtr<nsIInputStream> stream;
+    mBlob->GetInternalStream(getter_AddRefs(stream));
+
+    nsresult rv = mFile->Write(stream);
 
     if (NS_FAILED(rv)) {
       mFile->mFile->Remove(false);
@@ -859,7 +863,6 @@ public:
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
     nsRefPtr<nsRunnable> r;
-
     if (!mFile->mEditable) {
       bool check = false;
       mFile->mFile->Exists(&check);
@@ -903,7 +906,7 @@ public:
     bool check = false;
     mFile->mFile->Exists(&check);
     if (check) {
-      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN, mFile);
+      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_FILE_DOES_NOT_EXIST, mFile);
     }
     else {
       r = new PostResultEvent(mRequest, mFile->mPath);
@@ -1053,22 +1056,18 @@ public:
         }
 
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
+
+	  BlobChild* actor = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
+	  if (!actor) {
+	    return NS_ERROR_FAILURE;
+	  }
+
+          DeviceStorageAddParams params;
+	  params.blobChild() = actor;
+	  params.name() = mFile->mPath;
+	  params.fullpath() = fullpath;
+
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
-
-          nsCOMPtr<nsIInputStream> stream;
-          mBlob->GetInternalStream(getter_AddRefs(stream));
-
-          InfallibleTArray<PRUint8> bits;
-          PRUint32 bufSize, numRead;
-
-          stream->Available(&bufSize);
-          bits.SetCapacity(bufSize);
-
-          void* buffer = (void*) bits.Elements();
-
-          stream->Read((char*)buffer, bufSize, &numRead);
-
-          DeviceStorageAddParams params(fullpath, bits);
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
@@ -1080,7 +1079,7 @@ public:
       {
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
-          DeviceStorageGetParams params(fullpath);
+          DeviceStorageGetParams params(mFile->mPath, fullpath);
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
