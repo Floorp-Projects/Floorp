@@ -281,7 +281,7 @@ public:
     mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
-  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static int DumpEntry(PLHashEntry *he, int i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
@@ -290,7 +290,7 @@ public:
     return HT_ENUMERATE_NEXT;
   }
 
-  static PRIntn TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
+  static int TotalEntries(PLHashEntry *he, int i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry && nsCRT::strcmp(entry->mClassName, "TOTAL") != 0) {
       entry->Total((BloatEntry*)arg);
@@ -342,7 +342,7 @@ public:
     return true;
   }
 
-  void Dump(PRIntn i, FILE* out, nsTraceRefcntImpl::StatisticsType type) {
+  void Dump(int i, FILE* out, nsTraceRefcntImpl::StatisticsType type) {
     nsTraceRefcntStats* stats = (type == nsTraceRefcntImpl::NEW_STATS) ? &mNewStats : &mAllStats;
     if (gLogLeaksOnly && !HaveLeaks(stats)) {
       return;
@@ -444,7 +444,7 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   return entry;
 }
 
-static PRIntn DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+static int DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
   serialNumberRecord* record = reinterpret_cast<serialNumberRecord *>(aHashEntry->value);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR

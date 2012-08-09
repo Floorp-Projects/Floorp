@@ -265,7 +265,7 @@ bool shutdown_server = false;
 bool do_http_proxy = false;
 bool any_host_spec_config = false;
 
-PR_CALLBACK PRIntn ClientAuthValueComparator(const void *v1, const void *v2)
+PR_CALLBACK int ClientAuthValueComparator(const void *v1, const void *v2)
 {
   int a = *static_cast<const client_auth_option*>(v1) -
           *static_cast<const client_auth_option*>(v2);
@@ -277,7 +277,7 @@ PR_CALLBACK PRIntn ClientAuthValueComparator(const void *v1, const void *v2)
     return -1;
 }
 
-static PRIntn match_hostname(PLHashEntry *he, PRIntn index, void* arg)
+static int match_hostname(PLHashEntry *he, int index, void* arg)
 {
   server_match_t *match = (server_match_t*)arg;
   if (match->fullHost.find((char*)he->key) != string::npos)
@@ -1268,21 +1268,21 @@ int parseConfigFile(const char* filePath)
   return 0;
 }
 
-PRIntn freeHostCertHashItems(PLHashEntry *he, PRIntn i, void *arg)
+int freeHostCertHashItems(PLHashEntry *he, int i, void *arg)
 {
   delete [] (char*)he->key;
   delete [] (char*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
-PRIntn freeHostRedirHashItems(PLHashEntry *he, PRIntn i, void *arg)
+int freeHostRedirHashItems(PLHashEntry *he, int i, void *arg)
 {
   delete [] (char*)he->key;
   delete [] (char*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
-PRIntn freeClientAuthHashItems(PLHashEntry *he, PRIntn i, void *arg)
+int freeClientAuthHashItems(PLHashEntry *he, int i, void *arg)
 {
   delete [] (char*)he->key;
   delete (client_auth_option*)he->value;

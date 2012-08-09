@@ -54,7 +54,7 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 }
 
 
-PRIntn
+int
 nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 {
   NS_ASSERTION(key1 && key2, "Null key passed to NodeInfoInnerKeyCompare!");
@@ -183,8 +183,8 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 }
 
 // static
-PRIntn
-nsNodeInfoManager::DropNodeInfoDocument(PLHashEntry *he, PRIntn hashIndex, void *arg)
+int
+nsNodeInfoManager::DropNodeInfoDocument(PLHashEntry *he, int hashIndex, void *arg)
 {
   static_cast<nsINodeInfo*>(he->value)->mDocument = nullptr;
   return HT_ENUMERATE_NEXT;

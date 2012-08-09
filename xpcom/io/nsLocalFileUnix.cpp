@@ -417,28 +417,28 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
 }
 
 static int
-do_create(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
+do_create(const char *path, int flags, mode_t mode, PRFileDesc **_retval)
 {
     *_retval = PR_Open(path, flags, mode);
     return *_retval ? 0 : -1;
 }
 
 static int
-do_mkdir(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
+do_mkdir(const char *path, int flags, mode_t mode, PRFileDesc **_retval)
 {
     *_retval = nullptr;
     return mkdir(path, mode);
 }
 
 nsresult
-nsLocalFile::CreateAndKeepOpen(PRUint32 type, PRIntn flags,
+nsLocalFile::CreateAndKeepOpen(PRUint32 type, int flags,
                                PRUint32 permissions, PRFileDesc **_retval)
 {
     if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
         return NS_ERROR_FILE_UNKNOWN_TYPE;
 
     int result;
-    int (*createFunc)(const char *, PRIntn, mode_t, PRFileDesc **) =
+    int (*createFunc)(const char *, int, mode_t, PRFileDesc **) =
         (type == NORMAL_FILE_TYPE) ? do_create : do_mkdir;
 
     result = createFunc(mPath.get(), flags, permissions, _retval);
