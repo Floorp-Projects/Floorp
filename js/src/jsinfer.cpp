@@ -5712,6 +5712,48 @@ TypeCompartment::sweep(FreeOp *fop)
 
     pendingArray = NULL;
     pendingCapacity = 0;
+
+    sweepCompilerOutputs(fop);
+}
+
+void
+TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
+{
+
+    if (constrainedOutputs) {
+        bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
+        if (isCompiling && !compartment()->activeAnalysis)
+        {
+#if DEBUG
+            for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
+                CompilerOutput &co = (*constrainedOutputs)[i];
+                JS_ASSERT(!co.isValid());
+            }
+#endif
+            fop->delete_(constrainedOutputs);
+            constrainedOutputs = NULL;
+        } else {
+            // A Compilation is running and the AutoEnterCompilation class has
+            // captured an index into the constrained outputs vector and
+            // potentially created multiple types with this index.  Instead, we
+            // invalidate all compilations except the one running now.
+            size_t len = constrainedOutputs->length();
+            if (isCompiling) {
+                len--;
+                JS_ASSERT(compiledInfo.outputIndex == len);
+            }
+            for (unsigned i = 0; i < len; i++) {
+                CompilerOutput &co = (*constrainedOutputs)[i];
+                JS_ASSERT(!co.isValid());
+                co.invalidate();
+            }
+        }
+    }
+
+    if (pendingRecompiles) {
+        fop->delete_(pendingRecompiles);
+        pendingRecompiles = NULL;
+    }
 }
 
 void
