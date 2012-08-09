@@ -15,6 +15,7 @@ XPIDL_MODULE   = dom_apps
 GRE_MODULE     = 1
 
 XPIDLSRCS =                               \
+            mozIApplication.idl \
             nsIDOMApplicationRegistry.idl \
             nsIAppsService.idl \
             nsIDOMMozApplicationEvent.idl \
