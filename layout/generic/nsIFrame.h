@@ -1001,7 +1001,7 @@ public:
   static bool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                                    const nsSize& aFrameSize,
                                    const nsSize& aBorderArea,
-                                   PRIntn aSkipSides,
+                                   int aSkipSides,
                                    nscoord aRadii[8]);
 
   /*
@@ -2357,7 +2357,7 @@ public:
    * Determine whether borders should not be painted on certain sides of the
    * frame.
    */
-  virtual PRIntn GetSkipSides() const { return 0; }
+  virtual int GetSkipSides() const { return 0; }
 
   /**
    * @returns true if this frame is selected.

@@ -425,10 +425,10 @@ TestRunner.testFinished = function(tests) {
 
     function runNextTest() {
         if (TestRunner.currentTestURL != TestRunner.getLoadedTestURL()) {
-            TestRunner.log("TEST-UNEXPECTED-FAIL | " +
-                           TestRunner.currentTestURL +
-                           " | finished in a non-clean fashion (in " +
-                           TestRunner.getLoadedTestURL() + ")");
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                             TestRunner.currentTestURL +
+                             " | finished in a non-clean fashion (in " +
+                             TestRunner.getLoadedTestURL() + ")");
             tests.push({ result: false });
         }
 

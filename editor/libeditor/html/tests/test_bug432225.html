@@ -36,10 +36,10 @@ function editDoc() {
 function getSpellCheckSelection() {
   var Ci = Components.interfaces;
   var win = editDoc().defaultView;
-  var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIEditingSession);
+  var editingSession = SpecialPowers.wrap(win.QueryInterface(Ci.nsIInterfaceRequestor))
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
   var editor = editingSession.getEditorForWindow(win);
   var selcon = editor.selectionController;
   return selcon.getSelection(selcon.SELECTION_SPELLCHECK);  
@@ -51,7 +51,6 @@ function runTest() {
 }  
  
 function addWords(aLimit) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   if (aLimit == 0) {
     is(isSpellingCheckOk(), true, "All misspellings accounted for.");
     SimpleTest.finish();

@@ -18,6 +18,7 @@ class nsPIDOMWindow;
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsInterfaceHashtable.h"
+#include "nsIPrincipal.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
 #include "nsIDOMEventListener.h"
@@ -86,7 +87,7 @@ public:
   NS_DECL_NSIDOMDEVICESTORAGECURSOR
 
   nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
-                           nsIURI* aURI,
+                           nsIPrincipal* aPrincipal,
                            DeviceStorageFile* aFile,
                            PRUint64 aSince);
 
@@ -102,7 +103,7 @@ private:
   ~nsDOMDeviceStorageCursor();
 
   nsRefPtr<DeviceStorageFile> mFile;
-  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 //helpers

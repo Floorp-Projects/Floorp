@@ -28,7 +28,6 @@ int main()
   SHOW_TYPE(PRUint8);
   SHOW_TYPE(PRInt16);
   SHOW_TYPE(PRUint32);
-  SHOW_TYPE(PRFloat64);
   SHOW_TYPE(void*);
   SHOW_TYPE(double);
   SHOW_TYPE(short[7]);

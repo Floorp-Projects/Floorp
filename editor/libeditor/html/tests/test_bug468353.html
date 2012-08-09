@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=468353
 var styleSheets = null;
 
 function checkStylesheets() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   // Evidently RemoveStyleSheet is the only method in nsIEditorStyleSheets
   // that would throw. RemoveOverrideStyleSheet returns NS_OK even if the
   // sheet is not there
@@ -43,8 +41,6 @@ function checkStylesheets() {
 }
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   const Ci = Components.interfaces;
   const Cc = Components.classes;
 
@@ -58,7 +54,7 @@ function runTest() {
   editdoc.designMode='on';
 
   // Hold the reference to the editor
-  editor = editframe.QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)
@@ -77,7 +73,7 @@ function runTest() {
   editdoc.body.contentEditable = true;
   
   // Hold the reference to the editor
-  editor = editframe.QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)
@@ -94,7 +90,7 @@ function runTest() {
   editdoc.designMode = "off";
 
   // Hold the reference to the editor
-  editor = editframe.QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)

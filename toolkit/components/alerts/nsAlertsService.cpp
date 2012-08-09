@@ -8,7 +8,7 @@
 
 #include "nsAlertsService.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #else
 
@@ -24,7 +24,7 @@
 
 #define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xul"
 
-#endif // !ANDROID
+#endif // !MOZ_WIDGET_ANDROID
 
 using namespace mozilla;
 
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
     return NS_OK;
   }
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertCookie,
                                                           aAlertListener, aAlertName);
   return NS_OK;
@@ -108,6 +108,10 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
       aAlertListener->Observe(NULL, "alertfinished", PromiseFlatString(aAlertCookie).get());
     return NS_OK;
   }
+
+#ifdef XP_MACOSX
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIDOMWindow> newWindow;
@@ -178,7 +182,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                  "chrome,dialog=yes,titlebar=no,popup=yes", argsArray,
                  getter_AddRefs(newWindow));
   return rv;
-#endif // !ANDROID
+#endif // !MOZ_WIDGET_ANDROID
 }
 
 NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
@@ -186,20 +190,20 @@ NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
                                           PRInt64 aProgressMax,
                                           const nsAString & aAlertText)
 {
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->AlertsProgressListener_OnProgress(aAlertName, aProgress, aProgressMax, aAlertText);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif // !ANDROID
+#endif // !MOZ_WIDGET_ANDROID
 }
 
 NS_IMETHODIMP nsAlertsService::OnCancel(const nsAString & aAlertName)
 {
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->AlertsProgressListener_OnCancel(aAlertName);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif // !ANDROID
+#endif // !MOZ_WIDGET_ANDROID
 }

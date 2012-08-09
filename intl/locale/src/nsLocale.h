@@ -41,8 +41,8 @@ protected:
 	NS_IMETHOD AddCategory(const nsAString& category, const nsAString& value);
 
 	static PLHashNumber Hash_HashFunction(const void* key);
-	static PRIntn Hash_CompareNSString(const void* s1, const void* s2);
-	static PRIntn Hash_EnumerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
+	static int Hash_CompareNSString(const void* s1, const void* s2);
+	static int Hash_EnumerateDelete(PLHashEntry *he, int hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;
 	PRUint32		fCategoryCount;

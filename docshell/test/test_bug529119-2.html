@@ -42,8 +42,6 @@ function pollForPage(expectErrorPage, f, w)
 
 function windowLoaded()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   /* 2. We have successfully loaded a page, now go to a faulty URL */
   // XXX The test fails when we change the location synchronously 
   window.setTimeout(function() {
@@ -52,11 +50,9 @@ function windowLoaded()
 
   pollForPage(true, function(succeeded) {
     ok(succeeded, "Waiting for error page succeeded");
-    
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     /* 3. now, while we are on the error page, navigate back */
     try {
-      w.back();
+      SpecialPowers.wrap(w).back();
     }
     catch(ex) {
       ok(false, "w.back() threw " + ex);
@@ -64,11 +60,9 @@ function windowLoaded()
 
     pollForPage(false, function(succeeded) {
       ok(succeeded, "Waiting for original page succeeded");
-      
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       /* 4-finish, check we are back at the original page */
-      isnot(w.location.href, faultyURL, "Is on an error page");
-      is(w.location.href, workingURL, "Is not on the previous page");
+      isnot(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");
+      is(SpecialPowers.wrap(w).location.href, workingURL, "Is not on the previous page");
       w.close();
       SimpleTest.finish();
     }, w);

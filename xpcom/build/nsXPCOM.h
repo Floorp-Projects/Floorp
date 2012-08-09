@@ -214,7 +214,7 @@ NS_NewNativeLocalFile(const nsACString &path,
  * @note         This function is thread-safe.
  */
 XPCOM_API(void*)
-NS_Alloc(PRSize size);
+NS_Alloc(size_t size);
 
 /**
  * Reallocates a block of memory to a new size.
@@ -232,7 +232,7 @@ NS_Alloc(PRSize size);
  * allocation fails, the process aborts.
  */
 XPCOM_API(void*)
-NS_Realloc(void* ptr, PRSize size);
+NS_Realloc(void* ptr, size_t size);
 
 /**
  * Frees a block of memory. Null is a permissible value, in which case no
