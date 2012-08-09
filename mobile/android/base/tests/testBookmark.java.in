@@ -85,6 +85,15 @@ public class testBookmark extends BaseTest  {
 
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
+        if (bookmarksList.getChildCount() != 4) {
+            mAsserter.dumpLog("Unexpected child count; dumping bookmarks...");
+            for (int i = 0; i < bookmarksList.getChildCount(); i++) {
+                Cursor c = (Cursor)bookmarksList.getItemAtPosition(i);
+                String url = c.getString(c.getColumnIndexOrThrow("url"));
+                mAsserter.dumpLog(url);
+            }
+        }
+
         // No folders should be visible if no desktop bookmarks exist
         mAsserter.is(bookmarksList.getChildCount(), 4,
             "bookmarks list has 4 children (the default bookmarks)");
