@@ -230,16 +230,16 @@ public:
 #ifdef DEBUG
     virtual PContentPermissionRequestChild* SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
                                                                                      const nsCString& aType,
-                                                                                     const URI& aUri)
+                                                                                     const IPC::Principal& aPrincipal)
     {
       PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
-      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aUri);
+      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aPrincipal);
       child->mIPCOpen = true;
       return request;
     }
 #endif /* DEBUG */
 
-    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
+    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
     virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URI& manifestURI,

@@ -353,7 +353,16 @@ load 707098.html
 load 722137.html
 load 725535.html
 load 727601.html
-skip-if(Android&&!browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
+# Bug 778067: This test fails when we try to create a popup window in
+# <browser remote>, because TabParent::AnswerOpenWindow() can't deal
+# with creating a popup window this early during page load.  However,
+# <iframe mobrowser> is set up to handle this, and <browser remote>
+# isn't shipping again in the foreseeable future, so disable for now.
+# (The parent process in this case is behaving "well" by crashing the
+# content process when it gets into an unexpected state, it's just
+# that the reftest harness can't handle restarting crashed content
+# processes so we time out.)
+skip-if(Android||browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 asserts-if(winWidget,0-2) load 736924-1.html # bug 738803
 load 749816-1.html

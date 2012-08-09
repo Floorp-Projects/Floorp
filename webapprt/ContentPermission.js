@@ -23,7 +23,7 @@ ContentPermission.prototype = {
     }
 
     // Reuse any remembered permission preferences
-    let result = Services.perms.testExactPermission(request.uri, "geo");
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, "geo");
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return;
@@ -73,7 +73,7 @@ ContentPermission.prototype = {
       if (choice != 0) {
         action = Ci.nsIPermissionManager.DENY_ACTION;
       }
-      Services.perms.add(request.uri, "geo", action);
+      Services.perms.addFromPrincipal(request.principal, "geo", action);
     }
 
     // Trigger the selected choice

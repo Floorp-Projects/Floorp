@@ -30,11 +30,14 @@ public:
     mFilename(aFilename),
     mStart(aStart),
     mLength(aLength),
-    mRunning(false)
-  {}
-
-  ~ArchiveInputStream()
+    mStatus(NotStarted)
   {
+    MOZ_COUNT_CTOR(ArchiveInputStream);
+  }
+
+  virtual ~ArchiveInputStream()
+  {
+    MOZ_COUNT_DTOR(ArchiveInputStream);
     Close();
   }
 
@@ -53,7 +56,11 @@ private: // data
 
   z_stream mZs;
 
-  bool mRunning;
+  enum {
+    NotStarted,
+    Started,
+    Done
+  } mStatus;
 
   struct {
     nsCOMPtr<nsIInputStream> inputStream;
@@ -147,16 +154,15 @@ ArchiveInputStream::Init()
     }
   }
 
-  mRunning = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ArchiveInputStream::Close()
 {
-  if (mRunning) {
+  if (mStatus != NotStarted) {
     inflateEnd(&mZs);
-    mRunning = false;
+    mStatus = NotStarted;
   }
 
   return NS_OK;
@@ -177,18 +183,22 @@ ArchiveInputStream::Read(char* aBuffer,
   NS_ENSURE_ARG_POINTER(aBuffer);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  PRUint32 ret;
   nsresult rv;
 
   // This is the first time:
-  if (!mRunning) {
+  if (mStatus == NotStarted) {
+    mStatus = Started;
+
     rv = Init();
     if (rv != NS_OK)
       return rv;
+
+    // Let's set avail_out to -1 so we read something from the stream.
+    mZs.avail_out = (uInt)-1;
   }
 
   // Nothing more can be read
-  if (mData.sizeToBeRead == 0) {
+  if (mStatus == Done) {
     *_retval = 0;
     return NS_OK;
   }
@@ -200,15 +210,20 @@ ArchiveInputStream::Read(char* aBuffer,
                                  (mData.sizeToBeRead > aCount ?
                                       aCount : mData.sizeToBeRead),
                                  _retval);
-    if (rv == NS_OK)
+    if (rv == NS_OK) {
       mData.sizeToBeRead -= *_retval;
+
+      if (mData.sizeToBeRead == 0)
+        mStatus = Done;
+    }
 
     return rv;
   }
 
   // We have nothing ready to be processed:
-  if (mZs.avail_out == 0)
+  if (mZs.avail_out != 0 && mData.sizeToBeRead != 0)
   {
+    PRUint32 ret;
     rv = mData.inputStream->Read((char*)mData.input,
                                  (mData.sizeToBeRead > sizeof(mData.input) ?
                                       sizeof(mData.input) : mData.sizeToBeRead),
@@ -230,9 +245,12 @@ ArchiveInputStream::Read(char* aBuffer,
   mZs.avail_out = aCount;
   mZs.next_out = (unsigned char*)aBuffer;
 
-  ret = inflate(&mZs, mData.sizeToBeRead ? Z_NO_FLUSH : Z_FINISH);
-  if (ret != Z_OK && ret != Z_STREAM_END)
+  int ret = inflate(&mZs, mData.sizeToBeRead ? Z_NO_FLUSH : Z_FINISH);
+  if (ret != Z_BUF_ERROR && ret != Z_OK && ret != Z_STREAM_END)
     return NS_ERROR_UNEXPECTED;
+
+  if (ret == Z_STREAM_END)
+    mStatus = Done;
 
   *_retval = aCount - mZs.avail_out;
   return NS_OK;

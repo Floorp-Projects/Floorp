@@ -3551,7 +3551,7 @@ pref("layers.prefer-d3d9", false);
 pref("geo.enabled", true);
 
 // Enable/Disable the orientation API for content
-pref("device.motion.enabled", true);
+pref("device.sensors.enabled", true);
 
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);

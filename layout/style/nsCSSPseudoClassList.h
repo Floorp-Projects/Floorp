@@ -9,45 +9,27 @@
  * This file contains the list of nsIAtoms and their values for CSS
  * pseudo-classes.  It is designed to be used as inline input to
  * nsCSSPseudoClasses.cpp *only* through the magic of C preprocessing.
- * All entries must be enclosed in the macros CSS_PSEUDO_CLASS,
- * CSS_STATE_DEPENDENT_PSEUDO_CLASS, or CSS_STATE_PSEUDO_CLASS which
- * will have cruel and unusual things done to them.  The entries should
- * be kept in some sort of logical order.  The first argument to
- * CSS_PSEUDO_CLASS is the C++ identifier of the atom.  The second
- * argument is the string value of the atom.
- * CSS_STATE_DEPENDENT_PSEUDO_CLASS and CSS_STATE_PSEUDO_CLASS also take
- * the name of the state bits that the class corresponds to.  Only one
- * of the bits needs to match for a CSS_STATE_PSEUDO_CLASS to match;
- * CSS_STATE_DEPENDENT_PSEUDO_CLASS matching depends on a customized per-class
- * algorithm which should be defined in SelectorMatches() in
- * nsCSSRuleProcessor.cpp.
- *
- * If CSS_STATE_PSEUDO_CLASS is not defined, it'll be automatically
- * defined to CSS_STATE_DEPENDENT_PSEUDO_CLASS;
- * if CSS_STATE_DEPENDENT_PSEUDO_CLASS is not defined, it'll be
- * automatically defined to CSS_PSEUDO_CLASS.
+ * All entries must be enclosed in the macros CSS_PSEUDO_CLASS or
+ * CSS_STATE_PSEUDO_CLASS which will have cruel and unusual things
+ * done to it.  The entries should be kept in some sort of logical
+ * order.  The first argument to CSS_PSEUDO_CLASS is the C++
+ * identifier of the atom.  The second argument is the string value of
+ * the atom.  CSS_STATE_PSEUDO_CLASS also takes the name of the state
+ * bits that the class corresponds to.  Only one of the bits needs to
+ * match for the pseudo-class to match.  If CSS_STATE_PSEUDO_CLASS is
+ * not defined, it'll be automatically defined to CSS_PSEUDO_CLASS.
  */
 
 // OUTPUT_CLASS=nsCSSPseudoClasses
 // MACRO_NAME=CSS_PSEUDO_CLASS
 
-#ifdef DEFINED_CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#error "CSS_STATE_DEPENDENT_PSEUDO_CLASS shouldn't be defined"
-#endif
-
-#ifndef CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#define CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _bit) \
-  CSS_PSEUDO_CLASS(_name, _value)
-#define DEFINED_CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#endif
-
 #ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
-#error "CSS_STATE_PSEUDO_CLASS shouldn't be defined"
+#error "This shouldn't be defined"
 #endif
 
 #ifndef CSS_STATE_PSEUDO_CLASS
 #define CSS_STATE_PSEUDO_CLASS(_name, _value, _bit) \
-  CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _bit)
+  CSS_PSEUDO_CLASS(_name, _value)
 #define DEFINED_CSS_STATE_PSEUDO_CLASS
 #endif
 
@@ -107,11 +89,6 @@ CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero")
 // :not needs to come at the end of the non-bit pseudo-class list, since
 // it doesn't actually get directly matched on in SelectorMatches.
 CSS_PSEUDO_CLASS(notPseudo, ":not")
-
-// :dir(ltr) and :dir(rtl) match elements whose resolved directionality
-// in the markup language is ltr or rtl respectively
-CSS_STATE_DEPENDENT_PSEUDO_CLASS(dir, ":dir",
-                                 NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
 CSS_STATE_PSEUDO_CLASS(link, ":link", NS_EVENT_STATE_UNVISITED)
 // what matches :link or :visited
@@ -200,9 +177,4 @@ CSS_STATE_PSEUDO_CLASS(mozMeterSubSubOptimum, ":-moz-meter-sub-sub-optimum",
 #ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef CSS_STATE_PSEUDO_CLASS
-#endif
-
-#ifdef DEFINED_CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#undef DEFINED_CSS_STATE_DEPENDENT_PSEUDO_CLASS
-#undef CSS_STATE_DEPENDENT_PSEUDO_CLASS
 #endif
