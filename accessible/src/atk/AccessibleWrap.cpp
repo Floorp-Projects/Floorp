@@ -11,6 +11,7 @@
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
+#include "nsIAccessibleTable.h"
 #include "RootAccessible.h"
 #include "nsIAccessibleValue.h"
 #include "nsMai.h"

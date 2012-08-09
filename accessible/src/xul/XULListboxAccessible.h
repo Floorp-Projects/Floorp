@@ -90,6 +90,7 @@ public:
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
   virtual void SelectRow(uint32_t aRowIdx);
   virtual void UnselectRow(uint32_t aRowIdx);
+  virtual Accessible* AsAccessible() { return this; }
 
   // nsAccessNode
   virtual void Shutdown();
@@ -164,12 +165,20 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTableCell
-  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL
+  NS_FORWARD_NSIACCESSIBLETABLECELL(xpcAccessibleTableCell::)
 
   // Accessible
+  virtual TableCellAccessible* AsTableCell() { return this; }
   virtual void Shutdown();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual a11y::role NativeRole();
+
+  // TableCellAccessible
+  virtual TableAccessible* Table() const MOZ_OVERRIDE;
+  virtual uint32_t ColIdx() const MOZ_OVERRIDE;
+  virtual uint32_t RowIdx() const MOZ_OVERRIDE;
+  virtual void ColHeaderCells(nsTArray<Accessible*>* aHeaderCells) MOZ_OVERRIDE;
+  virtual bool Selected() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
