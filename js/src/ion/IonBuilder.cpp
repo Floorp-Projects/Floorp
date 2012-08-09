@@ -3100,12 +3100,6 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
         fallbackBlock->push(unbox);
     }
 
-    // Re-create the stack on the fallback block to reflect the pushed arguments.
-    // When pushing the function arguments, wrap them with MPassArgs
-    // because they will be popped and called anyway.
-    for (int i = argc; i >= 0; i--)
-        fallbackBlock->push(current->peek(-((int) i + 1)));
-
     // Finally create a fallbackEnd block to do the actual call.  The fallbackEnd block will
     // have the |pc| restored to the current PC.
     MBasicBlock *fallbackEndBlock = newBlock(fallbackBlock, pc, preCallResumePoint);
