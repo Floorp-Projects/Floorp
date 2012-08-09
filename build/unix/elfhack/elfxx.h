@@ -135,6 +135,7 @@ public:
     ElfLocation(unsigned int location, Elf *elf);
     unsigned int getValue();
     ElfSection *getSection() { return section; }
+    const char *getBuffer();
 };
 
 class ElfSize: public ElfValue {
@@ -273,6 +274,7 @@ public:
 
     ElfDynamic_Section *getDynSection();
 
+    void normalize();
     void write(std::ofstream &file);
 
     char getClass();
@@ -663,6 +665,10 @@ inline ElfLocation::ElfLocation(unsigned int location, Elf *elf) {
 
 inline unsigned int ElfLocation::getValue() {
     return (section ? section->getAddr() : 0) + offset;
+}
+
+inline const char *ElfLocation::getBuffer() {
+    return section ? section->getData() + offset : NULL;
 }
 
 inline unsigned int ElfSize::getValue() {
