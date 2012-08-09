@@ -2183,23 +2183,6 @@ CutPrefix(const char *aName) {
 
 // static
 nsresult
-nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
-{
-  nsScriptNameSpaceManager *nameSpaceManager =
-    nsJSRuntime::GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-
-  nameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
-                                      aClassInfoID,
-                                      sClassInfoData[aClassInfoID].mChromeOnly,
-                                      sClassInfoData[aClassInfoID].mDisabled,
-                                      &sClassInfoData[aClassInfoID].mNameUTF16);
-
-  return NS_OK;
-}
-
-// static
-nsresult
 nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
 {
   nsScriptNameSpaceManager *nameSpaceManager =
@@ -4543,7 +4526,9 @@ nsDOMClassInfo::Init()
   PRInt32 i;
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
-    RegisterClassName(i);
+    nsDOMClassInfoData& data = sClassInfoData[i];
+    nameSpaceManager->RegisterClassName(data.mName, i, data.mChromeOnly,
+                                        data.mDisabled, &data.mNameUTF16);
   }
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
