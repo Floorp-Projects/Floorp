@@ -680,8 +680,9 @@ RadioInterfaceLayer.prototype = {
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
-        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
-                                     nsIAudioManager.FORCE_NONE);
+        let force = this.speakerEnabled ? nsIAudioManager.FORCE_SPEAKER
+                                        : nsIAudioManager.FORCE_NONE;
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
         break;
