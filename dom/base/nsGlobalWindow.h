@@ -905,6 +905,9 @@ protected:
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
+  // Helper for creating performance objects.
+  void CreatePerformanceObjectIfNeeded();
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -990,6 +993,7 @@ protected:
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
+  // mPerformance is only used on inner windows.
   nsRefPtr<nsPerformance>       mPerformance;
   nsRefPtr<nsDOMWindowList>     mFrames;
   nsRefPtr<nsBarProp>           mMenubar;
