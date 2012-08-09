@@ -1261,7 +1261,7 @@ MediaStreamGraphImpl::RunThread()
     {
       // Not using MonitorAutoLock since we need to unlock in a way
       // that doesn't match lexical scopes.
-      mMonitor.Lock();
+      MonitorAutoLock lock(mMonitor);
       PrepareUpdatesToMainThreadState();
       if (mForceShutDown || (IsEmpty() && mMessageQueue.IsEmpty())) {
         // Enter shutdown mode. The stable-state handler will detect this
@@ -1269,18 +1269,8 @@ MediaStreamGraphImpl::RunThread()
         LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p waiting for main thread cleanup", this));
         // Commit to shutting down this graph object.
         mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
-        // Move mStreams to a temporary array, because after we unlock
-        // mMonitor, 'this' may be deleted by the main thread.
-        nsTArray<nsRefPtr<MediaStream> > streams;
-        mStreams.SwapElements(streams);
-
-        mMonitor.Unlock();
-        // Unlock mMonitor while destroying our streams, since
-        // SourceMediaStream::DestroyImpl needs to take its lock while
-        // we're not holding mMonitor.
-        for (PRUint32 i = 0; i < streams.Length(); ++i) {
-          streams[i]->DestroyImpl();
-        }
+        // No need to Destroy streams here. The main-thread owner of each
+        // stream is responsible for calling Destroy them.
         return;
       }
 
@@ -1308,8 +1298,6 @@ MediaStreamGraphImpl::RunThread()
       mWaitState = WAITSTATE_RUNNING;
       mNeedAnotherIteration = false;
       messageQueue.SwapElements(mMessageQueue);
-
-      mMonitor.Unlock();
     }
   }
 }
