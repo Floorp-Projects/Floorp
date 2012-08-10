@@ -1,4 +1,7 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,6 +18,8 @@
 #include "jsscript.h"
 
 #include "jsobjinlines.h"
+
+#include "ion/IonCode.h"
 
 #ifdef JS_THREADSAFE
 
@@ -193,7 +198,16 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         break;
     }
     case JSTRACE_IONCODE:
+    {
+#ifdef JS_METHODJIT
+# ifdef JS_ION
+        ion::IonCode *code = static_cast<ion::IonCode *>(thing);
+        cStats->gcHeapScripts += thingSize;
+        cStats->mjitData += code->bufferSize();
+# endif
+#endif
         break;
+    }
     case JSTRACE_TYPE_OBJECT:
     {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
