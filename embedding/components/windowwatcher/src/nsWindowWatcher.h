@@ -72,14 +72,15 @@ protected:
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
   // (which means called from script) or called via OpenWindow.
-  nsresult OpenWindowJSInternal(nsIDOMWindow *aParent,
-                                const char *aUrl,
-                                const char *aName,
-                                const char *aFeatures,
-                                bool aDialog,
-                                nsIArray *argv,
-                                bool aCalledFromJS,
-                                nsIDOMWindow **_retval);
+  nsresult OpenWindowInternal(nsIDOMWindow *aParent,
+                              const char *aUrl,
+                              const char *aName,
+                              const char *aFeatures,
+                              bool aCalledFromJS,
+                              bool aDialog,
+                              bool aNavigate,
+                              nsIArray *argv,
+                              nsIDOMWindow **_retval);
 
   static JSContext *GetJSContextFromWindow(nsIDOMWindow *aWindow);
   static JSContext *GetJSContextFromCallStack();
