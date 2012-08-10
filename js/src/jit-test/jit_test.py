@@ -111,6 +111,8 @@ class Test:
                         test.jitflags.append('-d')
                     elif name == 'mjit':
                         test.jitflags.append('-m')
+                    elif name == 'ion-eager':
+                        test.jitflags.append('--ion-eager')
                     elif name == 'dump-bytecode':
                         test.jitflags.append('-D')
                     else:
