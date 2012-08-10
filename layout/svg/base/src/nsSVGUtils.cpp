@@ -54,6 +54,7 @@
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
+#include "nsTextFrame.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/unused.h"
 
@@ -1758,12 +1759,12 @@ nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
 static gfxRect
 PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                              nsSVGGeometryFrame* aFrame,
-                              double styleExpansionFactor,
+                              nsIFrame* aFrame,
+                              double aStyleExpansionFactor,
                               const gfxMatrix& aMatrix)
 {
   double style_expansion =
-    styleExpansionFactor * nsSVGUtils::GetStrokeWidth(aFrame);
+    aStyleExpansionFactor * nsSVGUtils::GetStrokeWidth(aFrame);
 
   gfxMatrix matrix = aMatrix;
   matrix.Multiply(nsSVGUtils::GetStrokeTransform(aFrame));
@@ -1781,6 +1782,15 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsSVGGeometryFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
+  return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
+}
+
+/*static*/ gfxRect
+nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
+                                          nsTextFrame* aFrame,
+                                          const gfxMatrix& aMatrix)
+{
+  NS_ASSERTION(aFrame->IsSVGText(), "expected an nsTextFrame for SVG text");
   return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
 }
 
