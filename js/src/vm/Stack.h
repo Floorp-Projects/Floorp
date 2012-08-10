@@ -1622,7 +1622,8 @@ class ContextStack
      */
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                          JSFunction &callee, JSScript *script,
-                         InitialFrameFlags initial);
+                         InitialFrameFlags initial,
+                         MaybeReportError report = REPORT_ERROR);
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                          JSFunction &callee, JSScript *script,
                          InitialFrameFlags initial, Value **stackLimit);

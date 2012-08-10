@@ -203,7 +203,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     if (JSOp(*regs.pc) == JSOP_NEW)
         flags = INITIAL_CONSTRUCT;
 
-    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, flags))
+    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, flags, DONT_REPORT_ERROR))
         return NULL;
 
     StackFrame *fp = cx->stack.fp();
@@ -268,7 +268,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     }
 
     if (!fp)
-        return BAILOUT_RETURN_FATAL_ERROR;
+        return BAILOUT_RETURN_OVERRECURSED;
 
     br->setEntryFrame(fp);
 
@@ -289,7 +289,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
         fp = PushInlinedFrame(cx, fp);
         if (!fp)
-            return BAILOUT_RETURN_FATAL_ERROR;
+            return BAILOUT_RETURN_OVERRECURSED;
     }
 
     jsbytecode *bailoutPc = fp->script()->code + iter.pcOffset();
@@ -364,12 +364,7 @@ ion::Bailout(BailoutStack *sp)
     uint32 retval = ConvertFrames(cx, activation, iter);
 
     EnsureExitFrame(iter.jsFrame());
-
-    if (retval != BAILOUT_RETURN_FATAL_ERROR)
-        return retval;
-
-    cx->delete_(activation->maybeTakeBailout());
-    return BAILOUT_RETURN_FATAL_ERROR;
+    return retval;
 }
 
 uint32
@@ -383,10 +378,6 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     IonActivationIterator ionActivations(cx);
     IonBailoutIterator iter(ionActivations, sp);
     IonActivation *activation = ionActivations.activation();
-
-    // IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    // IonActivation *activation = cx->runtime->ionActivation;
-    // FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
 
     IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", iter.snapshotOffset());
 
@@ -433,7 +424,6 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         return retval;
     }
 
-    cx->delete_(activation->maybeTakeBailout());
     return BAILOUT_RETURN_FATAL_ERROR;
 }
 

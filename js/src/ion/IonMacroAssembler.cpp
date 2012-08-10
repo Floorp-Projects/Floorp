@@ -499,6 +499,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     Label osr;
     Label recompile;
     Label boundscheck;
+    Label overrecursed;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -517,6 +518,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &recompile);
 
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &boundscheck);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
 
     // Fall-through: force invalidation.
     {
@@ -555,7 +557,17 @@ MacroAssembler::generateBailoutTail(Register scratch)
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
 
         branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        // Fall-through to the interpreter.
+        jump(&interpret);
+    }
+
+    // Throw an over-recursion error.
+    bind(&overrecursed);
+    {
+        loadJSContext(ReturnReg);
+        setupUnalignedABICall(1, scratch);
+        passABIArg(ReturnReg);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_ReportOverRecursed));
+        jump(&exception);
     }
 
     bind(&interpret);
