@@ -36,7 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
-  ["Readability", "chrome://browser/content/Readability.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
@@ -2865,7 +2864,10 @@ Tab.prototype = {
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this.id, function (article) {
-          if (article == null)
+          // Do nothing if there's no article or the page in this tab has
+          // changed
+          let tabURL = this.browser.currentURI.specIgnoringRef;
+          if (article == null || (article.url != tabURL))
             return;
 
           sendMessageToJava({
@@ -6440,9 +6442,6 @@ let Reader = {
             return;
           }
 
-          // Append URL to the article data
-          article.url = url;
-
           callback(article);
         }.bind(this));
       }.bind(this));
@@ -6550,8 +6549,20 @@ let Reader = {
   },
 
   _readerParse: function Reader_readerParse(uri, doc, callback) {
+    let worker = new ChromeWorker("readerWorker.js");
+    worker.onmessage = function (evt) {
+      let article = evt.data;
+
+      // Append URL to the article data. specIgnoringRef will ignore any hash
+      // in the URL.
+      if (article)
+        article.url = uri.specIgnoringRef;
+
+      callback(article);
+    };
+
     try {
-      new Readability({
+      worker.postMessage({
         uri: {
           spec: uri.spec,
           host: uri.host,
@@ -6559,8 +6570,8 @@ let Reader = {
           scheme: uri.scheme,
           pathBase: Services.io.newURI(".", null, uri).spec
         },
-        doc: doc
-      }).parse(callback);
+        doc: new XMLSerializer().serializeToString(doc)
+      });
     } catch (e) {
       dump("Reader: could not build Readability arguments: " + e);
       callback(null);
@@ -6644,9 +6655,6 @@ let Reader = {
           }
 
           this.log("Parsing has been successful");
-
-          // Append URL to the article data
-          article.url = url;
 
           this._runCallbacksAndFinish(request, article);
         }.bind(this));
