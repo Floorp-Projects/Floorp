@@ -853,7 +853,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
             pd[i].id = IdToValue(props[i]);
             if (!js_AddRoot(cx, &pd[i].value, NULL))
                 goto bad;
-            if (!Proxy::get(cx, obj, obj, props[i], &pd[i].value))
+            if (!Proxy::get(cx, obj, obj, props.handleAt(i), MutableHandleValue::fromMarkedLocation(&pd[i].value)))
                 goto bad;
         }
 
