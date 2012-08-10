@@ -49,9 +49,9 @@ public:
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor);
   NS_IMETHOD DetachEditor();
-  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+  NS_IMETHOD BeforeEdit(OperationID action,
                         nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+  NS_IMETHOD AfterEdit(OperationID action,
                        nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(mozilla::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled);
@@ -101,7 +101,7 @@ public:
 protected:
 
   // nsTextEditRules implementation methods
-  nsresult WillInsertText(  nsEditor::OperationID aAction,
+  nsresult WillInsertText(  OperationID aAction,
                             mozilla::Selection* aSelection,
                             bool            *aCancel,
                             bool            *aHandled,
@@ -233,7 +233,7 @@ protected:
                                                // characters not visually 
                                                // adjacent to the caret without
                                                // moving the caret first.
-  nsEditor::OperationID mTheAction;     // the top level editor action
+  OperationID mTheAction;     // the top level editor action
   nsCOMPtr<nsITimer>   mTimer;
   PRUint32             mLastStart, mLastLength;
 
@@ -248,7 +248,7 @@ class nsTextRulesInfo : public nsRulesInfo
 {
  public:
  
-  nsTextRulesInfo(nsEditor::OperationID aAction) :
+  nsTextRulesInfo(OperationID aAction) :
     nsRulesInfo(aAction),
     inString(0),
     outString(0),

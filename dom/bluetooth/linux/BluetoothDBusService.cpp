@@ -979,11 +979,89 @@ BluetoothDBusService::GetDeviceServiceChannelInternal(const nsAString& aObjectPa
   const char* pattern = NS_ConvertUTF16toUTF8(aPattern).get();
 
   DBusMessage *reply =
-    dbus_func_args(mConnection, deviceObjectPath,
+    dbus_func_args(gThreadConnection->GetConnection(),
+                   deviceObjectPath,
                    DBUS_DEVICE_IFACE, "GetServiceAttributeValue",
                    DBUS_TYPE_STRING, &pattern,
                    DBUS_TYPE_UINT16, &aAttributeId,
                    DBUS_TYPE_INVALID);
 
   return reply ? dbus_returns_int32(reply) : -1;
+}
+
+static void
+ExtractHandles(DBusMessage *aReply, nsTArray<PRUint32>& aOutHandles)
+{
+  uint32_t* handles = NULL;
+  int len;
+
+  DBusError err;
+  dbus_error_init(&err);
+
+  if (dbus_message_get_args(aReply, &err,
+                            DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32, &handles, &len,
+                            DBUS_TYPE_INVALID)) {
+     if (!handles) {
+       LOG("Null array in extract_handles");
+     } else {
+        for (int i = 0; i < len; ++i) {
+        aOutHandles.AppendElement(handles[i]);
+      }
+    }
+  } else {
+    LOG_AND_FREE_DBUS_ERROR(&err);
+  }
+}
+
+nsTArray<PRUint32>
+BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
+                                                  const nsTArray<PRUint32>& aServices)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsTArray<PRUint32> ret;
+  const char* adapterPath = NS_ConvertUTF16toUTF8(aAdapterPath).get();
+
+  int length = aServices.Length();
+  if (length == 0) return ret;
+
+  const uint32_t* services = aServices.Elements();
+  DBusMessage* reply =
+    dbus_func_args(gThreadConnection->GetConnection(),
+                   adapterPath,
+                   DBUS_ADAPTER_IFACE, "AddReservedServiceRecords",
+                   DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
+                   &services, length, DBUS_TYPE_INVALID);
+
+  if (!reply) {
+    LOG("Null DBus message. Couldn't extract handles.");
+    return ret;
+  }
+
+  ExtractHandles(reply, ret);
+  return ret;
+}
+
+bool
+BluetoothDBusService::RemoveReservedServicesInternal(const nsAString& aAdapterPath,
+                                                     const nsTArray<PRUint32>& aServiceHandles)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  int length = aServiceHandles.Length();
+  if (length == 0) return false;
+
+  const uint32_t* services = aServiceHandles.Elements();
+
+  DBusMessage* reply =
+    dbus_func_args(gThreadConnection->GetConnection(),
+                   NS_ConvertUTF16toUTF8(aAdapterPath).get(),
+                   DBUS_ADAPTER_IFACE, "RemoveReservedServiceRecords",
+                   DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
+                   &services, length, DBUS_TYPE_INVALID);
+
+  if (!reply) return false;
+
+  dbus_message_unref(reply);
+  return true;
 }

@@ -1646,7 +1646,6 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
         }
 
-        Tabs.getInstance().setContentResolver(getContentResolver());
         Tabs.registerOnTabsChangedListener(this);
 
         if (cameraView == null) {
@@ -1774,16 +1773,17 @@ abstract public class GeckoApp
      * Enable Android StrictMode checks (for supported OS versions).
      * http://developer.android.com/reference/android/os/StrictMode.html
      */
-    private void enableStrictMode()
-    {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+    private void enableStrictMode() {
+        int SDK_INT = Build.VERSION.SDK_INT;
+        if (SDK_INT < 9)
             return;
-        }
 
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                                  .detectAll()
-                                  .penaltyLog()
-                                  .build());
+        StrictMode.ThreadPolicy.Builder threadPolicyBuilder = new StrictMode.ThreadPolicy.Builder()
+                                                                            .detectAll()
+                                                                            .penaltyLog();
+        if (SDK_INT >= 11)
+            threadPolicyBuilder = threadPolicyBuilder.penaltyFlashScreen();
+        StrictMode.setThreadPolicy(threadPolicyBuilder.build());
 
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                                .detectAll()
@@ -2423,7 +2423,7 @@ abstract public class GeckoApp
             return;
         }
 
-        if (mDoorHangerPopup.isShowing()) {
+        if (mDoorHangerPopup != null && mDoorHangerPopup.isShowing()) {
             mDoorHangerPopup.dismiss();
             return;
         }
@@ -2515,22 +2515,19 @@ abstract public class GeckoApp
      * "Back" button to return to the previous tab.
      */
     public void loadUrlInTab(String url) {
-        ArrayList<Tab> tabs = Tabs.getInstance().getTabsInOrder();
-        if (tabs != null) {
-            Iterator<Tab> tabsIter = tabs.iterator();
-            while (tabsIter.hasNext()) {
-                Tab tab = tabsIter.next();
-                if (url.equals(tab.getURL())) {
-                    Tabs.getInstance().selectTab(tab.getId());
-                    return;
-                }
+        Tabs tabsInstance = Tabs.getInstance();
+        Iterable<Tab> tabs = tabsInstance.getTabsInOrder();
+        for (Tab tab : tabs) {
+            if (url.equals(tab.getURL())) {
+                tabsInstance.selectTab(tab.getId());
+                return;
             }
         }
 
         JSONObject args = new JSONObject();
         try {
             args.put("url", url);
-            args.put("parentId", Tabs.getInstance().getSelectedTab().getId());
+            args.put("parentId", tabsInstance.getSelectedTab().getId());
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
         }

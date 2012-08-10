@@ -183,7 +183,13 @@ public:
   {
     mManager = MediaManager::Get();
 
-    if (mPicture) {
+    // It is an error is audio or video are requested along with picture.
+    if (mPicture && (mAudio || mVideo)) {
+      NS_DispatchToMainThread(new ErrorCallbackRunnable(
+        mError, NS_LITERAL_STRING("NOT_SUPPORTED_ERR"), mWindowID
+      ));
+      return NS_OK;
+    } else {
       SendPicture();
       return NS_OK;
     }

@@ -300,6 +300,7 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
     AutoIdVector tmp(cx);
     if (!tmp.resize(n))
         return false;
+    PodCopy(tmp.begin(), ids, n);
 
     if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx)))
         return false;

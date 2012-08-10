@@ -108,8 +108,7 @@ public class FennecMochitestAssert implements Assert {
         }
     }
 
-    public void finalize() {
-        // It appears that we call finalize during cleanup, this might be an invalid assertion.
+    public void endTest() {
         String message;
 
         if (mLogTestName != "") {

@@ -3706,6 +3706,17 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
         return;
     }
 
+    // bug 777028
+    // Mesa can't handle more than 16 samplers per program, counting each array entry.
+    if (mIsMesa) {
+        if (program->UpperBoundNumSamplerUniforms() > 16) {
+            GenerateWarning("Programs with more than 16 samplers are disallowed on Mesa drivers "
+                            "to avoid a Mesa crasher.");
+            program->SetLinkStatus(false);
+            return;
+        }
+    }
+
     GLint ok;
     if (gl->WorkAroundDriverBugs() &&
         program->HasBadShaderAttached())
@@ -5028,7 +5039,6 @@ WebGLContext::CompileShader(WebGLShader *shader)
         nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
         nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
         nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
-
 
         for (int i = 0; i < num_uniforms; i++) {
             int length, size;

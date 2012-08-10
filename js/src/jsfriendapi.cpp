@@ -235,7 +235,7 @@ JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 static bool
 DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char *value)
 {
-    JSAtom *atom = js_Atomize(cx, value, strlen(value));
+    JSAtom *atom = Atomize(cx, value, strlen(value));
     if (!atom)
         return false;
     jsval v = STRING_TO_JSVAL(atom);
@@ -253,7 +253,7 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *objArg, const JSFunctionSpec
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     for (; fs->name; fs++) {
-        JSAtom *atom = js_Atomize(cx, fs->name, strlen(fs->name));
+        JSAtom *atom = Atomize(cx, fs->name, strlen(fs->name));
         if (!atom)
             return false;
 
@@ -360,7 +360,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
     Rooted<jsid> id(cx, AtomToId(atom));
@@ -381,7 +381,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
     if (!name) {
         atom = NULL;
     } else {
-        atom = js_Atomize(cx, name, strlen(name));
+        atom = Atomize(cx, name, strlen(name));
         if (!atom)
             return NULL;
     }

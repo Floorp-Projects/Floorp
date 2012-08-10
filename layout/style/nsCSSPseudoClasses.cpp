@@ -42,7 +42,8 @@ nsCSSPseudoClasses::HasStringArg(Type aType)
   return aType == ePseudoClass_lang ||
          aType == ePseudoClass_mozEmptyExceptChildrenWithLocalname ||
          aType == ePseudoClass_mozSystemMetric ||
-         aType == ePseudoClass_mozLocaleDir;
+         aType == ePseudoClass_mozLocaleDir ||
+         aType == ePseudoClass_dir;
 }
 
 bool

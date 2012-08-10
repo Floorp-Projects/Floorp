@@ -283,6 +283,10 @@ abstract public class BrowserApp extends GeckoApp
             mMainLayout.addView(actionBar, index);
             mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
+
+            // The favicon view is different now, so we need to update the DoorHangerPopup anchor view.
+            if (mDoorHangerPopup != null)
+                mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
         }
 
         invalidateOptionsMenu();

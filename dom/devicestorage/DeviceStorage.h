@@ -63,6 +63,11 @@ private:
 
   bool  mIsWatchingFile;
 
+#ifdef MOZ_WIDGET_GONK
+  PRUint32 mLastVolumeState; // Values match nsIVolume.idl
+  void DispatchMountChangeEvent(bool aMounted);
+#endif
+
   // nsIDOMDeviceStorage.type
   enum {
       DEVICE_STORAGE_TYPE_DEFAULT = 0,

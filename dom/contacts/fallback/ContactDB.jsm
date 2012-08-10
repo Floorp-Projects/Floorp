@@ -302,7 +302,6 @@ ContactDB.prototype = {
    */
   find: function find(aSuccessCb, aFailureCb, aOptions) {
     debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp + "\n");
-
     let self = this;
     this.newTxn("readonly", function (txn, store) {
       if (aOptions && (aOptions.filterOp == "equals" || aOptions.filterOp == "contains")) {
