@@ -63,7 +63,9 @@ OperationInProgress(JSContext *cx, JSObject *proxy)
 }
 #endif
 
-BaseProxyHandler::BaseProxyHandler(void *family) : mFamily(family)
+BaseProxyHandler::BaseProxyHandler(void *family)
+  : mFamily(family),
+    mHasPrototype(false)
 {
 }
 
@@ -372,6 +374,15 @@ BaseProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue, JSCont
 void
 BaseProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
 {
+}
+
+bool
+BaseProxyHandler::getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto)
+{
+    // The default implementation here just uses proto of the proxy object.
+    JS_ASSERT(hasPrototype());
+    *proto = proxy->getProto();
+    return true;
 }
 
 IndirectProxyHandler::IndirectProxyHandler(void *family) : BaseProxyHandler(family)
