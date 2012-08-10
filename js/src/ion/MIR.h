@@ -2123,6 +2123,51 @@ class MBinaryArithInstruction
     }
 };
 
+class MMinMax
+  : public MBinaryInstruction,
+    public ArithPolicy
+{
+    bool isMax_;
+
+    MMinMax(MDefinition *left, MDefinition *right, MIRType type, bool isMax)
+      : MBinaryInstruction(left, right),
+        isMax_(isMax)
+    {
+        JS_ASSERT(type == MIRType_Double || type == MIRType_Int32);
+        setResultType(type);
+        setMovable();
+        specialization_ = type;
+    }
+
+  public:
+    INSTRUCTION_HEADER(MinMax);
+    static MMinMax *New(MDefinition *left, MDefinition *right, MIRType type, bool isMax) {
+        return new MMinMax(left, right, type, isMax);
+    }
+
+    bool isMax() const {
+        return isMax_;
+    }
+    MIRType specialization() const {
+        return specialization_;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        if (!ins->isMinMax())
+            return false;
+        if (isMax() != ins->toMinMax()->isMax())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MAbs
   : public MUnaryInstruction,
     public ArithPolicy

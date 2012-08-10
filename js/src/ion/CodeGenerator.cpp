@@ -1605,6 +1605,35 @@ CodeGenerator::visitStringLength(LStringLength *lir)
 }
 
 bool
+CodeGenerator::visitMinMaxI(LMinMaxI *ins)
+{
+    Register first = ToRegister(ins->first());
+    Register output = ToRegister(ins->output());
+
+    JS_ASSERT(first == output);
+
+    if (ins->second()->isConstant())
+        masm.cmp32(first, Imm32(ToInt32(ins->second())));
+    else
+        masm.cmp32(first, ToRegister(ins->second()));
+
+    Label done;
+    if (ins->mir()->isMax())
+        masm.j(Assembler::GreaterThan, &done);
+    else
+        masm.j(Assembler::LessThan, &done);
+
+    if (ins->second()->isConstant())
+        masm.move32(Imm32(ToInt32(ins->second())), output);
+    else
+        masm.mov(ToRegister(ins->second()), output);
+
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGenerator::visitAbsI(LAbsI *ins)
 {
     Register input = ToRegister(ins->input());

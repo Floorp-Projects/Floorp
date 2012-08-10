@@ -402,6 +402,50 @@ CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
     return true;
 }
 
+
+bool
+CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
+{
+    FloatRegister first = ToFloatRegister(ins->first());
+    FloatRegister second = ToFloatRegister(ins->second());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    JS_ASSERT(first == output);
+
+    Assembler::Condition cond = ins->mir()->isMax()
+                               ? Assembler::Above
+                               : Assembler::Below;
+    Label nan, equal, returnSecond, done;
+
+    masm.ucomisd(second, first);
+    masm.j(Assembler::Parity, &nan); // first or second is NaN, result is NaN.
+    masm.j(Assembler::Equal, &equal); // make sure we handle -0 and 0 right.
+    masm.j(cond, &returnSecond);
+    masm.jmp(&done);
+
+    // Check for zero.
+    masm.bind(&equal);
+    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
+    masm.ucomisd(first, ScratchFloatReg);
+    masm.j(Assembler::NotEqual, &done); // first wasn't 0 or -0, so just return it.
+    // So now both operands are either -0 or 0.
+    if (ins->mir()->isMax())
+        masm.addsd(second, first); // -0 + -0 = -0 and -0 + 0 = 0.
+    else
+        masm.orpd(second, first); // This just ors the sign bit.
+    masm.jmp(&done);
+
+    masm.bind(&nan);
+    masm.loadStaticDouble(&js_NaN, output);
+    masm.jmp(&done);
+
+    masm.bind(&returnSecond);
+    masm.movsd(second, output);
+
+    masm.bind(&done);
+    return true;
+}
+
 bool
 CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {

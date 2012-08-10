@@ -37,6 +37,10 @@ IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
         return inlineMathRound(argc, constructing);
     if (native == js_math_sqrt)
         return inlineMathSqrt(argc, constructing);
+    if (native == js_math_max)
+        return inlineMathMinMax(true /* max */, argc, constructing);
+    if (native == js_math_min)
+        return inlineMathMinMax(false /* max */, argc, constructing);
     if (native == js_math_pow)
         return inlineMathPow(argc, constructing);
     if (native == js::math_sin)
@@ -537,6 +541,40 @@ IonBuilder::inlineMathPow(uint32 argc, bool constructing)
     }
 
     MPow *ins = MPow::New(argv[1], argv[2], arg2Type);
+    current->add(ins);
+    current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathMinMax(bool max, uint32 argc, bool constructing)
+{
+    if (argc != 2 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType returnType = getInlineReturnType();
+    if (returnType != MIRType_Double && returnType != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MIRType arg1Type = getInlineArgType(argc, 1);
+    if (arg1Type != MIRType_Double && arg1Type != MIRType_Int32)
+        return InliningStatus_NotInlined;
+    MIRType arg2Type = getInlineArgType(argc, 2);
+    if (arg2Type != MIRType_Double && arg2Type != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    if (returnType == MIRType_Int32 &&
+        (arg1Type == MIRType_Double || arg2Type == MIRType_Double))
+    {
+        // We would need to inform TI, if we happen to return a double.
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MMinMax *ins = MMinMax::New(argv[1], argv[2], returnType, max);
     current->add(ins);
     current->push(ins);
     return InliningStatus_Inlined;
