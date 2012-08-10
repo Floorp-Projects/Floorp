@@ -215,13 +215,13 @@ class Proxy {
     /* ES5 Harmony derived proxy traps. */
     static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    static bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
-    static bool getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                                    uint32_t index, Value *vp, bool *present);
-    static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
-                    Value *vp);
+    static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, MutableHandleValue vp);
+    static bool getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                                    uint32_t index, MutableHandleValue vp, bool *present);
+    static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
+                    MutableHandleValue vp);
     static bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    static bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp);
+    static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
     static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);

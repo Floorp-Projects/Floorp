@@ -1149,28 +1149,30 @@ Proxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-Proxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
+Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+           MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
-    return GetProxyHandler(proxy)->get(cx, proxy, receiver, id, vp);
+    return GetProxyHandler(proxy)->get(cx, proxy, receiver, id, vp.address());
 }
 
 bool
-Proxy::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32_t index,
-                           Value *vp, bool *present)
+Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver, uint32_t index,
+                           MutableHandleValue vp, bool *present)
 {
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
-    return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp, present);
+    return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp.address(), present);
 }
 
 bool
-Proxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict, Value *vp)
+Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
+           MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
-    return GetProxyHandler(proxy)->set(cx, proxy, receiver, id, strict, vp);
+    return GetProxyHandler(proxy)->set(cx, proxy, receiver, id, strict, vp.address());
 }
 
 bool
@@ -1182,11 +1184,11 @@ Proxy::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 }
 
 bool
-Proxy::iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp)
+Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
-    return GetProxyHandler(proxy)->iterate(cx, proxy, flags, vp);
+    return GetProxyHandler(proxy)->iterate(cx, proxy, flags, vp.address());
 }
 
 bool
@@ -1372,7 +1374,7 @@ static JSBool
 proxy_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                  MutableHandleValue vp)
 {
-    return Proxy::get(cx, obj, receiver, id, vp.address());
+    return Proxy::get(cx, obj, receiver, id, vp);
 }
 
 static JSBool
@@ -1397,7 +1399,7 @@ static JSBool
 proxy_GetElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
                           MutableHandleValue vp, bool *present)
 {
-    return Proxy::getElementIfPresent(cx, obj, receiver, index, vp.address(), present);
+    return Proxy::getElementIfPresent(cx, obj, receiver, index, vp, present);
 }
 
 static JSBool
@@ -1412,7 +1414,7 @@ static JSBool
 proxy_SetGeneric(JSContext *cx, HandleObject obj, HandleId id,
                  MutableHandleValue vp, JSBool strict)
 {
-    return Proxy::set(cx, obj, obj, id, strict, vp.address());
+    return Proxy::set(cx, obj, obj, id, strict, vp);
 }
 
 static JSBool
