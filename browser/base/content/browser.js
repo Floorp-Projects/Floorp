@@ -2515,6 +2515,9 @@ let BrowserOnClick = {
     else if (/^about:blocked/.test(ownerDoc.documentURI)) {
       this.onAboutBlocked(originalTarget, ownerDoc);
     }
+    else if (/^about:neterror/.test(ownerDoc.documentURI)) {
+      this.onAboutNetError(originalTarget, ownerDoc);
+    }
     else if (/^about:home$/i.test(ownerDoc.documentURI)) {
       this.onAboutHome(originalTarget, ownerDoc);
     }
@@ -2679,6 +2682,13 @@ let BrowserOnClick = {
     // Persist the notification until the user removes so it
     // doesn't get removed on redirects.
     notification.persistence = -1;
+  },
+
+  onAboutNetError: function BrowserOnClick_onAboutNetError(aTargetElm, aOwnerDoc) {
+    let elmId = aTargetElm.getAttribute("id");
+    if (elmId != "errorTryAgain" || !/e=netOffline/.test(aOwnerDoc.documentURI))
+      return;
+    Services.io.offline = false;
   },
 
   onAboutHome: function BrowserOnClick_onAboutHome(aTargetElm, aOwnerDoc) {
@@ -4476,11 +4486,11 @@ var TabsProgressListener = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
         /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
-      aBrowser.addEventListener("click", BrowserOnClick, false);
+      aBrowser.addEventListener("click", BrowserOnClick, true);
       aBrowser.addEventListener("pagehide", function onPageHide(event) {
         if (event.target.defaultView.frameElement)
           return;
-        aBrowser.removeEventListener("click", BrowserOnClick, false);
+        aBrowser.removeEventListener("click", BrowserOnClick, true);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
       }, true);
 
