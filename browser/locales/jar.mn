@@ -16,7 +16,7 @@
     locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
 #endif
-*   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
+    locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/devtools/debugger.dtd              (%chrome/browser/devtools/debugger.dtd)
@@ -41,10 +41,10 @@
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
     locale/browser/openLocation.properties         (%chrome/browser/openLocation.properties)
-*   locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
+    locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)
-*   locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
+    locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
     locale/browser/searchbar.dtd                   (%chrome/browser/searchbar.dtd)
@@ -75,7 +75,7 @@
     locale/browser/preferences/aboutPermissions.dtd          (%chrome/browser/preferences/aboutPermissions.dtd)
     locale/browser/preferences/aboutPermissions.properties   (%chrome/browser/preferences/aboutPermissions.properties)
     locale/browser/preferences/advanced.dtd           (%chrome/browser/preferences/advanced.dtd)
-*   locale/browser/preferences/advanced-scripts.dtd   (%chrome/browser/preferences/advanced-scripts.dtd)
+    locale/browser/preferences/advanced-scripts.dtd   (%chrome/browser/preferences/advanced-scripts.dtd)
     locale/browser/preferences/applicationManager.dtd        (%chrome/browser/preferences/applicationManager.dtd)
     locale/browser/preferences/applicationManager.properties (%chrome/browser/preferences/applicationManager.properties)
     locale/browser/preferences/colors.dtd             (%chrome/browser/preferences/colors.dtd)
@@ -107,9 +107,9 @@
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides
-*   locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
-*   locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
-*   locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
+    locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
+    locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
+    locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
 % override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
