@@ -164,125 +164,6 @@ IonCompartment::generateReturnError(JSContext *cx)
     return linker.newCode(cx);
 }
 
-static void
-GenerateBailoutTail(MacroAssembler &masm)
-{
-    masm.enterExitFrame();
-
-    Label reflow;
-    Label interpret;
-    Label exception;
-    Label osr;
-    Label recompile;
-    Label boundscheck;
-
-    // The return value from Bailout is tagged as:
-    // - 0x0: done (thunk to interpreter)
-    // - 0x1: error (handle exception)
-    // - 0x2: reflow args
-    // - 0x3: reflow barrier
-    // - 0x4: monitor types
-    // - 0x5: recompile to inline calls
-    // - 0x6: bounds check failure
-    // - 0x7: force invalidation
-
-    masm.cmpl(rax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
-    masm.j(Assembler::LessThan, &interpret);
-    masm.j(Assembler::Equal, &exception);
-
-    masm.cmpl(rax, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK));
-    masm.j(Assembler::LessThan, &reflow);
-    masm.j(Assembler::Equal, &recompile);
-
-    masm.cmpl(eax, Imm32(BAILOUT_RETURN_INVALIDATE));
-    masm.j(Assembler::LessThan, &boundscheck);
-
-    // Force invalidation.
-    {
-        masm.setupUnalignedABICall(0, rdx);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForceInvalidation));
-
-        masm.testl(rax, rax);
-        masm.j(Assembler::Zero, &exception);
-        masm.jmp(&interpret);
-    }
-
-    // Bounds check failure.
-    masm.bind(&boundscheck);
-    {
-        masm.setupUnalignedABICall(0, rdx);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
-
-        masm.testl(rax, rax);
-        masm.j(Assembler::Zero, &exception);
-        masm.jmp(&interpret);
-    }
-
-    // Recompile to inline calls.
-    masm.bind(&recompile);
-    {
-        masm.setupUnalignedABICall(0, rdx);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
-
-        masm.testl(rax, rax);
-        masm.j(Assembler::Zero, &exception);
-        masm.jmp(&interpret);
-    }
-
-    // Otherwise, we're in the "reflow" case.
-    masm.bind(&reflow);
-    {
-        masm.setupUnalignedABICall(1, rdx);
-        masm.passABIArg(rax);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
-
-        masm.testl(rax, rax);
-        masm.j(Assembler::Zero, &exception);
-    }
-
-    masm.bind(&interpret);
-    {
-        // Reserve space for Interpret() to store a Value.
-        masm.subq(Imm32(sizeof(Value)), rsp);
-        masm.movq(rsp, rcx);
-
-        // Call out to the interpreter.
-        masm.setupUnalignedABICall(1, rdx);
-        masm.passABIArg(rcx);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-
-        // Load the value the interpreter returned.
-        masm.popValue(JSReturnOperand);
-
-        // Check for an exception.
-        masm.testl(rax, rax);
-        masm.j(Assembler::Zero, &exception);
-
-        // Remove the exitCode pointer from the stack.
-        masm.leaveExitFrame();
-
-        // Check for OSR.
-        masm.cmpl(rax, Imm32(Interpret_OSR));
-        masm.j(Assembler::Equal, &osr);
-
-        // Return to the caller.
-        masm.ret();
-    }
-
-    // OSR handling
-    masm.bind(&osr);
-    {
-        masm.unboxPrivate(JSReturnOperand, OsrFrameReg);
-        masm.performOsr();
-    }
-
-    // Exception handling
-    masm.bind(&exception);
-    {
-        masm.handleException();
-    }
-}
-
 IonCode *
 IonCompartment::generateInvalidator(JSContext *cx)
 {
@@ -319,7 +200,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     // Pop the machine state and the dead frame.
     masm.lea(Operand(rsp, rbx, TimesOne, sizeof(InvalidationBailoutStack)), rsp);
 
-    GenerateBailoutTail(masm);
+    masm.generateBailoutTail(rdx);
 
     Linker linker(masm);
     return linker.newCode(cx);
@@ -443,7 +324,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
     masm.pop(rcx);
     masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void *)), rsp);
 
-    GenerateBailoutTail(masm);
+    masm.generateBailoutTail(rdx);
 }
 
 IonCode *
