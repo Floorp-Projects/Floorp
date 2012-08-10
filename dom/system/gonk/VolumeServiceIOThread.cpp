@@ -32,6 +32,9 @@ void
 VolumeServiceIOThread::Notify(Volume * const &aVolume)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
+    return;
+  }
   nsVolumeService::UpdateVolumeIOThread(aVolume);
 }
 
