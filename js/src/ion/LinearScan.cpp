@@ -1225,12 +1225,28 @@ LinearScanAllocator::populateSafepoints()
                     continue;
 
                 LAllocation *a = interval->getAllocation();
-                if (a->isGeneralReg() && !ins->isCall())
-                    safepoint->addGcRegister(a->toGeneralReg()->reg());
+                if (a->isGeneralReg() && !ins->isCall()) {
+#ifdef JS_PUNBOX64
+                    if (reg->type() == LDefinition::BOX) {
+                        safepoint->addValueRegister(a->toGeneralReg()->reg());
+                    } else
+#endif
+                    {
+                        safepoint->addGcRegister(a->toGeneralReg()->reg());
+                    }
+                }
 
                 if (IsSpilledAt(interval, inputOf(ins))) {
-                    if (!safepoint->addGcSlot(reg->canonicalSpillSlot()))
-                        return false;
+#ifdef JS_PUNBOX64
+                    if (reg->type() == LDefinition::BOX) {
+                        if (!safepoint->addValueSlot(reg->canonicalSpillSlot()))
+                            return false;
+                    } else
+#endif
+                    {
+                        if (!safepoint->addGcSlot(reg->canonicalSpillSlot()))
+                            return false;
+                    }
                 }
 #ifdef JS_NUNBOX32
             } else {

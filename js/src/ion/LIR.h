@@ -925,9 +925,15 @@ class LSafepoint : public TempObject
     // List of stack slots which have gc pointers.
     SlotList gcSlots_;
 
-#ifdef JS_NUNBOX32
+    // List of stack slots which have Values.
     SlotList valueSlots_;
+
+#ifdef JS_NUNBOX32
+    // List of registers which contain pieces of values.
     NunboxList nunboxParts_;
+#elif JS_PUNBOX64
+    // List of registers which contain values.
+    GeneralRegisterSet valueRegs_;
 #endif
 
   public:
@@ -954,18 +960,26 @@ class LSafepoint : public TempObject
         return gcSlots_;
     }
 
-#ifdef JS_NUNBOX32
     bool addValueSlot(uint32 slot) {
         return valueSlots_.append(slot);
     }
     SlotList &valueSlots() {
         return valueSlots_;
     }
+
+#ifdef JS_NUNBOX32
     bool addNunboxParts(LAllocation type, LAllocation payload) {
         return nunboxParts_.append(NunboxEntry(type, payload));
     }
     NunboxList &nunboxParts() {
         return nunboxParts_;
+    }
+#elif JS_PUNBOX64
+    void addValueRegister(Register reg) {
+        valueRegs_.add(reg);
+    }
+    GeneralRegisterSet valueRegs() {
+        return valueRegs_;
     }
 #endif
     bool encoded() const {

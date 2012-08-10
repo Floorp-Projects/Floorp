@@ -19,6 +19,7 @@ namespace ion {
 
 struct SafepointNunboxEntry;
 class LAllocation;
+class LSafepoint;
 
 static const uint32 INVALID_SAFEPOINT_OFFSET = uint32(-1);
 
@@ -30,14 +31,23 @@ class SafepointWriter
   public:
     bool init(uint32 slotCount);
 
+  private:
     // A safepoint entry is written in the order these functions appear.
     uint32 startEntry();
+
     void writeOsiCallPointOffset(uint32 osiPointOffset);
-    void writeGcRegs(GeneralRegisterSet gc, GeneralRegisterSet spilled);
-    void writeGcSlots(uint32 nslots, uint32 *slots);
-    void writeValueSlots(uint32 nslots, uint32 *slots);
-    void writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries);
+    void writeGcRegs(LSafepoint *safepoint);
+    void writeGcSlots(LSafepoint *safepoint);
+    void writeValueSlots(LSafepoint *safepoint);
+
+#ifdef JS_NUNBOX32
+    void writeNunboxParts(LSafepoint *safepoint);
+#endif
+
     void endEntry();
+
+  public:
+    void encode(LSafepoint *safepoint);
 
     size_t size() const {
         return stream_.length();
@@ -55,6 +65,7 @@ class SafepointReader
     uint32 currentSlotChunkNumber_;
     uint32 osiCallPointOffset_;
     GeneralRegisterSet gcSpills_;
+    GeneralRegisterSet valueSpills_;
     GeneralRegisterSet allSpills_;
     uint32 nunboxSlotsRemaining_;
 
@@ -74,6 +85,9 @@ class SafepointReader
     }
     GeneralRegisterSet gcSpills() const {
         return gcSpills_;
+    }
+    GeneralRegisterSet valueSpills() const {
+        return valueSpills_;
     }
     GeneralRegisterSet allSpills() const {
         return allSpills_;

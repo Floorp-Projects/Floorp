@@ -262,30 +262,6 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
 }
 
 void
-CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
-{
-    if (safepoint->encoded())
-        return;
-
-    safepoint->fixupOffset(&masm);
-
-    uint32 safepointOffset = safepoints_.startEntry();
-
-    JS_ASSERT(safepoint->osiCallPointOffset());
-
-    safepoints_.writeOsiCallPointOffset(safepoint->osiCallPointOffset());
-    safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->liveRegs().gprs());
-    safepoints_.writeGcSlots(safepoint->gcSlots().length(), safepoint->gcSlots().begin());
-#ifdef JS_NUNBOX32
-    safepoints_.writeValueSlots(safepoint->valueSlots().length(), safepoint->valueSlots().begin());
-    safepoints_.writeNunboxParts(safepoint->nunboxParts().length(), safepoint->nunboxParts().begin());
-#endif
-
-    safepoints_.endEntry();
-    safepoint->setOffset(safepointOffset);
-}
-
-void
 CodeGeneratorShared::encodeSafepoints()
 {
     for (SafepointIndex *it = safepointIndices_.begin(), *end = safepointIndices_.end();
@@ -294,9 +270,11 @@ CodeGeneratorShared::encodeSafepoints()
     {
         LSafepoint *safepoint = it->safepoint();
 
-        // All safepoints must have a valid OSI displacement.
-        JS_ASSERT(safepoint->osiCallPointOffset());
-        encodeSafepoint(safepoint);
+        if (!safepoint->encoded()) {
+            safepoint->fixupOffset(&masm);
+            safepoints_.encode(safepoint);
+        }
+
         it->resolve();
     }
 }
@@ -475,13 +453,8 @@ bool
 CodeGeneratorShared::markArgumentSlots(LSafepoint *safepoint)
 {
     for (size_t i = 0; i < pushedArgumentSlots_.length(); i++) {
-#ifdef JS_NUNBOX32
         if (!safepoint->addValueSlot(pushedArgumentSlots_[i]))
             return false;
-#else
-        if (!safepoint->addGcSlot(pushedArgumentSlots_[i]))
-            return false;
-#endif
     }
     return true;
 }
