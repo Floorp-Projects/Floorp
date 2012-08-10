@@ -9,6 +9,7 @@
 #include "jsinferinlines.h"
 #include "IonMacroAssembler.h"
 #include "gc/Root.h"
+#include "Bailouts.h"
 
 using namespace js;
 using namespace js::ion;
@@ -485,5 +486,114 @@ MacroAssembler::performOsr()
     // looks like a JS frame with no argv.
     enterOsr(calleeToken, code);
     ret();
+}
+
+void
+MacroAssembler::generateBailoutTail(Register scratch)
+{
+    enterExitFrame();
+
+    Label reflow;
+    Label interpret;
+    Label exception;
+    Label osr;
+    Label recompile;
+    Label boundscheck;
+
+    // The return value from Bailout is tagged as:
+    // - 0x0: done (thunk to interpreter)
+    // - 0x1: error (handle exception)
+    // - 0x2: reflow args
+    // - 0x3: reflow barrier
+    // - 0x4: monitor types
+    // - 0x5: recompile to inline calls
+    // - 0x6: bounds check failure
+    // - 0x7: force invalidation
+
+    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &interpret);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
+
+    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &reflow);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &recompile);
+
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &boundscheck);
+
+    // Fall-through: force invalidation.
+    {
+        setupUnalignedABICall(0, scratch);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForceInvalidation));
+
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+        jump(&interpret);
+    }
+
+    // Bounds-check failure.
+    bind(&boundscheck);
+    {
+        setupUnalignedABICall(0, scratch);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
+
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+        jump(&interpret);
+    }
+
+    // Recompile to inline calls.
+    bind(&recompile);
+    {
+        setupUnalignedABICall(0, scratch);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
+
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+        jump(&interpret);
+    }
+
+    // Reflow types.
+    bind(&reflow);
+    {
+        setupUnalignedABICall(1, scratch);
+        passABIArg(ReturnReg);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+        // Fall-through to the interpreter.
+    }
+
+    bind(&interpret);
+    {
+        // Reserve space for Interpret() to store a Value.
+        subPtr(Imm32(sizeof(Value)), StackPointer);
+        mov(StackPointer, ReturnReg);
+
+        // Call out to the interpreter.
+        setupUnalignedABICall(1, scratch);
+        passABIArg(ReturnReg);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+
+        // Load the value the interpreter returned.
+        popValue(JSReturnOperand);
+
+        // Check for an exception.
+        JS_STATIC_ASSERT(!Interpret_Error);
+        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+
+        // Remove the exitCode pointer from the stack.
+        leaveExitFrame();
+
+        branch32(Equal, ReturnReg, Imm32(Interpret_OSR), &osr);
+
+        // Return to the caller.
+        ret();
+    }
+
+    bind(&osr);
+    {
+        unboxPrivate(JSReturnOperand, OsrFrameReg);
+        performOsr();
+    }
+
+    bind(&exception);
+    {
+        handleException();
+    }
 }
 

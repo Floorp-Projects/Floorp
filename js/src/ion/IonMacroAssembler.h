@@ -462,6 +462,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Checks if an OSR frame is the previous frame, and if so, removes it.
     void maybeRemoveOsrFrame(Register scratch);
+
+    // Generates code used to complete a bailout.
+    void generateBailoutTail(Register scratch);
 };
 
 } // namespace ion
