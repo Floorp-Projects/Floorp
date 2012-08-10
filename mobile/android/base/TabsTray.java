@@ -197,12 +197,10 @@ public class TabsTray extends LinearLayout
             // Store a different copy of the tabs, so that we don't have to worry about
             // accidentally updating it on the wrong thread.
             mTabs = new ArrayList<Tab>();
-            ArrayList<Tab> tabs = Tabs.getInstance().getTabsInOrder();
 
-            if (tabs != null) {
-                for (Tab tab : tabs) {
-                    mTabs.add(tab);
-                }
+            Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
+            for (Tab tab : tabs) {
+                mTabs.add(tab);
             }
 
             notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.

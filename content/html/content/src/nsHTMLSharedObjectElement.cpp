@@ -465,6 +465,12 @@ nsHTMLSharedObjectElement::GetAttributeMappingFunction() const
 void
 nsHTMLSharedObjectElement::StartObjectLoad(bool aNotify)
 {
+  // BindToTree can call us asynchronously, and we may be removed from the tree
+  // in the interim
+  if (!IsInDoc() || !OwnerDoc()->IsActive()) {
+    return;
+  }
+
   LoadObject(aNotify);
   SetIsNetworkCreated(false);
 }

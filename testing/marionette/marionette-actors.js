@@ -765,6 +765,21 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Gets the page source of the content document
+   */
+  getPageSource: function MDA_getPageSource(){
+    if (this.context == "chrome"){
+      var curWindow = this.getCurrentWindow();
+      var XMLSerializer = curWindow.XMLSerializer; 
+      var pageSource = new XMLSerializer().serializeToString(curWindow.document);
+      this.sendResponse(pageSource);
+    }
+    else {
+      this.sendAsync("getPageSource", {});
+    }
+  },
+
+  /**
    * Go back in history
    */
   goBack: function MDA_goBack() {
@@ -1450,6 +1465,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "sendKeysToElement": MarionetteDriverActor.prototype.sendKeysToElement,
   "clearElement": MarionetteDriverActor.prototype.clearElement,
   "getTitle": MarionetteDriverActor.prototype.getTitle,
+  "getPageSource": MarionetteDriverActor.prototype.getPageSource,
   "goUrl": MarionetteDriverActor.prototype.goUrl,
   "getUrl": MarionetteDriverActor.prototype.getUrl,
   "goBack": MarionetteDriverActor.prototype.goBack,

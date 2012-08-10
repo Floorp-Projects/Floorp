@@ -30,6 +30,8 @@ function dump(s) {
 };
 
 var Readability = function(uri, doc) {
+  const ENABLE_LOGGING = false;
+
   this._uri = uri;
   this._doc = doc;
   this._biggestFrame = false;
@@ -49,6 +51,15 @@ var Readability = function(uri, doc) {
 
   // Make an AJAX request for each page and append it to the document.
   this._curPageNum = 1;
+
+  // Control whether log messages are sent to the console
+  if (ENABLE_LOGGING) {
+    this.log = function (msg) {
+      dump("Reader: (Readability) " + msg);
+    };
+  } else {
+    this.log = function () {};
+  }
 }
 
 Readability.prototype = {
@@ -73,7 +84,6 @@ Readability.prototype = {
     negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
-    replaceBrs: /(<br[^>]*>[ \n\r\t]*){2,}/gi,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
@@ -223,7 +233,7 @@ Readability.prototype = {
         doc.body = body;
       } catch(e) {
         doc.documentElement.appendChild(body);
-        dump(e);
+        this.log(e);
       }
     }
 
@@ -245,7 +255,7 @@ Readability.prototype = {
           let frameBody = frames[frameIndex].contentWindow.document.body;
           canAccessFrame = true;
         } catch(eFrames) {
-          dump(eFrames);
+          this.log(eFrames);
         }
 
         if (frameSize > biggestFrameSize) {
@@ -283,11 +293,80 @@ Readability.prototype = {
       styleTags[st].textContent = "";
     }
 
-    // Turn all double br's into p's. Note, this is pretty costly as far
-    // as processing goes. Maybe optimize later.
-    doc.body.innerHTML =
-        doc.body.innerHTML.replace(this.REGEXPS.replaceBrs, '</p><p>').
-            replace(this.REGEXPS.replaceFonts, '<$1span>');
+    this._replaceBrs(doc.body);
+
+    doc.body.innerHTML = doc.body.innerHTML.replace(this.REGEXPS.replaceFonts, '<$1span>');
+  },
+
+  /**
+   * Replaces 2 or more successive <br> elements with a single <p>.
+   * Whitespace between <br> elements are ignored. For example:
+   *   <div>foo<br>bar<br> <br><br>abc</div>
+   * will become:
+   *   <div>foo<br>bar<p>abc</p></div>
+   */
+  _replaceBrs: function (elem) {
+    // ignore whitespace between elements
+    let whitespace = /^\s*$/;
+
+    /**
+     * Finds the next element, starting from the given node, and ignoring
+     * whitespace in between. If the given node is an element, the same node is
+     * returned.
+     */
+    function nextElement(node) {
+      let next = node;
+      while (next
+          && (next.nodeType != Node.ELEMENT_NODE)
+          && !whitespace.test(next.textContent)) {
+        next = next.nextSibling;
+      }
+      return next;
+    }
+
+    let brs = elem.getElementsByTagName("br");
+    for (let i = 0; i < brs.length; i++) {
+      let br = brs[i];
+      let next = br.nextSibling;
+
+      // Whether 2 or more <br> elements have been found and replaced with a
+      // <p> block.
+      let replaced = false;
+
+      // If we find a <br> chain, remove the <br>s until we hit another element
+      // or non-whitespace. This leaves behind the first <br> in the chain
+      // (which will be replaced with a <p> later).
+      while ((next = nextElement(next)) && (next.tagName == "BR")) {
+        replaced = true;
+        let sibling = next.nextSibling;
+        next.parentNode.removeChild(next);
+        next = sibling;
+      }
+
+      // If we removed a <br> chain, replace the remaining <br> with a <p>. Add
+      // all sibling nodes as children of the <p> until we hit another <br>
+      // chain.
+      if (replaced) {
+        let p = this._doc.createElement("p");
+        br.parentNode.replaceChild(p, br);
+
+        next = p.nextSibling;
+        while (next) {
+          // If we've hit another <br><br>, we're done adding children to this <p>.
+          if (next.tagName == "BR") {
+            let nextElem = nextElement(next);
+            if (nextElem && nextElem.tagName == "BR") {
+              break;
+            }
+          }
+          
+          // Otherwise, make this node a child of the new <p>.
+          let sibling = next.nextSibling;
+          p.appendChild(next);
+          next = sibling;
+        }
+      }
+    }
   },
 
   /**
@@ -444,7 +523,7 @@ Readability.prototype = {
           if (unlikelyMatchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
             unlikelyMatchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
             node.tagName !== "BODY") {
-            dump("Removing unlikely candidate - " + unlikelyMatchString);
+            this.log("Removing unlikely candidate - " + unlikelyMatchString);
             node.parentNode.removeChild(node);
             nodeIndex -= 1;
             continue;
@@ -550,7 +629,7 @@ Readability.prototype = {
         candidates[c].readability.contentScore =
             candidates[c].readability.contentScore * (1 - this._getLinkDensity(candidates[c]));
 
-        dump('Candidate: ' + candidates[c] + " (" + candidates[c].className + ":" +
+        this.log('Candidate: ' + candidates[c] + " (" + candidates[c].className + ":" +
           candidates[c].id + ") with score " +
           candidates[c].readability.contentScore);
 
@@ -601,8 +680,8 @@ Readability.prototype = {
         let siblingNode = siblingNodes[s];
         let append = false;
 
-        dump("Looking at sibling node: " + siblingNode + " (" + siblingNode.className + ":" + siblingNode.id + ")" + ((typeof siblingNode.readability !== 'undefined') ? (" with score " + siblingNode.readability.contentScore) : ''));
-        dump("Sibling has score " + (siblingNode.readability ? siblingNode.readability.contentScore : 'Unknown'));
+        this.log("Looking at sibling node: " + siblingNode + " (" + siblingNode.className + ":" + siblingNode.id + ")" + ((typeof siblingNode.readability !== 'undefined') ? (" with score " + siblingNode.readability.contentScore) : ''));
+        this.log("Sibling has score " + (siblingNode.readability ? siblingNode.readability.contentScore : 'Unknown'));
 
         if (siblingNode === topCandidate)
           append = true;
@@ -631,13 +710,13 @@ Readability.prototype = {
         }
 
         if (append) {
-          dump("Appending node: " + siblingNode);
+          this.log("Appending node: " + siblingNode);
 
           let nodeToAppend = null;
           if (siblingNode.nodeName !== "DIV" && siblingNode.nodeName !== "P") {
             // We have a node that isn't a common block level element, like a form or td tag.
             // Turn it into a div so it doesn't get filtered out later by accident. */
-            dump("Altering siblingNode of " + siblingNode.nodeName + ' to div.');
+            this.log("Altering siblingNode of " + siblingNode.nodeName + ' to div.');
 
             nodeToAppend = doc.createElement("DIV");
             nodeToAppend.id = siblingNode.id;
@@ -1011,7 +1090,7 @@ Readability.prototype = {
     if (topPage) {
       let nextHref = topPage.href.replace(/\/$/,'');
 
-      dump('NEXT PAGE IS ' + nextHref);
+      this.log('NEXT PAGE IS ' + nextHref);
       this._parsedPages[nextHref] = true;
       return nextHref;
     } else {
@@ -1087,7 +1166,7 @@ Readability.prototype = {
           let eTag = r.getResponseHeader('ETag');
           if (eTag) {
             if (eTag in this._pageETags) {
-              dump("Exact duplicate page found via ETag. Aborting.");
+              this.log("Exact duplicate page found via ETag. Aborting.");
               articlePage.style.display = 'none';
               return;
             } else {
@@ -1109,10 +1188,10 @@ Readability.prototype = {
           let responseHtml = r.responseText.replace(/\n/g,'\uffff').replace(/<script.*?>.*?<\/script>/gi, '');
           responseHtml = responseHtml.replace(/\n/g,'\uffff').replace(/<script.*?>.*?<\/script>/gi, '');
           responseHtml = responseHtml.replace(/\uffff/g,'\n').replace(/<(\/?)noscript/gi, '<$1div');
-          responseHtml = responseHtml.replace(this.REGEXPS.replaceBrs, '</p><p>');
           responseHtml = responseHtml.replace(this.REGEXPS.replaceFonts, '<$1span>');
 
           page.innerHTML = responseHtml;
+          this._replaceBrs(page);
 
           // Reset all flags for the next page, as they will search through it and
           // disable as necessary at the end of grabArticle.
@@ -1125,7 +1204,7 @@ Readability.prototype = {
           let content = this._grabArticle(page);
 
           if (!content) {
-            dump("No content found in page to append. Aborting.");
+            this.log("No content found in page to append. Aborting.");
             return;
           }
 
@@ -1137,7 +1216,7 @@ Readability.prototype = {
             for (let i = 1; i <= this._curPageNum; i += 1) {
               let rPage = doc.getElementById('readability-page-' + i);
               if (rPage && rPage.innerHTML.indexOf(firstP.innerHTML) !== -1) {
-                dump('Duplicate of page ' + i + ' - skipping.');
+                this.log('Duplicate of page ' + i + ' - skipping.');
                 articlePage.style.display = 'none';
                 this._parsedPages[pageUrl] = true;
                 return;
@@ -1263,7 +1342,7 @@ Readability.prototype = {
       let weight = this._getClassWeight(tagsList[i]);
       let contentScore = (typeof tagsList[i].readability !== 'undefined') ? tagsList[i].this._contentScore : 0;
 
-      dump("Cleaning Conditionally " + tagsList[i] + " (" + tagsList[i].className + ":" + tagsList[i].id + ")" + ((typeof tagsList[i].readability !== 'undefined') ? (" with score " + tagsList[i].this._contentScore) : ''));
+      this.log("Cleaning Conditionally " + tagsList[i] + " (" + tagsList[i].className + ":" + tagsList[i].id + ")" + ((typeof tagsList[i].readability !== 'undefined') ? (" with score " + tagsList[i].this._contentScore) : ''));
 
       if (weight + contentScore < 0) {
         tagsList[i].parentNode.removeChild(tagsList[i]);

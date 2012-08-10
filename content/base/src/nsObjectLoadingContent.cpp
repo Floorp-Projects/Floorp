@@ -81,6 +81,16 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 #define LOG(args) PR_LOG(gObjectLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gObjectLog, PR_LOG_DEBUG)
 
+static bool
+InActiveDocument(nsIContent *aContent)
+{
+  if (!aContent->IsInDoc()) {
+    return false;
+  }
+  nsIDocument *doc = aContent->OwnerDoc();
+  return (doc && doc->IsActive());
+}
+
 ///
 /// Runnables and helper classes
 ///
@@ -137,7 +147,7 @@ InDocCheckEvent::Run()
   nsCOMPtr<nsIContent> content =
     do_QueryInterface(static_cast<nsIImageLoadingContent *>(objLC));
 
-  if (!content->IsInDoc()) {
+  if (!InActiveDocument(content)) {
     nsObjectLoadingContent *objLC =
       static_cast<nsObjectLoadingContent *>(mContent.get());
     objLC->UnloadObject();
@@ -556,39 +566,41 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsresult rv;
   nsCOMPtr<nsIWebNavigationInfo> info(
-    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv));
-  PRUint32 supported;
-  if (info) {
-    nsCOMPtr<nsIWebNavigation> webNav;
-    nsIDocument* currentDoc = thisContent->GetCurrentDoc();
-    if (currentDoc) {
-      webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
-    }
-    rv = info->IsTypeSupported(aMimeType, webNav, &supported);
+    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID));
+  if (!info) {
+    return false;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    if (supported == nsIWebNavigationInfo::UNSUPPORTED) {
-      // Try a stream converter
-      // NOTE: We treat any type we can convert from as a supported type. If a
-      // type is not actually supported, the URI loader will detect that and
-      // return an error, and we'll fallback.
-      nsCOMPtr<nsIStreamConverterService> convServ =
-        do_GetService("@mozilla.org/streamConverters;1");
-      bool canConvert = false;
-      if (convServ) {
-        rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
-      }
-      return NS_SUCCEEDED(rv) && canConvert;
-    }
+  nsCOMPtr<nsIWebNavigation> webNav;
+  nsIDocument* currentDoc = thisContent->GetCurrentDoc();
+  if (currentDoc) {
+    webNav = do_GetInterface(currentDoc->GetScriptGlobalObject());
+  }
+  
+  PRUint32 supported;
+  nsresult rv = info->IsTypeSupported(aMimeType, webNav, &supported);
 
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (supported != nsIWebNavigationInfo::UNSUPPORTED) {
     // Don't want to support plugins as documents
     return supported != nsIWebNavigationInfo::PLUGIN;
   }
 
-  return false;
+  // Try a stream converter
+  // NOTE: We treat any type we can convert from as a supported type. If a
+  // type is not actually supported, the URI loader will detect that and
+  // return an error, and we'll fallback.
+  nsCOMPtr<nsIStreamConverterService> convServ =
+    do_GetService("@mozilla.org/streamConverters;1");
+  bool canConvert = false;
+  if (convServ) {
+    rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
+  }
+  return NS_SUCCEEDED(rv) && canConvert;
 }
 
 nsresult
@@ -612,7 +624,7 @@ nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
   nsIDocument* ownerDoc = thisContent->OwnerDoc();
   ownerDoc->RemovePlugin(this);
 
-  if (mType == eType_Plugin) {
+  if (mType == eType_Plugin && mInstanceOwner) {
     // we'll let the plugin continue to run at least until we get back to
     // the event loop. If we get back to the event loop and the node
     // has still not been added back to the document then we tear down the
@@ -624,6 +636,7 @@ nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
       appShell->RunInStableState(event);
     }
   } else {
+    // Reset state and clear pending events
     /// XXX(johns): The implementation for GenericFrame notes that ideally we
     ///             would keep the docshell around, but trash the frameloader
     UnloadObject();
@@ -694,7 +707,7 @@ nsObjectLoadingContent::InstantiatePluginInstance()
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
-  if (!doc->IsActive()) {
+  if (!InActiveDocument(thisContent)) {
     NS_ERROR("Shouldn't be calling "
              "InstantiatePluginInstance in an inactive document");
     return NS_ERROR_FAILURE;
@@ -1471,17 +1484,17 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   nsIDocument* doc = thisContent->OwnerDoc();
   nsresult rv = NS_OK;
 
+  // Sanity check
+  if (!InActiveDocument(thisContent)) {
+    NS_NOTREACHED("LoadObject called while not bound to an active document");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // XXX(johns): In these cases, we refuse to touch our content and just
   //   remain unloaded, as per legacy behavior. It would make more sense to
   //   load fallback content initially and refuse to ever change state again.
   if (doc->IsBeingUsedAsImage() || doc->IsLoadedAsData()) {
     return NS_OK;
-  }
-
-  // Sanity check
-  if (!thisContent->IsInDoc()) {
-    NS_NOTREACHED("LoadObject called while not bound to a document");
-    return NS_ERROR_UNEXPECTED;
   }
 
   LOG(("OBJLC [%p]: LoadObject called, notify %u, forceload %u, channel %p",
@@ -1970,7 +1983,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 
   if (newState != aOldState) {
     // This will trigger frame construction
-    NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
+    NS_ASSERTION(InActiveDocument(thisContent), "Something is confused");
     nsEventStates changedBits = aOldState ^ newState;
 
     {
@@ -2151,10 +2164,10 @@ nsObjectLoadingContent::SyncStartPluginInstance()
                "Must be able to run script in order to instantiate a plugin instance!");
 
   // Don't even attempt to start an instance unless the content is in
-  // the document.
+  // the document and active
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  if (!thisContent->IsInDoc()) {
+  if (!InActiveDocument(thisContent)) {
     return NS_ERROR_FAILURE;
   }
 

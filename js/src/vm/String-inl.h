@@ -183,7 +183,7 @@ JSFlatString::toPropertyName(JSContext *cx)
 #endif
     if (isAtom())
         return asAtom().asPropertyName();
-    JSAtom *atom = js_AtomizeString(cx, this);
+    JSAtom *atom = js::AtomizeString(cx, this);
     if (!atom)
         return NULL;
     return atom->asPropertyName();

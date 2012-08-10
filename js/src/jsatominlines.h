@@ -34,7 +34,7 @@ ToAtom(JSContext *cx, const js::Value &v)
         if (!str)
             return NULL;
         JS::Anchor<JSString *> anchor(str);
-        return js_AtomizeString(cx, str);
+        return AtomizeString(cx, str);
     }
 
     JSString *str = v.toString();
@@ -42,7 +42,7 @@ ToAtom(JSContext *cx, const js::Value &v)
         return &str->asAtom();
 
     JS::Anchor<JSString *> anchor(str);
-    return js_AtomizeString(cx, str);
+    return AtomizeString(cx, str);
 }
 
 inline bool
