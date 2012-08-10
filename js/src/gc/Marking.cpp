@@ -290,14 +290,26 @@ MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name)
+MarkGCThingInternal(JSTracer *trc, void **thingp, const char *name)
 {
-    JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
     JS_ASSERT(thingp);
     if (!*thingp)
         return;
     MarkKind(trc, thingp, GetGCThingTraceKind(*thingp));
+}
+
+void
+MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name)
+{
+    JS_ROOT_MARKING_ASSERT(trc);
+    MarkGCThingInternal(trc, thingp, name);
+}
+
+void
+MarkGCThingUnbarriered(JSTracer *trc, void **thingp, const char *name)
+{
+    MarkGCThingInternal(trc, thingp, name);
 }
 
 /*** ID Marking ***/
@@ -573,51 +585,6 @@ PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
 
 static void
 MarkChildren(JSTracer *trc, JSScript *script);
-
-void
-MarkThingOrValueUnbarriered(JSTracer *trc, uintptr_t *word, const char *name)
-{
-    JS_SET_TRACING_NAME(trc, name);
-
-#ifdef JS_PUNBOX64
-    // All pointers on x64 will have the top bits cleared. If those bits
-    // are not cleared, this must be a Value.
-    {
-        if (*word >> JSVAL_TAG_SHIFT) {
-            jsval_layout layout;
-            layout.asBits = *word;
-            Value v = IMPL_TO_JSVAL(layout);
-            gc::MarkValueInternal(trc, &v);
-            *word = JSVAL_TO_IMPL(v).asBits;
-            return;
-        }
-    }
-#endif
-
-    void **thingp = reinterpret_cast<void **>(word);
-    MarkKind(trc, thingp, GetGCThingTraceKind(*thingp));
-}
-
-void
-MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name)
-{
-#ifdef JS_PUNBOX64
-    // All pointers on x64 will have the top bits cleared. If those bits
-    // are not cleared, this must be a Value.
-    {
-        if (*word >> JSVAL_TAG_SHIFT) {
-            jsval_layout layout;
-            layout.asBits = *word;
-            Value v = IMPL_TO_JSVAL(layout);
-            gc::MarkValueRoot(trc, &v, name);
-            *word = JSVAL_TO_IMPL(v).asBits;
-            return;
-        }
-    }
-#endif
-
-    gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(word), name);
-}
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSScript *thing)
