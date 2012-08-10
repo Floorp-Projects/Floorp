@@ -224,7 +224,9 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     } else {
       uri = Uri.parse(Constants.LINK_FIND_ADD_DEVICE);
     }
-    startActivity(new Intent(Intent.ACTION_VIEW, uri));
+    Intent intent = new Intent(this, WebViewActivity.class);
+    intent.setData(uri);
+    startActivity(intent);
   }
 
   /* Controller methods */
