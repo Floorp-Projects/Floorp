@@ -21,7 +21,6 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,1,92400) fails-if(Android) == linear-mix
 == linear-diagonal-7a.html linear-diagonal-7-ref.html
 == linear-diagonal-8a.html linear-diagonal-8-ref.html
 == linear-diagonal-9a.html linear-diagonal-9-ref.html
-fuzzy(1,800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
 fails-if(d2d) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
@@ -42,7 +41,6 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-ver
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1c.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1d.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1e.html linear-vertical-1-ref.html
-== linear-vertical-subpixel-1.html linear-vertical-subpixel-1-ref.html
 == linear-viewport.html linear-viewport-ref.html
 == linear-zero-length-1a.html linear-zero-length-1-ref.html
 == linear-zero-length-1b.html linear-zero-length-1-ref.html
