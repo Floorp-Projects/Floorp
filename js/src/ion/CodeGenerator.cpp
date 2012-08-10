@@ -1322,7 +1322,12 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     size_t maxArraySlots =
         gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - ObjectElements::VALUES_PER_HEADER;
 
-    if (templateObject->hasSingletonType() || count > maxArraySlots)
+    // Allocate space using the VMCall
+    // when mir hints it needs to get allocated immediatly,
+    // but only when data doesn't fit the available array slots.
+    bool allocating = lir->mir()->isAllocating() && count > maxArraySlots;
+
+    if (templateObject->hasSingletonType() || allocating)
         return visitNewArrayCallVM(lir);
 
     OutOfLineNewArray *ool = new OutOfLineNewArray(lir);

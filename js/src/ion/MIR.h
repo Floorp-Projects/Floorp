@@ -940,18 +940,27 @@ class MThrow
 
 class MNewArray : public MNullaryInstruction
 {
+  public:
+    enum AllocatingBehaviour {
+        NewArray_Allocating,
+        NewArray_Unallocating
+    };
+
   private:
     // Number of space to allocate for the array.
     uint32 count_;
     // Template for the created object.
     CompilerRootObject templateObject_;
+    // Allocate space at initialization or not
+    AllocatingBehaviour allocating_;
 
   public:
     INSTRUCTION_HEADER(NewArray);
 
-    MNewArray(uint32 count, JSObject *templateObject)
+    MNewArray(uint32 count, JSObject *templateObject, AllocatingBehaviour allocating)
       : count_(count),
-        templateObject_(templateObject)
+        templateObject_(templateObject),
+        allocating_(allocating)
     {
         setResultType(MIRType_Object);
     }
@@ -962,6 +971,10 @@ class MNewArray : public MNullaryInstruction
 
     JSObject *templateObject() const {
         return templateObject_;
+    }
+
+    bool isAllocating() const {
+        return allocating_ == NewArray_Allocating;
     }
 
     // NewArray is marked as non-effectful because all our allocations are
