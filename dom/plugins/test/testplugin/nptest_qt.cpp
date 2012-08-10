@@ -193,6 +193,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     XButtonEvent* button = &nsEvent->xbutton;
     instanceData->lastMouseX = button->x;
     instanceData->lastMouseY = button->y;
+    instanceData->mouseUpEventCount++;
     break;
   }
   default:
