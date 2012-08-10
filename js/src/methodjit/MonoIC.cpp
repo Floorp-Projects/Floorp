@@ -571,12 +571,18 @@ class CallCompiler : public BaseCompiler
         Assembler masm;
         Registers regs(Registers::AvailRegs);
 
+        /* Reserve this, so we don't take something setupFallibleABICall will use. */
         regs.takeReg(Registers::ClobberInCall);
 
-        /* Save the funObjReg, since setupFallibleABICall could crush it. */
-        RegisterID funObjReg = regs.takeAnyReg().reg();
-        if (ic.funObjReg != funObjReg)
+        /* If we might clobber |ic.funObjReg| later, save it now. */
+        RegisterID funObjReg = ic.funObjReg;
+        if (funObjReg == Registers::ClobberInCall) {
+            funObjReg = regs.takeAnyReg().reg();
             masm.move(ic.funObjReg, funObjReg);
+        } else {
+            /* Make sure no temporaries collide. */
+            regs.takeReg(funObjReg);
+        }
 
         size_t argc = ic.frameSize.staticArgc();
 
