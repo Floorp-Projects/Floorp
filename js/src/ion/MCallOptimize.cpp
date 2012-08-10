@@ -168,10 +168,13 @@ IonBuilder::InliningStatus
 IonBuilder::inlineArray(uint32 argc, bool constructing)
 {
     uint32_t initLength = 0;
+    MNewArray::AllocatingBehaviour allocating = MNewArray::NewArray_Unallocating;
 
     // Multiple arguments imply array initialization, not just construction.
-    if (argc >= 2)
+    if (argc >= 2) {
         initLength = argc;
+        allocating = MNewArray::NewArray_Allocating;
+    }
 
     // A single integer argument denotes initial length.
     if (argc == 1) {
@@ -195,7 +198,7 @@ IonBuilder::inlineArray(uint32 argc, bool constructing)
     if (!templateObject)
         return InliningStatus_Error;
 
-    MNewArray *ins = new MNewArray(initLength, templateObject, MNewArray::NewArray_Unallocating);
+    MNewArray *ins = new MNewArray(initLength, templateObject, allocating);
     current->add(ins);
     current->push(ins);
 
