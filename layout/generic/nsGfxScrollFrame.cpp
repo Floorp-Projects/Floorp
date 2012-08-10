@@ -1683,19 +1683,18 @@ void
 nsGfxScrollFrameInner::ScrollToCSSPixels(nsIntPoint aScrollPosition)
 {
   nsPoint current = GetScrollPosition();
-  nsIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt(nsPresContext::CSSPixelsToAppUnits(aScrollPosition.x),
              nsPresContext::CSSPixelsToAppUnits(aScrollPosition.y));
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
   nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2*halfPixel - 1, 2*halfPixel - 1);
-  if (currentCSSPixels.x == aScrollPosition.x) {
+  if (nsPresContext::AppUnitsToIntCSSPixels(current.x) == aScrollPosition.x) {
     pt.x = current.x;
     range.x = pt.x;
     range.width = 0;
   } else {
     // current.x must be outside 'range', so we must move in the correct direction.
   }
-  if (currentCSSPixels.y == aScrollPosition.y) {
+  if (nsPresContext::AppUnitsToIntCSSPixels(current.y) == aScrollPosition.y) {
     pt.y = current.y;
     range.y = pt.y;
     range.height = 0;
@@ -1703,14 +1702,6 @@ nsGfxScrollFrameInner::ScrollToCSSPixels(nsIntPoint aScrollPosition)
     // current.y must be outside 'range', so we must move in the correct direction.
   }
   ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
-}
-
-nsIntPoint
-nsGfxScrollFrameInner::GetScrollPositionCSSPixels()
-{
-  nsPoint pt = GetScrollPosition();
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 }
 
 /*
