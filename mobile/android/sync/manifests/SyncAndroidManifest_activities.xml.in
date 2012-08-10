@@ -12,6 +12,9 @@
         </activity>
 
         <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.WebViewActivity" />
+
+        <activity
             android:clearTaskOnLaunch="true"
             android:name="org.mozilla.gecko.sync.setup.activities.AccountActivity"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
