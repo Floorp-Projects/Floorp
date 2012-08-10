@@ -3889,7 +3889,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedObject obj(cx);
     if (argc == 0) {
-        RootedObject global(cx, JS_GetGlobalObject(cx));
+        RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
         AutoIdArray ida(cx, JS_Enumerate(cx, global));
         if (!ida)
             return false;
@@ -3898,15 +3898,23 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
             jsval v;
             if (!JS_LookupPropertyById(cx, global, ida[i], &v))
                 return false;
+            if (JSVAL_IS_PRIMITIVE(v)) {
+                JS_ReportError(cx, "primitive arg");
+                return false;
+            }
             obj = JSVAL_TO_OBJECT(v);
-            if (!JSVAL_IS_PRIMITIVE(v) && !PrintHelp(cx, obj))
+            if (!PrintHelp(cx, obj))
                 return false;
         }
     } else {
         jsval *argv = JS_ARGV(cx, vp);
         for (unsigned i = 0; i < argc; i++) {
+            if (JSVAL_IS_PRIMITIVE(argv[i])) {
+                JS_ReportError(cx, "primitive arg");
+                return false;
+            }
             obj = JSVAL_TO_OBJECT(argv[i]);
-            if (!JSVAL_IS_PRIMITIVE(argv[i]) && !PrintHelp(cx, obj))
+            if (!PrintHelp(cx, obj))
                 return false;
         }
     }

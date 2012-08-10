@@ -2900,7 +2900,7 @@ TypeObject::addPropertyType(JSContext *cx, const char *name, Type type)
 {
     jsid id = JSID_VOID;
     if (name) {
-        JSAtom *atom = js_Atomize(cx, name, strlen(name));
+        JSAtom *atom = Atomize(cx, name, strlen(name));
         if (!atom) {
             AutoEnterTypeInference enter(cx);
             cx->compartment->types.setPendingNukeTypes(cx);

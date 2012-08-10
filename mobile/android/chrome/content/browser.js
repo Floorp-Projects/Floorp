@@ -36,7 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
-  ["Readability", "chrome://browser/content/Readability.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
@@ -2863,10 +2862,12 @@ Tab.prototype = {
           }
         });
 
-        // Once document is fully loaded, we can do a readability check to
-        // possibly enable reader mode for this page
-        Reader.checkTabReadability(this.id, function(isReadable) {
-          if (!isReadable)
+        // Once document is fully loaded, parse it
+        Reader.parseDocumentFromTab(this.id, function (article) {
+          // Do nothing if there's no article or the page in this tab has
+          // changed
+          let tabURL = this.browser.currentURI.specIgnoringRef;
+          if (article == null || (article.url != tabURL))
             return;
 
           sendMessageToJava({
@@ -4067,12 +4068,21 @@ var FormAssistant = {
         if (!this._currentInputElement)
           break;
 
-        this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement).setUserInput(aData);
+        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+
+        // If we have an active composition string, commit it before sending
+        // the autocomplete event with the text that will replace it.
+        try {
+          let imeEditor = editableElement.editor.QueryInterface(Ci.nsIEditorIMESupport);
+          if (imeEditor.composing)
+            imeEditor.forceCompositionEnd();
+        } catch (e) {}
+
+        editableElement.setUserInput(aData);
 
         let event = this._currentInputElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
         this._currentInputElement.dispatchEvent(event);
-
         break;
 
       case "FormAssist:Blocklisted":
@@ -5966,12 +5976,6 @@ var WebappsUI = {
             return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
-          // The manifest is stored as UTF-8, sendMessageToJava expects UTF-16. Convert before sending
-          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
-          converter.charset = "UTF-8";
-          let name = manifest.name ? converter.ConvertToUnicode(manifest.name) :
-                                     converter.ConvertToUnicode(manifest.fullLaunchPath());
-
           let observer = {
             observe: function (aSubject, aTopic) {
               if (aTopic == "alertclickcallback") {
@@ -6430,21 +6434,13 @@ let Reader = {
           return;
         }
 
-        // We need to clone the document before parsing because readability
-        // changes the document object in several ways to find the article
-        // in it.
-        let doc = tab.browser.contentWindow.document.cloneNode(true);
-
-        let readability = new Readability(uri, doc);
-        readability.parse(function (article) {
+        let doc = tab.browser.contentWindow.document;
+        this._readerParse(uri, doc, function (article) {
           if (!article) {
             this.log("Failed to parse page");
             callback(null);
             return;
           }
-
-          // Append URL to the article data
-          article.url = url;
 
           callback(article);
         }.bind(this));
@@ -6452,33 +6448,6 @@ let Reader = {
     } catch (e) {
       this.log("Error parsing document from tab: " + e);
       callback(null);
-    }
-  },
-
-  checkTabReadability: function Reader_checkTabReadability(tabId, callback) {
-    try {
-      this.log("checkTabReadability: " + tabId);
-
-      let tab = BrowserApp.getTabForId(tabId);
-      let url = tab.browser.contentWindow.location.href;
-
-      // First, try to find a cached parsed article in the DB
-      this.getArticleFromCache(url, function(article) {
-        if (article) {
-          this.log("Page found in cache, page is definitely readable");
-          callback(true);
-          return;
-        }
-
-        let uri = Services.io.newURI(url, null, null);
-        let doc = tab.browser.contentWindow.document;
-
-        let readability = new Readability(uri, doc);
-        readability.check(callback);
-      }.bind(this));
-    } catch (e) {
-      this.log("Error checking tab readability: " + e);
-      callback(false);
     }
   },
 
@@ -6579,6 +6548,36 @@ let Reader = {
       dump("Reader: " + msg);
   },
 
+  _readerParse: function Reader_readerParse(uri, doc, callback) {
+    let worker = new ChromeWorker("readerWorker.js");
+    worker.onmessage = function (evt) {
+      let article = evt.data;
+
+      // Append URL to the article data. specIgnoringRef will ignore any hash
+      // in the URL.
+      if (article)
+        article.url = uri.specIgnoringRef;
+
+      callback(article);
+    };
+
+    try {
+      worker.postMessage({
+        uri: {
+          spec: uri.spec,
+          host: uri.host,
+          prePath: uri.prePath,
+          scheme: uri.scheme,
+          pathBase: Services.io.newURI(".", null, uri).spec
+        },
+        doc: new XMLSerializer().serializeToString(doc)
+      });
+    } catch (e) {
+      dump("Reader: could not build Readability arguments: " + e);
+      callback(null);
+    }
+  },
+
   _runCallbacksAndFinish: function Reader_runCallbacksAndFinish(request, result) {
     delete this._requests[request.url];
 
@@ -6641,8 +6640,7 @@ let Reader = {
         this.log("Parsing response with Readability");
 
         let uri = Services.io.newURI(url, null, null);
-        let readability = new Readability(uri, doc);
-        readability.parse(function (article) {
+        this._readerParse(uri, doc, function (article) {
           // Delete reference to the browser element as we've finished parsing.
           let browser = request.browser;
           if (browser) {
@@ -6657,9 +6655,6 @@ let Reader = {
           }
 
           this.log("Parsing has been successful");
-
-          // Append URL to the article data
-          article.url = url;
 
           this._runCallbacksAndFinish(request, article);
         }.bind(this));

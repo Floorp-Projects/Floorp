@@ -48,29 +48,6 @@ function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
 
-// FIXME Bug 707625
-// Please don't add more permissions here.
-// XXX never grant 'content-camera' to non-gaia apps
-function addPermissions(urls) {
-  let permissions = [
-    'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
-    'content-camera', 'wifi-manage', 'desktop-notification',
-    'geolocation', 'device-storage', 'alarms'
-  ];
-
-  urls.forEach(function(url) {
-    url = url.trim();
-    if (url) {
-      let uri = Services.io.newURI(url, null, null);
-      let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
-
-      permissions.forEach(function(permission) {
-        Services.perms.add(uri, permission, allow);
-      });
-    }
-  });
-}
-
 var shell = {
 
   get CrashSubmit() {
@@ -159,13 +136,6 @@ var shell = {
     } catch(e) {
       dump('Error setting master volume: ' + e + '\n');
     }
-
-    let domains = "";
-    try {
-      domains = Services.prefs.getCharPref('b2g.privileged.domains');
-    } catch(e) {}
-
-    addPermissions(domains.split(","));
 
     CustomEventManager.init();
     WebappsHelper.init();

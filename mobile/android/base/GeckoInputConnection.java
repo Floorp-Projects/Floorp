@@ -95,8 +95,7 @@ class GeckoInputConnection
     private int mCompositionStart = NO_COMPOSITION_STRING;
     private boolean mCommittingText;
     private KeyCharacterMap mKeyCharacterMap;
-    private Editable mEditable;
-    private Editable.Factory mEditableFactory;
+    private final Editable mEditable;
     private boolean mBatchMode;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
@@ -110,9 +109,8 @@ class GeckoInputConnection
 
     protected GeckoInputConnection(View targetView) {
         super(targetView, true);
-
-        mEditableFactory = Editable.Factory.getInstance();
-        initEditable("");
+        mEditable = Editable.Factory.getInstance().newEditable("");
+        spanAndSelectEditable();
         mIMEState = IME_STATE_DISABLED;
         mIMETypeHint = "";
         mIMEActionHint = "";
@@ -1149,16 +1147,16 @@ class GeckoInputConnection
     }
 
     private void setEditable(String contents) {
+        int prevLength = mEditable.length();
         mEditable.removeSpan(this);
-        mEditable.replace(0, mEditable.length(), contents);
-        mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        Selection.setSelection(mEditable, contents.length());
+        mEditable.replace(0, prevLength, contents);
+        spanAndSelectEditable();
     }
 
-    private void initEditable(String contents) {
-        mEditable = mEditableFactory.newEditable(contents);
-        mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        Selection.setSelection(mEditable, contents.length());
+    private void spanAndSelectEditable() {
+        int length = mEditable.length();
+        mEditable.setSpan(this, 0, length, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        Selection.setSelection(mEditable, length);
     }
 
     protected final boolean hasCompositionString() {

@@ -878,7 +878,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
                     Value *rval)
 {
     rval->setUndefined();
-    JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return false;
 
@@ -3648,7 +3648,7 @@ DebuggerObject_getClass(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get class", args, refobj);
     const char *s = refobj->getClass()->name;
-    JSAtom *str = js_Atomize(cx, s, strlen(s));
+    JSAtom *str = Atomize(cx, s, strlen(s));
     if (!str)
         return false;
     args.rval().setString(str);
@@ -4307,7 +4307,7 @@ DebuggerEnv_getType(JSContext *cx, unsigned argc, Value *vp)
     else
         s = "object";
 
-    JSAtom *str = js_Atomize(cx, s, strlen(s), InternAtom, NormalEncoding);
+    JSAtom *str = Atomize(cx, s, strlen(s), InternAtom, NormalEncoding);
     if (!str)
         return false;
     args.rval().setString(str);

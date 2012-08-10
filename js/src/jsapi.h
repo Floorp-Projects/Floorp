@@ -5123,7 +5123,7 @@ struct JS_PUBLIC_API(CompileOptions) {
         SAVE_SOURCE
     } sourcePolicy;
 
-    CompileOptions(JSContext *cx);
+    explicit CompileOptions(JSContext *cx);
     CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
     CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals = p; return *this; }
     CompileOptions &setVersion(JSVersion v) { version = v; versionSet = true; return *this; }

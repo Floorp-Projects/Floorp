@@ -406,6 +406,7 @@ var steps = [
     ok(true, "Adding a new contact with properties1");
     createResult1 = new mozContact();
     createResult1.init(properties1);
+    mozContacts.oncontactchange = null;
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -420,7 +421,6 @@ var steps = [
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
                    filterValue: properties1.tel[1].number.substring(1,5)};
-    mozContacts.oncontactchange = null;
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
