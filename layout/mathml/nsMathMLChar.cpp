@@ -33,7 +33,6 @@
 
 using namespace mozilla;
 
-//#define SHOW_BORDERS 1
 //#define NOISY_SEARCH 1
 
 // -----------------------------------------------------------------------------------
@@ -2057,21 +2056,16 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     // normal drawing if there is nothing special about this char ...
     // Grab some metrics to adjust the placements ...
     PRUint32 len = PRUint32(mData.Length());
-//printf("Painting %04X like a normal char\n", mData[0]);
-//aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawString(mData.get(), len, 0, mUnscaledAscent);
   }
   else {
     // Grab some metrics to adjust the placements ...
     // if there is a glyph of appropriate size, paint that glyph
     if (mGlyph.Exists()) {
-//printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
-//aRenderingContext.SetColor(NS_RGB(0,0,255));
       aRenderingContext.DrawString(mGlyph.code, mGlyph.Length(),
                                    0, mUnscaledAscent);
     }
     else { // paint by parts
-//aRenderingContext.SetColor(NS_RGB(0,255,0));
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
         PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
                         mGlyphTable, r);
@@ -2212,11 +2206,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     ch = chdata[i];
     // glue can be null, and other parts could have been set to glue
     if (ch.Exists()) {
-#ifdef SHOW_BORDERS
-      // bounding box of the part
-      aRenderingContext.SetColor(NS_RGB(0,0,0));
-      aRenderingContext.DrawRect(nsRect(dx,start[i],aRect.width+30*(i+1),end[i]-start[i]));
-#endif
       nscoord dy = offset[i];
       // Draw a glyph in a clipped area so that we don't have hairy chars
       // pending outside
@@ -2306,14 +2295,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       // Make sure not to draw outside the character
       nscoord dy = NS_MAX(end[i], aRect.y);
       nscoord fillEnd = NS_MIN(start[i+1], aRect.YMost());
-#ifdef SHOW_BORDERS
-      // exact area to fill
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      clipRect.y = dy;
-      clipRect.height = fillEnd - dy;
-      aRenderingContext.DrawRect(clipRect);
-      {
-#endif
       while (dy < fillEnd) {
         clipRect.y = dy;
         clipRect.height = NS_MIN(bm.ascent + bm.descent, fillEnd - dy);
@@ -2322,13 +2303,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
         aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
         dy += bm.descent;
       }
-#ifdef SHOW_BORDERS
-      }
-      // last glyph that may cross past its boundary and collide with the next
-      nscoord height = bm.ascent + bm.descent;
-      aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(nsRect(dx, dy-bm.ascent, aRect.width, height));
-#endif
     }
   }
 #ifdef DEBUG
@@ -2437,11 +2411,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     ch = chdata[i];
     // glue can be null, and other parts could have been set to glue
     if (ch.Exists()) {
-#ifdef SHOW_BORDERS
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawRect(nsRect(start[i], dy - bmdata[i].ascent,
-                                 end[i] - start[i], bmdata[i].ascent + bmdata[i].descent));
-#endif
       nscoord dx = offset[i];
       nsRect clipRect = unionRect;
       // Clip at the join to get a solid edge (without overlap or gap), when
@@ -2528,14 +2497,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       // Make sure not to draw outside the character
       nscoord dx = NS_MAX(end[i], aRect.x);
       nscoord fillEnd = NS_MIN(start[i+1], aRect.XMost());
-#ifdef SHOW_BORDERS
-      // rectangles in-between that are to be filled
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      clipRect.x = dx;
-      clipRect.width = fillEnd - dx;
-      aRenderingContext.DrawRect(clipRect);
-      {
-#endif
       while (dx < fillEnd) {
         clipRect.x = dx;
         clipRect.width = NS_MIN(bm.rightBearing - bm.leftBearing, fillEnd - dx);
@@ -2544,13 +2505,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
         aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
         dx += bm.rightBearing;
       }
-#ifdef SHOW_BORDERS
-      }
-      // last glyph that may cross past its boundary and collide with the next
-      nscoord width = bm.rightBearing - bm.leftBearing;
-      aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(nsRect(dx + bm.leftBearing, aRect.y, width, aRect.height));
-#endif
     }
   }
 #ifdef DEBUG
