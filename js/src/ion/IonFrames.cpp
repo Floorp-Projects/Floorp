@@ -300,6 +300,10 @@ ion::HandleException(ResumeFromException *rfe)
 
     IonSpew(IonSpew_Invalidate, "handling exception");
 
+    // Immediately remove any bailout frame guard that might be left over from
+    // an error in between ConvertFrames and ThunkToInterpreter.
+    cx->delete_(cx->runtime->ionActivation->maybeTakeBailout());
+
     IonFrameIterator iter(cx->runtime->ionTop);
     while (!iter.isEntry()) {
         if (iter.isScripted()) {

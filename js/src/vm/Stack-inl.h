@@ -434,7 +434,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                               JSFunction &callee, JSScript *script,
-                              InitialFrameFlags initial)
+                              InitialFrameFlags initial, MaybeReportError report)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
@@ -442,7 +442,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(script == callee.script());
 
     StackFrame::Flags flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
+    StackFrame *fp = getCallFrame(cx, report, args, &callee, script, &flags);
     if (!fp)
         return false;
 
