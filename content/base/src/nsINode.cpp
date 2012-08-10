@@ -311,11 +311,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 nsINodeList*
 nsINode::GetChildNodesList()
 {
-  nsSlots *slots = GetSlots();
-  if (!slots) {
-    return nullptr;
-  }
-
+  nsSlots* slots = Slots();
   if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
     if (slots->mChildNodes) {
