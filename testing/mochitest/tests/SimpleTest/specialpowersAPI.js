@@ -1131,7 +1131,7 @@ SpecialPowersAPI.prototype = {
     if (typeof(urlOrDocument) == "string") {
       return Cc["@mozilla.org/network/io-service;1"].
                getService(Ci.nsIIOService).
-               newURI(url, null, null);
+               newURI(urlOrDocument, null, null);
     }
     // Assume document.
     return this.getDocumentURIObject(urlOrDocument);
