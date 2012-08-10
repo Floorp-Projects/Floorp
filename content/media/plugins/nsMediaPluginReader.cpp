@@ -30,8 +30,6 @@ nsMediaPluginReader::~nsMediaPluginReader()
 
 nsresult nsMediaPluginReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-
   return NS_OK;
 }
 
@@ -145,10 +143,15 @@ bool nsMediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     mVideoSeekTimeUs = -1;
 
     if (aKeyframeSkip) {
+      // Disable keyframe skipping for now as
+      // stagefright doesn't seem to be telling us
+      // when a frame is a keyframe.
+#if 0
       if (!frame.mKeyFrame) {
         ++parsed;
         continue;
       }
+#endif
       aKeyframeSkip = false;
     }
 
