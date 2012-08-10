@@ -35,16 +35,19 @@ class B2GRemoteAutomation(Automation):
     _devicemanager = None
 
     def __init__(self, deviceManager, appName='', remoteLog=None,
-                 marionette=None):
+                 marionette=None, context_chrome=True):
         self._devicemanager = deviceManager
         self._appName = appName
         self._remoteProfile = None
         self._remoteLog = remoteLog
         self.marionette = marionette
+        self.context_chrome = context_chrome
         self._is_emulator = False
 
         # Default our product to b2g
         self._product = "b2g"
+        # Default log finish to mochitest standard
+        self.logFinish = 'INFO SimpleTest FINISHED' 
         Automation.__init__(self)
 
     def setEmulator(self, is_emulator):
@@ -121,7 +124,7 @@ class B2GRemoteAutomation(Automation):
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime,
                       debuggerInfo, symbolsPath):
-        """ Wait for mochitest to finish (as evidenced by a signature string
+        """ Wait for tests to finish (as evidenced by a signature string
             in logcat), or for a given amount of time to elapse with no
             output.
         """
@@ -135,7 +138,7 @@ class B2GRemoteAutomation(Automation):
             if currentlog:
                 done = time.time() + timeout
                 print currentlog
-                if 'INFO SimpleTest FINISHED' in currentlog:
+                if hasattr(self, 'logFinish') and self.logFinish in currentlog:
                     return 0
             else:
                 if time.time() > done:
@@ -162,6 +165,8 @@ class B2GRemoteAutomation(Automation):
         return (serial, status)
 
     def restartB2G(self):
+        # TODO hangs in subprocess.Popen without this delay
+        time.sleep(5)
         self._devicemanager.checkCmd(['shell', 'stop', 'b2g'])
         # Wait for a bit to make sure B2G has completely shut down.
         time.sleep(10)
@@ -194,11 +199,11 @@ class B2GRemoteAutomation(Automation):
 
     def Process(self, cmd, stdout=None, stderr=None, env=None, cwd=None):
         # On a desktop or fennec run, the Process method invokes a gecko
-        # process in which to run mochitests.  For B2G, we simply
+        # process in which to the tests.  For B2G, we simply
         # reboot the device (which was configured with a test profile
         # already), wait for B2G to start up, and then navigate to the
         # test url using Marionette.  There doesn't seem to be any way
-        # to pass env variables into the B2G process, but this doesn't 
+        # to pass env variables into the B2G process, but this doesn't
         # seem to matter.
 
         # reboot device so it starts up with the mochitest profile
@@ -239,11 +244,27 @@ class B2GRemoteAutomation(Automation):
         if 'b2g' not in session:
             raise Exception("bad session value %s returned by start_session" % session)
 
-        # Start the tests by navigating to the mochitest url, by setting it
-        # as the 'src' attribute to the homescreen mozbrowser element
-        # provided by B2G's shell.js.
-        self.marionette.set_context("chrome")
-        self.marionette.execute_script("document.getElementById('homescreen').src='%s';" % self.testURL)
+        if self.context_chrome:
+            self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+
+        # start the tests
+        if hasattr(self, 'testURL'):
+            # Start the tests by navigating to the mochitest url, by setting it
+            # as the 'src' attribute to the homescreen mozbrowser element
+            # provided by B2G's shell.js.
+            self.marionette.execute_script("document.getElementById('homescreen').src='%s';" % self.testURL)
+        # run the script that starts the tests
+        elif hasattr(self, 'testScript'):
+            if os.path.isfile(self.testScript):
+                script = open(self.testScript, 'r')
+                self.marionette.execute_script(script.read())
+                script.close()
+            else:
+                # assume testScript is a string
+                self.marionette.execute_script(self.testScript)
+        else:
+            # assumes the tests are started on startup automatically
+            pass
 
         return instance
 
