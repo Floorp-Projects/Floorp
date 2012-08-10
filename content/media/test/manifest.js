@@ -10,6 +10,7 @@ var gSmallTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
   { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.0 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -21,6 +22,7 @@ var gProgressTests = [
   { name:"seek.ogv", type:"video/ogg", duration:3.966, size:285310 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942 },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.0, size:383631 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -30,6 +32,7 @@ var gPlayedTests = [
   { name:"sound.ogg", type:"audio/ogg", duration:4.0 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.0 },
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
@@ -146,6 +149,8 @@ var gPlayTests = [
 
   // Opus data in an ogg container
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.0 },
 
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }

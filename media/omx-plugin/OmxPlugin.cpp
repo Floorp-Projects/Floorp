@@ -1,41 +1,13 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
-/* Copyright 2012 Mozilla Foundation and Mozilla contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-#include <unistd.h>
-#include <fcntl.h>
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stagefright/DataSource.h>
-#include <stagefright/MediaErrors.h>
 #include <stagefright/MediaExtractor.h>
-#include <stagefright/MediaSource.h>
 #include <stagefright/MetaData.h>
 #include <stagefright/OMXCodec.h>
-#include <stagefright/HardwareAPI.h>
 #include <OMX.h>
-#include <ui/GraphicBuffer.h>
-#include <ui/Rect.h>
-#include <ui/Region.h>
-#include <binder/IMemory.h>
-
-#include <OMX_Types.h>
-#include <OMX_Core.h>
-#include <OMX_Index.h>
-#include <OMX_IVCommon.h>
-#include <OMX_Component.h>
 
 #include "mozilla/Types.h"
 #include "MPAPI.h"
@@ -240,8 +212,8 @@ public:
 static sp<IOMX> sOMX = NULL;
 static sp<IOMX> GetOMX() {
   if(sOMX.get() == NULL) {
-    sOMX = new OMX;
-    }
+    sOMX = reinterpret_cast<IOMX*>(new OMX);
+  }
   return sOMX;
 }
 
@@ -301,7 +273,7 @@ bool OmxDecoder::Init() {
                                    false, // decoder
                                    videoTrack,
                                    NULL,
-                                   0); // flags (prefer hw codecs)
+                                   OMXCodec::kSoftwareCodecsOnly);
     if (videoSource == NULL) {
       return false;
     }
@@ -550,7 +522,10 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
   }
   else if (err == INFO_FORMAT_CHANGED) {
     // If the format changed, update our cached info.
-    return SetVideoFormat();
+    if (!SetVideoFormat())
+      return false;
+    else
+      return ReadVideo(aFrame, aSeekTimeUs);
   }
   else if (err == ERROR_END_OF_STREAM) {
     return false;
@@ -592,14 +567,17 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
                         mAudioBuffer->range_length(),
                         mAudioChannels, mAudioSampleRate);
   }
-  else if (err == INFO_FORMAT_CHANGED && !SetAudioFormat()) {
+  else if (err == INFO_FORMAT_CHANGED) {
     // If the format changed, update our cached info.
-    return false;
+    if (!SetAudioFormat())
+      return false;
+    else
+      return ReadAudio(aFrame, aSeekTimeUs);
   }
   else if (err == ERROR_END_OF_STREAM)
     return false;
-
-  return true;
+  else
+    return false; 
 }
 
 static OmxDecoder *cast(Decoder *decoder) {

@@ -34,14 +34,30 @@ USE_STATIC_LIBS = 1
 NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
+DIRS += lib/ics/libutils
+
 CPPSRCS = \
     OmxPlugin.cpp \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef GNU_CXX
+# Turn off C++ 11 features due to conflicts with Android OS headers and char16_t definition
+CXXFLAGS += -std=gnu++98
+endif
+
 INCLUDES        += \
                 -I$(srcdir)/../../content/media/plugins \
+                $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+EXTRA_DSO_LDOPTS += \
+               -lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
+               -lhardware -lcutils \
+		$(NULL)
+
+INCLUDES        += \
                 -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
@@ -49,12 +65,25 @@ INCLUDES        += \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
                 -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
+                -I$(ANDROID_SOURCE)/frameworks/base/native/include \
+                -I$(ANDROID_SOURCE)/system/core/include \
+                -I$(ANDROID_SOURCE)/hardware/libhardware/include \
                 $(NULL)
-
+else
 EXTRA_DSO_LDOPTS += \
-		-lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
-		-lhardware -lcutils \
+		-L$(DEPTH)/media/omx-plugin/lib/ics/libutils \
+		-lutils \
+		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright \
+		-lstagefright \
+		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright_omx \
+		-lstagefright_omx \
 		$(NULL)
+
+INCLUDES        += \
+                -I$(srcdir)/include/ics \
+                -I$(srcdir)/include/ics/media/stagefright/openmax \
+                $(NULL)
+endif
 
 libs::	$(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
 	$(INSTALL) $< $(DEPTH)/dist/bin
