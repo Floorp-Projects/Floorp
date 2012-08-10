@@ -14,7 +14,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconxbl_s
 LIBXUL_LIBRARY	= 1
 
-
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
