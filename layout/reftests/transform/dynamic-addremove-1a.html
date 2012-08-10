@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="margin:0;">
+<div id="t" style="width:100px; height:100px; background:yellow;">
+  <div style="position:absolute; left:50px; top:50px; width:100px; height:100px; background:orange;"></div>
+</div>
+<script>
+function doTest() {
+  document.getElementById("t").style.transform = "translate(80px,20px)";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
