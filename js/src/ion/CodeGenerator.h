@@ -109,6 +109,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitPowD(LPowD *lir);
     bool visitMathFunctionD(LMathFunctionD *ins);
     bool visitModD(LModD *ins);
+    bool visitMinMaxI(LMinMaxI *lir);
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareS(LCompareS *lir);
     bool visitCompareV(LCompareV *lir);

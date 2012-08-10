@@ -43,6 +43,7 @@ namespace ion {
     _(Lsh)                                                                  \
     _(Rsh)                                                                  \
     _(Ursh)                                                                 \
+    _(MinMax)                                                               \
     _(Abs)                                                                  \
     _(Sqrt)                                                                 \
     _(Pow)                                                                  \

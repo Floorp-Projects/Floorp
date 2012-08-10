@@ -104,6 +104,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitUrsh(MUrsh *ins);
     bool visitFloor(MFloor *ins);
     bool visitRound(MRound *ins);
+    bool visitMinMax(MMinMax *ins);
     bool visitAbs(MAbs *ins);
     bool visitSqrt(MSqrt *ins);
     bool visitPow(MPow *ins);

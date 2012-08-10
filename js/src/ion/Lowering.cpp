@@ -683,6 +683,22 @@ LIRGenerator::visitRound(MRound *ins)
 }
 
 bool
+LIRGenerator::visitMinMax(MMinMax *ins)
+{
+    MDefinition *first = ins->getOperand(0);
+    MDefinition *second = ins->getOperand(1);
+
+    if (ins->specialization() == MIRType_Int32) {
+        ReorderCommutative(&first, &second);
+        LMinMaxI *lir = new LMinMaxI(useRegisterAtStart(first), useRegisterOrConstant(second));
+        return defineReuseInput(lir, ins, 0);
+    } else {
+        LMinMaxD *lir = new LMinMaxD(useRegisterAtStart(first), useRegister(second));
+        return defineReuseInput(lir, ins, 0);
+    }
+}
+
+bool
 LIRGenerator::visitAbs(MAbs *ins)
 {
     MDefinition *num = ins->num();

@@ -1055,6 +1055,9 @@ class AssemblerX86Shared
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());
     }
+    void orpd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.orpd_rr(src.code(), dest.code());
+    }
     void andpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.andpd_rr(src.code(), dest.code());
     }
