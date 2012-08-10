@@ -139,6 +139,11 @@ public:
    */
   virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) = 0;
   /**
+   * Returns the scroll position in integer CSS pixels, rounded to the nearest
+   * pixel.
+   */
+  virtual nsIntPoint GetScrollPositionCSSPixels() = 0;
+  /**
    * When scrolling by a relative amount, we can choose various units.
    */
   enum ScrollUnit { DEVICE_PIXELS, LINES, PAGES, WHOLE };
