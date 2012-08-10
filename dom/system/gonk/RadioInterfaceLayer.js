@@ -541,7 +541,7 @@ RadioInterfaceLayer.prototype = {
       newInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
       (!newInfo.roaming || this._isDataRoamingEnabled());
     let haveDataConnection =
-      newInfo.type != GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
+      newInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
 
     if (isRegistered && haveDataConnection) {
       debug("Radio is ready for data connection.");
