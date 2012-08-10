@@ -159,6 +159,11 @@ REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
+RUN_REFTEST_B2G = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftestb2g.py \
+  --remote-webserver=10.0.2.2 --b2gpath=${B2G_PATH} --adbpath=${ADB_PATH} \
+  --xre-path=${MOZ_HOST_BIN} $(SYMBOLS_PATH) --ignore-window-size \
+  $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+
 ifeq ($(OS_ARCH),WINNT) #{
 # GPU-rendered shadow layers are unsupported here
 OOP_CONTENT = --setpref=browser.tabs.remote=true --setpref=layers.acceleration.disabled=true
@@ -185,6 +190,22 @@ reftest-remote:
         $(call REMOTE_REFTEST,tests/$(TEST_PATH)); \
         $(CHECK_TEST_ERROR); \
     fi
+
+reftest-b2g: TEST_PATH?=layout/reftests/reftest.list
+reftest-b2g:
+	@if [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
+        echo "please set the MOZ_HOST_BIN environment variable"; \
+	elif [ "${B2G_PATH}" = "" -o "${ADB_PATH}" = "" ]; then \
+		echo "please set the B2G_PATH and ADB_PATH environment variables"; \
+	else \
+        ln -s $(abspath $(topsrcdir)) _tests/reftest/tests; \
+		if [ "${REFTEST_PATH}" != "" ]; then \
+			$(call RUN_REFTEST_B2G,tests/${REFTEST_PATH}); \
+		else \
+			$(call RUN_REFTEST_B2G,tests/$(TEST_PATH)); \
+		fi; \
+        $(CHECK_TEST_ERROR); \
+	fi
 
 reftest-ipc: TEST_PATH?=layout/reftests/reftest.list
 reftest-ipc:
