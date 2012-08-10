@@ -517,7 +517,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &reflow);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &recompile);
 
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &boundscheck);
+    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &boundscheck);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
 
     // Fall-through: force invalidation.
