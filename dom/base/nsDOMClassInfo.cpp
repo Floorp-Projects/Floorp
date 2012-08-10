@@ -7992,9 +7992,14 @@ GetBindingURL(Element *aElement, nsIDocument *aDocument,
 {
   // If we have a frame the frame has already loaded the binding.  And
   // otherwise, don't do anything else here unless we're dealing with
-  // XUL.
+  // XUL or an HTML element that may have a plugin-related overlay
+  // (i.e. object, embed, or applet).
+  bool isXULorPluginElement = (aElement->IsXUL() ||
+                               aElement->IsHTML(nsGkAtoms::object) ||
+                               aElement->IsHTML(nsGkAtoms::embed) ||
+                               aElement->IsHTML(nsGkAtoms::applet));
   nsIPresShell *shell = aDocument->GetShell();
-  if (!shell || aElement->GetPrimaryFrame() || !aElement->IsXUL()) {
+  if (!shell || aElement->GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
 
     return true;
@@ -9824,18 +9829,18 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
     // that can result from such a situation. We'll return NS_OK for the time
     // being and hope for the best.
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetupProtoChain failed!");
-    return NS_OK;
+  }
+  else {
+    // This may be null if the JS context is not a DOM context. That's ok, we'll
+    // use the safe context from XPConnect in the runnable.
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
+
+    nsRefPtr<nsPluginProtoChainInstallRunner> runner =
+      new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
+    nsContentUtils::AddScriptRunner(runner);
   }
 
-  // This may be null if the JS context is not a DOM context. That's ok, we'll
-  // use the safe context from XPConnect in the runnable.
-  nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
-
-  nsRefPtr<nsPluginProtoChainInstallRunner> runner =
-    new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
-  nsContentUtils::AddScriptRunner(runner);
-
-  return NS_OK;
+  return nsElementSH::PostCreate(wrapper, cx, obj);
 }
 
 NS_IMETHODIMP
