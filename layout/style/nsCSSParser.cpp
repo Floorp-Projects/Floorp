@@ -3595,10 +3595,12 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
     return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
-  // -moz-locale-dir can only have values of 'ltr' or 'rtl'.
-  if (aType == nsCSSPseudoClasses::ePseudoClass_mozLocaleDir) {
+  // -moz-locale-dir and :dir can only have values of 'ltr' or 'rtl'.
+  if (aType == nsCSSPseudoClasses::ePseudoClass_mozLocaleDir ||
+      aType == nsCSSPseudoClasses::ePseudoClass_dir) {
     if (!mToken.mIdent.EqualsLiteral("ltr") &&
         !mToken.mIdent.EqualsLiteral("rtl")) {
+      REPORT_UNEXPECTED_TOKEN(PEBadDirValue);
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
   }
