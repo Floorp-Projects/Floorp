@@ -66,7 +66,6 @@ Readability.prototype = {
   FLAG_STRIP_UNLIKELYS: 0x1,
   FLAG_WEIGHT_CLASSES: 0x2,
   FLAG_CLEAN_CONDITIONALLY: 0x4,
-  FLAG_READABILITY_CHECK: 0x8,
 
   // The maximum number of pages to loop through before we call
   // it quits and just show a link.
@@ -218,9 +217,6 @@ Readability.prototype = {
    * @return void
    **/
   _prepDocument: function() {
-    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
-      return;
-
     let doc = this._doc;
 
     // In some cases a body element can't be found (if the HTML is
@@ -497,7 +493,6 @@ Readability.prototype = {
     while (true) {
       let doc = this._doc;
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
-      let isChecking = this._flagIsActive(this.FLAG_READABILITY_CHECK);
       let isPaging = (page !== null ? true: false);
 
       page = page ? page : this._doc.body;
@@ -536,15 +531,12 @@ Readability.prototype = {
         // Turn all divs that don't have children block level elements into p's
         if (node.tagName === "DIV") {
           if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1) {
-            if (!isChecking) {
-              let newNode = doc.createElement('p');
-              newNode.innerHTML = node.innerHTML;
-              node.parentNode.replaceChild(newNode, node);
-              nodeIndex -= 1;
-            }
-
+            let newNode = doc.createElement('p');
+            newNode.innerHTML = node.innerHTML;
+            node.parentNode.replaceChild(newNode, node);
+            nodeIndex -= 1;
             nodesToScore[nodesToScore.length] = node;
-          } else if (!isChecking) {
+          } else {
             // EXPERIMENTAL
             for (let i = 0, il = node.childNodes.length; i < il; i += 1) {
               let childNode = node.childNodes[i];
@@ -644,13 +636,6 @@ Readability.prototype = {
       // If we still have no top candidate, just use the body as a last resort.
       // We also have to copy the body node so it is something we can modify.
       if (topCandidate === null || topCandidate.tagName === "BODY") {
-        // If we couldn't find a candidate for article content at this point,
-        // it's very unlikely to be a convertible page, just bail the check.
-        if (isChecking) {
-          dump('No top candidate found, failed readability check');
-          yield null;
-        }
-
         topCandidate = doc.createElement("DIV");
         topCandidate.innerHTML = page.innerHTML;
 
@@ -658,12 +643,6 @@ Readability.prototype = {
         page.appendChild(topCandidate);
 
         this._initializeNode(topCandidate);
-      } else if (isChecking) {
-        dump('Found a top candidate, passed readability check');
-
-        // Just return a non-null value, no need to post-process the article content
-        // as we're just checking for readability.
-        yield {};
       }
 
       // Now that we have the top candidate, look through its siblings for content
@@ -776,9 +755,6 @@ Readability.prototype = {
    * @param Element
   **/
   _removeScripts: function(doc) {
-    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
-      return;
-
     let scripts = doc.getElementsByTagName('script');
     for (let i = scripts.length - 1; i >= 0; i -= 1) {
       scripts[i].nodeValue="";
@@ -1457,14 +1433,6 @@ Readability.prototype = {
         return;
       }
 
-      // If we're simply checking whether the document is convertible
-      // or not, we don't need to do any post-processing on the article
-      // content, just return a non-null value (see check() method)
-      if (this._flagIsActive(this.FLAG_READABILITY_CHECK)) {
-        callback({});
-        return;
-      }
-
       this._postProcessContent(articleContent);
 
       // if (nextPageLink) {
@@ -1478,15 +1446,5 @@ Readability.prototype = {
       callback({ title: this._getInnerText(articleTitle),
                  content: articleContent.innerHTML });
     }.bind(this));
-  },
-
-  check: function (callback) {
-    // Set proper flags for parsing document in readability check mode, skipping
-    // any DOM manipulation.
-    this._flags = this.FLAG_READABILITY_CHECK;
-
-    this.parse(function (result) {
-      callback(result != null);
-    });
   }
 };

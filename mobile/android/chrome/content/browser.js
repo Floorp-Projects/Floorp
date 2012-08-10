@@ -2863,10 +2863,9 @@ Tab.prototype = {
           }
         });
 
-        // Once document is fully loaded, we can do a readability check to
-        // possibly enable reader mode for this page
-        Reader.checkTabReadability(this.id, function(isReadable) {
-          if (!isReadable)
+        // Once document is fully loaded, parse it
+        Reader.parseDocumentFromTab(this.id, function (article) {
+          if (article == null)
             return;
 
           sendMessageToJava({
@@ -6433,11 +6432,7 @@ let Reader = {
           return;
         }
 
-        // We need to clone the document before parsing because readability
-        // changes the document object in several ways to find the article
-        // in it.
-        let doc = tab.browser.contentWindow.document.cloneNode(true);
-
+        let doc = tab.browser.contentWindow.document;
         let readability = new Readability(uri, doc);
         readability.parse(function (article) {
           if (!article) {
@@ -6455,33 +6450,6 @@ let Reader = {
     } catch (e) {
       this.log("Error parsing document from tab: " + e);
       callback(null);
-    }
-  },
-
-  checkTabReadability: function Reader_checkTabReadability(tabId, callback) {
-    try {
-      this.log("checkTabReadability: " + tabId);
-
-      let tab = BrowserApp.getTabForId(tabId);
-      let url = tab.browser.contentWindow.location.href;
-
-      // First, try to find a cached parsed article in the DB
-      this.getArticleFromCache(url, function(article) {
-        if (article) {
-          this.log("Page found in cache, page is definitely readable");
-          callback(true);
-          return;
-        }
-
-        let uri = Services.io.newURI(url, null, null);
-        let doc = tab.browser.contentWindow.document;
-
-        let readability = new Readability(uri, doc);
-        readability.check(callback);
-      }.bind(this));
-    } catch (e) {
-      this.log("Error checking tab readability: " + e);
-      callback(false);
     }
   },
 
