@@ -489,7 +489,11 @@ ContactManager.prototype = {
     let allowCallback = function() {
       let callback = function(aType, aContacts) {
         debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
-        let result = aContacts.map(function(c) { return { name: [c.alphaId], tel: [c.number] } });
+        let result = aContacts.map(function(c) {
+          var contact = new Contact();
+          contact.init( { name: [c.alphaId], tel: [ { number: c.number } ] } );
+          return contact;
+        });
         debug("result: " + JSON.stringify(result));
         Services.DOMRequest.fireSuccess(request, result);
       };
