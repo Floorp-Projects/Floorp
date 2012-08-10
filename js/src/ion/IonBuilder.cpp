@@ -3855,7 +3855,7 @@ IonBuilder::jsop_newarray(uint32 count)
     if (!templateObject)
         return false;
 
-    MNewArray *ins = new MNewArray(count, templateObject);
+    MNewArray *ins = new MNewArray(count, templateObject, MNewArray::NewArray_Allocating);
 
     current->add(ins);
     current->push(ins);
