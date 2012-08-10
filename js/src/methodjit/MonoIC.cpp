@@ -763,7 +763,7 @@ class CallCompiler : public BaseCompiler
 
         masm.move(ionReturn, JSReturnReg_Type);
 
-        masm.move(JSReturnReg_Type, rval);
+        masm.storePtr(JSReturnReg_Type, rval);
         masm.move(Registers::PayloadMaskReg, JSReturnReg_Data);
         masm.andPtr(JSReturnReg_Type, JSReturnReg_Data);
         masm.xorPtr(JSReturnReg_Data, JSReturnReg_Type);
