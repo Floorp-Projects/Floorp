@@ -45,6 +45,7 @@ class nsSVGLength2;
 class nsSVGOuterSVGFrame;
 class nsSVGPathGeometryFrame;
 class nsSVGSVGElement;
+class nsTextFrame;
 
 struct nsStyleSVG;
 struct nsStyleSVGPaint;
@@ -655,6 +656,9 @@ public:
    */
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsSVGGeometryFrame* aFrame,
+                                               const gfxMatrix& aMatrix);
+  static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
+                                               nsTextFrame* aFrame,
                                                const gfxMatrix& aMatrix);
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsSVGPathGeometryFrame* aFrame,
