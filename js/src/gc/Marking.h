@@ -108,6 +108,9 @@ MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 void
 MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name);
 
+void
+MarkGCThingUnbarriered(JSTracer *trc, void **thingp, const char *name);
+
 /*** ID Marking ***/
 
 void
@@ -144,9 +147,6 @@ MarkValueRoot(JSTracer *trc, Value *v, const char *name);
 
 void
 MarkThingOrValueUnbarriered(JSTracer *trc, uintptr_t *word, const char *name);
-
-void
-MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name);
 
 void
 MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name);

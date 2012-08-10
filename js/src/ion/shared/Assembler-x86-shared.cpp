@@ -32,8 +32,22 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
         size_t offset = reader.readUnsigned();
         void **ptr = JSC::X86Assembler::getPointerRef(buffer + offset);
 
+#ifdef JS_PUNBOX64
+        // All pointers on x64 will have the top bits cleared. If those bits
+        // are not cleared, this must be a Value.
+        uintptr_t *word = reinterpret_cast<uintptr_t *>(ptr);
+        if (*word >> JSVAL_TAG_SHIFT) {
+            jsval_layout layout;
+            layout.asBits = *word;
+            Value v = IMPL_TO_JSVAL(layout);
+            gc::MarkValueUnbarriered(trc, &v, "ion-masm-value");
+            JS_ASSERT(*word == JSVAL_TO_IMPL(v).asBits);
+            continue;
+        }
+#endif
+
         // No barrier needed since these are constants.
-        gc::MarkThingOrValueUnbarriered(trc, reinterpret_cast<uintptr_t *>(ptr), "imm-gc-word");
+        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(ptr), "ion-masm-ptr");
     }
 }
 

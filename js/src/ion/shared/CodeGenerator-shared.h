@@ -169,9 +169,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     // error (the code generator may use a slower bailout mechanism).
     bool assignBailoutId(LSnapshot *snapshot);
 
-    // Encode a safepoint in the safepoint stream.
-    void encodeSafepoint(LSafepoint *safepoint);
-
     // Encode all encountered safepoints in CG-order, and resolve |indices| for
     // safepoint offsets.
     void encodeSafepoints();

@@ -454,7 +454,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     uint32 slot;
     while (safepoint.getGcSlot(&slot)) {
         uintptr_t *ref = layout->slotRef(slot);
-        gc::MarkThingOrValueRoot(trc, ref, "ion-gc-slot");
+        gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(ref), "ion-gc-slot");
     }
 
     while (safepoint.getValueSlot(&slot)) {
@@ -464,10 +464,13 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     uintptr_t *spill = frame.spillBase();
     GeneralRegisterSet gcRegs = safepoint.gcSpills();
+    GeneralRegisterSet valueRegs = safepoint.valueSpills();
     for (GeneralRegisterIterator iter(safepoint.allSpills()); iter.more(); iter++) {
         --spill;
         if (gcRegs.has(*iter))
-            gc::MarkThingOrValueRoot(trc, spill, "ion-gc-spill");
+            gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(spill), "ion-gc-spill");
+        else if (valueRegs.has(*iter))
+            gc::MarkValueRoot(trc, reinterpret_cast<Value *>(spill), "ion-value-spill");
     }
 
 #ifdef JS_NUNBOX32
@@ -545,7 +548,7 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
             gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootCell:
-            gc::MarkThingOrValueRoot(trc, reinterpret_cast<uintptr_t *>(argBase), "ion-vm-args");
+            gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(argBase), "ion-vm-args");
             break;
         }
 
