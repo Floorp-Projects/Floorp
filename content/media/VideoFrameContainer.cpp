@@ -49,6 +49,14 @@ double VideoFrameContainer::GetFrameDelay()
 void VideoFrameContainer::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must call on main thread");
+
+  if (!mNeedInvalidation) {
+    return;
+  }
+  if (mImageContainer && mImageContainer->IsAsync()) {
+    mNeedInvalidation = false;
+  }
+
   if (!mElement) {
     // Element has been destroyed
     return;
