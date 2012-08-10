@@ -238,8 +238,13 @@ pref("gfx.content.azure.enabled", true);
 pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cg");
 #else
+#ifdef ANDROID
+pref("gfx.canvas.azure.enabled", true);
+pref("gfx.canvas.azure.backends", "cairo");
+#else
 pref("gfx.canvas.azure.enabled", false);
 pref("gfx.canvas.azure.backends", "cairo");
+#endif
 #endif
 #endif
 

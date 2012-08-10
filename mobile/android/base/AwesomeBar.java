@@ -319,12 +319,15 @@ public class AwesomeBar extends GeckoActivity {
         mGoButton.setVisibility(View.VISIBLE);
 
         int imageResource = R.drawable.ic_awesomebar_go;
+        String contentDescription = getString(R.string.go);
         int imeAction = EditorInfo.IME_ACTION_GO;
         if (isSearchUrl(text)) {
             imageResource = R.drawable.ic_awesomebar_search;
+            contentDescription = getString(R.string.search);
             imeAction = EditorInfo.IME_ACTION_SEARCH;
         }
         mGoButton.setImageResource(imageResource);
+        mGoButton.setContentDescription(contentDescription);
 
         int actionBits = mText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
         if (actionBits != imeAction) {

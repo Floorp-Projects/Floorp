@@ -3304,8 +3304,9 @@ BEGIN_CASE(JSOP_RETSUB)
         goto error;
     }
     JS_ASSERT(rval.isInt32());
-    len = rval.toInt32();
-    regs.pc = script->code;
+
+    /* Increment the PC by this much. */
+    len = rval.toInt32() - int32_t(regs.pc - script->code);
 END_VARLEN_CASE
 }
 

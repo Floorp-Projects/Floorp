@@ -69,12 +69,11 @@
       * resources with their finalizer, etc.
       *
       * @param {string} name The name of the type. Must be unique.
-      * @param {function=} convert_from_c A function to call to construct a
-      * value of this type from a C return value.
+      * @param {CType} implementation The js-ctypes implementation of the type.
       *
       * @constructor
       */
-     function Type(name, implementation, convert_from_c) {
+     function Type(name, implementation) {
        if (!(typeof name == "string")) {
          throw new TypeError("Type expects as first argument a name, got: "
                              + name);
@@ -83,16 +82,17 @@
          throw new TypeError("Type expects as second argument a ctypes.CType"+
                              ", got: " + implementation);
        }
-       this.name = name;
-       this.implementation = implementation;
-       if (convert_from_c) {
-         this.convert_from_c = convert_from_c;
-       } else {// Optimization: Ensure harmony of shapes
-         this.convert_from_c = Type.prototype.convert_from_c;
-       }
+       Object.defineProperty(this, "name", { value: name });
+       Object.defineProperty(this, "implementation", { value: implementation });
      }
      Type.prototype = {
-       convert_from_c: function(value) {
+       /**
+        * Import a value from C.
+        *
+        * In this default implementation, return the value
+        * unchanged.
+        */
+       importFromC: function default_importFromC(value) {
          return value;
        },
 
@@ -101,7 +101,7 @@
         */
        get in_ptr() {
          delete this.in_ptr;
-         let ptr_t = new Type("[int] " + this.name + "*",
+         let ptr_t = new PtrType("[in] " + this.name + "*",
            this.implementation.ptr);
          Object.defineProperty(this, "in_ptr",
            {
@@ -117,7 +117,7 @@
         */
        get out_ptr() {
          delete this.out_ptr;
-         let ptr_t = new Type("[out] " + this.name + "*",
+         let ptr_t = new PtrType("[out] " + this.name + "*",
            this.implementation.ptr);
          Object.defineProperty(this, "out_ptr",
            {
@@ -137,7 +137,7 @@
         */
        get inout_ptr() {
          delete this.inout_ptr;
-         let ptr_t = new Type("[inout] " + this.name + "*",
+         let ptr_t = new PtrType("[inout] " + this.name + "*",
            this.implementation.ptr);
          Object.defineProperty(this, "inout_ptr",
            {
@@ -153,13 +153,12 @@
         */
        releaseWith: function releaseWith(finalizer) {
          let parent = this;
-         let type = new Type("[auto " + finalizer +"] " + this.name,
-           this.implementation,
-           function release(value, operation) {
-             return ctypes.CDataFinalizer(
-               parent.convert_from_c(value, operation),
-               finalizer);
-           });
+         let type = this.withName("[auto " + this.name + ", " + finalizer + "] ");
+         type.importFromC = function importFromC(value, operation) {
+           return ctypes.CDataFinalizer(
+             parent.importFromC(value, operation),
+             finalizer);
+         };
          return type;
        },
 
@@ -168,8 +167,29 @@
         */
        withName: function withName(name) {
          return Object.create(this, {name: {value: name}});
-       }
+       },
+
+       /**
+        * Cast a C value to |this| type.
+        *
+        * Throw an error if the value cannot be casted.
+        */
+       cast: function cast(value) {
+         return ctypes.cast(value, this.implementation);
+        }
      };
+
+
+     /**
+      * A |Type| of pointers.
+      *
+      * @param {string} name The name of this type.
+      * @param {CType} implementation The type of this pointer.
+      */
+     function PtrType(name, implementation) {
+       Type.call(this, name, implementation);
+     }
+     PtrType.prototype = Object.create(Type.prototype);
 
      exports.OS.Shared.Type = Type;
      let Types = Type;
@@ -197,13 +217,19 @@
      };
 
      function projector(type, signed) {
+       LOG("Determining best projection for", type,
+             "(size: ", type.size, ")", signed?"signed":"unsigned");
+       if (type instanceof Type) {
+         type = type.implementation;
+       }
        if (!type.size) {
          throw new TypeError("Argument is not a proper C type");
        }
-       LOG("Determining best projection for", type,
-             "(size: ", type.size, ")", signed?"signed":"unsigned");
        // Determine if type is projected to Int64/Uint64
        if (type.size == 8           // Usual case
+           // The following cases have special treatment in js-ctypes
+           // Regardless of their size, the value getter returns
+           // a Int64/Uint64
            || type == ctypes.size_t // Special cases
            || type == ctypes.ssize_t
            || type == ctypes.intptr_t
@@ -277,7 +303,7 @@
       * Shortcut for |void*|.
       */
      Types.voidptr_t =
-       new Type("void*",
+       new PtrType("void*",
                 ctypes.voidptr_t);
 
      // void* is a special case as we can cast any pointer to/from it
@@ -286,11 +312,25 @@
      ["in_ptr", "out_ptr", "inout_ptr"].forEach(function(key) {
        Object.defineProperty(Types.void_t, key,
        {
-         get: function() {
-           return Types.voidptr_t;
-         }
+         value: Types.voidptr_t
        });
      });
+
+     /**
+      * A Type of integers.
+      *
+      * @param {string} name The name of this type.
+      * @param {CType} implementation The underlying js-ctypes implementation.
+      * @param {bool} signed |true| if this is a type of signed integers,
+      * |false| otherwise.
+      *
+      * @constructor
+      */
+     function IntType(name, implementation, signed) {
+       Type.call(this, name, implementation);
+       this.importFromC = projector(implementation, signed);
+     };
+     IntType.prototype = Object.create(Type.prototype);
 
      /**
       * A C char (one byte)
@@ -307,32 +347,13 @@
                 ctypes.jschar);
 
      /**
-      * A C integer
-      *
-      * Size depends on the platform.
-      */
-     Types.int =
-       new Type("int",
-                ctypes.int,
-                projector(ctypes.int, true));
-
-     Types.unsigned_int =
-       new Type("unsigned int",
-                ctypes.unsigned_int,
-                projector(ctypes.unsigned_int, false));
-
-     /**
       * A C integer (8-bits).
       */
      Types.int8_t =
-       new Type("int8_t",
-                ctypes.int8_t,
-                projectValue);
+       new IntType("int8_t", ctypes.int8_t, true);
 
      Types.uint8_t =
-       new Type("uint8_t",
-                ctypes.uint8_t,
-                projectValue);
+       new IntType("uint8_t", ctypes.uint8_t, false);
 
      /**
       * A C integer (16-bits).
@@ -340,14 +361,10 @@
       * Also known as WORD under Windows.
       */
      Types.int16_t =
-       new Type("int16_t",
-                ctypes.int16_t,
-                projectValue);
+       new IntType("int16_t", ctypes.int16_t, true);
 
      Types.uint16_t =
-       new Type("uint16_t",
-                ctypes.uint16_t,
-                projectValue);
+       new IntType("uint16_t", ctypes.uint16_t, false);
 
      /**
       * A C integer (32-bits).
@@ -355,92 +372,97 @@
       * Also known as DWORD under Windows.
       */
      Types.int32_t =
-       new Type("int32_t",
-                ctypes.int32_t,
-                projectValue);
+       new IntType("int32_t", ctypes.int32_t, true);
 
      Types.uint32_t =
-       new Type("uint32_t",
-                ctypes.uint32_t,
-                projectValue);
+       new IntType("uint32_t", ctypes.uint32_t, false);
 
      /**
       * A C integer (64-bits).
       */
      Types.int64_t =
-       new Type("int64_t",
-                ctypes.int64_t,
-                projectLargeInt);
+       new IntType("int64_t", ctypes.int64_t, true);
 
      Types.uint64_t =
-       new Type("uint64_t",
-                ctypes.uint64_t,
-                projectLargeUInt);
+       new IntType("uint64_t", ctypes.uint64_t, false);
+
+      /**
+      * A C integer
+      *
+      * Size depends on the platform.
+      */
+     Types.int = Types.intn_t(ctypes.int.size).
+       withName("int");
+
+     Types.unsigned_int = Types.intn_t(ctypes.unsigned_int.size).
+       withName("unsigned int");
 
      /**
-      * A C integer.
+      * A C long integer.
+      *
       * Size depends on the platform.
       */
      Types.long =
-       new Type("long",
-                ctypes.long,
-                projector(ctypes.long, true));
+       Types.intn_t(ctypes.long.size).withName("long");
+
+     Types.unsigned_long =
+       Types.intn_t(ctypes.unsigned_long.size).withName("unsigned long");
+
+     /**
+      * An unsigned integer with the same size as a pointer.
+      *
+      * Used to cast a pointer to an integer, whenever necessary.
+      */
+     Types.uintptr_t =
+       Types.uintn_t(ctypes.uintptr_t.size).withName("uintptr_t");
 
      /**
       * A boolean.
       * Implemented as a C integer.
       */
-     Types.bool =
-       new Type("bool",
-                ctypes.int,
-                function projectBool(x) {
-                  return !!(x.value);
-                });
+     Types.bool = Types.int.withName("bool");
+     Types.bool.importFromC = function projectBool(x) {
+       return !!(x.value);
+     };
 
      /**
       * A user identifier.
+      *
       * Implemented as a C integer.
       */
      Types.uid_t =
-       new Type("uid_t",
-                ctypes.int,
-                projector(ctypes.int, true));
+       Types.int.withName("uid_t");
 
      /**
       * A group identifier.
+      *
       * Implemented as a C integer.
       */
      Types.gid_t =
-       new Type("gid_t",
-                ctypes.int,
-                projector(ctypes.int, true));
+       Types.int.withName("gid_t");
 
      /**
       * An offset (positive or negative).
+      *
       * Implemented as a C integer.
       */
      Types.off_t =
-       new Type("off_t",
-                ctypes.off_t,
-                projector(ctypes.off_t, true));
+       new IntType("off_t", ctypes.off_t, true);
 
      /**
       * A size (positive).
+      *
       * Implemented as a C size_t.
       */
      Types.size_t =
-       new Type("size_t",
-                ctypes.size_t,
-                projector(ctypes.size_t, false));
+       new IntType("size_t", ctypes.size_t, false);
 
      /**
       * An offset (positive or negative).
       * Implemented as a C integer.
       */
      Types.ssize_t =
-       new Type("ssize_t",
-                ctypes.ssize_t,
-                projector(ctypes.ssize_t, true));
+       new IntType("ssize_t", ctypes.ssize_t, true);
 
 
      /**
@@ -612,6 +634,9 @@
          // is an abi.
          throw new TypeError("declareFFI expects as second argument an abi or null");
        }
+       if (!returnType.importFromC) {
+         throw new TypeError("declareFFI expects as third argument an instance of Type");
+       }
        let signature = [symbol, abi];
        let argtypes  = [];
        for (let i = 3; i < arguments.length; ++i) {
@@ -631,7 +656,7 @@
          let fun = lib.declare.apply(lib, signature);
          let result = function ffi(/*arguments*/) {
            let result = fun.apply(fun, arguments);
-           return returnType.convert_from_c(result, symbol);
+           return returnType.importFromC(result, symbol);
          };
          if (exports.OS.Shared.DEBUG) {
            result.fun = fun; // Also return the raw FFI function.

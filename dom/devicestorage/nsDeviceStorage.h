@@ -15,6 +15,7 @@ class nsPIDOMWindow;
 #include "nsIClassInfo.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDOMDeviceStorageCursor.h"
+#include "nsIDOMDeviceStorageStat.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsInterfaceHashtable.h"
@@ -34,10 +35,12 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_ILLEGAL_FILE_NAME           "Illegal file name"
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 #define POST_ERROR_EVENT_NON_STRING_TYPE_UNSUPPORTED "Non-string type unsupported"
+#define POST_ERROR_EVENT_NOT_IMPLEMENTED             "Not implemented"
 
 using namespace mozilla::dom;
 
-class DeviceStorageFile MOZ_FINAL : public nsISupports {
+class DeviceStorageFile MOZ_FINAL
+  : public nsISupports {
 public:
   nsCOMPtr<nsIFile> mFile;
   nsString mPath;
@@ -53,11 +56,13 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
-  
-  nsresult Write(nsIDOMBlob* blob);
+
+  nsresult Write(nsIInputStream* aInputStream);
   nsresult Write(InfallibleTArray<PRUint8>& bits);
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRUint64 aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRUint64 aSince, nsAString& aRootPath);
+
+  static PRUint64 DirectoryDiskUsage(nsIFile* aFile, PRUint64 aSoFar = 0);
 
 private:
   void NormalizeFilePath();
@@ -106,10 +111,24 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
+class nsDOMDeviceStorageStat MOZ_FINAL
+  : public nsIDOMDeviceStorageStat
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMDEVICESTORAGESTAT
+
+  nsDOMDeviceStorageStat(PRUint64 aFreeBytes, PRUint64 aTotalBytes);
+
+private:
+  ~nsDOMDeviceStorageStat();
+  PRUint64 mFreeBytes, mTotalBytes;
+};
+
 //helpers
 jsval StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString);
-jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile, bool aEditable);
-jsval BlobToJsval(nsPIDOMWindow* aWindow, nsIDOMBlob* aBlob);
+jsval nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile);
+jsval InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID);
 
 
 #endif

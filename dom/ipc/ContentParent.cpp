@@ -96,6 +96,11 @@
 # include "AndroidBridge.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsIVolume.h"
+#include "nsIVolumeService.h"
+#endif
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -270,6 +275,9 @@ ContentParent::Init()
         obs->AddObserver(this, "child-gc-request", false);
         obs->AddObserver(this, "child-cc-request", false);
         obs->AddObserver(this, "last-pb-context-exited", false);
+#ifdef MOZ_WIDGET_GONK
+        obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
+#endif
 #ifdef ACCESSIBILITY
         obs->AddObserver(this, "a11y-init-or-shutdown", false);
 #endif
@@ -431,6 +439,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "last-pb-context-exited");
+#ifdef MOZ_WIDGET_GONK
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_VOLUME_STATE_CHANGED);
+#endif
 #ifdef ACCESSIBILITY
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "a11y-init-or-shutdown");
 #endif
@@ -873,6 +884,24 @@ ContentParent::Observe(nsISupports* aSubject,
     else if (!strcmp(aTopic, "last-pb-context-exited")) {
         unused << SendLastPrivateDocShellDestroyed();
     }
+#ifdef MOZ_WIDGET_GONK
+    else if(!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
+        nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
+        if (!vol) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        nsString volName;
+        nsString mountPoint;
+        PRInt32  state;
+
+        vol->GetName(volName);
+        vol->GetMountPoint(mountPoint);
+        vol->GetState(&state);
+
+        unused << SendFileSystemUpdate(volName, mountPoint, state);
+    }
+#endif
 #ifdef ACCESSIBILITY
     // Make sure accessibility is running in content process when accessibility
     // gets initiated in chrome process.
@@ -933,13 +962,16 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 PDeviceStorageRequestParent*
 ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
 {
-  return new DeviceStorageRequestParent(aParams);
+  DeviceStorageRequestParent* result = new DeviceStorageRequestParent(aParams);
+  NS_ADDREF(result);
+  return result;
 }
 
 bool
 ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
 {
-  delete doomed;
+  DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
+  NS_RELEASE(parent);
   return true;
 }
 

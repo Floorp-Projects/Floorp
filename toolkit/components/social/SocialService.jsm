@@ -41,6 +41,15 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
   // Initialize the MozSocialAPI
   MozSocialAPI.enabled = SocialServiceInternal.enabled;
 
+  // Don't load any providers from prefs if the test pref is set
+  let skipLoading = false;
+  try {
+    skipLoading = Services.prefs.getBoolPref("social.skipLoadingProviders");
+  } catch (ex) {}
+
+  if (skipLoading)
+    return {};
+
   // Now retrieve the providers
   let providers = {};
   let MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");

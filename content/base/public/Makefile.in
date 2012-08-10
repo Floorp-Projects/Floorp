@@ -48,6 +48,7 @@ $(NULL)
 EXPORTS_NAMESPACES = mozilla/dom mozilla
 
 EXPORTS_mozilla/dom = \
+		DirectionalityUtils.h \
 		Element.h \
 		FragmentOrElement.h \
 		FromParser.h \

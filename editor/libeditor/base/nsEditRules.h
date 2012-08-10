@@ -24,10 +24,10 @@ class nsRulesInfo
 {
   public:
   
-  nsRulesInfo(nsEditor::OperationID aAction) : action(aAction) {}
+  nsRulesInfo(OperationID aAction) : action(aAction) {}
   virtual ~nsRulesInfo() {}
   
-  nsEditor::OperationID action;
+  OperationID action;
 };
 
 /***************************************************************************
@@ -44,9 +44,9 @@ public:
 
   NS_IMETHOD Init(nsPlaintextEditor *aEditor)=0;
   NS_IMETHOD DetachEditor()=0;
-  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+  NS_IMETHOD BeforeEdit(OperationID action,
                         nsIEditor::EDirection aDirection) = 0;
-  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+  NS_IMETHOD AfterEdit(OperationID action,
                        nsIEditor::EDirection aDirection) = 0;
   NS_IMETHOD WillDoAction(mozilla::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled) = 0;

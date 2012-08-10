@@ -92,6 +92,7 @@ function startListeners() {
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
+  addMessageListenerId("Marionette:getPageSource", getPageSource);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
@@ -152,6 +153,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
+  removeMessageListenerId("Marionette:getPageSource", getPageSource);
   removeMessageListenerId("Marionette:getUrl", getUrl);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
@@ -520,6 +522,15 @@ function getUrl(msg) {
  */
 function getTitle(msg) {
   sendResponse({value: curWindow.top.document.title});
+}
+
+/**
+ * Get the current page source 
+ */
+function getPageSource(msg) {
+  var XMLSerializer = curWindow.XMLSerializer;
+  var pageSource = new XMLSerializer().serializeToString(curWindow.document);
+  sendResponse({value: pageSource });
 }
 
 /**
