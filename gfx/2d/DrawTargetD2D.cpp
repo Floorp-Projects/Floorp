@@ -1579,52 +1579,83 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
 }
 
 TemporaryRef<ID2D1Geometry>
+DrawTargetD2D::ConvertRectToGeometry(const D2D1_RECT_F& aRect)
+{
+  RefPtr<ID2D1RectangleGeometry> rectGeom;
+  factory()->CreateRectangleGeometry(&aRect, byRef(rectGeom));
+  return rectGeom.forget();
+}
+
+static D2D1_RECT_F
+IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
+{
+  D2D1_RECT_F result;
+  result.left = max(aRect1.left, aRect2.left);
+  result.top = max(aRect1.top, aRect2.top);
+  result.right = min(aRect1.right, aRect2.right);
+  result.bottom = min(aRect1.bottom, aRect2.bottom);
+  return result;
+}
+
+TemporaryRef<ID2D1Geometry>
 DrawTargetD2D::GetClippedGeometry()
 {
   if (mCurrentClippedGeometry) {
     return mCurrentClippedGeometry;
   }
 
-  RefPtr<ID2D1GeometrySink> currentSink;
-
-  factory()->CreatePathGeometry(byRef(mCurrentClippedGeometry));
-  mCurrentClippedGeometry->Open(byRef(currentSink));
-      
+  // if pathGeom is null then pathRect represents the path.
+  RefPtr<ID2D1Geometry> pathGeom;
+  D2D1_RECT_F pathRect;
   std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
-
   if (iter->mPath) {
+    RefPtr<ID2D1PathGeometry> tmpGeometry;
+    factory()->CreatePathGeometry(byRef(tmpGeometry));
+    RefPtr<ID2D1GeometrySink> currentSink;
+    tmpGeometry->Open(byRef(currentSink));
     iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
                                          iter->mTransform, currentSink);
+    currentSink->Close();
+    pathGeom = tmpGeometry.forget();
   } else {
-    RefPtr<ID2D1RectangleGeometry> rectGeom;
-    factory()->CreateRectangleGeometry(iter->mBounds, byRef(rectGeom));
-    rectGeom->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                       D2D1::IdentityMatrix(), currentSink);
+    pathRect = iter->mBounds;
   }
-  currentSink->Close();
 
   iter++;
   for (;iter != mPushedClips.end(); iter++) {
+    if (!pathGeom) {
+      if (iter->mPath) {
+        pathGeom = ConvertRectToGeometry(pathRect);
+      } else {
+        pathRect = IntersectRect(pathRect, iter->mBounds);
+        continue;
+      }
+    }
+
     RefPtr<ID2D1PathGeometry> newGeom;
     factory()->CreatePathGeometry(byRef(newGeom));
 
+    RefPtr<ID2D1GeometrySink> currentSink;
     newGeom->Open(byRef(currentSink));
 
     if (iter->mPath) {
-      mCurrentClippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
-                                           iter->mTransform, currentSink);
+      pathGeom->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                    iter->mTransform, currentSink);
     } else {
-      RefPtr<ID2D1RectangleGeometry> rectGeom;
-      factory()->CreateRectangleGeometry(iter->mBounds, byRef(rectGeom));
-      mCurrentClippedGeometry->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
-                                                   D2D1::IdentityMatrix(), currentSink);
+      RefPtr<ID2D1Geometry> rectGeom = ConvertRectToGeometry(iter->mBounds);
+      pathGeom->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
+                                    D2D1::IdentityMatrix(), currentSink);
     }
 
     currentSink->Close();
 
-    mCurrentClippedGeometry = newGeom;
+    pathGeom = newGeom.forget();
   }
 
+  if (!pathGeom) {
+    pathGeom = ConvertRectToGeometry(pathRect);
+  }
+  mCurrentClippedGeometry = pathGeom.forget();
   return mCurrentClippedGeometry;
 }
 
