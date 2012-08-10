@@ -75,7 +75,7 @@ var gClearingForAssertionCheck = false;
 
 const TYPE_SCRIPT = 'script'; // test contains individual test results
 
-function markupDocumentViewer() { 
+function markupDocumentViewer() {
     return docShell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
 }
 
@@ -119,7 +119,9 @@ function PaintWaitFinishedListener(event)
 
 function OnInitialLoad()
 {
+#ifndef REFTEST_B2G
     removeEventListener("load", OnInitialLoad, true);
+#endif
 
     gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
 
@@ -132,7 +134,7 @@ function OnInitialLoad()
 
     addEventListener("MozPaintWait", PaintWaitListener, true);
     addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
- 
+
     LogWarning("Using browser remote="+ gBrowserIsRemote +"\n");
 }
 
@@ -170,11 +172,16 @@ function resetZoom() {
 }
 
 function doPrintMode(contentRootElement) {
+#if REFTEST_B2G
+    // nsIPrintSettings not available in B2G
+    return false;
+#else
     // use getAttribute because className works differently in HTML and SVG
     return contentRootElement &&
            contentRootElement.hasAttribute('class') &&
            contentRootElement.getAttribute('class').split(/\s+/)
                              .indexOf("reftest-print") != -1;
+#endif
 }
 
 function setupPrintMode() {
@@ -289,7 +296,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
             } catch (e) {
                 LogWarning("flushWindow failed: " + e + "\n");
             }
-            
+
             if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
                 LogInfo("FlushRendering generated paint for window " + win.location.href);
                 anyPendingPaintsGeneratedInDescendants = true;
@@ -380,7 +387,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
             }
 
             state = STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL;
-            var hasReftestWait = shouldWaitForReftestWaitRemoval(contentRootElement);            
+            var hasReftestWait = shouldWaitForReftestWaitRemoval(contentRootElement);
             // Notify the test document that now is a good time to test some invalidation
             LogInfo("MakeProgress: dispatching MozReftestInvalidate");
             if (contentRootElement) {
@@ -459,12 +466,18 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
     MakeProgress();
 }
 
+#if REFTEST_B2G
+function OnDocumentLoad()
+{
+    var currentDoc = content.document;
+#else
 function OnDocumentLoad(event)
 {
     var currentDoc = content.document;
     if (event.target != currentDoc)
         // Ignore load events for subframes.
         return;
+#endif
 
     if (gClearingForAssertionCheck &&
         currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
@@ -750,7 +763,7 @@ function SendInitCanvasWithSnapshot()
     // browser though, it doesn't wrt correctness whether this request
     // is sync or async.
     var ret = sendSyncMessage("reftest:InitCanvasWithSnapshot")[0];
- 
+
     gHaveCanvasSnapshot = ret.painted;
     return ret.painted;
 }
@@ -780,7 +793,7 @@ function SendUpdateCanvasForEvent(event)
 {
     var win = content;
     var scale = markupDocumentViewer().fullZoom;
- 
+
     var rects = [ ];
     var rectList = event.clientRects;
     for (var i = 0; i < rectList.length; ++i) {
@@ -803,5 +816,9 @@ function SendUpdateCanvasForEvent(event)
         sendAsyncMessage("reftest:UpdateCanvasForInvalidation", { rects: rects });
     }
 }
-
+#if REFTEST_B2G
+OnInitialLoad();
+OnDocumentLoad();
+#else
 addEventListener("load", OnInitialLoad, true);
+#endif

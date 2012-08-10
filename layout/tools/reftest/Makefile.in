@@ -25,6 +25,11 @@ DEFINES += -DBOOTSTRAP
 DIST_FILES += bootstrap.js
 endif
 
+ifeq ($(MOZ_BUILD_APP),b2g)
+DEFINES += -DBOOTSTRAP
+DEFINES += -DREFTEST_B2G
+endif
+
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
 else
@@ -52,10 +57,13 @@ endif
 _HARNESS_FILES = \
   $(srcdir)/runreftest.py \
   $(srcdir)/remotereftest.py \
+  $(srcdir)/runreftestb2g.py \
+  $(srcdir)/b2g_start_script.js \
   automation.py \
   $(topsrcdir)/build/mobile/devicemanager.py \
   $(topsrcdir)/build/mobile/devicemanagerADB.py \
   $(topsrcdir)/build/mobile/devicemanagerSUT.py \
+  $(topsrcdir)/build/mobile/b2gautomation.py \
   $(topsrcdir)/build/automationutils.py \
   $(topsrcdir)/build/mobile/remoteautomation.py \
   $(topsrcdir)/testing/mochitest/server.js \
