@@ -724,28 +724,50 @@ class CallCompiler : public BaseCompiler
         masm.pop(Registers::TypeMaskReg);
 #endif
 
-        /* We need to grab two temporaries, so make sure the rval is safe. */
-        regs = Registers(Registers::AvailRegs);
-#ifdef JS_NUNBOX32
-        regs.takeRegUnchecked((RegisterID)ion::JSReturnReg_Type.code());
-        regs.takeRegUnchecked((RegisterID)ion::JSReturnReg_Data.code());
-#elif JS_PUNBOX64
-        regs.takeRegUnchecked((RegisterID)ion::JSReturnReg.code());
-#endif
-
-#ifdef JS_CPU_X86
-        RegisterID returnTypeReg = (RegisterID)ion::JSReturnReg_Type.code();
-#elif JS_CPU_ARM
-        /*
-         * On ARM, Ion's return type register is reserved by the assembler, so
-         * we move it into a new temporary.
-         */
-        RegisterID returnTypeReg = regs.takeAnyReg().reg();
-        masm.move((RegisterID)ion::JSReturnReg_Type.code(), returnTypeReg);
-#endif
-
         /* Grab the original JSFrameReg. */
         masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
+
+        /* We need to grab two temporaries, so make sure the rval is safe. */
+        regs = Registers(Registers::AvailRegs);
+        regs.takeRegUnchecked(JSReturnReg_Type);
+        regs.takeRegUnchecked(JSReturnReg_Data);
+
+        /*
+         * Immediately take the Ion return value and copy it to JM's return
+         * registers. Note that we also store the value into the stack in case
+         * of recompilation, since the value cannot be recovered from registers.
+         */
+        Address rval(JSFrameReg, spOffset - ((argc + 2) * sizeof(Value)));
+#ifdef JS_NUNBOX32
+        RegisterID ionReturnType = (RegisterID)ion::JSReturnReg_Type.code();
+        RegisterID ionReturnData = (RegisterID)ion::JSReturnReg_Data.code();
+
+        /* None of these registers may overlap. */
+        JS_ASSERT(ionReturnType != JSReturnReg_Type);
+        JS_ASSERT(ionReturnType != JSReturnReg_Data);
+        JS_ASSERT(ionReturnType != JSFrameReg);
+        JS_ASSERT(ionReturnData != JSReturnReg_Type);
+        JS_ASSERT(ionReturnData != JSReturnReg_Data);
+        JS_ASSERT(ionReturnData != JSFrameReg);
+
+        masm.move(ionReturnType, JSReturnReg_Type);
+        masm.move(ionReturnData, JSReturnReg_Data);
+        masm.storeValueFromComponents(JSReturnReg_Type, JSReturnReg_Data, rval);
+#elif JS_PUNBOX64
+        RegisterID ionReturn = (RegisterID)ion::JSReturnReg.code();
+
+        /* None of these registers may overlap. */
+        JS_ASSERT(ionReturn != JSReturnReg_Type);
+        JS_ASSERT(ionReturn != JSReturnReg_Data);
+        JS_ASSERT(ionReturn != JSFrameReg);
+
+        masm.move(ionReturn, JSReturnReg_Type);
+
+        masm.move(JSReturnReg_Type, rval);
+        masm.move(Registers::PayloadMaskReg, JSReturnReg_Data);
+        masm.andPtr(JSReturnReg_Type, JSReturnReg_Data);
+        masm.xorPtr(JSReturnReg_Data, JSReturnReg_Type);
+#endif
 
         /* Unset VMFrame::stubRejoin. */
         masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
@@ -760,19 +782,8 @@ class CallCompiler : public BaseCompiler
         masm.and32(Imm32(~StackFrame::CALLING_INTO_ION), t0);
         masm.store32(t0, Address(JSFrameReg, StackFrame::offsetOfFlags()));
 
-        /* Check for an exception, and store the return value onto the stack.  */
-        Address rval(JSFrameReg, spOffset - ((argc + 2) * sizeof(Value)));
-#ifdef JS_NUNBOX32
-        Jump exception = masm.testMagic(Assembler::Equal, returnTypeReg);
-        masm.storeValueFromComponents(returnTypeReg,
-                                      (RegisterID)ion::JSReturnReg_Data.code(),
-                                      rval);
-#elif defined JS_PUNBOX64
-        masm.move(ion::JSReturnReg.code(), t0);
-        masm.convertValueToType(t0);
-        Jump exception = masm.testMagic(Assembler::Equal, t0);
-        masm.storePtr(ion::JSReturnReg.code(), rval);
-#endif
+        /* Check for an exception. */
+        Jump exception = masm.testMagic(Assembler::Equal, JSReturnReg_Type);
 
         /* If no exception, jump to the return address. */
         NativeStubLinker::FinalJump done;
@@ -797,7 +808,7 @@ class CallCompiler : public BaseCompiler
         }
 
         linker.link(noIonCode, ic.icCall());
-        linker.patchJump(ic.nativeRejoin());
+        linker.patchJump(ic.ionJoinPoint());
         JSC::CodeLocationLabel cs = linker.finalize(f);
 
         ic.updateLastOolJump(linker.locationOf(noIonCode),

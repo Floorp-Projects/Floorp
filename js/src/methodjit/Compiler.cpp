@@ -1599,6 +1599,11 @@ mjit::Compiler::finishThisUp()
         jitCallICs[i].joinPointOffset = offset;
         JS_ASSERT(jitCallICs[i].joinPointOffset == offset);
 
+        offset = fullCode.locationOf(callICs[i].ionJoinPoint) -
+                 fullCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].ionJoinOffset = offset;
+        JS_ASSERT(jitCallICs[i].ionJoinOffset == offset);
+
         /* Compute the OOL call offset. */
         offset = stubCode.locationOf(callICs[i].oolCall) -
                  stubCode.locationOf(callICs[i].slowPathStart);
@@ -4436,6 +4441,7 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
     callIC.joinPoint = callPatch.joinPoint = masm.label();
     callIC.callIndex = callSites.length();
     addReturnSite();
+    callIC.ionJoinPoint = masm.label();
     if (lowerFunCallOrApply)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
 
