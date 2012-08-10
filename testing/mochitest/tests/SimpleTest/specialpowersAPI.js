@@ -834,6 +834,10 @@ SpecialPowersAPI.prototype = {
     Components.utils.forceGC();
   },
 
+  forceCC: function() {
+    Components.utils.forceCC();
+  },
+
   exactGC: function(win, callback) {
     var self = this;
     let count = 0;
