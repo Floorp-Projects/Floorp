@@ -145,6 +145,9 @@ endif
 
 ifdef MOZ_OMX_PLUGIN
 tier_platform_dirs += \
+		media/omx-plugin/lib/ics/libutils \
+		media/omx-plugin/lib/ics/libstagefright \
+		media/omx-plugin/lib/ics/libstagefright_omx \
 		media/omx-plugin \
 		$(NULL)
 endif

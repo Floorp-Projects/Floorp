@@ -5304,7 +5304,7 @@ if test -n "$MOZ_MEDIA_NAVIGATOR"; then
 fi
 
 dnl ========================================================
-dnl = Enable building OMX media plugin (B2G)
+dnl = Enable building OMX media plugin (B2G or Android)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(omx-plugin,
 [  --enable-omx-plugin      Enable building OMX plugin (B2G)],
@@ -5312,12 +5312,12 @@ MOZ_ARG_ENABLE_BOOL(omx-plugin,
     MOZ_OMX_PLUGIN=)
 
 if test -n "$MOZ_OMX_PLUGIN"; then
-    if test "$OS_TARGET" = "Android" -a -n "$gonkdir"; then
-        dnl Only allow building OMX plugin on Gonk (B2G)
+    if test "$OS_TARGET" = "Android"; then
+        dnl Only allow building OMX plugin on Gonk (B2G) or Android
         AC_DEFINE(MOZ_OMX_PLUGIN)
     else
-       dnl fail if we're not building on Gonk
-       AC_MSG_ERROR([OMX media plugin can only be built on B2G])
+       dnl fail if we're not building on Gonk or Android
+       AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
     fi
 fi
 
