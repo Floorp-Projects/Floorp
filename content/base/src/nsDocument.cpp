@@ -1986,7 +1986,7 @@ nsDocument::Init()
   mRadioGroups.Init();
 
   // Force initialization.
-  nsINode::nsSlots* slots = GetSlots();
+  nsINode::nsSlots* slots = Slots();
 
   // Prepend self as mutation-observer whether we need it or not (some
   // subclasses currently do, other don't). This is because the code in

@@ -789,13 +789,11 @@ public:
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* s = GetSlots();
-    if (s) {
-      NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
-                   nsTArray<int>::NoIndex,
-                   "Observer already in the list");
-      s->mMutationObservers.AppendElement(aMutationObserver);
-    }
+    nsSlots* s = Slots();
+    NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
+                 nsTArray<int>::NoIndex,
+                 "Observer already in the list");
+    s->mMutationObservers.AppendElement(aMutationObserver);
   }
 
   /**
@@ -804,10 +802,8 @@ public:
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* s = GetSlots();
-    if (s) {
-      s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
-    }
+    nsSlots* s = Slots();
+    s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
   }
 
   /**
@@ -893,7 +889,7 @@ public:
 #ifdef DEBUG
   nsSlots* DebugGetSlots()
   {
-    return GetSlots();
+    return Slots();
   }
 #endif
 
@@ -1419,6 +1415,7 @@ public:
 protected:
 
   // Override this function to create a custom slots class.
+  // Must not return null.
   virtual nsINode::nsSlots* CreateSlots();
 
   bool HasSlots() const
@@ -1431,10 +1428,11 @@ protected:
     return mSlots;
   }
 
-  nsSlots* GetSlots()
+  nsSlots* Slots()
   {
     if (!HasSlots()) {
       mSlots = CreateSlots();
+      MOZ_ASSERT(mSlots);
     }
     return GetExistingSlots();
   }
