@@ -48,9 +48,18 @@ class JS_FRIEND_API(Wrapper);
  */
 class JS_FRIEND_API(BaseProxyHandler) {
     void *mFamily;
+    bool mHasPrototype;
+  protected:
+    // Subclasses may set this in their constructor.
+    void setHasPrototype(bool hasPrototype) { mHasPrototype = hasPrototype; };
+
   public:
     explicit BaseProxyHandler(void *family);
     virtual ~BaseProxyHandler();
+
+    bool hasPrototype() {
+        return mHasPrototype;
+    }
 
     inline void *family() {
         return mFamily;
@@ -114,6 +123,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
+    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto);
 };
 
 /*
