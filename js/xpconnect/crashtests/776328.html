@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+  var div = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+  Components.lookupMethod(div.childNodes, "xx");
+}
+
+</script>
+<body onload="boom();"></body>
