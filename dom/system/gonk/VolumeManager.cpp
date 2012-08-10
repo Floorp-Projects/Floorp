@@ -25,11 +25,13 @@ namespace system {
 
 static RefPtr<VolumeManager> sVolumeManager;
 
+VolumeManager::STATE VolumeManager::mState = VolumeManager::UNINITIALIZED;
+VolumeManager::StateObserverList VolumeManager::mStateObserverList;
+
 /***************************************************************************/
 
 VolumeManager::VolumeManager()
-  : mState(VolumeManager::STARTING),
-    mSocket(-1),
+  : mSocket(-1),
     mCommandPending(false),
     mRcvIdx(0)
 {
@@ -62,17 +64,14 @@ VolumeManager::GetVolume(size_t aIndex)
 VolumeManager::STATE
 VolumeManager::State()
 {
-  if (!sVolumeManager) {
-    return VolumeManager::UNINITIALIZED;
-  }
-  return sVolumeManager->mState;
+  return mState;
 }
 
 //static
 const char *
-VolumeManager::StateStr()
+VolumeManager::StateStr(VolumeManager::STATE aState)
 {
-  switch (State()) {
+  switch (aState) {
     case UNINITIALIZED: return "Uninitialized";
     case STARTING:      return "Starting";
     case VOLUMES_READY: return "Volumes Ready";
@@ -85,12 +84,11 @@ VolumeManager::StateStr()
 void
 VolumeManager::SetState(STATE aNewState)
 {
-  if (!sVolumeManager) {
-    return;
-  }
-  if (sVolumeManager->mState != aNewState) {
-    sVolumeManager->mState = aNewState;
-    sVolumeManager->mStateObserverList.Broadcast(StateChangedEvent());
+  if (mState != aNewState) {
+    LOG("changing state from '%s' to '%s'",
+        StateStr(mState), StateStr(aNewState));
+    mState = aNewState;
+    mStateObserverList.Broadcast(StateChangedEvent());
   }
 }
 
@@ -98,13 +96,13 @@ VolumeManager::SetState(STATE aNewState)
 void
 VolumeManager::RegisterStateObserver(StateObserver *aObserver)
 {
-  sVolumeManager->mStateObserverList.AddObserver(aObserver);
+  mStateObserverList.AddObserver(aObserver);
 }
 
 //static
 void VolumeManager::UnregisterStateObserver(StateObserver *aObserver)
 {
-  sVolumeManager->mStateObserverList.RemoveObserver(aObserver);
+  mStateObserverList.RemoveObserver(aObserver);
 }
 
 //static
@@ -396,6 +394,7 @@ VolumeManager::Start()
   if (!sVolumeManager) {
     return;
   }
+  SetState(STARTING);
   if (!sVolumeManager->OpenSocket()) {
     // Socket open failed, try again in a second.
     MessageLoopForIO::current()->

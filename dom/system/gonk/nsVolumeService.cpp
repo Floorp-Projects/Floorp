@@ -173,7 +173,7 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    DBG("UpdateVolumeRunnable::Run '%s' state %s",
+    LOG("UpdateVolumeRunnable::Run '%s' state %s",
         mVolume->NameStr(), mVolume->StateStr());
 
     nsCOMPtr<nsIVolumeService> ivs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
@@ -196,6 +196,8 @@ private:
 //static
 void nsVolumeService::UpdateVolumeIOThread(const Volume *aVolume)
 {
+  LOG("UpdateVolumeIOThread: Volume '%s' state %s mount '%s'",
+      aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   NS_DispatchToMainThread(new UpdateVolumeRunnable(aVolume));
 }
