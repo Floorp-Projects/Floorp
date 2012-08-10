@@ -73,7 +73,9 @@ void nsMediaPluginHost::TryLoad(const char *name)
 
 nsMediaPluginHost::nsMediaPluginHost() {
   MOZ_COUNT_CTOR(nsMediaPluginHost);
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+  TryLoad("lib/libomxplugin.so");
+#elif defined(ANDROID) && defined(MOZ_WIDGET_GONK)
   TryLoad("libomxplugin.so");
 #endif
 }
