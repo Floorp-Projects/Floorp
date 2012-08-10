@@ -128,6 +128,7 @@ class Compiler : public BaseCompiler
         Label        slowJoinPoint;
         Label        slowPathStart;
         Label        hotPathLabel;
+        Label        ionJoinPoint;
         DataLabelPtr addrLabel1;
         DataLabelPtr addrLabel2;
         Jump         oolJump;
