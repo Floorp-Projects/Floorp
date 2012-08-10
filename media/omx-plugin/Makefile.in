@@ -34,7 +34,9 @@ USE_STATIC_LIBS = 1
 NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
-DIRS += lib/ics/libutils
+ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
+DIRS += lib/ics/libutils lib/ics/libstagefright lib/ics/libstagefright_omx
+endif
 
 CPPSRCS = \
     OmxPlugin.cpp \
