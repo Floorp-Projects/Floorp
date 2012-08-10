@@ -61,9 +61,6 @@ Readability.prototype = {
   // it quits and just show a link.
   MAX_PAGES: 5,
 
-  // The number of iterations processed before yielding.
-  GEN_ITERATIONS: 100,
-
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
@@ -456,37 +453,14 @@ Readability.prototype = {
     node.readability.contentScore += this._getClassWeight(node);
   },
 
-  _grabArticle: function (callback) {
-    let gen = this._grabArticleGenerator();
-    let iterate = function () {
-      for (let i = this.GEN_ITERATIONS; i--;) {
-        let result;
-        try {
-          // Parse can be interrupted if document changes (will throw dead
-          // object exception)
-          result = gen.next();
-        } catch (e) {
-          dump("Caught exception while grabbing article, aborting");
-          result = null;
-        }
-        if (result !== undefined) {
-          callback(result);
-          return;
-        }
-      }
-      setTimeout(iterate, 0);
-    }.bind(this);
-    iterate();
-  },
-
   /***
-   * grabArticleGenerator - Using a variety of metrics (content score, classname, element types), find the content that is
+   * grabArticle - Using a variety of metrics (content score, classname, element types), find the content that is
    *         most likely to be the stuff a user wants to read. Then return it wrapped up in a div.
    *
    * @param page a document to run upon. Needs to be a full document, complete with body.
    * @return Element
   **/
-  _grabArticleGenerator: function(page) {
+  _grabArticle: function (page) {
     while (true) {
       let doc = this._doc;
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
@@ -496,8 +470,6 @@ Readability.prototype = {
 
       let pageCacheHtml = page.innerHTML;
       let allElements = page.getElementsByTagName('*');
-
-      yield;
 
       // First, node prepping. Trash nodes that look cruddy (like ones with the
       // class name "comment", etc), and turn divs into P tags where they have been
@@ -577,8 +549,6 @@ Readability.prototype = {
             }
           }
         }
-
-        yield;
       }
 
       /**
@@ -630,8 +600,6 @@ Readability.prototype = {
 
         if (grandParentNode)
           grandParentNode.readability.contentScore += contentScore / 2;
-
-        yield;
       }
 
       // After we've calculated scores, loop through all of the possible
@@ -652,8 +620,6 @@ Readability.prototype = {
           candidates[c].readability.contentScore > topCandidate.readability.contentScore) {
           topCandidate = candidates[c];
         }
-
-        yield;
       }
 
       // If we still have no top candidate, just use the body as a last resort.
@@ -737,14 +703,10 @@ Readability.prototype = {
           // the node when you append to another node.
           articleContent.appendChild(nodeToAppend);
         }
-
-        yield;
       }
 
       // So we have all of the content that we need. Now we clean it up for presentation.
       this._prepArticle(articleContent);
-
-      yield;
 
       if (this._curPageNum === 1)
         articleContent.innerHTML = '<div id="readability-page-1" class="page">' + articleContent.innerHTML + '</div>';
@@ -764,10 +726,10 @@ Readability.prototype = {
         } else if (this._flagIsActive(this.FLAG_CLEAN_CONDITIONALLY)) {
           this._removeFlag(this.FLAG_CLEAN_CONDITIONALLY);
         } else {
-          yield null;
+          return null;
         }
       } else {
-        yield articleContent;
+        return articleContent;
       }
     }
   },
@@ -1427,11 +1389,10 @@ Readability.prototype = {
    *
    * @return void
    **/
-  parse: function (callback) {
+  parse: function () {
     let uri = this._uri;
     if ((uri.prePath + "/") === uri.spec) {
-      callback(null);
-      return;
+      return null;
     }
 
     // Remove script tags from the document.
@@ -1450,24 +1411,22 @@ Readability.prototype = {
     this._prepDocument();
 
     let articleTitle = this._getArticleTitle();
-    this._grabArticle(function (articleContent) {
-      if (!articleContent) {
-        callback(null);
-        return;
-      }
+    let articleContent = this._grabArticle();
+    if (!articleContent) {
+      return null;
+    }
 
-      this._postProcessContent(articleContent);
+    this._postProcessContent(articleContent);
 
-      // if (nextPageLink) {
-      //   // Append any additional pages after a small timeout so that people
-      //   // can start reading without having to wait for this to finish processing.
-      //   setTimeout((function() {
-      //     this._appendNextPage(nextPageLink);
-      //   }).bind(this), 500);
-      // }
+    // if (nextPageLink) {
+    //   // Append any additional pages after a small timeout so that people
+    //   // can start reading without having to wait for this to finish processing.
+    //   setTimeout((function() {
+    //     this._appendNextPage(nextPageLink);
+    //   }).bind(this), 500);
+    // }
 
-      callback({ title: this._getInnerText(articleTitle),
-                 content: articleContent.innerHTML });
-    }.bind(this));
+    return { title: this._getInnerText(articleTitle),
+             content: articleContent.innerHTML };
   }
 };
