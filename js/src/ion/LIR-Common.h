@@ -1246,6 +1246,54 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
     }
 };
 
+class LMinMaxI : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(MinMaxI);
+    LMinMaxI(const LAllocation &first, const LAllocation &second)
+    {
+        setOperand(0, first);
+        setOperand(1, second);
+    }
+
+    const LAllocation *first() {
+        return this->getOperand(0);
+    }
+    const LAllocation *second() {
+        return this->getOperand(1);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+    MMinMax *mir() const {
+        return mir_->toMinMax();
+    }
+};
+
+class LMinMaxD : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(MinMaxD);
+    LMinMaxD(const LAllocation &first, const LAllocation &second) 
+    {
+        setOperand(0, first);
+        setOperand(1, second);
+    }
+
+    const LAllocation *first() {
+        return this->getOperand(0);
+    }
+    const LAllocation *second() {
+        return this->getOperand(1);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+    MMinMax *mir() const {
+        return mir_->toMinMax();
+    }
+};
+
 // Absolute value of an integer.
 class LAbsI : public LInstructionHelper<1, 1, 0>
 {

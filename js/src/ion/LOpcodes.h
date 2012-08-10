@@ -59,6 +59,8 @@
     _(CompareBAndBranch)            \
     _(IsNullOrUndefined)            \
     _(IsNullOrUndefinedAndBranch)   \
+    _(MinMaxI)                      \
+    _(MinMaxD)                      \
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \
