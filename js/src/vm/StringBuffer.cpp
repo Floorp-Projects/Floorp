@@ -75,7 +75,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->runtime->atomState.emptyAtom;
 
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
+    JSAtom *atom = AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

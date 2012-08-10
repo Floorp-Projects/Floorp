@@ -63,6 +63,7 @@ DIRS += \
   src \
   locales \
   network \
+  permission \
   plugins/base \
   plugins/ipc \
   indexedDB \
