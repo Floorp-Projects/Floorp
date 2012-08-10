@@ -1981,7 +1981,9 @@ let RIL = {
       return;
     }
 
-    let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
+    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
+    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
+    let app = iccStatus.apps[index];
     if (!app) {
       if (DEBUG) {
         debug("Subscription application is not present in iccStatus.");
@@ -1995,6 +1997,8 @@ let RIL = {
                            cardState: this.cardState});
       return;
     }
+    // fetchICCRecords will need to read aid, so read aid here.
+    this.aid = app.aid;
 
     let newCardState;
     switch (app.app_state) {
@@ -2020,15 +2024,12 @@ let RIL = {
       return;
     }
 
-    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
-    // fetchICCRecords will need to read aid, so read aid here.
-    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
-    this.aid = iccStatus.apps[index].aid;
-
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     this.getSignalStrength();
-    this.fetchICCRecords();
+    if (newCardState == GECKO_CARDSTATE_READY) {
+      this.fetchICCRecords();
+    }
 
     this.cardState = newCardState;
     this.sendDOMMessage({rilMessageType: "cardstatechange",
