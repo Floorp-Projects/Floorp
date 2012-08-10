@@ -49,6 +49,10 @@ public:
                                   const nsAString& aPattern,
                                   int aAttributeId);
 
+  virtual nsTArray<PRUint32>
+  AddReservedServicesInternal(const nsAString& aAdapterPath,
+                              const nsTArray<PRUint32>& aServices);
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,
