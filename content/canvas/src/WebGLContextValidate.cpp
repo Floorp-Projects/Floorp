@@ -771,6 +771,9 @@ WebGLContext::InitAndValidateGL()
     }
 #endif
 
+    // Mesa can only be detected with the GL_VERSION string, of the form "2.1 Mesa 7.11.0"
+    mIsMesa = strstr((const char *)(gl->fGetString(LOCAL_GL_VERSION)), "Mesa");
+
     // notice that the point of calling GetAndClearError here is not only to check for error,
     // it is also to reset the error flags so that a subsequent WebGL getError call will give the correct result.
     error = gl->GetAndClearError();
