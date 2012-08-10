@@ -114,12 +114,12 @@ public class LayerView extends FrameLayout {
         if (GeckoApp.mAppContext != null)
             GeckoApp.mAppContext.hideFormAssistPopup();
 
-        return mTouchEventHandler.handleEvent(event);
+        return mTouchEventHandler == null ? false : mTouchEventHandler.handleEvent(event);
     }
 
     @Override
     public boolean onHoverEvent(MotionEvent event) {
-        return mTouchEventHandler.handleEvent(event);
+        return mTouchEventHandler == null ? false : mTouchEventHandler.handleEvent(event);
     }
 
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
