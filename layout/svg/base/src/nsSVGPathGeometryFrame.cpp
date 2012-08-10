@@ -188,7 +188,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
     MarkerProperties properties = GetMarkerProperties(this);
       
     if (properties.MarkersExist()) {
-      float strokeWidth = GetStrokeWidth();
+      float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
         
       nsTArray<nsSVGMark> marks;
       static_cast<nsSVGPathGeometryElement*>
@@ -258,7 +258,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (hitTestFlags & SVG_HIT_TEST_FILL)
     isHit = tmpCtx->PointInFill(userSpacePoint);
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
-    SetupCairoStrokeHitGeometry(tmpCtx);
+    nsSVGUtils::SetupCairoStrokeHitGeometry(this, tmpCtx);
     isHit = tmpCtx->PointInStroke(userSpacePoint);
   }
 
@@ -390,7 +390,8 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
   // Account for stroke:
   if ((aFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
-      ((aFlags & nsSVGUtils::eBBoxIncludeStroke) && HasStroke())) {
+      ((aFlags & nsSVGUtils::eBBoxIncludeStroke) &&
+       nsSVGUtils::HasStroke(this))) {
     // We can't use tmpCtx->GetUserStrokeExtent() since it doesn't work for
     // device space extents. Instead we approximate the stroke extents from
     // pathExtents using PathExtentsToMaxStrokeExtents.
@@ -401,7 +402,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // though, because if pathExtents is empty, its position will not have
       // been set. Happily we can use tmpCtx->GetUserStrokeExtent() to find
       // the center point of the extents even though it gets the extents wrong.
-      SetupCairoStrokeGeometry(tmpCtx);
+      nsSVGUtils::SetupCairoStrokeGeometry(this, tmpCtx);
       pathExtents.MoveTo(tmpCtx->GetUserStrokeExtent().Center());
       pathExtents.SizeTo(0, 0);
     }
@@ -414,7 +415,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   if ((aFlags & nsSVGUtils::eBBoxIncludeMarkers) != 0 &&
       static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
 
-    float strokeWidth = GetStrokeWidth();
+    float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
     MarkerProperties properties = GetMarkerProperties(this);
 
     if (properties.MarkersExist()) {
@@ -567,11 +568,11 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext)
     return;
   }
 
-  if (SetupCairoFill(gfx)) {
+  if (nsSVGUtils::SetupCairoFillPaint(this, gfx)) {
     gfx->Fill();
   }
 
-  if (SetupCairoStroke(gfx)) {
+  if (nsSVGUtils::SetupCairoStroke(this, gfx)) {
     gfx->Stroke();
   }
 
