@@ -196,6 +196,10 @@ public:
   AddReservedServicesInternal(const nsAString& aAdapterPath,
                               const nsTArray<PRUint32>& aServices) = 0;
 
+  virtual bool
+  RemoveReservedServicesInternal(const nsAString& aAdapterPath,
+                                 const nsTArray<PRUint32>& aServiceHandles) = 0;
+
   /**
    * Due to the fact that some operations require multiple calls, a
    * CommandThread is created that can run blocking, platform-specific calls
