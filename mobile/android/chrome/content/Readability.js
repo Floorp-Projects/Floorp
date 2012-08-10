@@ -511,7 +511,28 @@ Readability.prototype = {
       let node = null;
       let nodesToScore = [];
 
-      for (let nodeIndex = 0; (node = allElements[nodeIndex]); nodeIndex += 1) {
+      // Let each node know its index in the allElements array.
+      for (let i = allElements.length; --i >= 0;) {
+        allElements[i]._index = i;
+      }
+
+      /**
+       * JSDOMParser returns static node lists, not live ones. When we remove
+       * an element from the document, we need to manually remove it - and all
+       * of its children - from the allElements array.
+       */
+      function purgeNode(node) {
+        for (let i = node.childNodes.length; --i >= 0;) {
+          purgeNode(node.childNodes[i]);
+        }
+        if (node._index !== undefined && allElements[node._index] == node)
+          delete allElements[node._index];
+      }
+
+      for (let nodeIndex = 0; nodeIndex < allElements.length; nodeIndex++) {
+        if (!(node = allElements[nodeIndex]))
+          continue;
+
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
           let unlikelyMatchString = node.className + node.id;
@@ -520,7 +541,7 @@ Readability.prototype = {
             node.tagName !== "BODY") {
             this.log("Removing unlikely candidate - " + unlikelyMatchString);
             node.parentNode.removeChild(node);
-            nodeIndex -= 1;
+            purgeNode(node);
             continue;
           }
         }
@@ -534,6 +555,12 @@ Readability.prototype = {
             let newNode = doc.createElement('p');
             newNode.innerHTML = node.innerHTML;
             node.parentNode.replaceChild(newNode, node);
+
+            // Manually update allElements since it is not a live NodeList
+            newNode._index = nodeIndex;
+            allElements[nodeIndex] = newNode;
+            purgeNode(node);
+
             nodeIndex -= 1;
             nodesToScore[nodesToScore.length] = node;
           } else {
@@ -545,10 +572,9 @@ Readability.prototype = {
 
               if (childNode.nodeType === 3) { // Node.TEXT_NODE
                 let p = doc.createElement('p');
-                p.innerHTML = childNode.nodeValue;
+                p.innerHTML = childNode.textContent;
                 p.style.display = 'inline';
                 p.className = 'readability-styled';
-
                 childNode.parentNode.replaceChild(p, childNode);
               }
             }
