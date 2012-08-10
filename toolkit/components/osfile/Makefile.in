@@ -11,10 +11,17 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = osfile
+LIBRARY_NAME    = osfile_s
+LIBXUL_LIBRARY  = 1
+FORCE_STATIC_LIB = 1
 
 EXTRA_PP_JS_MODULES = \
    osfile.jsm \
    $(NULL)
+
+CPPSRCS = \
+	osfileutils.cpp \
+	$(NULL)
 
 ifdef ENABLE_TESTS
 DIRS += tests
