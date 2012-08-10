@@ -364,22 +364,16 @@ SafepointReader::advanceFromGcSlots()
 {
     // No, reset the counter.
     currentSlotChunkNumber_ = 0;
-#ifdef JS_NUNBOX32
     currentSlotChunk_ = stream_.readUnsigned();
-#endif
 }
 
 bool
 SafepointReader::getValueSlot(uint32 *slot)
 {
-#ifdef JS_NUNBOX32
     if (getSlotFromBitmap(slot))
         return true;
     advanceFromValueSlots();
     return false;
-#else
-    return false;
-#endif
 }
 
 void
