@@ -53,6 +53,10 @@ public:
   AddReservedServicesInternal(const nsAString& aAdapterPath,
                               const nsTArray<PRUint32>& aServices);
 
+  virtual bool
+  RemoveReservedServicesInternal(const nsAString& aAdapterPath,
+                                 const nsTArray<PRUint32>& aServiceHandles);
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

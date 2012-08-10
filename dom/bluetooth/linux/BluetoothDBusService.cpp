@@ -1015,7 +1015,7 @@ ExtractHandles(DBusMessage *aReply, nsTArray<PRUint32>& aOutHandles)
 
 nsTArray<PRUint32>
 BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
-    const nsTArray<PRUint32>& aServices)
+                                                  const nsTArray<PRUint32>& aServices)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -1040,4 +1040,28 @@ BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
 
   ExtractHandles(reply, ret);
   return ret;
+}
+
+bool
+BluetoothDBusService::RemoveReservedServicesInternal(const nsAString& aAdapterPath,
+                                                     const nsTArray<PRUint32>& aServiceHandles)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  int length = aServiceHandles.Length();
+  if (length == 0) return false;
+
+  const uint32_t* services = aServiceHandles.Elements();
+
+  DBusMessage* reply =
+    dbus_func_args(gThreadConnection->GetConnection(),
+                   NS_ConvertUTF16toUTF8(aAdapterPath).get(),
+                   DBUS_ADAPTER_IFACE, "RemoveReservedServiceRecords",
+                   DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
+                   &services, length, DBUS_TYPE_INVALID);
+
+  if (!reply) return false;
+
+  dbus_message_unref(reply);
+  return true;
 }
