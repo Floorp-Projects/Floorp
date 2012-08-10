@@ -4330,13 +4330,11 @@ nsGlobalWindow::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
     return GetScrollXY(aScrollX, aScrollY, true);
   }
 
-  nsIntPoint scrollPosCSSPixels = sf->GetScrollPositionCSSPixels();
-  if (aScrollX) {
-    *aScrollX = scrollPosCSSPixels.x;
-  }
-  if (aScrollY) {
-    *aScrollY = scrollPosCSSPixels.y;
-  }
+  if (aScrollX)
+    *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
+  if (aScrollY)
+    *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
+
   return NS_OK;
 }
 
