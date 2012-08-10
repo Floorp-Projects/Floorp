@@ -306,26 +306,6 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
         // reset the annotation indicator to be 0 for the next code point
         j = -1;
       }
-#if 0 // If we want this then the nsGlyphTableList must be declared
-      // or the UnicodeTable could be made a global.
-      // See if this code point is an *indirect reference* to the Unicode
-      // table and lookup the code there.
-      else if (code == PRUnichar(0xF8FF) && gGlyphTableList &&
-               this != &gGlyphTableList->mUnicodeTable) {
-        code = gGlyphTableList->mUnicodeTable.
-          ElementAt(aPresContext, aChar, aPosition).code;
-      }
-      // see if this code point is a *direct reference* to
-      // the Unicode table, and lookup the [TLMBRG1-9] position for code.
-      else if ((i+1 < length) && (value[i] == PRUnichar('.'))) {
-        ++i;
-        // Need to implement this if we want it:
-        // Set (new) code from the value[i] position for (current) code.
-        if (1)
-          return kNullGlyph;
-        ++i;
-      }
-#endif
       // Read the next word if we have a non-BMP character.
       if (i < length && NS_IS_HIGH_SURROGATE(code)) {
         code = value[i];
