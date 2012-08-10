@@ -6433,8 +6433,7 @@ let Reader = {
         }
 
         let doc = tab.browser.contentWindow.document;
-        let readability = new Readability(uri, doc);
-        readability.parse(function (article) {
+        this._readerParse(uri, doc, function (article) {
           if (!article) {
             this.log("Failed to parse page");
             callback(null);
@@ -6550,6 +6549,24 @@ let Reader = {
       dump("Reader: " + msg);
   },
 
+  _readerParse: function Reader_readerParse(uri, doc, callback) {
+    try {
+      new Readability({
+        uri: {
+          spec: uri.spec,
+          host: uri.host,
+          prePath: uri.prePath,
+          scheme: uri.scheme,
+          pathBase: Services.io.newURI(".", null, uri).spec
+        },
+        doc: doc
+      }).parse(callback);
+    } catch (e) {
+      dump("Reader: could not build Readability arguments: " + e);
+      callback(null);
+    }
+  },
+
   _runCallbacksAndFinish: function Reader_runCallbacksAndFinish(request, result) {
     delete this._requests[request.url];
 
@@ -6612,8 +6629,7 @@ let Reader = {
         this.log("Parsing response with Readability");
 
         let uri = Services.io.newURI(url, null, null);
-        let readability = new Readability(uri, doc);
-        readability.parse(function (article) {
+        this._readerParse(uri, doc, function (article) {
           // Delete reference to the browser element as we've finished parsing.
           let browser = request.browser;
           if (browser) {

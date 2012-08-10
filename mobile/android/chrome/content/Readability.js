@@ -19,16 +19,6 @@
  * available at: http://code.google.com/p/arc90labs-readability
  */
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
-
-function dump(s) {
-  Services.console.logStringMessage("Reader: (Readability) " + s);
-};
-
 var Readability = function(uri, doc) {
   const ENABLE_LOGGING = false;
 
@@ -132,36 +122,43 @@ Readability.prototype = {
    * @return void
    */
   _fixRelativeUris: function(articleContent) {
-    let baseUri = this._uri;
+    let scheme = this._uri.scheme;
+    let prePath = this._uri.prePath;
+    let pathBase = this._uri.pathBase;
 
-    // Fix links.
-    let links = articleContent.getElementsByTagName('a');
-    for (let i = links.length - 1; i >= 0; i--) {
-      links[i].href = this._newURIErrorWrapper(links[i].href, baseUri);
+    function toAbsoluteURI(uri) {
+      // If this is already an absolute URI, return it.
+      if (/^[a-zA-Z][a-zA-Z0-9\+\-\.]*:/.test(uri))
+        return uri;
+
+      // Scheme-rooted relative URI.
+      if (uri.substr(0, 2) == "//")
+        return scheme + "://" + uri.substr(2);
+
+      // Prepath-rooted relative URI.
+      if (uri[0] == "/")
+        return prePath + "/" + uri;
+
+      // Standard relative URI; add entire path.
+      return pathBase + uri;
     }
 
-    // Fix images.
-    let images = articleContent.getElementsByTagName('img');
-    for (let i = images.length - 1; i >= 0; i--) {
-      images[i].src = this._newURIErrorWrapper(images[i].src, baseUri);
+    function convertRelativeURIs(tagName, propName) {
+      let elems = articleContent.getElementsByTagName(tagName);
+      for (let i = elems.length; --i >= 0;) {
+        let elem = elems[i];
+        let relativeURI = elem.getAttribute(propName);
+        if (relativeURI != null) {
+          elems[i].setAttribute(propName, toAbsoluteURI(relativeURI));
+        }
+      }
     }
-  },
 
-  /**
-   * Converts the given parameters into a new nsIURI object and returns the "spec" attribute of it.
-   * Catches errors of the newURI method and returns an appropriate value.
-   *
-   * @param string
-   * @param nsIURI
-   * @return string
-   */
-  _newURIErrorWrapper: function(aSpec, aBaseURI) {
-    try {
-      return Services.io.newURI(aSpec, null, aBaseURI).spec;
-    } catch (err) {
-      dump("_newURIErrorWrapper: " + err.message);
-      return "";
-    }
+     // Fix links.
+    convertRelativeURIs("a", "href");
+
+     // Fix images.
+    convertRelativeURIs("img", "src");
   },
 
   /**
