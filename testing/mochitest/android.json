@@ -126,6 +126,7 @@
  "docshell/test/test_bug668513.html": "RANDOM",
  "dom/browser-element/mochitest/test_browserElement_oop_SecurityChange.html": "TIMED_OUT, bug 766586",
  "dom/browser-element/mochitest/test_browserElement_inproc_SecurityChange.html": "TIMED_OUT, bug 766586",
+ "dom/devicestorage/test/test_stat.html": "bug 781789",
  "dom/imptests/editing/conformancetest/test_event.html": "",
  "dom/imptests/editing/conformancetest/test_runtest.html": "",
  "dom/imptests/editing/selecttest/test_addRange.html": "bug 775227", 
