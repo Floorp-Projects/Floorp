@@ -353,8 +353,3 @@ MSG_DEF(JSMSG_REST_WITH_DEFAULT,      299, 0, JSEXN_SYNTAXERR, "rest parameter m
 MSG_DEF(JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT, 300, 0, JSEXN_SYNTAXERR, "parameter(s) with default followed by parameter without default")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default expression")
 MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic function {0}")
-MSG_DEF(JSMSG_PAR_ARRAY_IMMUTABLE,    303, 0, JSEXN_TYPEERR, "ParallelArray objects are immutable")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BNDS, 304, 0, JSEXN_ERR, "scatter index out of bounds")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_INVALID_VEC, 305, 0, JSEXN_ERR, "first argument to scatter is not a valid scatter vector")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 306, 0, JSEXN_ERR, "no function provided to resolve conflicting assignment in scatter")
-MSG_DEF(JSMSG_PAR_ARRAY_MAP_INVALID_ARG, 307, 1, JSEXN_ERR, "argument {0} to map is not an object")

@@ -214,8 +214,6 @@ extern Class MathClass;
 extern Class NumberClass;
 extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
-extern Class ParallelArrayClass;
-extern Class ParallelArrayProtoClass;
 extern Class ProxyClass;
 extern Class RegExpClass;
 extern Class RegExpStaticsClass;
