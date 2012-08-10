@@ -631,7 +631,7 @@ class Mochitest(object):
         self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
       if options.testManifest:
         self.urlOpts.append("testManifest=%s" % options.testManifest)
-        if options.runOnly:
+        if hasattr(options, 'runOnly') and options.runOnly:
           self.urlOpts.append("runOnly=true")
         else:
           self.urlOpts.append("runOnly=false")
