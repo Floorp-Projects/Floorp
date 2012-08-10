@@ -90,6 +90,10 @@ class Element;
 #define SVG_WSP_DELIM       "\x20\x9\xD\xA"
 #define SVG_COMMA_WSP_DELIM "," SVG_WSP_DELIM
 
+#define SVG_HIT_TEST_FILL        0x01
+#define SVG_HIT_TEST_STROKE      0x02
+#define SVG_HIT_TEST_CHECK_MRECT 0x04
+
 inline bool
 IsSVGWhitespace(char aChar)
 {
@@ -671,13 +675,47 @@ public:
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
   /**
-   * Set the graphics context ready for filling.
+   * Sets the current paint on the specified gfxContent to be the SVG 'fill'
+   * for the given frame.
    */
-  static bool SetupCairoFill(gfxContext *aContext, nsIFrame *aFrame);
+  static bool SetupCairoFillPaint(nsIFrame* aFrame, gfxContext* aContext);
+
   /**
-   * Set the graphics context ready for stroking.
+   * Sets the current paint on the specified gfxContent to be the SVG 'stroke'
+   * for the given frame.
    */
-  static bool SetupCairoStroke(gfxContext *aContext, nsIFrame *aFrame);
+  static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext);
+
+  /*
+   * @return false if there is no stroke
+   */
+  static bool HasStroke(nsIFrame* aFrame);
+
+  static float GetStrokeWidth(nsIFrame* aFrame);
+
+  /*
+   * Set up a cairo context for measuring a stroked path
+   */
+  static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext);
+
+  /*
+   * Set up a cairo context for hit testing a stroked path
+   */
+  static void SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext *aContext);
+
+  /*
+   * Set up a cairo context for stroking, including setting up any stroke-related
+   * properties such as dashing and setting the current paint on the gfxContext.
+   */
+  static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext);
+
+  /**
+   * This function returns a set of bit flags indicating which parts of the
+   * element (fill, stroke, bounds) should intercept pointer events. It takes
+   * into account the type of element and the value of the 'pointer-events'
+   * property on the element.
+   */
+  static PRUint16 GetGeometryHitTestFlags(nsIFrame* aFrame);
 };
 
 #endif
