@@ -2204,7 +2204,7 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
+  if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), aCodecList))
     return CANPLAY_MAYBE;
 #endif
   return CANPLAY_NO;
@@ -2230,7 +2230,7 @@ bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
     return true;
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
+  if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), NULL))
     return true;
 #endif
   // We should not return true for Wave types, since there are some
@@ -2346,7 +2346,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
-  if (GetMediaPluginHost()->FindDecoder(aType, NULL)) {
+  if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
     nsRefPtr<nsMediaPluginDecoder> decoder = new nsMediaPluginDecoder(aType);
     if (decoder->Init(this)) {
       return decoder.forget();
