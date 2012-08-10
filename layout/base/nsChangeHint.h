@@ -102,6 +102,14 @@ enum nsChangeHint {
   nsChangeHint_RecomputePosition = 0x2000,
 
   /**
+   * Behaves like ReconstructFrame, but only if the frame has descendants
+   * that are absolutely or fixed position. Use this hint when a style change
+   * has changed whether the frame is a container for fixed-pos or abs-pos
+   * elements, but reframing is otherwise not needed.
+   */
+  nsChangeHint_AddOrRemoveTransform = 0x4000,
+
+  /**
    * We have an optimization when processing change hints which prevents
    * us from visiting the descendants of a node when a hint on that node
    * is being processed.  This optimization does not apply in some of the
@@ -116,7 +124,8 @@ enum nsChangeHint {
     nsChangeHint_UpdateOpacityLayer |
     nsChangeHint_UpdateOverflow |
     nsChangeHint_ChildrenOnlyTransform |
-    nsChangeHint_RecomputePosition
+    nsChangeHint_RecomputePosition |
+    nsChangeHint_AddOrRemoveTransform
 };
 
 // Redefine these operators to return nothing. This will catch any use
