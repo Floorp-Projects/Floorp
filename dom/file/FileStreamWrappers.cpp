@@ -139,7 +139,7 @@ FileInputStreamWrapper::Close()
 }
 
 NS_IMETHODIMP
-FileInputStreamWrapper::Available(PRUint32* _retval)
+FileInputStreamWrapper::Available(PRUint64* _retval)
 {
   // Performing sync IO on the main thread is generally not allowed.
   // However, the input stream wrapper is also used to track reads performed by

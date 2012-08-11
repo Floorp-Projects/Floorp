@@ -808,9 +808,13 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   nsCOMPtr<nsIInputStream> input;
   channel->Open(getter_AddRefs(input));
   nsString dataString;
-  PRUint32 avail = 0;
-  if (input && NS_SUCCEEDED(input->Available(&avail)) && avail) {
+  PRUint64 avail64 = 0;
+  if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {
+    if (avail64 > PR_UINT32_MAX) {
+      return;
+    }
     nsCString buffer;
+    PRUint32 avail = (PRUint32)NS_MIN(avail64, (PRUint64)PR_UINT32_MAX);
     if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
       return;
     }

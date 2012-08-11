@@ -2099,7 +2099,7 @@ nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *context,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFtpState::Available(PRUint32 *result)
+nsFtpState::Available(PRUint64 *result)
 {
     if (mDataStream)
         return mDataStream->Available(result);

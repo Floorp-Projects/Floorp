@@ -749,10 +749,15 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   if (!imgStream)
     return;
 
-  PRUint32 bufSize;
-  rv = imgStream->Available(&bufSize);
+  PRUint64 bufSize64;
+  rv = imgStream->Available(&bufSize64);
   if (NS_FAILED(rv))
     return;
+
+  if (bufSize64 > PR_UINT32_MAX - 16)
+    return;
+
+  PRUint32 bufSize = (PRUint32)bufSize64;
 
   // ...leave a little extra room so we can call read again and make sure we
   // got everything. 16 bytes for better padding (maybe)

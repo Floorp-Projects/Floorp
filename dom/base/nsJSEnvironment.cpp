@@ -3897,11 +3897,13 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, PRUint
   rv = scriptChannel->Open(getter_AddRefs(scriptStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 rawLen;
+  PRUint64 rawLen;
   rv = scriptStream->Available(&rawLen);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!rawLen)
     return NS_ERROR_FAILURE;
+  if (rawLen > PR_UINT32_MAX)
+    return NS_ERROR_FILE_TOO_BIG;
 
   // Allocate an internal buf the size of the file.
   nsAutoArrayPtr<unsigned char> buf(new unsigned char[rawLen]);
