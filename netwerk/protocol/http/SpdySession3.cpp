@@ -2258,7 +2258,7 @@ SpdySession3::Caps()
   return 0;
 }
 
-PRUint32
+PRUint64
 SpdySession3::Available()
 {
   NS_ABORT_IF_FALSE(false, "SpdySession3::Available()");

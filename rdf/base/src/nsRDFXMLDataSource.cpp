@@ -519,21 +519,24 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
     rv = aConsumer->OnStartRequest(channel, nullptr);
 
-    PRUint32 offset = 0;
+    PRUint64 offset = 0;
     while (NS_SUCCEEDED(rv)) {
         // Skip ODA if the channel is canceled
         channel->GetStatus(&rv);
         if (NS_FAILED(rv))
             break;
 
-        PRUint32 avail;
+        PRUint64 avail;
         if (NS_FAILED(rv = bufStream->Available(&avail)))
             break; // error
 
         if (avail == 0)
             break; // eof
 
-        rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, offset, avail);
+        if (avail > PR_UINT32_MAX)
+            avail = PR_UINT32_MAX;
+
+        rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, (PRUint32)NS_MIN(offset, (PRUint64)PR_UINT32_MAX), (PRUint32)avail);
         if (NS_SUCCEEDED(rv))
             offset += avail;
     }

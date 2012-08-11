@@ -56,7 +56,7 @@ native nsWriteSegmentFun(nsWriteSegmentFun);
  * the case that a blocking input stream should be implemented using thread-
  * safe AddRef and Release.
  */
-[scriptable, uuid(fa9c7f6c-61b3-11d4-9877-00c04fa0cf4a)]
+[scriptable, uuid(53cdbc97-c2d7-4e30-b2c3-45b2ee79db18)]
 interface nsIInputStream : nsISupports
 {
     /** 
@@ -80,14 +80,13 @@ interface nsIInputStream : nsISupports
      * this method returns 0 bytes available.  (Note: some nsIInputStream
      * implementations automatically close when eof is reached; some do not).
      *
-     * @return number of bytes currently available in the stream, or
-     *   PR_UINT32_MAX if the size of the stream exceeds PR_UINT32_MAX.
+     * @return number of bytes currently available in the stream.
      *
      * @throws NS_BASE_STREAM_CLOSED if the stream is closed normally.
      * @throws <other-error> if the stream is closed due to some error
      *   condition
      */
-    unsigned long available();
+    unsigned long long available();
 
     /** 
      * Read data from the stream.

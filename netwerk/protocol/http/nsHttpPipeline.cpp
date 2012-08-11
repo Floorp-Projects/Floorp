@@ -559,10 +559,10 @@ nsHttpPipeline::Caps()
     return trans ? trans->Caps() : 0;
 }
 
-PRUint32
+PRUint64
 nsHttpPipeline::Available()
 {
-    PRUint32 result = 0;
+    PRUint64 result = 0;
 
     PRInt32 i, count = mRequestQ.Length();
     for (i=0; i<count; ++i)
@@ -597,7 +597,7 @@ nsHttpPipeline::ReadSegments(nsAHttpSegmentReader *reader,
     }
 
     nsresult rv;
-    PRUint32 avail = 0;
+    PRUint64 avail = 0;
     if (mSendBufIn) {
         rv = mSendBufIn->Available(&avail);
         if (NS_FAILED(rv)) return rv;
@@ -623,7 +623,8 @@ nsHttpPipeline::ReadSegments(nsAHttpSegmentReader *reader,
 
     mReader = reader;
 
-    rv = mSendBufIn->ReadSegments(ReadFromPipe, this, avail, countRead);
+    // avail is under 4GB, so casting to PRUint32 is safe
+    rv = mSendBufIn->ReadSegments(ReadFromPipe, this, (PRUint32)avail, countRead);
 
     mReader = nullptr;
     return rv;
@@ -835,7 +836,8 @@ nsHttpPipeline::FillSendBuf()
         if (NS_FAILED(rv)) return rv;
     }
 
-    PRUint32 n, avail;
+    PRUint32 n;
+    PRUint64 avail;
     nsAHttpTransaction *trans;
     nsITransport *transport = Transport();
 
@@ -849,7 +851,7 @@ nsHttpPipeline::FillSendBuf()
             nsAHttpTransaction *response = Response(0);
             if (response && !response->PipelinePosition())
                 response->SetPipelinePosition(1);
-            rv = trans->ReadSegments(this, avail, &n);
+            rv = trans->ReadSegments(this, (PRUint32)NS_MIN(avail, (PRUint64)PR_UINT32_MAX), &n);
             if (NS_FAILED(rv)) return rv;
             
             if (n == 0) {
