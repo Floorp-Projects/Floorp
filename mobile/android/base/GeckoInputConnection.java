@@ -1033,6 +1033,12 @@ class GeckoInputConnection
                         if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
                         IMEStateUpdater.resetIME();
                         break;
+
+                    case NOTIFY_IME_SETOPENSTATE:
+                    default:
+                        if (DEBUG)
+                            throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
+                        break;
                 }
             }
         });
@@ -1443,9 +1449,19 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
 
     @Override
     public void notifyIME(int type, int state) {
-        Log.d(LOGTAG, String.format("IME: >notifyIME(type=%d, state=%d)", type, state));
+        Log.d(LOGTAG, "IME: >notifyIME(type=" + type + ", state=" + state + ")");
         GeckoApp.assertOnGeckoThread();
         super.notifyIME(type, state);
+    }
+
+    @Override
+    public void notifyIMEEnabled(int state, String typeHint, String actionHint) {
+        Log.d(LOGTAG, "IME: >notifyIMEEnabled(state=" + state + ", typeHint=\"" + typeHint
+                      + "\", actionHint=\"" + actionHint + "\"");
+        GeckoApp.assertOnGeckoThread();
+        if (state < IME_STATE_DISABLED || state > IME_STATE_PLUGIN)
+            throw new IllegalArgumentException("Unexpected IMEState=" + state);
+        super.notifyIMEEnabled(state, typeHint, actionHint);
     }
 }
 
