@@ -921,7 +921,7 @@ public class PanZoomController
          * Apply edge resistance if we're zoomed out smaller than the page size by scaling the zoom
          * factor toward 1.0.
          */
-        float resistance = Math.min(mX.getEdgeResistance(), mY.getEdgeResistance());
+        float resistance = Math.min(mX.getEdgeResistance(true), mY.getEdgeResistance(true));
         if (spanRatio > 1.0f)
             spanRatio = 1.0f + (spanRatio - 1.0f) * resistance;
         else
