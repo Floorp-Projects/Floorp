@@ -16,6 +16,18 @@
 
 ok('mozPower' in navigator, "navigator.mozPower should exist");
 
+/** Test permission **/
+
+SpecialPowers.removePermission("power", document);
+
+power = navigator.mozPower;
+ok(!power, "Shouldn't be able to access power manager without permission.");
+
+SpecialPowers.addPermission("power", true, document);
+
+power = navigator.mozPower;
+ok(power, "Shouldn be able to access power manager with permission.");
+
 </script>
 </pre>
 </body>
