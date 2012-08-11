@@ -40,9 +40,6 @@ SUBMAKEFILES += \
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
-# XXXCallek Unused?
-APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
-
 PWD := $(CURDIR)
 
 # These are defaulted to be compatible with the files the wget-en-US target
