@@ -590,9 +590,12 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Obtain the ICO buffer size from the re-encoded ICO stream
-  PRUint32 bufSize;
-  rv = iconStream->Available(&bufSize);
+  PRUint64 bufSize64;
+  rv = iconStream->Available(&bufSize64);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(bufSize64 <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+
+  PRUint32 bufSize = (PRUint32)bufSize64;
 
   // Setup a buffered output stream from the stream object
   // so that we can simply use WriteFrom with the stream object

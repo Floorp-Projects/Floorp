@@ -178,12 +178,15 @@ struct ParamTraits<InputStream>
       NS_WARNING("nsIInputStream implementation doesn't support nsIIPCSerializable; falling back to copying data");
 
       nsCString streamString;
-      PRUint32 bytes;
+      PRUint64 bytes;
 
-      aParam.mStream->Available(&bytes);
-      if (bytes > 0) {
+      nsresult rv = aParam.mStream->Available(&bytes);
+      if (NS_SUCCEEDED(rv) && bytes > 0) {
+        // Also, on 64-bit system, for an interoperability for 32-bit process
+        // and 64-bit process, we shouldn't handle over 4GB message.
+        NS_ABORT_IF_FALSE(bytes < PR_UINT32_MAX, "nsIInputStream has over 4GB data");
         mozilla::DebugOnly<nsresult> rv =
-          NS_ReadInputStreamToString(aParam.mStream, streamString, bytes);
+          NS_ReadInputStreamToString(aParam.mStream, streamString, (PRUint32)bytes);
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't read input stream into a string!");
       }
 

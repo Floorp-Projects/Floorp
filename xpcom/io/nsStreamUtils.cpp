@@ -611,20 +611,23 @@ NS_ConsumeStream(nsIInputStream *stream, PRUint32 maxCount, nsACString &result)
     result.Truncate();
 
     while (maxCount) {
-        PRUint32 avail;
-        rv = stream->Available(&avail);
+        PRUint64 avail64;
+        rv = stream->Available(&avail64);
         if (NS_FAILED(rv)) {
             if (rv == NS_BASE_STREAM_CLOSED)
                 rv = NS_OK;
             break;
         }
-        if (avail == 0)
+        if (avail64 == 0)
             break;
-        if (avail > maxCount)
-            avail = maxCount;
+
+        PRUint32 avail = (PRUint32)NS_MIN<PRUint64>(avail64, maxCount);
 
         // resize result buffer
         PRUint32 length = result.Length();
+        if (avail > PR_UINT32_MAX - length)
+            return NS_ERROR_FILE_TOO_BIG;
+        
         result.SetLength(length + avail);
         if (result.Length() != (length + avail))
             return NS_ERROR_OUT_OF_MEMORY;

@@ -599,11 +599,12 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   rv = channel->Open(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 available;
-  rv = stream->Available(&available);
+  PRUint64 available64;
+  rv = stream->Available(&available64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (available == 0)
-    return NS_ERROR_FAILURE;
+  if (available64 == 0 || available64 > PR_UINT32_MAX / sizeof(PRUint8))
+    return NS_ERROR_FILE_TOO_BIG;
+  PRUint32 available = (PRUint32)available64;
 
   // Read all the decoded data.
   PRUint8* buffer = static_cast<PRUint8*>
@@ -661,11 +662,12 @@ nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
   rv = channel->Open(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 available;
-  rv = stream->Available(&available);
+  PRUint64 available64;
+  rv = stream->Available(&available64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (available == 0)
+  if (available64 == 0 || available64 > PR_UINT32_MAX / sizeof(PRUint8))
     return NS_ERROR_FAILURE;
+  PRUint32 available = (PRUint32)available64;
 
   // read all the decoded data
   PRUint8* buffer = static_cast<PRUint8*>

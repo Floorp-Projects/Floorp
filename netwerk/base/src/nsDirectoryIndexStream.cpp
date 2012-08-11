@@ -200,7 +200,7 @@ nsDirectoryIndexStream::Close()
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::Available(PRUint32* aLength)
+nsDirectoryIndexStream::Available(PRUint64* aLength)
 {
     if (NS_FAILED(mStatus))
         return mStatus;
