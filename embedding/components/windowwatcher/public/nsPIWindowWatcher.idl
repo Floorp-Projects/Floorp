@@ -16,7 +16,7 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 
-[uuid(00788A84-152F-4BD8-A814-FD8EB545DB29)]
+[uuid(8624594a-28d7-4bc3-8d12-b1c2b9eefd90)]
 
 interface nsPIWindowWatcher : nsISupports
 {
@@ -35,9 +35,8 @@ interface nsPIWindowWatcher : nsISupports
   */
   void removeWindow(in nsIDOMWindow aWindow);
 
-  /** Like the public interface's open(), but can handle openDialog-style
-      arguments and calls which shouldn't result in us navigating the window.
-
+  /** Like the public interface's open(), but can deal with openDialog
+      style arguments.
       @param aParent parent window, if any. Null if no parent.  If it is
              impossible to get to an nsIWebBrowserChrome from aParent, this
              method will effectively act as if aParent were null.
@@ -47,10 +46,7 @@ interface nsPIWindowWatcher : nsISupports
              with this name already exists, the openWindow call may just load
              aUrl in it (if aUrl is not null) and return it.
       @param aFeatures window features from JS window.open. can be null.
-      @param aCalledFromScript true if we were called from script.
       @param aDialog use dialog defaults (see nsIDOMWindow::openDialog)
-      @param aNavigate true if we should navigate the new window to the
-             specified URL.
       @param aArgs Window argument
       @return the new window
 
@@ -62,10 +58,9 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
-  nsIDOMWindow openWindow2(in nsIDOMWindow aParent, in string aUrl,
-                           in string aName, in string aFeatures,
-                           in boolean aCalledFromScript, in boolean aDialog,
-                           in boolean aNavigate, in nsISupports aArgs);
+  nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in string aUrl,
+               in string aName, in string aFeatures, in boolean aDialog,
+               in nsIArray aArgs);
 
   /**
    * Find a named docshell tree item amongst all windows registered
