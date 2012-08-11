@@ -642,6 +642,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
     JS_ASSERT(masm.framePushed() == initialStack);
 
+    dropArguments(call->numStackArgs() + 1);
     return true;
 }
 
