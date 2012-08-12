@@ -339,6 +339,14 @@ protected:
     void ApplyUserPrefsToDelta(mozilla::widget::WheelEvent* aEvent);
 
     /**
+     * If ApplyUserPrefsToDelta() changed the delta values with customized
+     * prefs, the overflowDelta values would be inflated.
+     * CancelApplyingUserPrefsFromOverflowDelta() cancels the inflation.
+     */
+    void CancelApplyingUserPrefsFromOverflowDelta(
+                                    mozilla::widget::WheelEvent* aEvent);
+
+    /**
      * Computes the default action for the aEvent with the prefs.
      */
     enum Action
