@@ -86,6 +86,14 @@ public:
                            nsIFrame* aTargetFrame,
                            nsEventStatus* aStatus);
 
+  /**
+   * DispatchLegacyMouseScrollEvents() dispatches NS_MOUSE_SCROLL event and
+   * NS_MOUSE_PIXEL_SCROLL event for compatiblity with old Gecko.
+   */
+  void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
+                                       mozilla::widget::WheelEvent* aEvent,
+                                       nsEventStatus* aStatus);
+
   void NotifyDestroyPresContext(nsPresContext* aPresContext);
   void SetPresContext(nsPresContext* aPresContext);
   void ClearFrameRefs(nsIFrame* aFrame);
@@ -392,15 +400,52 @@ protected:
     static WheelPrefs* sInstance;
   };
 
+  /**
+   * DeltaDirection is used for specifying whether the called method should
+   * handle vertical delta or horizontal delta.
+   * This is clearer than using bool.
+   */
+  enum DeltaDirection
+  {
+    DELTA_DIRECTION_X = 0,
+    DELTA_DIRECTION_Y
+  };
+
+  /**
+   * SendLineScrollEvent() dispatches a DOMMouseScroll event for the
+   * widget::WheelEvent.  This method shouldn't be called for non-trusted
+   * wheel event because it's not necessary for compatiblity.
+   *
+   * @param aTargetFrame        The event target of wheel event.
+   * @param aEvent              The original Wheel event.
+   * @param aStatus             The event status, must not be
+   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aDelta              The delta value of the event.
+   * @param aDeltaDirection     The X/Y direction of dispatching event.
+   */
   void SendLineScrollEvent(nsIFrame* aTargetFrame,
-                           nsMouseScrollEvent* aEvent,
-                           nsPresContext* aPresContext,
+                           mozilla::widget::WheelEvent* aEvent,
                            nsEventStatus* aStatus,
-                           PRInt32 aNumLines);
+                           PRInt32 aDelta,
+                           DeltaDirection aDeltaDirection);
+
+  /**
+   * SendPixelScrollEvent() dispatches a MozMousePixelScroll event for the
+   * widget::WheelEvent.  This method shouldn't be called for non-trusted
+   * wheel event because it's not necessary for compatiblity.
+   *
+   * @param aTargetFrame        The event target of wheel event.
+   * @param aEvent              The original Wheel event.
+   * @param aStatus             The event status, must not be
+   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aPixelDelta         The delta value of the event.
+   * @param aDeltaDirection     The X/Y direction of dispatching event.
+   */
   void SendPixelScrollEvent(nsIFrame* aTargetFrame,
-                            nsMouseScrollEvent* aEvent,
-                            nsPresContext* aPresContext,
-                            nsEventStatus* aStatus);
+                            mozilla::widget::WheelEvent* aEvent,
+                            nsEventStatus* aStatus,
+                            PRInt32 aPixelDelta,
+                            DeltaDirection aDeltaDirection);
 
   /**
    * ComputeScrollTarget() returns the scrollable frame which should be
