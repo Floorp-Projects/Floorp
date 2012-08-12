@@ -49,21 +49,19 @@ const DOM_PAGE_SCROLL_DELTA = 32768;
 
 const kSystemScrollSpeedOverridePref = "mousewheel.system_scroll_override_on_root_content.enabled";
 
-const kAltKeyVActionPref        = "mousewheel.withaltkey.action";
-const kAltKeyHActionPref        = "mousewheel.horizscroll.withaltkey.action";
-const kCtrlKeyVActionPref       = "mousewheel.withcontrolkey.action";
-const kCtrlKeyHActionPref       = "mousewheel.horizscroll.withcontrolkey.action";
-const kShiftKeyVActionPref      = "mousewheel.withshiftkey.action";
-const kShiftKeyHActionPref      = "mousewheel.horizscroll.withshiftkey.action";
+const kAltKeyActionPref         = "mousewheel.with_alt.action";
+const kCtrlKeyActionPref        = "mousewheel.with_control.action";
+const kShiftKeyActionPref       = "mousewheel.with_shift.action";
+const kWinKeyActionPref         = "mousewheel.with_win.action";
 
-const kAltKeyDeltaMultiplierXPref   = "mousewheel.withaltkey.delta_multiplier_x";
-const kAltKeyDeltaMultiplierYPref   = "mousewheel.withaltkey.delta_multiplier_y";
-const kCtrlKeyDeltaMultiplierXPref  = "mousewheel.withcontrolkey.delta_multiplier_x";
-const kCtrlKeyDeltaMultiplierYPref  = "mousewheel.withcontrolkey.delta_multiplier_y";
-const kShiftKeyDeltaMultiplierXPref = "mousewheel.withshiftkey.delta_multiplier_x";
-const kShiftKeyDeltaMultiplierYPref = "mousewheel.withshiftkey.delta_multiplier_y";
-const kWinKeyDeltaMultiplierXPref   = "mousewheel.withwinkey.delta_multiplier_x";
-const kWinKeyDeltaMultiplierYPref   = "mousewheel.withwinkey.delta_multiplier_y";
+const kAltKeyDeltaMultiplierXPref   = "mousewheel.with_alt.delta_multiplier_x";
+const kAltKeyDeltaMultiplierYPref   = "mousewheel.with_alt.delta_multiplier_y";
+const kCtrlKeyDeltaMultiplierXPref  = "mousewheel.with_control.delta_multiplier_x";
+const kCtrlKeyDeltaMultiplierYPref  = "mousewheel.with_control.delta_multiplier_y";
+const kShiftKeyDeltaMultiplierXPref = "mousewheel.with_shift.delta_multiplier_x";
+const kShiftKeyDeltaMultiplierYPref = "mousewheel.with_shift.delta_multiplier_y";
+const kWinKeyDeltaMultiplierXPref   = "mousewheel.with_win.delta_multiplier_x";
+const kWinKeyDeltaMultiplierYPref   = "mousewheel.with_win.delta_multiplier_y";
 
 const kPixelEnabledPref           = "mousewheel.enable_pixel_scrolling";
 const kEmulateWheelByWMSCROLLPref = "mousewheel.emulate_at_wm_scroll";
@@ -109,12 +107,10 @@ function todo_is(aLeft, aRight, aMessage)
 
 function onUnload()
 {
-  SpecialPowers.clearUserPref(kAltKeyVActionPref);
-  SpecialPowers.clearUserPref(kAltKeyHActionPref);
-  SpecialPowers.clearUserPref(kCtrlKeyVActionPref);
-  SpecialPowers.clearUserPref(kCtrlKeyHActionPref);
-  SpecialPowers.clearUserPref(kShiftKeyVActionPref);
-  SpecialPowers.clearUserPref(kShiftKeyHActionPref);
+  SpecialPowers.clearUserPref(kAltKeyActionPref);
+  SpecialPowers.clearUserPref(kCtrlKeyActionPref);
+  SpecialPowers.clearUserPref(kShiftKeyActionPref);
+  SpecialPowers.clearUserPref(kWinKeyActionPref);
 
   SpecialPowers.clearUserPref(kAltKeyDeltaMultiplierXPref);
   SpecialPowers.clearUserPref(kAltKeyDeltaMultiplierYPref);
@@ -1878,12 +1874,10 @@ function runNextTest(aTests, aIndex)
 function prepareTests()
 {
   // Disable special action with modifier key
-  SpecialPowers.setIntPref(kAltKeyVActionPref, 0);
-  SpecialPowers.setIntPref(kCtrlKeyVActionPref, 0);
-  SpecialPowers.setIntPref(kShiftKeyVActionPref, 0);
-  SpecialPowers.setIntPref(kAltKeyHActionPref, 0);
-  SpecialPowers.setIntPref(kCtrlKeyHActionPref, 0);
-  SpecialPowers.setIntPref(kShiftKeyHActionPref, 0);
+  SpecialPowers.setIntPref(kAltKeyActionPref, 1);
+  SpecialPowers.setIntPref(kCtrlKeyActionPref, 1);
+  SpecialPowers.setIntPref(kShiftKeyActionPref, 1);
+  SpecialPowers.setIntPref(kWinKeyActionPref, 1);
 
   SpecialPowers.setIntPref(kAltKeyDeltaMultiplierXPref, 100);
   SpecialPowers.setIntPref(kAltKeyDeltaMultiplierYPref, 100);

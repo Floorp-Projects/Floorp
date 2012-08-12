@@ -302,34 +302,6 @@ GetAccessModifierMaskFromPref(PRInt32 aItemType)
   }
 }
 
-static void
-GetBasePrefKeyForMouseWheel(nsMouseScrollEvent* aEvent, nsACString& aPref)
-{
-  NS_NAMED_LITERAL_CSTRING(prefbase,    "mousewheel");
-  NS_NAMED_LITERAL_CSTRING(horizscroll, ".horizscroll");
-  NS_NAMED_LITERAL_CSTRING(withshift,   ".withshiftkey");
-  NS_NAMED_LITERAL_CSTRING(withalt,     ".withaltkey");
-  NS_NAMED_LITERAL_CSTRING(withcontrol, ".withcontrolkey");
-  NS_NAMED_LITERAL_CSTRING(withmetakey, ".withmetakey");
-  NS_NAMED_LITERAL_CSTRING(withno,      ".withnokey");
-
-  aPref = prefbase;
-  if (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
-    aPref.Append(horizscroll);
-  }
-  if (aEvent->IsShift()) {
-    aPref.Append(withshift);
-  } else if (aEvent->IsControl()) {
-    aPref.Append(withcontrol);
-  } else if (aEvent->IsAlt()) {
-    aPref.Append(withalt);
-  } else if (aEvent->IsMeta()) {
-    aPref.Append(withmetakey);
-  } else {
-    aPref.Append(withno);
-  }
-}
-
 class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
@@ -2686,43 +2658,55 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
 }
 
 PRInt32
-nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent)
+nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aEvent)
 {
-  PRInt32 action = GetWheelActionFor(aMouseEvent);
-  if (!aMouseEvent->customizedByUserPrefs &&
-      (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)) {
-    action = MOUSE_SCROLL_PAGE;
+  PRInt32 result = -1;
+  bool isPage =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) != 0;
+  bool isMomentum =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum) != 0;
+  bool hasPixel =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) != 0;
+  bool isPixel = (aEvent->message == NS_MOUSE_PIXEL_SCROLL);
+
+  WheelPrefs::Action action = WheelPrefs::GetInstance()->GetActionFor(aEvent);
+  if (action == WheelPrefs::ACTION_NONE) {
+    return -1;
   }
 
-  if (aMouseEvent->message == NS_MOUSE_PIXEL_SCROLL) {
-    if (action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE ||
-        (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
-      action = MOUSE_SCROLL_PIXELS;
-    } else {
-      // Do not scroll pixels when zooming
-      action = -1;
+  if (action == WheelPrefs::ACTION_SCROLL) {
+    if (isPixel) {
+      return MOUSE_SCROLL_PIXELS;
     }
-  } else if (((aMouseEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) &&
-              (!aMouseEvent->customizedByUserPrefs ||
-               action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE)) ||
-             ((aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum) &&
-              (action == MOUSE_SCROLL_HISTORY || action == MOUSE_SCROLL_ZOOM))) {
-    // Don't scroll lines or page when a pixel scroll event will follow.
-    // Also, don't do history scrolling or zooming for momentum scrolls,
-    // no matter what's going on with pixel scrolling.
-    action = -1;
+    // Don't need to scroll, will be scrolled by following pixel event.
+    if (hasPixel) {
+      return -1;
+    }
+    return isPage ? MOUSE_SCROLL_PAGE : MOUSE_SCROLL_N_LINES;
   }
 
-  return action;
-}
+  // Momentum pixel events shouldn't run special actions.
+  if (isPixel && isMomentum) {
+    // Get the default action.  Note that user might kill the wheel scrolling.
+    action = WheelPrefs::GetInstance()->GetActionFor(nullptr);
+    return (action == WheelPrefs::ACTION_SCROLL) ? MOUSE_SCROLL_PIXELS : -1;
+  }
 
-PRInt32
-nsEventStateManager::GetWheelActionFor(nsMouseScrollEvent* aMouseEvent)
-{
-  nsCAutoString prefName;
-  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
-  prefName.Append(".action");
-  return Preferences::GetInt(prefName.get());
+  // Special actions shouldn't be run by pixel scroll event or momentum events.
+  if (isMomentum || isPixel) {
+    return -1;
+  }
+
+  if (action == WheelPrefs::ACTION_HISTORY) {
+    return MOUSE_SCROLL_HISTORY;
+  }
+
+  if (action == WheelPrefs::ACTION_ZOOM) {
+    return MOUSE_SCROLL_ZOOM;
+  }
+
+  NS_WARNING("Unsupported wheel action pref value!");
+  return -1;
 }
 
 nsIScrollableFrame*
@@ -5232,6 +5216,10 @@ nsEventStateManager::WheelPrefs::Reset()
 nsEventStateManager::WheelPrefs::Index
 nsEventStateManager::WheelPrefs::GetIndexFor(nsMouseEvent_base* aEvent)
 {
+  if (!aEvent) {
+    return INDEX_DEFAULT;
+  }
+
   widget::Modifiers modifiers =
     (aEvent->modifiers & (widget::MODIFIER_ALT |
                           widget::MODIFIER_CONTROL |
@@ -5265,23 +5253,23 @@ nsEventStateManager::WheelPrefs::GetBasePrefName(
   aBasePrefName.AssignLiteral("mousewheel.");
   switch (aIndex) {
     case INDEX_ALT:
-      aBasePrefName.AppendLiteral("withaltkey.");
+      aBasePrefName.AppendLiteral("with_alt.");
       break;
     case INDEX_CONTROL:
-      aBasePrefName.AppendLiteral("withcontrolkey.");
+      aBasePrefName.AppendLiteral("with_control.");
       break;
     case INDEX_META:
-      aBasePrefName.AppendLiteral("withmetakey.");
+      aBasePrefName.AppendLiteral("with_meta.");
       break;
     case INDEX_SHIFT:
-      aBasePrefName.AppendLiteral("withshiftkey.");
+      aBasePrefName.AppendLiteral("with_shift.");
       break;
     case INDEX_OS:
-      aBasePrefName.AppendLiteral("withwinkey.");
+      aBasePrefName.AppendLiteral("with_win.");
       break;
     case INDEX_DEFAULT:
     default:
-      aBasePrefName.AppendLiteral("withnokey.");
+      aBasePrefName.AppendLiteral("default.");
       break;
   }
 }
@@ -5313,6 +5301,16 @@ nsEventStateManager::WheelPrefs::Init(
   if (mMultiplierY[aIndex] < 1.0 && mMultiplierY[aIndex] > -1.0) {
     mMultiplierY[aIndex] = mMultiplierY[aIndex] < 0.0 ? -1.0 : 1.0;
   }
+
+  nsCAutoString prefNameAction(basePrefName);
+  prefNameAction.AppendLiteral("action");
+  mActions[aIndex] =
+    static_cast<Action>(Preferences::GetInt(prefNameAction.get(),
+                                            ACTION_SCROLL));
+  if (mActions[aIndex] < ACTION_NONE || mActions[aIndex] > ACTION_LAST) {
+    NS_WARNING("Unsupported action pref value, replaced with 'Scroll'.");
+    mActions[aIndex] = ACTION_SCROLL;
+  }
 }
 
 void
@@ -5333,4 +5331,12 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
       static_cast<PRInt32>((delta > 0.0) ? ceil(delta) : floor(delta));
     aEvent->customizedByUserPrefs = (mMultiplierY[index] != 1.0);
   }
+}
+
+nsEventStateManager::WheelPrefs::Action
+nsEventStateManager::WheelPrefs::GetActionFor(nsMouseScrollEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+  return mActions[index];
 }
