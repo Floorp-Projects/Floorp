@@ -1,12 +1,43 @@
 <!DOCTYPE HTML>
-<html>
+<html style="font-size: 32px;">
 <head>
   <title>Test for D3E WheelEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <p id="display"></p>
+<div id="scrollable" style="font-size: 16px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
+  <div id="scrolled" style="font-size: 64px; width: 5000px; height: 5000px;">
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+    Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
+  </div>
+</div>
 <div id="content" style="display: none">
   
 </div>
@@ -15,6 +46,49 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
+
+var gScrollableElement = document.getElementById("scrollable");
+var gScrolledElement = document.getElementById("scrolled");
+
+var gLineHeight = 0;
+var gPageHeight = 0;
+var gPageWidth  = 0;
+
+function prepareScrollUnits()
+{
+  var result = -1;
+  function handler(aEvent)
+  {
+    result = aEvent.detail;
+    aEvent.preventDefault();
+  }
+  window.addEventListener("MozMousePixelScroll", handler, true);
+
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gLineHeight = result;
+  ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
+
+  result = -1;
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gPageHeight = result;
+  // XXX Cannot we know the actual scroll port size?
+  ok(gPageHeight >= 150 && gPageHeight <= 200,
+     "prepareScrollUnits: gPageHeight is strange value, got " + gPageHeight);
+
+  result = -1;
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gPageWidth = result;
+  ok(gPageWidth >= 150 && gPageWidth <= 200,
+     "prepareScrollUnits: gPageWidth is strange value, got " + gPageWidth);
+
+  window.removeEventListener("MozMousePixelScroll", handler, true);
+}
 
 function testMakingUntrustedEvent()
 {
@@ -39,9 +113,591 @@ function testMakingUntrustedEvent()
      "WheelEvent must not have initWheelEvent()");
 }
 
+// delta_multiplier prefs should cause changing delta values of trusted events only.
+// And also legacy events' detail value should be changed too.
+function testDeltaMultiplierPrefs()
+{
+  const kModifierAlt     = 0x01;
+  const kModifierControl = 0x02;
+  const kModifierMeta    = 0x04;
+  const kModifierShift   = 0x08;
+  const kModifierWin     = 0x10;
+
+  const kTests = [
+    { name: "default",
+      expected: [ 0, kModifierShift | kModifierAlt, kModifierShift | kModifierControl,
+                     kModifierShift | kModifierMeta, kModifierShift | kModifierWin,
+                     kModifierControl | kModifierAlt, kModifierMeta | kModifierAlt ],
+      unexpected: [ kModifierAlt, kModifierControl, kModifierMeta, kModifierShift, kModifierWin ] },
+    { name: "with_alt",
+      expected: [ kModifierAlt ],
+      unexpected: [0, kModifierControl, kModifierMeta, kModifierShift, kModifierWin,
+                      kModifierShift | kModifierAlt, kModifierControl | kModifierAlt,
+                      kModifierMeta | kModifierAlt ] },
+    { name: "with_control",
+      expected: [ kModifierControl ],
+      unexpected: [0, kModifierAlt, kModifierMeta, kModifierShift, kModifierWin,
+                      kModifierShift | kModifierControl, kModifierControl | kModifierAlt,
+                      kModifierMeta | kModifierControl ] },
+    { name: "with_meta",
+      expected: [ kModifierMeta ],
+      unexpected: [0, kModifierAlt, kModifierControl, kModifierShift, kModifierWin,
+                      kModifierShift | kModifierMeta, kModifierControl | kModifierMeta,
+                      kModifierMeta | kModifierAlt ] },
+    { name: "with_shift",
+      expected: [ kModifierShift ],
+      unexpected: [0, kModifierAlt, kModifierControl, kModifierMeta, kModifierWin,
+                      kModifierShift | kModifierAlt, kModifierControl | kModifierShift,
+                      kModifierMeta | kModifierShift ] },
+    { name: "with_win",
+      expected: [ kModifierWin ],
+      unexpected: [0, kModifierAlt, kModifierControl, kModifierMeta, kModifierShift,
+                      kModifierShift | kModifierWin ] },
+  ];
+
+  // Note that this test doesn't support complicated lineOrPageDelta values which are computed with
+  // accumulated delta values by the prefs.  If you need to test the lineOrPageDelta accumulation,
+  // use test_continuous_dom_wheel_event.html.
+  const kEvents = [
+    { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+      deltaX: gLineHeight, deltaY: gLineHeight, deltaZ: gLineHeight, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+    { deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+    { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+    { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+      deltaX: -gLineHeight, deltaY: -gLineHeight, deltaZ: -gLineHeight, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+    { deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaX: -1.0, deltaY: -1.0, deltaZ: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+    { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaX: -1.0, deltaY: -1.0, deltaZ: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+  ];
+
+  const kDeltaMultiplierPrefs = [
+    "delta_multiplier_x", "delta_multiplier_y", "delta_multiplier_z"
+  ];
+
+  const kPrefValues = [
+    200, 50, 0, -50, -150
+  ];
+
+  var currentTest, currentModifiers, currentEvent, currentPref, currentMultiplier, testingExpected;
+  var description;
+  var calledHandlers = { wheel: false,
+                         DOMMouseScroll: { horizontal: false, vertical: false },
+                         MozMousePixelScroll: { horizontal: false, vertical: false } };
+
+  function wheelEventHandler(aEvent) {
+    calledHandlers.wheel = true;
+
+    var expectedDeltaX = currentEvent.deltaX;
+    var expectedDeltaY = currentEvent.deltaY;
+    var expectedDeltaZ = currentEvent.deltaZ;
+
+    if (testingExpected) {
+      switch (currentPref.charAt(currentPref.length - 1)) {
+        case "x":
+          expectedDeltaX *= currentMultiplier;
+          break;
+        case "y":
+          expectedDeltaY *= currentMultiplier;
+          break;
+        case "z":
+          expectedDeltaZ *= currentMultiplier;
+          break;
+      }
+    }
+    is(aEvent.deltaX, expectedDeltaX, description + "deltaX (" + currentEvent.deltaX + ") was invaild");
+    is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invaild");
+    is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invaild");
+  }
+
+  function legacyEventHandler(aEvent) {
+    var isHorizontal = (aEvent.axis == MouseScrollEvent.HORIZONTAL_AXIS);
+    var isScrollEvent = (aEvent.type == "DOMMouseScroll");
+    if (isScrollEvent) {
+      if (isHorizontal) {
+        calledHandlers.DOMMouseScroll.horizontal = true;
+      } else {
+        calledHandlers.DOMMouseScroll.vertical = true;
+      }
+    } else {
+      if (isHorizontal) {
+        calledHandlers.MozMousePixelScroll.horizontal = true;
+      } else {
+        calledHandlers.MozMousePixelScroll.vertical = true;
+      }
+    }
+    var eventName = (isHorizontal ? "Horizontal " : "Vertical ") + aEvent.type + " ";
+    var expectedDetail;
+    if (isScrollEvent) {
+      expectedDetail = isHorizontal ? currentEvent.lineOrPageDeltaX : currentEvent.lineOrPageDeltaY;
+      if (currentEvent.deltaMode == WheelEvent.DOM_DELTA_PAGE && expectedDetail) {
+        expectedDetail = ((expectedDetail > 0) ? UIEvent.SCROLL_PAGE_DOWN : UIEvent.SCROLL_PAGE_UP);
+      }
+    } else {
+      expectedDetail = isHorizontal ? currentEvent.deltaX : currentEvent.deltaY;
+      if (expectedDetail) {
+        if (currentEvent.deltaMode == WheelEvent.DOM_DELTA_LINE) {
+          expectedDetail *= gLineHeight;
+        } else if (currentEvent.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
+          if (expectedDetail > 0) {
+            expectedDetail = (isHorizontal ? gPageWidth : gPageHeight);
+          } else {
+            expectedDetail = (isHorizontal ? -gPageWidth : -gPageHeight);
+          }
+        }
+      }
+    }
+    if (testingExpected) {
+      if ((isHorizontal && currentPref.charAt(currentPref.length - 1) == "x") ||
+          (!isHorizontal && currentPref.charAt(currentPref.length - 1) == "y")) {
+        // If it's a page scroll event, the detail value is UIEvent.SCROLL_PAGE_DOWN or
+        // UIEvent.SCROLL_PAGE_UP.  If the delta value sign is reverted, we need to
+        // revert the expected detail value too.  Otherwise, don't touch it.
+        if (isScrollEvent && currentEvent.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
+          if (currentMultiplier < 0) {
+            expectedDetail = ((expectedDetail == UIEvent.SCROLL_PAGE_UP) ? UIEvent.SCROLL_PAGE_DOWN : UIEvent.SCROLL_PAGE_UP);
+          }
+        } else {
+          expectedDetail *= currentMultiplier;
+          expectedDetail = expectedDetail < 0 ? Math.ceil(expectedDetail) : Math.floor(expectedDetail);
+        }
+      }
+    }
+    is(aEvent.detail, expectedDetail, description + eventName + "detail was invalid");
+
+    aEvent.preventDefault();
+  }
+
+  window.addEventListener("wheel", wheelEventHandler, true);
+  window.addEventListener("DOMMouseScroll", legacyEventHandler, true);
+  window.addEventListener("MozMousePixelScroll", legacyEventHandler, true);
+
+  function dispatchEvent(aIsExpected) {
+    for (var i = 0; i < kEvents.length; i++) {
+      currentEvent = kEvents[i];
+      currentEvent.shiftKey = (currentModifiers & kModifierShift) != 0;
+      currentEvent.ctrlKey  = (currentModifiers & kModifierControl) != 0;
+      currentEvent.altKey   = (currentModifiers & kModifierAlt) != 0;
+      currentEvent.metaKey  = (currentModifiers & kModifierMeta) != 0;
+      currentEvent.osKey    = (currentModifiers & kModifierWin) != 0;
+      var modifierList = "";
+      if (currentEvent.shiftKey) {
+        modifierList += "Shift ";
+      }
+      if (currentEvent.ctrlKey) {
+        modifierList += "Control ";
+      }
+      if (currentEvent.altKey) {
+        modifierList += "Alt ";
+      }
+      if (currentEvent.metaKey) {
+        modifierList += "Meta ";
+      }
+      if (currentEvent.osKey) {
+        modifierList += "Win ";
+      }
+
+      for (var j = 0; j < kPrefValues.length; j++) {
+        currentMultiplier = kPrefValues[j] / 100;
+        if (currentMultiplier > -1.0 && currentMultiplier < 1.0) {
+          currentMultiplier = currentMultiplier < 0 ? -1.0 : 1.0;
+        }
+        for (var k = 0; k < kDeltaMultiplierPrefs.length; k++) {
+          currentPref = "mousewheel." + currentTest.name + "." + kDeltaMultiplierPrefs[k];
+
+          SpecialPowers.setIntPref(currentPref, kPrefValues[j]);
+
+          gScrollableElement.scrollTop = gScrollableElement.scrollBottom = 1000;
+
+          // trusted event's delta valuses should be reverted by the pref.
+          testingExpected = aIsExpected;
+
+          description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
+            ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";
+          synthesizeWheel(gScrollableElement, 10, 10, currentEvent);
+
+          ok(calledHandlers.wheel, description + "wheel event was not fired");
+          ok(calledHandlers.DOMMouseScroll.horizontal,
+             description + "Horizontal DOMMouseScroll event was not fired");
+          ok(calledHandlers.DOMMouseScroll.vertical,
+             description + "Vertical DOMMouseScroll event was not fired");
+          ok(calledHandlers.MozMousePixelScroll.horizontal,
+             description + "Horizontal MozMousePixelScroll event was not fired");
+          ok(calledHandlers.MozMousePixelScroll.vertical,
+             description + "Vertical MozMousePixelScroll event was not fired");
+
+          calledHandlers = { wheel: false,
+                             DOMMouseScroll: { horizontal: false, vertical: false },
+                             MozMousePixelScroll: { horizontal: false, vertical: false } };
+
+          // untrusted event's delta values shouldn't be reverted by the pref.
+          testingExpected = false;
+          var props = {
+            bubbles: true,
+            cancelable: true,
+            shiftKey: currentEvent.shiftKey,
+            ctrlKey: currentEvent.ctrlKey,
+            altKey: currentEvent.altKey,
+            metaKey: currentEvent.metaKey,
+            deltaX: currentEvent.deltaX,
+            deltaY: currentEvent.deltaY,
+            deltaZ: currentEvent.deltaZ,
+            deltaMode: currentEvent.deltaMode,
+          };
+          var untrustedEvent = new WheelEvent("wheel", props);
+
+          description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
+            ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (untrusted event): ";
+          gScrollableElement.dispatchEvent(untrustedEvent);
+
+          ok(calledHandlers.wheel, description + "wheel event was not fired for untrusted event");
+          ok(!calledHandlers.DOMMouseScroll.horizontal,
+             description + "Horizontal DOMMouseScroll event was fired for untrusted event");
+          ok(!calledHandlers.DOMMouseScroll.vertical,
+             description + "Vertical DOMMouseScroll event was fired for untrusted event");
+          ok(!calledHandlers.MozMousePixelScroll.horizontal,
+             description + "Horizontal MozMousePixelScroll event was fired for untrusted event");
+          ok(!calledHandlers.MozMousePixelScroll.vertical,
+             description + "Vertical MozMousePixelScroll event was fired for untrusted event");
+
+          SpecialPowers.setIntPref(currentPref, 100);
+
+          calledHandlers = { wheel: false,
+                             DOMMouseScroll: { horizontal: false, vertical: false },
+                             MozMousePixelScroll: { horizontal: false, vertical: false } };
+
+        }
+        // We should skip other value tests if testing with modifier key.
+        // If we didn't do so, it would test too many times, but we don't need to do so.
+        if (kTests.name != "default") {
+          break;
+        }
+      }
+    }
+  }
+
+  for (var i = 0; i < kTests.length; i++) {
+    currentTest = kTests[i];
+    for (var j = 0; j < currentTest.expected.length; j++) {
+      currentModifiers = currentTest.expected[j];
+      dispatchEvent(true);
+    }
+    for (var k = 0; k < currentTest.unexpected.length; k++) {
+      currentModifiers = currentTest.unexpected[k];
+      dispatchEvent(false);
+    }
+  }
+
+  window.removeEventListener("wheel", wheelEventHandler, true);
+  window.removeEventListener("DOMMouseScroll", legacyEventHandler, true);
+  window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
+}
+
+// Untrusted wheel events shouldn't cause legacy mouse scroll events.
+function testDispatchingUntrustEvent()
+{
+  var descriptionBase = "testDispatchingUntrustEvent, ";
+  var description, wheelEventFired;
+  function wheelEventHandler(aEvent)
+  {
+    wheelEventFired = true;
+  }
+
+  function legacyEventHandler(aEvent)
+  {
+    ok(false, aEvent.type + " must not be fired");
+  }
+
+  window.addEventListener("wheel", wheelEventHandler, true);
+  window.addEventListener("DOMMouseScroll", legacyEventHandler, true);
+  window.addEventListener("MozMousePixelScroll", legacyEventHandler, true);
+
+  description = descriptionBase + "dispatching a pixel wheel event: ";
+  wheelEventFired = false;
+  var untrustedPixelEvent = new WheelEvent("wheel", {
+    bubbles: true, cancelable: true,
+    deltaX: 24.0, deltaY: 24.0,
+    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+  });
+  gScrolledElement.dispatchEvent(untrustedPixelEvent);
+  ok(wheelEventFired, description + "wheel event wasn't fired");
+
+  description = descriptionBase + "dispatching a line wheel event: ";
+  wheelEventFired = false;
+  var untrustedLineEvent = new WheelEvent("wheel", {
+    bubbles: true, cancelable: true,
+    deltaX: 3.0, deltaY: 3.0,
+    deltaMode: WheelEvent.DOM_DELTA_LINE,
+  });
+  gScrolledElement.dispatchEvent(untrustedLineEvent);
+  ok(wheelEventFired, description + "wheel event wasn't fired");
+
+  description = descriptionBase + "dispatching a page wheel event: ";
+  wheelEventFired = false;
+  var untrustedPageEvent = new WheelEvent("wheel", {
+    bubbles: true, cancelable: true,
+    deltaX: 1.0, deltaY: 1.0,
+    deltaMode: WheelEvent.DOM_DELTA_PAGE,
+  });
+  gScrolledElement.dispatchEvent(untrustedPageEvent);
+  ok(wheelEventFired, description + "wheel event wasn't fired");
+
+  window.removeEventListener("wheel", wheelEventHandler, true);
+  window.removeEventListener("DOMMouseScroll", legacyEventHandler, true);
+  window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
+}
+
+function testEventOrder()
+{
+  const kWheelEvent                         = 0x0001;
+  const kDOMMouseScrollEvent                = 0x0002;
+  const kMozMousePixelScrollEvent           = 0x0004;
+  const kVerticalScrollEvent                = 0x0010;
+  const kHorizontalScrollEvent              = 0x0020;
+  const kInSystemGroup                      = 0x0100;
+  const kDefaultPrevented                   = 0x1000;
+
+  var currentTest;
+
+  const kTests = [
+    {
+      description: "Testing the order of the events without preventDefault()",
+      expectedEvents: [ kWheelEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kWheelEvent | kInSystemGroup],
+      resultEvents: [],
+      doPreventDefaultAt: 0,
+    },
+    {
+      description: "Testing the order of the events, calling preventDefault() at default group wheel event",
+      expectedEvents: [ kWheelEvent,
+                        kWheelEvent | kInSystemGroup | kDefaultPrevented],
+      resultEvents: [],
+      doPreventDefaultAt: kWheelEvent,
+    },
+    {
+      description: "Testing the order of the events, calling preventDefault() at default group DOMMouseScroll event",
+      expectedEvents: [ kWheelEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup | kDefaultPrevented,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kDefaultPrevented,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup | kDefaultPrevented,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kWheelEvent | kInSystemGroup | kDefaultPrevented],
+      resultEvents: [],
+      doPreventDefaultAt: kDOMMouseScrollEvent | kVerticalScrollEvent,
+    },
+    {
+      description: "Testing the order of the events, calling preventDefault() at default group MozMousePixelScroll event",
+      expectedEvents: [ kWheelEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup | kDefaultPrevented,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kWheelEvent | kInSystemGroup | kDefaultPrevented],
+      resultEvents: [],
+      doPreventDefaultAt: kMozMousePixelScrollEvent | kVerticalScrollEvent,
+    },
+    {
+      description: "Testing the order of the events, calling preventDefault() at system group DOMMouseScroll event",
+      expectedEvents: [ kWheelEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kDefaultPrevented,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup | kDefaultPrevented,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kWheelEvent | kInSystemGroup | kDefaultPrevented],
+      resultEvents: [],
+      doPreventDefaultAt: kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+    },
+    {
+      description: "Testing the order of the events, calling preventDefault() at system group MozMousePixelScroll event",
+      expectedEvents: [ kWheelEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent,
+                        kDOMMouseScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent,
+                        kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent,
+                        kDOMMouseScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent,
+                        kMozMousePixelScrollEvent | kHorizontalScrollEvent | kInSystemGroup,
+                        kWheelEvent | kInSystemGroup | kDefaultPrevented],
+      resultEvents: [],
+      doPreventDefaultAt: kMozMousePixelScrollEvent | kVerticalScrollEvent | kInSystemGroup,
+    },
+  ];
+
+  function getEventDescription(aEvent)
+  {
+    var result = "";
+    if (aEvent & kWheelEvent) {
+      result = "wheel"
+    } else {
+      if (aEvent & kDOMMouseScrollEvent) {
+        result = "DOMMouseScroll";
+      } else if (aEvent & kMozMousePixelScrollEvent) {
+        result = "MozMousePixelScroll";
+      }
+      if (aEvent & kVerticalScrollEvent) {
+        result += ", vertical";
+      } else {
+        result += ", horizontal";
+      }
+    }
+    if (aEvent & kInSystemGroup) {
+      result += ", system group";
+    }
+    if (aEvent & kDefaultPrevented) {
+      result += ", defaultPrevented";
+    }
+    return result;
+  }
+
+  function pushEvent(aEvent, aIsSystemGroup)
+  {
+    var event = 0;
+    if (aEvent.type == "wheel") {
+      event = kWheelEvent;
+    } else {
+      if (aEvent.type == "DOMMouseScroll") {
+        event = kDOMMouseScrollEvent;
+      } else if (aEvent.type == "MozMousePixelScroll") {
+        event = kMozMousePixelScrollEvent;
+      }
+      if (aEvent.axis == MouseScrollEvent.HORIZONTAL_AXIS) {
+        event |= kHorizontalScrollEvent;
+      } else {
+        event |= kVerticalScrollEvent;
+      }
+    }
+    if (aIsSystemGroup) {
+      event |= kInSystemGroup;
+    }
+    if (aEvent.defaultPrevented) {
+      event |= kDefaultPrevented;
+    }
+    currentTest.resultEvents.push(event);
+    return event;
+  }
+
+  function handler(aEvent)
+  {
+    if (pushEvent(aEvent, false) == currentTest.doPreventDefaultAt) {
+      aEvent.preventDefault();
+    }
+  }
+
+  function systemHandler(aEvent)
+  {
+    if (pushEvent(aEvent, true) == currentTest.doPreventDefaultAt) {
+      aEvent.preventDefault();
+    }
+  }
+
+  window.addEventListener("wheel", handler, true);
+  window.addEventListener("DOMMouseScroll", handler, true);
+  window.addEventListener("MozMousePixelScroll", handler, true);
+
+  SpecialPowers.addSystemEventListener(window, "wheel", systemHandler, true);
+  SpecialPowers.addSystemEventListener(window, "DOMMouseScroll", systemHandler, true);
+  SpecialPowers.addSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
+
+  for (var i = 0; i < kTests.length; i++) {
+    currentTest = kTests[i];
+    synthesizeWheel(gScrollableElement, 10, 10,
+                    { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaX: 1.0, deltaY: 1.0 });
+
+    for (var j = 0; j < currentTest.expectedEvents.length; j++) {
+      if (currentTest.resultEvents.length == j) {
+        ok(false, currentTest.description + ": " +
+           getEventDescription(currentTest.expectedEvents[j]) + " wasn't fired");
+        break;
+      }
+      is(getEventDescription(currentTest.resultEvents[j]),
+         getEventDescription(currentTest.expectedEvents[j]),
+         currentTest.description + ": " + (j + 1) + "th event is mismatched");
+    }
+    if (currentTest.expectedEvents.length < currentTest.resultEvents.length) {
+      ok(false, currentTest.description + ": " +
+         getEventDescription(currentTest.resultEvents[currentTest.expectedEvents.length]) +
+         " was fired unexpectedly");
+    }
+  }
+
+  window.removeEventListener("wheel", handler, true);
+  window.removeEventListener("DOMMouseScroll", handler, true);
+  window.removeEventListener("MozMousePixelScroll", handler, true);
+
+  SpecialPowers.removeSystemEventListener(window, "wheel", systemHandler, true);
+  SpecialPowers.removeSystemEventListener(window, "DOMMouseScroll", systemHandler, true);
+  SpecialPowers.removeSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
+}
+
 function runTests()
 {
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
+
+  prepareScrollUnits();
   testMakingUntrustedEvent();
+  testDeltaMultiplierPrefs();
+  testDispatchingUntrustEvent();
+  testEventOrder();
+
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
+
   SimpleTest.finish();
 }
 
