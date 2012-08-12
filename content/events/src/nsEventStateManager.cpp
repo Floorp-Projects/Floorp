@@ -138,8 +138,8 @@ TimeStamp nsEventStateManager::sHandlingInputStart;
 
 nsEventStateManager::WheelPrefs*
   nsEventStateManager::WheelPrefs::sInstance = nullptr;
-nsEventStateManager::PixelDeltaAccumulator*
-  nsEventStateManager::PixelDeltaAccumulator::sInstance = nullptr;
+nsEventStateManager::DeltaAccumulator*
+  nsEventStateManager::DeltaAccumulator::sInstance = nullptr;
 
 static inline PRInt32
 RoundDown(double aDouble)
@@ -810,6 +810,7 @@ nsEventStateManager::~nsEventStateManager()
       NS_RELEASE(gUserInteractionTimer);
     }
     WheelPrefs::Shutdown();
+    DeltaAccumulator::Shutdown();
   }
 
   if (sDragOverContent && sDragOverContent->OwnerDoc() == mDocument) {
@@ -835,7 +836,6 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  PixelDeltaAccumulator::Shutdown();
   Preferences::RemoveObservers(this, kObservedPrefs);
   m_haveShutdown = true;
   return NS_OK;
@@ -1132,6 +1132,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       widget::WheelEvent* wheelEvent = static_cast<widget::WheelEvent*>(aEvent);
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
+
+      // Init lineOrPageDelta values for line scroll events for some devices
+      // on some platforms which might dispatch wheel events which don't have
+      // lineOrPageDelta values.  And also, if delta values are customized by
+      // prefs, this recomputes them.
+      DeltaAccumulator::GetInstance()->
+        InitLineOrPageDelta(aTargetFrame, this, wheelEvent);
     }
     break;
   case NS_QUERY_SELECTED_TEXT:
@@ -5140,91 +5147,95 @@ nsEventStateManager::ClearGlobalActiveContent(nsEventStateManager* aClearer)
 }
 
 /******************************************************************/
-/* nsEventStateManager::PixelDeltaAccumulator                     */
+/* nsEventStateManager::DeltaAccumulator                          */
 /******************************************************************/
 
 void
-nsEventStateManager::PixelDeltaAccumulator::OnMousePixelScrollEvent(
-                                                nsPresContext* aPresContext,
-                                                nsIFrame* aTargetFrame,
-                                                nsEventStateManager* aESM,
-                                                nsMouseScrollEvent* aEvent,
-                                                nsEventStatus* aStatus)
+nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
+                                         nsIFrame* aTargetFrame,
+                                         nsEventStateManager* aESM,
+                                         widget::WheelEvent* aEvent)
 {
-  MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aESM);
   MOZ_ASSERT(aEvent);
-  MOZ_ASSERT(aEvent->message == NS_MOUSE_PIXEL_SCROLL);
-  MOZ_ASSERT(NS_IS_TRUSTED_EVENT(aEvent));
-  MOZ_ASSERT(aStatus);
 
-  if (!(aEvent->scrollFlags & nsMouseScrollEvent::kNoLines)) {
+  if (!(aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+        aEvent->isPixelOnlyDevice) &&
+      !WheelPrefs::GetInstance()->NeedToComputeLineOrPageDelta(aEvent)) {
     Reset();
     return;
   }
 
-#if 0
-  nsIScrollableFrame* scrollTarget =
-    aESM->ComputeScrollTarget(aTargetFrame, aEvent, false);
-  nsSize scrollAmount =
-    aESM->GetScrollAmount(aPresContext, aEvent, aTargetFrame, scrollTarget);
-  bool isHorizontal =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
-  PRInt32 pixelsPerLine =
-    nsPresContext::AppUnitsToIntCSSPixels(isHorizontal ? scrollAmount.width :
-                                                         scrollAmount.height);
-
+  // Reset if the previous wheel event is too old.
   if (!mLastTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastTime;
     if (duration.ToMilliseconds() > nsMouseWheelTransaction::GetTimeoutTime()) {
       Reset();
     }
   }
+  // If we have accumulated delta,  we may need to reset it.
+  if (mHandlingDeltaMode != PR_UINT32_MAX) {
+    // If wheel event type is changed, reset the values.
+    if (mHandlingDeltaMode != aEvent->deltaMode ||
+        mHandlingPixelOnlyDevice != aEvent->isPixelOnlyDevice) {
+      Reset();
+    } else {
+      // If the delta direction is changed, we should reset only the
+      // accumulated values.
+      if (mX && aEvent->deltaX && ((aEvent->deltaX > 0.0) != (mX > 0.0))) {
+        mX = 0.0;
+      }
+      if (mY && aEvent->deltaY && ((aEvent->deltaY > 0.0) != (mY > 0.0))) {
+        mY = 0.0;
+      }
+    }
+  }
+
+  mHandlingDeltaMode = aEvent->deltaMode;
+  mHandlingPixelOnlyDevice = aEvent->isPixelOnlyDevice;
+
+  mX += aEvent->deltaX;
+  mY += aEvent->deltaY;
+
+  if (mHandlingDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    // Records pixel delta values and init lineOrPageDeltaX and
+    // lineOrPageDeltaY for wheel events which are caused by pixel only
+    // devices.  Ignore mouse wheel transaction for computing this.  The
+    // lineOrPageDelta values will be used by dispatching legacy
+    // NS_MOUSE_SCROLL_EVENT (DOMMouseScroll) but not be used for scrolling
+    // of default action.  The transaction should be used only for the default
+    // action.
+    nsIScrollableFrame* scrollTarget =
+      aESM->ComputeScrollTarget(aTargetFrame, aEvent, false);
+    nsIFrame* frame = do_QueryFrame(scrollTarget);
+    nsPresContext* pc =
+      frame ? frame->PresContext() : aTargetFrame->PresContext();
+    nsSize scrollAmount = aESM->GetScrollAmount(pc, aEvent, scrollTarget);
+    nsIntSize scrollAmountInCSSPixels(
+      nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.width),
+      nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.height));
+
+    aEvent->lineOrPageDeltaX = RoundDown(mX) / scrollAmountInCSSPixels.width;
+    aEvent->lineOrPageDeltaY = RoundDown(mY) / scrollAmountInCSSPixels.height;
+
+    mX -= aEvent->lineOrPageDeltaX * scrollAmountInCSSPixels.width;
+    mY -= aEvent->lineOrPageDeltaY * scrollAmountInCSSPixels.height;
+  } else {
+    aEvent->lineOrPageDeltaX = RoundDown(mX);
+    aEvent->lineOrPageDeltaY = RoundDown(mY);
+    mX -= aEvent->lineOrPageDeltaX;
+    mY -= aEvent->lineOrPageDeltaY;
+  }
 
   mLastTime = TimeStamp::Now();
-
-  // If the delta direction is changed, we should reset the accumulated values.
-  if (mX && isHorizontal && aEvent->delta &&
-      ((aEvent->delta > 0) != (mX > 0))) {
-    mX = 0;
-  }
-  if (mY && !isHorizontal && aEvent->delta &&
-      ((aEvent->delta > 0) != (mY > 0))) {
-    mY = 0;
-  }
-
-  PRInt32 numLines;
-  if (isHorizontal) {
-    // Adds delta value, first.
-    mX += aEvent->delta;
-    // Compute lines in integer scrolled by the accumulated delta value.
-    numLines =
-      static_cast<PRInt32>(NS_round(static_cast<double>(mX) / pixelsPerLine));
-    // Consume the lines from the accumulated delta value.
-    mX -= numLines * pixelsPerLine;
-  } else {
-    // Adds delta value, first.
-    mY += aEvent->delta;
-    // Compute lines in integer scrolled by the accumulated delta value.
-    numLines =
-      static_cast<PRInt32>(NS_round(static_cast<double>(mY) / pixelsPerLine));
-    // Consume the lines from the accumulated delta value.
-    mY -= numLines * pixelsPerLine;
-  }
-
-  if (!numLines) {
-    return;
-  }
-
-  aESM->SendLineScrollEvent(aTargetFrame, aEvent, aPresContext,
-                            aStatus, numLines);
-#endif
 }
 
 void
-nsEventStateManager::PixelDeltaAccumulator::Reset()
+nsEventStateManager::DeltaAccumulator::Reset()
 {
-  mX = mY = 0;
+  mX = mY = 0.0;
+  mHandlingDeltaMode = PR_UINT32_MAX;
+  mHandlingPixelOnlyDevice = false;
 }
 
 /******************************************************************/
@@ -5256,6 +5267,7 @@ nsEventStateManager::WheelPrefs::OnPrefChanged(const char* aPrefName,
 {
   // forget all prefs, it's not problem for performance.
   sInstance->Reset();
+  DeltaAccumulator::GetInstance()->Reset();
   return 0;
 }
 
@@ -5409,4 +5421,15 @@ nsEventStateManager::WheelPrefs::GetActionFor(nsMouseScrollEvent* aEvent)
   Index index = GetIndexFor(aEvent);
   Init(index);
   return mActions[index];
+}
+
+bool
+nsEventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
+                                   widget::WheelEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+
+  return (mMultiplierX[index] != 1.0 && mMultiplierX[index] != -1.0) ||
+         (mMultiplierY[index] != 1.0 && mMultiplierY[index] != -1.0);
 }

@@ -1408,7 +1408,7 @@ public:
     nsMouseEvent_base(aIsTrusted, aMessage, aWidget, NS_WHEEL_EVENT),
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),
     deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
-    customizedByUserPrefs(false),
+    customizedByUserPrefs(false), isPixelOnlyDevice(false),
     lineOrPageDeltaX(0), lineOrPageDeltaY(0),
     overflowDeltaX(0.0), overflowDeltaY(0.0)
   {
@@ -1424,6 +1424,12 @@ public:
   // If the delta values are computed from prefs, this value is true.
   // Otherwise, i.e., they are computed from native events, false.
   bool customizedByUserPrefs;
+
+  // If device event handlers don't know when they should set lineOrPageDeltaX
+  // and lineOrPageDeltaY, this is true.  Otherwise, false.
+  // If isPixelOnlyDevice is true, ESM will generate NS_MOUSE_SCROLL events
+  // when accumulated pixel delta values reach a line height.
+  bool isPixelOnlyDevice;
 
   // If widget sets lineOrPageDelta, nsEventStateManager will dispatch
   // NS_MOUSE_SCROLL event for compatibility.  Note that the delta value means
