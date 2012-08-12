@@ -2433,7 +2433,7 @@ public:
     : nsDisplayItem(aBuilder, aFrame), mLeftEdge(0), mRightEdge(0) {}
 
   nsCharClipDisplayItem(nsIFrame* aFrame)
-    : nsDisplayItem(nsnull, aFrame, nsPoint()) {}
+    : nsDisplayItem(nullptr, aFrame, nsPoint()) {}
 
   struct ClipEdges {
     ClipEdges(const nsDisplayItem& aItem,

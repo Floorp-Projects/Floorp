@@ -27,7 +27,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-  : mTimer(nsnull), mState(kReleased)
+  : mTimer(nullptr), mState(kReleased)
 {}
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()

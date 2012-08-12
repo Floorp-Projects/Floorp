@@ -9059,7 +9059,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetUrl(url);
   aEvent->GetStorageArea(getter_AddRefs(storageArea));
 
-  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), nsnull, nsnull);
+  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), nullptr, nullptr);
   aEvent = do_QueryInterface(domEvent);
   return aEvent->InitStorageEvent(aType, canBubble, cancelable,
                                   key, oldValue, newValue,
