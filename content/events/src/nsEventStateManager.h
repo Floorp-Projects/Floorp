@@ -421,7 +421,7 @@ protected:
   /**
    * GetScrollAmount() returns the scroll amount in app units of one line or
    * one page.  If the mouse scroll event scrolls a page, returns the page width
-   * or height.  Otherwise, returns line height.
+   * and height.  Otherwise, returns line height by both .width and .height.
    *
    * @param aTargetFrame        The event target of the wheel event.
    *                            Must not be NULL.
@@ -432,10 +432,10 @@ protected:
    *                            frame.  Then, this method uses root frame's
    *                            line height or visible area's width or height.
    */
-  nscoord GetScrollAmount(nsPresContext* aPresContext,
-                          nsMouseScrollEvent* aEvent,
-                          nsIFrame* aTargetFrame,
-                          nsIScrollableFrame* aScrollableFrame);
+  nsSize GetScrollAmount(nsPresContext* aPresContext,
+                         nsMouseScrollEvent* aEvent,
+                         nsIFrame* aTargetFrame,
+                         nsIScrollableFrame* aScrollableFrame);
 
   /**
    * DoScrollText() scrolls the scrollable frame for aEvent.
