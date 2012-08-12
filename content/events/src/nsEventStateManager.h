@@ -351,6 +351,12 @@ protected:
     };
     Action GetActionFor(nsMouseScrollEvent* aEvent);
 
+    /**
+     * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
+     * computed the lineOrPageDelta values.
+     */
+    bool NeedToComputeLineOrPageDelta(mozilla::widget::WheelEvent* aEvent);
+
   private:
     WheelPrefs();
     ~WheelPrefs();
@@ -499,16 +505,18 @@ protected:
   PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent);
 
   /**
-   * PixelDeltaAccumulator class manages pixel delta values for dispatching
-   * DOMMouseScroll event.
+   * DeltaAccumulator class manages delta values for dispatching DOMMouseScroll
+   * event.  If wheel events are caused by pixel scroll only devices or
+   * the delta values are customized by prefs, this class stores the delta
+   * values and set lineOrPageDelta values.
    */
-  class PixelDeltaAccumulator
+  class DeltaAccumulator
   {
   public:
-    static PixelDeltaAccumulator* GetInstance()
+    static DeltaAccumulator* GetInstance()
     {
       if (!sInstance) {
-        sInstance = new PixelDeltaAccumulator;
+        sInstance = new DeltaAccumulator;
       }
       return sInstance;
     }
@@ -520,31 +528,34 @@ protected:
     }
 
     /**
-     * OnMousePixelScrollEvent() stores pixel delta values.  And if the
-     * accumulated delta becomes a line height, dispatches DOMMouseScroll event
-     * automatically.
+     * InitLineOrPageDelta() stores pixel delta values of WheelEvents which are
+     * caused if it's needed.  And if the accumulated delta becomes a
+     * line height, sets lineOrPageDeltaX and lineOrPageDeltaY automatically.
      */
-    void OnMousePixelScrollEvent(nsPresContext* aPresContext,
-                                 nsIFrame* aTargetFrame,
-                                 nsEventStateManager* aESM,
-                                 nsMouseScrollEvent* aEvent,
-                                 nsEventStatus* aStatus);
+    void InitLineOrPageDelta(nsIFrame* aTargetFrame,
+                             nsEventStateManager* aESM,
+                             mozilla::widget::WheelEvent* aEvent);
+
     /**
      * Reset() resets both delta values.
      */
     void Reset();
 
   private:
-    PixelDeltaAccumulator() :
-      mX(0), mY(0)
+    DeltaAccumulator() :
+      mX(0.0), mY(0.0), mHandlingDeltaMode(PR_UINT32_MAX),
+      mHandlingPixelOnlyDevice(false)
     {
     }
 
-    PRInt32 mX;
-    PRInt32 mY;
+    double mX;
+    double mY;
     TimeStamp mLastTime;
 
-    static PixelDeltaAccumulator* sInstance;
+    PRUint32 mHandlingDeltaMode;
+    bool mHandlingPixelOnlyDevice;
+
+    static DeltaAccumulator* sInstance;
   };
 
   // end mousewheel functions
