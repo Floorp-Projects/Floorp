@@ -330,6 +330,19 @@ protected:
      */
     void ApplyUserPrefsToDelta(nsMouseScrollEvent* aEvent);
 
+    /**
+     * Gets the wheel action for the aMouseEvent from the pref.
+     */
+    enum Action
+    {
+      ACTION_NONE = 0,
+      ACTION_SCROLL,
+      ACTION_HISTORY,
+      ACTION_ZOOM,
+      ACTION_LAST = ACTION_ZOOM
+    };
+    Action GetActionFor(nsMouseScrollEvent* aMouseEvent);
+
   private:
     WheelPrefs();
     ~WheelPrefs();
@@ -362,7 +375,8 @@ protected:
      * It's decided by GetModifierForPref() which modifier should be used for
      * the aEvent.
      *
-     * @param aBasePrefName The result, it must be "mousewheel.with*.".
+     * @param aBasePrefName The result, must be "mousewheel.with_*." or
+     *                      "mousewheel.default.".
      */
     void GetBasePrefName(Index aIndex, nsACString& aBasePrefName);
 
@@ -373,6 +387,7 @@ protected:
     bool mInit[COUNT_OF_MULTIPLIERS];
     double mMultiplierX[COUNT_OF_MULTIPLIERS];
     double mMultiplierY[COUNT_OF_MULTIPLIERS];
+    Action mActions[COUNT_OF_MULTIPLIERS];
 
     static WheelPrefs* sInstance;
   };
@@ -448,12 +463,7 @@ protected:
    * When the result is -1, nothing happens for the event.
    */
   PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Gets the wheel action for the aMouseEvent ONLY with the pref.
-   * When you actually do something for the event, probably you should use
-   * ComputeWheelActionFor().
-   */
-  PRInt32 GetWheelActionFor(nsMouseScrollEvent* aMouseEvent);
+
   // end mousewheel functions
 
   /*
