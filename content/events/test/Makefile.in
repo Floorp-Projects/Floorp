@@ -84,6 +84,7 @@ MOCHITEST_FILES = \
 		test_bug741666.html \
 		test_dom_keyboard_event.html \
 		test_dom_mouse_event.html \
+		test_dom_wheel_event.html \
 		test_bug603008.html \
 		test_bug716822.html \
 		test_bug742376.html \

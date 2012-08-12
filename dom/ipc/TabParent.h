@@ -144,6 +144,7 @@ public:
                       bool aPreventDefault);
     bool SendRealMouseEvent(nsMouseEvent& event);
     bool SendMouseScrollEvent(nsMouseScrollEvent& event);
+    bool SendMouseWheelEvent(mozilla::widget::WheelEvent& event);
     bool SendRealKeyEvent(nsKeyEvent& event);
     bool SendRealTouchEvent(nsTouchEvent& event);
 
