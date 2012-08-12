@@ -139,9 +139,6 @@ static nscoord gPixelScrollDeltaX = 0;
 static nscoord gPixelScrollDeltaY = 0;
 static PRUint32 gPixelScrollDeltaTimeout = 0;
 
-static nscoord
-GetScrollableLineHeight(nsIFrame* aTargetFrame);
-
 TimeStamp nsEventStateManager::sHandlingInputStart;
 
 static inline bool
@@ -1213,18 +1210,21 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       // If needed send a line scroll event for pixel scrolls with kNoLines
       if (msEvent->scrollFlags & nsMouseScrollEvent::kNoLines) {
-        nscoord pixelHeight = aPresContext->AppUnitsToIntCSSPixels(
-          GetScrollableLineHeight(aTargetFrame));
-
+        nsIScrollableFrame* scrollableFrame =
+          ComputeScrollTarget(aTargetFrame, msEvent, false);
+        PRInt32 pixelsPerUnit =
+          nsPresContext::AppUnitsToIntCSSPixels(
+            GetScrollAmount(aPresContext, msEvent, aTargetFrame,
+                            scrollableFrame));
         if (msEvent->scrollFlags & nsMouseScrollEvent::kIsVertical) {
           gPixelScrollDeltaX += msEvent->delta;
-          if (!gPixelScrollDeltaX || !pixelHeight)
+          if (!gPixelScrollDeltaX || !pixelsPerUnit)
             break;
 
-          if (NS_ABS(gPixelScrollDeltaX) >= pixelHeight) {
-            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaX/(float)pixelHeight);
+          if (NS_ABS(gPixelScrollDeltaX) >= pixelsPerUnit) {
+            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaX/(float)pixelsPerUnit);
 
-            gPixelScrollDeltaX -= numLines*pixelHeight;
+            gPixelScrollDeltaX -= numLines*pixelsPerUnit;
 
             nsWeakFrame weakFrame(aTargetFrame);
             SendLineScrollEvent(aTargetFrame, msEvent, aPresContext,
@@ -1233,13 +1233,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           }
         } else if (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
           gPixelScrollDeltaY += msEvent->delta;
-          if (!gPixelScrollDeltaY || !pixelHeight)
+          if (!gPixelScrollDeltaY || !pixelsPerUnit)
             break;
 
-          if (NS_ABS(gPixelScrollDeltaY) >= pixelHeight) {
-            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaY/(float)pixelHeight);
+          if (NS_ABS(gPixelScrollDeltaY) >= pixelsPerUnit) {
+            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaY/(float)pixelsPerUnit);
 
-            gPixelScrollDeltaY -= numLines*pixelHeight;
+            gPixelScrollDeltaY -= numLines*pixelsPerUnit;
 
             nsWeakFrame weakFrame(aTargetFrame);
             SendLineScrollEvent(aTargetFrame, msEvent, aPresContext,
@@ -2625,25 +2625,6 @@ GetParentFrameToScroll(nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
-static nscoord
-GetScrollableLineHeight(nsIFrame* aTargetFrame)
-{
-  for (nsIFrame* f = aTargetFrame; f; f = GetParentFrameToScroll(f)) {
-    nsIScrollableFrame* sf = f->GetScrollTargetFrame();
-    if (sf)
-      return sf->GetLineScrollAmount().height;
-  }
-
-  // Fall back to the font height of the target frame.
-  nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aTargetFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(aTargetFrame));
-  NS_ASSERTION(fm, "FontMetrics is null!");
-  if (fm)
-    return fm->MaxHeight();
-  return 0;
-}
-
 void
 nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
                                          nsMouseScrollEvent* aEvent,
@@ -2692,7 +2673,16 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nscoord lineHeight = GetScrollableLineHeight(aTargetFrame);
+  // The delta value for pixel scroll event should be computed from scroll
+  // target of default action.
+  // XXX This is very strange. When we're computing the detail value of line
+  //     scroll event if a pixel scroll event doesn't have a line scroll event,
+  //     we're using nearest scrollable frame's information.
+  nsIScrollableFrame* scrollableFrame =
+    ComputeScrollTarget(aTargetFrame, aEvent, true);
+  PRInt32 pixelsPerUnit = nsPresContext::AppUnitsToIntCSSPixels(
+                            GetScrollAmount(aPresContext, aEvent, aTargetFrame,
+                                            scrollableFrame));
 
   bool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
   nsMouseScrollEvent event(isTrusted, NS_MOUSE_PIXEL_SCROLL, nullptr);
@@ -2703,7 +2693,12 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.buttons = aEvent->buttons;
   event.scrollFlags = aEvent->scrollFlags;
   event.inputSource = static_cast<nsMouseEvent_base*>(aEvent)->inputSource;
-  event.delta = aPresContext->AppUnitsToIntCSSPixels(aEvent->delta * lineHeight);
+  if (aEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) {
+    event.delta = !aEvent->delta ? 0 :
+                  aEvent->delta > 0 ? pixelsPerUnit : -pixelsPerUnit;
+  } else {
+    event.delta = aEvent->delta * pixelsPerUnit;
+  }
 
   nsEventDispatcher::Dispatch(targetContent, aPresContext, &event, nullptr, aStatus);
 }
@@ -2810,36 +2805,45 @@ nsEventStateManager::UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent)
 
 nsIScrollableFrame*
 nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                         nsMouseScrollEvent* aEvent)
+                                         nsMouseScrollEvent* aEvent,
+                                         bool aForDefaultAction)
 {
   PRInt32 numLines = aEvent->delta;
   bool isHorizontal = aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal;
 
-  // If the user recently scrolled with the mousewheel, then they probably want
-  // to scroll the same view as before instead of the view under the cursor.
-  // nsMouseWheelTransaction tracks the frame currently being scrolled with the
-  // mousewheel. We consider the transaction ended when the mouse moves more than
-  // "mousewheel.transaction.ignoremovedelay" milliseconds after the last scroll
-  // operation, or any time the mouse moves out of the frame, or when more than
-  // "mousewheel.transaction.timeout" milliseconds have passed after the last
-  // operation, even if the mouse hasn't moved.
-  nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
-  if (lastScrollFrame) {
-    nsIScrollableFrame* frameToScroll = lastScrollFrame->GetScrollTargetFrame();
-    if (frameToScroll) {
-      return frameToScroll;
+  if (aForDefaultAction) {
+    // If the user recently scrolled with the mousewheel, then they probably
+    // want to scroll the same view as before instead of the view under the
+    // cursor.  nsMouseWheelTransaction tracks the frame currently being
+    // scrolled with the mousewheel. We consider the transaction ended when the
+    // mouse moves more than "mousewheel.transaction.ignoremovedelay"
+    // milliseconds after the last scroll operation, or any time the mouse moves
+    // out of the frame, or when more than "mousewheel.transaction.timeout"
+    // milliseconds have passed after the last operation, even if the mouse
+    // hasn't moved.
+    nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
+    if (lastScrollFrame) {
+      nsIScrollableFrame* frameToScroll =
+        lastScrollFrame->GetScrollTargetFrame();
+      if (frameToScroll) {
+        return frameToScroll;
+      }
     }
   }
 
   nsIScrollableFrame* frameToScroll = nullptr;
-  bool passToParent = true;
-  for (nsIFrame* scrollFrame = aTargetFrame;
-       scrollFrame && passToParent;
+  for (nsIFrame* scrollFrame = aTargetFrame; scrollFrame;
        scrollFrame = GetParentFrameToScroll(scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
     frameToScroll = scrollFrame->GetScrollTargetFrame();
     if (!frameToScroll) {
       continue;
+    }
+
+    // At computing scroll target for legacy mouse events, we should return
+    // first scrollable element even when it's not scrollable to the direction.
+    if (!aForDefaultAction) {
+      return frameToScroll;
     }
 
     nsPresContext::ScrollbarStyles ss = frameToScroll->GetScrollbarStyles();
@@ -2849,36 +2853,69 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     }
 
     // Check if the scrollable view can be scrolled any further.
-    nscoord lineHeight = frameToScroll->GetLineScrollAmount().height;
-    if (lineHeight != 0) {
-      if (CanScrollOn(frameToScroll, numLines, isHorizontal)) {
-        passToParent = false;
-      }
-
+    if (frameToScroll->GetLineScrollAmount().height) {
+      // For default action, we should climb up the tree if cannot scroll it
+      // by the event actually.
+      bool canScroll = CanScrollOn(frameToScroll, numLines, isHorizontal);
       // Comboboxes need special care.
       nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
       if (comboBox) {
         if (comboBox->IsDroppedDown()) {
           // Don't propagate to parent when drop down menu is active.
-          if (passToParent) {
-            passToParent = false;
-            frameToScroll = nullptr;
-          }
-        } else {
-          // Always propagate when not dropped down (even if focused).
-          passToParent = true;
+          return canScroll ? frameToScroll : nullptr;
         }
+        // Always propagate when not dropped down (even if focused).
+        continue;
+      }
+
+      if (canScroll) {
+        return frameToScroll;
       }
     }
   }
 
-  if (!passToParent) {
-    return frameToScroll;
-  }
-
   nsIFrame* newFrame = nsLayoutUtils::GetCrossDocParentFrame(
       aTargetFrame->PresContext()->FrameManager()->GetRootFrame());
-  return newFrame ? ComputeScrollTarget(newFrame, aEvent) : nullptr;
+  return newFrame ?
+    ComputeScrollTarget(newFrame, aEvent, aForDefaultAction) : nullptr;
+}
+
+nscoord
+nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
+                                     nsMouseScrollEvent* aEvent,
+                                     nsIFrame* aTargetFrame,
+                                     nsIScrollableFrame* aScrollableFrame)
+{
+  MOZ_ASSERT(aPresContext);
+  MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(aTargetFrame);
+
+  bool isPage = (aEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) != 0;
+  bool isHorizontal =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
+
+  if (aScrollableFrame) {
+    nsSize size = isPage ? aScrollableFrame->GetPageScrollAmount() :
+                           aScrollableFrame->GetLineScrollAmount();
+    return isHorizontal ? size.width : size.height;
+  }
+
+  // If there is no scrollable frame and page scrolling, use view port size.
+  if (isPage) {
+    nsRect visibleRect = aPresContext->GetVisibleArea();
+    return isHorizontal ? visibleRect.width : visibleRect.height;
+  }
+
+  // If there is no scrollable frame, we should use root frame's information.
+  nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
+  if (!rootFrame) {
+    return 0;
+  }
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(rootFrame, getter_AddRefs(fm),
+    nsLayoutUtils::FontSizeInflationFor(rootFrame));
+  NS_ENSURE_TRUE(fm, 0);
+  return fm->MaxHeight();
 }
 
 nsresult
@@ -2892,7 +2929,7 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
   aMouseEvent->scrollOverflow = aMouseEvent->delta;
 
   nsIScrollableFrame* frameToScroll =
-    ComputeScrollTarget(aTargetFrame, aMouseEvent);
+    ComputeScrollTarget(aTargetFrame, aMouseEvent, true);
   if (!frameToScroll) {
     nsMouseWheelTransaction::EndTransaction();
     return NS_OK;
