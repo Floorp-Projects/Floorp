@@ -333,10 +333,34 @@ protected:
    *
    * @param aTargetFrame        The event target of the wheel event.
    * @param aEvent              The handling mouse wheel event.
+   * @param aForDefaultAction   Whether this uses wheel transaction or not.
+   *                            If true, returns the latest scrolled frame if
+   *                            there is it.  Otherwise, the nearest ancestor
+   *                            scrollable frame from aTargetFrame.
    * @return                    The scrollable frame which should be scrolled.
    */
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          nsMouseScrollEvent* aMouseEvent);
+                                          nsMouseScrollEvent* aMouseEvent,
+                                          bool aForDefaultAction);
+
+  /**
+   * GetScrollAmount() returns the scroll amount in app units of one line or
+   * one page.  If the mouse scroll event scrolls a page, returns the page width
+   * or height.  Otherwise, returns line height.
+   *
+   * @param aTargetFrame        The event target of the wheel event.
+   *                            Must not be NULL.
+   * @param aScrollableFrame    A frame which will be scrolled by the event.
+   *                            The result of ComputeScrollTarget() is
+   *                            expected for this value.
+   *                            This can be NULL if there is no scrollable
+   *                            frame.  Then, this method uses root frame's
+   *                            line height or visible area's width or height.
+   */
+  nscoord GetScrollAmount(nsPresContext* aPresContext,
+                          nsMouseScrollEvent* aEvent,
+                          nsIFrame* aTargetFrame,
+                          nsIScrollableFrame* aScrollableFrame);
 
   /**
    * @param aQueryEvent If you set vailid pointer for this, DoScrollText()
