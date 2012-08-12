@@ -299,24 +299,40 @@ GetAccessModifierMaskFromPref(PRInt32 aItemType)
   }
 }
 
+struct DeltaValues
+{
+  DeltaValues() : deltaX(0.0), deltaY(0.0) {}
+
+  DeltaValues(double aDeltaX, double aDeltaY) :
+    deltaX(aDeltaX), deltaY(aDeltaY)
+  {
+  }
+
+  explicit DeltaValues(widget::WheelEvent* aEvent) :
+    deltaX(aEvent->deltaX), deltaY(aEvent->deltaY)
+  {
+  }
+
+  double deltaX;
+  double deltaY;
+};
+
 class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
   static void BeginTransaction(nsIFrame* aTargetFrame,
-                               PRInt32 aNumLines,
-                               bool aScrollHorizontal);
+                               widget::WheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
-  static bool UpdateTransaction(PRInt32 aNumLines,
-                                  bool aScrollHorizontal);
+  static bool UpdateTransaction(widget::WheelEvent* aEvent);
   static void EndTransaction();
   static void OnEvent(nsEvent* aEvent);
   static void Shutdown();
   static PRUint32 GetTimeoutTime();
-  static PRInt32 AccelerateWheelDelta(PRInt32 aScrollLines,
-                   bool aIsHorizontal, bool aAllowScrollSpeedOverride,
-                   nsIScrollableFrame::ScrollUnit *aScrollQuantity,
-                   bool aLimitToMaxOnePageScroll = true);
+
+
+  static DeltaValues AccelerateWheelDelta(widget::WheelEvent* aEvent,
+                                          bool aAllowScrollSpeedOverride);
   static bool IsAccelerationEnabled();
 
   enum {
@@ -330,12 +346,8 @@ protected:
   static PRUint32 GetIgnoreMoveDelayTime();
   static PRInt32 GetAccelerationStart();
   static PRInt32 GetAccelerationFactor();
-  static PRInt32 OverrideSystemScrollSpeed(PRInt32 aScrollLines,
-                                           bool aIsHorizontal);
-  static PRInt32 ComputeAcceleratedWheelDelta(PRInt32 aDelta, PRInt32 aFactor);
-  static PRInt32 LimitToOnePageScroll(PRInt32 aScrollLines,
-                   bool aIsHorizontal,
-                   nsIScrollableFrame::ScrollUnit *aScrollQuantity);
+  static DeltaValues OverrideSystemScrollSpeed(widget::WheelEvent* aEvent);
+  static double ComputeAcceleratedWheelDelta(double aDelta, PRInt32 aFactor);
 
   static nsWeakFrame sTargetFrame;
   static PRUint32    sTime;        // in milliseconds
@@ -358,47 +370,48 @@ OutOfTime(PRUint32 aBaseTime, PRUint32 aThreshold)
 }
 
 static bool
-CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax, PRInt32 aDirection)
+CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax, double aDirection)
 {
-  return aDirection > 0 ? aValue < aMax : aMin < aValue;
+  return aDirection > 0.0 ? aValue < static_cast<double>(aMax) :
+                            static_cast<double>(aMin) < aValue;
 }
 
 static bool
-CanScrollOn(nsIScrollableFrame* aScrollFrame, PRInt32 aNumLines,
-            bool aScrollHorizontal)
+CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDeltaX, double aDeltaY)
 {
-  NS_PRECONDITION(aScrollFrame, "aScrollFrame is null");
-  NS_PRECONDITION(aNumLines, "aNumLines must be non-zero");
+  MOZ_ASSERT(aScrollFrame);
+  NS_ASSERTION(aDeltaX || aDeltaY,
+               "One of the delta values must be non-zero at least");
+
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect scrollRange = aScrollFrame->GetScrollRange();
 
-  return aScrollHorizontal
-    ? CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(), aNumLines)
-    : CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(), aNumLines);
+  return ((aDeltaX && CanScrollInRange(scrollRange.x, scrollPt.x,
+                                       scrollRange.XMost(), aDeltaX)) ||
+          (aDeltaY && CanScrollInRange(scrollRange.y, scrollPt.y,
+                                       scrollRange.YMost(), aDeltaY)));
 }
 
 void
 nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
-                                          PRInt32 aNumLines,
-                                          bool aScrollHorizontal)
+                                          widget::WheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   sTargetFrame = aTargetFrame;
   sScrollSeriesCounter = 0;
-  if (!UpdateTransaction(aNumLines, aScrollHorizontal)) {
+  if (!UpdateTransaction(aEvent)) {
     NS_ERROR("BeginTransaction is called even cannot scroll the frame");
     EndTransaction();
   }
 }
 
 bool
-nsMouseWheelTransaction::UpdateTransaction(PRInt32 aNumLines,
-                                           bool aScrollHorizontal)
+nsMouseWheelTransaction::UpdateTransaction(widget::WheelEvent* aEvent)
 {
   nsIScrollableFrame* sf = GetTargetFrame()->GetScrollTargetFrame();
   NS_ENSURE_TRUE(sf, false);
 
-  if (!CanScrollOn(sf, aNumLines, aScrollHorizontal)) {
+  if (!CanScrollOn(sf, aEvent->deltaX, aEvent->deltaY)) {
     OnFailToScrollTarget();
     // We should not modify the transaction state when the view will not be
     // scrolled actually.
@@ -444,18 +457,8 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
     return;
   }
 
-  PRInt32 message = aEvent->message;
-  // If the event is query scroll target info event, that causes modifying
-  // wheel transaction because DoScrollText() needs to use them.  Therefore,
-  // we should handle the event as its mouse scroll event here.
-  if (message == NS_QUERY_SCROLL_TARGET_INFO) {
-    nsQueryContentEvent* queryEvent = static_cast<nsQueryContentEvent*>(aEvent);
-    message = queryEvent->mInput.mMouseScrollEvent->message;
-  }
-
-  switch (message) {
-    case NS_MOUSE_SCROLL:
-    case NS_MOUSE_PIXEL_SCROLL:
+  switch (aEvent->message) {
+    case NS_WHEEL_WHEEL:
       if (sMouseMoved != 0 &&
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
@@ -592,15 +595,19 @@ nsMouseWheelTransaction::IsAccelerationEnabled()
   return GetAccelerationStart() >= 0 && GetAccelerationFactor() > 0;
 }
 
-PRInt32
-nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
-                           bool aIsHorizontal,
-                           bool aAllowScrollSpeedOverride,
-                           nsIScrollableFrame::ScrollUnit *aScrollQuantity,
-                           bool aLimitToMaxOnePageScroll)
+DeltaValues
+nsMouseWheelTransaction::AccelerateWheelDelta(widget::WheelEvent* aEvent,
+                                              bool aAllowScrollSpeedOverride)
 {
+  DeltaValues result(aEvent);
+
+  // Don't accelerate the delta values if the event isn't line scrolling.
+  if (aEvent->deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE) {
+    return result;
+  }
+
   if (aAllowScrollSpeedOverride) {
-    aScrollLines = OverrideSystemScrollSpeed(aScrollLines, aIsHorizontal);
+    result = OverrideSystemScrollSpeed(aEvent);
   }
 
   // Accelerate by the sScrollSeriesCounter
@@ -608,25 +615,23 @@ nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
   if (start >= 0 && sScrollSeriesCounter >= start) {
     PRInt32 factor = GetAccelerationFactor();
     if (factor > 0) {
-      aScrollLines = ComputeAcceleratedWheelDelta(aScrollLines, factor);
+      result.deltaX = ComputeAcceleratedWheelDelta(result.deltaX, factor);
+      result.deltaY = ComputeAcceleratedWheelDelta(result.deltaY, factor);
     }
   }
 
-  // If the computed delta is larger than the page, we should limit
-  // the delta value to the one page size.
-  return !aLimitToMaxOnePageScroll ? aScrollLines :
-    LimitToOnePageScroll(aScrollLines, aIsHorizontal, aScrollQuantity);
+  return result;
 }
 
-PRInt32
-nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(PRInt32 aDelta,
+double
+nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
                                                       PRInt32 aFactor)
 {
-  if (aDelta == 0)
+  if (aDelta == 0.0) {
     return 0;
+  }
 
-  return PRInt32(NS_round(aDelta * sScrollSeriesCounter *
-                          (double)aFactor / 10));
+  return (aDelta * sScrollSeriesCounter * (double)aFactor / 10);
 }
 
 PRInt32
@@ -641,20 +646,29 @@ nsMouseWheelTransaction::GetAccelerationFactor()
   return Preferences::GetInt("mousewheel.acceleration.factor", -1);
 }
 
-PRInt32
-nsMouseWheelTransaction::OverrideSystemScrollSpeed(PRInt32 aScrollLines,
-                                                   bool aIsHorizontal)
+DeltaValues
+nsMouseWheelTransaction::OverrideSystemScrollSpeed(widget::WheelEvent* aEvent)
 {
-  NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
+  MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
+  MOZ_ASSERT(aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
 
-  if (aScrollLines == 0) {
-    return 0;
+  DeltaValues result(aEvent);
+
+  // If the event doesn't scroll to both X and Y, we don't need to do anything
+  // here.  And also, if the event indicates the device supports high
+  // resolution scroll, we shouldn't need to override it.
+  PRInt32 lineOrPageDeltaX = static_cast<PRInt32>(aEvent->deltaX);
+  PRInt32 lineOrPageDeltaY = static_cast<PRInt32>(aEvent->deltaY);
+  if ((!lineOrPageDeltaX && !lineOrPageDeltaY) ||
+      (static_cast<double>(lineOrPageDeltaX) != aEvent->deltaX) ||
+      (static_cast<double>(lineOrPageDeltaY) != aEvent->deltaY)) {
+    return result;
   }
 
   // We shouldn't override the scrolling speed on non root scroll frame.
   if (sTargetFrame !=
         sTargetFrame->PresContext()->PresShell()->GetRootScrollFrame()) {
-    return aScrollLines;
+    return result;
   }
 
   // Compute the overridden speed to nsIWidget.  The widget can check the
@@ -662,48 +676,25 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(PRInt32 aScrollLines,
   // the system settings of the mouse wheel scrolling or not), and can limit
   // the speed for preventing the unexpected high speed scrolling.
   nsCOMPtr<nsIWidget> widget(sTargetFrame->GetNearestWidget());
-  NS_ENSURE_TRUE(widget, aScrollLines);
-  PRInt32 overriddenDelta;
-  nsresult rv = widget->OverrideSystemMouseScrollSpeed(aScrollLines,
-                                                       aIsHorizontal,
-                                                       overriddenDelta);
-  NS_ENSURE_SUCCESS(rv, aScrollLines);
-  return overriddenDelta;
-}
-
-PRInt32
-nsMouseWheelTransaction::LimitToOnePageScroll(PRInt32 aScrollLines,
-                           bool aIsHorizontal,
-                           nsIScrollableFrame::ScrollUnit *aScrollQuantity)
-{
-  NS_ENSURE_TRUE(aScrollQuantity, aScrollLines);
-  NS_PRECONDITION(*aScrollQuantity == nsIScrollableFrame::LINES,
-                  "aScrollQuantity isn't by line");
-
-  NS_ENSURE_TRUE(sTargetFrame, aScrollLines);
-  nsIScrollableFrame* sf = sTargetFrame->GetScrollTargetFrame();
-  NS_ENSURE_TRUE(sf, aScrollLines);
-
-  // Limit scrolling to be at most one page, but if possible, try to
-  // just adjust the number of scrolled lines.
-  nsSize lineAmount = sf->GetLineScrollAmount();
-  nscoord lineScroll = aIsHorizontal ? lineAmount.width : lineAmount.height;
-
-  if (lineScroll == 0)
-    return aScrollLines;
-
-  nsSize pageAmount = sf->GetPageScrollAmount();
-  nscoord pageScroll = aIsHorizontal ? pageAmount.width : pageAmount.height;
-
-  if (NS_ABS(aScrollLines) * lineScroll < pageScroll)
-    return aScrollLines;
-
-  nscoord maxLines = (pageScroll / lineScroll);
-  if (maxLines >= 1)
-    return ((aScrollLines < 0) ? -1 : 1) * maxLines;
-
-  *aScrollQuantity = nsIScrollableFrame::PAGES;
-  return (aScrollLines < 0) ? -1 : 1;
+  NS_ENSURE_TRUE(widget, result);
+  PRInt32 overriddenDeltaX = 0, overriddenDeltaY = 0;
+  if (lineOrPageDeltaX) {
+    nsresult rv =
+      widget->OverrideSystemMouseScrollSpeed(lineOrPageDeltaX,
+                                             true, overriddenDeltaX);
+    if (NS_FAILED(rv)) {
+      return result;
+    }
+  }
+  if (lineOrPageDeltaY) {
+    nsresult rv =
+      widget->OverrideSystemMouseScrollSpeed(lineOrPageDeltaY,
+                                             false, overriddenDeltaY);
+    if (NS_FAILED(rv)) {
+      return result;
+    }
+  }
+  return DeltaValues(overriddenDeltaX, overriddenDeltaY);
 }
 
 /******************************************************************/
@@ -2714,7 +2705,8 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     if (frameToScroll->GetLineScrollAmount().height) {
       // For default action, we should climb up the tree if cannot scroll it
       // by the event actually.
-      bool canScroll = CanScrollOn(frameToScroll, numLines, isHorizontal);
+      bool canScroll = isHorizontal ? CanScrollOn(frameToScroll, numLines, 0) :
+                                      CanScrollOn(frameToScroll, 0, numLines);
       // Comboboxes need special care.
       nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
       if (comboBox) {
@@ -2795,6 +2787,7 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
   PRInt32 numLines = aMouseEvent->delta;
   bool isHorizontal = aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal;
 
+#if 0
   nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
   if (!lastScrollFrame) {
     nsMouseWheelTransaction::BeginTransaction(scrollFrame, numLines,
@@ -2806,6 +2799,7 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
   } else {
     nsMouseWheelTransaction::UpdateTransaction(numLines, isHorizontal);
   }
+#endif
 
   // When the scroll event will not scroll any views, UpdateTransaction
   // fired MozMouseScrollFailed event which is for automated testing.
@@ -2820,10 +2814,12 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
     // When this is called for querying the scroll target information,
     // we shouldn't limit the scrolling amount to less one page.
     // Otherwise, we shouldn't scroll more one page at once.
+#if 0
     numLines =
       nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
                                                     aAllowScrollSpeedOverride,
                                                     &aScrollQuantity, true);
+#endif
   }
 #ifdef DEBUG
   else {
@@ -4970,9 +4966,10 @@ nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
 
   nsIScrollableFrame* sf =
     ps->GetFrameToScrollAsScrollable(nsIPresShell::eEither);
-  aEvent->mIsEnabled = sf ? CanScrollOn(sf, aEvent->mScroll.mAmount,
-                                        aEvent->mScroll.mIsHorizontal) :
-                            false;
+  aEvent->mIsEnabled = sf ?
+    (aEvent->mScroll.mIsHorizontal ?
+      CanScrollOn(sf, aEvent->mScroll.mAmount, 0) :
+      CanScrollOn(sf, 0, aEvent->mScroll.mAmount)) : false;
 
   if (!aEvent->mIsEnabled || aEvent->mOnlyEnabledCheck) {
     return NS_OK;
