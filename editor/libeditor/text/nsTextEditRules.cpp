@@ -63,7 +63,7 @@ nsTextEditRules::nsTextEditRules()
 , mActionNesting(0)
 , mLockRulesSniffing(false)
 , mDidExplicitlySetInterline(false)
-, mTheAction(OperationID::none)
+, mTheAction(EditAction::none)
 , mLastStart(0)
 , mLastLength(0)
 {
@@ -145,7 +145,7 @@ nsTextEditRules::DetachEditor()
 }
 
 NS_IMETHODIMP
-nsTextEditRules::BeforeEdit(OperationID action,
+nsTextEditRules::BeforeEdit(EditAction action,
                             nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) return NS_OK;
@@ -172,7 +172,7 @@ nsTextEditRules::BeforeEdit(OperationID action,
 
 
 NS_IMETHODIMP
-nsTextEditRules::AfterEdit(OperationID action,
+nsTextEditRules::AfterEdit(EditAction action,
                            nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) return NS_OK;
@@ -228,27 +228,27 @@ nsTextEditRules::WillDoAction(Selection* aSelection,
   nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
 
   switch (info->action) {
-    case OperationID::insertBreak:
+    case EditAction::insertBreak:
       return WillInsertBreak(aSelection, aCancel, aHandled, info->maxLength);
-    case OperationID::insertText:
-    case OperationID::insertIMEText:
+    case EditAction::insertText:
+    case EditAction::insertIMEText:
       return WillInsertText(info->action, aSelection, aCancel, aHandled,
                             info->inString, info->outString, info->maxLength);
-    case OperationID::deleteSelection:
+    case EditAction::deleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction,
                                  aCancel, aHandled);
-    case OperationID::undo:
+    case EditAction::undo:
       return WillUndo(aSelection, aCancel, aHandled);
-    case OperationID::redo:
+    case EditAction::redo:
       return WillRedo(aSelection, aCancel, aHandled);
-    case OperationID::setTextProperty:
+    case EditAction::setTextProperty:
       return WillSetTextProperty(aSelection, aCancel, aHandled);
-    case OperationID::removeTextProperty:
+    case EditAction::removeTextProperty:
       return WillRemoveTextProperty(aSelection, aCancel, aHandled);
-    case OperationID::outputText:
+    case EditAction::outputText:
       return WillOutputText(aSelection, info->outputFormat, info->outString,
                             aCancel, aHandled);
-    case OperationID::insertElement:
+    case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
       return WillInsert(aSelection, aCancel);
@@ -272,22 +272,22 @@ nsTextEditRules::DidDoAction(nsISelection *aSelection,
 
   switch (info->action)
   {
-    case OperationID::insertBreak:
+    case EditAction::insertBreak:
       return DidInsertBreak(aSelection, aResult);
-    case OperationID::insertText:
-    case OperationID::insertIMEText:
+    case EditAction::insertText:
+    case EditAction::insertIMEText:
       return DidInsertText(aSelection, aResult);
-    case OperationID::deleteSelection:
+    case EditAction::deleteSelection:
       return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
-    case OperationID::undo:
+    case EditAction::undo:
       return DidUndo(aSelection, aResult);
-    case OperationID::redo:
+    case EditAction::redo:
       return DidRedo(aSelection, aResult);
-    case OperationID::setTextProperty:
+    case EditAction::setTextProperty:
       return DidSetTextProperty(aSelection, aResult);
-    case OperationID::removeTextProperty:
+    case EditAction::removeTextProperty:
       return DidRemoveTextProperty(aSelection, aResult);
-    case OperationID::outputText:
+    case EditAction::outputText:
       return DidOutputText(aSelection, aResult);
     default:
       // Don't fail on transactions we don't handle here!
@@ -540,7 +540,7 @@ nsTextEditRules::HandleNewLines(nsString &aString,
 }
 
 nsresult
-nsTextEditRules::WillInsertText(OperationID aAction,
+nsTextEditRules::WillInsertText(EditAction aAction,
                                 Selection* aSelection,
                                 bool            *aCancel,
                                 bool            *aHandled,
@@ -550,7 +550,7 @@ nsTextEditRules::WillInsertText(OperationID aAction,
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
-  if (inString->IsEmpty() && aAction != OperationID::insertIMEText) {
+  if (inString->IsEmpty() && aAction != EditAction::insertIMEText) {
     // HACK: this is a fix for bug 19395
     // I can't outlaw all empty insertions
     // because IME transaction depend on them
@@ -574,7 +574,7 @@ nsTextEditRules::WillInsertText(OperationID aAction,
   // If we're exceeding the maxlength when composing IME, we need to clean up
   // the composing text, so we shouldn't return early.
   if (truncated && outString->IsEmpty() &&
-      aAction != OperationID::insertIMEText) {
+      aAction != EditAction::insertIMEText) {
     *aCancel = true;
     return NS_OK;
   }
@@ -609,7 +609,7 @@ nsTextEditRules::WillInsertText(OperationID aAction,
   // to the replacement character
   if (IsPasswordEditor())
   {
-    if (aAction == OperationID::insertIMEText) {
+    if (aAction == EditAction::insertIMEText) {
       RemoveIMETextFromPWBuf(start, outString);
     }
   }
@@ -676,11 +676,11 @@ nsTextEditRules::WillInsertText(OperationID aAction,
   nsCOMPtr<nsIDOMDocument> doc = mEditor->GetDOMDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
     
-  if (aAction == OperationID::insertIMEText) {
+  if (aAction == EditAction::insertIMEText) {
     res = mEditor->InsertTextImpl(*outString, address_of(selNode), &selOffset, doc);
     NS_ENSURE_SUCCESS(res, res);
   } else {
-    // aAction == OperationID::insertText; find where we are
+    // aAction == EditAction::insertText; find where we are
     nsCOMPtr<nsIDOMNode> curNode = selNode;
     PRInt32 curOffset = selOffset;
 
@@ -1087,7 +1087,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   }
 
   // tell rules system to not do any post-processing
-  nsAutoRules beginRulesSniffing(mEditor, OperationID::ignore, nsIEditor::eNone);
+  nsAutoRules beginRulesSniffing(mEditor, EditAction::ignore, nsIEditor::eNone);
 
   nsCOMPtr<dom::Element> body = mEditor->GetRoot();
   if (!body) {
