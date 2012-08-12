@@ -1341,7 +1341,7 @@ public:
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
     kIsHorizontal = 1 << 2,
-    kHasPixels =    1 << 3, // Marks line scroll events that are provided as
+    kHasPixels =    1 << 3  // Marks line scroll events that are provided as
                             // a fallback for pixel scroll events.
                             // These scroll events are used by things that can't
                             // be scrolled pixel-wise, like trees. You should
@@ -1350,20 +1350,16 @@ public:
                             // When kHasPixels is set, the event is guaranteed to
                             // be followed up by an event that contains pixel
                             // scrolling information.
-    kIsMomentum =   1 << 6  // Marks scroll events that aren't controlled by the
-                            // user but fire automatically as the result of a
-                            // "momentum" scroll.
 };
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
-      scrollFlags(0), delta(0), scrollOverflow(0)
+      scrollFlags(0), delta(0)
   {
   }
 
   PRInt32               scrollFlags;
   PRInt32               delta;
-  PRInt32               scrollOverflow;
 };
 
 /**

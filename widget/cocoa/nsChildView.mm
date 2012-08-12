@@ -63,6 +63,8 @@
 
 #include "sampler.h"
 
+#include "nsIDOMWheelEvent.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -150,6 +152,11 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 #endif
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
+
+#ifndef NP_NO_CARBON
+- (void)sendCarbonWheelEvent:(SInt32)delta
+                     forAxis:(EventMouseWheelAxis)carbonAxis;
+#endif
 
 @end
 
@@ -3018,7 +3025,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // (under Fluid Swipe Tracking API).
 #ifdef __LP64__
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                      scrollOverflow:(PRInt32)overflow
+                      scrollOverflow:(double)overflow
 {
   if (!nsCocoaFeatures::OnLionOrLater()) {
     return;
@@ -3671,198 +3678,126 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
-// Handle an NSScrollWheel event for a single axis only.
--(void)scrollWheel:(NSEvent*)theEvent forAxis:(enum nsMouseScrollEvent::nsMouseScrollFlags)inAxis
+static PRInt32 RoundUp(double aDouble)
+{
+  return aDouble < 0 ? static_cast<PRInt32>(floor(aDouble)) :
+                       static_cast<PRInt32>(ceil(aDouble));
+}
+
+- (void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mGeckoChild)
-    return;
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  float scrollDelta = 0;
-  float scrollDeltaPixels = 0;
-  bool checkPixels =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
+  ChildViewMouseTracker::MouseScrolled(theEvent);
+
+  if ([self maybeRollup:theEvent]) {
+    return;
+  }
+
+  if (!mGeckoChild) {
+    return;
+  }
+
+  WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&wheelEvent];
+  wheelEvent.deltaMode =
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true) ?
+      nsIDOMWheelEvent::DOM_DELTA_PIXEL : nsIDOMWheelEvent::DOM_DELTA_LINE;
 
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
   // assertion and an Objective-C NSInternalInconsistencyException if the
   // underlying "Carbon" event doesn't contain pixel scrolling information.
   // For these events, carbonEventKind is kEventMouseWheelMoved instead of
   // kEventMouseScroll.
-  if (checkPixels) {
+  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
     EventRef theCarbonEvent = [theEvent _eventRef];
     UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
-    if (carbonEventKind != kEventMouseScroll)
-      checkPixels = false;
+    if (carbonEventKind != kEventMouseScroll) {
+      wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+    }
   }
 
-  // Some scrolling devices supports pixel scrolling, e.g. a Macbook
-  // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
-  // contains the amount of pixels to scroll. Since Lion this has changed 
-  // to [theEvent scrollingDeltaX/Y].
-  if (inAxis & nsMouseScrollEvent::kIsVertical) {
-    scrollDelta       = -[theEvent deltaY];
-    if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      if ([theEvent respondsToSelector:@selector(scrollingDeltaY)]) {
-        scrollDeltaPixels = -[theEvent scrollingDeltaY];
-      } else {
-        scrollDeltaPixels = -[theEvent deviceDeltaY];
-      }
-    }
-  } else if (inAxis & nsMouseScrollEvent::kIsHorizontal) {
-    scrollDelta       = -[theEvent deltaX];
-    if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
-        scrollDeltaPixels = -[theEvent scrollingDeltaX];
-      } else {
-        scrollDeltaPixels = -[theEvent deviceDeltaX];
-      }
+  wheelEvent.lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
+  wheelEvent.lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
+
+  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    // Some scrolling devices supports pixel scrolling, e.g. a Macbook
+    // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
+    // contains the amount of pixels to scroll. Since Lion this has changed 
+    // to [theEvent scrollingDeltaX/Y].
+    if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+      wheelEvent.deltaX = -[theEvent scrollingDeltaX];
+      wheelEvent.deltaY = -[theEvent scrollingDeltaY];
+    } else {
+      wheelEvent.deltaX = -[theEvent deviceDeltaX];
+      wheelEvent.deltaY = -[theEvent deviceDeltaY];
     }
   } else {
-    return; // caller screwed up
+    wheelEvent.deltaX = -[theEvent deltaX];
+    wheelEvent.deltaY = -[theEvent deltaY];
   }
 
-  BOOL hasPixels = (scrollDeltaPixels != 0);
+  // TODO: We should not set deltaZ for now because we're not sure if we should
+  //       revert the sign.
+  // wheelEvent.deltaZ = [theEvent deltaZ];
 
-  if (!hasPixels && scrollDelta == 0)
+  if (!wheelEvent.deltaX && !wheelEvent.deltaY && !wheelEvent.deltaZ) {
     // No sense in firing off a Gecko event.
-     return;
+    return;
+  }
 
-  BOOL isMomentumScroll = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
+  wheelEvent.isMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
 
-  if (scrollDelta != 0) {
-    // Send the line scroll event.
-    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_SCROLL, mGeckoChild);
-    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-    geckoEvent.scrollFlags |= inAxis;
+  NPCocoaEvent cocoaEvent;
+  if (mPluginEventModel == NPEventModelCocoa) {
+    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
+    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+    cocoaEvent.type = NPCocoaEventScrollWheel;
+    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+    cocoaEvent.data.mouse.pluginX = point.x;
+    cocoaEvent.data.mouse.pluginY = point.y;
+    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+    cocoaEvent.data.mouse.clickCount = 0;
+    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+    wheelEvent.pluginEvent = &cocoaEvent;
+  }
 
-    if (hasPixels)
-      geckoEvent.scrollFlags |= nsMouseScrollEvent::kHasPixels;
-
-    if (isMomentumScroll)
-      geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsMomentum;
-
-    // Gecko only understands how to scroll by an integer value. Using floor
-    // and ceil is better than truncating the fraction, especially when
-    // |delta| < 1.
-    if (scrollDelta < 0)
-      geckoEvent.delta = (PRInt32)floorf(scrollDelta);
-    else
-      geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
-
-    NPCocoaEvent cocoaEvent;
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-      cocoaEvent.type = NPCocoaEventScrollWheel;
-      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = point.x;
-      cocoaEvent.data.mouse.pluginY = point.y;
-      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-      cocoaEvent.data.mouse.clickCount = 0;
-      if (inAxis & nsMouseScrollEvent::kIsHorizontal)
-        cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-      else
-        cocoaEvent.data.mouse.deltaX = 0.0;
-      if (inAxis & nsMouseScrollEvent::kIsVertical)
-        cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-      else
-        cocoaEvent.data.mouse.deltaY = 0.0;
-      cocoaEvent.data.mouse.deltaZ = 0.0;
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-    mGeckoChild->DispatchWindowEvent(geckoEvent);
-    if (!mGeckoChild)
-      return;
+  mGeckoChild->DispatchWindowEvent(wheelEvent);
+  if (!mGeckoChild) {
+    return;
+  }
 
 #ifndef NP_NO_CARBON
-    // dispatch scroll wheel carbon event for plugins
-    if (mPluginEventModel == NPEventModelCarbon) {
-      EventRef theEvent;
-      OSStatus err = ::CreateEvent(NULL,
-                                   kEventClassMouse,
-                                   kEventMouseWheelMoved,
-                                   TicksToEventTime(TickCount()),
-                                   kEventAttributeUserEvent,
-                                   &theEvent);
-      if (err == noErr) {
-        EventMouseWheelAxis axis;
-        if (inAxis & nsMouseScrollEvent::kIsVertical)
-          axis = kEventMouseWheelAxisY;
-        else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
-          axis = kEventMouseWheelAxisX;
-        
-        SetEventParameter(theEvent,
-                          kEventParamMouseWheelAxis,
-                          typeMouseWheelAxis,
-                          sizeof(EventMouseWheelAxis),
-                          &axis);
-        
-        SInt32 delta = (SInt32)-geckoEvent.delta;
-        SetEventParameter(theEvent,
-                          kEventParamMouseWheelDelta,
-                          typeLongInteger,
-                          sizeof(SInt32),
-                          &delta);
-        
-        Point mouseLoc;
-        ::GetGlobalMouse(&mouseLoc);
-        SetEventParameter(theEvent,
-                          kEventParamMouseLocation,
-                          typeQDPoint,
-                          sizeof(Point),
-                          &mouseLoc);
-        
-        ::SendEventToEventTarget(theEvent, GetWindowEventTarget((WindowRef)[[self window] windowRef]));
-        ReleaseEvent(theEvent);
-      }
+  // dispatch scroll wheel carbon event for plugins
+  if (mPluginEventModel == NPEventModelCarbon) {
+    [self sendCarbonWheelEvent:RoundUp([theEvent deltaY])
+                       forAxis:kEventMouseWheelAxisY];
+    if (!mGeckoChild) {
+      return;
     }
+    [self sendCarbonWheelEvent:RoundUp([theEvent deltaX])
+                       forAxis:kEventMouseWheelAxisX];
+    if (!mGeckoChild) {
+      return;
+    }
+  }
 #endif
-  }
 
-  if (hasPixels) {
-    // Send the pixel scroll event.
-    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_PIXEL_SCROLL, mGeckoChild);
-    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-    geckoEvent.scrollFlags |= inAxis;
-    if (isMomentumScroll)
-      geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsMomentum;
-    geckoEvent.delta = NSToIntRound(scrollDeltaPixels);
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-    mGeckoChild->DispatchWindowEvent(geckoEvent);
 #ifdef __LP64__
-    // scrollOverflow tells us when the user has tried to scroll past the edge
-    // of a page (in those cases it's non-zero).  Gecko only sets it when
-    // processing NS_MOUSE_PIXEL_SCROLL events (not MS_MOUSE_SCROLL events).
-    // It only means left/right overflow when Gecko is processing a horizontal
-    // event.
-    if (inAxis & nsMouseScrollEvent::kIsHorizontal) {
-      [self maybeTrackScrollEventAsSwipe:theEvent
-                          scrollOverflow:geckoEvent.scrollOverflow];
-    }
-#endif // #ifdef __LP64__
+  // overflowDeltaX tells us when the user has tried to scroll past the edge
+  // of a page to the left or the right (in those cases it's non-zero).
+  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+      wheelEvent.deltaX != 0.0) {
+    [self maybeTrackScrollEventAsSwipe:theEvent
+                        scrollOverflow:wheelEvent.overflowDeltaX];
   }
+#endif // #ifdef __LP64__
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
--(void)scrollWheel:(NSEvent*)theEvent
-{
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  ChildViewMouseTracker::MouseScrolled(theEvent);
-
-  if ([self maybeRollup:theEvent])
-    return;
-
-  // It's possible for a single NSScrollWheel event to carry both useful
-  // deltaX and deltaY, for example, when the "wheel" is a trackpad.
-  // NSMouseScrollEvent can only carry one axis at a time, so the system
-  // event will be split into two Gecko events if necessary.
-  [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsVertical];
-  [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsHorizontal];
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -3915,6 +3850,51 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
+
+#ifndef NP_NO_CARBON
+
+- (void)sendCarbonWheelEvent:(SInt32)delta
+                     forAxis:(EventMouseWheelAxis)carbonAxis
+{
+  if (!delta) {
+    return;
+  }
+
+  EventRef theEvent;
+  OSStatus err = ::CreateEvent(NULL,
+                               kEventClassMouse,
+                               kEventMouseWheelMoved,
+                               TicksToEventTime(TickCount()),
+                               kEventAttributeUserEvent,
+                               &theEvent);
+  if (err != noErr) {
+    return;
+  }
+
+  SetEventParameter(theEvent,
+                    kEventParamMouseWheelAxis,
+                    typeMouseWheelAxis,
+                    sizeof(EventMouseWheelAxis),
+                    &carbonAxis);
+  SetEventParameter(theEvent,
+                    kEventParamMouseWheelDelta,
+                    typeLongInteger,
+                    sizeof(SInt32),
+                    &delta);
+  Point mouseLoc;
+  ::GetGlobalMouse(&mouseLoc);
+  SetEventParameter(theEvent,
+                    kEventParamMouseLocation,
+                    typeQDPoint,
+                    sizeof(Point),
+                    &mouseLoc);
+
+  ::SendEventToEventTarget(theEvent,
+      GetWindowEventTarget((WindowRef)[[self window] windowRef]));
+  ReleaseEvent(theEvent);
+}
+
+#endif // #ifndef NP_NO_CARBON
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
