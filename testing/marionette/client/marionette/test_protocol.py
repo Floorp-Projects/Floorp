@@ -48,7 +48,7 @@ if __name__ == '__main__':
     assert(m.find_element(HTMLElement.ID, 'id3').send_keys('Mozilla Firefox'))
     assert(m.find_element(HTMLElement.ID, 'id3').value() == server.TEST_GET_VALUE)
     assert(m.find_element(HTMLElement.ID, 'id3').clear())
-    assert(m.find_element(HTMLElement.ID, 'id3').selected())
+    assert(m.find_element(HTMLElement.ID, 'id3').is_selected())
     assert(m.find_element(HTMLElement.ID, 'id1').equals(m.find_element(HTMLElement.TAG, 'p')))
     assert(m.find_element(HTMLElement.ID, 'id3').enabled())
     assert(m.find_element(HTMLElement.ID, 'id3').displayed())
