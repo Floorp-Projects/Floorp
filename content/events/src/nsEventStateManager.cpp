@@ -1029,7 +1029,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   if (NS_IS_TRUSTED_EVENT(aEvent) &&
       ((NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
        IsMouseEventReal(aEvent)) ||
-       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT)) {
+       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
+       aEvent->eventStructType == NS_WHEEL_EVENT)) {
     if (!sIsPointerLocked) {
       sLastScreenPoint = nsDOMUIEvent::CalculateScreenPoint(aPresContext, aEvent);
       sLastClientPoint = nsDOMUIEvent::CalculateClientPoint(aPresContext, aEvent, nullptr);
@@ -1044,6 +1045,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         aEvent->message != NS_MOUSE_ENTER &&
         aEvent->message != NS_MOUSE_EXIT) ||
        aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
+       aEvent->eventStructType == NS_WHEEL_EVENT ||
        aEvent->eventStructType == NS_KEY_EVENT)) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
@@ -1663,6 +1665,10 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
     nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(aEvent);
     return remote->SendMouseScrollEvent(*scrollEvent);
   }
+  case NS_WHEEL_EVENT: {
+    widget::WheelEvent* wheelEvent = static_cast<widget::WheelEvent*>(aEvent);
+    return remote->SendMouseWheelEvent(*wheelEvent);
+  }
   case NS_TOUCH_EVENT: {
     // Let the child process synthesize a mouse event if needed, and
     // ensure we don't synthesize one in this process.
@@ -1711,6 +1717,7 @@ CrossProcessSafeEvent(const nsEvent& aEvent)
   switch (aEvent.eventStructType) {
   case NS_KEY_EVENT:
   case NS_MOUSE_SCROLL_EVENT:
+  case NS_WHEEL_EVENT:
     return true;
   case NS_MOUSE_EVENT:
     switch (aEvent.message) {
