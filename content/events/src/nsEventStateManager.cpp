@@ -2814,6 +2814,7 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
 
   aEvent->overflowDeltaX = aEvent->deltaX;
   aEvent->overflowDeltaY = aEvent->deltaY;
+  WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
 
   nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
   MOZ_ASSERT(scrollFrame);
@@ -2938,6 +2939,7 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     aEvent->overflowDeltaY =
       static_cast<double>(overflow.y) / scrollAmountInDevPixels.height;
   }
+  WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
 }
 
 void
@@ -5355,6 +5357,19 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
   aEvent->customizedByUserPrefs =
     ((mMultiplierX[index] != 1.0) || (mMultiplierY[index] != 1.0) ||
      (mMultiplierZ[index] != 1.0));
+}
+
+void
+nsEventStateManager::WheelPrefs::CancelApplyingUserPrefsFromOverflowDelta(
+                                                   widget::WheelEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+
+  NS_ASSERTION(mMultiplierX[index] && mMultiplierY[index],
+               "The absolute values of both multipliers must be 1 or larger");
+  aEvent->overflowDeltaX /= mMultiplierX[index];
+  aEvent->overflowDeltaY /= mMultiplierY[index];
 }
 
 nsEventStateManager::WheelPrefs::Action
