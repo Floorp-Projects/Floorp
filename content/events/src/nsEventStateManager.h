@@ -326,6 +326,18 @@ protected:
                             nsMouseScrollEvent* aEvent,
                             nsPresContext* aPresContext,
                             nsEventStatus* aStatus);
+
+  /**
+   * ComputeScrollTarget() returns the scrollable frame which should be
+   * scrolled.
+   *
+   * @param aTargetFrame        The event target of the wheel event.
+   * @param aEvent              The handling mouse wheel event.
+   * @return                    The scrollable frame which should be scrolled.
+   */
+  nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                          nsMouseScrollEvent* aMouseEvent);
+
   /**
    * @param aQueryEvent If you set vailid pointer for this, DoScrollText()
    *                    computes the line-height and page size of current
