@@ -339,7 +339,7 @@ protected:
     void ApplyUserPrefsToDelta(mozilla::widget::WheelEvent* aEvent);
 
     /**
-     * Gets the wheel action for the aEvent from the pref.
+     * Computes the default action for the aEvent with the prefs.
      */
     enum Action
     {
@@ -349,7 +349,7 @@ protected:
       ACTION_ZOOM,
       ACTION_LAST = ACTION_ZOOM
     };
-    Action GetActionFor(nsMouseScrollEvent* aEvent);
+    Action ComputeActionFor(mozilla::widget::WheelEvent* aEvent);
 
     /**
      * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
@@ -382,7 +382,7 @@ protected:
      * default index which is used at either no modifier key is pressed or
      * two or modifier keys are pressed.
      */
-    Index GetIndexFor(nsMouseEvent_base* aEvent);
+    Index GetIndexFor(mozilla::widget::WheelEvent* aEvent);
 
     /**
      * GetPrefNameBase() returns the base pref name for aEvent.
@@ -496,13 +496,6 @@ protected:
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
-  /**
-   * Computes the action for the aMouseEvent with prefs.  The result is
-   * MOUSE_SCROLL_N_LINES, MOUSE_SCROLL_PAGE, MOUSE_SCROLL_HISTORY,
-   * MOUSE_SCROLL_ZOOM, MOUSE_SCROLL_PIXELS or -1.
-   * When the result is -1, nothing happens for the event.
-   */
-  PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent);
 
   /**
    * DeltaAccumulator class manages delta values for dispatching DOMMouseScroll

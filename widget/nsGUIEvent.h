@@ -1408,7 +1408,7 @@ public:
     nsMouseEvent_base(aIsTrusted, aMessage, aWidget, NS_WHEEL_EVENT),
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),
     deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
-    customizedByUserPrefs(false), isPixelOnlyDevice(false),
+    customizedByUserPrefs(false), isMomentum(false), isPixelOnlyDevice(false),
     lineOrPageDeltaX(0), lineOrPageDeltaY(0),
     overflowDeltaX(0.0), overflowDeltaY(0.0)
   {
@@ -1421,9 +1421,14 @@ public:
   // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
   PRUint32 deltaMode;
 
+  // Following members are for internal use only, not for DOM event.
+
   // If the delta values are computed from prefs, this value is true.
   // Otherwise, i.e., they are computed from native events, false.
   bool customizedByUserPrefs;
+
+  // true if the event is caused by momentum.
+  bool isMomentum;
 
   // If device event handlers don't know when they should set lineOrPageDeltaX
   // and lineOrPageDeltaY, this is true.  Otherwise, false.
@@ -1436,6 +1441,27 @@ public:
   // pages if the deltaMode is DOM_DELTA_PAGE, otherwise, lines.
   PRInt32 lineOrPageDeltaX;
   PRInt32 lineOrPageDeltaY;
+
+  // When the default action for an wheel event is moving history or zooming,
+  // need to chose a delta value for doing it.
+  PRInt32 GetPreferredIntDelta()
+  {
+    if (!lineOrPageDeltaX && !lineOrPageDeltaY) {
+      return 0;
+    }
+    if (lineOrPageDeltaY && !lineOrPageDeltaX) {
+      return lineOrPageDeltaY;
+    }
+    if (lineOrPageDeltaX && !lineOrPageDeltaY) {
+      return lineOrPageDeltaX;
+    }
+    if ((lineOrPageDeltaX < 0 && lineOrPageDeltaY > 0) ||
+        (lineOrPageDeltaX > 0 && lineOrPageDeltaY < 0)) {
+      return 0; // We cannot guess the answer in this case.
+    }
+    return (NS_ABS(lineOrPageDeltaX) > NS_ABS(lineOrPageDeltaY)) ?
+             lineOrPageDeltaX : lineOrPageDeltaY;
+  }
 
   // overflowed delta values, these values are the result of dispatching this
   // event.
