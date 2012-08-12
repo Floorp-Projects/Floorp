@@ -5311,6 +5311,14 @@ nsEventStateManager::WheelPrefs::Init(
     mMultiplierY[aIndex] = mMultiplierY[aIndex] < 0.0 ? -1.0 : 1.0;
   }
 
+  nsCAutoString prefNameZ(basePrefName);
+  prefNameZ.AppendLiteral("delta_multiplier_z");
+  mMultiplierZ[aIndex] =
+    static_cast<double>(Preferences::GetInt(prefNameZ.get(), 100)) / 100;
+  if (mMultiplierZ[aIndex] < 1.0 && mMultiplierZ[aIndex] > -1.0) {
+    mMultiplierZ[aIndex] = mMultiplierZ[aIndex] < 0.0 ? -1.0 : 1.0;
+  }
+
   nsCAutoString prefNameAction(basePrefName);
   prefNameAction.AppendLiteral("action");
   mActions[aIndex] =
@@ -5331,12 +5339,12 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
 
   aEvent->deltaX *= mMultiplierX[index];
   aEvent->deltaY *= mMultiplierY[index];
+  aEvent->deltaZ *= mMultiplierZ[index];
 
   // If the multiplier is 1.0 or -1.0, i.e., it doesn't change the absolute
   // value, we should use lineOrPageDelta values which were set by widget.
   // Otherwise, we need to compute them from accumulated delta values.
-  if ((mMultiplierX[index] == 1.0 || mMultiplierX[index] == -1.0) &&
-      (mMultiplierY[index] == 1.0 || mMultiplierY[index] == -1.0)) {
+  if (!NeedToComputeLineOrPageDelta(aEvent)) {
     aEvent->lineOrPageDeltaX *= static_cast<PRInt32>(mMultiplierX[index]);
     aEvent->lineOrPageDeltaY *= static_cast<PRInt32>(mMultiplierY[index]);
   } else {
@@ -5345,7 +5353,8 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
   }
 
   aEvent->customizedByUserPrefs =
-    ((mMultiplierX[index] != 1.0) || (mMultiplierY[index] != 1.0));
+    ((mMultiplierX[index] != 1.0) || (mMultiplierY[index] != 1.0) ||
+     (mMultiplierZ[index] != 1.0));
 }
 
 nsEventStateManager::WheelPrefs::Action

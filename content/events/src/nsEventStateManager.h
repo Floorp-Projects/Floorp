@@ -401,6 +401,7 @@ protected:
     bool mInit[COUNT_OF_MULTIPLIERS];
     double mMultiplierX[COUNT_OF_MULTIPLIERS];
     double mMultiplierY[COUNT_OF_MULTIPLIERS];
+    double mMultiplierZ[COUNT_OF_MULTIPLIERS];
     Action mActions[COUNT_OF_MULTIPLIERS];
 
     static WheelPrefs* sInstance;
