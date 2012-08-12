@@ -254,14 +254,6 @@ nsUITimerCallback::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-enum {
- MOUSE_SCROLL_N_LINES,
- MOUSE_SCROLL_PAGE,
- MOUSE_SCROLL_HISTORY,
- MOUSE_SCROLL_ZOOM,
- MOUSE_SCROLL_PIXELS
-};
-
 // mask values for ui.key.chromeAccess and ui.key.contentAccess
 #define NS_MODIFIER_SHIFT    1
 #define NS_MODIFIER_CONTROL  2
@@ -2696,58 +2688,6 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
                               &event, nullptr, aStatus);
 }
 
-PRInt32
-nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aEvent)
-{
-  PRInt32 result = -1;
-  bool isPage =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) != 0;
-  bool isMomentum =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum) != 0;
-  bool hasPixel =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) != 0;
-  bool isPixel = (aEvent->message == NS_MOUSE_PIXEL_SCROLL);
-
-  WheelPrefs::Action action = WheelPrefs::GetInstance()->GetActionFor(aEvent);
-  if (action == WheelPrefs::ACTION_NONE) {
-    return -1;
-  }
-
-  if (action == WheelPrefs::ACTION_SCROLL) {
-    if (isPixel) {
-      return MOUSE_SCROLL_PIXELS;
-    }
-    // Don't need to scroll, will be scrolled by following pixel event.
-    if (hasPixel) {
-      return -1;
-    }
-    return isPage ? MOUSE_SCROLL_PAGE : MOUSE_SCROLL_N_LINES;
-  }
-
-  // Momentum pixel events shouldn't run special actions.
-  if (isPixel && isMomentum) {
-    // Get the default action.  Note that user might kill the wheel scrolling.
-    action = WheelPrefs::GetInstance()->GetActionFor(nullptr);
-    return (action == WheelPrefs::ACTION_SCROLL) ? MOUSE_SCROLL_PIXELS : -1;
-  }
-
-  // Special actions shouldn't be run by pixel scroll event or momentum events.
-  if (isMomentum || isPixel) {
-    return -1;
-  }
-
-  if (action == WheelPrefs::ACTION_HISTORY) {
-    return MOUSE_SCROLL_HISTORY;
-  }
-
-  if (action == WheelPrefs::ACTION_ZOOM) {
-    return MOUSE_SCROLL_ZOOM;
-  }
-
-  NS_WARNING("Unsupported wheel action pref value!");
-  return -1;
-}
-
 nsIScrollableFrame*
 nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                          widget::WheelEvent* aEvent,
@@ -3298,55 +3238,28 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       widget::WheelEvent* wheelEvent = static_cast<widget::WheelEvent*>(aEvent);
-
-      // For scrolling of default action, we should honor the mouse wheel
-      // transaction.
-      nsIScrollableFrame* scrollTarget =
-        ComputeScrollTarget(aTargetFrame, wheelEvent, true);
-      if (scrollTarget) {
-        DoScrollText(scrollTarget, wheelEvent);
-      } else {
-        nsMouseWheelTransaction::EndTransaction();
-      }
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-
-#if 0
-      if (*aStatus != nsEventStatus_eConsumeNoDefault) {
-        PRInt32 action = ComputeWheelActionFor(msEvent);
-
-        switch (action) {
-        case MOUSE_SCROLL_N_LINES:
-          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::LINES,
-                       !msEvent->customizedByUserPrefs, nsGkAtoms::mouseWheel);
-          break;
-
-        case MOUSE_SCROLL_PAGE:
-          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::PAGES,
-                       false);
-          break;
-
-        case MOUSE_SCROLL_PIXELS:
-          {
-            bool fromLines = msEvent->scrollFlags & nsMouseScrollEvent::kFromLines;
-            DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::DEVICE_PIXELS,
-                         false, (fromLines ? nsGkAtoms::mouseWheel : nullptr));
+      switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
+        case WheelPrefs::ACTION_SCROLL: {
+          // For scrolling of default action, we should honor the mouse wheel
+          // transaction.
+          nsIScrollableFrame* scrollTarget =
+            ComputeScrollTarget(aTargetFrame, wheelEvent, true);
+          if (scrollTarget) {
+            DoScrollText(scrollTarget, wheelEvent);
+          } else {
+            nsMouseWheelTransaction::EndTransaction();
           }
           break;
-
-        case MOUSE_SCROLL_HISTORY:
-          DoScrollHistory(msEvent->delta);
-          break;
-
-        case MOUSE_SCROLL_ZOOM:
-          DoScrollZoom(aTargetFrame, msEvent->delta);
-          break;
-
-        default:  // Including -1 (do nothing)
-          break;
         }
-        *aStatus = nsEventStatus_eConsumeNoDefault;
+        case WheelPrefs::ACTION_HISTORY:
+          DoScrollHistory(wheelEvent->GetPreferredIntDelta());
+          break;
+
+        case WheelPrefs::ACTION_ZOOM:
+          DoScrollZoom(aTargetFrame, wheelEvent->GetPreferredIntDelta());
+          break;
       }
-#endif
+      *aStatus = nsEventStatus_eConsumeNoDefault;
     }
     break;
 
@@ -5290,7 +5203,7 @@ nsEventStateManager::WheelPrefs::Reset()
 }
 
 nsEventStateManager::WheelPrefs::Index
-nsEventStateManager::WheelPrefs::GetIndexFor(nsMouseEvent_base* aEvent)
+nsEventStateManager::WheelPrefs::GetIndexFor(widget::WheelEvent* aEvent)
 {
   if (!aEvent) {
     return INDEX_DEFAULT;
@@ -5416,11 +5329,30 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
 }
 
 nsEventStateManager::WheelPrefs::Action
-nsEventStateManager::WheelPrefs::GetActionFor(nsMouseScrollEvent* aEvent)
+nsEventStateManager::WheelPrefs::ComputeActionFor(widget::WheelEvent* aEvent)
 {
+  if (!aEvent->deltaX && !aEvent->deltaY) {
+    return ACTION_NONE;
+  }
+
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return mActions[index];
+
+  if (mActions[index] == ACTION_NONE || mActions[index] == ACTION_SCROLL) {
+    return mActions[index];
+  }
+
+  // Momentum events shouldn't run special actions.
+  if (aEvent->isMomentum) {
+    // Use the default action.  Note that user might kill the wheel scrolling.
+    Init(INDEX_DEFAULT);
+    return (mActions[INDEX_DEFAULT] == ACTION_SCROLL) ? ACTION_SCROLL :
+                                                        ACTION_NONE;
+  }
+
+  // If this event doesn't cause NS_MOUSE_SCROLL event or the direction is
+  // oblique, history and zoom shouldn't be executed.
+  return !aEvent->GetPreferredIntDelta() ? ACTION_NONE : mActions[index];
 }
 
 bool
