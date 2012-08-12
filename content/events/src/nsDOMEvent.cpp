@@ -720,11 +720,10 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsMouseScrollEvent* mouseScrollEvent =
         new nsMouseScrollEvent(false, msg, nullptr);
-      NS_ENSURE_TRUE(mouseScrollEvent, NS_ERROR_OUT_OF_MEMORY);
       isInputEvent = true;
       nsMouseScrollEvent* oldMouseScrollEvent =
         static_cast<nsMouseScrollEvent*>(mEvent);
-      mouseScrollEvent->scrollFlags = oldMouseScrollEvent->scrollFlags;
+      mouseScrollEvent->isHorizontal = oldMouseScrollEvent->isHorizontal;
       mouseScrollEvent->delta = oldMouseScrollEvent->delta;
       mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
       mouseScrollEvent->button = oldMouseScrollEvent->button;
