@@ -668,8 +668,8 @@ void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
 
     uint64_t oldestIndex = UINT64_MAX;
     uint64_t oldestIndexThisPrincipal = UINT64_MAX;
-    const WebGLContext *oldestContext = nsnull;
-    const WebGLContext *oldestContextThisPrincipal = nsnull;
+    const WebGLContext *oldestContext = nullptr;
+    const WebGLContext *oldestContextThisPrincipal = nullptr;
     size_t numContexts = 0;
     size_t numContextsThisPrincipal = 0;
 

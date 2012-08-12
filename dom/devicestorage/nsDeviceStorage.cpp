@@ -847,7 +847,7 @@ public:
 				    &NS_GET_IID(nsIDOMDeviceStorageStat));
 
     mRequest->FireSuccess(result);
-    mRequest = nsnull;
+    mRequest = nullptr;
     return NS_OK;
   }
 

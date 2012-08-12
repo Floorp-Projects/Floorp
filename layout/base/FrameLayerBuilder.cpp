@@ -2225,7 +2225,7 @@ static nsDisplayTransform* FindTransformForContainerFrame(nsIFrame* aContainerFr
 {
   if (!aContainerFrame->IsTransformed() ||
       aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM)
-    return nsnull;
+    return nullptr;
 
   nsTArray<nsDisplayItem*> queue;
   queue.AppendElement(aContainerItem);
@@ -2247,7 +2247,7 @@ static nsDisplayTransform* FindTransformForContainerFrame(nsIFrame* aContainerFr
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<ContainerLayer>
