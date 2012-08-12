@@ -200,7 +200,8 @@ function test_menulist_open(element, scroller)
   var scrolled = false;
   var mouseScrolled = function (event) { scrolled = true; }
   window.addEventListener("DOMMouseScroll", mouseScrolled, false);
-  synthesizeMouseScroll(element, 2, 2, { delta: 10 });
+  synthesizeWheel(element, 2, 2, { deltaY: 10,
+                                   deltaMode: WheelEvent.DOM_DELTA_LINE });
   is(scrolled, true, "mousescroll " + element.id);
   is(scroller.scrollTop, 0, "scroll position on mousescroll " + element.id);
   window.removeEventListener("DOMMouseScroll", mouseScrolled, false);

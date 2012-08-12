@@ -36,10 +36,10 @@ function doTest() {
   synthesizeMouse(scrollbox, 8, 8, { type: "mousemove" });
 
   // Now scroll 10px down.
-  synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:10, type:"MozMousePixelScroll"});
+  synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
 
   // Send a 0-delta scroll.
-  synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:0, type:"MozMousePixelScroll"});
+  synthesizeWheel(scrollbox, 10, 10, { deltaY: 0.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
 
   setTimeout(function() {
     // Check if the 10px were scrolled.
@@ -50,7 +50,7 @@ function doTest() {
     scrollbox.scrollTop = 20;
 
     // Start an async scroll to 30.
-    synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:10, type:"MozMousePixelScroll"});
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
 
     // Start a sync scroll to 30.
     scrollbox.scrollTop = 30;
@@ -62,13 +62,13 @@ function doTest() {
     scrollbox.scrollTop = 40;
 
     // Start an async scroll to 50.
-    synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:10, type:"MozMousePixelScroll"});
-    
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 10.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
+
     // Cancel the async scroll.
     scrollbox.scrollTop = 40;
 
     // Send a 0-delta scroll.
-    synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:0, type:"MozMousePixelScroll"});
+    synthesizeWheel(scrollbox, 10, 10, { deltaY: 0.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL });
 
     setTimeout(function() {
       is(scrollbox.scrollTop, 40, "Canceling an async scroll should reset the point of reference for relative scrolls (mDestinationX/Y).");
