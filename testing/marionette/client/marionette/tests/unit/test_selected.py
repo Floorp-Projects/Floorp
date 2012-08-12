@@ -10,9 +10,9 @@ class TestSelected(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         box = self.marionette.find_element("name", "myCheckBox")
-        self.assertFalse(box.selected())
+        self.assertFalse(box.is_selected())
         box.click()
-        self.assertTrue(box.selected())
+        self.assertTrue(box.is_selected())
 
 class TestSelectedChrome(MarionetteTestCase):
     def setUp(self):
@@ -32,6 +32,6 @@ class TestSelectedChrome(MarionetteTestCase):
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
         box = self.marionette.find_element("id", "testBox")
-        self.assertFalse(box.selected())
+        self.assertFalse(box.is_selected())
         self.assertFalse(self.marionette.execute_script("arguments[0].checked = true;", [box]))
-        self.assertTrue(box.selected())
+        self.assertTrue(box.is_selected())
