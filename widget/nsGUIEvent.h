@@ -393,12 +393,6 @@ class nsHashKey;
 // Query if the DOM element under nsEvent::refPoint belongs to our widget
 // or not.
 #define NS_QUERY_DOM_WIDGET_HITTEST     (NS_QUERY_CONTENT_EVENT_START + 9)
-// Query for some information about mouse wheel event's target
-// XXX This is used only for supporting high resolution mouse scroll on Windows
-//     and it's going to be reimplemented with another approach.  At that time,
-//     this even is going to be removed. Therefore,  DON'T use this event for
-//     other purpose.
-#define NS_QUERY_SCROLL_TARGET_INFO     (NS_QUERY_CONTENT_EVENT_START + 99)
 
 // Video events
 #define NS_MEDIA_EVENT_START            3300
@@ -1356,23 +1350,9 @@ public:
                             // When kHasPixels is set, the event is guaranteed to
                             // be followed up by an event that contains pixel
                             // scrolling information.
-    kNoLines =      1 << 4, // Marks pixel scroll events that will not be
-                            // followed by a line scroll events. EventStateManager
-                            // will compute the appropriate height/width based on
-                            // view lineHeight and generate line scroll events
-                            // as needed.
-    kNoDefer =      1 << 5, // For scrollable views, indicates scroll should not
-                            // occur asynchronously.
-    kIsMomentum =   1 << 6, // Marks scroll events that aren't controlled by the
+    kIsMomentum =   1 << 6  // Marks scroll events that aren't controlled by the
                             // user but fire automatically as the result of a
                             // "momentum" scroll.
-    kAllowSmoothScroll = 1 << 7, // Allow smooth scroll for the pixel scroll
-                                 // event.
-    kFromLines =    1 << 8  // For a pixels scroll event, indicates that it
-                            // originated from a lines scroll event.
-                            // (Only used on windows which generates "faked"
-                            // pixel scroll events even for simple mouse wheel
-                            // scroll)
 };
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -1564,13 +1544,6 @@ public:
     refPoint = aPoint;
   }
 
-  void InitForQueryScrollTargetInfo(nsMouseScrollEvent* aEvent)
-  {
-    NS_ASSERTION(message == NS_QUERY_SCROLL_TARGET_INFO,
-                 "wrong initializer is called");
-    mInput.mMouseScrollEvent = aEvent;
-  }
-
   PRUint32 GetSelectionStart(void) const
   {
     NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
@@ -1590,8 +1563,6 @@ public:
   struct {
     PRUint32 mOffset;
     PRUint32 mLength;
-    // used by NS_QUERY_SCROLL_TARGET_INFO
-    nsMouseScrollEvent* mMouseScrollEvent;
   } mInput;
   struct {
     void* mContentsRoot;
@@ -1605,18 +1576,6 @@ public:
     bool mWidgetIsHit; // true if DOM element under mouse belongs to widget
     // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
     nsCOMPtr<nsITransferable> mTransferable;
-    // used by NS_QUERY_SCROLL_TARGET_INFO
-    PRInt32 mLineHeight;
-    PRInt32 mPageWidth;
-    PRInt32 mPageHeight;
-    // used by NS_QUERY_SCROLL_TARGET_INFO
-    // the mouse wheel scrolling amount may be overridden by prefs or
-    // overriding system scrolling speed mechanism.
-    // If mMouseScrollEvent is a line scroll event, the unit of this value is
-    // line.  If mMouseScrollEvent is a page scroll event, the unit of this
-    // value is page.
-    PRInt32 mComputedScrollAmount;
-    PRInt32 mComputedScrollAction;
   } mReply;
 
   enum {
@@ -2017,8 +1976,7 @@ enum nsDragDropEventStatus {
 // cases, you should use NS_IS_IME_RELATED_EVENT instead.
 #define NS_IS_IME_RELATED_EVENT(evnt) \
   (NS_IS_IME_EVENT(evnt) || \
-   (NS_IS_QUERY_CONTENT_EVENT(evnt) && \
-    evnt->message != NS_QUERY_SCROLL_TARGET_INFO) || \
+   NS_IS_QUERY_CONTENT_EVENT(evnt) || \
    NS_IS_SELECTION_EVENT(evnt))
 
 /*

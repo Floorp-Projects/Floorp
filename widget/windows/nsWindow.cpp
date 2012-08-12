@@ -6273,43 +6273,42 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
   return true;
 }
 
+static PRInt32 RoundDown(double aDouble)
+{
+  return aDouble > 0 ? static_cast<PRInt32>(floor(aDouble)) :
+                       static_cast<PRInt32>(ceil(aDouble));
+}
+
 // Gesture event processing. Handles WM_GESTURE events.
 bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
 {
   // Treatment for pan events which translate into scroll events:
   if (mGesture.IsPanEvent(lParam)) {
-    nsMouseScrollEvent event(true, NS_MOUSE_PIXEL_SCROLL, this);
-
     if ( !mGesture.ProcessPanMessage(mWnd, wParam, lParam) )
       return false; // ignore
 
     nsEventStatus status;
 
-    ModifierKeyState modifierKeyState;
-    modifierKeyState.InitInputEvent(event);
+    WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
 
-    event.button    = 0;
-    event.time      = ::GetMessageTime();
-    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    ModifierKeyState modifierKeyState;
+    modifierKeyState.InitInputEvent(wheelEvent);
+
+    wheelEvent.button      = 0;
+    wheelEvent.time        = ::GetMessageTime();
+    wheelEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
     bool endFeedback = true;
 
-    PRInt32 scrollOverflowX = 0;
-    PRInt32 scrollOverflowY = 0;
-
-    if (mGesture.PanDeltaToPixelScrollX(event)) {
-      DispatchEvent(&event, status);
-      scrollOverflowX = event.scrollOverflow;
-    }
-
-    if (mGesture.PanDeltaToPixelScrollY(event)) {
-      DispatchEvent(&event, status);
-      scrollOverflowY = event.scrollOverflow;
+    if (mGesture.PanDeltaToPixelScroll(wheelEvent)) {
+      DispatchEvent(&wheelEvent, status);
     }
 
     if (mDisplayPanFeedback) {
-      mGesture.UpdatePanFeedbackX(mWnd, scrollOverflowX, endFeedback);
-      mGesture.UpdatePanFeedbackY(mWnd, scrollOverflowY, endFeedback);
+      mGesture.UpdatePanFeedbackX(mWnd, RoundDown(wheelEvent.overflowDeltaX),
+                                  endFeedback);
+      mGesture.UpdatePanFeedbackY(mWnd, RoundDown(wheelEvent.overflowDeltaY),
+                                  endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     }
 

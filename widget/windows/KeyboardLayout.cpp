@@ -128,7 +128,7 @@ void
 ModifierKeyState::InitMouseEvent(nsInputEvent& aMouseEvent) const
 {
   NS_ASSERTION(aMouseEvent.eventStructType == NS_MOUSE_EVENT ||
-               aMouseEvent.eventStructType == NS_MOUSE_SCROLL_EVENT ||
+               aMouseEvent.eventStructType == NS_WHEEL_EVENT ||
                aMouseEvent.eventStructType == NS_DRAG_EVENT ||
                aMouseEvent.eventStructType == NS_SIMPLE_GESTURE_EVENT ||
                aMouseEvent.eventStructType == NS_MOZTOUCH_EVENT,
