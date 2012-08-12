@@ -105,15 +105,13 @@ struct ParamTraits<nsMouseScrollEvent>
     WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
     WriteParam(aMsg, aParam.scrollFlags);
     WriteParam(aMsg, aParam.delta);
-    WriteParam(aMsg, aParam.scrollOverflow);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->scrollFlags) &&
-           ReadParam(aMsg, aIter, &aResult->delta) &&
-           ReadParam(aMsg, aIter, &aResult->scrollOverflow);
+           ReadParam(aMsg, aIter, &aResult->delta);
   }
 };
 
