@@ -438,18 +438,13 @@ protected:
                           nsIScrollableFrame* aScrollableFrame);
 
   /**
-   * @param aQueryEvent If you set vailid pointer for this, DoScrollText()
-   *                    computes the line-height and page size of current
-   *                    mouse wheel scroll target and sets it to the event.
-   *                    And then, this method does NOT scroll any scrollable
-   *                    elements.  I.e., you can just query the scroll target
-   *                    information.
+   * DoScrollText() scrolls the scrollable frame for aEvent.
+   * The actual scroll amount will be computed from aPixelsPerLineOrPage.
    */
   nsresult DoScrollText(nsIFrame* aTargetFrame,
                         nsMouseScrollEvent* aMouseEvent,
                         nsIScrollableFrame::ScrollUnit aScrollQuantity,
                         bool aAllowScrollSpeedOverride,
-                        nsQueryContentEvent* aQueryEvent = nullptr,
                         nsIAtom *aOrigin = nullptr);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
@@ -575,8 +570,6 @@ protected:
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
-  void DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
-                               nsIFrame* aTargetFrame);
   void DoQuerySelectedText(nsQueryContentEvent* aEvent);
 
   bool RemoteQueryContentEvent(nsEvent *aEvent);

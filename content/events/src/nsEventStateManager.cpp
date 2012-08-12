@@ -1229,12 +1229,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       handler.OnQueryDOMWidgetHittest(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
-  case NS_QUERY_SCROLL_TARGET_INFO:
-    {
-      DoQueryScrollTargetInfo(static_cast<nsQueryContentEvent*>(aEvent),
-                              aTargetFrame);
-      break;
-    }
   case NS_SELECTION_SET:
     {
       nsSelectionEvent *selectionEvent =
@@ -2788,7 +2782,6 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
                                   nsMouseScrollEvent* aMouseEvent,
                                   nsIScrollableFrame::ScrollUnit aScrollQuantity,
                                   bool aAllowScrollSpeedOverride,
-                                  nsQueryContentEvent* aQueryEvent,
                                   nsIAtom *aOrigin)
 {
   aMouseEvent->scrollOverflow = aMouseEvent->delta;
@@ -2835,8 +2828,7 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
     numLines =
       nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
                                                     aAllowScrollSpeedOverride,
-                                                    &aScrollQuantity,
-                                                    !aQueryEvent);
+                                                    &aScrollQuantity, true);
   }
 #ifdef DEBUG
   else {
@@ -2847,45 +2839,6 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
 
   if (aScrollQuantity == nsIScrollableFrame::PAGES) {
     numLines = (numLines > 0) ? 1 : -1;
-  }
-
-  if (aQueryEvent) {
-    // If acceleration is enabled, pixel scroll shouldn't be used for
-    // high resolution scrolling.
-    if (nsMouseWheelTransaction::IsAccelerationEnabled()) {
-      return NS_OK;
-    }
-
-    nscoord appUnitsPerDevPixel =
-      aTargetFrame->PresContext()->AppUnitsPerDevPixel();
-    aQueryEvent->mReply.mLineHeight =
-      frameToScroll->GetLineScrollAmount().height / appUnitsPerDevPixel;
-    aQueryEvent->mReply.mPageHeight =
-      frameToScroll->GetPageScrollAmount().height / appUnitsPerDevPixel;
-    aQueryEvent->mReply.mPageWidth =
-      frameToScroll->GetPageScrollAmount().width / appUnitsPerDevPixel;
-
-    // Returns computed numLines to widget which is needed to compute the
-    // pixel scrolling amout for high resolution scrolling.
-    aQueryEvent->mReply.mComputedScrollAmount = numLines;
-
-    switch (aScrollQuantity) {
-      case nsIScrollableFrame::LINES:
-        aQueryEvent->mReply.mComputedScrollAction =
-          nsQueryContentEvent::SCROLL_ACTION_LINE;
-        break;
-      case nsIScrollableFrame::PAGES:
-        aQueryEvent->mReply.mComputedScrollAction =
-          nsQueryContentEvent::SCROLL_ACTION_PAGE;
-        break;
-      default:
-        aQueryEvent->mReply.mComputedScrollAction =
-          nsQueryContentEvent::SCROLL_ACTION_NONE;
-        break;
-    }
-
-    aQueryEvent->mSucceeded = true;
-    return NS_OK;
   }
 
   PRInt32 scrollX = 0;
@@ -3253,8 +3206,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         switch (action) {
         case MOUSE_SCROLL_N_LINES:
           DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::LINES,
-                       !msEvent->customizedByUserPrefs, nullptr,
-                       nsGkAtoms::mouseWheel);
+                       !msEvent->customizedByUserPrefs, nsGkAtoms::mouseWheel);
           break;
 
         case MOUSE_SCROLL_PAGE:
@@ -3266,7 +3218,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           {
             bool fromLines = msEvent->scrollFlags & nsMouseScrollEvent::kFromLines;
             DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::DEVICE_PIXELS,
-                         false, nullptr, (fromLines ? nsGkAtoms::mouseWheel : nullptr));
+                         false, (fromLines ? nsGkAtoms::mouseWheel : nullptr));
           }
           break;
 
@@ -5041,46 +4993,6 @@ nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
   // The caller may want synchronous scrolling.
   sf->ScrollBy(pt, scrollUnit, nsIScrollableFrame::INSTANT);
   return NS_OK;
-}
-
-void
-nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
-                                             nsIFrame* aTargetFrame)
-{
-  // Don't modify the test event which in mInput.
-  nsMouseScrollEvent msEvent(
-    NS_IS_TRUSTED_EVENT(aEvent->mInput.mMouseScrollEvent),
-    aEvent->mInput.mMouseScrollEvent->message,
-    aEvent->mInput.mMouseScrollEvent->widget);
-
-  msEvent.modifiers = aEvent->mInput.mMouseScrollEvent->modifiers;
-  msEvent.buttons = aEvent->mInput.mMouseScrollEvent->buttons;
-
-  msEvent.scrollFlags = aEvent->mInput.mMouseScrollEvent->scrollFlags;
-  msEvent.delta = aEvent->mInput.mMouseScrollEvent->delta;
-  msEvent.scrollOverflow = aEvent->mInput.mMouseScrollEvent->scrollOverflow;
-
-  WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(&msEvent);
-
-  nsIScrollableFrame::ScrollUnit unit;
-  bool allowOverrideSystemSettings;
-  switch (ComputeWheelActionFor(&msEvent)) {
-    case MOUSE_SCROLL_N_LINES:
-      unit = nsIScrollableFrame::LINES;
-      allowOverrideSystemSettings = !msEvent.customizedByUserPrefs;
-      break;
-    case MOUSE_SCROLL_PAGE:
-      unit = nsIScrollableFrame::PAGES;
-      allowOverrideSystemSettings = false;
-      break;
-    default:
-      // Don't use high resolution scrolling when the action doesn't scroll
-      // contents.
-      return;
-  }
-
-  DoScrollText(aTargetFrame, &msEvent, unit,
-               allowOverrideSystemSettings, aEvent);
 }
 
 void
