@@ -306,7 +306,6 @@ child:
 
     RealMouseEvent(nsMouseEvent event);
     RealKeyEvent(nsKeyEvent event);
-    MouseScrollEvent(nsMouseScrollEvent event);
     MouseWheelEvent(WheelEvent event);
     RealTouchEvent(nsTouchEvent event);
 
