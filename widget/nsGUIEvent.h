@@ -1377,13 +1377,15 @@ public:
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
-      scrollFlags(0), delta(0), scrollOverflow(0)
+      scrollFlags(0), delta(0), scrollOverflow(0), customizedByUserPrefs(false)
   {
   }
 
   PRInt32               scrollFlags;
   PRInt32               delta;
   PRInt32               scrollOverflow;
+
+  bool                  customizedByUserPrefs;
 };
 
 /**

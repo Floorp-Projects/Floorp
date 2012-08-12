@@ -50,18 +50,20 @@ const DOM_PAGE_SCROLL_DELTA = 32768;
 const kSystemScrollSpeedOverridePref = "mousewheel.system_scroll_override_on_root_content.enabled";
 
 const kAltKeyVActionPref        = "mousewheel.withaltkey.action";
-const kAltKeyVSysNumLinesPref   = "mousewheel.withaltkey.sysnumlines";
 const kAltKeyHActionPref        = "mousewheel.horizscroll.withaltkey.action";
-const kAltKeyHSysNumLinesPref   = "mousewheel.horizscroll.withaltkey.sysnumlines";
 const kCtrlKeyVActionPref       = "mousewheel.withcontrolkey.action";
-const kCtrlKeyVSysNumLinesPref  = "mousewheel.withcontrolkey.sysnumlines";
 const kCtrlKeyHActionPref       = "mousewheel.horizscroll.withcontrolkey.action";
-const kCtrlKeyHSysNumLinesPref  = "mousewheel.horizscroll.withcontrolkey.sysnumlines";
 const kShiftKeyVActionPref      = "mousewheel.withshiftkey.action";
-const kShiftKeyVSysNumLinesPref = "mousewheel.withshiftkey.sysnumlines";
 const kShiftKeyHActionPref      = "mousewheel.horizscroll.withshiftkey.action";
-const kShiftKeyHSysNumLinesPref = "mousewheel.horizscroll.withshiftkey.sysnumlines";
 
+const kAltKeyDeltaMultiplierXPref   = "mousewheel.withaltkey.delta_multiplier_x";
+const kAltKeyDeltaMultiplierYPref   = "mousewheel.withaltkey.delta_multiplier_y";
+const kCtrlKeyDeltaMultiplierXPref  = "mousewheel.withcontrolkey.delta_multiplier_x";
+const kCtrlKeyDeltaMultiplierYPref  = "mousewheel.withcontrolkey.delta_multiplier_y";
+const kShiftKeyDeltaMultiplierXPref = "mousewheel.withshiftkey.delta_multiplier_x";
+const kShiftKeyDeltaMultiplierYPref = "mousewheel.withshiftkey.delta_multiplier_y";
+const kWinKeyDeltaMultiplierXPref   = "mousewheel.withwinkey.delta_multiplier_x";
+const kWinKeyDeltaMultiplierYPref   = "mousewheel.withwinkey.delta_multiplier_y";
 
 const kPixelEnabledPref           = "mousewheel.enable_pixel_scrolling";
 const kEmulateWheelByWMSCROLLPref = "mousewheel.emulate_at_wm_scroll";
@@ -108,17 +110,20 @@ function todo_is(aLeft, aRight, aMessage)
 function onUnload()
 {
   SpecialPowers.clearUserPref(kAltKeyVActionPref);
-  SpecialPowers.clearUserPref(kAltKeyVSysNumLinesPref);
   SpecialPowers.clearUserPref(kAltKeyHActionPref);
-  SpecialPowers.clearUserPref(kAltKeyHSysNumLinesPref);
   SpecialPowers.clearUserPref(kCtrlKeyVActionPref);
-  SpecialPowers.clearUserPref(kCtrlKeyVSysNumLinesPref);
   SpecialPowers.clearUserPref(kCtrlKeyHActionPref);
-  SpecialPowers.clearUserPref(kCtrlKeyHSysNumLinesPref);
   SpecialPowers.clearUserPref(kShiftKeyVActionPref);
-  SpecialPowers.clearUserPref(kShiftKeyVSysNumLinesPref);
   SpecialPowers.clearUserPref(kShiftKeyHActionPref);
-  SpecialPowers.clearUserPref(kShiftKeyHSysNumLinesPref);
+
+  SpecialPowers.clearUserPref(kAltKeyDeltaMultiplierXPref);
+  SpecialPowers.clearUserPref(kAltKeyDeltaMultiplierYPref);
+  SpecialPowers.clearUserPref(kCtrlKeyDeltaMultiplierXPref);
+  SpecialPowers.clearUserPref(kCtrlKeyDeltaMultiplierYPref);
+  SpecialPowers.clearUserPref(kShiftKeyDeltaMultiplierXPref);
+  SpecialPowers.clearUserPref(kShiftKeyDeltaMultiplierYPref);
+  SpecialPowers.clearUserPref(kWinKeyDeltaMultiplierXPref);
+  SpecialPowers.clearUserPref(kWinKeyDeltaMultiplierYPref);
 
   SpecialPowers.clearUserPref(kSystemScrollSpeedOverridePref);
   SpecialPowers.clearUserPref(kPixelEnabledPref);
@@ -1879,12 +1884,15 @@ function prepareTests()
   SpecialPowers.setIntPref(kAltKeyHActionPref, 0);
   SpecialPowers.setIntPref(kCtrlKeyHActionPref, 0);
   SpecialPowers.setIntPref(kShiftKeyHActionPref, 0);
-  SpecialPowers.setBoolPref(kAltKeyVSysNumLinesPref, true);
-  SpecialPowers.setBoolPref(kCtrlKeyVSysNumLinesPref, true);
-  SpecialPowers.setBoolPref(kShiftKeyVSysNumLinesPref, true);
-  SpecialPowers.setBoolPref(kAltKeyHSysNumLinesPref, true);
-  SpecialPowers.setBoolPref(kCtrlKeyHSysNumLinesPref, true);
-  SpecialPowers.setBoolPref(kShiftKeyHSysNumLinesPref, true);
+
+  SpecialPowers.setIntPref(kAltKeyDeltaMultiplierXPref, 100);
+  SpecialPowers.setIntPref(kAltKeyDeltaMultiplierYPref, 100);
+  SpecialPowers.setIntPref(kCtrlKeyDeltaMultiplierXPref, 100);
+  SpecialPowers.setIntPref(kCtrlKeyDeltaMultiplierYPref, 100);
+  SpecialPowers.setIntPref(kShiftKeyDeltaMultiplierXPref, 100);
+  SpecialPowers.setIntPref(kShiftKeyDeltaMultiplierYPref, 100);
+  SpecialPowers.setIntPref(kWinKeyDeltaMultiplierXPref, 100);
+  SpecialPowers.setIntPref(kWinKeyDeltaMultiplierYPref, 100);
 
   SpecialPowers.setBoolPref(kSystemScrollSpeedOverridePref, false);
   SpecialPowers.setBoolPref(kPixelEnabledPref, true);
