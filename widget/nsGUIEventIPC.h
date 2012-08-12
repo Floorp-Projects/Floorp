@@ -130,6 +130,8 @@ struct ParamTraits<mozilla::widget::WheelEvent>
     WriteParam(aMsg, aParam.deltaZ);
     WriteParam(aMsg, aParam.deltaMode);
     WriteParam(aMsg, aParam.customizedByUserPrefs);
+    WriteParam(aMsg, aParam.lineOrPageDeltaX);
+    WriteParam(aMsg, aParam.lineOrPageDeltaY);
     WriteParam(aMsg, aParam.overflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
   }
@@ -142,6 +144,8 @@ struct ParamTraits<mozilla::widget::WheelEvent>
            ReadParam(aMsg, aIter, &aResult->deltaZ) &&
            ReadParam(aMsg, aIter, &aResult->deltaMode) &&
            ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
+           ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
+           ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
            ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
            ReadParam(aMsg, aIter, &aResult->overflowDeltaY);
   }

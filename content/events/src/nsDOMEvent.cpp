@@ -751,6 +751,8 @@ nsDOMEvent::DuplicatePrivateData()
       wheelEvent->modifiers = oldWheelEvent->modifiers;
       wheelEvent->inputSource = oldWheelEvent->inputSource;
       wheelEvent->customizedByUserPrefs = oldWheelEvent->customizedByUserPrefs;
+      wheelEvent->lineOrPageDeltaX = oldWheelEvent->lineOrPageDeltaX;
+      wheelEvent->lineOrPageDeltaY = oldWheelEvent->lineOrPageDeltaY;
       wheelEvent->overflowDeltaX = oldWheelEvent->overflowDeltaX;
       wheelEvent->overflowDeltaY = oldWheelEvent->overflowDeltaY;
       newEvent = wheelEvent;
