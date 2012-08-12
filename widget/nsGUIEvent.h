@@ -1340,17 +1340,8 @@ public:
   enum nsMouseScrollFlags {
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
-    kIsHorizontal = 1 << 2,
-    kHasPixels =    1 << 3  // Marks line scroll events that are provided as
-                            // a fallback for pixel scroll events.
-                            // These scroll events are used by things that can't
-                            // be scrolled pixel-wise, like trees. You should
-                            // ignore them when processing pixel scroll events
-                            // to avoid double-processing the same scroll gesture.
-                            // When kHasPixels is set, the event is guaranteed to
-                            // be followed up by an event that contains pixel
-                            // scrolling information.
-};
+    kIsHorizontal = 1 << 2
+  };
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
