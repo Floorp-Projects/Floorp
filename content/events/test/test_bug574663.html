@@ -110,7 +110,7 @@ function initPrefs()
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
   prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
   // Enable zooming for ctrl-scrolling
-  prefSvc.setIntPref("mousewheel.withcontrolkey.action", 3);
+  prefSvc.setIntPref("mousewheel.with_control.action", 3);
 }
 
 function clearPrefs()
@@ -122,7 +122,7 @@ function clearPrefs()
   prefSvc.clearUserPref("general.smoothScroll");
   prefSvc.clearUserPref("mousewheel.acceleration.start");
   prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
-  prefSvc.clearUserPref("mousewheel.withcontrolkey.action");
+  prefSvc.clearUserPref("mousewheel.with_control.action");
 }
 
 window.onload = function () {

@@ -1380,37 +1380,36 @@ pref("mousewheel.acceleration.factor", 10);
 pref("mousewheel.system_scroll_override_on_root_content.vertical.factor", 200);
 pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200);
 
-// 0=lines, 1=pages, 2=history , 3=text size
-pref("mousewheel.withnokey.action",0);
-pref("mousewheel.withcontrolkey.action",0);
-// mousewheel.withshiftkey, see the Mac note below.
-pref("mousewheel.withshiftkey.action",0);
-pref("mousewheel.withaltkey.action",2);
-pref("mousewheel.withmetakey.action",0);
-
-// activate horizontal scrolling by default
-pref("mousewheel.horizscroll.withnokey.action",0);
-pref("mousewheel.horizscroll.withcontrolkey.action",0);
-pref("mousewheel.horizscroll.withshiftkey.action",0);
-pref("mousewheel.horizscroll.withaltkey.action",2);
-pref("mousewheel.horizscroll.withmetakey.action",0);
+// mousewheel.*.action can specify the action when you use mosue wheel.
+// When no modifier keys are pressed or two or more modifires are pressed,
+// .default is used.
+// 0: Nothing happens
+// 1: Scrolling contents
+// 2: Go back or go forward, in your history
+// 3: Zoom in or out.
+pref("mousewheel.default.action", 1);
+pref("mousewheel.with_alt.action", 2);
+pref("mousewheel.with_control.action", 3);
+pref("mousewheel.with_meta.action", 1);  // command key on Mac
+pref("mousewheel.with_shift.action", 1);
+pref("mousewheel.with_win.action", 1);
 
 // mousewheel.*.delta_multiplier_* can specify the value muliplied by the delta
 // value.  The values will be used after divided by 100.  I.e., 100 means 1.0,
 // -100 means -1.0.  If the values were negative, the direction would be
 // reverted.  The absolue value must be 100 or larger.
-pref("mousewheel.withnokey.delta_multiplier_x", 100);
-pref("mousewheel.withnokey.delta_multiplier_y", 100);
-pref("mousewheel.withaltkey.delta_multiplier_x", 100);
-pref("mousewheel.withaltkey.delta_multiplier_y", 100);
-pref("mousewheel.withcontrolkey.delta_multiplier_x", 100);
-pref("mousewheel.withcontrolkey.delta_multiplier_y", 100);
-pref("mousewheel.withmetakey.delta_multiplier_x", 100);  // command key on Mac
-pref("mousewheel.withmetakey.delta_multiplier_y", 100);  // command key on Mac
-pref("mousewheel.withshiftkey.delta_multiplier_x", 100);
-pref("mousewheel.withshiftkey.delta_multiplier_y", 100);
-pref("mousewheel.withwinkey.delta_multiplier_x", 100);
-pref("mousewheel.withwinkey.delta_multiplier_y", 100);
+pref("mousewheel.default.delta_multiplier_x", 100);
+pref("mousewheel.default.delta_multiplier_y", 100);
+pref("mousewheel.with_alt.delta_multiplier_x", 100);
+pref("mousewheel.with_alt.delta_multiplier_y", 100);
+pref("mousewheel.with_control.delta_multiplier_x", 100);
+pref("mousewheel.with_control.delta_multiplier_y", 100);
+pref("mousewheel.with_meta.delta_multiplier_x", 100);  // command key on Mac
+pref("mousewheel.with_meta.delta_multiplier_y", 100);  // command key on Mac
+pref("mousewheel.with_shift.delta_multiplier_x", 100);
+pref("mousewheel.with_shift.delta_multiplier_y", 100);
+pref("mousewheel.with_win.delta_multiplier_x", 100);
+pref("mousewheel.with_win.delta_multiplier_y", 100);
 
 // These define the smooth scroll behavior (min ms, max ms) for different triggers
 // Some triggers:
