@@ -823,14 +823,6 @@ TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
 }
 
 bool
-TabChild::RecvMouseScrollEvent(const nsMouseScrollEvent& event)
-{
-  nsMouseScrollEvent localEvent(event);
-  DispatchWidgetEvent(localEvent);
-  return true;
-}
-
-bool
 TabChild::RecvMouseWheelEvent(const WheelEvent& event)
 {
   WheelEvent localEvent(event);

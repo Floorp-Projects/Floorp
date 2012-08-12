@@ -1568,10 +1568,6 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
     nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aEvent);
     return remote->SendRealKeyEvent(*keyEvent);
   }
-  case NS_MOUSE_SCROLL_EVENT: {
-    nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(aEvent);
-    return remote->SendMouseScrollEvent(*scrollEvent);
-  }
   case NS_WHEEL_EVENT: {
     widget::WheelEvent* wheelEvent = static_cast<widget::WheelEvent*>(aEvent);
     return remote->SendMouseWheelEvent(*wheelEvent);
@@ -1623,7 +1619,6 @@ CrossProcessSafeEvent(const nsEvent& aEvent)
 {
   switch (aEvent.eventStructType) {
   case NS_KEY_EVENT:
-  case NS_MOUSE_SCROLL_EVENT:
   case NS_WHEEL_EVENT:
     return true;
   case NS_MOUSE_EVENT:
