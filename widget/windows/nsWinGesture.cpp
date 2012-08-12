@@ -12,10 +12,12 @@
 #include "nsUXThemeData.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsGUIEvent.h"
+#include "nsIDOMWheelEvent.h"
 #include "mozilla/Constants.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
@@ -554,53 +556,29 @@ nsWinGesture::PanFeedbackFinalize(HWND hWnd, bool endFeedback)
 }
 
 bool
-nsWinGesture::PanDeltaToPixelScrollX(nsMouseScrollEvent& evt)
+nsWinGesture::PanDeltaToPixelScroll(WheelEvent& aWheelEvent)
 {
-  evt.delta = 0;
-  evt.scrollOverflow = 0;
+  aWheelEvent.deltaX = aWheelEvent.deltaY = aWheelEvent.deltaZ = 0.0;
+  aWheelEvent.lineOrPageDeltaX = aWheelEvent.lineOrPageDeltaY = 0;
+
+  aWheelEvent.refPoint.x = mPanRefPoint.x;
+  aWheelEvent.refPoint.y = mPanRefPoint.y;
+  aWheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  aWheelEvent.scrollType = WheelEvent::SCROLL_SYNCHRONOUSLY;
+  aWheelEvent.isPixelOnlyDevice = true;
+
+  aWheelEvent.overflowDeltaX = 0.0;
+  aWheelEvent.overflowDeltaY = 0.0;
 
   // Don't scroll the view if we are currently at a bounds, or, if we are
   // panning back from a max feedback position. This keeps the original drag point
   // constant.
-  if (mXAxisFeedback)
-    return false;
-
-  if (mPixelScrollDelta.x != 0)
-  {
-    evt.scrollFlags = nsMouseScrollEvent::kIsHorizontal|
-                      nsMouseScrollEvent::kHasPixels|
-                      nsMouseScrollEvent::kNoLines|
-                      nsMouseScrollEvent::kNoDefer;
-    evt.delta = mPixelScrollDelta.x;
-    evt.refPoint.x = mPanRefPoint.x;
-    evt.refPoint.y = mPanRefPoint.y;
-    return true;
+  if (!mXAxisFeedback) {
+    aWheelEvent.deltaX = mPixelScrollDelta.x;
   }
-  return false;
-}
-
-bool
-nsWinGesture::PanDeltaToPixelScrollY(nsMouseScrollEvent& evt)
-{
-  evt.delta = 0;
-  evt.scrollOverflow = 0;
-
-  // Don't scroll the view if we are currently at a bounds, or, if we are
-  // panning back from a max feedback position. This keeps the original drag point
-  // constant.
-  if (mYAxisFeedback)
-    return false;
-
-  if (mPixelScrollDelta.y != 0)
-  {
-    evt.scrollFlags = nsMouseScrollEvent::kIsVertical|
-                      nsMouseScrollEvent::kHasPixels|
-                      nsMouseScrollEvent::kNoLines|
-                      nsMouseScrollEvent::kNoDefer;
-    evt.delta = mPixelScrollDelta.y;
-    evt.refPoint.x = mPanRefPoint.x;
-    evt.refPoint.y = mPanRefPoint.y;
-    return true;
+  if (!mYAxisFeedback) {
+    aWheelEvent.deltaY = mPixelScrollDelta.y;
   }
-  return false;
+
+  return (aWheelEvent.deltaX != 0 || aWheelEvent.deltaY != 0);
 }

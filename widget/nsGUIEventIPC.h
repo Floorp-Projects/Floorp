@@ -395,18 +395,12 @@ struct ParamTraits<nsQueryContentEvent>
     WriteParam(aMsg, aParam.mSucceeded);
     WriteParam(aMsg, aParam.mInput.mOffset);
     WriteParam(aMsg, aParam.mInput.mLength);
-    WriteParam(aMsg, *aParam.mInput.mMouseScrollEvent);
     WriteParam(aMsg, aParam.mReply.mOffset);
     WriteParam(aMsg, aParam.mReply.mString);
     WriteParam(aMsg, aParam.mReply.mRect);
     WriteParam(aMsg, aParam.mReply.mReversed);
     WriteParam(aMsg, aParam.mReply.mHasSelection);
     WriteParam(aMsg, aParam.mReply.mWidgetIsHit);
-    WriteParam(aMsg, aParam.mReply.mLineHeight);
-    WriteParam(aMsg, aParam.mReply.mPageHeight);
-    WriteParam(aMsg, aParam.mReply.mPageWidth);
-    WriteParam(aMsg, aParam.mReply.mComputedScrollAmount);
-    WriteParam(aMsg, aParam.mReply.mComputedScrollAction);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -416,18 +410,12 @@ struct ParamTraits<nsQueryContentEvent>
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mLength) &&
-           ReadParam(aMsg, aIter, aResult->mInput.mMouseScrollEvent) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mString) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mRect) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mHasSelection) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mLineHeight) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mPageHeight) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mPageWidth) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAmount) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAction);
+           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit);
   }
 };
 
