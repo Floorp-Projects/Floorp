@@ -1377,15 +1377,13 @@ public:
 
   nsMouseScrollEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
-      scrollFlags(0), delta(0), scrollOverflow(0), customizedByUserPrefs(false)
+      scrollFlags(0), delta(0), scrollOverflow(0)
   {
   }
 
   PRInt32               scrollFlags;
   PRInt32               delta;
   PRInt32               scrollOverflow;
-
-  bool                  customizedByUserPrefs;
 };
 
 /**
@@ -1409,7 +1407,9 @@ public:
   WheelEvent(bool aIsTrusted, PRUint32 aMessage, nsIWidget* aWidget) :
     nsMouseEvent_base(aIsTrusted, aMessage, aWidget, NS_WHEEL_EVENT),
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),
-    deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
+    customizedByUserPrefs(false),
+    overflowDeltaX(0.0), overflowDeltaY(0.0)
   {
   }
 
@@ -1419,6 +1419,15 @@ public:
 
   // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
   PRUint32 deltaMode;
+
+  // If the delta values are computed from prefs, this value is true.
+  // Otherwise, i.e., they are computed from native events, false.
+  bool customizedByUserPrefs;
+
+  // overflowed delta values, these values are the result of dispatching this
+  // event.
+  double overflowDeltaX;
+  double overflowDeltaY;
 };
 
 } // namespace widget

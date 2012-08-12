@@ -328,10 +328,10 @@ protected:
      * ApplyUserPrefsToDelta() overrides the wheel event's delta values with
      * user prefs.
      */
-    void ApplyUserPrefsToDelta(nsMouseScrollEvent* aEvent);
+    void ApplyUserPrefsToDelta(mozilla::widget::WheelEvent* aEvent);
 
     /**
-     * Gets the wheel action for the aMouseEvent from the pref.
+     * Gets the wheel action for the aEvent from the pref.
      */
     enum Action
     {
@@ -341,7 +341,7 @@ protected:
       ACTION_ZOOM,
       ACTION_LAST = ACTION_ZOOM
     };
-    Action GetActionFor(nsMouseScrollEvent* aMouseEvent);
+    Action GetActionFor(nsMouseScrollEvent* aEvent);
 
   private:
     WheelPrefs();
@@ -415,37 +415,31 @@ protected:
    * @return                    The scrollable frame which should be scrolled.
    */
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          nsMouseScrollEvent* aMouseEvent,
+                                          mozilla::widget::WheelEvent* aEvent,
                                           bool aForDefaultAction);
 
   /**
-   * GetScrollAmount() returns the scroll amount in app units of one line or
-   * one page.  If the mouse scroll event scrolls a page, returns the page width
-   * and height.  Otherwise, returns line height by both .width and .height.
+   * GetScrollAmount() returns the scroll amount in app uints of one line or
+   * one page.  If the wheel event scrolls a page, returns the page width and
+   * height.  Otherwise, returns line height for both its width and height.
    *
-   * @param aTargetFrame        The event target of the wheel event.
-   *                            Must not be NULL.
    * @param aScrollableFrame    A frame which will be scrolled by the event.
    *                            The result of ComputeScrollTarget() is
    *                            expected for this value.
    *                            This can be NULL if there is no scrollable
    *                            frame.  Then, this method uses root frame's
-   *                            line height or visible area's width or height.
+   *                            line height or visible area's width and height.
    */
   nsSize GetScrollAmount(nsPresContext* aPresContext,
-                         nsMouseScrollEvent* aEvent,
-                         nsIFrame* aTargetFrame,
+                         mozilla::widget::WheelEvent* aEvent,
                          nsIScrollableFrame* aScrollableFrame);
 
   /**
    * DoScrollText() scrolls the scrollable frame for aEvent.
-   * The actual scroll amount will be computed from aPixelsPerLineOrPage.
    */
-  nsresult DoScrollText(nsIFrame* aTargetFrame,
-                        nsMouseScrollEvent* aMouseEvent,
-                        nsIScrollableFrame::ScrollUnit aScrollQuantity,
-                        bool aAllowScrollSpeedOverride,
-                        nsIAtom *aOrigin = nullptr);
+  void DoScrollText(nsIScrollableFrame* aScrollableFrame,
+                    mozilla::widget::WheelEvent* aEvent);
+
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
@@ -657,10 +651,6 @@ public:
   static nsresult UpdateUserActivityTimer(void);
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
-
-  // Unlocks pixel scrolling
-  bool mLastLineScrollConsumedX;
-  bool mLastLineScrollConsumedY;
 
   static PRInt32 sUserInputEventDepth;
   

@@ -129,6 +129,9 @@ struct ParamTraits<mozilla::widget::WheelEvent>
     WriteParam(aMsg, aParam.deltaY);
     WriteParam(aMsg, aParam.deltaZ);
     WriteParam(aMsg, aParam.deltaMode);
+    WriteParam(aMsg, aParam.customizedByUserPrefs);
+    WriteParam(aMsg, aParam.overflowDeltaX);
+    WriteParam(aMsg, aParam.overflowDeltaY);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -137,7 +140,10 @@ struct ParamTraits<mozilla::widget::WheelEvent>
            ReadParam(aMsg, aIter, &aResult->deltaX) &&
            ReadParam(aMsg, aIter, &aResult->deltaY) &&
            ReadParam(aMsg, aIter, &aResult->deltaZ) &&
-           ReadParam(aMsg, aIter, &aResult->deltaMode);
+           ReadParam(aMsg, aIter, &aResult->deltaMode) &&
+           ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
+           ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
+           ReadParam(aMsg, aIter, &aResult->overflowDeltaY);
   }
 };
 
