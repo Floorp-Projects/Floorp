@@ -1409,7 +1409,7 @@ public:
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),
     deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
     customizedByUserPrefs(false), isMomentum(false), isPixelOnlyDevice(false),
-    lineOrPageDeltaX(0), lineOrPageDeltaY(0),
+    lineOrPageDeltaX(0), lineOrPageDeltaY(0), scrollType(SCROLL_DEFAULT),
     overflowDeltaX(0.0), overflowDeltaY(0.0)
   {
   }
@@ -1462,6 +1462,17 @@ public:
     return (NS_ABS(lineOrPageDeltaX) > NS_ABS(lineOrPageDeltaY)) ?
              lineOrPageDeltaX : lineOrPageDeltaY;
   }
+
+  // Scroll type
+  // The default value is SCROLL_DEFAULT, which means nsEventStateManager will
+  // select preferred scroll type automatically.
+  enum ScrollType {
+    SCROLL_DEFAULT,
+    SCROLL_SYNCHRONOUSLY,
+    SCROLL_ASYNCHRONOUSELY,
+    SCROLL_SMOOTHLY
+  };
+  ScrollType scrollType;
 
   // overflowed delta values, these values are the result of dispatching this
   // event.

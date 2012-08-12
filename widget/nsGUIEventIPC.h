@@ -134,24 +134,31 @@ struct ParamTraits<mozilla::widget::WheelEvent>
     WriteParam(aMsg, aParam.isPixelOnlyDevice);
     WriteParam(aMsg, aParam.lineOrPageDeltaX);
     WriteParam(aMsg, aParam.lineOrPageDeltaY);
+    WriteParam(aMsg, static_cast<PRInt32>(aParam.scrollType));
     WriteParam(aMsg, aParam.overflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->deltaX) &&
-           ReadParam(aMsg, aIter, &aResult->deltaY) &&
-           ReadParam(aMsg, aIter, &aResult->deltaZ) &&
-           ReadParam(aMsg, aIter, &aResult->deltaMode) &&
-           ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
-           ReadParam(aMsg, aIter, &aResult->isMomentum) &&
-           ReadParam(aMsg, aIter, &aResult->isPixelOnlyDevice) &&
-           ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
-           ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
-           ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
-           ReadParam(aMsg, aIter, &aResult->overflowDeltaY);
+    PRInt32 scrollType;
+    bool rv =
+      ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+      ReadParam(aMsg, aIter, &aResult->deltaX) &&
+      ReadParam(aMsg, aIter, &aResult->deltaY) &&
+      ReadParam(aMsg, aIter, &aResult->deltaZ) &&
+      ReadParam(aMsg, aIter, &aResult->deltaMode) &&
+      ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
+      ReadParam(aMsg, aIter, &aResult->isMomentum) &&
+      ReadParam(aMsg, aIter, &aResult->isPixelOnlyDevice) &&
+      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
+      ReadParam(aMsg, aIter, &scrollType) &&
+      ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->overflowDeltaY);
+    aResult->scrollType =
+      static_cast<mozilla::widget::WheelEvent::ScrollType>(scrollType);
+    return rv;
   }
 };
 

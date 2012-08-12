@@ -755,6 +755,7 @@ nsDOMEvent::DuplicatePrivateData()
       wheelEvent->isPixelOnlyDevice = oldWheelEvent->isPixelOnlyDevice;
       wheelEvent->lineOrPageDeltaX = oldWheelEvent->lineOrPageDeltaX;
       wheelEvent->lineOrPageDeltaY = oldWheelEvent->lineOrPageDeltaY;
+      wheelEvent->scrollType = oldWheelEvent->scrollType;
       wheelEvent->overflowDeltaX = oldWheelEvent->overflowDeltaX;
       wheelEvent->overflowDeltaY = oldWheelEvent->overflowDeltaY;
       newEvent = wheelEvent;
