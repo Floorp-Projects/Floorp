@@ -281,13 +281,6 @@ class GeckoInputConnection
         // setComposingText() places the given text into the editable, replacing any existing
         // composing text. This method will likely be called multiple times while we are composing
         // text.
-
-        // If the replacement composition string is empty and we have no active composition string
-        // to replace, then just ignore the empty string. Some VKBs, such as TouchPal Keyboard,
-        // send us empty strings at inopportune times, deleting committed text. See bug 768106.
-        if (text.length() == 0 && !hasCompositionString())
-            return true;
-
         return super.setComposingText(text, newCursorPosition);
     }
 
@@ -532,6 +525,7 @@ class GeckoInputConnection
     }
 
     protected void resetCompositionState() {
+        removeComposingSpans(mEditable);
         mCompositionStart = NO_COMPOSITION_STRING;
         mBatchMode = false;
         mUpdateRequest = null;

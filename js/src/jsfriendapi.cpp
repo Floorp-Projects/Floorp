@@ -922,6 +922,12 @@ EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
     rt->spsProfiler.enable(enabled);
 }
 
+JS_FRIEND_API(jsbytecode*)
+ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
+{
+    return rt->spsProfiler.ipToPC(script, size_t(ip));
+}
+
 JS_FRIEND_API(void)
 SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks)
 {

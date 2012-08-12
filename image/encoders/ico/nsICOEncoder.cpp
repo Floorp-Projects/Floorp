@@ -334,7 +334,7 @@ NS_IMETHODIMP nsICOEncoder::Close()
 }
 
 // Obtains the available bytes to read
-NS_IMETHODIMP nsICOEncoder::Available(PRUint32 *_retval)
+NS_IMETHODIMP nsICOEncoder::Available(PRUint64 *_retval)
 {
   if (!mImageBufferStart || !mImageBufferCurr) {
     return NS_BASE_STREAM_CLOSED;
