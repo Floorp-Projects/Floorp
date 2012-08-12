@@ -317,6 +317,66 @@ protected:
   bool IsShellVisible(nsIDocShell* aShell);
 
   // These functions are for mousewheel and pixel scrolling
+
+  class WheelPrefs
+  {
+  public:
+    static WheelPrefs* GetInstance();
+    static void Shutdown();
+
+    /**
+     * ApplyUserPrefsToDelta() overrides the wheel event's delta values with
+     * user prefs.
+     */
+    void ApplyUserPrefsToDelta(nsMouseScrollEvent* aEvent);
+
+  private:
+    WheelPrefs();
+    ~WheelPrefs();
+
+    static int OnPrefChanged(const char* aPrefName, void* aClosure);
+
+    enum Index
+    {
+      INDEX_DEFAULT = 0,
+      INDEX_ALT,
+      INDEX_CONTROL,
+      INDEX_META,
+      INDEX_SHIFT,
+      INDEX_OS,
+      COUNT_OF_MULTIPLIERS
+    };
+
+    /**
+     * GetIndexFor() returns the index of the members which should be used for
+     * the aEvent.  When only one modifier key of MODIFIER_ALT,
+     * MODIFIER_CONTROL, MODIFIER_META, MODIFIER_SHIFT or MODIFIER_OS is
+     * pressed, returns the index for the modifier.  Otherwise, this return the
+     * default index which is used at either no modifier key is pressed or
+     * two or modifier keys are pressed.
+     */
+    Index GetIndexFor(nsMouseEvent_base* aEvent);
+
+    /**
+     * GetPrefNameBase() returns the base pref name for aEvent.
+     * It's decided by GetModifierForPref() which modifier should be used for
+     * the aEvent.
+     *
+     * @param aBasePrefName The result, it must be "mousewheel.with*.".
+     */
+    void GetBasePrefName(Index aIndex, nsACString& aBasePrefName);
+
+    void Init(Index aIndex);
+
+    void Reset();
+
+    bool mInit[COUNT_OF_MULTIPLIERS];
+    double mMultiplierX[COUNT_OF_MULTIPLIERS];
+    double mMultiplierY[COUNT_OF_MULTIPLIERS];
+
+    static WheelPrefs* sInstance;
+  };
+
   void SendLineScrollEvent(nsIFrame* aTargetFrame,
                            nsMouseScrollEvent* aEvent,
                            nsPresContext* aPresContext,
@@ -382,38 +442,18 @@ protected:
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
   /**
-   * Computes actual delta value used for scrolling.  If user customized the
-   * scrolling speed and/or direction, this would return the customized value.
-   * Otherwise, it would return the original delta value of aMouseEvent.
-   */
-  PRInt32 ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent);
-  /**
    * Computes the action for the aMouseEvent with prefs.  The result is
    * MOUSE_SCROLL_N_LINES, MOUSE_SCROLL_PAGE, MOUSE_SCROLL_HISTORY,
    * MOUSE_SCROLL_ZOOM, MOUSE_SCROLL_PIXELS or -1.
    * When the result is -1, nothing happens for the event.
-   *
-   * @param aUseSystemSettings    Set the result of UseSystemScrollSettingFor().
    */
-  PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
-                                bool aUseSystemSettings);
+  PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent);
   /**
    * Gets the wheel action for the aMouseEvent ONLY with the pref.
    * When you actually do something for the event, probably you should use
    * ComputeWheelActionFor().
    */
   PRInt32 GetWheelActionFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Gets the pref value for line scroll amount for the aMouseEvent.
-   * Note that this method doesn't check whether the aMouseEvent is line scroll
-   * event and doesn't use system settings.
-   */
-  PRInt32 GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Whether use system scroll settings or settings in our prefs for the event.
-   * TRUE, if use system scroll settings.  Otherwise, FALSE.
-   */
-  bool UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent);
   // end mousewheel functions
 
   /*
