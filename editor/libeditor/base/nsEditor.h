@@ -87,7 +87,7 @@ struct IMEState;
 
 // This is PRInt32 instead of PRInt16 because nsIInlineSpellChecker.idl's
 // spellCheckAfterEditorChange is defined to take it as a long.
-MOZ_BEGIN_ENUM_CLASS(OperationID, PRInt32)
+MOZ_BEGIN_ENUM_CLASS(EditAction, PRInt32)
   ignore = -1,
   none = 0,
   undo,
@@ -125,11 +125,11 @@ MOZ_BEGIN_ENUM_CLASS(OperationID, PRInt32)
   removeAbsolutePosition = 3016,
   decreaseZIndex      = 3017,
   increaseZIndex      = 3018
-MOZ_END_ENUM_CLASS(OperationID)
+MOZ_END_ENUM_CLASS(EditAction)
 
-inline bool operator!(const OperationID& aOp)
+inline bool operator!(const EditAction& aOp)
 {
-  return aOp == OperationID::none;
+  return aOp == EditAction::none;
 }
 
 /** implementation of an editor object.  it will be the controller/focal point 
@@ -420,7 +420,7 @@ public:
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
-  NS_IMETHOD StartOperation(OperationID opID,
+  NS_IMETHOD StartOperation(EditAction opID,
                             nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
@@ -657,7 +657,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  nsresult HandleInlineSpellCheck(OperationID action,
+  nsresult HandleInlineSpellCheck(EditAction action,
                                     nsISelection *aSelection,
                                     nsIDOMNode *previousSelectedNode,
                                     PRInt32 previousSelectedOffset,
@@ -872,7 +872,7 @@ protected:
   PRInt32           mUpdateCount;
 
   PRInt32           mPlaceHolderBatch;   // nesting count for batching
-  OperationID       mAction;             // the current editor action
+  EditAction        mAction;             // the current editor action
   PRUint32          mHandlingActionCount;
 
   PRUint32          mIMETextOffset;    // offset in text node where IME comp string begins
