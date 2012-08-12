@@ -23,25 +23,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=574663
 function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
-    'type': "DOMMouseScroll",
-    'axis': "vertical",
-    'delta': direction,
-    'hasPixels': true,
-    'ctrlKey': ctrl,
-    'isMomentum': momentum,
+    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+    deltaY: direction * 3,
+    lineOrPageDeltaY: direction,
+    ctrlKey: ctrl,
+    isMomentum: momentum
   };
-  // first a line scroll
-  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
-  // Then a line scroll with hasPixels set to false
-  event.hasPixels = false;
-  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
-  // then 5 pixel scrolls
-  event.hasPixels = true;
-  event.delta *= 3;
-  event.type = "MozMousePixelScroll";
-  event.hasPixels = false;
+  synthesizeWheel(scrollbox, 10, 10, event, win);
+  // then 5 additional pixel scrolls
+  event.lineOrPageDeltaY = 0;
   for (let i = 0; i < 5; ++i) {
-    synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+    synthesizeWheel(scrollbox, 10, 10, event, win);
   }
 }
 
