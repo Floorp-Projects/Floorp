@@ -2636,11 +2636,7 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.time = aEvent->time;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
-  event.scrollFlags = (aDeltaDirection == DELTA_DIRECTION_Y) ?
-    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
-  if (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE) {
-    event.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-  }
+  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aDelta;
   event.inputSource = aEvent->inputSource;
 
@@ -2676,11 +2672,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.time = aEvent->time;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
-  event.scrollFlags = (aDeltaDirection == DELTA_DIRECTION_Y) ?
-    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
-  if (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE) {
-    event.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-  }
+  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aPixelDelta;
   event.inputSource = aEvent->inputSource;
 
