@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for default action of WheelEvent</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var subWin = window.open("window_wheel_default_action.html", "_blank",
+                         "width=500,height=500,scrollbars=yes");
+
+function finish()
+{
+  subWin.close();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
