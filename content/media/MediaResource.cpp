@@ -1053,13 +1053,13 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
     return NS_ERROR_FAILURE;
   }
 
-  // Get the file size and inform the decoder. Only files up to 4GB are
-  // supported here.
-  PRUint32 size;
+  // Get the file size and inform the decoder.
+  PRUint64 size;
   rv = mInput->Available(&size);
-  if (NS_SUCCEEDED(rv)) {
-    mSize = size;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(size <= PR_INT64_MAX, NS_ERROR_FILE_TOO_BIG);
+ 
+  mSize = (PRInt64)size;
 
   nsCOMPtr<nsIRunnable> event = new LoadedEvent(mDecoder);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);

@@ -48,7 +48,7 @@ public:
   Close();
 
   NS_IMETHOD
-  Available(PRUint32* _retval);
+  Available(PRUint64* _retval);
 
   NS_IMETHOD
   Read(char* aBuf, PRUint32 aCount, PRUint32* _retval);

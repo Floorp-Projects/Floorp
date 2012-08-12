@@ -158,7 +158,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return rv;
   }
 
-  PRUint32 bufSize;
+  PRUint64 bufSize = 0;
   aInputStream->Available(&bufSize);
 
   nsCOMPtr<nsIOutputStream> outputStream;
@@ -177,12 +177,20 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 wrote;
-  bufferedOutputStream->WriteFrom(aInputStream, bufSize, &wrote);
+  rv = NS_OK;
+  while (bufSize) {
+    PRUint32 wrote;
+    rv = bufferedOutputStream->WriteFrom(aInputStream, static_cast<PRUint32>(NS_MIN<PRUint64>(bufSize, PR_UINT32_MAX)), &wrote);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+    bufSize -= wrote;
+  }
+
   bufferedOutputStream->Close();
   outputStream->Close();
-  if (bufSize != wrote) {
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   return NS_OK;
 }

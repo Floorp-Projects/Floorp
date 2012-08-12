@@ -393,7 +393,7 @@ GonkCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
 }
 
 NS_IMETHODIMP
-GonkCameraInputStream::Available(PRUint32 *aAvailable)
+GonkCameraInputStream::Available(PRUint64 *aAvailable)
 {
   ReentrantMonitorAutoEnter enter(mMonitor);
 

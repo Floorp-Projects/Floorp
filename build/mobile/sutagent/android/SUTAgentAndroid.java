@@ -790,7 +790,10 @@ public class SUTAgentAndroid extends Activity
             } 
             finally 
             {
-                pw.close();
+                if (pw != null)
+                {
+                    pw.close();
+                }
             }
 
         }

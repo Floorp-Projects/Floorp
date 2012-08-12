@@ -24,7 +24,7 @@ nsScriptableInputStream::Init(nsIInputStream *aInputStream) {
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Available(PRUint32 *_retval) {
+nsScriptableInputStream::Available(PRUint64 *_retval) {
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
     return mInputStream->Available(_retval);
 }
@@ -32,16 +32,16 @@ nsScriptableInputStream::Available(PRUint32 *_retval) {
 NS_IMETHODIMP
 nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     nsresult rv = NS_OK;
-    PRUint32 count = 0;
+    PRUint64 count64 = 0;
     char *buffer = nullptr;
 
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
 
-    rv = mInputStream->Available(&count);
+    rv = mInputStream->Available(&count64);
     if (NS_FAILED(rv)) return rv;
 
     // bug716556 - Ensure count+1 doesn't overflow
-    count = NS_MIN(NS_MIN(count, aCount), PR_UINT32_MAX - 1);
+    PRUint32 count = NS_MIN((PRUint32)NS_MIN<PRUint64>(count64, aCount), PR_UINT32_MAX - 1);
     buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 

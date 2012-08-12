@@ -7,11 +7,12 @@
 
 #include "nsARIAMap.h"
 
+#include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "Role.h"
 #include "States.h"
 
-#include "nsIContent.h"
+#include "nsAttrName.h"
 #include "nsWhitespaceTokenizer.h"
 
 using namespace mozilla;
@@ -684,3 +685,39 @@ aria::UniversalStatesFor(mozilla::dom::Element* aElement)
 
   return state;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// AttrIterator class
+
+bool
+AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
+{
+  while (mAttrIdx < mAttrCount) {
+    const nsAttrName* attr = mContent->GetAttrNameAt(mAttrIdx);
+    mAttrIdx++;
+    if (attr->NamespaceEquals(kNameSpaceID_None)) {
+      nsIAtom* attrAtom = attr->Atom();
+      nsDependentAtomString attrStr(attrAtom);
+      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
+        continue; // Not ARIA
+
+      PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
+      if (attrFlags & ATTR_BYPASSOBJ)
+        continue; // No need to handle exposing as obj attribute here
+
+      if ((attrFlags & ATTR_VALTOKEN) &&
+           !nsAccUtils::HasDefinedARIAToken(mContent, attrAtom))
+        continue; // only expose token based attributes if they are defined
+
+      nsAutoString value;
+      if (mContent->GetAttr(kNameSpaceID_None, attrAtom, value)) {
+        aAttrName.Assign(Substring(attrStr, 5));
+        aAttrValue.Assign(value);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+

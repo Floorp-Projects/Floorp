@@ -98,7 +98,7 @@ public:
 
     // Override input stream methods:
     NS_IMETHOD CloseWithStatus(nsresult status);
-    NS_IMETHOD Available(PRUint32 *result);
+    NS_IMETHOD Available(PRUint64 *result);
     NS_IMETHOD ReadSegments(nsWriteSegmentFun fun, void *closure,
                             PRUint32 count, PRUint32 *result);
 

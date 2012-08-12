@@ -114,7 +114,7 @@ FileStream::Close()
 }
 
 NS_IMETHODIMP
-FileStream::Available(PRUint32* aResult)
+FileStream::Available(PRUint64* aResult)
 {
   nsresult rv = DoPendingOpen();
   NS_ENSURE_SUCCESS(rv, rv);

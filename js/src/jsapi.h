@@ -1257,6 +1257,9 @@ class AutoVectorRooter : protected AutoGCRooter
     size_t length() const { return vector.length(); }
 
     bool append(const T &v) { return vector.append(v); }
+    bool append(const AutoVectorRooter<T> &other) {
+        return vector.append(other.vector);
+    }
 
     /* For use when space has already been reserved. */
     void infallibleAppend(const T &v) { vector.infallibleAppend(v); }

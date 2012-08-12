@@ -41,9 +41,9 @@ nsPreloadedStream::Close()
 
 
 NS_IMETHODIMP
-nsPreloadedStream::Available(PRUint32 *_retval)
+nsPreloadedStream::Available(PRUint64 *_retval)
 {
-    PRUint32 avail = 0;
+    PRUint64 avail = 0;
     
     nsresult rv = mStream->Available(&avail);
     if (NS_FAILED(rv))
