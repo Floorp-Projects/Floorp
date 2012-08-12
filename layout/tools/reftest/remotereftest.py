@@ -51,7 +51,7 @@ class RemoteOptions(ReftestOptions):
         self.add_option("--remote-webserver", action="store",
                     type = "string", dest = "remoteWebServer",
                     help = "IP Address of the webserver hosting the reftest content")
-        defaults["remoteWebServer"] = automation.getLanIp() 
+        defaults["remoteWebServer"] = automation.getLanIp()
 
         self.add_option("--http-port", action = "store",
                     type = "string", dest = "httpPort",
@@ -114,23 +114,23 @@ class RemoteOptions(ReftestOptions):
             # Neither remoteAppPath nor app are set -- error
             print "ERROR: You must specify either appPath or app"
             return None
-        
+
         if (options.xrePath == None):
             print "ERROR: You must specify the path to the controller xre directory"
             return None
         else:
             # Ensure xrepath is a full path
             options.xrePath = os.path.abspath(options.xrePath)
-        
+
         # Default to <deviceroot>/reftest/reftest.log
         if (options.remoteLogFile == None):
             options.remoteLogFile = 'reftest.log'
 
         options.localLogName = options.remoteLogFile
         options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
-         
+
         # Ensure that the options.logfile (which the base class uses) is set to
-        # the remote setting when running remote. Also, if the user set the 
+        # the remote setting when running remote. Also, if the user set the
         # log file name there, use that instead of reusing the remotelogfile as above.
         if (options.logFile):
             # If the user specified a local logfile name use that
@@ -168,7 +168,7 @@ class ReftestServer:
 
     def start(self):
         "Run the Refest server, returning the process ID of the server."
-          
+
         env = self._automation.environment(xrePath = self._xrePath)
         env["XPCOM_DEBUG_BREAK"] = "warn"
         if self._automation.IS_WIN32:
@@ -177,7 +177,7 @@ class ReftestServer:
         args = ["-g", self._xrePath,
                 "-v", "170",
                 "-f", os.path.join(self.scriptDir, "reftest/components/httpd.js"),
-                "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" % 
+                "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" %
                        {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
                 "-f", os.path.join(self.scriptDir, "server.js")]
 
@@ -211,16 +211,17 @@ class ReftestServer:
             return 1
 
     def stop(self):
-        try:
-            c = urllib2.urlopen(self.shutdownURL)
-            c.read()
-            c.close()
+        if hasattr(self, '_process'):
+            try:
+                c = urllib2.urlopen(self.shutdownURL)
+                c.read()
+                c.close()
 
-            rtncode = self._process.poll()
-            if (rtncode == None):
-                self._process.terminate()
-        except:
-            self._process.kill()
+                rtncode = self._process.poll()
+                if (rtncode == None):
+                    self._process.terminate()
+            except:
+                self._process.kill()
 
 class RemoteReftest(RefTest):
     remoteApp = ''
@@ -279,7 +280,7 @@ class RemoteReftest(RefTest):
         xpcshell = "xpcshell"
         if (os.name == "nt"):
             xpcshell += ".exe"
-      
+
         if (options.utilityPath):
             paths.insert(0, options.utilityPath)
         options.utilityPath = self.findPath(paths, xpcshell)
@@ -299,7 +300,7 @@ class RemoteReftest(RefTest):
         options.xrePath = remoteXrePath
         options.utilityPath = remoteUtilityPath
         return 0
-         
+
     def stopWebServer(self, options):
         self.server.stop()
 
@@ -333,7 +334,7 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
     def copyExtraFilesToProfile(self, options, profileDir):
         RefTest.copyExtraFilesToProfile(self, options, profileDir)
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
-            raise devicemanager.FileError("Failed to copy extra files to device") 
+            raise devicemanager.FileError("Failed to copy extra files to device")
 
     def getManifestPath(self, path):
         return path

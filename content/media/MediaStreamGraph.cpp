@@ -1028,7 +1028,8 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStream(GraphTime aAudioOutputStartTime
   aStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
   aStream->mAudioOutput = nsAudioStream::AllocateStream();
   aStream->mAudioOutput->Init(audio->GetChannels(),
-                              track->GetRate());
+                              track->GetRate(),
+                              audio->GetFirstFrameFormat());
 }
 
 void

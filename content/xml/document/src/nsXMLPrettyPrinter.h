@@ -49,7 +49,6 @@ private:
     void MaybeUnhook(nsIContent* aContent);
 
     nsIDocument* mDocument; //weak. Set as long as we're observing the document
-    PRUint32 mUpdateDepth;
     bool mUnhookPending;
 };
 

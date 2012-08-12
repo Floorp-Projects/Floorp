@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(1f4da4d4-1d72-4709-8207-3665dbaac4b4)]
+[scriptable, uuid(6652c4d2-6b49-424b-aaf9-91f91006fab7)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -76,7 +76,4 @@ interface nsIDOMJSWindow : nsISupports
    * This property is "replaceable" in JavaScript.
    */
   readonly attribute nsIDOMWindow             frames;
-
-  [binaryname(ContentForCompat)]
-  readonly attribute nsIDOMWindow             _content;
 };

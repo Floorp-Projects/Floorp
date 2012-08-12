@@ -202,3 +202,9 @@ function resetUnlimitedQuota(url)
 {
   removePermission("indexedDB-unlimited", url);
 }
+
+function gc()
+{
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+}

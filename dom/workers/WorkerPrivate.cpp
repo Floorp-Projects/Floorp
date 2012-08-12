@@ -3816,44 +3816,45 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     }
 
     NS_ASSERTION(mRunningExpiredTimeouts, "Someone changed this!");
-
-    // Reschedule intervals.
-    if (info->mIsInterval && !info->mCanceled) {
-      PRUint32 timeoutIndex = mTimeouts.IndexOf(info);
-      NS_ASSERTION(timeoutIndex != PRUint32(-1),
-                   "Should still be in the main list!");
-
-      // This is nasty but we have to keep the old nsAutoPtr from deleting the
-      // info we're about to re-add.
-      mTimeouts[timeoutIndex].forget();
-      mTimeouts.RemoveElementAt(timeoutIndex);
-
-      NS_ASSERTION(!mTimeouts.Contains(info), "Shouldn't have duplicates!");
-
-      // NB: We must ensure that info->mTargetTime > now (where now is the
-      // now above, not literally TimeStamp::Now()) or we will remove the
-      // interval in the next loop below.
-      info->mTargetTime = NS_MAX(info->mTargetTime + info->mInterval,
-                                 now + TimeDuration::FromMilliseconds(1));
-      mTimeouts.InsertElementSorted(info, comparator);
-    }
   }
 
   // No longer possible to be called recursively.
   mRunningExpiredTimeouts = false;
 
   // Now remove canceled and expired timeouts from the main list.
-  for (PRUint32 index = 0; index < mTimeouts.Length(); ) {
+  // NB: The timeouts present in expiredTimeouts must have the same order
+  // with respect to each other in mTimeouts.  That is, mTimeouts is just
+  // expiredTimeouts with extra elements inserted.  There may be unexpired
+  // timeouts that have been inserted between the expired timeouts if the
+  // timeout event handler called setTimeout/setInterval.
+  for (PRUint32 index = 0, expiredTimeoutIndex = 0,
+       expiredTimeoutLength = expiredTimeouts.Length();
+       index < mTimeouts.Length(); ) {
     nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
-    if (info->mTargetTime <= now || info->mCanceled) {
-      NS_ASSERTION(!info->mIsInterval || info->mCanceled,
-                   "Interval timers can only be removed when canceled!");
-      mTimeouts.RemoveElement(info);
+    if ((expiredTimeoutIndex < expiredTimeoutLength &&
+         info == expiredTimeouts[expiredTimeoutIndex] &&
+         ++expiredTimeoutIndex) ||
+        info->mCanceled) {
+      if (info->mIsInterval && !info->mCanceled) {
+        // Reschedule intervals.
+        info->mTargetTime = info->mTargetTime + info->mInterval;
+        // Don't resort the list here, we'll do that at the end.
+        ++index;
+      }
+      else {
+        mTimeouts.RemoveElement(info);
+      }
     }
     else {
-      index++;
+      // If info did not match the current entry in expiredTimeouts, it
+      // shouldn't be there at all.
+      NS_ASSERTION(!expiredTimeouts.Contains(info),
+                   "Our timeouts are out of order!");
+      ++index;
     }
   }
+
+  mTimeouts.Sort(comparator);
 
   // Either signal the parent that we're no longer using timeouts or reschedule
   // the timer.

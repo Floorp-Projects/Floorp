@@ -721,7 +721,7 @@ public:
 
 #ifdef DEBUG
     // Make sure we got correct length from Blob
-    PRUint32 bytes;
+    PRUint64 bytes;
     mMsg.pStream->Available(&bytes);
     NS_ASSERTION(bytes == mLength, "Stream length != blob length!");
 #endif

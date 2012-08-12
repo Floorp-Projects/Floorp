@@ -8157,8 +8157,13 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   rv = file->InitWithPath(name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 length;
-  encoder->Available(&length);
+  PRUint64 length64;
+  rv = encoder->Available(&length64);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (length64 > PR_UINT32_MAX)
+    return NS_ERROR_FILE_TOO_BIG;
+
+  PRUint32 length = (PRUint32)length64;
 
   nsCOMPtr<nsIOutputStream> outputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);

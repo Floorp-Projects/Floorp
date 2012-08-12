@@ -1672,6 +1672,9 @@ fi
 if [ "$MOZ_OMX_PLUGIN" ]; then
   add_makefiles "
     media/omx-plugin/Makefile
+    media/omx-plugin/lib/ics/libutils/Makefile
+    media/omx-plugin/lib/ics/libstagefright/Makefile
+    media/omx-plugin/lib/ics/libstagefright_omx/Makefile
   "
 fi
 

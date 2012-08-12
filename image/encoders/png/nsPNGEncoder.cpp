@@ -492,7 +492,7 @@ NS_IMETHODIMP nsPNGEncoder::Close()
 }
 
 /* unsigned long available (); */
-NS_IMETHODIMP nsPNGEncoder::Available(PRUint32 *_retval)
+NS_IMETHODIMP nsPNGEncoder::Available(PRUint64 *_retval)
 {
   if (!mImageBuffer)
     return NS_BASE_STREAM_CLOSED;

@@ -9,11 +9,11 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.PanZoomTarget;
-import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
+import org.mozilla.gecko.util.EventDispatcher;
+import org.mozilla.gecko.util.GeckoEventResponder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,7 +26,6 @@ import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.GestureDetector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +38,7 @@ public class GeckoLayerClient
     private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
 
+    private final EventDispatcher mEventDispatcher;
     private Context mContext;
     private IntSize mScreenSize;
     private IntSize mWindowSize;
@@ -102,9 +102,10 @@ public class GeckoLayerClient
     private final PanZoomController mPanZoomController;
     private LayerView mView;
 
-    public GeckoLayerClient(Context context) {
+    public GeckoLayerClient(Context context, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
+        mEventDispatcher = eventDispatcher;
         mContext = context;
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
@@ -112,7 +113,6 @@ public class GeckoLayerClient
         mRecordDrawTimes = true;
         mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
-
         mCompositorCreated = false;
 
         mForceRedraw = true;
@@ -122,7 +122,7 @@ public class GeckoLayerClient
         mCheckerboardColor = Color.WHITE;
         mCheckerboardShouldShowChecks = true;
 
-        mPanZoomController = new PanZoomController(this);
+        mPanZoomController = new PanZoomController(this, mEventDispatcher);
     }
 
     public void setView(LayerView v) {
@@ -137,11 +137,11 @@ public class GeckoLayerClient
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
         mLayerRenderer = new LayerRenderer(mView);
 
-        GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
-        GeckoAppShell.registerGeckoEventListener("Viewport:PageSize", this);
-        GeckoAppShell.registerGeckoEventListener("Viewport:CalculateDisplayPort", this);
-        GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
-        GeckoAppShell.registerGeckoEventListener("Preferences:Data", this);
+        registerEventListener("Viewport:Update");
+        registerEventListener("Viewport:PageSize");
+        registerEventListener("Viewport:CalculateDisplayPort");
+        registerEventListener("Checkerboard:Toggle");
+        registerEventListener("Preferences:Data");
 
         mView.setListener(this);
         mView.setLayerRenderer(mLayerRenderer);
@@ -156,11 +156,19 @@ public class GeckoLayerClient
 
     public void destroy() {
         mPanZoomController.destroy();
-        GeckoAppShell.unregisterGeckoEventListener("Viewport:Update", this);
-        GeckoAppShell.unregisterGeckoEventListener("Viewport:PageSize", this);
-        GeckoAppShell.unregisterGeckoEventListener("Viewport:CalculateDisplayPort", this);
-        GeckoAppShell.unregisterGeckoEventListener("Checkerboard:Toggle", this);
-        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+        unregisterEventListener("Viewport:Update");
+        unregisterEventListener("Viewport:PageSize");
+        unregisterEventListener("Viewport:CalculateDisplayPort");
+        unregisterEventListener("Checkerboard:Toggle");
+        unregisterEventListener("Preferences:Data");
+    }
+
+    private void registerEventListener(String event) {
+        mEventDispatcher.registerEventListener(event, this);
+    }
+
+    private void unregisterEventListener(String event) {
+        mEventDispatcher.unregisterEventListener(event, this);
     }
 
     /**
@@ -384,7 +392,7 @@ public class GeckoLayerClient
                 // right batch of prefs, since other java code may also have sent requests
                 // for prefs.
                 if (DisplayPortCalculator.setStrategy(prefValues) && PluginLayer.setUsePlaceholder(prefValues)) {
-                    GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+                    unregisterEventListener("Preferences:Data");
                 }
             }
         } catch (JSONException e) {
