@@ -117,6 +117,29 @@ struct ParamTraits<nsMouseScrollEvent>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::widget::WheelEvent>
+{
+  typedef mozilla::widget::WheelEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
+    WriteParam(aMsg, aParam.deltaX);
+    WriteParam(aMsg, aParam.deltaY);
+    WriteParam(aMsg, aParam.deltaZ);
+    WriteParam(aMsg, aParam.deltaMode);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->deltaX) &&
+           ReadParam(aMsg, aIter, &aResult->deltaY) &&
+           ReadParam(aMsg, aIter, &aResult->deltaZ) &&
+           ReadParam(aMsg, aIter, &aResult->deltaMode);
+  }
+};
 
 template<>
 struct ParamTraits<nsMouseEvent>

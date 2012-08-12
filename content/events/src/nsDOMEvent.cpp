@@ -52,7 +52,7 @@ static const char* const sEventNames[] = {
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
-  "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll",
+  "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll", "wheel",
   "offline", "online", "copy", "cut", "paste", "open", "message", "show",
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom",
@@ -191,6 +191,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
     switch (tmp->mEvent->eventStructType) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
+      case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
       case NS_MOZTOUCH_EVENT:
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
@@ -218,6 +219,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
     switch (tmp->mEvent->eventStructType) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
+      case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
       case NS_MOZTOUCH_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
@@ -732,6 +734,25 @@ nsDOMEvent::DuplicatePrivateData()
       newEvent = mouseScrollEvent;
       break;
     }
+    case NS_WHEEL_EVENT:
+    {
+      widget::WheelEvent* wheelEvent =
+        new widget::WheelEvent(false, msg, nullptr);
+      isInputEvent = true;
+      widget::WheelEvent* oldWheelEvent =
+        static_cast<widget::WheelEvent*>(mEvent);
+      wheelEvent->deltaX = oldWheelEvent->deltaX;
+      wheelEvent->deltaY = oldWheelEvent->deltaY;
+      wheelEvent->deltaZ = oldWheelEvent->deltaZ;
+      wheelEvent->deltaMode = oldWheelEvent->deltaMode;
+      wheelEvent->relatedTarget = oldWheelEvent->relatedTarget;
+      wheelEvent->button = oldWheelEvent->button;
+      wheelEvent->buttons = oldWheelEvent->buttons;
+      wheelEvent->modifiers = oldWheelEvent->modifiers;
+      wheelEvent->inputSource = oldWheelEvent->inputSource;
+      newEvent = wheelEvent;
+      break;
+    }
     case NS_SCROLLPORT_EVENT:
     {
       newEvent = new nsScrollPortEvent(false, msg, nullptr);
@@ -1157,6 +1178,7 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
        (aEvent->eventStructType != NS_MOUSE_EVENT &&
         aEvent->eventStructType != NS_POPUP_EVENT &&
         aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+        aEvent->eventStructType != NS_WHEEL_EVENT &&
         aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
         aEvent->eventStructType != NS_TOUCH_EVENT &&
         aEvent->eventStructType != NS_DRAG_EVENT &&
@@ -1216,6 +1238,7 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
       (aEvent->eventStructType != NS_MOUSE_EVENT &&
        aEvent->eventStructType != NS_POPUP_EVENT &&
        aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+       aEvent->eventStructType != NS_WHEEL_EVENT &&
        aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
        aEvent->eventStructType != NS_TOUCH_EVENT &&
        aEvent->eventStructType != NS_DRAG_EVENT &&
@@ -1390,6 +1413,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_DOMMouseScroll];
   case NS_MOUSE_PIXEL_SCROLL:
     return sEventNames[eDOMEvents_MozMousePixelScroll];
+  case NS_WHEEL_WHEEL:
+    return sEventNames[eDOMEvents_wheel];
   case NS_OFFLINE:
     return sEventNames[eDOMEvents_offline];
   case NS_ONLINE:

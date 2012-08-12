@@ -22,6 +22,11 @@ class nsInvalidateRequestList;
 namespace IPC {
 class Message;
 }
+namespace mozilla {
+namespace widget {
+class WheelEvent;
+} // namespace widget
+} // namespace mozilla
 %}
 
 /**
@@ -266,6 +271,8 @@ nsresult
 NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsInputEvent *aEvent);
 nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsInputEvent *aEvent);
+nsresult
+NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, mozilla::widget::WheelEvent *aEvent);
 nsresult
 NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsDragEvent *aEvent);
 nsresult
