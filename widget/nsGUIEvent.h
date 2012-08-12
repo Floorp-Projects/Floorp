@@ -1409,6 +1409,7 @@ public:
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),
     deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
     customizedByUserPrefs(false),
+    lineOrPageDeltaX(0), lineOrPageDeltaY(0),
     overflowDeltaX(0.0), overflowDeltaY(0.0)
   {
   }
@@ -1423,6 +1424,12 @@ public:
   // If the delta values are computed from prefs, this value is true.
   // Otherwise, i.e., they are computed from native events, false.
   bool customizedByUserPrefs;
+
+  // If widget sets lineOrPageDelta, nsEventStateManager will dispatch
+  // NS_MOUSE_SCROLL event for compatibility.  Note that the delta value means
+  // pages if the deltaMode is DOM_DELTA_PAGE, otherwise, lines.
+  PRInt32 lineOrPageDeltaX;
+  PRInt32 lineOrPageDeltaY;
 
   // overflowed delta values, these values are the result of dispatching this
   // event.
