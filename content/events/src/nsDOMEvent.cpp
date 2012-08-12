@@ -750,6 +750,9 @@ nsDOMEvent::DuplicatePrivateData()
       wheelEvent->buttons = oldWheelEvent->buttons;
       wheelEvent->modifiers = oldWheelEvent->modifiers;
       wheelEvent->inputSource = oldWheelEvent->inputSource;
+      wheelEvent->customizedByUserPrefs = oldWheelEvent->customizedByUserPrefs;
+      wheelEvent->overflowDeltaX = oldWheelEvent->overflowDeltaX;
+      wheelEvent->overflowDeltaY = oldWheelEvent->overflowDeltaY;
       newEvent = wheelEvent;
       break;
     }
