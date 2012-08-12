@@ -141,6 +141,9 @@ static PRUint32 gPixelScrollDeltaTimeout = 0;
 
 TimeStamp nsEventStateManager::sHandlingInputStart;
 
+nsEventStateManager::WheelPrefs*
+  nsEventStateManager::WheelPrefs::sInstance = nullptr;
+
 static inline bool
 IsMouseEventReal(nsEvent* aEvent)
 {
@@ -787,20 +790,6 @@ static const char* kObservedPrefs[] = {
   "ui.key.chromeAccess",
   "ui.key.contentAccess",
   "ui.click_hold_context_menus",
-#if 0
-  "mousewheel.withaltkey.action",
-  "mousewheel.withaltkey.numlines",
-  "mousewheel.withaltkey.sysnumlines",
-  "mousewheel.withcontrolkey.action",
-  "mousewheel.withcontrolkey.numlines",
-  "mousewheel.withcontrolkey.sysnumlines",
-  "mousewheel.withnokey.action",
-  "mousewheel.withnokey.numlines",
-  "mousewheel.withnokey.sysnumlines",
-  "mousewheel.withshiftkey.action",
-  "mousewheel.withshiftkey.numlines",
-  "mousewheel.withshiftkey.sysnumlines",
-#endif
   "dom.popup_allowed_events",
   nullptr
 };
@@ -857,6 +846,7 @@ nsEventStateManager::~nsEventStateManager()
       gUserInteractionTimer->Cancel();
       NS_RELEASE(gUserInteractionTimer);
     }
+    WheelPrefs::Shutdown();
   }
 
   if (sDragOverContent && sDragOverContent->OwnerDoc() == mDocument) {
@@ -921,20 +911,6 @@ nsEventStateManager::Observe(nsISupports *aSubject,
     } else if (data.EqualsLiteral("ui.click_hold_context_menus")) {
       mClickHoldContextMenu =
         Preferences::GetBool("ui.click_hold_context_menus", false);
-#if 0
-    } else if (data.EqualsLiteral("mousewheel.withaltkey.action")) {
-    } else if (data.EqualsLiteral("mousewheel.withaltkey.numlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withaltkey.sysnumlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.action")) {
-    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.numlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.sysnumlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withshiftkey.action")) {
-    } else if (data.EqualsLiteral("mousewheel.withshiftkey.numlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withshiftkey.sysnumlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withnokey.action")) {
-    } else if (data.EqualsLiteral("mousewheel.withnokey.numlines")) {
-    } else if (data.EqualsLiteral("mousewheel.withnokey.sysnumlines")) {
-#endif
     } else if (data.EqualsLiteral("dom.popup_allowed_events")) {
       nsDOMEvent::PopupAllowedEventsChanged();
     }
@@ -1190,8 +1166,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mCurrentTargetContent = content;
 
       nsMouseScrollEvent* msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
+      WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(msEvent);
 
-      msEvent->delta = ComputeWheelDeltaFor(msEvent);
+      if (ComputeWheelActionFor(msEvent) == MOUSE_SCROLL_PAGE) {
+        msEvent->delta =
+          (msEvent->delta > 0) ? PRInt32(nsIDOMUIEvent::SCROLL_PAGE_DOWN) :
+                                 PRInt32(nsIDOMUIEvent::SCROLL_PAGE_UP);
+      }
     }
     break;
   case NS_MOUSE_PIXEL_SCROLL:
@@ -1201,6 +1182,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mCurrentTargetContent = content;
 
       nsMouseScrollEvent *msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
+      WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(msEvent);
 
       // Clear old deltas after a period of non action
       if (OutOfTime(gPixelScrollDeltaTimeout, nsMouseWheelTransaction::GetTimeoutTime())) {
@@ -2704,50 +2686,10 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
 }
 
 PRInt32
-nsEventStateManager::ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent)
-{
-  PRInt32 delta = aMouseEvent->delta;
-  bool useSysNumLines = UseSystemScrollSettingFor(aMouseEvent);
-  if (!useSysNumLines) {
-    // If the scroll event's delta isn't to our liking, we can
-    // override it with the "numlines" parameter.  There are two
-    // things we can do:
-    //
-    // (1) Pick a different number.  Instead of scrolling 3
-    //     lines ("delta" in Gtk2), we would scroll 1 line.
-    // (2) Swap directions.  Instead of scrolling down, scroll up.
-    //
-    // For the first item, the magnitude of the parameter is
-    // used instead of the magnitude of the delta.  For the
-    // second item, if the parameter is negative we swap
-    // directions.
-
-    PRInt32 numLines = GetScrollLinesFor(aMouseEvent);
-
-    bool swapDirs = (numLines < 0);
-    PRInt32 userSize = swapDirs ? -numLines : numLines;
-
-    bool deltaUp = (delta < 0);
-    if (swapDirs) {
-      deltaUp = !deltaUp;
-    }
-    delta = deltaUp ? -userSize : userSize;
-  }
-
-  if (ComputeWheelActionFor(aMouseEvent, useSysNumLines) == MOUSE_SCROLL_PAGE) {
-    delta = (delta > 0) ? PRInt32(nsIDOMUIEvent::SCROLL_PAGE_DOWN) :
-                          PRInt32(nsIDOMUIEvent::SCROLL_PAGE_UP);
-  }
-
-  return delta;
-}
-
-PRInt32
-nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
-                                           bool aUseSystemSettings)
+nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent)
 {
   PRInt32 action = GetWheelActionFor(aMouseEvent);
-  if (aUseSystemSettings &&
+  if (!aMouseEvent->customizedByUserPrefs &&
       (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)) {
     action = MOUSE_SCROLL_PAGE;
   }
@@ -2761,7 +2703,7 @@ nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
       action = -1;
     }
   } else if (((aMouseEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) &&
-              (aUseSystemSettings ||
+              (!aMouseEvent->customizedByUserPrefs ||
                action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE)) ||
              ((aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum) &&
               (action == MOUSE_SCROLL_HISTORY || action == MOUSE_SCROLL_ZOOM))) {
@@ -2781,26 +2723,6 @@ nsEventStateManager::GetWheelActionFor(nsMouseScrollEvent* aMouseEvent)
   GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
   prefName.Append(".action");
   return Preferences::GetInt(prefName.get());
-}
-
-PRInt32
-nsEventStateManager::GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent)
-{
-  NS_ASSERTION(!UseSystemScrollSettingFor(aMouseEvent),
-    "GetScrollLinesFor() called when should use system settings");
-  nsCAutoString prefName;
-  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
-  prefName.Append(".numlines");
-  return Preferences::GetInt(prefName.get());
-}
-
-bool
-nsEventStateManager::UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent)
-{
-  nsCAutoString prefName;
-  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
-  prefName.Append(".sysnumlines");
-  return Preferences::GetBool(prefName.get());
 }
 
 nsIScrollableFrame*
@@ -3383,13 +3305,13 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       if (*aStatus != nsEventStatus_eConsumeNoDefault) {
-        bool useSysNumLines = UseSystemScrollSettingFor(msEvent);
-        PRInt32 action = ComputeWheelActionFor(msEvent, useSysNumLines);
+        PRInt32 action = ComputeWheelActionFor(msEvent);
 
         switch (action) {
         case MOUSE_SCROLL_N_LINES:
           DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::LINES,
-                       useSysNumLines, nullptr, nsGkAtoms::mouseWheel);
+                       !msEvent->customizedByUserPrefs, nullptr,
+                       nsGkAtoms::mouseWheel);
           break;
 
         case MOUSE_SCROLL_PAGE:
@@ -5192,17 +5114,17 @@ nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
   msEvent.buttons = aEvent->mInput.mMouseScrollEvent->buttons;
 
   msEvent.scrollFlags = aEvent->mInput.mMouseScrollEvent->scrollFlags;
-  msEvent.delta = ComputeWheelDeltaFor(aEvent->mInput.mMouseScrollEvent);
+  msEvent.delta = aEvent->mInput.mMouseScrollEvent->delta;
   msEvent.scrollOverflow = aEvent->mInput.mMouseScrollEvent->scrollOverflow;
 
-  bool useSystemSettings = UseSystemScrollSettingFor(&msEvent);
+  WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(&msEvent);
 
   nsIScrollableFrame::ScrollUnit unit;
   bool allowOverrideSystemSettings;
-  switch (ComputeWheelActionFor(&msEvent, useSystemSettings)) {
+  switch (ComputeWheelActionFor(&msEvent)) {
     case MOUSE_SCROLL_N_LINES:
       unit = nsIScrollableFrame::LINES;
-      allowOverrideSystemSettings = useSystemSettings;
+      allowOverrideSystemSettings = !msEvent.customizedByUserPrefs;
       break;
     case MOUSE_SCROLL_PAGE:
       unit = nsIScrollableFrame::PAGES;
@@ -5254,4 +5176,161 @@ nsEventStateManager::ClearGlobalActiveContent(nsEventStateManager* aClearer)
     sActiveESM->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
   }
   sActiveESM = nullptr;
+}
+
+
+/******************************************************************/
+/* nsEventStateManager::WheelPrefs                                */
+/******************************************************************/
+
+// static
+nsEventStateManager::WheelPrefs*
+nsEventStateManager::WheelPrefs::GetInstance()
+{
+  if (!sInstance) {
+    sInstance = new WheelPrefs();
+  }
+  return sInstance;
+}
+
+// static
+void
+nsEventStateManager::WheelPrefs::Shutdown()
+{
+  delete sInstance;
+  sInstance = nullptr;
+}
+
+// static
+int
+nsEventStateManager::WheelPrefs::OnPrefChanged(const char* aPrefName,
+                                               void* aClosure)
+{
+  // forget all prefs, it's not problem for performance.
+  sInstance->Reset();
+  return 0;
+}
+
+nsEventStateManager::WheelPrefs::WheelPrefs()
+{
+  Reset();
+  Preferences::RegisterCallback(OnPrefChanged, "mousewheel.", nullptr);
+}
+
+nsEventStateManager::WheelPrefs::~WheelPrefs()
+{
+  Preferences::UnregisterCallback(OnPrefChanged, "mousewheel.", nullptr);
+}
+
+void
+nsEventStateManager::WheelPrefs::Reset()
+{
+  memset(mInit, 0, sizeof(mInit));
+
+}
+
+nsEventStateManager::WheelPrefs::Index
+nsEventStateManager::WheelPrefs::GetIndexFor(nsMouseEvent_base* aEvent)
+{
+  widget::Modifiers modifiers =
+    (aEvent->modifiers & (widget::MODIFIER_ALT |
+                          widget::MODIFIER_CONTROL |
+                          widget::MODIFIER_META |
+                          widget::MODIFIER_SHIFT |
+                          widget::MODIFIER_OS));
+
+  switch (modifiers) {
+    case widget::MODIFIER_ALT:
+      return INDEX_ALT;
+    case widget::MODIFIER_CONTROL:
+      return INDEX_CONTROL;
+    case widget::MODIFIER_META:
+      return INDEX_META;
+    case widget::MODIFIER_SHIFT:
+      return INDEX_SHIFT;
+    case widget::MODIFIER_OS:
+      return INDEX_OS;
+    default:
+      // If two or more modifier keys are pressed, we should use default
+      // settings.
+      return INDEX_DEFAULT;
+  }
+}
+
+void
+nsEventStateManager::WheelPrefs::GetBasePrefName(
+                       nsEventStateManager::WheelPrefs::Index aIndex,
+                       nsACString& aBasePrefName)
+{
+  aBasePrefName.AssignLiteral("mousewheel.");
+  switch (aIndex) {
+    case INDEX_ALT:
+      aBasePrefName.AppendLiteral("withaltkey.");
+      break;
+    case INDEX_CONTROL:
+      aBasePrefName.AppendLiteral("withcontrolkey.");
+      break;
+    case INDEX_META:
+      aBasePrefName.AppendLiteral("withmetakey.");
+      break;
+    case INDEX_SHIFT:
+      aBasePrefName.AppendLiteral("withshiftkey.");
+      break;
+    case INDEX_OS:
+      aBasePrefName.AppendLiteral("withwinkey.");
+      break;
+    case INDEX_DEFAULT:
+    default:
+      aBasePrefName.AppendLiteral("withnokey.");
+      break;
+  }
+}
+
+void
+nsEventStateManager::WheelPrefs::Init(
+                       nsEventStateManager::WheelPrefs::Index aIndex)
+{
+  if (mInit[aIndex]) {
+    return;
+  }
+  mInit[aIndex] = true;
+
+  nsCAutoString basePrefName;
+  GetBasePrefName(aIndex, basePrefName);
+
+  nsCAutoString prefNameX(basePrefName);
+  prefNameX.AppendLiteral("delta_multiplier_x");
+  mMultiplierX[aIndex] =
+    static_cast<double>(Preferences::GetInt(prefNameX.get(), 100)) / 100;
+  if (mMultiplierX[aIndex] < 1.0 && mMultiplierX[aIndex] > -1.0) {
+    mMultiplierX[aIndex] = mMultiplierX[aIndex] < 0.0 ? -1.0 : 1.0;
+  }
+
+  nsCAutoString prefNameY(basePrefName);
+  prefNameY.AppendLiteral("delta_multiplier_y");
+  mMultiplierY[aIndex] =
+    static_cast<double>(Preferences::GetInt(prefNameY.get(), 100)) / 100;
+  if (mMultiplierY[aIndex] < 1.0 && mMultiplierY[aIndex] > -1.0) {
+    mMultiplierY[aIndex] = mMultiplierY[aIndex] < 0.0 ? -1.0 : 1.0;
+  }
+}
+
+void
+nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(
+                                   nsMouseScrollEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+
+  if (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
+    double delta = aEvent->delta * mMultiplierX[index];
+    aEvent->delta =
+      static_cast<PRInt32>((delta > 0.0) ? ceil(delta) : floor(delta));
+    aEvent->customizedByUserPrefs = (mMultiplierX[index] != 1.0);
+  } else if (aEvent->scrollFlags & nsMouseScrollEvent::kIsVertical) {
+    double delta = aEvent->delta * mMultiplierY[index];
+    aEvent->delta =
+      static_cast<PRInt32>((delta > 0.0) ? ceil(delta) : floor(delta));
+    aEvent->customizedByUserPrefs = (mMultiplierY[index] != 1.0);
+  }
 }
