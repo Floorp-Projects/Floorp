@@ -1400,16 +1400,22 @@ pref("mousewheel.with_win.action", 1);
 // reverted.  The absolue value must be 100 or larger.
 pref("mousewheel.default.delta_multiplier_x", 100);
 pref("mousewheel.default.delta_multiplier_y", 100);
+pref("mousewheel.default.delta_multiplier_z", 100);
 pref("mousewheel.with_alt.delta_multiplier_x", 100);
 pref("mousewheel.with_alt.delta_multiplier_y", 100);
+pref("mousewheel.with_alt.delta_multiplier_z", 100);
 pref("mousewheel.with_control.delta_multiplier_x", 100);
 pref("mousewheel.with_control.delta_multiplier_y", 100);
+pref("mousewheel.with_control.delta_multiplier_z", 100);
 pref("mousewheel.with_meta.delta_multiplier_x", 100);  // command key on Mac
 pref("mousewheel.with_meta.delta_multiplier_y", 100);  // command key on Mac
+pref("mousewheel.with_meta.delta_multiplier_z", 100);  // command key on Mac
 pref("mousewheel.with_shift.delta_multiplier_x", 100);
 pref("mousewheel.with_shift.delta_multiplier_y", 100);
+pref("mousewheel.with_shift.delta_multiplier_z", 100);
 pref("mousewheel.with_win.delta_multiplier_x", 100);
 pref("mousewheel.with_win.delta_multiplier_y", 100);
+pref("mousewheel.with_win.delta_multiplier_z", 100);
 
 // These define the smooth scroll behavior (min ms, max ms) for different triggers
 // Some triggers:
