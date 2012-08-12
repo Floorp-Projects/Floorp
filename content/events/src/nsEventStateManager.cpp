@@ -2853,13 +2853,13 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
 
   nsIntPoint actualDevPixelScrollAmount(0, 0);
   if (isDeltaModePixel) {
-    actualDevPixelScrollAmount.x = RoundDown(aEvent->deltaX);
-    actualDevPixelScrollAmount.y = RoundDown(aEvent->deltaY);
+    actualDevPixelScrollAmount.x = RoundDown(acceleratedDelta.deltaX);
+    actualDevPixelScrollAmount.y = RoundDown(acceleratedDelta.deltaY);
   } else {
     actualDevPixelScrollAmount.x =
-      RoundDown(scrollAmountInDevPixels.width * aEvent->deltaX);
+      RoundDown(scrollAmountInDevPixels.width * acceleratedDelta.deltaX);
     actualDevPixelScrollAmount.y =
-      RoundDown(scrollAmountInDevPixels.height * aEvent->deltaY);
+      RoundDown(scrollAmountInDevPixels.height * acceleratedDelta.deltaY);
   }
 
   nsIAtom* origin = nullptr;
@@ -3271,6 +3271,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         case WheelPrefs::ACTION_ZOOM:
           DoScrollZoom(aTargetFrame, wheelEvent->GetPreferredIntDelta());
+          break;
+        default:
           break;
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
