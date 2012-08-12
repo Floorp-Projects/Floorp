@@ -2582,9 +2582,13 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   //     we're using nearest scrollable frame's information.
   nsIScrollableFrame* scrollableFrame =
     ComputeScrollTarget(aTargetFrame, aEvent, true);
-  PRInt32 pixelsPerUnit = nsPresContext::AppUnitsToIntCSSPixels(
-                            GetScrollAmount(aPresContext, aEvent, aTargetFrame,
-                                            scrollableFrame));
+  nsSize scrollAmount =
+    GetScrollAmount(aPresContext, aEvent, aTargetFrame, scrollableFrame);
+  bool isHorizontal =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
+  PRInt32 pixelsPerUnit =
+    nsPresContext::AppUnitsToIntCSSPixels(isHorizontal ? scrollAmount.width :
+                                                         scrollAmount.height);
 
   bool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
   nsMouseScrollEvent event(isTrusted, NS_MOUSE_PIXEL_SCROLL, nullptr);
@@ -2734,7 +2738,7 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     ComputeScrollTarget(newFrame, aEvent, aForDefaultAction) : nullptr;
 }
 
-nscoord
+nsSize
 nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
                                      nsMouseScrollEvent* aEvent,
                                      nsIFrame* aTargetFrame,
@@ -2745,31 +2749,27 @@ nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
   MOZ_ASSERT(aTargetFrame);
 
   bool isPage = (aEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) != 0;
-  bool isHorizontal =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
-
   if (aScrollableFrame) {
-    nsSize size = isPage ? aScrollableFrame->GetPageScrollAmount() :
-                           aScrollableFrame->GetLineScrollAmount();
-    return isHorizontal ? size.width : size.height;
+    return isPage ? aScrollableFrame->GetPageScrollAmount() :
+                    aScrollableFrame->GetLineScrollAmount();
   }
 
   // If there is no scrollable frame and page scrolling, use view port size.
   if (isPage) {
-    nsRect visibleRect = aPresContext->GetVisibleArea();
-    return isHorizontal ? visibleRect.width : visibleRect.height;
+    return aPresContext->GetVisibleArea().Size();
   }
 
   // If there is no scrollable frame, we should use root frame's information.
   nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
   if (!rootFrame) {
-    return 0;
+    return nsSize(0, 0);
   }
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(rootFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(rootFrame));
-  NS_ENSURE_TRUE(fm, 0);
-  return fm->MaxHeight();
+  NS_ENSURE_TRUE(fm, nsSize(0, 0));
+  PRInt32 fontHeight = fm->MaxHeight();
+  return nsSize(fontHeight, fontHeight);
 }
 
 nsresult
@@ -5054,9 +5054,13 @@ nsEventStateManager::PixelDeltaAccumulator::OnMousePixelScrollEvent(
 
   nsIScrollableFrame* scrollTarget =
     aESM->ComputeScrollTarget(aTargetFrame, aEvent, false);
-  PRInt32 pixelsPerLine = nsPresContext::AppUnitsToIntCSSPixels(
-                            aESM->GetScrollAmount(aPresContext, aEvent,
-                                                  aTargetFrame, scrollTarget));
+  nsSize scrollAmount =
+    aESM->GetScrollAmount(aPresContext, aEvent, aTargetFrame, scrollTarget);
+  bool isHorizontal =
+    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
+  PRInt32 pixelsPerLine =
+    nsPresContext::AppUnitsToIntCSSPixels(isHorizontal ? scrollAmount.width :
+                                                         scrollAmount.height);
 
   if (!mLastTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastTime;
@@ -5066,9 +5070,6 @@ nsEventStateManager::PixelDeltaAccumulator::OnMousePixelScrollEvent(
   }
 
   mLastTime = TimeStamp::Now();
-
-  bool isHorizontal =
-    (aEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) != 0;
 
   // If the delta direction is changed, we should reset the accumulated values.
   if (mX && isHorizontal && aEvent->delta &&
