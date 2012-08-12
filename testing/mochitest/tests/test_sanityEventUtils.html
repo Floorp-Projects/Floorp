@@ -91,13 +91,13 @@ function starttest() {
       $("textBoxA").focus();
     
       /**
-       * TODO: testing synthesizeMouseScroll requires a setTimeout 
+       * TODO: testing synthesizeWheel requires a setTimeout 
        * since there is delay between the scroll event and a check, so for now just test
        * that we can successfully call it to avoid having setTimeout vary the runtime metric.
        * Testing of this method is currently done here:
        * toolkit/content/tests/chrome/test_mousescroll.xul
        */
-      synthesizeMouseScroll($("scrollB"), 5, 5, {'delta': 10, 'type': "DOMMouseScroll"});
+      synthesizeWheel($("scrollB"), 5, 5, {'deltaY': 10.0, deltaMode: WheelEvent.DOM_DELTA_LINE});
     
       /* test synthesizeKey* */
       check = false;
