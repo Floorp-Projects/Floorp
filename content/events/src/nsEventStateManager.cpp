@@ -2901,8 +2901,28 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
                                             -devPixelPageSize.height;
   }
 
-  nsIScrollableFrame::ScrollMode mode =
-    isDeltaModePixel ? nsIScrollableFrame::NORMAL : nsIScrollableFrame::SMOOTH;
+  nsIScrollableFrame::ScrollMode mode;
+  switch (aEvent->scrollType) {
+    case widget::WheelEvent::SCROLL_DEFAULT:
+      if (isDeltaModePixel) {
+        mode = nsIScrollableFrame::NORMAL;
+      } else {
+        mode = nsIScrollableFrame::SMOOTH;
+      }
+      break;
+    case widget::WheelEvent::SCROLL_SYNCHRONOUSLY:
+      mode = nsIScrollableFrame::INSTANT;
+      break;
+    case widget::WheelEvent::SCROLL_ASYNCHRONOUSELY:
+      mode = nsIScrollableFrame::NORMAL;
+      break;
+    case widget::WheelEvent::SCROLL_SMOOTHLY:
+      mode = nsIScrollableFrame::SMOOTH;
+      break;
+    default:
+      MOZ_NOT_REACHED("Invalid scrollType value comes");
+      return;
+  }
 
   nsIntPoint overflow;
   aScrollableFrame->ScrollBy(actualDevPixelScrollAmount,
