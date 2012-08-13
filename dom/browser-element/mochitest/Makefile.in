@@ -33,6 +33,12 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_Titlechange.html \
 		browserElement_TopBarrier.js \
 		test_browserElement_inproc_TopBarrier.html \
+		browserElement_AppWindowNamespace.js \
+		test_browserElement_inproc_AppWindowNamespace.html \
+		file_browserElement_AppWindowNamespace.html \
+		browserElement_BrowserWindowNamespace.js \
+		test_browserElement_inproc_BrowserWindowNamespace.html \
+		file_browserElement_BrowserWindowNamespace.html \
 		browserElement_Iconchange.js \
 		test_browserElement_inproc_Iconchange.html \
 		browserElement_GetScreenshot.js \
@@ -122,6 +128,8 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_DataURI.html \
 		test_browserElement_oop_ErrorSecurity.html \
 		test_browserElement_oop_Titlechange.html \
+		test_browserElement_oop_AppWindowNamespace.html \
+		test_browserElement_oop_BrowserWindowNamespace.html \
 		test_browserElement_oop_TopBarrier.html \
 		test_browserElement_oop_Iconchange.html \
 		test_browserElement_oop_GetScreenshot.html \
