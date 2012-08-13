@@ -1246,17 +1246,16 @@ TokenStream::getAtSourceMappingURL()
              * we should stop and drop everything for, though. */
             return true;
 
-        int len = tokenbuf.length();
+        size_t sourceMapLength = tokenbuf.length();
 
         if (sourceMap)
             cx->free_(sourceMap);
-        sourceMap = (jschar *) cx->malloc_(sizeof(jschar) * (len + 1));
+        sourceMap = static_cast<jschar *>(cx->malloc_(sizeof(jschar) * (sourceMapLength + 1)));
         if (!sourceMap)
             return false;
 
-        for (int i = 0; i < len; i++)
-            sourceMap[i] = tokenbuf[i];
-        sourceMap[len] = '\0';
+        PodCopy(sourceMap, tokenbuf.begin(), sourceMapLength);
+        sourceMap[sourceMapLength] = '\0';
     }
     return true;
 }
