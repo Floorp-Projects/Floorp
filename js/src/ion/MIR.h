@@ -4454,7 +4454,7 @@ class MLoadSlot
     {
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(slots->type() == MIRType_Slots || slots->type() == MIRType_UpvarSlots);
+        JS_ASSERT(slots->type() == MIRType_Slots);
     }
 
   public:
@@ -4481,11 +4481,8 @@ class MLoadSlot
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        if (slots()->type() == MIRType_Slots)
-            return AliasSet::Load(AliasSet::Slot);
-
-        JS_ASSERT(slots()->type() == MIRType_UpvarSlots);
-        return AliasSet::None();
+        JS_ASSERT(slots()->type() == MIRType_Slots);
+        return AliasSet::Load(AliasSet::Slot);
     }
 };
 
