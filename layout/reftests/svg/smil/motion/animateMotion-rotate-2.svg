@@ -25,7 +25,7 @@
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <script type="text/javascript">
     function doTest() {
-      setTimeAndSnapshot(1, true);
+      setTimeAndSnapshot(101, true);
     }
     window.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
@@ -40,13 +40,13 @@
     <!-- And here's a stack of elements animated with 'animateMotion' that
          should end up there. -->
     <use xlink:href="#marker" class="testBegin">
-      <animateMotion from="20,20" to="40,40" rotate="auto" begin="1s" dur="1s"/>
+      <animateMotion from="20,20" to="40,40" rotate="auto" begin="101s" dur="1s"/>
     </use>
     <use xlink:href="#marker" class="testEnd">
-      <animateMotion by="20,20" rotate="auto" dur="1s" fill="freeze"/>
+      <animateMotion by="20,20" rotate="auto" begin="100" dur="1s" fill="freeze"/>
     </use>
     <use xlink:href="#marker" class="mask">
-      <animateMotion by="40,40" rotate="auto" dur="2s"/>
+      <animateMotion by="40,40" rotate="auto" begin="100s" dur="2s"/>
     </use>
   </g>
 </svg>
