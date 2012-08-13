@@ -540,6 +540,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "LockedFile.h"
 #include "GeneratedEvents.h"
 #include "mozilla/Likely.h"
+#include "nsDebug.h"
 
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
@@ -2073,8 +2074,10 @@ SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
 
   if (MOZ_UNLIKELY(!*parent)) {
     // The only known case where this can happen is when the inner window has
-    // been torn down. See bug 691178 comment 11.
-    MOZ_ASSERT(win->IsClosedOrClosing());
+    // been torn down. See bug 691178 comment 11. Should be a fatal MOZ_ASSERT,
+    // but we've found a way to hit it too often in mochitests. See bugs 777875
+    // 778424, 781078.
+    NS_ASSERTION(win->IsClosedOrClosing(), "win should be closed or closing");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
