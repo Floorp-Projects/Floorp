@@ -2312,5 +2312,14 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     }
 }
 
+bool
+nsWindow::NeedsPaint()
+{
+  if (sCompositorPaused || FindTopLevel() != nsWindow::TopWindow()) {
+    return false;
+  }
+  return nsIWidget::NeedsPaint();
+}
+
 #endif
 
