@@ -453,7 +453,7 @@ public:
   bool ConfirmDialogIfNeeded();
 
   // Prevent further dialogs in this (top level) window
-  void PreventFurtherDialogs();
+  void PreventFurtherDialogs(bool aPermanent);
 
   virtual void SetHasAudioAvailableEventListeners();
 
@@ -1058,6 +1058,11 @@ protected:
   // dialogs for this window. Subsequent dialogs may still open if
   // mDialogAbuseCount gets reset.
   bool                          mStopAbuseDialogs;
+
+  // This flag gets set when dialogs should be permanently disabled for this
+  // window (e.g. when we are closing the tab and therefore are guaranteed to be
+  // destroying this window).
+  bool                          mDialogsPermanentlyDisabled;
 
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
