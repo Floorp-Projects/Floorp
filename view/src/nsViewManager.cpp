@@ -23,6 +23,7 @@
 #include "nsEventStateManager.h"
 #include "mozilla/StartupTimeline.h"
 #include "sampler.h"
+#include "nsRefreshDriver.h"
 
 /**
    XXX TODO XXX
@@ -377,7 +378,9 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   // damage is applied based on the final widget geometry
   if (aFlushDirtyRegion) {
     nsIWidget *widget = aView->GetWidget();
-    if (widget) {
+    if (widget && widget->NeedsPaint() && aView->HasNonEmptyDirtyRegion()) {
+      FlushDirtyRegionToWidget(aView);
+      SetPainting(true);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
 #endif
@@ -386,8 +389,8 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT END ----\n");
 #endif
+      SetPainting(false);
     }
-    FlushDirtyRegionToWidget(aView);
   }
 }
 
