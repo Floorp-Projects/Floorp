@@ -9,8 +9,9 @@ interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
+interface nsIDOMMozIccManager;
 
-[scriptable, builtinclass, uuid(e7309c47-9a2e-4e12-84ab-f8f39214eaba)]
+[scriptable, builtinclass, uuid(46fa4f72-9c81-4b7f-b395-87202966e526)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -37,6 +38,11 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Possible values: null (unknown), 'automatic', 'manual'
    */
   readonly attribute DOMString networkSelectionMode;
+
+  /**
+   * IccManager provides access to ICC related funcionality.
+   */
+  readonly attribute nsIDOMMozIccManager icc;
 
   /**
    * Search for available networks.
