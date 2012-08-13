@@ -70,6 +70,10 @@ BrowserElementChild.prototype = {
     debug("Starting up.");
     sendAsyncMsg("hello");
 
+    // Set the docshell's name according to our <iframe>'s name attribute.
+    docShell.QueryInterface(Ci.nsIDocShellTreeItem).name =
+      sendSyncMsg('get-name')[0];
+
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
     docShell.QueryInterface(Ci.nsIWebProgress)
