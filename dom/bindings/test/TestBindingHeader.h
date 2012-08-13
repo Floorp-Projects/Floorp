@@ -434,6 +434,9 @@ public:
   uint32_t UnforgeableAttr();
   uint32_t UnforgeableAttr2();
   void PassRenamedInterface(nsRenamedInterface&);
+  TestInterface* PutForwardsAttr();
+  TestInterface* PutForwardsAttr2();
+  TestInterface* PutForwardsAttr3();
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();

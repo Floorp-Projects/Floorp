@@ -1118,7 +1118,7 @@ class AttrDefiner(PropertyDefiner):
                        "native" : native})
 
         def setter(attr):
-            if attr.readonly:
+            if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
                 return "JSOP_NULLWRAPPER"
             native = ("genericLenientSetter" if attr.hasLenientThis()
                       else "genericSetter")
@@ -3868,6 +3868,31 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         name = attr.identifier.name
         return "Set" + MakeNativeName(descriptor.binaryNames.get(name, name))
 
+class CGSpecializedForwardingSetter(CGSpecializedSetter):
+    """
+    A class for generating the code for a specialized attribute setter with
+    PutForwards that the JIT can call with lower overhead.
+    """
+    def __init__(self, descriptor, attr):
+        CGSpecializedSetter.__init__(self, descriptor, attr)
+
+    def definition_body(self):
+        attrName = self.attr.identifier.name
+        forwardToAttrName = self.attr.getExtendedAttribute("PutForwards")[0]
+        # JS_GetProperty and JS_SetProperty can only deal with ASCII
+        assert all(ord(c) < 128 for c in attrName)
+        assert all(ord(c) < 128 for c in forwardToAttrName)
+        return CGIndenter(CGGeneric("""js::RootedValue v(cx);
+if (!JS_GetProperty(cx, obj, "%s", v.address())) {
+  return false;
+}
+
+if (!v.isObject()) {
+  return ThrowErrorMessage(cx, MSG_NOT_OBJECT);
+}
+
+return JS_SetProperty(cx, &v.toObject(), "%s", argv);""" % (attrName, forwardToAttrName))).define()
+
 def memberIsCreator(member):
     return member.getExtendedAttribute("Creator") is not None
 
@@ -3903,7 +3928,7 @@ class CGMemberJITInfo(CGThing):
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             result = self.defineJitInfo(getterinfo, getter, getterinfal)
-            if not self.member.readonly:
+            if not self.member.readonly or self.member.getExtendedAttribute("PutForwards") is not None:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
                 setter = ("(JSJitPropertyOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
@@ -5320,6 +5345,9 @@ class CGDescriptor(CGThing):
                             hasLenientSetter = True
                         else:
                             hasSetter = True
+                    elif m.getExtendedAttribute("PutForwards"):
+                        cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                        hasSetter = True
                     cgThings.append(CGMemberJITInfo(descriptor, m))
             if hasMethod: cgThings.append(CGGenericMethod(descriptor))
             if hasGetter: cgThings.append(CGGenericGetter(descriptor))
