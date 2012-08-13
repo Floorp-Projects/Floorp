@@ -421,6 +421,12 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   mTransactionIncomplete = false;
 
+  if (aFlags & END_NO_COMPOSITE) {
+    // TODO: We should really just set mTarget to null and make sure we can handle that further down the call chain
+    nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
+    mTarget = new gfxContext(surf);
+  }
+
   if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     nsIntRect clipRect;
     if (HasShadowManager()) {
@@ -450,9 +456,19 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       }
     }
 
-    PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
-    if (mWidget) {
-      FlashWidgetUpdateArea(mTarget);
+    if (aFlags & END_NO_COMPOSITE) {
+      if (IsRetained()) {
+        // Clip the destination out so that we don't draw to it, and
+        // only end up validating ThebesLayers.
+        mTarget->Clip(gfxRect(0, 0, 0, 0));
+        PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
+      }
+      // If we're not retained, then don't composite means do nothing at all.
+    } else {
+      PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
+      if (mWidget) {
+        FlashWidgetUpdateArea(mTarget);
+      }
     }
 
     if (!mTransactionIncomplete) {
