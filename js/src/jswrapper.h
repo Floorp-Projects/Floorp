@@ -162,7 +162,7 @@ class JS_FRIEND_API(IndirectWrapper) : public Wrapper,
 class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
 {
   public:
-    explicit DirectWrapper(unsigned flags);
+    explicit DirectWrapper(unsigned flags, bool hasPrototype = false);
 
     virtual ~DirectWrapper();
 
@@ -209,6 +209,7 @@ class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
 
     static DirectWrapper singleton;
+    static DirectWrapper singletonWithPrototype;
 
     static void *getWrapperFamily();
 };
@@ -217,7 +218,7 @@ class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
 class JS_FRIEND_API(CrossCompartmentWrapper) : public DirectWrapper
 {
   public:
-    CrossCompartmentWrapper(unsigned flags);
+    CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false);
 
     virtual ~CrossCompartmentWrapper();
 
@@ -254,6 +255,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public DirectWrapper
     virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp);
 
     static CrossCompartmentWrapper singleton;
+    static CrossCompartmentWrapper singletonWithPrototype;
 };
 
 /*

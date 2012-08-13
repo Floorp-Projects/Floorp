@@ -134,6 +134,11 @@ opus_decoder_ctl
 opus_decoder_get_nb_samples
 opus_decode
 opus_decode_float
+opus_multistream_decoder_create
+opus_multistream_decoder_ctl
+opus_multistream_decoder_destroy
+opus_multistream_decode_float
+opus_multistream_decode
 opus_packet_get_nb_frames
 opus_packet_get_samples_per_frame
 #endif

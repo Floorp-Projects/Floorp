@@ -87,8 +87,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     
     PRUint32 read, streamLen;
 
-    rv = inStr->Available(&streamLen);
+    PRUint64 streamLen64;
+    rv = inStr->Available(&streamLen64);
     NS_ENSURE_SUCCESS(rv, rv);
+    streamLen = (PRUint32)NS_MIN(streamLen64, PRUint64(PR_UINT32_MAX - 1));
 
     nsAutoArrayPtr<char> buffer(new char[streamLen + 1]);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);

@@ -343,8 +343,8 @@ RecordShutdownEndTimeStamp() {
   TimeDuration diff = now - gRecordedShutdownStartTime;
   uint32_t diff2 = diff.ToMilliseconds();
   int written = fprintf(f, "%d\n", diff2);
+  MozillaUnRegisterDebugFILE(f);
   int rv = fclose(f);
-  MozillaUnRegisterDebugFD(fd);
   if (written < 0 || rv != 0) {
     PR_Delete(tmpName.get());
     return;

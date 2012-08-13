@@ -81,49 +81,52 @@ var smoothScrollPref = "general.smoothScroll";
 SpecialPowers.setBoolPref(smoothScrollPref, false);
 SimpleTest.waitForExplicitFinish();
 
-/* There are three kinds of scroll events:
-    1. line scrolls without hasPixels
-    2. line scrolls with hasPixels
-    3. pixel scrolls
-   Listboxes and arrowscrollboxes (DOM event scrolling) should only react to
-   line scrolls and ignore hasPixels.
-   Richlistboxes ("native" scrolling) should be scrollable by kind 1 and 3.
-*/
-const kinds = [
-  { eventType: "DOMMouseScroll", hasPixels: false, shouldScrollDOM: true, shouldScrollNative: true },
-  { eventType: "DOMMouseScroll", hasPixels: true, shouldScrollDOM: true, shouldScrollNative: false },
-  { eventType: "MozMousePixelScroll", hasPixels: false, shouldScrollDOM: false, shouldScrollNative: true }
+const deltaModes = [
+  WheelEvent.DOM_DELTA_PIXEL,  // 0
+  WheelEvent.DOM_DELTA_LINE,   // 1
+  WheelEvent.DOM_DELTA_PAGE    // 2
 ];
-
 
 function testListbox(id)
 {
   var listbox = document.getElementById(id);
 
-  function helper(aStart, aDelta, aKind)
+  function helper(aStart, aDelta, aIntDelta, aDeltaMode)
   {
     listbox.scrollToIndex(aStart);
-    synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
-                           hasPixels:aKind.hasPixels});
-    is(listbox.getIndexOfFirstVisibleRow(), aKind.shouldScrollDOM ? aStart + aDelta : aStart,
-       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
-       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+    synthesizeWheel(listbox, 10, 10,
+                    { deltaMode: aDeltaMode, deltaY: aDelta,
+                      lineOrPageDeltaY: aIntDelta });
+    var expectedPos = aStart;
+    if (aIntDelta) {
+      if (aDeltaMode == WheelEvent.DOM_DELTA_PAGE) {
+        expectedPos += aIntDelta > 0 ? listbox.getNumberOfVisibleRows() :
+                                       -listbox.getNumberOfVisibleRows();
+      } else {
+        expectedPos += aIntDelta;
+      }
+    }
+    is(listbox.getIndexOfFirstVisibleRow(), expectedPos,
+       "testListbox(" + id +  "): vertical, starting " + aStart +
+         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+         " aDeltaMode " + aDeltaMode);
 
     // Check that horizontal scrolling has no effect
     listbox.scrollToIndex(aStart);
-    synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
-                           hasPixels:aKind.hasPixels});  
+    synthesizeWheel(listbox, 10, 10,
+                    { deltaMode: aDeltaMode, deltaX: aDelta,
+                      lineOrPageDeltaX: aIntDelta });
     is(listbox.getIndexOfFirstVisibleRow(), aStart,
-       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
-       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+       "testListbox(" + id +  "): horizontal, starting " + aStart +
+         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+         " aDeltaMode " + aDeltaMode);
   }
-  kinds.forEach(function(aKind) {
-    helper(2, -1, aKind);
-    helper(2, 1, aKind);
-    helper(2, -2, aKind);
-    helper(2, 2, aKind);
+  deltaModes.forEach(function(aDeltaMode) {
+    let delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
+    helper(5, -delta,  0, aDeltaMode);
+    helper(5, -delta, -1, aDeltaMode);
+    helper(5,  delta,  1, aDeltaMode);
+    helper(5,  delta,  0, aDeltaMode);
   });
 }
 
@@ -134,29 +137,31 @@ function testRichListbox(id, andThen)
 
   function helper()
   {
-    var [aStart, aDelta, aKind] = tests[0];
+    var [aStart, aDelta, aIntDelta, aDeltaMode] = tests[0];
     tests.shift();
     listbox.scrollToIndex(aStart);
-    synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
-                           hasPixels:aKind.hasPixels});
+    synthesizeWheel(listbox, 10, 10,
+                    { deltaMode: aDeltaMode, deltaY: aDelta,
+                      lineOrPageDeltaY: aIntDelta });
     setTimeout(function() {
       var change = listbox.getIndexOfFirstVisibleRow() - aStart;
       var direction = (change > 0) - (change < 0);
-      var expected = aKind.shouldScrollNative && (aDelta > 0) - (aDelta < 0);
+      var expected = (aDelta > 0) - (aDelta < 0);
       is(direction, expected,
-         "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
-         + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+       "testRichListbox(" + id +  "): vertical, starting " + aStart +
+         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+         " aDeltaMode " + aDeltaMode);
 
       // Check that horizontal scrolling has no effect
       listbox.scrollToIndex(aStart);
-      synthesizeMouseScroll(listbox, 10, 10,
-                            {axis:"horizontal", delta:aDelta, type:aKind.eventType,
-                             hasPixels:aKind.hasPixels});
+      synthesizeWheel(listbox, 10, 10,
+                      { deltaMode: aDeltaMode, deltaX: aDelta,
+                        lineOrPageDeltaX: aIntDelta });
       setTimeout(function() {
         is(listbox.getIndexOfFirstVisibleRow(), aStart,
-           "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
-           + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+           "testRichListbox(" + id +  "): horizontal, starting " + aStart +
+             " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+             " aDeltaMode " + aDeltaMode);
         if (tests.length)
           helper();
         else
@@ -168,9 +173,12 @@ function testRichListbox(id, andThen)
   // richlistbox currently uses native XUL scrolling, so the "line"
   // amounts don't necessarily correspond 1-to-1 with listbox items. So
   // we just check that scrolling up/down scrolls in the right direction.
-  kinds.forEach(function(aKind) {
-    tests.push([2, -100, aKind]);
-    tests.push([2, 100, aKind]);
+  deltaModes.forEach(function(aDeltaMode) {
+    let delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 32.0 : 2.0;
+    tests.push([5, -delta, -1, aDeltaMode]);
+    tests.push([5, -delta,  0, aDeltaMode]);
+    tests.push([5,  delta,  1, aDeltaMode]);
+    tests.push([5,  delta,  0, aDeltaMode]);
   });
   helper();
 }
@@ -181,39 +189,43 @@ function testArrowScrollbox(id)
   var scrollBoxObject = scrollbox.scrollBoxObject;
   var orient = scrollbox.getAttribute("orient");
 
-  function helper(aStart, aDelta, aExpected, aKind)
+  function helper(aStart, aDelta, aIntDelta, aDeltaMode, aExpected)
   {
     var xpos = {};
     var ypos = {};
-    var pos = orient == "horizontal" ? xpos : ypos;
+    var orientIsHorizontal = (orient == "horizontal");
+    var pos = orientIsHorizontal ? xpos : ypos;
 
     scrollBoxObject.scrollTo(aStart, aStart);
-    for (var i = (orient == "horizontal") ? 2 : 0; i >= 0; i--) {
-      synthesizeMouseScroll(scrollbox, 5, 5,
-                            {axis:"vertical", delta:aDelta, type:aKind.eventType,
-                             hasPixels:aKind.hasPixels});
+
+    for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+      synthesizeWheel(scrollbox, 5, 5,
+                      { deltaMode: aDeltaMode, deltaY: aDelta,
+                        lineOrPageDeltaY: aIntDelta });
       scrollBoxObject.getPosition(xpos, ypos);
       // Note, vertical mouse scrolling is allowed to scroll horizontal
       // arrowscrollboxes, because many users have no horizontal mouse scroll
       // capability
-      var expected = (aKind.shouldScrollDOM && !i) ? aExpected : aStart;
+      let expected = !i ? aExpected : aStart;
       is(pos.value, expected,
-         "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
-         + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+         "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+           " aDeltaMode " + aDeltaMode);
     }
 
-    for (var i = (orient == "horizontal") ? 2 : 0; i >= 0; i--) {
-      scrollBoxObject.scrollTo(aStart, aStart);
-      synthesizeMouseScroll(scrollbox, 5, 5,
-                            {axis:"horizontal", delta:aDelta, type:aKind.eventType,
-                             hasPixels:aKind.hasPixels});
+    scrollBoxObject.scrollTo(aStart, aStart);
+    for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+      synthesizeWheel(scrollbox, 5, 5,
+                      { deltaMode: aDeltaMode, deltaX: aDelta,
+                        lineOrPageDeltaX: aIntDelta });
       // horizontal mouse scrolling is never allowed to scroll vertical
       // arrowscrollboxes
       scrollBoxObject.getPosition(xpos, ypos);
-      var expected = (aKind.shouldScrollDOM && !i && (orient == "horizontal")) ? aExpected : aStart;
+      let expected = (!i && orientIsHorizontal) ? aExpected : aStart;
       is(pos.value, expected,
-         "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
-         + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
+         "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+           " aDeltaMode " + aDeltaMode);
     }
   }
 
@@ -224,9 +236,14 @@ function testArrowScrollbox(id)
   var scrollMaxY = scrolledHeight.value - scrollBoxObject.height;
   var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
 
-  kinds.forEach(function(aKind) {
-    helper(50, -100, 0, aKind);
-    helper(50, 100, scrollMax, aKind);
+  deltaModes.forEach(function(aDeltaMode) {
+    // These lineOrPageDelta values are not realistic.  However, it's enough to
+    // test if it's scrolled by the lineOrPageDelta value.
+    let delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
+    helper(50, -delta, -100, aDeltaMode, 0);
+    helper(50,  delta,  100, aDeltaMode, scrollMax);
+    helper(50, -delta,    0, aDeltaMode, 50);
+    helper(50,  delta,    0, aDeltaMode, 50);
   });
 }
 

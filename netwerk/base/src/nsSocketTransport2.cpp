@@ -249,7 +249,7 @@ nsSocketInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsSocketInputStream::Available(PRUint32 *avail)
+nsSocketInputStream::Available(PRUint64 *avail)
 {
     SOCKET_LOG(("nsSocketInputStream::Available [this=%x]\n", this));
 

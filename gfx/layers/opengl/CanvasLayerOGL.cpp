@@ -365,7 +365,23 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
     return;
   }
 
-  if (IsValidSharedTexDescriptor(aNewFront)) {
+  if (nsRefPtr<TextureImage> texImage =
+      ShadowLayerManager::OpenDescriptorForDirectTexturing(
+        gl(), aNewFront.get_SurfaceDescriptor(), LOCAL_GL_CLAMP_TO_EDGE)) {
+
+    if (mTexImage &&
+        (mTexImage->GetSize() != texImage->GetSize() ||
+         mTexImage->GetContentType() != texImage->GetContentType())) {
+      mTexImage = nullptr;
+      DestroyFrontBuffer();
+    }
+
+    mTexImage = texImage;
+    *aNewBack = IsSurfaceDescriptorValid(mFrontBufferDescriptor) ?
+                CanvasSurface(mFrontBufferDescriptor) : CanvasSurface(null_t());
+    mFrontBufferDescriptor = aNewFront;
+    mNeedsYFlip = needYFlip;
+  } else if (IsValidSharedTexDescriptor(aNewFront)) {
     MakeTextureIfNeeded(gl(), mTexture);
     if (!IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
       mFrontBufferDescriptor = SharedTextureDescriptor(TextureImage::ThreadShared, 0, nsIntSize(0, 0), false);

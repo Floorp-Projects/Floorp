@@ -103,7 +103,8 @@ public:
   };
 
   static STATE State();
-  static const char *StateStr();
+  static const char *StateStr(STATE aState);
+  static const char *StateStr() { return StateStr(State()); }
 
   class StateChangedEvent
   {
@@ -146,15 +147,16 @@ private:
 
   typedef std::queue<RefPtr<VolumeCommand> > CommandQueue;
 
+  static STATE              mState;
+  static StateObserverList  mStateObserverList;
+
   static const int    kRcvBufSize = 1024;
-  STATE               mState;
   ScopedClose         mSocket;
   VolumeArray         mVolumeArray;
   CommandQueue        mCommands;
   bool                mCommandPending;
   char                mRcvBuf[kRcvBufSize];
   size_t              mRcvIdx;
-  StateObserverList   mStateObserverList;
   MessageLoopForIO                       *mIOLoop;
   MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
   MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;

@@ -185,8 +185,9 @@ AudioSession::Start()
 
   HRESULT hr;
 
-  if (FAILED(::CoInitialize(NULL)))
-    return NS_ERROR_FAILURE;
+  // Don't check for errors in case something already initialized COM
+  // on this thread.
+  CoInitialize(NULL);
 
   if (mState == UNINITIALIZED) {
     mState = FAILED;
@@ -201,7 +202,6 @@ AudioSession::Start()
     nsCOMPtr<nsIStringBundleService> bundleService = 
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     NS_ENSURE_TRUE(bundleService, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                                 getter_AddRefs(bundle));
@@ -219,8 +219,7 @@ AudioSession::Start()
 
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1");
-    NS_ASSERTION(uuidgen, "No UUID-Generator?!?");
-
+    NS_ENSURE_TRUE(uuidgen, NS_ERROR_FAILURE);
     uuidgen->GenerateUUIDInPlace(&mSessionGroupingParameter);
   }
 

@@ -39,6 +39,7 @@ DOMCI_CLASS(MutationEvent)
 DOMCI_CLASS(UIEvent)
 DOMCI_CLASS(MouseEvent)
 DOMCI_CLASS(MouseScrollEvent)
+DOMCI_CLASS(WheelEvent)
 DOMCI_CLASS(DragEvent)
 DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
@@ -386,6 +387,7 @@ DOMCI_CLASS(MessageEvent)
 
 DOMCI_CLASS(DeviceStorage)
 DOMCI_CLASS(DeviceStorageCursor)
+DOMCI_CLASS(DeviceStorageStat)
 
 // Geolocation
 DOMCI_CLASS(GeoGeolocation)

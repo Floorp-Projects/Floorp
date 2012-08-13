@@ -562,7 +562,7 @@ nsInputStreamWrapper::Close()
 }
 
 nsresult nsCacheEntryDescriptor::
-nsInputStreamWrapper::Available(PRUint32 *avail)
+nsInputStreamWrapper::Available(PRUint64 *avail)
 {
     nsresult rv = EnsureInit();
     if (NS_FAILED(rv)) return rv;

@@ -374,6 +374,26 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  getSessionCapabilities: function MDA_getSessionCapabilities(){
+    let rotatable = appName == "B2G" ? true : false;
+
+    let value = {
+          'appBuildId' : Services.appinfo.appBuildID,
+          'XULappId' : Services.appinfo.ID,
+          'cssSelectorsEnabled': true,
+          'browserName': appName,
+          'handlesAlerts': false,
+          'javascriptEnabled': true,
+          'nativeEvents': false,
+          'platform': Services.appinfo.OS,
+          'rotatable': rotatable,
+          'takesScreenshot': false,
+          'version': Services.appinfo.version
+    };
+
+    this.sendResponse(value);
+  },
+
   /**
    * Log message. Accepts user defined log-level.
    *
@@ -762,6 +782,21 @@ MarionetteDriverActor.prototype = {
    */
   getTitle: function MDA_getTitle() {
     this.sendAsync("getTitle", {});
+  },
+
+  /**
+   * Gets the page source of the content document
+   */
+  getPageSource: function MDA_getPageSource(){
+    if (this.context == "chrome"){
+      var curWindow = this.getCurrentWindow();
+      var XMLSerializer = curWindow.XMLSerializer; 
+      var pageSource = new XMLSerializer().serializeToString(curWindow.document);
+      this.sendResponse(pageSource);
+    }
+    else {
+      this.sendAsync("getPageSource", {});
+    }
   },
 
   /**
@@ -1428,6 +1463,7 @@ MarionetteDriverActor.prototype = {
 
 MarionetteDriverActor.prototype.requestTypes = {
   "newSession": MarionetteDriverActor.prototype.newSession,
+  "getSessionCapabilities": MarionetteDriverActor.prototype.getSessionCapabilities,
   "log": MarionetteDriverActor.prototype.log,
   "getLogs": MarionetteDriverActor.prototype.getLogs,
   "addPerfData": MarionetteDriverActor.prototype.addPerfData,
@@ -1450,6 +1486,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "sendKeysToElement": MarionetteDriverActor.prototype.sendKeysToElement,
   "clearElement": MarionetteDriverActor.prototype.clearElement,
   "getTitle": MarionetteDriverActor.prototype.getTitle,
+  "getPageSource": MarionetteDriverActor.prototype.getPageSource,
   "goUrl": MarionetteDriverActor.prototype.goUrl,
   "getUrl": MarionetteDriverActor.prototype.getUrl,
   "goBack": MarionetteDriverActor.prototype.goBack,

@@ -29,8 +29,8 @@ class HTMLElement(object):
     def __str__(self):
         return self.id
 
-    def equals(self, other_element):
-        return self.marionette._send_message('elementsEqual', 'value', elements=[self.id, other_element.id])
+    def __eq__(self, other_element):
+        return self.id == other_element.id
 
     def find_element(self, method, target):
         return self.marionette.find_element(method, target, self.id)
@@ -247,7 +247,8 @@ class Marionette(object):
         self.client.close()
         return response
 
-    def get_session_capabilities(self):
+    @property
+    def session_capabilities(self):
         response = self._send_message('getSessionCapabilities', 'value')
         return response
 
@@ -272,6 +273,11 @@ class Marionette(object):
     @property
     def window_handles(self):
         response = self._send_message('getWindows', 'value')
+        return response
+
+    @property
+    def page_source(self):
+        response = self._send_message('getPageSource', 'value')
         return response
 
     def close(self, window_id=None):

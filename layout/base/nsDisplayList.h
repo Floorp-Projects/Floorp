@@ -1948,6 +1948,8 @@ public:
   {
     return mozilla::LAYER_ACTIVE;
   }
+  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
+
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 
 protected:

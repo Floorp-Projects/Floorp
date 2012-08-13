@@ -156,7 +156,7 @@ _BROWSER_FILES = \
                  browser_bug749738.js \
                  browser_bug763468.js \
                  browser_bug767836.js \
-                 browser_shareButton.js \
+                 browser_social_shareButton.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
                  browser_findbarClose.js \
@@ -232,6 +232,7 @@ _BROWSER_FILES = \
                  plugin_clickToPlayAllow.html \
                  plugin_clickToPlayDeny.html \
                  plugin_bug749455.html \
+                 plugin_hidden_to_visible.html \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \

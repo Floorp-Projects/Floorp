@@ -646,8 +646,17 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
               rv = tmp;
             }
         }
-        if (NS_SUCCEEDED(rv))
-            rv = inputStream->Available(&len);
+
+        if (NS_SUCCEEDED(rv)) {
+            PRUint64 len64;
+            rv = inputStream->Available(&len64);
+            if (NS_SUCCEEDED(rv)) {
+              if (len64 <= PR_UINT32_MAX)
+                len = (PRUint32)len64;
+              else
+                rv = NS_ERROR_FILE_TOO_BIG;
+            }
+        }
         
         if (NS_SUCCEEDED(rv)) {
             buf = new char[len];

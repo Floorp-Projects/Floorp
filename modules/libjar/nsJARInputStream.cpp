@@ -146,7 +146,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
 }
 
 NS_IMETHODIMP 
-nsJARInputStream::Available(PRUint32 *_retval)
+nsJARInputStream::Available(PRUint64 *_retval)
 {
     // A lot of callers don't check the error code.
     // They just use the _retval value.

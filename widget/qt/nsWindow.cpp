@@ -86,6 +86,7 @@ using namespace QtMobility;
 #include "gfxImageSurface.h"
 
 #include "nsIDOMSimpleGestureEvent.h" //Gesture support
+#include "nsIDOMWheelEvent.h"
 
 #if MOZ_PLATFORM_MAEMO > 5
 #include "nsIDOMWindow.h"
@@ -1935,35 +1936,38 @@ nsEventStatus
 nsWindow::OnScrollEvent(QGraphicsSceneWheelEvent *aEvent)
 {
     // check to see if we should rollup
-    nsMouseScrollEvent event(true, NS_MOUSE_SCROLL, this);
+    WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
+    wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+
+    // negative values for aEvent->delta indicate downward scrolling;
+    // this is opposite Gecko usage.
+    // TODO: Store the unused delta values due to fraction round and add it
+    //       to next event.  The stored values should be reset by other
+    //       direction scroll event.
+    PRInt32 delta = (int)(aEvent->delta() / WHEEL_DELTA) * -3;
 
     switch (aEvent->orientation()) {
     case Qt::Vertical:
-        event.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = delta;
         break;
     case Qt::Horizontal:
-        event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+        wheelEvent.deltaX = wheelEvent.lineOrPageDeltaX = delta;
         break;
     default:
         Q_ASSERT(0);
         break;
     }
 
-    // negative values for aEvent->delta indicate downward scrolling;
-    // this is opposite Gecko usage.
+    wheelEvent.refPoint.x = nscoord(aEvent->scenePos().x());
+    wheelEvent.refPoint.y = nscoord(aEvent->scenePos().y());
 
-    event.delta = (int)(aEvent->delta() / WHEEL_DELTA) * -3;
+    wheelEvent.InitBasicModifiers(aEvent->modifiers() & Qt::ControlModifier,
+                                  aEvent->modifiers() & Qt::AltModifier,
+                                  aEvent->modifiers() & Qt::ShiftModifier,
+                                  aEvent->modifiers() & Qt::MetaModifier);
+    wheelEvent.time = 0;
 
-    event.refPoint.x = nscoord(aEvent->scenePos().x());
-    event.refPoint.y = nscoord(aEvent->scenePos().y());
-
-    event.InitBasicModifiers(aEvent->modifiers() & Qt::ControlModifier,
-                             aEvent->modifiers() & Qt::AltModifier,
-                             aEvent->modifiers() & Qt::ShiftModifier,
-                             aEvent->modifiers() & Qt::MetaModifier);
-    event.time            = 0;
-
-    return DispatchEvent(&event);
+    return DispatchEvent(&wheelEvent);
 }
 
 

@@ -38,6 +38,7 @@
 
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMMutationObserver.h"
+#include "nsICycleCollectorListener.h"
 
 using namespace mozilla::dom;
 using namespace xpc;
@@ -2970,5 +2971,25 @@ JS_EXPORT_API(void) DumpJSValue(JS::Value val)
         printf("No idea what this value is.\n");
     }
 }
+
+JS_EXPORT_API(void) DumpCompleteHeap()
+{
+    nsCOMPtr<nsICycleCollectorListener> listener =
+      do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
+    if (!listener) {
+      NS_WARNING("Failed to create CC logger");
+      return;
+    }
+
+    nsCOMPtr<nsICycleCollectorListener> alltracesListener;
+    listener->AllTraces(getter_AddRefs(alltracesListener));
+    if (!alltracesListener) {
+      NS_WARNING("Failed to get all traces logger");
+      return;
+    }
+
+    nsJSContext::CycleCollectNow(alltracesListener);
+}
+
 JS_END_EXTERN_C
 
