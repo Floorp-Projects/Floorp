@@ -409,7 +409,6 @@ class nsIWidget : public nsISupports {
     nsIWidget()
       : mLastChild(nullptr)
       , mPrevSibling(nullptr)
-      , mNeedsPaint(false)
     {}
 
         
@@ -1595,7 +1594,13 @@ class nsIWidget : public nsISupports {
     virtual bool WidgetPaintsBackground() { return false; }
 
     bool NeedsPaint() { 
-      return true;
+      if (!IsVisible()) {
+        return false;
+      }
+      nsIntRect bounds;
+      nsresult rv = GetBounds(bounds);
+      NS_ENSURE_SUCCESS(rv, false);
+      return !bounds.IsEmpty();
     }
     /**
      * Get the natural bounds of this widget.  This method is only
@@ -1647,7 +1652,6 @@ protected:
     nsIWidget* mLastChild;
     nsCOMPtr<nsIWidget> mNextSibling;
     nsIWidget* mPrevSibling;
-    bool mNeedsPaint;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)
