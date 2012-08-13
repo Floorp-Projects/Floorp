@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Scrolling by pages with fixed-pos headers and footers</title>
+  <style>
+  .fp { position:fixed; left:0; width:100%; }
+  </style>
+</head>
+<body onscroll="didScroll()" onload="test()">
+<div class="fp" id="top" style="top:0; height:10px; background:yellow;"></div>
+<div class="fp" style="top:50%; height:7px; background:cyan;"></div>
+<div class="fp" id="bottom" style="bottom:0; height:13px; background:yellow;"></div>
+<p id="target">Something to click on to get focus
+<div style="height:3000px;"></div>
+<pre id="test">
+<script class="testbody">
+var SimpleTest = window.opener.SimpleTest;
+var SpecialPowers = window.opener.SpecialPowers;
+var is = window.opener.is;
+
+function showFixedPosElements(show) {
+  var elements = document.getElementsByClassName("fp");
+  for (var i = 0; i < elements.length; ++i) {
+    elements[i].style.display = show ? '' : 'none';
+  }
+}
+
+var nextCont;
+function didScroll() {
+  var c = nextCont;
+  nextCont = null;
+  if (c) {
+    c();
+  }
+}
+
+function scrollDownOnePageWithContinuation(cont) {
+  document.documentElement.scrollTop = 0;
+  nextCont = cont;
+  window.scrollByPages(1);
+}
+
+function test() {
+  var smoothScrollPref = "general.smoothScroll";
+  SpecialPowers.setBoolPref(smoothScrollPref, false);
+
+  showFixedPosElements(false);
+  scrollDownOnePageWithContinuation(function() {
+    var fullPageScrollDown = document.documentElement.scrollTop;
+
+    showFixedPosElements(true);
+    scrollDownOnePageWithContinuation(function() {
+      var fullPageScrollDownWithHeaderAndFooter = document.documentElement.scrollTop;
+      is(fullPageScrollDownWithHeaderAndFooter, fullPageScrollDown - (10 + 13),
+         "Reduce scroll distance by size of small header and footer");
+
+      document.getElementById("bottom").style.height = (window.innerHeight - 20) + "px";
+      scrollDownOnePageWithContinuation(function() {
+        is(document.documentElement.scrollTop, fullPageScrollDown - 10,
+           "Ignore really big elements when reducing scroll size");   
+        document.getElementById("bottom").style.height = "13px";
+
+        document.getElementById("top").style.width = "100px";
+        scrollDownOnePageWithContinuation(function() {
+          is(document.documentElement.scrollTop, fullPageScrollDown - 13,
+             "Ignore elements that don't span the entire viewport side");
+        
+          // Scroll back up so test results are visible
+          document.documentElement.scrollTop = 0;
+          SpecialPowers.clearUserPref(smoothScrollPref);
+          SimpleTest.finish();
+          window.close();
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

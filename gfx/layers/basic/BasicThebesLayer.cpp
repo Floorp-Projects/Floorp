@@ -27,9 +27,7 @@ BasicThebesLayer::CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize
       referenceSurface = defaultTarget->CurrentSurface();
     } else {
       nsIWidget* widget = BasicManager()->GetRetainerWidget();
-      if (widget) {
-        referenceSurface = widget->GetThebesSurface();
-      } else {
+      if (!widget || !(referenceSurface = widget->GetThebesSurface())) {
         referenceSurface = BasicManager()->GetTarget()->CurrentSurface();
       }
     }

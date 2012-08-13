@@ -4645,23 +4645,20 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
   CanvasRenderingContext2DUserDataAzure *userData = nullptr;
-  if (aBuilder->IsPaintingToWindow()) {
-    // Make the layer tell us whenever a transaction finishes (including
-    // the current transaction), so we can clear our invalidation state and
-    // start invalidating again. We need to do this for the layer that is
-    // being painted to a window (there shouldn't be more than one at a time,
-    // and if there is, flushing the invalidation state more often than
-    // necessary is harmless).
+  // Make the layer tell us whenever a transaction finishes (including
+  // the current transaction), so we can clear our invalidation state and
+  // start invalidating again. We need to do this for all layers since
+  // callers of DrawWindow may be expecting to receive normal invalidation
+  // notifications after this paint.
 
-    // The layer will be destroyed when we tear down the presentation
-    // (at the latest), at which time this userData will be destroyed,
-    // releasing the reference to the element.
-    // The userData will receive DidTransactionCallbacks, which flush the
-    // the invalidation state to indicate that the canvas is up to date.
-    userData = new CanvasRenderingContext2DUserDataAzure(this);
-    canvasLayer->SetDidTransactionCallback(
-            CanvasRenderingContext2DUserDataAzure::DidTransactionCallback, userData);
-  }
+  // The layer will be destroyed when we tear down the presentation
+  // (at the latest), at which time this userData will be destroyed,
+  // releasing the reference to the element.
+  // The userData will receive DidTransactionCallbacks, which flush the
+  // the invalidation state to indicate that the canvas is up to date.
+  userData = new CanvasRenderingContext2DUserDataAzure(this);
+  canvasLayer->SetDidTransactionCallback(
+          CanvasRenderingContext2DUserDataAzure::DidTransactionCallback, userData);
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasLayer::Data data;
