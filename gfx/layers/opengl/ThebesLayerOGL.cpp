@@ -88,6 +88,8 @@ public:
   void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager,
                 PRUint32 aFlags);
 
+  void EndUpdate();
+
   nsIntSize GetSize() {
     if (mTexImage)
       return mTexImage->GetSize();
@@ -108,6 +110,17 @@ protected:
   bool mInitialised;
 };
 
+void ThebesLayerBufferOGL::EndUpdate()
+{
+  if (mTexImage && mTexImage->InUpdate()) {
+    mTexImage->EndUpdate();
+  }
+
+  if (mTexImageOnWhite && mTexImageOnWhite->InUpdate()) {
+    mTexImageOnWhite->EndUpdate();
+  }
+}
+
 void
 ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
                                LayerManagerOGL* aManager,
@@ -118,13 +131,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   if (!mTexImage || !Initialised())
     return;
 
-  if (mTexImage->InUpdate()) {
-    mTexImage->EndUpdate();
-  }
-
-  if (mTexImageOnWhite && mTexImageOnWhite->InUpdate()) {
-    mTexImageOnWhite->EndUpdate();
-  }
+  EndUpdate();
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
@@ -838,6 +845,11 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     }
   }
 
+  if (mOGLManager->CompositingDisabled()) {
+    mBuffer->EndUpdate();
+    return;
+  }
+
   // Drawing thebes layers can change the current context, reset it.
   gl()->MakeCurrent();
 
@@ -1099,7 +1111,7 @@ void
 ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                   const nsIntPoint& aOffset)
 {
-  if (!mBuffer) {
+  if (!mBuffer || mOGLManager->CompositingDisabled()) {
     return;
   }
   NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
