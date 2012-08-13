@@ -160,6 +160,7 @@
 @BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_gonk.xpt
+@BINPATH@/components/dom_icc.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
 #ifdef MOZ_B2G_BT

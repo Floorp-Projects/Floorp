@@ -44,6 +44,12 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/icc/src \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

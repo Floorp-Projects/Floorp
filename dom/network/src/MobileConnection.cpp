@@ -9,6 +9,7 @@
 #include "nsIObserverService.h"
 #include "USSDReceivedEvent.h"
 #include "mozilla/Services.h"
+#include "IccManager.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
@@ -45,6 +46,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(datachange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ussdreceived)
   tmp->mProvider = nullptr;
+  tmp->mIccManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
@@ -82,6 +84,9 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   obs->AddObserver(this, kDataChangedTopic, false);
   obs->AddObserver(this, kCardStateChangedTopic, false);
   obs->AddObserver(this, kUssdReceivedTopic, false);
+
+  mIccManager = new icc::IccManager();
+  mIccManager->Init(aWindow);
 }
 
 void
@@ -97,6 +102,11 @@ MobileConnection::Shutdown()
   obs->RemoveObserver(this, kDataChangedTopic);
   obs->RemoveObserver(this, kCardStateChangedTopic);
   obs->RemoveObserver(this, kUssdReceivedTopic);
+
+  if (mIccManager) {
+    mIccManager->Shutdown();
+    mIccManager = nullptr;
+  }
 }
 
 // nsIObserver
@@ -178,6 +188,13 @@ MobileConnection::GetNetworkSelectionMode(nsAString& networkSelectionMode)
     return NS_OK;
   }
   return mProvider->GetNetworkSelectionMode(networkSelectionMode);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetIcc(nsIDOMMozIccManager** aIcc)
+{
+  NS_IF_ADDREF(*aIcc = mIccManager);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
