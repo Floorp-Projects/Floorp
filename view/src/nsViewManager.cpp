@@ -1285,6 +1285,7 @@ nsViewManager::ProcessPendingUpdates()
     return;
   }
 
+  mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
   if (mHasPendingUpdates) {
     mHasPendingUpdates = false;
       
