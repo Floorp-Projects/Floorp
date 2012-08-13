@@ -1593,7 +1593,7 @@ class nsIWidget : public nsISupports {
      */
     virtual bool WidgetPaintsBackground() { return false; }
 
-    bool NeedsPaint() { 
+    virtual bool NeedsPaint() { 
       if (!IsVisible()) {
         return false;
       }
