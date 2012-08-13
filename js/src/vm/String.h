@@ -100,7 +100,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  |
  * JSFixedString                 - / may have external pointers into char array
  *  | \  \  \
- *  |  \  \ JSUndependedString   - / original dependent base
+ *  |  \  \ JSUndependedString   original dependent base / -
  *  |   \  \
  *  |    \ JSExternalString      - / char array memory managed by embedding
  *  |     \
