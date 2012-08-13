@@ -28,11 +28,9 @@ enum MIRType
     MIRType_Object,
     MIRType_Magic,
     MIRType_Value,
-    MIRType_Any,        // Any type.
     MIRType_None,       // Invalid, used as a placeholder.
     MIRType_Slots,      // A slots vector
     MIRType_Elements,   // An elements vector
-    MIRType_UpvarSlots, // Flat closure upvar slots
     MIRType_StackFrame  // StackFrame pointer for OSR.
 };
 
@@ -347,16 +345,12 @@ StringFromMIRType(MIRType type)
       return "Magic";
     case MIRType_Value:
       return "Value";
-    case MIRType_Any:
-      return "Any";
     case MIRType_None:
       return "None";
     case MIRType_Slots:
       return "Slots";
     case MIRType_Elements:
       return "Elements";
-    case MIRType_UpvarSlots:
-      return "UpvarSlots";
     case MIRType_StackFrame:
       return "StackFrame";
     default:

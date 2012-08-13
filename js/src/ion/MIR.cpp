@@ -489,8 +489,6 @@ MCall::addArg(size_t argnum, MPassArg *arg)
 void
 MBitNot::infer(const TypeOracle::Unary &u)
 {
-    JS_ASSERT(u.ival != MIRType_Any);
-
     if (u.ival == MIRType_Object)
         specialization_ = MIRType_None;
     else
@@ -530,9 +528,6 @@ MBinaryBitwiseInstruction::foldsTo(bool useValueNumbers)
 void
 MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
 {
-    JS_ASSERT(b.lhs != MIRType_Any);
-    JS_ASSERT(b.rhs != MIRType_Any);
-
     if (b.lhs == MIRType_Object || b.rhs == MIRType_Object) {
         specialization_ = MIRType_None;
     } else {
