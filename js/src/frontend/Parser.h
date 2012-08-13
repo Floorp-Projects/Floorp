@@ -327,7 +327,7 @@ Parser::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 }
 
 bool
-DefineArg(ParseNode *pn, PropertyName *name, unsigned i, Parser *parser);
+DefineArg(ParseNode *pn, HandlePropertyName name, unsigned i, Parser *parser);
 
 } /* namespace frontend */
 } /* namespace js */

@@ -6,6 +6,9 @@
 == compound-1a.html compound-1-ref.html
 != compound-1a.html compound-1-fail.html
 == dynamic-inherit-1.html dynamic-inherit-1-ref.html
+== dynamic-addremove-1a.html dynamic-addremove-1-ref.html
+== dynamic-addremove-1b.html dynamic-addremove-1-ref.html
+== dynamic-addremove-1c.html dynamic-addremove-1-ref.html
 # translatex should act like position: relative
 == translatex-1a.html translatex-1-ref.html
 == translatex-1b.html translatex-1-ref.html

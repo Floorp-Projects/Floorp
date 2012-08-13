@@ -1037,7 +1037,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   layerBuilder->WillEndTransaction(layerManager);
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
-                               aBuilder);
+                               aBuilder, (aFlags & PAINT_NO_COMPOSITE) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT);
   aBuilder->SetIsCompositingCheap(temp);
   layerBuilder->DidEndTransaction(layerManager);
 

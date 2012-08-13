@@ -143,10 +143,9 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsArrayBuffer(args.thisv()));
 
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    ArrayBufferObject &arrayBuffer = thisObj->asArrayBuffer();
 
     // these are the default values
-    uint32_t length = arrayBuffer.byteLength();
+    uint32_t length = thisObj->asArrayBuffer().byteLength();
     uint32_t begin = 0, end = length;
 
     if (args.length() > 0) {
@@ -162,7 +161,7 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     if (begin > end)
         begin = end;
 
-    JSObject *nobj = createSlice(cx, arrayBuffer, begin, end);
+    JSObject *nobj = createSlice(cx, thisObj->asArrayBuffer(), begin, end);
     if (!nobj)
         return false;
     args.rval().setObject(*nobj);
@@ -1678,8 +1677,8 @@ class TypedArrayTemplate
                 if (!cx->stack.pushInvokeArgs(cx, 3, &ag))
                     return NULL;
 
-                ag.calleev() = cx->compartment->maybeGlobal()->createArrayFromBuffer<NativeType>();
-                ag.thisv() = ObjectValue(*bufobj);
+                ag.setCallee(cx->compartment->maybeGlobal()->createArrayFromBuffer<NativeType>());
+                ag.setThis(ObjectValue(*bufobj));
                 ag[0] = Int32Value(byteOffsetInt);
                 ag[1] = Int32Value(lengthInt);
                 ag[2] = ObjectValue(*proto);
@@ -2262,8 +2261,8 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         InvokeArgsGuard ag;
         if (!cx->stack.pushInvokeArgs(cx, argc + 1, &ag))
             return false;
-        ag.calleev() = global->createDataViewForThis();
-        ag.thisv() = ObjectValue(*bufobj);
+        ag.setCallee(global->createDataViewForThis());
+        ag.setThis(ObjectValue(*bufobj));
         PodCopy(ag.array(), args.array(), args.length());
         ag[argc] = ObjectValue(*proto);
         if (!Invoke(cx, ag))
