@@ -141,6 +141,7 @@
  "dom/imptests/webapps/DOMCore/tests/approved/test_Range-mutations.html": "bug 775227",
  "dom/imptests/webapps/DOMCore/tests/approved/test_Range-set.html": "bug 775227",
  "dom/imptests/webapps/DOMCore/tests/approved/test_Range-surroundContents.html": "bug 775227",
+ "dom/imptests/webapps/DOMCore/tests/submissions": "bug 782254",
  "dom/imptests/webapps/WebStorage/tests/submissions": "bug 781837 & bug 775227",
  "dom/indexedDB/test/test_third_party.html": "TIMED_OUT",
  "dom/indexedDB/test/test_event_propagation.html": "TIMED_OUT, bug 780855",
