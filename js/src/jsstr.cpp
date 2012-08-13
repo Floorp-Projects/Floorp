@@ -440,7 +440,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
             Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.toStringAtom));
             if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
                 JSString *str = obj->asString().unbox();
-                call.thisv().setString(str);
+                call.setThis(StringValue(str));
                 return str;
             }
         }
@@ -454,7 +454,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
     if (!str)
         return NULL;
 
-    call.thisv().setString(str);
+    call.setThis(StringValue(str));
     return str;
 }
 
@@ -1022,7 +1022,7 @@ StringMatch(const jschar *text, uint32_t textlen,
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 /*
- * RopeMatch takes the text to search, the patern to search for in the text.
+ * RopeMatch takes the text to search and the pattern to search for in the text.
  * RopeMatch returns false on OOM and otherwise returns the match index through
  * the 'match' outparam (-1 for not found).
  */
@@ -1147,6 +1147,9 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
     const jschar *text = str->getChars(cx);
     if (!text)
         return false;
+
+    // XXX fix for moving GC.
+    SkipRoot skip(cx, &text);
 
     if (args.hasDefined(1)) {
         // Step 4
@@ -1325,6 +1328,9 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
     if (!text)
         return false;
 
+    // XXX fix for moving GC.
+    SkipRoot skip(cx, &text);
+
     if (args.hasDefined(1)) {
         // Step 4
         double posDouble;
@@ -1367,6 +1373,9 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     const jschar *text = str->getChars(cx);
     if (!text)
         return false;
+
+    // XXX fix for moving GC.
+    SkipRoot skip(cx, &text);
 
     if (args.hasDefined(1)) {
         // Step 5
@@ -1978,7 +1987,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
             return false;
 
         args.setCallee(ObjectValue(*lambda));
-        args.thisv() = UndefinedValue();
+        args.setThis(UndefinedValue());
 
         /* Push $&, $1, $2, ... */
         unsigned argi = 0;
@@ -2296,8 +2305,8 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
         return false;
 
     CallArgs &args = rdata.args;
-    args.calleev().setObject(*rdata.lambda);
-    args.thisv().setUndefined();
+    args.setCallee(ObjectValue(*rdata.lambda));
+    args.setThis(UndefinedValue());
 
     Value *sp = args.array();
     sp[0].setString(matchStr);
@@ -2769,7 +2778,7 @@ static JSBool
 str_substr(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ThisToStringForStringProto(cx, args);
+    RootedString str(cx, ThisToStringForStringProto(cx, args));
     if (!str)
         return false;
 

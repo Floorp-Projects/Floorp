@@ -418,10 +418,11 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
         *succeeded = false;
         if (!shouldThrow)
             return true;
+        RootedValue val(cx, ObjectValue(*obj));
         MOZ_ALWAYS_FALSE(js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                                   JSDVG_IGNORE_STACK,
-                                                  ObjectValue(*obj),
-                                                  NULL, NULL, NULL));
+                                                  val, NullPtr(),
+                                                  NULL, NULL));
         return false;
     }
 
@@ -466,10 +467,11 @@ TypedElementsHeader<T>::defineElement(JSContext *cx, Handle<ObjectImpl*> obj,
 {
     /* XXX jwalden This probably isn't how typed arrays should behave... */
     *succeeded = false;
+
+    RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                              JSDVG_IGNORE_STACK,
-                             ObjectValue(*obj),
-                             NULL, NULL, NULL);
+                             val, NullPtr(), NULL, NULL);
     return false;
 }
 
@@ -629,8 +631,8 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                 return false;
 
             /* Push get, receiver, and no args. */
-            args.calleev() = get;
-            args.thisv() = ObjectValue(*current);
+            args.setCallee(get);
+            args.setThis(ObjectValue(*current));
 
             bool ok = Invoke(cx, args);
             *vp = args.rval();
@@ -861,8 +863,8 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
                     return false;
 
                 /* Push set, receiver, and v as the sole argument. */
-                args.calleev() = setter;
-                args.thisv() = ObjectValue(*current);
+                args.setCallee(setter);
+                args.setThis(ObjectValue(*current));
                 args[0] = v;
 
                 *succeeded = true;

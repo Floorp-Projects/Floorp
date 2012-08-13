@@ -205,8 +205,8 @@ BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
-    ag.calleev() = cx->compartment->maybeGlobal()->booleanValueOf();
-    ag.thisv().setObject(obj);
+    ag.setCallee(cx->compartment->maybeGlobal()->booleanValueOf());
+    ag.setThis(ObjectValue(obj));
     if (!Invoke(cx, ag))
         return false;
     *vp = ag.rval();
