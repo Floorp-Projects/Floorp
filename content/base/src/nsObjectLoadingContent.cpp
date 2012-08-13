@@ -540,7 +540,7 @@ IsPluginEnabledForType(const nsCString& aMIMEType)
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
@@ -720,7 +720,7 @@ nsObjectLoadingContent::InstantiatePluginInstance()
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   // If you add early return(s), be sure to balance this call to
