@@ -823,6 +823,8 @@ MapIteratorObject::next_impl(JSContext *cx, CallArgs args)
     }
 
     Value pair[2] = { range->front().key.get(), range->front().value };
+    AutoValueArray root(cx, pair, 2);
+
     JSObject *pairobj = NewDenseCopiedArray(cx, 2, pair);
     if (!pairobj)
         return false;
@@ -970,7 +972,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (args.hasDefined(0)) {
         ForOfIterator iter(cx, args[0]);
         while (iter.next()) {
-            JSObject *pairobj = js_ValueToNonNullObject(cx, iter.value());
+            RootedObject pairobj(cx, js_ValueToNonNullObject(cx, iter.value()));
             if (!pairobj)
                 return false;
 

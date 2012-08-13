@@ -72,8 +72,8 @@ void JS_FASTCALL
 stubs::SetName(VMFrame &f, PropertyName *name)
 {
     JSContext *cx = f.cx;
-    const Value &rval = f.regs.sp[-1];
-    const Value &lval = f.regs.sp[-2];
+    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+    HandleValue lval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
     if (!SetPropertyOperation(cx, f.pc(), lval, rval))
         THROW();
@@ -106,11 +106,11 @@ stubs::Name(VMFrame &f)
 void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
-    Value &lref = f.regs.sp[-2];
-    Value &rref = f.regs.sp[-1];
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
-    if (!GetElementOperation(f.cx, JSOp(*f.pc()), lref, rref, res))
+    if (!GetElementOperation(f.cx, JSOp(*f.pc()), lval, rval, res))
         THROW();
 }
 
@@ -121,13 +121,13 @@ stubs::SetElem(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
-    Value &objval = regs.sp[-3];
+    HandleValue objval = HandleValue::fromMarkedLocation(&regs.sp[-3]);
     Value &idval  = regs.sp[-2];
     RootedValue rval(cx, regs.sp[-1]);
 
     RootedId id(cx);
 
-    Rooted<JSObject*> obj(cx, ValueToObject(cx, objval));
+    Rooted<JSObject*> obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
@@ -174,10 +174,10 @@ template void JS_FASTCALL stubs::SetElem<false>(VMFrame &f);
 void JS_FASTCALL
 stubs::ToId(VMFrame &f)
 {
-    Value &objval = f.regs.sp[-2];
+    HandleValue objval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
     MutableHandleValue idval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    JSObject *obj = ValueToObject(f.cx, objval);
+    JSObject *obj = ToObjectFromStack(f.cx, objval);
     if (!obj)
         THROW();
 
@@ -983,8 +983,10 @@ stubs::GetProp(VMFrame &f, PropertyName *name)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
+    MutableHandleValue objval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+
     RootedValue rval(cx);
-    if (!GetPropertyOperation(cx, f.script(), f.pc(), f.regs.sp[-1], rval.address()))
+    if (!GetPropertyOperation(cx, f.pc(), objval, &rval))
         THROW();
 
     regs.sp[-1] = rval;
@@ -1142,10 +1144,10 @@ stubs::InstanceOf(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
-    const Value &rref = regs.sp[-1];
+    RootedValue rref(cx, regs.sp[-1]);
     if (rref.isPrimitive()) {
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                            -1, rref, NULL);
+                            -1, rref, NullPtr());
         THROWV(JS_FALSE);
     }
     RootedObject obj(cx, &rref.toObject());
@@ -1167,7 +1169,8 @@ stubs::FastInstanceOf(VMFrame &f)
          * Throw a runtime error if instanceof is called on a function that
          * has a non-object as its .prototype value.
          */
-        js_ReportValueError(f.cx, JSMSG_BAD_PROTOTYPE, -1, f.regs.sp[-2], NULL);
+        RootedValue val(f.cx, f.regs.sp[-2]);
+        js_ReportValueError(f.cx, JSMSG_BAD_PROTOTYPE, -1, val, NullPtr());
         THROW();
     }
 
@@ -1365,7 +1368,8 @@ stubs::DelProp(VMFrame &f, PropertyName *name_)
     JSContext *cx = f.cx;
     RootedPropertyName name(cx, name_);
 
-    JSObject *obj = ValueToObject(cx, f.regs.sp[-1]);
+    RootedValue objval(cx, f.regs.sp[-1]);
+    JSObject *obj = ToObjectFromStack(cx, objval);
     if (!obj)
         THROW();
 
@@ -1385,7 +1389,8 @@ stubs::DelElem(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = ValueToObject(cx, f.regs.sp[-2]);
+    RootedValue objval(cx, f.regs.sp[-2]);
+    JSObject *obj = ToObjectFromStack(cx, objval);
     if (!obj)
         THROW();
 
@@ -1434,7 +1439,8 @@ stubs::In(VMFrame &f)
 
     const Value &rref = f.regs.sp[-1];
     if (!rref.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
+        RootedValue val(cx, rref);
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, val, NullPtr());
         THROWV(JS_FALSE);
     }
 

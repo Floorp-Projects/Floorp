@@ -105,8 +105,9 @@ ValueToIdentifier(JSContext *cx, const Value &v, jsid *idp)
     if (!ValueToId(cx, v, &id))
         return false;
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
+        RootedValue val(cx, v);
         js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                 JSDVG_SEARCH_STACK, v, NULL, "not an identifier", NULL);
+                                 JSDVG_SEARCH_STACK, val, NullPtr(), "not an identifier", NULL);
         return false;
     }
     *idp = id;
@@ -1472,7 +1473,6 @@ Debugger::sweepAll(FreeOp *fop)
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
                 dbg->removeDebuggeeGlobal(fop, e.front(), NULL, &e);
         }
-
     }
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
@@ -1971,12 +1971,18 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      * for sure, and possibly the compartment's debuggee set.
      */
     v->erase(p);
-    if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
     if (debugEnum)
         debugEnum->removeFront();
     else
         debuggees.remove(global);
+
+    /*
+     * The debuggee needs to be removed from the compartment last, as this can
+     * trigger GCs if the compartment's debug mode is being changed, and the
+     * global cannot be rooted on the stack without a cx.
+     */
+    if (v->empty())
+        global->compartment()->removeDebuggee(fop, global, compartmentEnum);
 }
 
 /*
@@ -3171,7 +3177,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
      * Put the Debugger.Frame into the this-value slot, then use THIS_FRAME
      * to check that it is still live and get the fp.
      */
-    args.thisv() = argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME);
+    args.setThis(argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME));
     THIS_FRAME(cx, argc, vp, "get argument", ca2, thisobj, fp);
 
     /*
@@ -3907,7 +3913,9 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperties", args, dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperties", 1);
-    RootedObject props(cx, ToObject(cx, &args[0]));
+
+    RootedValue arg(cx, args[0]);
+    RootedObject props(cx, ToObject(cx, arg));
     if (!props)
         return false;
 

@@ -771,7 +771,7 @@ class CallCompiler : public BaseCompiler
             return false;
 
         if (callingNew)
-            args.thisv().setMagic(JS_IS_CONSTRUCTING);
+            args.setThis(MagicValue(JS_IS_CONSTRUCTING));
 
         RecompilationMonitor monitor(cx);
 
