@@ -195,7 +195,7 @@ function testReturnKey()
 
       ok(!completeNode.value, "completeNode is empty");
 
-      executeSoon(finishTest);
+      dontShowArrayNumbers();
     }, false);
 
     EventUtils.synthesizeKey("VK_RETURN", {});
@@ -207,3 +207,30 @@ function testReturnKey()
     EventUtils.synthesizeKey(".", {});
   });
 }
+
+function dontShowArrayNumbers()
+{
+  content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
+
+  let jsterm = HUD.jsterm;
+  let popup = jsterm.autocompletePopup;
+  let completeNode = jsterm.completeNode;
+
+  popup._panel.addEventListener("popupshown", function onShown() {
+    popup._panel.removeEventListener("popupshown", onShown, false);
+
+    let sameItems = popup.getItems().map(function(e) {return e.label;});
+    ok(!sameItems.some(function(prop, index) { prop === "0"; }),
+       "Completing on an array doesn't show numbers.");
+
+    popup._panel.addEventListener("popuphidden", consoleOpened, false);
+
+    EventUtils.synthesizeKey("VK_TAB", {});
+
+    executeSoon(finishTest);
+  }, false);
+
+  jsterm.setInputValue("window.foobarBug585991");
+  EventUtils.synthesizeKey(".", {});
+}
+
