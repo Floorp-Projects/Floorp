@@ -524,13 +524,13 @@ BasicLayerManager::FlashWidgetUpdateArea(gfxContext *aContext)
 }
 
 bool
-BasicLayerManager::EndEmptyTransaction()
+BasicLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
   if (!mRoot) {
     return false;
   }
 
-  return EndTransactionInternal(nullptr, nullptr);
+  return EndTransactionInternal(nullptr, nullptr, aFlags);
 }
 
 void
@@ -1055,9 +1055,9 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 }
 
 bool
-BasicShadowLayerManager::EndEmptyTransaction()
+BasicShadowLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  if (!BasicLayerManager::EndEmptyTransaction()) {
+  if (!BasicLayerManager::EndEmptyTransaction(aFlags)) {
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following
     // EndTransaction will complete it.
