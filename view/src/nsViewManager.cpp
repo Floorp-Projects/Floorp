@@ -338,7 +338,7 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
       printf("--COMPOSITE-- %p\n", mPresShell);
 #endif
       mPresShell->Paint(aView, damageRegion, nsIPresShell::PaintType_Composite,
-                        aWillSendDidPaint);
+                        false);
 #ifdef DEBUG_INVALIDATIONS
       printf("--ENDCOMPOSITE--\n");
 #endif
@@ -380,12 +380,29 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
     nsIWidget *widget = aView->GetWidget();
     if (widget && widget->NeedsPaint() && aView->HasNonEmptyDirtyRegion()) {
       FlushDirtyRegionToWidget(aView);
+      // If an ancestor widget was hidden and then shown, we could
+      // have a delayed resize to handle.
+      for (nsViewManager *vm = this; vm;
+           vm = vm->mRootView->GetParent()
+                  ? vm->mRootView->GetParent()->GetViewManager()
+                  : nullptr) {
+        if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+            vm->mRootView->IsEffectivelyVisible() &&
+            mPresShell && mPresShell->IsVisible()) {
+          vm->FlushDelayedResize(true);
+          vm->InvalidateView(vm->mRootView);
+        }
+      }
+
+      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
+
       SetPainting(true);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
 #endif
       nsAutoScriptBlocker scriptBlocker;
-      mPresShell->Paint(aView, nsRegion(), nsIPresShell::PaintType_NoComposite, false);
+      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
+      mPresShell->Paint(aView, nsRegion(), nsIPresShell::PaintType_NoComposite, true);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT END ----\n");
 #endif
@@ -717,35 +734,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           break;
 
         *aStatus = nsEventStatus_eConsumeNoDefault;
-
-        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
-
-        NS_ASSERTION(static_cast<nsView*>(aView) ==
-                       nsView::GetViewFor(event->widget),
-                     "view/widget mismatch");
-
-        // If an ancestor widget was hidden and then shown, we could
-        // have a delayed resize to handle.
-        for (nsViewManager *vm = this; vm;
-             vm = vm->mRootView->GetParent()
-                    ? vm->mRootView->GetParent()->GetViewManager()
-                    : nullptr) {
-          if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-              vm->mRootView->IsEffectivelyVisible() &&
-              mPresShell && mPresShell->IsVisible()) {
-            vm->FlushDelayedResize(true);
-            vm->InvalidateView(vm->mRootView);
-          }
-        }
-
-        // Flush things like reflows and plugin widget geometry updates by
-        // calling WillPaint on observer presShells.
-        nsRefPtr<nsViewManager> rootVM = RootViewManager();
-        if (mPresShell) {
-          rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
-        }
-        // Flush view widget geometry updates and invalidations.
-        rootVM->ProcessPendingUpdates();
       }
       break;
 
@@ -763,17 +751,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                      "shouldn't be receiving paint events while painting is "
                      "disallowed!");
 
-        if (!event->didSendWillPaint) {
-          // Send NS_WILL_PAINT event ourselves.
-          nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, event->widget);
-          willPaintEvent.willSendDidPaint = event->willSendDidPaint;
-          DispatchEvent(&willPaintEvent, view, aStatus);
-
-          // Get the view pointer again since NS_WILL_PAINT might have
-          // destroyed it during CallWillPaintOnObservers (bug 378273).
-          view = nsView::GetViewFor(event->widget);
-        }
-
         if (!view || event->region.IsEmpty())
           break;
 
@@ -784,8 +761,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
       }
 
     case NS_DID_PAINT: {
-      nsRefPtr<nsViewManager> rootVM = RootViewManager();
-      rootVM->CallDidPaintOnObserver();
       break;
     }
 
@@ -1311,8 +1286,15 @@ nsViewManager::ProcessPendingUpdates()
   }
 
   if (mHasPendingUpdates) {
-    ProcessPendingUpdatesForView(mRootView, true);
     mHasPendingUpdates = false;
+      
+    // Flush things like reflows and plugin widget geometry updates by
+    // calling WillPaint on observer presShells.
+    if (mPresShell) {
+      CallWillPaintOnObservers(true);
+    }
+    ProcessPendingUpdatesForView(mRootView, true);
+    CallDidPaintOnObserver();
   }
 }
 
@@ -1325,8 +1307,8 @@ nsViewManager::UpdateWidgetGeometry()
   }
 
   if (mHasPendingWidgetGeometryChanges) {
-    ProcessPendingUpdatesForView(mRootView, false);
     mHasPendingWidgetGeometryChanges = false;
+    ProcessPendingUpdatesForView(mRootView, false);
   }
 }
 
