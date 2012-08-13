@@ -214,7 +214,7 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 */
 function pageShowEventHandlers(event) {
   // Filter out events that are not about the document load we are interested in
-  if (event.originalTarget == content.document) {
+  if (event.target == content.document) {
     charsetLoadListener(event);
     XULBrowserWindow.asyncUpdateUI();
 
