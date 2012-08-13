@@ -88,6 +88,10 @@ MOCHITEST_FILES = \
 		browserElement_OpenWindowDifferentOrigin.js \
 		test_browserElement_inproc_OpenWindowDifferentOrigin.html \
 		file_browserElement_OpenWindowDifferentOrigin.html \
+		browserElement_OpenNamed.js \
+		test_browserElement_inproc_OpenNamed.html \
+		file_browserElement_OpenNamed.html \
+		file_browserElement_OpenNamed2.html \
 		browserElement_SecurityChange.js \
 		test_browserElement_inproc_SecurityChange.html \
 		file_browserElement_SecurityChange.html \
@@ -139,6 +143,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_OpenWindowInFrame.html \
 		test_browserElement_oop_OpenWindowRejected.html \
 		test_browserElement_oop_OpenWindowDifferentOrigin.html \
+		test_browserElement_oop_OpenNamed.html \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
 		test_browserElement_oop_Reload.html \
