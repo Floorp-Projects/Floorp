@@ -11,9 +11,18 @@
 namespace mozilla {
 namespace layers {
 
+template<class Container>
+static void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter);
+template<class Container>
+static void ContainerRemoveChild(Container* aContainer, Layer* aChild);
+
 class ContainerLayerD3D10 : public ContainerLayer,
                             public LayerD3D10
 {
+  template<class Container>
+  friend void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter);
+  template<class Container>
+  friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
 public:
   ContainerLayerD3D10(LayerManagerD3D10 *aManager);
   ~ContainerLayerD3D10();
@@ -47,6 +56,10 @@ public:
 class ShadowContainerLayerD3D10 : public ShadowContainerLayer,
                                   public LayerD3D10
 {
+  template<class Container>
+  friend void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter);
+  template<class Container>
+  friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
 public:
   ShadowContainerLayerD3D10(LayerManagerD3D10 *aManager);
   ~ShadowContainerLayerD3D10();

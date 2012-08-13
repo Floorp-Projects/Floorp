@@ -332,7 +332,6 @@ public:
 
   static DeltaValues AccelerateWheelDelta(widget::WheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
-  static bool IsAccelerationEnabled();
 
   enum {
     kScrollSeriesTimeout = 80
@@ -586,12 +585,6 @@ PRUint32
 nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
 {
   return Preferences::GetUint("mousewheel.transaction.ignoremovedelay", 100);
-}
-
-bool
-nsMouseWheelTransaction::IsAccelerationEnabled()
-{
-  return GetAccelerationStart() >= 0 && GetAccelerationFactor() > 0;
 }
 
 DeltaValues

@@ -87,20 +87,12 @@ endif
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
-ifeq ($(OS_ARCH),QNX)
-ifeq ($(OS_TARGET),NTO)
-LD		:= qcc -Vgcc_ntox86 -nostdlib
-else
-LD		:= $(CC)
-endif
-endif
-
 #
 # Strip off the excessively long version numbers on these platforms,
 # but save the version to allow multiple versions of the same base
 # platform to be built in the same tree.
 #
-ifneq (,$(filter FreeBSD HP-UX Linux NetBSD OpenBSD OSF1 SunOS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD HP-UX Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
 OS_RELEASE	:= $(basename $(OS_RELEASE))
 
 # Allow the user to ignore the OS_VERSION, which is usually irrelevant.
