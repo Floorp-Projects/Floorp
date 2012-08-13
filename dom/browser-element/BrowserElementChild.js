@@ -87,26 +87,6 @@ BrowserElementChild.prototype = {
                        .createInstance(Ci.nsISecureBrowserUI);
     securityUI.init(content);
 
-    // A mozbrowser iframe contained inside a mozapp iframe should return false
-    // for nsWindowUtils::IsPartOfApp (unless the mozbrowser iframe is itself
-    // also mozapp).  That is, mozapp is transitive down to its children, but
-    // mozbrowser serves as a barrier.
-    //
-    // This is because mozapp iframes have some privileges which we don't want
-    // to extend to untrusted mozbrowser content.
-    //
-    // Get the app manifest from the parent, if our frame has one.
-    let appManifestURL = sendSyncMsg('get-mozapp-manifest-url')[0];
-    let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-
-    if (!!appManifestURL) {
-      windowUtils.setIsApp(true);
-      windowUtils.setApp(appManifestURL);
-    } else {
-      windowUtils.setIsApp(false);
-    }
-
     // A cache of the menuitem dom objects keyed by the id we generate
     // and pass to the embedder
     this._ctxHandlers = {};
