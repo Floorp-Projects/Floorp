@@ -15,7 +15,6 @@ LIBRARY_NAME	= gkconbase_s
 LIBXUL_LIBRARY	= 1
 
 
-
 EXPORTS		= \
 		nsAtomListUtils.h \
 		nsAttrName.h \

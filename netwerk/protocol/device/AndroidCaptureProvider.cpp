@@ -102,7 +102,7 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
 }
 
 NS_IMETHODIMP
-AndroidCameraInputStream::Available(PRUint32 *aAvailable)
+AndroidCameraInputStream::Available(PRUint64 *aAvailable)
 {
   mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
 

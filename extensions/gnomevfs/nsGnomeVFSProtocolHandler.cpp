@@ -319,7 +319,7 @@ class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
       : mSpec(uriSpec)
       , mChannel(nullptr)
       , mHandle(nullptr)
-      , mBytesRemaining(PR_UINT32_MAX)
+      , mBytesRemaining(PR_UINT64_MAX)
       , mStatus(NS_OK)
       , mDirList(nullptr)
       , mDirListPtr(nullptr)
@@ -355,7 +355,7 @@ class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
     nsCString                mSpec;
     nsIChannel              *mChannel; // manually refcounted
     GnomeVFSHandle          *mHandle;
-    PRUint32                 mBytesRemaining;
+    PRUint64                 mBytesRemaining;
     nsresult                 mStatus;
     GList                   *mDirList;
     GList                   *mDirListPtr;
@@ -429,13 +429,14 @@ nsGnomeVFSInputStream::DoOpen()
       if (info.mime_type && (strcmp(info.mime_type, APPLICATION_OCTET_STREAM) != 0))
         SetContentTypeOfChannel(info.mime_type);
 
-      // XXX truncates size from 64-bit to 32-bit
-      mBytesRemaining = (PRUint32) info.size;
+      mBytesRemaining = info.size;
 
       // Update the content length attribute on the channel.  We do this
       // synchronously without proxying.  This hack is not as bad as it looks!
-      if (mBytesRemaining != PR_UINT32_MAX)
-        mChannel->SetContentLength(mBytesRemaining);
+      if (mBytesRemaining != PR_UINT64_MAX) {
+        // XXX 64-bit
+        mChannel->SetContentLength(NS_MAX((PRInt32)mBytesRemaining, PR_INT32_MAX));
+      }
     }
     else
     {
@@ -478,6 +479,7 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
     rv = gnome_vfs_read(mHandle, aBuf, aCount, &bytesRead);
     if (rv == GNOME_VFS_OK)
     {
+      // aCount is 32-bit, so aCountRead is under 32-bit value.
       *aCountRead = (PRUint32) bytesRead;
       mBytesRemaining -= *aCountRead;
     }
@@ -668,7 +670,7 @@ nsGnomeVFSInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsGnomeVFSInputStream::Available(PRUint32 *aResult)
+nsGnomeVFSInputStream::Available(PRUint64 *aResult)
 {
   if (NS_FAILED(mStatus))
     return mStatus;

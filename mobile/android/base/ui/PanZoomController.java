@@ -12,6 +12,7 @@ import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
+import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -110,7 +111,7 @@ public class PanZoomController
     private final SubdocumentScrollHelper mSubscroller;
     private final Axis mX;
     private final Axis mY;
-
+    private final EventDispatcher mEventDispatcher;
     private Thread mMainThread;
 
     /* The timer that handles flings or bounces. */
@@ -124,9 +125,9 @@ public class PanZoomController
     /* Current state the pan/zoom UI is in. */
     private PanZoomState mState;
 
-    public PanZoomController(PanZoomTarget target) {
+    public PanZoomController(PanZoomTarget target, EventDispatcher eventDispatcher) {
         mTarget = target;
-        mSubscroller = new SubdocumentScrollHelper(this);
+        mSubscroller = new SubdocumentScrollHelper(this, eventDispatcher);
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
 
@@ -135,9 +136,10 @@ public class PanZoomController
 
         setState(PanZoomState.NOTHING);
 
-        GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
-        GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
-        GeckoAppShell.registerGeckoEventListener(MESSAGE_PREFS_DATA, this);
+        mEventDispatcher = eventDispatcher;
+        registerEventListener(MESSAGE_ZOOM_RECT);
+        registerEventListener(MESSAGE_ZOOM_PAGE);
+        registerEventListener(MESSAGE_PREFS_DATA);
 
         JSONArray prefs = new JSONArray();
         prefs.put(PREF_ZOOM_ANIMATION_FRAMES);
@@ -146,10 +148,18 @@ public class PanZoomController
     }
 
     public void destroy() {
-        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_ZOOM_RECT, this);
-        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
-        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
+        unregisterEventListener(MESSAGE_ZOOM_RECT);
+        unregisterEventListener(MESSAGE_ZOOM_PAGE);
+        unregisterEventListener(MESSAGE_PREFS_DATA);
         mSubscroller.destroy();
+    }
+
+    private void registerEventListener(String event) {
+        mEventDispatcher.registerEventListener(event, this);
+    }
+
+    private void unregisterEventListener(String event) {
+        mEventDispatcher.unregisterEventListener(event, this);
     }
 
     private void setState(PanZoomState state) {
@@ -227,7 +237,7 @@ public class PanZoomController
                 if (zoomAnimationFrames != null) {
                     setZoomAnimationFrames(zoomAnimationFrames);
                     Axis.setPrefs(axisPrefs);
-                    GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
+                    unregisterEventListener(MESSAGE_PREFS_DATA);
                 }
             }
         } catch (Exception e) {
@@ -911,7 +921,7 @@ public class PanZoomController
          * Apply edge resistance if we're zoomed out smaller than the page size by scaling the zoom
          * factor toward 1.0.
          */
-        float resistance = Math.min(mX.getEdgeResistance(), mY.getEdgeResistance());
+        float resistance = Math.min(mX.getEdgeResistance(true), mY.getEdgeResistance(true));
         if (spanRatio > 1.0f)
             spanRatio = 1.0f + (spanRatio - 1.0f) * resistance;
         else

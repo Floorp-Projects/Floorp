@@ -12,8 +12,8 @@
 #include "mozilla/a11y/Role.h"
 
 #include "nsIAtom.h"
+#include "nsIContent.h"
 
-class nsIContent;
 class nsINode;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +225,31 @@ nsRoleMapEntry* GetRoleMap(nsINode* aNode);
  * element.
  */
 PRUint64 UniversalStatesFor(mozilla::dom::Element* aElement);
+
+ /**
+  * Represents a simple enumerator for iterating through ARIA attributes 
+  * exposed as object attributes on a given accessible. 
+  */
+class AttrIterator
+{
+public:
+  AttrIterator(nsIContent* aContent) : 
+    mContent(aContent), mAttrIdx(0) 
+  { 
+    mAttrCount = mContent->GetAttrCount();
+  }
+
+  bool Next(nsAString& aAttrName, nsAString& aAttrValue);
+
+private:
+  AttrIterator() MOZ_DELETE;
+  AttrIterator(const AttrIterator&) MOZ_DELETE;
+  AttrIterator& operator= (const AttrIterator&) MOZ_DELETE;
+
+  nsIContent* mContent;
+  PRUint32 mAttrIdx;
+  PRUint32 mAttrCount;
+};
 
 } // namespace aria
 } // namespace a11y

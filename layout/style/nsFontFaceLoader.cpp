@@ -873,11 +873,16 @@ nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
   rv = channel->Open(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stream->Available(&aBufferLength);
+  PRUint64 bufferLength64;
+  rv = stream->Available(&bufferLength64);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aBufferLength == 0) {
+  if (bufferLength64 == 0) {
     return NS_ERROR_FAILURE;
   }
+  if (bufferLength64 > PR_UINT32_MAX) {
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+  aBufferLength = static_cast<PRUint32>(bufferLength64);
 
   // read all the decoded data
   aBuffer = static_cast<PRUint8*> (NS_Alloc(sizeof(PRUint8) * aBufferLength));

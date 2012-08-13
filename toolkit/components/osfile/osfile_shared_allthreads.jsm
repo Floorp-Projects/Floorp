@@ -346,6 +346,14 @@
        new Type("jschar",
                 ctypes.jschar);
 
+      /**
+       * Base string types.
+       */
+     Types.cstring = Types.char.in_ptr.withName("[in] C string");
+     Types.wstring = Types.jschar.in_ptr.withName("[in] wide string");
+     Types.out_cstring = Types.char.out_ptr.withName("[out] C string");
+     Types.out_wstring = Types.jschar.out_ptr.withName("[out] wide string");
+
      /**
       * A C integer (8-bits).
       */
@@ -464,6 +472,13 @@
      Types.ssize_t =
        new IntType("ssize_t", ctypes.ssize_t, true);
 
+     /**
+      * Encoding/decoding strings
+      */
+     Types.uencoder =
+       new Type("uencoder", ctypes.StructType("uencoder"));
+     Types.udecoder =
+       new Type("udecoder", ctypes.StructType("udecoder"));
 
      /**
       * Utility class, used to build a |struct| type
@@ -672,6 +687,75 @@
      };
      exports.OS.Shared.declareFFI = declareFFI;
 
+
+     /**
+      * Libxul-based utilities, shared by all back-ends.
+      */
+
+     let libxul = ctypes.open(OS.Constants.Path.libxul);
+     exports.OS.Shared.libxul = libxul;
+
+     exports.OS.Shared.Utils = {};
+
+     let Strings = exports.OS.Shared.Utils.Strings = {};
+     let Pointers = exports.OS.Shared.Utils.Pointers = {};
+
+     /**
+      * Import a wide string (e.g. a |jschar.ptr|) as a string.
+      *
+      * @param {CData} wstring The C representation of a widechar string
+      * (can be jschar* or a jschar[]).
+      * @return {string} The same string, as a JavaScript String.
+      */
+     Strings.importWString = function importWString(wstring) {
+       return wstring.readString();
+     };
+
+
+     let NS_Free = libxul.declare("osfile_ns_free", ctypes.default_abi,
+       /*return*/ Types.void_t.implementation,
+       /*ptr*/ Types.voidptr_t.implementation);
+
+     let wstrdup = declareFFI(libxul, "osfile_wstrdup", ctypes.default_abi,
+       /*return*/ Types.out_wstring.releaseWith(NS_Free),
+       /*ptr*/ Types.wstring);
+
+
+      /**
+        * Export a string as a wide string (e.g. a |jschar.ptr|).
+        *
+        * @param {string} string A JavaScript String.
+        * @return {CData} The C representation of that string, as a |jschar*|.
+        * This value will be automatically garbage-collected once it is
+        * not referenced anymore.
+        */
+      Strings.exportWString = function exportWString(string) {
+        return wstrdup(string);
+      };
+
+// Encodings
+
+     Strings.encodeAll = declareFFI(libxul, "osfile_EncodeAll",
+        ctypes.default_abi,
+         /*return*/     Types.void_t.out_ptr.releaseWith(NS_Free),
+         /*encoding*/   Types.cstring,
+         /*source*/     Types.wstring,
+         /*bytes*/      Types.uint32_t.out_ptr);
+
+     let _decodeAll = declareFFI(libxul, "osfile_DecodeAll",
+        ctypes.default_abi,
+         /*return*/     Types.out_wstring.releaseWith(NS_Free),
+         /*encoding*/   Types.cstring,
+         /*source*/     Types.void_t.in_ptr,
+         /*bytes*/      Types.uint32_t);
+
+     Strings.decodeAll = function decodeAll(encoding, source, bytes) {
+       let decoded = _decodeAll(encoding, source, bytes);
+       if (!decoded) {
+         return null;
+       }
+       return Strings.importWString(decoded);
+     };
 
      /**
       * Specific tools that don't really fit anywhere.

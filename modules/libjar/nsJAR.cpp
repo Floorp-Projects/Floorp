@@ -422,11 +422,11 @@ nsJAR::LoadEntry(const nsACString &aFilename, char** aBuf, PRUint32* aBufLen)
   
   //-- Read the manifest file into memory
   char* buf;
-  PRUint32 len;
-  rv = manifestStream->Available(&len);
+  PRUint64 len64;
+  rv = manifestStream->Available(&len64);
   if (NS_FAILED(rv)) return rv;
-  if (len == PRUint32(-1))
-    return NS_ERROR_FILE_CORRUPTED; // bug 164695
+  NS_ENSURE_TRUE(len64 < PR_UINT32_MAX, NS_ERROR_FILE_CORRUPTED); // bug 164695
+  PRUint32 len = (PRUint32)len64;
   buf = (char*)malloc(len+1);
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 bytesRead;

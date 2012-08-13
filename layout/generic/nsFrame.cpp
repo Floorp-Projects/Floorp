@@ -3647,10 +3647,7 @@ nsIFrame::InlineMinWidthData::ForceBreak(nsRenderingContext *aRenderingContext)
   currentLine = trailingWhitespace = 0;
 
   for (PRUint32 i = 0, i_end = floats.Length(); i != i_end; ++i) {
-    nsIFrame *floatFrame = floats[i];
-    nscoord float_min =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, floatFrame,
-                                           nsLayoutUtils::MIN_WIDTH);
+    nscoord float_min = floats[i].Width();
     if (float_min > prevLines)
       prevLines = float_min;
   }
@@ -3689,8 +3686,8 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsRenderingContext *aRenderingContext)
             floats_cur_right = 0;
 
     for (PRUint32 i = 0, i_end = floats.Length(); i != i_end; ++i) {
-      nsIFrame *floatFrame = floats[i];
-      const nsStyleDisplay *floatDisp = floatFrame->GetStyleDisplay();
+      const FloatInfo& floatInfo = floats[i];
+      const nsStyleDisplay *floatDisp = floatInfo.Frame()->GetStyleDisplay();
       if (floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT ||
           floatDisp->mBreakType == NS_STYLE_CLEAR_RIGHT ||
           floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT) {
@@ -3706,10 +3703,7 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsRenderingContext *aRenderingContext)
 
       nscoord &floats_cur = floatDisp->mFloats == NS_STYLE_FLOAT_LEFT
                               ? floats_cur_left : floats_cur_right;
-      nscoord floatWidth =
-          nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                               floatFrame,
-                                               nsLayoutUtils::PREF_WIDTH);
+      nscoord floatWidth = floatInfo.Width();
       // Negative-width floats don't change the available space so they
       // shouldn't change our intrinsic line width either.
       floats_cur =

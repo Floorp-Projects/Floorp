@@ -172,6 +172,12 @@ function disallowUnlimitedQuota(url)
   throw "disallowUnlimitedQuota";
 }
 
+function gc()
+{
+  Components.utils.forceGC();
+  Components.utils.forceCC();
+}
+
 var SpecialPowers = {
   isMainProcess: function() {
     return Components.classes["@mozilla.org/xre/app-info;1"]

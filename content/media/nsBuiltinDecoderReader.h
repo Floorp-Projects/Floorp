@@ -52,11 +52,12 @@ public:
   bool mHasVideo;
 };
 
-#ifndef MOZ_FLOATING_POINT_AUDIO
+#ifdef MOZ_TREMOR
 #include <ogg/os_types.h>
 typedef ogg_int32_t VorbisPCMValue;
 typedef short AudioDataValue;
 
+#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16_LE)
 #define MOZ_CLIP_TO_15(x) ((x)<-32768?-32768:(x)<=32767?(x):32767)
 // Convert the output of vorbis_synthesis_pcmout to a AudioDataValue
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) \
@@ -65,11 +66,12 @@ typedef short AudioDataValue;
 #define MOZ_CONVERT_AUDIO_SAMPLE(x) ((x)*(1.F/32768))
 #define MOZ_SAMPLE_TYPE_S16LE 1
 
-#else /* MOZ_FLOATING_POINT_AUDIO == 1*/
+#else /*MOZ_VORBIS*/
 
 typedef float VorbisPCMValue;
 typedef float AudioDataValue;
 
+#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) (x)
 #define MOZ_CONVERT_AUDIO_SAMPLE(x) (x)
 #define MOZ_SAMPLE_TYPE_FLOAT32 1

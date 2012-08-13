@@ -247,7 +247,8 @@ class Marionette(object):
         self.client.close()
         return response
 
-    def get_session_capabilities(self):
+    @property
+    def session_capabilities(self):
         response = self._send_message('getSessionCapabilities', 'value')
         return response
 

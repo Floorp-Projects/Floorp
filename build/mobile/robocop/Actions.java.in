@@ -43,7 +43,7 @@ public interface Actions {
      * 
      * @param geckoEvent The geckoEvent JSONObject's type
      */
-    EventExpecter expectGeckoEvent(String geckoEvent);
+    RepeatedEventExpecter expectGeckoEvent(String geckoEvent);
 
     /**
      * Listens for a paint event. Note that calling expectPaint() will

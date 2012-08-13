@@ -520,7 +520,7 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   *outBRNode = nullptr;
 
   // calling it text insertion to trigger moz br treatment by rules
-  nsAutoRules beginRulesSniffing(this, OperationID::insertText, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -640,7 +640,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
-  nsAutoRules beginRulesSniffing(this, OperationID::deleteSelection, aAction);
+  nsAutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   // pre-process
   nsRefPtr<Selection> selection = GetSelection();
@@ -666,7 +666,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
     }
   }
 
-  nsTextRulesInfo ruleInfo(OperationID::deleteSelection);
+  nsTextRulesInfo ruleInfo(EditAction::deleteSelection);
   ruleInfo.collapsedAction = aAction;
   ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
@@ -692,10 +692,10 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  OperationID opID = OperationID::insertText;
+  EditAction opID = EditAction::insertText;
   if (mInIMEMode) 
   {
-    opID = OperationID::insertIMEText;
+    opID = EditAction::insertIMEText;
   }
   nsAutoPlaceHolderBatch batch(this, nullptr); 
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
@@ -735,7 +735,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, OperationID::insertBreak, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
 
   // pre-process
   nsRefPtr<Selection> selection = GetSelection();
@@ -747,7 +747,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
   shell->MaybeInvalidateCaretPosition();
 
-  nsTextRulesInfo ruleInfo(OperationID::insertBreak);
+  nsTextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1082,9 +1082,9 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
 
   ForceCompositionEnd();
 
-  nsAutoRules beginRulesSniffing(this, OperationID::undo, nsIEditor::eNone);
+  nsAutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
-  nsTextRulesInfo ruleInfo(OperationID::undo);
+  nsTextRulesInfo ruleInfo(EditAction::undo);
   nsRefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1111,9 +1111,9 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
 
   ForceCompositionEnd();
 
-  nsAutoRules beginRulesSniffing(this, OperationID::redo, nsIEditor::eNone);
+  nsAutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
-  nsTextRulesInfo ruleInfo(OperationID::redo);
+  nsTextRulesInfo ruleInfo(EditAction::redo);
   nsRefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1256,7 +1256,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsString resultString;
-  nsTextRulesInfo ruleInfo(OperationID::outputText);
+  nsTextRulesInfo ruleInfo(EditAction::outputText);
   ruleInfo.outString = &resultString;
   // XXX Struct should store a nsAReadable*
   nsAutoString str(aFormatType);
@@ -1392,10 +1392,10 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, OperationID::insertText, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(OperationID::insertElement);
+  nsTextRulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1520,7 +1520,7 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 /** All editor operations which alter the doc should be prefaced
  *  with a call to StartOperation, naming the action and direction */
 NS_IMETHODIMP
-nsPlaintextEditor::StartOperation(OperationID opID,
+nsPlaintextEditor::StartOperation(EditAction opID,
                                   nsIEditor::EDirection aDirection)
 {
   // Protect the edit rules object from dying

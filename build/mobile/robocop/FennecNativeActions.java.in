@@ -65,8 +65,8 @@ public class FennecNativeActions implements Actions {
             Class [] parameters = new Class[2];
             parameters[0] = String.class;
             parameters[1] = mGel;
-            mRegisterGEL = mGas.getMethod("registerGeckoEventListener", parameters);
-            mUnregisterGEL = mGas.getMethod("unregisterGeckoEventListener", parameters);
+            mRegisterGEL = mGas.getMethod("registerEventListener", parameters);
+            mUnregisterGEL = mGas.getMethod("unregisterEventListener", parameters);
             parameters = new Class[1];
             parameters[0] = mGe;
             mSendGE = mGas.getMethod("sendEventToGecko", parameters);
@@ -115,7 +115,7 @@ public class FennecNativeActions implements Actions {
         }
     }
 
-    class GeckoEventExpecter implements EventExpecter {
+    class GeckoEventExpecter implements RepeatedEventExpecter {
         private final String mGeckoEvent;
         private final Object[] mRegistrationParams;
         private boolean mEventReceived;
@@ -143,6 +143,61 @@ public class FennecNativeActions implements Actions {
                     return;
                 }
             }
+            try {
+                mUnregisterGEL.invoke(null, mRegistrationParams);
+            } catch (IllegalAccessException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            } catch (InvocationTargetException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                "unblocked on expecter for " + mGeckoEvent);
+        }
+
+        public synchronized void blockUntilClear(long millis) {
+            if (millis <= 0) {
+                throw new IllegalArgumentException("millis must be > 0");
+            }
+            // wait for at least one event
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
+            while (!mEventReceived) {
+                try {
+                    this.wait(MAX_WAIT_MS);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
+                    break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (!mEventReceived && (endTime - startTime >= MAX_WAIT_MS)) {
+                    mAsserter.ok(false, "GeckoEventExpecter", "blockUtilClear timeout");
+                    return;
+                }
+            }
+            // now wait for a period of millis where we don't get an event
+            startTime = SystemClock.uptimeMillis();
+            while (true) {
+                try {
+                    this.wait(millis);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
+                    break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (endTime - startTime >= millis) {
+                    // success
+                    break;
+                }
+                // we got a notify() before we could wait long enough, so we need to start over
+                startTime = endTime;
+            }
+            try {
+                mUnregisterGEL.invoke(null, mRegistrationParams);
+            } catch (IllegalAccessException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            } catch (InvocationTargetException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            }
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "unblocked on expecter for " + mGeckoEvent);
         }
@@ -152,13 +207,6 @@ public class FennecNativeActions implements Actions {
         }
 
         void notifyOfEvent() {
-            try {
-                mUnregisterGEL.invoke(null, mRegistrationParams);
-            } catch (IllegalAccessException e) {
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-            } catch (InvocationTargetException e) {
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-            }
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "received event " + mGeckoEvent);
             synchronized (this) {
@@ -168,7 +216,7 @@ public class FennecNativeActions implements Actions {
         }
     }
     
-    public EventExpecter expectGeckoEvent(String geckoEvent) {
+    public RepeatedEventExpecter expectGeckoEvent(String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
             "waiting for "+geckoEvent);
         try {

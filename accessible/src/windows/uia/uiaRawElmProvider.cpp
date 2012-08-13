@@ -8,6 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "nsIPersistentProperties2.h"
+#include "nsARIAMap.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -194,6 +195,30 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       if(!xmlRoles.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(xmlRoles.get());
+        return S_OK;
+      }
+
+      break;
+    }
+
+    //ARIA Properties
+    case UIA_AriaPropertiesPropertyId: {
+      nsAutoString ariaProperties;
+
+      aria::AttrIterator attribIter(mAcc->GetContent());
+      nsAutoString attribName, attribValue;
+      while (attribIter.Next(attribName, attribValue)) {
+        ariaProperties.Append(attribName);
+        ariaProperties.Append('=');
+        ariaProperties.Append(attribValue);
+        ariaProperties.Append(';');
+      }
+
+      if (!ariaProperties.IsEmpty()) {
+        //remove last delimiter:
+        ariaProperties.Truncate(ariaProperties.Length()-1);
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(ariaProperties.get());
         return S_OK;
       }
 

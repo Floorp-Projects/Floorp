@@ -199,6 +199,7 @@
 #include "nsIDOMCompositionEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
+#include "nsIDOMWheelEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
@@ -539,6 +540,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "LockedFile.h"
 #include "GeneratedEvents.h"
 #include "mozilla/Likely.h"
+#include "nsDebug.h"
 
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
@@ -813,6 +815,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MouseEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MouseScrollEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WheelEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DragEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1749,6 +1753,7 @@ NS_DEFINE_CONTRACT_CTOR(MozActivity, NS_DOMACTIVITY_CONTRACTID)
 NS_DEFINE_EVENT_CTOR(Event)
 NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
+NS_DEFINE_EVENT_CTOR(WheelEvent)
 #ifdef MOZ_B2G_RIL
 NS_DEFINE_EVENT_CTOR(MozWifiStatusChangeEvent)
 NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
@@ -1787,6 +1792,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(WheelEvent)
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiConnectionInfoEvent)
@@ -1821,6 +1827,7 @@ jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
 jsid nsDOMClassInfo::sScrollbars_id      = JSID_VOID;
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
+jsid nsDOMClassInfo::s_content_id        = JSID_VOID;
 jsid nsDOMClassInfo::sContent_id         = JSID_VOID;
 jsid nsDOMClassInfo::sMenubar_id         = JSID_VOID;
 jsid nsDOMClassInfo::sToolbar_id         = JSID_VOID;
@@ -2067,8 +2074,10 @@ SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
 
   if (MOZ_UNLIKELY(!*parent)) {
     // The only known case where this can happen is when the inner window has
-    // been torn down. See bug 691178 comment 11.
-    MOZ_ASSERT(win->IsClosedOrClosing());
+    // been torn down. See bug 691178 comment 11. Should be a fatal MOZ_ASSERT,
+    // but we've found a way to hit it too often in mochitests. See bugs 777875
+    // 778424, 781078.
+    NS_ASSERTION(win->IsClosedOrClosing(), "win should be closed or closing");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -2097,6 +2106,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
+  SET_JSID_TO_STRING(s_content_id,        cx, "_content");
   SET_JSID_TO_STRING(sContent_id,         cx, "content");
   SET_JSID_TO_STRING(sMenubar_id,         cx, "menubar");
   SET_JSID_TO_STRING(sToolbar_id,         cx, "toolbar");
@@ -2653,6 +2663,12 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MouseScrollEvent, nsIDOMMouseScrollEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseScrollEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WheelEvent, nsIDOMWheelEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWheelEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -5212,6 +5228,7 @@ nsDOMClassInfo::ShutDown()
   sScrollbars_id      = JSID_VOID;
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
+  s_content_id        = JSID_VOID;
   sContent_id         = JSID_VOID;
   sMenubar_id         = JSID_VOID;
   sToolbar_id         = JSID_VOID;
@@ -6949,6 +6966,18 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   return rv;
 }
 
+// Native code for window._content getter, this simply maps
+// window._content to window.content for backwards compatibility only.
+static JSBool
+ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JSObject *obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj)
+    return JS_FALSE;
+
+  return ::JS_GetProperty(cx, obj, "content", vp);
+}
+
 static JSNewResolveOp sOtherResolveFuncs[] = {
   mozilla::dom::workers::ResolveWorkerClasses
 };
@@ -7278,6 +7307,36 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       return NS_OK;
     }
+  }
+
+  if (s_content_id == id) {
+    // Map window._content to window.content for backwards
+    // compatibility, this should spit out an message on the JS
+    // console.
+
+    JSObject *windowObj = win->GetGlobalJSObject();
+
+    JSAutoRequest ar(cx);
+
+    JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
+                                       windowObj, "_content");
+    if (!fun) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JSObject *funObj = ::JS_GetFunctionObject(fun);
+
+    if (!::JS_DefinePropertyById(cx, windowObj, id, JSVAL_VOID,
+                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),
+                                 nullptr,
+                                 JSPROP_ENUMERATE | JSPROP_GETTER |
+                                 JSPROP_SHARED)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *objp = obj;
+
+    return NS_OK;
   }
 
   if (flags & JSRESOLVE_ASSIGNING) {
@@ -7936,9 +7995,14 @@ GetBindingURL(Element *aElement, nsIDocument *aDocument,
 {
   // If we have a frame the frame has already loaded the binding.  And
   // otherwise, don't do anything else here unless we're dealing with
-  // XUL.
+  // XUL or an HTML element that may have a plugin-related overlay
+  // (i.e. object, embed, or applet).
+  bool isXULorPluginElement = (aElement->IsXUL() ||
+                               aElement->IsHTML(nsGkAtoms::object) ||
+                               aElement->IsHTML(nsGkAtoms::embed) ||
+                               aElement->IsHTML(nsGkAtoms::applet));
   nsIPresShell *shell = aDocument->GetShell();
-  if (!shell || aElement->GetPrimaryFrame() || !aElement->IsXUL()) {
+  if (!shell || aElement->GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
 
     return true;
@@ -9768,18 +9832,18 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
     // that can result from such a situation. We'll return NS_OK for the time
     // being and hope for the best.
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetupProtoChain failed!");
-    return NS_OK;
+  }
+  else {
+    // This may be null if the JS context is not a DOM context. That's ok, we'll
+    // use the safe context from XPConnect in the runnable.
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
+
+    nsRefPtr<nsPluginProtoChainInstallRunner> runner =
+      new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
+    nsContentUtils::AddScriptRunner(runner);
   }
 
-  // This may be null if the JS context is not a DOM context. That's ok, we'll
-  // use the safe context from XPConnect in the runnable.
-  nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
-
-  nsRefPtr<nsPluginProtoChainInstallRunner> runner =
-    new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
-  nsContentUtils::AddScriptRunner(runner);
-
-  return NS_OK;
+  return nsElementSH::PostCreate(wrapper, cx, obj);
 }
 
 NS_IMETHODIMP

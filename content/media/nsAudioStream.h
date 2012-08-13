@@ -11,14 +11,6 @@
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
 
-#ifndef MOZ_FLOATING_POINT_AUDIO
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16_LE)
-typedef short SampleType;
-#else
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
-typedef float SampleType;
-#endif
-
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels,Format}
@@ -36,7 +28,8 @@ public:
 
   nsAudioStream()
     : mRate(0),
-      mChannels(0)
+      mChannels(0),
+      mFormat(FORMAT_S16_LE)
   {}
 
   virtual ~nsAudioStream();
@@ -63,7 +56,7 @@ public:
   // (22050Hz, 44100Hz, etc).
   // Unsafe to call with a monitor held due to synchronous event execution
   // on the main thread, which may attempt to acquire any held monitor.
-  virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate) = 0;
+  virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat) = 0;
 
   // Closes the stream. All future use of the stream is an error.
   // Unsafe to call with a monitor held due to synchronous event execution
@@ -113,7 +106,7 @@ public:
 
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
-  SampleFormat GetFormat() { return MOZ_AUDIO_DATA_FORMAT; }
+  SampleFormat GetFormat() { return mFormat; }
 
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;

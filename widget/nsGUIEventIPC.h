@@ -96,27 +96,49 @@ struct ParamTraits<nsMouseEvent_base>
 };
 
 template<>
-struct ParamTraits<nsMouseScrollEvent>
+struct ParamTraits<mozilla::widget::WheelEvent>
 {
-  typedef nsMouseScrollEvent paramType;
+  typedef mozilla::widget::WheelEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
-    WriteParam(aMsg, aParam.scrollFlags);
-    WriteParam(aMsg, aParam.delta);
-    WriteParam(aMsg, aParam.scrollOverflow);
+    WriteParam(aMsg, aParam.deltaX);
+    WriteParam(aMsg, aParam.deltaY);
+    WriteParam(aMsg, aParam.deltaZ);
+    WriteParam(aMsg, aParam.deltaMode);
+    WriteParam(aMsg, aParam.customizedByUserPrefs);
+    WriteParam(aMsg, aParam.isMomentum);
+    WriteParam(aMsg, aParam.isPixelOnlyDevice);
+    WriteParam(aMsg, aParam.lineOrPageDeltaX);
+    WriteParam(aMsg, aParam.lineOrPageDeltaY);
+    WriteParam(aMsg, static_cast<PRInt32>(aParam.scrollType));
+    WriteParam(aMsg, aParam.overflowDeltaX);
+    WriteParam(aMsg, aParam.overflowDeltaY);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->scrollFlags) &&
-           ReadParam(aMsg, aIter, &aResult->delta) &&
-           ReadParam(aMsg, aIter, &aResult->scrollOverflow);
+    PRInt32 scrollType;
+    bool rv =
+      ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+      ReadParam(aMsg, aIter, &aResult->deltaX) &&
+      ReadParam(aMsg, aIter, &aResult->deltaY) &&
+      ReadParam(aMsg, aIter, &aResult->deltaZ) &&
+      ReadParam(aMsg, aIter, &aResult->deltaMode) &&
+      ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
+      ReadParam(aMsg, aIter, &aResult->isMomentum) &&
+      ReadParam(aMsg, aIter, &aResult->isPixelOnlyDevice) &&
+      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
+      ReadParam(aMsg, aIter, &scrollType) &&
+      ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->overflowDeltaY);
+    aResult->scrollType =
+      static_cast<mozilla::widget::WheelEvent::ScrollType>(scrollType);
+    return rv;
   }
 };
-
 
 template<>
 struct ParamTraits<nsMouseEvent>
@@ -351,18 +373,12 @@ struct ParamTraits<nsQueryContentEvent>
     WriteParam(aMsg, aParam.mSucceeded);
     WriteParam(aMsg, aParam.mInput.mOffset);
     WriteParam(aMsg, aParam.mInput.mLength);
-    WriteParam(aMsg, *aParam.mInput.mMouseScrollEvent);
     WriteParam(aMsg, aParam.mReply.mOffset);
     WriteParam(aMsg, aParam.mReply.mString);
     WriteParam(aMsg, aParam.mReply.mRect);
     WriteParam(aMsg, aParam.mReply.mReversed);
     WriteParam(aMsg, aParam.mReply.mHasSelection);
     WriteParam(aMsg, aParam.mReply.mWidgetIsHit);
-    WriteParam(aMsg, aParam.mReply.mLineHeight);
-    WriteParam(aMsg, aParam.mReply.mPageHeight);
-    WriteParam(aMsg, aParam.mReply.mPageWidth);
-    WriteParam(aMsg, aParam.mReply.mComputedScrollAmount);
-    WriteParam(aMsg, aParam.mReply.mComputedScrollAction);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -372,18 +388,12 @@ struct ParamTraits<nsQueryContentEvent>
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mLength) &&
-           ReadParam(aMsg, aIter, aResult->mInput.mMouseScrollEvent) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mString) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mRect) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mHasSelection) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mLineHeight) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mPageHeight) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mPageWidth) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAmount) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAction);
+           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit);
   }
 };
 

@@ -1,0 +1,5 @@
+The source from this directory was copied from the Android OS source
+using the update.sh script and modified with patches as applied by
+that script.
+
+The git branch used from AOSP was android-4.0.4_r2.1.

@@ -85,6 +85,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -139,6 +140,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
   switch(mEvent->eventStructType) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -167,6 +169,7 @@ nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
   switch(mEvent->eventStructType) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -206,6 +209,7 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -227,6 +231,7 @@ nsDOMMouseEvent::GetButtons(PRUint16* aButtons)
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -250,6 +255,7 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
