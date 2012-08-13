@@ -200,7 +200,7 @@ LayerManagerD3D10::Initialize(bool force)
     mInputLayout = attachments->mInputLayout;
   }
 
-  if (HasShadowManager()) {
+  if (ShadowLayerForwarder::HasShadowManager()) {
     reporter.SetSuccessful();
     return true;
   }
@@ -335,12 +335,12 @@ LayerManagerD3D10::BeginTransactionWithTarget(gfxContext* aTarget)
 }
 
 bool
-LayerManagerD3D10::EndEmptyTransaction()
+LayerManagerD3D10::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
   if (!mRoot)
     return false;
 
-  EndTransaction(nullptr, nullptr);
+  EndTransaction(nullptr, nullptr, aFlags);
   return true;
 }
 
