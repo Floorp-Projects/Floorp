@@ -10,6 +10,7 @@
 #include "mozilla/dom/FragmentOrElement.h" // for base class
 #include "nsChangeHint.h"                  // for enum
 #include "nsEventStates.h"                 // for member
+#include "mozilla/dom/DirectionalityUtils.h"
 
 class nsEventStateManager;
 class nsFocusManager;
@@ -215,6 +216,54 @@ public:
    * "class" attribute for this type of content node.
    */
   virtual nsIAtom *GetClassAttributeName() const = 0;
+
+  inline mozilla::directionality::Directionality GetDirectionality() const {
+    if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
+      return mozilla::directionality::eDir_RTL;
+    }
+
+    if (HasFlag(NODE_HAS_DIRECTION_LTR)) {
+      return mozilla::directionality::eDir_LTR;
+    }
+
+    return mozilla::directionality::eDir_NotSet;
+  }
+
+  inline void SetDirectionality(mozilla::directionality::Directionality aDir,
+                                bool aNotify) {
+    UnsetFlags(NODE_ALL_DIRECTION_FLAGS);
+    if (!aNotify) {
+      RemoveStatesSilently(DIRECTION_STATES);
+    }
+
+    switch (aDir) {
+      case (mozilla::directionality::eDir_RTL):
+        SetFlags(NODE_HAS_DIRECTION_RTL);
+        if (!aNotify) {
+          AddStatesSilently(NS_EVENT_STATE_RTL);
+        }
+        break;
+
+      case(mozilla::directionality::eDir_LTR):
+        SetFlags(NODE_HAS_DIRECTION_LTR);
+        if (!aNotify) {
+          AddStatesSilently(NS_EVENT_STATE_LTR);
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    /* 
+     * Only call UpdateState if we need to notify, because we call
+     * SetDirectionality for every element, and UpdateState is very very slow
+     * for some elements.
+     */
+    if (aNotify) {
+      UpdateState(true);
+    }
+  }
 
 protected:
   /**

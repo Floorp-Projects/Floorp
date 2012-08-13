@@ -15,6 +15,9 @@
 #endif
 #ifdef MOZ_OPUS
 #include <opus/opus.h>
+extern "C" {
+#include "opus/opus_multistream.h"
+}
 // For MOZ_SAMPLE_TYPE_*
 #include "nsBuiltinDecoderStateMachine.h"
 #include "nsBuiltinDecoderReader.h"
@@ -326,8 +329,11 @@ public:
 #endif
   int mChannelMapping; // Channel mapping family.
   int mStreams;     // Number of packed streams in each packet.
+  int mCoupledStreams; // Number of packed coupled streams in each packet.
+  unsigned char mMappingTable[255]; // Channel mapping table.
 
-  OpusDecoder *mDecoder;
+  OpusMSDecoder *mDecoder;
+
   int mSkip;        // Number of samples left to trim before playback.
   // Granule position (end sample) of the last decoded Opus packet. This is
   // used to calculate the amount we should trim from the last packet.

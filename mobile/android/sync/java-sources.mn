@@ -180,6 +180,7 @@ sync/setup/activities/SendTabActivity.java
 sync/setup/activities/SetupFailureActivity.java
 sync/setup/activities/SetupSuccessActivity.java
 sync/setup/activities/SetupSyncActivity.java
+sync/setup/activities/WebViewActivity.java
 sync/setup/auth/AccountAuthenticator.java
 sync/setup/auth/AuthenticateAccountStage.java
 sync/setup/auth/AuthenticationResult.java

@@ -7,6 +7,7 @@
 #include "DeviceStorageRequestChild.h"
 #include "nsDeviceStorage.h"
 #include "nsDOMFile.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,6 +29,7 @@ DeviceStorageRequestChild::DeviceStorageRequestChild(DOMRequest* aRequest,
 DeviceStorageRequestChild::~DeviceStorageRequestChild() {
   MOZ_COUNT_DTOR(DeviceStorageRequestChild);
 }
+
 bool
 DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aValue)
 {
@@ -50,21 +52,20 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TBlobResponse:
     {
       BlobResponse r = aValue;
+      BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
+      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
 
-      // I am going to hell for this.  bent says he'll save me.
-      const InfallibleTArray<PRUint8> bits = r.bits();
-      void* buffer = PR_Malloc(bits.Length());
-      memcpy(buffer, (void*) bits.Elements(), bits.Length());
+      jsval result = InterfaceToJsval(mRequest->GetOwner(), blob, &NS_GET_IID(nsIDOMBlob));
+      mRequest->FireSuccess(result);
+      break;
+    }
 
-      nsString mimeType;
-      mimeType.AssignWithConversion(r.contentType());
+    case DeviceStorageResponseValue::TStatStorageResponse:
+    {
+      StatStorageResponse r = aValue;
 
-      nsCOMPtr<nsIDOMBlob> blob = new nsDOMMemoryFile(buffer,
-                                                      bits.Length(),
-                                                      mFile->mPath,
-                                                      mimeType);
-
-      jsval result = BlobToJsval(mRequest->GetOwner(), blob);
+      nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(r.freeBytes(), r.totalBytes());
+      jsval result = InterfaceToJsval(mRequest->GetOwner(), domstat, &NS_GET_IID(nsIDOMDeviceStorageStat));
       mRequest->FireSuccess(result);
       break;
     }
@@ -77,10 +78,13 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       PRUint32 count = r.paths().Length();
       for (PRUint32 i = 0; i < count; i++) {
         nsCOMPtr<nsIFile> f;
-        NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
+        nsresult rv = NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
+        if (NS_FAILED(rv)) {
+          continue;
+        }
 
         nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(f);
-        dsf->SetPath(r.paths()[i].path());
+        dsf->SetPath(r.paths()[i].name());
         cursor->mFiles.AppendElement(dsf);
       }
 

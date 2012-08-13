@@ -3382,7 +3382,7 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
 {
     RootedObject protoProto(cx, protoProto_);
 
-    RootedAtom atom(cx, js_Atomize(cx, clasp->name, strlen(clasp->name)));
+    RootedAtom atom(cx, Atomize(cx, clasp->name, strlen(clasp->name)));
     if (!atom)
         return NULL;
 
@@ -3888,7 +3888,7 @@ js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
         }
         id = NameToId(cx->runtime->atomState.classAtoms[protoKey]);
     } else {
-        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
+        JSAtom *atom = Atomize(cx, clasp->name, strlen(clasp->name));
         if (!atom)
             return false;
         id = AtomToId(atom);
@@ -4709,7 +4709,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
 
     if (!obj2->isNative()) {
         return obj2->isProxy()
-               ? Proxy::get(cx, obj2, receiver, id, vp.address())
+               ? Proxy::get(cx, obj2, receiver, id, vp)
                : obj2->getGeneric(cx, id, vp);
     }
 

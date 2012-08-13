@@ -340,11 +340,11 @@ bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
   return PBrowserParent::SendRealMouseEvent(e);
 }
 
-bool TabParent::SendMouseScrollEvent(nsMouseScrollEvent& event)
+bool TabParent::SendMouseWheelEvent(WheelEvent& event)
 {
-  nsMouseScrollEvent e(event);
+  WheelEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
-  return PBrowserParent::SendMouseScrollEvent(e);
+  return PBrowserParent::SendMouseWheelEvent(event);
 }
 
 bool TabParent::SendRealKeyEvent(nsKeyEvent& event)

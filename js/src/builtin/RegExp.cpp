@@ -265,7 +265,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!str)
             return false;
 
-        source = js_AtomizeString(cx, str);
+        source = AtomizeString(cx, str);
         if (!source)
             return false;
     }
@@ -555,8 +555,8 @@ GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
     if (cx->compartment->regExps.lookupHack(source, flags, cx, g))
         return true;
 
-    JSAtom *hackedSource = js_AtomizeChars(cx, source->chars() + ArrayLength(GreedyStarChars),
-                                           source->length() - ArrayLength(GreedyStarChars));
+    JSAtom *hackedSource = AtomizeChars(cx, source->chars() + ArrayLength(GreedyStarChars),
+                                        source->length() - ArrayLength(GreedyStarChars));
     if (!hackedSource)
         return false;
 

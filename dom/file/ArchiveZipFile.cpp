@@ -169,7 +169,7 @@ ArchiveInputStream::Close()
 }
 
 NS_IMETHODIMP
-ArchiveInputStream::Available(PRUint32* _retval)
+ArchiveInputStream::Available(PRUint64* _retval)
 {
   *_retval = mLength - mZs.total_out - mStart;
   return NS_OK;

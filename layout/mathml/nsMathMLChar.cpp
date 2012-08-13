@@ -33,16 +33,15 @@
 
 using namespace mozilla;
 
-//#define SHOW_BORDERS 1
 //#define NOISY_SEARCH 1
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 static const PRUnichar   kSpaceCh   = PRUnichar(' ');
 static const nsGlyphCode kNullGlyph = {{0, 0}, 0};
 typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
   nsMathfontPrefExtension;
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // nsGlyphTable is a class that provides an interface for accessing glyphs
 // of stretchy chars. It acts like a table that stores the variants of bigger
 // sizes (if any) and the partial glyphs needed to build extensible symbols.
@@ -59,31 +58,36 @@ typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
 // points or as direct glyph indices, depending on the type of the table.
 // XXX The latter is not yet supported.
 
-// General format of MathFont Property Files from which glyph data are retrieved:
-// -----------------------------------------------------------------------------------
+// General format of MathFont Property Files from which glyph data are
+// retrieved:
+// -----------------------------------------------------------------------------
 // Each font should have its set of glyph data. For example, the glyph data for
 // the "Symbol" font and the "MT Extra" font are in "mathfontSymbol.properties"
-// and "mathfontMTExtra.properties", respectively. The mathfont property file is a
-// set of all the stretchy MathML characters that can be rendered with that font
-// using larger and/or partial glyphs. The entry of each stretchy character in the
-// mathfont property file gives, in that order, the 4 partial glyphs: Top (or Left),
-// Middle, Bottom (or Right), Glue; and the variants of bigger sizes (if any).
+// and "mathfontMTExtra.properties", respectively. The mathfont property file
+// is a set of all the stretchy MathML characters that can be rendered with that
+// font using larger and/or partial glyphs. The entry of each stretchy character
+// in the mathfont property file gives, in that order, the 4 partial glyphs:
+// Top (or Left), Middle, Bottom (or Right), Glue; and the variants of bigger
+// sizes (if any).
 // A position that is not relevant to a particular character is indicated there
 // with the UNICODE REPLACEMENT CHARACTER 0xFFFD.
 // Characters that need to be built recursively from other characters are said
 // to be composite. For example, chars like over/underbrace in CMEX10 have to
-// be built from two half stretchy chars and joined in the middle (TeXbook, p.225).
-// Such chars are handled in a special manner by the nsMathMLChar class, which allows
-// several (2 or more) child chars to be composed in order to render another char.
-// To specify such chars, their list of glyphs in the property file should be given
-// as space-separated segments of glyphs. Each segment gives the 4 partial
+// be built from two half stretchy chars and joined in the middle
+// (TeXbook, p.225).
+// Such chars are handled in a special manner by the nsMathMLChar class, which
+// allows several (2 or more) child chars to be composed in order to render
+// another char.
+// To specify such chars, their list of glyphs in the property file should be
+// given as space-separated segments of glyphs. Each segment gives the 4 partial
 // glyphs with which to build the child char that will be joined with its other
-// siblings. In this code, when this situation happens (see the detailed description
-// of Stretch() below), the original char (referred to as "parent") creates a
-// singly-linked list of child chars, asking them to stretch in an equally divided
-// space. The nsGlyphTable embeds the necessary logic to guarantee correctness in a
-// recursive stretch (and in the use of TopOf(), GlueOf(), etc) on these child chars.
-// -----------------------------------------------------------------------------------
+// siblings. In this code, when this situation happens (see the detailed
+// description of Stretch() below), the original char (referred to as "parent")
+// creates a singly-linked list of child chars, asking them to stretch in an
+// equally divided space. The nsGlyphTable embeds the necessary logic to
+// guarantee correctness in a recursive stretch (and in the use of TopOf(),
+// GlueOf(), etc) on these child chars.
+// -----------------------------------------------------------------------------
 
 #define NS_TABLE_TYPE_UNICODE       0
 #define NS_TABLE_TYPE_GLYPH_INDEX   1
@@ -116,7 +120,7 @@ LoadProperties(const nsString& aName,
                                                 NS_ConvertUTF16toUTF8(uriStr));
 }
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class nsGlyphTable {
 public:
@@ -130,7 +134,8 @@ public:
     mFontName.AppendElement(aPrimaryFontName);
   }
 
-  ~nsGlyphTable() // not a virtual destructor: this class is not intended to be subclassed
+  // not a virtual destructor: this class is not intended to be subclassed
+  ~nsGlyphTable()
   {
     MOZ_COUNT_DTOR(nsGlyphTable);
   }
@@ -174,7 +179,8 @@ public:
   nsGlyphCode GlueOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
     return ElementAt(aPresContext, aChar, 3);
   }
-  nsGlyphCode BigOf(nsPresContext* aPresContext, nsMathMLChar* aChar, PRInt32 aSize) {
+  nsGlyphCode BigOf(nsPresContext* aPresContext, nsMathMLChar* aChar,
+                    PRInt32 aSize) {
     return ElementAt(aPresContext, aChar, 4 + aSize);
   }
   nsGlyphCode LeftOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
@@ -185,7 +191,8 @@ public:
   }
 
 private:
-  nsGlyphCode ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint32 aPosition);
+  nsGlyphCode ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
+                        PRUint32 aPosition);
 
   // The type is either NS_TABLE_TYPE_UNICODE or NS_TABLE_TYPE_GLYPH_INDEX
   PRInt32 mType;    
@@ -198,31 +205,36 @@ private:
   // Tri-state variable for error/empty/ready
   PRInt32 mState;
 
-  // The set of glyph data in this table, as provided by the MathFont Property File
+  // The set of glyph data in this table, as provided by the MathFont Property
+  // File
   nsCOMPtr<nsIPersistentProperties> mGlyphProperties;
 
   // For speedy re-use, we always cache the last data used in the table.
   // mCharCache is the Unicode point of the last char that was queried in this
   // table. mGlyphCache is a buffer containing the glyph data associated to
   // that char. For a property line 'key = value' in the MathFont Property File,
-  // mCharCache will retain the 'key' -- which is a Unicode point, while mGlyphCache
-  // will retain the 'value', which is a consecutive list of nsGlyphCodes, i.e.,
-  // the pairs of 'code@font' needed by the char -- in which 'code@0' can be specified
-  // without the optional '@0'. However, to ease subsequent processing, mGlyphCache
-  // excludes the '@' symbol and explicitly inserts all optional '0' that indicates
-  // the primary font identifier. Specifically therefore, the k-th glyph is
-  // characterized by :
-  // 1) mGlyphCache[3*k],mGlyphCache[3*k+1] : its Unicode point (or glyph index -- depending on mType),
-  // 2) mGlyphCache[3*k+2] : the numeric identifier of the font where it comes from.
+  // mCharCache will retain the 'key' -- which is a Unicode point, while
+  // mGlyphCache will retain the 'value', which is a consecutive list of
+  // nsGlyphCodes, i.e., the pairs of 'code@font' needed by the char -- in
+  // which 'code@0' can be specified
+  // without the optional '@0'. However, to ease subsequent processing,
+  // mGlyphCache excludes the '@' symbol and explicitly inserts all optional '0'
+  // that indicates the primary font identifier. Specifically therefore, the
+  // k-th glyph is characterized by :
+  // 1) mGlyphCache[3*k],mGlyphCache[3*k+1] : its Unicode point (or glyph index
+  // -- depending on mType),
+  // 2) mGlyphCache[3*k+2] : the numeric identifier of the font where it comes
+  // from.
   // A font identifier of '0' means the default primary font associated to this
-  // table. Other digits map to the "external" fonts that may have been specified
-  // in the MathFont Property File.
+  // table. Other digits map to the "external" fonts that may have been
+  // specified in the MathFont Property File.
   nsString  mGlyphCache;
   PRUnichar mCharCache;
 };
 
 nsGlyphCode
-nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint32 aPosition)
+nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
+                        PRUint32 aPosition)
 {
   if (mState == NS_TABLE_STATE_ERROR) return kNullGlyph;
   // Load glyph properties if this is the first time we have been here
@@ -268,15 +280,19 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
     // as such ...
     char key[10]; PR_snprintf(key, sizeof(key), "\\u%04X", uchar);
     nsAutoString value;
-    nsresult rv = mGlyphProperties->GetStringProperty(nsDependentCString(key), value);
+    nsresult rv = mGlyphProperties->GetStringProperty(nsDependentCString(key),
+                                                      value);
     if (NS_FAILED(rv)) return kNullGlyph;
     Clean(value);
-    // See if this char uses external fonts; e.g., if the 2nd glyph is taken from the
-    // external font '1', the property line looks like \uNNNN = \uNNNN\uNNNN@1\uNNNN.
-    // This is where mGlyphCache is pre-processed to explicitly store all glyph codes
-    // as combined pairs of 'code@font', excluding the '@' separator. This means that
-    // mGlyphCache[3*k],mGlyphCache[3*k+1] will later be rendered with mFontName[mGlyphCache[3*k+2]]
-    // Note: font identifier is internally an ASCII digit to avoid the null char issue
+    // See if this char uses external fonts; e.g., if the 2nd glyph is taken
+    // from the external font '1', the property line looks like
+    // \uNNNN = \uNNNN\uNNNN@1\uNNNN.
+    // This is where mGlyphCache is pre-processed to explicitly store all glyph
+    // codes as combined pairs of 'code@font', excluding the '@' separator. This
+    // means that mGlyphCache[3*k],mGlyphCache[3*k+1] will later be rendered
+    // with mFontName[mGlyphCache[3*k+2]]
+    // Note: font identifier is internally an ASCII digit to avoid the null
+    // char issue
     nsAutoString buffer;
     PRInt32 length = value.Length();
     PRInt32 i = 0; // index in value
@@ -290,26 +306,6 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
         // reset the annotation indicator to be 0 for the next code point
         j = -1;
       }
-#if 0 // If we want this then the nsGlyphTableList must be declared
-      // or the UnicodeTable could be made a global.
-      // See if this code point is an *indirect reference* to the Unicode
-      // table and lookup the code there.
-      else if (code == PRUnichar(0xF8FF) && gGlyphTableList &&
-               this != &gGlyphTableList->mUnicodeTable) {
-        code = gGlyphTableList->mUnicodeTable.
-          ElementAt(aPresContext, aChar, aPosition).code;
-      }
-      // see if this code point is a *direct reference* to
-      // the Unicode table, and lookup the [TLMBRG1-9] position for code.
-      else if ((i+1 < length) && (value[i] == PRUnichar('.'))) {
-        ++i;
-        // Need to implement this if we want it:
-        // Set (new) code from the value[i] position for (current) code.
-        if (1)
-          return kNullGlyph;
-        ++i;
-      }
-#endif
       // Read the next word if we have a non-BMP character.
       if (i < length && NS_IS_HIGH_SURROGATE(code)) {
         code = value[i];
@@ -363,9 +359,11 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
       offset += 5; // skip the 4 partial glyphs + the whitespace separator
       child = child->mSibling;
     }
-    length = 3*(offset + 4); // stay confined in the 4 partial glyphs of this child
+    // stay confined in the 4 partial glyphs of this child
+    length = 3*(offset + 4);
   }
-  PRUint32 index = 3*(offset + aPosition); // 3* is to account for the code@font pairs
+  // 3* is to account for the code@font pairs
+  PRUint32 index = 3*(offset + aPosition);
   if (index+2 >= length) return kNullGlyph;
   nsGlyphCode ch;
   ch.code[0] = mGlyphCache.CharAt(index);
@@ -420,7 +418,7 @@ nsGlyphTable::HasPartsOf(nsPresContext* aPresContext, nsMathMLChar* aChar)
     IsComposite(aPresContext, aChar);
 }
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // This is the list of all the applicable glyph tables.
 // We will maintain a single global instance that will only reveal those
 // glyph tables that are associated to fonts currently installed on the
@@ -476,7 +474,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver)
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Here is the global list of applicable glyph tables that we will be using
 static nsGlyphTableList* gGlyphTableList = nullptr;
 
@@ -568,7 +566,7 @@ nsGlyphTableList::GetGlyphTableFor(const nsAString& aFamily)
   return &mUnicodeTable;
 }
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 // Lookup the preferences:
 // "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
@@ -587,7 +585,8 @@ GetFontExtensionPref(PRUnichar aChar,
   // user_pref("font.mathfont-family.\uNNNN.base", "...") rather than
   // user_pref("font.mathfont-family.\\uNNNN.base", "...").
   // The \uNNNN in the former is interpreted as an UTF16 escape sequence by
-  // JavaScript and is converted to the internal UTF8 string that JavaScript uses. 
+  // JavaScript and is converted to the internal UTF8 string that JavaScript
+  // uses. 
   // But clueless users who are not savvy of JavaScript have no idea as to what 
   // is going on and are baffled as to why their pref setting is not working.
   // So to save countless explanations, we are going to support both keys.
@@ -692,7 +691,7 @@ InitGlobals(nsPresContext* aPresContext)
   return rv;
 }
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // And now the implementation of nsMathMLChar
 
 nsStyleContext*
@@ -748,7 +747,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   }
 }
 
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 /*
  The Stretch:
  @param aContainerSize - suggested size for the stretched char
@@ -831,7 +830,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
  account for the spacing when setting aContainerSize, and to leave
  any extra margin when placing the stretched char.
 */
-// -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 
 // plain TeX settings (TeXbook p.152)
@@ -855,7 +854,8 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
   bool isNearer = false;
   if (aHint & (NS_STRETCH_NEARER | NS_STRETCH_LARGEOP)) {
     float c = NS_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
-                     float(b) - nsPresContext::CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
+                     float(b) - nsPresContext::
+                     CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
     isNearer = bool(float(NS_ABS(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate
@@ -1179,7 +1179,8 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
   }
 
   return haveBetter &&
-    (largeopOnly || IsSizeOK(mPresContext, bestSize, mTargetSize, mStretchHint));
+    (largeopOnly ||
+     IsSizeOK(mPresContext, bestSize, mTargetSize, mStretchHint));
 }
 
 // 3. Build by parts.
@@ -1316,7 +1317,8 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     // When maxWidth, updating ascent and descent indicates that no characters
     // larger than this character's minimum size need to be checked as they
     // will not be used.
-    mBoundingMetrics.ascent = bmdata[0].ascent; // not used except with descent for height
+    mBoundingMetrics.ascent = bmdata[0].ascent; // not used except with descent
+                                                // for height
     mBoundingMetrics.descent = computedSize - mBoundingMetrics.ascent;
     mBoundingMetrics.leftBearing = lbearing;
     mBoundingMetrics.rightBearing = rbearing;
@@ -1357,7 +1359,8 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   // See if there is a special table for the family, but always use the
   // Unicode table for generic fonts.
   nsGlyphTable* glyphTable = aGeneric ?
-    &gGlyphTableList->mUnicodeTable : gGlyphTableList->GetGlyphTableFor(aFamily);
+    &gGlyphTableList->mUnicodeTable :
+    gGlyphTableList->GetGlyphTableFor(aFamily);
 
   if (context->mTablesTried.Contains(glyphTable))
     return true; // already tried this one
@@ -1438,9 +1441,9 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     mUnscaledAscent = aDesiredStretchSize.ascent;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // 1. Check the common situations where stretching is not actually needed
-  ////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   // quick return if there is nothing special about this char
   if ((aStretchDirection != direction &&
@@ -1520,9 +1523,9 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
       done = true;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // 2/3. Search for a glyph or set of part glyphs of appropriate size
-  ////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
 
   bool glyphFound = false;
   nsAutoString cssFamilies;
@@ -1728,7 +1731,8 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   NS_ASSERTION(count, "something is wrong somewhere");
   if (!count) return NS_ERROR_FAILURE;
   // if we haven't been here before, create the linked list of children now
-  // otherwise, use what we have, adding more children as needed or deleting the extra
+  // otherwise, use what we have, adding more children as needed or deleting
+  // the extra
   nsMathMLChar* last = this;
   while ((i < count) && last->mSibling) {
     i++;
@@ -1754,7 +1758,8 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   }
   nscoord dx = 0, dy = 0;
   for (i = 0, child = mSibling; child; child = child->mSibling, i++) {
-    // child chars should just inherit our values - which may change between calls...
+    // child chars should just inherit our values - which may change between
+    // calls...
     child->mData = mData;
     child->mDirection = mDirection;
     child->mStyleContext = mStyleContext;
@@ -1764,13 +1769,16 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
     nsBoundingMetrics childSize;
     nsresult rv = child->Stretch(aPresContext, aRenderingContext, mDirection,
                                  splitSize, childSize, aStretchHint, mMirrored);
-    // check if something went wrong or the child couldn't fit in the alloted space
-    if (NS_FAILED(rv) || (NS_STRETCH_DIRECTION_UNSUPPORTED == child->mDirection)) {
+    // check if something went wrong or the child couldn't fit in the alloted
+    // space
+    if (NS_FAILED(rv) ||
+        (NS_STRETCH_DIRECTION_UNSUPPORTED == child->mDirection)) {
       delete mSibling; // don't leave a dangling list behind ...
       mSibling = nullptr;
       return NS_ERROR_FAILURE;
     }
-    child->SetRect(nsRect(dx, dy, childSize.width, childSize.ascent+childSize.descent));
+    child->SetRect(nsRect(dx, dy, childSize.width,
+                          childSize.ascent+childSize.descent));
     if (0 == i)
       aCompositeSize = childSize;
     else {
@@ -1828,7 +1836,8 @@ public:
   nsDisplayMathMLCharBackground(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, const nsRect& aRect,
                                 nsStyleContext* aStyleContext)
-    : nsDisplayItem(aBuilder, aFrame), mStyleContext(aStyleContext), mRect(aRect) {
+    : nsDisplayItem(aBuilder, aFrame), mStyleContext(aStyleContext),
+      mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1897,7 +1906,10 @@ public:
     return GetBounds(aBuilder, &snap);
   }
   
-  virtual PRUint32 GetPerFrameKey() { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+  virtual PRUint32 GetPerFrameKey() {
+    return (mIndex << nsDisplayItem::TYPE_BITS)
+      | nsDisplayItem::GetPerFrameKey();
+  }
 
 private:
   nsMathMLChar* mChar;
@@ -1977,7 +1989,8 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
     if (styleContext != parentContext &&
         NS_GET_A(backg->mBackgroundColor) > 0) {
       rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect, styleContext));
+          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect,
+                                        styleContext));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     //else
@@ -1993,7 +2006,8 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   return aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
                                       aIndex,
-                                      aSelectedRect && !aSelectedRect->IsEmpty()));
+                                      aSelectedRect &&
+                                      !aSelectedRect->IsEmpty()));
 }
 
 void
@@ -2057,35 +2071,30 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     // normal drawing if there is nothing special about this char ...
     // Grab some metrics to adjust the placements ...
     PRUint32 len = PRUint32(mData.Length());
-//printf("Painting %04X like a normal char\n", mData[0]);
-//aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawString(mData.get(), len, 0, mUnscaledAscent);
   }
   else {
     // Grab some metrics to adjust the placements ...
     // if there is a glyph of appropriate size, paint that glyph
     if (mGlyph.Exists()) {
-//printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
-//aRenderingContext.SetColor(NS_RGB(0,0,255));
       aRenderingContext.DrawString(mGlyph.code, mGlyph.Length(),
                                    0, mUnscaledAscent);
     }
     else { // paint by parts
-//aRenderingContext.SetColor(NS_RGB(0,255,0));
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
         PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
                         mGlyphTable, r);
       else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-        PaintHorizontally(aPresContext, aRenderingContext, theFont, styleContext,
-                          mGlyphTable, r);
+        PaintHorizontally(aPresContext, aRenderingContext, theFont,
+                          styleContext, mGlyphTable, r);
     }
   }
 
   aRenderingContext.PopState();
 }
 
-/* =================================================================================
-  And now the helper routines that actually do the job of painting the char by parts
+/* =============================================================================
+  Helper routines that actually do the job of painting the char by parts
  */
 
 class AutoPushClipRect {
@@ -2212,11 +2221,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     ch = chdata[i];
     // glue can be null, and other parts could have been set to glue
     if (ch.Exists()) {
-#ifdef SHOW_BORDERS
-      // bounding box of the part
-      aRenderingContext.SetColor(NS_RGB(0,0,0));
-      aRenderingContext.DrawRect(nsRect(dx,start[i],aRect.width+30*(i+1),end[i]-start[i]));
-#endif
       nscoord dy = offset[i];
       // Draw a glyph in a clipped area so that we don't have hairy chars
       // pending outside
@@ -2252,7 +2256,8 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
   // fill the gap between top and middle, and between middle and bottom.
   if (!chGlue.Exists()) { // null glue : draw a rule
     // figure out the dimensions of the rule to be drawn :
-    // set lbearing to rightmost lbearing among the two current successive parts.
+    // set lbearing to rightmost lbearing among the two current successive
+    // parts.
     // set rbearing to leftmost rbearing among the two current successive parts.
     // this not only satisfies the convention used for over/underbraces
     // in TeX, but also takes care of broken fonts like the stretchy integral
@@ -2306,14 +2311,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       // Make sure not to draw outside the character
       nscoord dy = NS_MAX(end[i], aRect.y);
       nscoord fillEnd = NS_MIN(start[i+1], aRect.YMost());
-#ifdef SHOW_BORDERS
-      // exact area to fill
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      clipRect.y = dy;
-      clipRect.height = fillEnd - dy;
-      aRenderingContext.DrawRect(clipRect);
-      {
-#endif
       while (dy < fillEnd) {
         clipRect.y = dy;
         clipRect.height = NS_MIN(bm.ascent + bm.descent, fillEnd - dy);
@@ -2322,13 +2319,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
         aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
         dy += bm.descent;
       }
-#ifdef SHOW_BORDERS
-      }
-      // last glyph that may cross past its boundary and collide with the next
-      nscoord height = bm.ascent + bm.descent;
-      aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(nsRect(dx, dy-bm.ascent, aRect.width, height));
-#endif
     }
   }
 #ifdef DEBUG
@@ -2437,11 +2427,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     ch = chdata[i];
     // glue can be null, and other parts could have been set to glue
     if (ch.Exists()) {
-#ifdef SHOW_BORDERS
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawRect(nsRect(start[i], dy - bmdata[i].ascent,
-                                 end[i] - start[i], bmdata[i].ascent + bmdata[i].descent));
-#endif
       nscoord dx = offset[i];
       nsRect clipRect = unionRect;
       // Clip at the join to get a solid edge (without overlap or gap), when
@@ -2528,14 +2513,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       // Make sure not to draw outside the character
       nscoord dx = NS_MAX(end[i], aRect.x);
       nscoord fillEnd = NS_MIN(start[i+1], aRect.XMost());
-#ifdef SHOW_BORDERS
-      // rectangles in-between that are to be filled
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      clipRect.x = dx;
-      clipRect.width = fillEnd - dx;
-      aRenderingContext.DrawRect(clipRect);
-      {
-#endif
       while (dx < fillEnd) {
         clipRect.x = dx;
         clipRect.width = NS_MIN(bm.rightBearing - bm.leftBearing, fillEnd - dx);
@@ -2544,13 +2521,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
         aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
         dx += bm.rightBearing;
       }
-#ifdef SHOW_BORDERS
-      }
-      // last glyph that may cross past its boundary and collide with the next
-      nscoord width = bm.rightBearing - bm.leftBearing;
-      aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(nsRect(dx + bm.leftBearing, aRect.y, width, aRect.height));
-#endif
     }
   }
 #ifdef DEBUG

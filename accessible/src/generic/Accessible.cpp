@@ -1225,25 +1225,11 @@ Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
                                groupPos.setSize, groupPos.posInSet);
 
   // Expose object attributes from ARIA attributes.
-  PRUint32 numAttrs = mContent->GetAttrCount();
-  for (PRUint32 count = 0; count < numAttrs; count ++) {
-    const nsAttrName *attr = mContent->GetAttrNameAt(count);
-    if (attr && attr->NamespaceEquals(kNameSpaceID_None)) {
-      nsIAtom *attrAtom = attr->Atom();
-      nsDependentAtomString attrStr(attrAtom);
-      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-"))) 
-        continue; // Not ARIA
-      PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
-      if (attrFlags & ATTR_BYPASSOBJ)
-        continue; // No need to handle exposing as obj attribute here
-      if ((attrFlags & ATTR_VALTOKEN) &&
-          !nsAccUtils::HasDefinedARIAToken(mContent, attrAtom))
-        continue; // only expose token based attributes if they are defined
-      nsAutoString value;
-      if (mContent->GetAttr(kNameSpaceID_None, attrAtom, value)) {
-        attributes->SetStringProperty(NS_ConvertUTF16toUTF8(Substring(attrStr, 5)), value, oldValueUnused);
-      }
-    }
+  aria::AttrIterator attribIter(mContent);
+  nsAutoString name, value;
+  while(attribIter.Next(name, value)) {
+    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, 
+                                  oldValueUnused);
   }
 
   // If there is no aria-live attribute then expose default value of 'live'
@@ -3258,3 +3244,4 @@ KeyBinding::ToAtkFormat(nsAString& aValue) const
 
   aValue.Append(mKey);
 }
+

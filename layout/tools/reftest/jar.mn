@@ -1,6 +1,6 @@
 reftest.jar:
 % content reftest %content/
-  content/reftest-content.js (reftest-content.js)
+*  content/reftest-content.js (reftest-content.js)
 #ifdef BOOTSTRAP
 *  content/reftest.jsm (reftest.js)
 #else

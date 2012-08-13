@@ -373,7 +373,7 @@ nsStorageInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsStorageInputStream::Available(PRUint32 *aAvailable)
+nsStorageInputStream::Available(PRUint64 *aAvailable)
 {
     if (NS_FAILED(mStatus))
         return mStatus;

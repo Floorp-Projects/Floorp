@@ -688,3 +688,9 @@ pref("reader.color_scheme", "light");
 
 // Used to show a first-launch tip in reader
 pref("reader.has_used_toolbar", false);
+
+// Media plugins for libstagefright playback on android
+pref("media.plugins.enabled", false);
+
+// Coalesce touch events to prevent them from flooding the event queue
+pref("dom.event.touch.coalescing.enabled", true);

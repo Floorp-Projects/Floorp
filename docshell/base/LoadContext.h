@@ -8,6 +8,7 @@
 #define LoadContext_h
 
 #include "SerializedLoadContext.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -21,7 +22,7 @@ namespace mozilla {
  * it.
  */
 
-class LoadContext : public nsILoadContext
+class LoadContext MOZ_FINAL : public nsILoadContext
 {
 public:
   NS_DECL_ISUPPORTS

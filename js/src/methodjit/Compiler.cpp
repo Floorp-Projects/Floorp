@@ -61,6 +61,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     ssa(cx, outerScript),
     globalObj(cx, outerScript->hasGlobal() ? &outerScript->global() : NULL),
     globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
+    sps(&cx->runtime->spsProfiler, &script, &PC),
+    masm(&sps),
     frame(cx, *thisFromCtor(), masm, stubcc),
     a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
     inlineFrames(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -447,6 +449,9 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
             return status;
     }
 
+    if (!sps.enterInlineFrame())
+        return Compile_Error;
+
     this->script = script;
     this->analysis = newAnalysis;
     this->PC = script->code;
@@ -467,6 +472,7 @@ mjit::Compiler::popActiveFrame()
     this->analysis = this->script->analysis();
 
     frame.popActiveFrame();
+    sps.leaveInlineFrame();
 }
 
 #define CHECK_STATUS(expr)                                           \
@@ -524,6 +530,8 @@ mjit::Compiler::performCompilation()
 
         if (chunkIndex == 0)
             CHECK_STATUS(generatePrologue());
+        else
+            sps.setPushed();
         CHECK_STATUS(generateMethod());
         if (outerJIT() && chunkIndex == outerJIT()->nchunks - 1)
             CHECK_STATUS(generateEpilogue());
@@ -883,9 +891,12 @@ MakeJITScript(JSContext *cx, JSScript *script)
     }
 
     /* Generate a pool with all cross chunk shims, and set shimLabel for each edge. */
-    Assembler masm;
+    jsbytecode *pc;
+    SPSInstrumentation sps(&cx->runtime->spsProfiler, &script, &pc);
+    Assembler masm(&sps);
+    sps.setPushed();
     for (unsigned i = 0; i < jit->nedges; i++) {
-        jsbytecode *pc = script->code + jitEdges[i].target;
+        pc = script->code + jitEdges[i].target;
         jitEdges[i].shimLabel = (void *) masm.distanceOf(masm.label());
         masm.move(JSC::MacroAssembler::ImmPtr(&jitEdges[i]), Registers::ArgReg1);
         masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::CrossChunkShim),
@@ -1766,11 +1777,17 @@ mjit::Compiler::finishThisUp()
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    Probes::registerMJITCode(cx, chunk,
-                             a,
-                             (JSActiveFrame**) inlineFrames.begin(),
-                             result, masm.size(),
-                             result + masm.size(), stubcc.size());
+    a->mainCodeStart = size_t(result);
+    a->mainCodeEnd   = size_t(result + masm.size());
+    a->stubCodeStart = a->mainCodeEnd;
+    a->stubCodeEnd   = a->mainCodeEnd + stubcc.size();
+    if (!Probes::registerMJITCode(cx, chunk,
+                                  a, (JSActiveFrame**) inlineFrames.begin())) {
+        execPool->release();
+        cx->free_(chunk);
+        js_ReportOutOfMemory(cx);
+        return Compile_Error;
+    }
 
     outerChunkRef().chunk = chunk;
 
@@ -2039,7 +2056,7 @@ mjit::Compiler::generateMethod()
                         /* Track this sync code for the previous op. */
                         size_t length = masm.size() - masm.distanceOf(start);
                         uint32_t offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
-                        pcLengths[offset].codeLength += length;
+                        pcLengths[offset].codeLengthAugment += length;
                     }
                     JS_ASSERT(frame.consistentRegisters(PC));
                 }
@@ -2125,7 +2142,8 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-        Label codeStart = masm.label();
+        Label inlineStart = masm.label();
+        Label stubStart = stubcc.masm.label();
         bool countsUpdated = false;
         bool arithUpdated = false;
 
@@ -2156,7 +2174,7 @@ mjit::Compiler::generateMethod()
          * as we want to skip updating for ops we didn't generate any code for.
          */
         if (script->hasScriptCounts && JOF_OPTYPE(op) == JOF_JUMP)
-            updatePCCounts(PC, &codeStart, &countsUpdated);
+            updatePCCounts(PC, &countsUpdated);
 
     /**********************
      * BEGIN COMPILER OPS *
@@ -2192,7 +2210,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_RETURN)
             if (script->hasScriptCounts)
-                updatePCCounts(PC, &codeStart, &countsUpdated);
+                updatePCCounts(PC, &countsUpdated);
             emitReturn(frame.peek(-1));
             fallthrough = false;
           END_CASE(JSOP_RETURN)
@@ -2346,7 +2364,7 @@ mjit::Compiler::generateMethod()
             jsbytecode *target = NULL;
             if (fused != JSOP_NOP) {
                 if (script->hasScriptCounts)
-                    updatePCCounts(PC, &codeStart, &countsUpdated);
+                    updatePCCounts(PC, &countsUpdated);
                 target = next + GET_JUMP_OFFSET(next);
                 fixDoubleTypes(target);
             }
@@ -2620,7 +2638,7 @@ mjit::Compiler::generateMethod()
                     return status;
                 if (script->hasScriptCounts) {
                     /* Code generated while inlining has been accounted for. */
-                    updatePCCounts(PC, &codeStart, &countsUpdated);
+                    countsUpdated = true;
                 }
             }
 
@@ -2717,7 +2735,7 @@ mjit::Compiler::generateMethod()
              * switch statements (could be fixed).
              */
             if (script->hasScriptCounts)
-                updatePCCounts(PC, &codeStart, &countsUpdated);
+                updatePCCounts(PC, &countsUpdated);
 #if defined JS_CPU_ARM /* Need to implement jump(BaseIndex) for ARM */
             frame.syncAndKillEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
@@ -2737,7 +2755,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_LOOKUPSWITCH)
             if (script->hasScriptCounts)
-                updatePCCounts(PC, &codeStart, &countsUpdated);
+                updatePCCounts(PC, &countsUpdated);
             frame.syncAndForgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
@@ -2781,7 +2799,7 @@ mjit::Compiler::generateMethod()
           {
             /* At the byte level, this is always fused with IFNE or IFNEX. */
             if (script->hasScriptCounts)
-                updatePCCounts(PC, &codeStart, &countsUpdated);
+                updatePCCounts(PC, &countsUpdated);
             jsbytecode *target = &PC[JSOP_MOREITER_LENGTH];
             JSOp next = JSOp(*target);
             JS_ASSERT(next == JSOP_IFNE);
@@ -3142,7 +3160,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_STOP)
             if (script->hasScriptCounts)
-                updatePCCounts(PC, &codeStart, &countsUpdated);
+                updatePCCounts(PC, &countsUpdated);
             emitReturn(NULL);
             goto done;
           END_CASE(JSOP_STOP)
@@ -3220,7 +3238,7 @@ mjit::Compiler::generateMethod()
         }
 
         if (script->hasScriptCounts) {
-            size_t length = masm.size() - masm.distanceOf(codeStart);
+            size_t length = masm.size() - masm.distanceOf(inlineStart);
             bool typesUpdated = false;
 
             /* Update information about the type of value pushed by arithmetic ops. */
@@ -3242,21 +3260,16 @@ mjit::Compiler::generateMethod()
                 typesUpdated = true;
             }
 
-            if (countsUpdated || typesUpdated || length != 0) {
-                if (!countsUpdated)
-                    updatePCCounts(lastPC, &codeStart, &countsUpdated);
-
-                if (pcLengths) {
-                    /* Fill in the amount of inline code generated for the op. */
-                    uint32_t offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
-                    pcLengths[offset].codeLength += length;
-                }
-            }
-        } else if (pcLengths) {
-            /* Fill in the amount of inline code generated for the op. */
-            size_t length = masm.size() - masm.distanceOf(codeStart);
-            uint32_t offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
-            pcLengths[offset].codeLength += length;
+            if (!countsUpdated && (typesUpdated || length != 0))
+                updatePCCounts(lastPC, &countsUpdated);
+        }
+        /* Update how much code we generated for this opcode */
+        if (pcLengths) {
+            size_t length     = masm.size() - masm.distanceOf(inlineStart);
+            size_t stubLength = stubcc.size() - stubcc.masm.distanceOf(stubStart);
+            uint32_t offset   = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
+            pcLengths[offset].inlineLength += length;
+            pcLengths[offset].stubLength   += stubLength;
         }
 
         frame.assertValidRegisterState();
@@ -3270,9 +3283,11 @@ mjit::Compiler::generateMethod()
 #undef BEGIN_CASE
 
 void
-mjit::Compiler::updatePCCounts(jsbytecode *pc, Label *start, bool *updated)
+mjit::Compiler::updatePCCounts(jsbytecode *pc, bool *updated)
 {
     JS_ASSERT(script->hasScriptCounts);
+
+    Label start = masm.label();
 
     /*
      * Bump the METHODJIT count for the opcode, read the METHODJIT_CODE_LENGTH
@@ -3293,9 +3308,15 @@ mjit::Compiler::updatePCCounts(jsbytecode *pc, Label *start, bool *updated)
 
     PCCounts counts = script->getPCCounts(pc);
 
+    /*
+     * The inlineLength represents the actual length of the opcode generated,
+     * but this includes the instrumentation as well as other possibly not
+     * useful bytes. This extra cruft is accumulated in codeLengthAugment and
+     * will be taken out accordingly.
+     */
     double *code = &counts.get(PCCounts::BASE_METHODJIT_CODE);
-    double *codeLength = &pcLengths[offset].codeLength;
-    masm.addCount(codeLength, code, reg);
+    masm.addCount(&pcLengths[offset].inlineLength, code, reg);
+    masm.addCount(&pcLengths[offset].codeLengthAugment, code, reg);
 
     double *pics = &counts.get(PCCounts::BASE_METHODJIT_PICS);
     double *picsLength = &pcLengths[offset].picsLength;
@@ -3307,8 +3328,9 @@ mjit::Compiler::updatePCCounts(jsbytecode *pc, Label *start, bool *updated)
     /* Reload the base register's original value. */
     masm.loadPtr(frame.addressOfTop(), reg);
 
-    /* The start label should reflect the code for the op, not instrumentation. */
-    *start = masm.label();
+    /* The count of code executed should not reflect instrumentation as well */
+    pcLengths[offset].codeLengthAugment -= masm.size() - masm.distanceOf(start);
+
     *updated = true;
 }
 
@@ -3789,6 +3811,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     /* Inline StackFrame::epilogue. */
     if (debugMode()) {
+        sps.skipNextReenter();
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::Epilogue, REJOIN_NONE);
     } else {
@@ -3892,11 +3915,24 @@ mjit::Compiler::methodEntryHelper()
     if (debugMode()) {
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
-    } else if (Probes::callTrackingActive(cx)) {
+
+    /*
+     * If necessary, call the tracking probe to trigger SPS assertions. We can
+     * only do this when not inlining because the same StackFrame instance will
+     * be used to enter a function, triggering an assertion in enterScript
+     */
+    } else if (Probes::callTrackingActive(cx) ||
+               (sps.slowAssertions() && a->inlineIndex == UINT32_MAX)) {
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
     } else {
         return profilingPushHelper();
+    }
+    /* Ensure that we've flagged that the push has happened */
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.pushManual(masm, reg);
+        frame.freeReg(reg);
     }
     return Compile_Okay;
 }
@@ -3904,39 +3940,13 @@ mjit::Compiler::methodEntryHelper()
 CompileStatus
 mjit::Compiler::profilingPushHelper()
 {
-    SPSProfiler *p = &cx->runtime->spsProfiler;
-    if (!p->enabled())
+    if (!sps.enabled())
         return Compile_Okay;
-    /* If allocation fails, make sure no PopHelper() is emitted */
-    const char *str = p->profileString(cx, script, script->function());
-    if (str == NULL)
+    RegisterID reg = frame.allocReg();
+    if (!sps.push(cx, masm, reg))
         return Compile_Error;
 
-    /* Check if there's still space on the stack */
-    RegisterID size = frame.allocReg();
-    RegisterID base = frame.allocReg();
-    masm.load32(p->size(), size);
-    Jump j = masm.branch32(Assembler::GreaterThanOrEqual, size,
-                           Imm32(p->maxSize()));
-
-    /* With room, store our string onto the stack */
-    masm.move(ImmPtr(p->stack()), base);
-    JS_STATIC_ASSERT(sizeof(ProfileEntry) == 2 * sizeof(void*));
-    masm.lshift32(Imm32(sizeof(void*) == 4 ? 3 : 4), size);
-    masm.addPtr(size, base);
-
-    masm.storePtr(ImmPtr(str), Address(base, offsetof(ProfileEntry, string)));
-    masm.storePtr(ImmPtr(NULL), Address(base, offsetof(ProfileEntry, sp)));
-
-    frame.freeReg(base);
-    frame.freeReg(size);
-
-    /* Always increment the stack size (paired with a decrement below) */
-    j.linkTo(masm.label(), &masm);
-    masm.add32(Imm32(1), AbsoluteAddress(p->size()));
-
     /* Set the flags that we've pushed information onto the SPS stack */
-    RegisterID reg = frame.allocReg();
     masm.load32(FrameFlagsAddress(), reg);
     masm.or32(Imm32(StackFrame::HAS_PUSHED_SPS_FRAME), reg);
     masm.store32(reg, FrameFlagsAddress());
@@ -3948,13 +3958,12 @@ mjit::Compiler::profilingPushHelper()
 void
 mjit::Compiler::profilingPopHelper()
 {
-    if (Probes::callTrackingActive(cx) ||
-        cx->runtime->spsProfiler.slowAssertionsEnabled())
-    {
+    if (Probes::callTrackingActive(cx) || sps.slowAssertions()) {
+        sps.skipNextReenter();
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
-    } else if (cx->runtime->spsProfiler.enabled()) {
-        masm.sub32(Imm32(1), AbsoluteAddress(cx->runtime->spsProfiler.size()));
+    } else {
+        sps.pop(masm);
     }
 }
 
@@ -4007,6 +4016,11 @@ mjit::Compiler::emitUncachedCall(uint32_t argc, bool callingNew)
     callPatches.append(callPatch);
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.reenter(masm, reg);
+        frame.freeReg(reg);
+    }
 }
 
 void
@@ -4076,6 +4090,11 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
      * do the interrupt check at the start of the JSOP_ARGUMENTS.
      */
     interruptCheckHelper();
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.leave(masm, reg);
+        frame.freeReg(reg);
+    }
 
     FrameEntry *origCallee = frame.peek(-(int(argc) + 2));
     FrameEntry *origThis = frame.peek(-(int(argc) + 1));
@@ -4401,6 +4420,11 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
         callPatches.append(uncachedCallPatch);
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.reenter(masm, reg);
+        frame.freeReg(reg);
+    }
     return true;
 #endif
 }
@@ -4427,6 +4451,12 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
 
     if (inlineCallees.empty())
         return Compile_InlineAbort;
+
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.leave(masm, reg);
+        frame.freeReg(reg);
+    }
 
     JS_ASSERT(!monitored(PC));
 
@@ -4575,6 +4605,12 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
 
     JaegerSpew(JSpew_Inlining, "finished inlining call to script (file \"%s\") (line \"%d\")\n",
                script->filename, script->lineno);
+
+    if (sps.enabled()) {
+        RegisterID reg = frame.allocReg();
+        sps.reenter(masm, reg);
+        frame.freeReg(reg);
+    }
 
     return Compile_Okay;
 }
@@ -7064,7 +7100,7 @@ mjit::Compiler::jumpAndRun(Jump j, jsbytecode *target, Jump *slow, bool *trampol
                  */
                 uint32_t offset = ssa.frameLength(a->inlineIndex) + PC - script->code;
                 size_t length = stubcc.masm.size() - stubcc.masm.distanceOf(start);
-                pcLengths[offset].codeLength += length;
+                pcLengths[offset].codeLengthAugment += length;
             }
         }
 

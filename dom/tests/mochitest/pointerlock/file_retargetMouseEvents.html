@@ -36,6 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         this.mouseUp = false;
         this.mouseClick = false;
         this.mouseScroll = false;
+        this.wheel = false;
       }
 
       var parent = document.getElementById("parent")
@@ -49,12 +50,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         is(childStats.mouseUp, false, "Child should not receive mouseup event.");
         is(childStats.mouseClick, false, "Child should not receive click event.");
         is(childStats.mouseScroll, false, "Child should not receive DOMMouseScroll event.");
+        is(childStats.wheel, false, "Child should not receive wheel event.");
 
         ok(parentStats.mouseMove, "Parent should receive mousemove event.");
         ok(parentStats.mouseDown, "Parent should receive mousedown event.");
         ok(parentStats.mouseUp, "Parent should receive mouseup event.");
         ok(parentStats.mouseClick, "Parent should receive click event.");
         ok(parentStats.mouseScroll, "Parent should receive DOMMouseScroll event.");
+        ok(parentStats.wheel, "Parent should receive wheel event.");
       }
 
 
@@ -84,18 +87,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         childStats.mouseScroll = true;
       };
 
+      var childWheelTest = function() {
+        childStats.wheel = true;
+      };
+
       //  Event listeners for the parent element
       var startMouseTests = function() {
         parent.removeEventListener("mousemove", startMouseTests);
         parent.addEventListener("DOMMouseScroll", parentScrollTest);
         child.addEventListener("DOMMouseScroll", childScrollTest);
-        synthesizeMouseScroll(child, 5, 5, {'delta': 10, 'type': "DOMMouseScroll"});
+        synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
+                                      'deltaMode': WheelEvent.DOM_DELTA_LINE});
       };
 
       var parentScrollTest = function (e) {
         parentStats.mouseScroll = true;
         parent.removeEventListener("DOMMouseScroll", parentScrollTest);
         child.removeEventListener("DOMMouseScroll", childScrollTest);
+        parent.addEventListener("wheel", parentWheelTest);
+        child.addEventListener("wheel", childWheelTest);
+        synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
+                                      'deltaMode': WheelEvent.DOM_DELTA_LINE});
+      };
+
+      var parentWheelTest = function (e) {
+        parentStats.wheel = true;
+        parent.removeEventListener("wheel", parentWheelTest);
+        child.removeEventListener("wheel", childWheelTest);
         parent.addEventListener("mousedown", parentDownTest);
         child.addEventListener("mousedown", childDownTest);
         synthesizeMouseAtCenter(child, {type: "mousedown"}, window);

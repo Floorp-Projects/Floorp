@@ -1549,7 +1549,7 @@ class StringRegExpGuard
             if (!arg)
                 return false;
 
-            fm.patstr = js_AtomizeString(cx, arg);
+            fm.patstr = AtomizeString(cx, arg);
             if (!fm.patstr)
                 return false;
         }
@@ -1936,7 +1936,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (str->isAtom()) {
             atom = &str->asAtom();
         } else {
-            atom = js_AtomizeString(cx, str);
+            atom = AtomizeString(cx, str);
             if (!atom)
                 return false;
         }

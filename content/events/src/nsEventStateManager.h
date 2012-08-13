@@ -86,6 +86,14 @@ public:
                            nsIFrame* aTargetFrame,
                            nsEventStatus* aStatus);
 
+  /**
+   * DispatchLegacyMouseScrollEvents() dispatches NS_MOUSE_SCROLL event and
+   * NS_MOUSE_PIXEL_SCROLL event for compatiblity with old Gecko.
+   */
+  void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
+                                       mozilla::widget::WheelEvent* aEvent,
+                                       nsEventStatus* aStatus);
+
   void NotifyDestroyPresContext(nsPresContext* aPresContext);
   void SetPresContext(nsPresContext* aPresContext);
   void ClearFrameRefs(nsIFrame* aFrame);
@@ -317,67 +325,241 @@ protected:
   bool IsShellVisible(nsIDocShell* aShell);
 
   // These functions are for mousewheel and pixel scrolling
-  void SendLineScrollEvent(nsIFrame* aTargetFrame,
-                           nsMouseScrollEvent* aEvent,
-                           nsPresContext* aPresContext,
-                           nsEventStatus* aStatus,
-                           PRInt32 aNumLines);
-  void SendPixelScrollEvent(nsIFrame* aTargetFrame,
-                            nsMouseScrollEvent* aEvent,
-                            nsPresContext* aPresContext,
-                            nsEventStatus* aStatus);
+
+  class WheelPrefs
+  {
+  public:
+    static WheelPrefs* GetInstance();
+    static void Shutdown();
+
+    /**
+     * ApplyUserPrefsToDelta() overrides the wheel event's delta values with
+     * user prefs.
+     */
+    void ApplyUserPrefsToDelta(mozilla::widget::WheelEvent* aEvent);
+
+    /**
+     * If ApplyUserPrefsToDelta() changed the delta values with customized
+     * prefs, the overflowDelta values would be inflated.
+     * CancelApplyingUserPrefsFromOverflowDelta() cancels the inflation.
+     */
+    void CancelApplyingUserPrefsFromOverflowDelta(
+                                    mozilla::widget::WheelEvent* aEvent);
+
+    /**
+     * Computes the default action for the aEvent with the prefs.
+     */
+    enum Action
+    {
+      ACTION_NONE = 0,
+      ACTION_SCROLL,
+      ACTION_HISTORY,
+      ACTION_ZOOM,
+      ACTION_LAST = ACTION_ZOOM
+    };
+    Action ComputeActionFor(mozilla::widget::WheelEvent* aEvent);
+
+    /**
+     * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
+     * computed the lineOrPageDelta values.
+     */
+    bool NeedToComputeLineOrPageDelta(mozilla::widget::WheelEvent* aEvent);
+
+  private:
+    WheelPrefs();
+    ~WheelPrefs();
+
+    static int OnPrefChanged(const char* aPrefName, void* aClosure);
+
+    enum Index
+    {
+      INDEX_DEFAULT = 0,
+      INDEX_ALT,
+      INDEX_CONTROL,
+      INDEX_META,
+      INDEX_SHIFT,
+      INDEX_OS,
+      COUNT_OF_MULTIPLIERS
+    };
+
+    /**
+     * GetIndexFor() returns the index of the members which should be used for
+     * the aEvent.  When only one modifier key of MODIFIER_ALT,
+     * MODIFIER_CONTROL, MODIFIER_META, MODIFIER_SHIFT or MODIFIER_OS is
+     * pressed, returns the index for the modifier.  Otherwise, this return the
+     * default index which is used at either no modifier key is pressed or
+     * two or modifier keys are pressed.
+     */
+    Index GetIndexFor(mozilla::widget::WheelEvent* aEvent);
+
+    /**
+     * GetPrefNameBase() returns the base pref name for aEvent.
+     * It's decided by GetModifierForPref() which modifier should be used for
+     * the aEvent.
+     *
+     * @param aBasePrefName The result, must be "mousewheel.with_*." or
+     *                      "mousewheel.default.".
+     */
+    void GetBasePrefName(Index aIndex, nsACString& aBasePrefName);
+
+    void Init(Index aIndex);
+
+    void Reset();
+
+    bool mInit[COUNT_OF_MULTIPLIERS];
+    double mMultiplierX[COUNT_OF_MULTIPLIERS];
+    double mMultiplierY[COUNT_OF_MULTIPLIERS];
+    double mMultiplierZ[COUNT_OF_MULTIPLIERS];
+    Action mActions[COUNT_OF_MULTIPLIERS];
+
+    static WheelPrefs* sInstance;
+  };
+
   /**
-   * @param aQueryEvent If you set vailid pointer for this, DoScrollText()
-   *                    computes the line-height and page size of current
-   *                    mouse wheel scroll target and sets it to the event.
-   *                    And then, this method does NOT scroll any scrollable
-   *                    elements.  I.e., you can just query the scroll target
-   *                    information.
+   * DeltaDirection is used for specifying whether the called method should
+   * handle vertical delta or horizontal delta.
+   * This is clearer than using bool.
    */
-  nsresult DoScrollText(nsIFrame* aTargetFrame,
-                        nsMouseScrollEvent* aMouseEvent,
-                        nsIScrollableFrame::ScrollUnit aScrollQuantity,
-                        bool aAllowScrollSpeedOverride,
-                        nsQueryContentEvent* aQueryEvent = nullptr,
-                        nsIAtom *aOrigin = nullptr);
+  enum DeltaDirection
+  {
+    DELTA_DIRECTION_X = 0,
+    DELTA_DIRECTION_Y
+  };
+
+  /**
+   * SendLineScrollEvent() dispatches a DOMMouseScroll event for the
+   * widget::WheelEvent.  This method shouldn't be called for non-trusted
+   * wheel event because it's not necessary for compatiblity.
+   *
+   * @param aTargetFrame        The event target of wheel event.
+   * @param aEvent              The original Wheel event.
+   * @param aStatus             The event status, must not be
+   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aDelta              The delta value of the event.
+   * @param aDeltaDirection     The X/Y direction of dispatching event.
+   */
+  void SendLineScrollEvent(nsIFrame* aTargetFrame,
+                           mozilla::widget::WheelEvent* aEvent,
+                           nsEventStatus* aStatus,
+                           PRInt32 aDelta,
+                           DeltaDirection aDeltaDirection);
+
+  /**
+   * SendPixelScrollEvent() dispatches a MozMousePixelScroll event for the
+   * widget::WheelEvent.  This method shouldn't be called for non-trusted
+   * wheel event because it's not necessary for compatiblity.
+   *
+   * @param aTargetFrame        The event target of wheel event.
+   * @param aEvent              The original Wheel event.
+   * @param aStatus             The event status, must not be
+   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aPixelDelta         The delta value of the event.
+   * @param aDeltaDirection     The X/Y direction of dispatching event.
+   */
+  void SendPixelScrollEvent(nsIFrame* aTargetFrame,
+                            mozilla::widget::WheelEvent* aEvent,
+                            nsEventStatus* aStatus,
+                            PRInt32 aPixelDelta,
+                            DeltaDirection aDeltaDirection);
+
+  /**
+   * ComputeScrollTarget() returns the scrollable frame which should be
+   * scrolled.
+   *
+   * @param aTargetFrame        The event target of the wheel event.
+   * @param aEvent              The handling mouse wheel event.
+   * @param aForDefaultAction   Whether this uses wheel transaction or not.
+   *                            If true, returns the latest scrolled frame if
+   *                            there is it.  Otherwise, the nearest ancestor
+   *                            scrollable frame from aTargetFrame.
+   * @return                    The scrollable frame which should be scrolled.
+   */
+  nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                          mozilla::widget::WheelEvent* aEvent,
+                                          bool aForDefaultAction);
+
+  /**
+   * GetScrollAmount() returns the scroll amount in app uints of one line or
+   * one page.  If the wheel event scrolls a page, returns the page width and
+   * height.  Otherwise, returns line height for both its width and height.
+   *
+   * @param aScrollableFrame    A frame which will be scrolled by the event.
+   *                            The result of ComputeScrollTarget() is
+   *                            expected for this value.
+   *                            This can be NULL if there is no scrollable
+   *                            frame.  Then, this method uses root frame's
+   *                            line height or visible area's width and height.
+   */
+  nsSize GetScrollAmount(nsPresContext* aPresContext,
+                         mozilla::widget::WheelEvent* aEvent,
+                         nsIScrollableFrame* aScrollableFrame);
+
+  /**
+   * DoScrollText() scrolls the scrollable frame for aEvent.
+   */
+  void DoScrollText(nsIScrollableFrame* aScrollableFrame,
+                    mozilla::widget::WheelEvent* aEvent);
+
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
+
   /**
-   * Computes actual delta value used for scrolling.  If user customized the
-   * scrolling speed and/or direction, this would return the customized value.
-   * Otherwise, it would return the original delta value of aMouseEvent.
+   * DeltaAccumulator class manages delta values for dispatching DOMMouseScroll
+   * event.  If wheel events are caused by pixel scroll only devices or
+   * the delta values are customized by prefs, this class stores the delta
+   * values and set lineOrPageDelta values.
    */
-  PRInt32 ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Computes the action for the aMouseEvent with prefs.  The result is
-   * MOUSE_SCROLL_N_LINES, MOUSE_SCROLL_PAGE, MOUSE_SCROLL_HISTORY,
-   * MOUSE_SCROLL_ZOOM, MOUSE_SCROLL_PIXELS or -1.
-   * When the result is -1, nothing happens for the event.
-   *
-   * @param aUseSystemSettings    Set the result of UseSystemScrollSettingFor().
-   */
-  PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
-                                bool aUseSystemSettings);
-  /**
-   * Gets the wheel action for the aMouseEvent ONLY with the pref.
-   * When you actually do something for the event, probably you should use
-   * ComputeWheelActionFor().
-   */
-  PRInt32 GetWheelActionFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Gets the pref value for line scroll amount for the aMouseEvent.
-   * Note that this method doesn't check whether the aMouseEvent is line scroll
-   * event and doesn't use system settings.
-   */
-  PRInt32 GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent);
-  /**
-   * Whether use system scroll settings or settings in our prefs for the event.
-   * TRUE, if use system scroll settings.  Otherwise, FALSE.
-   */
-  bool UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent);
+  class DeltaAccumulator
+  {
+  public:
+    static DeltaAccumulator* GetInstance()
+    {
+      if (!sInstance) {
+        sInstance = new DeltaAccumulator;
+      }
+      return sInstance;
+    }
+
+    static void Shutdown()
+    {
+      delete sInstance;
+      sInstance = nullptr;
+    }
+
+    /**
+     * InitLineOrPageDelta() stores pixel delta values of WheelEvents which are
+     * caused if it's needed.  And if the accumulated delta becomes a
+     * line height, sets lineOrPageDeltaX and lineOrPageDeltaY automatically.
+     */
+    void InitLineOrPageDelta(nsIFrame* aTargetFrame,
+                             nsEventStateManager* aESM,
+                             mozilla::widget::WheelEvent* aEvent);
+
+    /**
+     * Reset() resets both delta values.
+     */
+    void Reset();
+
+  private:
+    DeltaAccumulator() :
+      mX(0.0), mY(0.0), mHandlingDeltaMode(PR_UINT32_MAX),
+      mHandlingPixelOnlyDevice(false)
+    {
+    }
+
+    double mX;
+    double mY;
+    TimeStamp mLastTime;
+
+    PRUint32 mHandlingDeltaMode;
+    bool mHandlingPixelOnlyDevice;
+
+    static DeltaAccumulator* sInstance;
+  };
+
   // end mousewheel functions
 
   /*
@@ -440,8 +622,6 @@ protected:
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
-  void DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
-                               nsIFrame* aTargetFrame);
   void DoQuerySelectedText(nsQueryContentEvent* aEvent);
 
   bool RemoteQueryContentEvent(nsEvent *aEvent);
@@ -529,10 +709,6 @@ public:
   static nsresult UpdateUserActivityTimer(void);
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
-
-  // Unlocks pixel scrolling
-  bool mLastLineScrollConsumedX;
-  bool mLastLineScrollConsumedY;
 
   static PRInt32 sUserInputEventDepth;
   

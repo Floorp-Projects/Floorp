@@ -689,5 +689,56 @@ function test19f() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 19f, Plugin should be activated");
 
+  prepareTest(test20a, gTestRoot + "plugin_hidden_to_visible.html");
+}
+
+// Tests that a plugin in a div that goes from style="display: none" to
+// "display: block" can be clicked to activate.
+function test20a() {
+  var clickToPlayNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(clickToPlayNotification, "Test 20a, Should have a click-to-play notification");
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("plugin");
+  var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(mainBox, "Test 20a, plugin overlay should not be null");
+  var pluginRect = mainBox.getBoundingClientRect();
+  ok(pluginRect.width == 0, "Test 20a, plugin should have an overlay with 0px width");
+  ok(pluginRect.height == 0, "Test 20a, plugin should have an overlay with 0px height");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 20a, plugin should not be activated");
+  var div = doc.getElementById("container");
+  ok(div.style.display == "none", "Test 20a, container div should be display: none");
+
+  div.style.display = "block";
+  var condition = function() {
+    var pluginRect = mainBox.getBoundingClientRect();
+    return (pluginRect.width == 200);
+  }
+  waitForCondition(condition, test20b, "Test 20a, Waited too long for plugin to become visible");
+}
+
+function test20b() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("plugin");
+  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+  ok(pluginRect.width == 200, "Test 20b, plugin should have an overlay with 200px width");
+  ok(pluginRect.height == 200, "Test 20b, plugin should have an overlay with 200px height");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 20b, plugin should not be activated");
+
+  EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
+  var condition = function() objLoadingContent.activated;
+  waitForCondition(condition, test20c, "Test 20b, Waited too long for plugin to activate");
+}
+
+function test20c() {
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("plugin");
+  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+  ok(pluginRect.width == 0, "Test 20c, plugin should have click-to-play overlay with zero width");
+  ok(pluginRect.height == 0, "Test 20c, plugin should have click-to-play overlay with zero height");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(objLoadingContent.activated, "Test 20c, plugin should be activated");
+
   finishTest();
 }
