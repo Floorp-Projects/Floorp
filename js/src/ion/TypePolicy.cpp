@@ -340,7 +340,7 @@ ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)
 {
     MDefinition *in = ins->getOperand(Op);
     if (in->type() == MIRType_Object || in->type() == MIRType_Slots ||
-        in->type() == MIRType_Elements || in->type() == MIRType_UpvarSlots)
+        in->type() == MIRType_Elements)
     {
         return true;
     }

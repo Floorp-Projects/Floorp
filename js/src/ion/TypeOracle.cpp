@@ -122,7 +122,7 @@ TypeOracle::Binary
 TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script == this->script);
-    
+
     JSOp op = (JSOp)*pc;
 
     Binary res;
