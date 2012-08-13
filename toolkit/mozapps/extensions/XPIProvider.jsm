@@ -5213,6 +5213,12 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
+#ifdef MOZ_EM_DEBUG
+  this.__defineGetter__("__AddonInstallInternal__", function AIW_debugGetter() {
+    return aInstall;
+  });
+#endif
+
   ["name", "type", "version", "iconURL", "releaseNotesURI", "file", "state", "error",
    "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() aInstall[aProp]);
@@ -5754,6 +5760,12 @@ function createWrapper(aAddon) {
  * the public API.
  */
 function AddonWrapper(aAddon) {
+#ifdef MOZ_EM_DEBUG
+  this.__defineGetter__("__AddonInternal__", function AW_debugGetter() {
+    return aAddon;
+  });
+#endif
+
   function chooseValue(aObj, aProp) {
     let repositoryAddon = aAddon._repositoryAddon;
     let objValue = aObj[aProp];
