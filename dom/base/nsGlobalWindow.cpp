@@ -671,7 +671,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
     mNotifiedIDDestroyed(false),
-    mIsApp(TriState_Unknown),
     mTimeoutInsertionPoint(nullptr),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -10678,112 +10677,6 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOMOther +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
-}
-
-void
-nsGlobalWindow::SetIsApp(bool aValue)
-{
-  FORWARD_TO_OUTER_VOID(SetIsApp, (aValue));
-
-  // You shouldn't call SetIsApp() more than once.
-  MOZ_ASSERT(mIsApp == TriState_Unknown);
-
-  mIsApp = aValue ? TriState_True : TriState_False;
-}
-
-bool
-nsGlobalWindow::IsInAppOrigin()
-{
-  FORWARD_TO_OUTER(IsInAppOrigin, (), false);
-
-  nsIPrincipal* principal = GetPrincipal();
-  NS_ENSURE_TRUE(principal != nullptr, false);
-
-  // We go trough all window parents until we find one with |mIsApp| set to
-  // something. If none is found, we are not part of an application.
-  for (nsGlobalWindow* w = static_cast<nsGlobalWindow*>(this); w;
-      w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
-    if (w->mIsApp == TriState_True) {
-      // The window should be part of an application.
-      MOZ_ASSERT(w->mApp);
-      bool sameOrigin = false;
-      return w->mAppPrincipal &&
-             principal &&
-             NS_SUCCEEDED(principal->Equals(w->mAppPrincipal, &sameOrigin)) &&
-             sameOrigin;
-    } else if (w->mIsApp == TriState_False) {
-      return false;
-    }
-  }
-
-  return false;
-}
-
-bool
-nsGlobalWindow::IsPartOfApp()
-{
-  nsCOMPtr<mozIDOMApplication> app;
-
-  return NS_SUCCEEDED(GetApp(getter_AddRefs(app))) ? app != nullptr : false;
-}
-
-nsresult
-nsGlobalWindow::SetApp(const nsAString& aManifestURL)
-{
-  // SetIsApp(true) should be called before calling SetApp().
-  if (mIsApp != TriState_True) {
-    MOZ_ASSERT(false);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  if (!appsService) {
-    NS_ERROR("Apps Service is not available!");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<mozIDOMApplication> app;
-  appsService->GetAppByManifestURL(aManifestURL, getter_AddRefs(app));
-  if (!app) {
-    NS_WARNING("No application found with the specified manifest URL");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult res = NS_NewURI(getter_AddRefs(uri), aManifestURL);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  res = ssm->GetSimpleCodebasePrincipal(uri, getter_AddRefs(mAppPrincipal));
-  NS_ENSURE_SUCCESS(res, res);
-
-  mApp = app.forget();
-
-  return NS_OK;
-}
-
-nsresult
-nsGlobalWindow::GetApp(mozIDOMApplication** aApplication)
-{
-  *aApplication = nullptr;
-
-  FORWARD_TO_OUTER(GetApp, (aApplication), NS_OK);
-
-  // We go trough all window parents until we find one with |mIsApp| set to
-  // something. If none is found, we are not part of an application.
-  for (nsGlobalWindow* w = this; w;
-       w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
-    if (w->mIsApp == TriState_True) {
-      // The window should be part of an application.
-      MOZ_ASSERT(w->mApp);
-      NS_IF_ADDREF(*aApplication = w->mApp);
-      return NS_OK;
-    } else if (w->mIsApp == TriState_False) {
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
 }
 
 // nsGlobalChromeWindow implementation
