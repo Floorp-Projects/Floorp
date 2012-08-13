@@ -22,6 +22,7 @@ const KEYS_WBO = "keys";
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -630,94 +631,93 @@ WeaveSvc.prototype = {
     }
   },
 
-  verifyLogin: function verifyLogin()
-    this._notify("verify-login", "", function onNotify() {
-      if (!this._identity.username) {
-        this._log.warn("No username in verifyLogin.");
-        Status.login = LOGIN_FAILED_NO_USERNAME;
-        return false;
+  verifyLogin: function verifyLogin() {
+    if (!this._identity.username) {
+      this._log.warn("No username in verifyLogin.");
+      Status.login = LOGIN_FAILED_NO_USERNAME;
+      return false;
+    }
+
+    // Unlock master password, or return.
+    // Attaching auth credentials to a request requires access to
+    // passwords, which means that Resource.get can throw MP-related
+    // exceptions!
+    // Try to fetch the passphrase first, while we still have control.
+    try {
+      this._identity.syncKey;
+    } catch (ex) {
+      this._log.debug("Fetching passphrase threw " + ex +
+                      "; assuming master password locked.");
+      Status.login = MASTER_PASSWORD_LOCKED;
+      return false;
+    }
+
+    try {
+      // Make sure we have a cluster to verify against.
+      // This is a little weird, if we don't get a node we pretend
+      // to succeed, since that probably means we just don't have storage.
+      if (this.clusterURL == "" && !this._setCluster()) {
+        Status.sync = NO_SYNC_NODE_FOUND;
+        Svc.Obs.notify("weave:service:sync:delayed");
+        return true;
       }
 
-      // Unlock master password, or return.
-      // Attaching auth credentials to a request requires access to
-      // passwords, which means that Resource.get can throw MP-related
-      // exceptions!
-      // Try to fetch the passphrase first, while we still have control.
-      try {
-        this._identity.syncKey;
-      } catch (ex) {
-        this._log.debug("Fetching passphrase threw " + ex +
-                        "; assuming master password locked.");
-        Status.login = MASTER_PASSWORD_LOCKED;
-        return false;
-      }
+      // Fetch collection info on every startup.
+      let test = new Resource(this.infoURL).get();
 
-      try {
-        // Make sure we have a cluster to verify against.
-        // This is a little weird, if we don't get a node we pretend
-        // to succeed, since that probably means we just don't have storage.
-        if (this.clusterURL == "" && !this._setCluster()) {
-          Status.sync = NO_SYNC_NODE_FOUND;
-          Svc.Obs.notify("weave:service:sync:delayed");
-          return true;
-        }
+      switch (test.status) {
+        case 200:
+          // The user is authenticated.
 
-        // Fetch collection info on every startup.
-        let test = new Resource(this.infoURL).get();
-
-        switch (test.status) {
-          case 200:
-            // The user is authenticated.
-
-            // We have no way of verifying the passphrase right now,
-            // so wait until remoteSetup to do so.
-            // Just make the most trivial checks.
-            if (!this._identity.syncKey) {
-              this._log.warn("No passphrase in verifyLogin.");
-              Status.login = LOGIN_FAILED_NO_PASSPHRASE;
-              return false;
-            }
-
-            // Go ahead and do remote setup, so that we can determine
-            // conclusively that our passphrase is correct.
-            if (this._remoteSetup()) {
-              // Username/password verified.
-              Status.login = LOGIN_SUCCEEDED;
-              return true;
-            }
-
-            this._log.warn("Remote setup failed.");
-            // Remote setup must have failed.
+          // We have no way of verifying the passphrase right now,
+          // so wait until remoteSetup to do so.
+          // Just make the most trivial checks.
+          if (!this._identity.syncKey) {
+            this._log.warn("No passphrase in verifyLogin.");
+            Status.login = LOGIN_FAILED_NO_PASSPHRASE;
             return false;
+          }
 
-          case 401:
-            this._log.warn("401: login failed.");
-            // Fall through to the 404 case.
+          // Go ahead and do remote setup, so that we can determine
+          // conclusively that our passphrase is correct.
+          if (this._remoteSetup()) {
+            // Username/password verified.
+            Status.login = LOGIN_SUCCEEDED;
+            return true;
+          }
 
-          case 404:
-            // Check that we're verifying with the correct cluster
-            if (this._setCluster())
-              return this.verifyLogin();
+          this._log.warn("Remote setup failed.");
+          // Remote setup must have failed.
+          return false;
 
-            // We must have the right cluster, but the server doesn't expect us
-            Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-            return false;
+        case 401:
+          this._log.warn("401: login failed.");
+          // Fall through to the 404 case.
 
-          default:
-            // Server didn't respond with something that we expected
-            Status.login = LOGIN_FAILED_SERVER_ERROR;
-            ErrorHandler.checkServerError(test);
-            return false;
-        }
+        case 404:
+          // Check that we're verifying with the correct cluster
+          if (this._setCluster()) {
+            return this.verifyLogin();
+          }
+
+          // We must have the right cluster, but the server doesn't expect us
+          Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+          return false;
+
+        default:
+          // Server didn't respond with something that we expected
+          Status.login = LOGIN_FAILED_SERVER_ERROR;
+          ErrorHandler.checkServerError(test);
+          return false;
       }
-      catch (ex) {
-        // Must have failed on some network issue
-        this._log.debug("verifyLogin failed: " + Utils.exceptionStr(ex));
-        Status.login = LOGIN_FAILED_NETWORK_ERROR;
-        ErrorHandler.checkServerError(ex);
-        return false;
-      }
-    })(),
+    } catch (ex) {
+      // Must have failed on some network issue
+      this._log.debug("verifyLogin failed: " + Utils.exceptionStr(ex));
+      Status.login = LOGIN_FAILED_NETWORK_ERROR;
+      ErrorHandler.checkServerError(ex);
+      return false;
+    }
+  },
 
   generateNewSymmetricKeys: function generateNewSymmetricKeys() {
     this._log.info("Generating new keys WBO...");
@@ -777,30 +777,28 @@ WeaveSvc.prototype = {
   },
 
   changePassword: function changePassword(newpass) {
-    return this._notify("changepwd", "", function onNotify() {
-      let url = this.userAPI + this._identity.username + "/password";
-      try {
-        let resp = new Resource(url).post(Utils.encodeUTF8(newpass));
-        if (resp.status != 200) {
-          this._log.debug("Password change failed: " + resp);
-          return false;
-        }
-      }
-      catch(ex) {
-        // Must have failed on some network issue
-        this._log.debug("changePassword failed: " + Utils.exceptionStr(ex));
+    let url = this.userAPI + this._identity.username + "/password";
+    try {
+      let resp = new Resource(url).post(Utils.encodeUTF8(newpass));
+      if (resp.status != 200) {
+        this._log.debug("Password change failed: " + resp);
         return false;
       }
+    }
+    catch(ex) {
+      // Must have failed on some network issue
+      this._log.debug("changePassword failed: " + Utils.exceptionStr(ex));
+      return false;
+    }
 
-      // Save the new password for requests and login manager.
-      this._identity.basicPassword = newpass;
-      this.persistLogin();
-      return true;
-    })();
+    // Save the new password for requests and login manager.
+    this._identity.basicPassword = newpass;
+    this.persistLogin();
+    return true;
   },
 
   changePassphrase: function changePassphrase(newphrase) {
-    return this._catch(this._notify("changepph", "", function onNotify() {
+    return this._catch(function doChangePasphrase() {
       /* Wipe. */
       this.wipeServer();
 
@@ -816,8 +814,11 @@ WeaveSvc.prototype = {
 
       /* Login and sync. This also generates new keys. */
       this.sync();
+
+      Svc.Obs.notify("weave:service:change-passphrase", true);
+
       return true;
-    }))();
+    })();
   },
 
   startOver: function startOver() {
@@ -1502,47 +1503,50 @@ WeaveSvc.prototype = {
    *
    * @return the server's timestamp of the (last) DELETE.
    */
-  wipeServer: function wipeServer(collections)
-    this._notify("wipe-server", "", function onNotify() {
-      let response;
-      if (!collections) {
-        // Strip the trailing slash.
-        let res = new Resource(this.storageURL.slice(0, -1));
-        res.setHeader("X-Confirm-Delete", "1");
-        try {
-          response = res.delete();
-        } catch (ex) {
-          this._log.debug("Failed to wipe server: " + Utils.exceptionStr(ex));
-          throw ex;
-        }
-        if (response.status != 200 && response.status != 404) {
-          this._log.debug("Aborting wipeServer. Server responded with " +
-                          response.status + " response for " + this.storageURL);
-          throw response;
-        }
-        return response.headers["x-weave-timestamp"];
+  wipeServer: function wipeServer(collections) {
+    let response;
+    if (!collections) {
+      // Strip the trailing slash.
+      let res = new Resource(this.storageURL.slice(0, -1));
+      res.setHeader("X-Confirm-Delete", "1");
+      try {
+        response = res.delete();
+      } catch (ex) {
+        this._log.debug("Failed to wipe server: " + CommonUtils.exceptionStr(ex));
+        throw ex;
       }
-      let timestamp;
-      for each (let name in collections) {
-        let url = this.storageURL + name;
-        try {
-          response = new Resource(url).delete();
-        } catch (ex) {
-          this._log.debug("Failed to wipe '" + name + "' collection: " +
-                          Utils.exceptionStr(ex));
-          throw ex;
-        }
-        if (response.status != 200 && response.status != 404) {
-          this._log.debug("Aborting wipeServer. Server responded with " +
-                          response.status + " response for " + url);
-          throw response;
-        }
-        if ("x-weave-timestamp" in response.headers) {
-          timestamp = response.headers["x-weave-timestamp"];
-        }
+      if (response.status != 200 && response.status != 404) {
+        this._log.debug("Aborting wipeServer. Server responded with " +
+                        response.status + " response for " + this.storageURL);
+        throw response;
       }
-      return timestamp;
-    })(),
+      return response.headers["x-weave-timestamp"];
+    }
+
+    let timestamp;
+    for (let name of collections) {
+      let url = this.storageURL + name;
+      try {
+        response = new Resource(url).delete();
+      } catch (ex) {
+        this._log.debug("Failed to wipe '" + name + "' collection: " +
+                        Utils.exceptionStr(ex));
+        throw ex;
+      }
+
+      if (response.status != 200 && response.status != 404) {
+        this._log.debug("Aborting wipeServer. Server responded with " +
+                        response.status + " response for " + url);
+        throw response;
+      }
+
+      if ("x-weave-timestamp" in response.headers) {
+        timestamp = response.headers["x-weave-timestamp"];
+      }
+    }
+
+    return timestamp;
+  },
 
   /**
    * Wipe all local user data.
@@ -1550,27 +1554,29 @@ WeaveSvc.prototype = {
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeClient: function wipeClient(engines)
-    this._notify("wipe-client", "", function onNotify() {
-      // If we don't have any engines, reset the service and wipe all engines
-      if (!engines) {
-        // Clear out any service data
-        this.resetService();
+  wipeClient: function wipeClient(engines) {
+    // If we don't have any engines, reset the service and wipe all engines
+    if (!engines) {
+      // Clear out any service data
+      this.resetService();
 
-        engines = [Clients].concat(Engines.getAll());
+      engines = [Clients].concat(Engines.getAll());
+    }
+    // Convert the array of names into engines
+    else {
+      engines = Engines.get(engines);
+    }
+
+    // Fully wipe each engine if it's able to decrypt data
+    for each (let engine in engines) {
+      if (engine.canDecrypt()) {
+        engine.wipeClient();
       }
-      // Convert the array of names into engines
-      else
-        engines = Engines.get(engines);
+    }
 
-      // Fully wipe each engine if it's able to decrypt data
-      for each (let engine in engines)
-        if (engine.canDecrypt())
-          engine.wipeClient();
-
-      // Save the password/passphrase just in-case they aren't restored by sync
-      this.persistLogin();
-    })(),
+    // Save the password/passphrase just in-case they aren't restored by sync
+    this.persistLogin();
+  },
 
   /**
    * Wipe all remote user data by wiping the server then telling each remote
@@ -1607,14 +1613,15 @@ WeaveSvc.prototype = {
   /**
    * Reset local service information like logs, sync times, caches.
    */
-  resetService: function resetService()
-    this._catch(this._notify("reset-service", "", function onNotify() {
+  resetService: function resetService() {
+    this._catch(function reset() {
       this._log.info("Service reset.");
 
       // Pretend we've never synced to the server and drop cached data
       this.syncID = "";
       Records.clearCache();
-    }))(),
+    })();
+  },
 
   /**
    * Reset the client by getting rid of any local server data and client data.
@@ -1622,8 +1629,8 @@ WeaveSvc.prototype = {
    * @param engines [optional]
    *        Array of engine names to reset. If not given, all engines are used.
    */
-  resetClient: function resetClient(engines)
-    this._catch(this._notify("reset-client", "", function onNotify() {
+  resetClient: function resetClient(engines) {
+    this._catch(function doResetClient() {
       // If we don't have any engines, reset everything including the service
       if (!engines) {
         // Clear out any service data
@@ -1632,13 +1639,16 @@ WeaveSvc.prototype = {
         engines = [Clients].concat(Engines.getAll());
       }
       // Convert the array of names into engines
-      else
+      else {
         engines = Engines.get(engines);
+      }
 
       // Have each engine drop any temporary meta data
-      for each (let engine in engines)
+      for each (let engine in engines) {
         engine.resetClient();
-    }))(),
+      }
+    })();
+  },
 
   /**
    * Fetch storage info from the server.
