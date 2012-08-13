@@ -275,7 +275,7 @@ nsCertOverrideService::Read()
     nsresult portParseError;
     nsCAutoString portString(Substring(host, portIndex+1));
     port = portString.ToInteger(&portParseError);
-    if (portParseError)
+    if (NS_FAILED(portParseError))
       continue; // Ignore broken entries
 
     host.Truncate(portIndex);
