@@ -157,6 +157,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   }
 
   addMessageListener("hello", this._recvHello);
+  addMessageListener("get-name", this._recvGetName);
   addMessageListener("contextmenu", this._fireCtxMenuEvent);
   addMessageListener("locationchange", this._fireEventFromMsg);
   addMessageListener("loadstart", this._fireEventFromMsg);
@@ -259,6 +260,10 @@ BrowserElementParent.prototype = {
     if (this._window.document.mozHidden) {
       this._ownerVisibilityChange();
     }
+  },
+
+  _recvGetName: function(data) {
+    return this._frameElement.getAttribute('name');
   },
 
   _fireCtxMenuEvent: function(data) {
