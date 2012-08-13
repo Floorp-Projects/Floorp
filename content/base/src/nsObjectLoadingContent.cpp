@@ -605,10 +605,13 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
 
 nsresult
 nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
-                                   nsIContent* /*aParent*/,
-                                   nsIContent* /*aBindingParent*/,
-                                   bool /*aCompileEventHandlers*/)
+                                   nsIContent* aParent,
+                                   nsIContent* aBindingParent,
+                                   bool aCompileEventHandlers)
 {
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
+                                    aCompileEventHandlers);
+
   if (aDocument) {
     return aDocument->AddPlugin(this);
   }
@@ -616,8 +619,10 @@ nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
+nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
+
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
   MOZ_ASSERT(thisContent);
