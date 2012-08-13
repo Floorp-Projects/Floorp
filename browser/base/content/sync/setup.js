@@ -60,10 +60,10 @@ var gSyncSetup = {
 
   init: function () {
     let obs = [
-      ["weave:service:changepph:finish", "onResetPassphrase"],
-      ["weave:service:login:start",  "onLoginStart"],
-      ["weave:service:login:error",  "onLoginEnd"],
-      ["weave:service:login:finish", "onLoginEnd"]];
+      ["weave:service:change-passphrase", "onResetPassphrase"],
+      ["weave:service:login:start",       "onLoginStart"],
+      ["weave:service:login:error",       "onLoginEnd"],
+      ["weave:service:login:finish",      "onLoginEnd"]];
 
     // Add the observers now and remove them on unload
     let self = this;
