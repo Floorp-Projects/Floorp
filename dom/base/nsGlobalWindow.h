@@ -384,8 +384,6 @@ public:
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
   virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
-  virtual NS_HIDDEN_(bool) IsPartOfApp();
-  virtual NS_HIDDEN_(bool) IsInAppOrigin();
 
   // nsIDOMStorageIndexedDB
   NS_DECL_NSIDOMSTORAGEINDEXEDDB
@@ -625,12 +623,6 @@ protected:
 
   friend class HashchangeCallback;
   friend class nsBarProp;
-
-  enum TriState {
-    TriState_Unknown = -1,
-    TriState_False,
-    TriState_True
-  };
 
   // Object Management
   virtual ~nsGlobalWindow();
@@ -898,10 +890,6 @@ protected:
   nsresult CloneStorageEvent(const nsAString& aType,
                              nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
-  void SetIsApp(bool aValue);
-  nsresult SetApp(const nsAString& aManifestURL);
-  nsresult GetApp(mozIDOMApplication** aApplication);
-
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
@@ -976,14 +964,6 @@ protected:
 
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
-
-  // Whether the window is the window of an application frame.
-  // This is TriState_Unknown if the object is the content window of an
-  // iframe which is neither mozBrowser nor mozApp.
-  TriState               mIsApp : 2;
-
-  // Principal of the web app running in this window, if any.
-  nsCOMPtr<nsIPrincipal>        mAppPrincipal;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
@@ -1079,10 +1059,6 @@ protected:
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<PRUint32> mEnabledSensors;
-
-  // The application associated with this window.
-  // This should only be non-null if mIsApp's value is TriState_True.
-  nsCOMPtr<mozIDOMApplication> mApp;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
