@@ -616,13 +616,14 @@ DOMCI_NODE_DATA(HTMLInputElement, nsHTMLInputElement)
 
 // QueryInterface implementation for nsHTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE8(nsHTMLInputElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE9(nsHTMLInputElement,
                                    nsIDOMHTMLInputElement,
                                    nsITextControlElement,
                                    nsIPhonetic,
                                    imgIDecoderObserver,
                                    nsIImageLoadingContent,
                                    imgIContainerObserver,
+                                   imgIOnloadBlocker,
                                    nsIDOMNSEditableElement,
                                    nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLInputElement,
