@@ -2458,7 +2458,7 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
   nsIContent *content = aTargetFrame->GetContent();
   if (content &&
       !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-      !content->IsXUL())
+      !content->OwnerDoc()->IsXUL())
     {
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;
