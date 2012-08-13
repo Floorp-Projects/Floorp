@@ -30,10 +30,11 @@ enum {
   NS_STRETCH_MAXWIDTH = 0x40
 };
 
-// A single glyph in our internal representation is characterized by a 'code@font' 
-// pair. The 'code' is interpreted as a Unicode point or as the direct glyph index
-// (depending on the type of nsGlyphTable where this comes from). The 'font' is a
-// numeric identifier given to the font to which the glyph belongs.
+// A single glyph in our internal representation is characterized by a
+// 'code@font' pair. The 'code' is interpreted as a Unicode point or as the
+// direct glyph index (depending on the type of nsGlyphTable where this comes
+// from). The 'font' is a numeric identifier given to the font to which the
+// glyph belongs.
 struct nsGlyphCode {
   PRUnichar code[2]; 
   PRInt32   font;
@@ -54,16 +55,17 @@ struct nsGlyphCode {
   }
 };
 
-// Class used to handle stretchy symbols (accent, delimiter and boundary symbols).
+// Class used to handle stretchy symbols (accent, delimiter and boundary
+// symbols).
 // There are composite characters that need to be built recursively from other
 // characters. Since these are rare we use a light-weight mechanism to handle
 // them. Specifically, as need arises we append a singly-linked list of child
 // chars with their mParent pointing to the first element in the list, except in
 // the originating first element itself where it points to null. mSibling points
 // to the next element in the list. Since the originating first element is the
-// parent of the others, we call it the "root" char of the list. Testing !mParent
-// tells whether you are that "root" during the recursion. The parent delegates
-// most of the tasks to the children.
+// parent of the others, we call it the "root" char of the list. Testing
+// !mParent tells whether you are that "root" during the recursion. The parent
+// delegates most of the tasks to the children.
 class nsMathMLChar
 {
 public:
@@ -79,7 +81,8 @@ public:
     mMirrored = false;
   }
 
-  ~nsMathMLChar() { // not a virtual destructor: this class is not intended to be subclassed
+  // not a virtual destructor: this class is not intended to be subclassed
+  ~nsMathMLChar() {
     MOZ_COUNT_DTOR(nsMathMLChar);
     // there is only one style context owned by the "root" char
     // and it may be used by child chars as well
@@ -150,7 +153,8 @@ public:
   SetRect(const nsRect& aRect) {
     mRect = aRect;
     // shift the orgins of child chars if any 
-    if (!mParent && mSibling) { // only a "root" having child chars can enter here
+    if (!mParent && mSibling) { // only a "root" having child chars can
+                                // enter here
       for (nsMathMLChar* child = mSibling; child; child = child->mSibling) {
         nsRect rect; 
         child->GetRect(rect);

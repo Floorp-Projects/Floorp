@@ -93,7 +93,7 @@ nsDiskCacheInputStream::Close()
 
 
 NS_IMETHODIMP
-nsDiskCacheInputStream::Available(PRUint32 * bytesAvailable)
+nsDiskCacheInputStream::Available(PRUint64 * bytesAvailable)
 {
     if (mClosed)  return NS_BASE_STREAM_CLOSED;
     if (mStreamEnd < mPos)  return NS_ERROR_UNEXPECTED;

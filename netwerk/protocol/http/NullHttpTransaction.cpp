@@ -89,7 +89,7 @@ NullHttpTransaction::Caps()
   return mCaps;
 }
 
-PRUint32
+PRUint64
 NullHttpTransaction::Available()
 {
   return 0;

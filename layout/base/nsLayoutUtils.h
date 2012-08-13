@@ -598,7 +598,8 @@ public:
     PAINT_HIDE_CARET = 0x20,
     PAINT_ALL_CONTINUATIONS = 0x40,
     PAINT_TO_WINDOW = 0x80,
-    PAINT_EXISTING_TRANSACTION = 0x100
+    PAINT_EXISTING_TRANSACTION = 0x100,
+    PAINT_NO_COMPOSITE = 0x200
   };
 
   /**
@@ -1608,6 +1609,14 @@ public:
     return sFontSizeInflationLineThreshold;
   }
 
+  /**
+   * See comment above "font.size.inflation.mappingIntercept" in
+   * modules/libpref/src/init/all.js .
+   */
+  static PRInt32 FontSizeInflationMappingIntercept() {
+    return sFontSizeInflationMappingIntercept;
+  }
+
   static void Initialize();
   static void Shutdown();
 
@@ -1716,6 +1725,7 @@ private:
   static PRUint32 sFontSizeInflationEmPerLine;
   static PRUint32 sFontSizeInflationMinTwips;
   static PRUint32 sFontSizeInflationLineThreshold;
+  static PRInt32 sFontSizeInflationMappingIntercept;
 };
 
 template<typename PointType, typename RectType, typename CoordType>

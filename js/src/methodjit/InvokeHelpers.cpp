@@ -1033,7 +1033,8 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
              * portion of fun_hasInstance.
              */
             if (f.regs.sp[0].isPrimitive()) {
-                js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, f.regs.sp[-1], NULL);
+                RootedValue val(cx, f.regs.sp[-1]);
+                js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, val, NullPtr());
                 return js_InternalThrow(f);
             }
             nextsp[-1].setBoolean(js_IsDelegate(cx, &f.regs.sp[0].toObject(), f.regs.sp[-2]));

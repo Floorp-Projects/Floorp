@@ -328,7 +328,7 @@ bool
 Throw(JSContext *cx, const Value &v);
 
 bool
-GetProperty(JSContext *cx, const Value &value, PropertyName *name, MutableHandleValue vp);
+GetProperty(JSContext *cx, HandleValue value, PropertyName *name, MutableHandleValue vp);
 
 bool
 GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
@@ -341,16 +341,16 @@ JSObject *
 Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
 
 bool
-GetElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
+GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
+GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-CallElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res);
+CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-SetObjectElement(JSContext *cx, HandleObject obj, const Value &index, const Value &value,
+SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
                  JSBool strict);
 
 bool
@@ -383,7 +383,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value);
 
 template <bool strict>
 bool
-DeleteProperty(JSContext *ctx, const Value &val, HandlePropertyName name, JSBool *bv);
+DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool *bv);
 
 }  /* namespace js */
 

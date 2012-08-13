@@ -3085,14 +3085,6 @@ nsGlobalWindow::GetTopImpl(nsIDOMWindow** aTop, bool aScriptable)
   return NS_OK;
 }
 
-// Map window._content to window.content for backwards compatibility, this
-// should spit out an message on the JS console.
-NS_IMETHODIMP
-nsGlobalWindow::GetContentForCompat(nsIDOMWindow** aContent)
-{
-  return GetContent(aContent);
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 {
@@ -4330,11 +4322,13 @@ nsGlobalWindow::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
     return GetScrollXY(aScrollX, aScrollY, true);
   }
 
-  if (aScrollX)
-    *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
-  if (aScrollY)
-    *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
-
+  nsIntPoint scrollPosCSSPixels = sf->GetScrollPositionCSSPixels();
+  if (aScrollX) {
+    *aScrollX = scrollPosCSSPixels.x;
+  }
+  if (aScrollY) {
+    *aScrollY = scrollPosCSSPixels.y;
+  }
   return NS_OK;
 }
 

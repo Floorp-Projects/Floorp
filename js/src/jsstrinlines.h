@@ -46,8 +46,8 @@ class StringSegmentRange
      * If malloc() shows up in any profiles from this vector, we can add a new
      * StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
      */
-    Vector<JSString *, 32> stack;
-    JSLinearString *cur;
+    AutoStringVector stack;
+    Rooted<JSLinearString*> cur;
 
     bool settle(JSString *str) {
         while (str->isRope()) {
@@ -62,7 +62,7 @@ class StringSegmentRange
 
   public:
     StringSegmentRange(JSContext *cx)
-      : stack(cx), cur(NULL)
+      : stack(cx), cur(cx)
     {}
 
     JS_WARN_UNUSED_RESULT bool init(JSString *str) {

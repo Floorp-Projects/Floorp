@@ -2589,8 +2589,10 @@ date_toISOString(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2601,7 +2603,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 3. */
     if (tv.isDouble() && !MOZ_DOUBLE_IS_FINITE(tv.toDouble())) {
-        vp->setNull();
+        args.rval().setNull();
         return true;
     }
 
@@ -2618,16 +2620,16 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 6. */
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, 0, &args))
+    InvokeArgsGuard ag;
+    if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
 
-    args.calleev() = toISO;
-    args.thisv().setObject(*obj);
+    ag.setCallee(toISO);
+    ag.setThis(ObjectValue(*obj));
 
-    if (!Invoke(cx, args))
+    if (!Invoke(cx, ag))
         return false;
-    *vp = args.rval();
+    args.rval().set(ag.rval());
     return true;
 }
 

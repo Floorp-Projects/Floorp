@@ -374,6 +374,26 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  getSessionCapabilities: function MDA_getSessionCapabilities(){
+    let rotatable = appName == "B2G" ? true : false;
+
+    let value = {
+          'appBuildId' : Services.appinfo.appBuildID,
+          'XULappId' : Services.appinfo.ID,
+          'cssSelectorsEnabled': true,
+          'browserName': appName,
+          'handlesAlerts': false,
+          'javascriptEnabled': true,
+          'nativeEvents': false,
+          'platform': Services.appinfo.OS,
+          'rotatable': rotatable,
+          'takesScreenshot': false,
+          'version': Services.appinfo.version
+    };
+
+    this.sendResponse(value);
+  },
+
   /**
    * Log message. Accepts user defined log-level.
    *
@@ -1443,6 +1463,7 @@ MarionetteDriverActor.prototype = {
 
 MarionetteDriverActor.prototype.requestTypes = {
   "newSession": MarionetteDriverActor.prototype.newSession,
+  "getSessionCapabilities": MarionetteDriverActor.prototype.getSessionCapabilities,
   "log": MarionetteDriverActor.prototype.log,
   "getLogs": MarionetteDriverActor.prototype.getLogs,
   "addPerfData": MarionetteDriverActor.prototype.addPerfData,

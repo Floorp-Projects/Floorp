@@ -297,7 +297,7 @@ nsBufferedInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsBufferedInputStream::Available(PRUint32 *result)
+nsBufferedInputStream::Available(PRUint64 *result)
 {
     nsresult rv = NS_OK;
     *result = 0;

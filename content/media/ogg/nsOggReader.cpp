@@ -11,6 +11,9 @@
 #include "theora/theoradec.h"
 #ifdef MOZ_OPUS
 #include "opus/opus.h"
+extern "C" {
+#include "opus/opus_multistream.h"
+}
 #endif
 #include "nsTimeRanges.h"
 #include "mozilla/TimeStamp.h"
@@ -321,7 +324,7 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
   if (mOpusState && ReadHeaders(mOpusState)) {
     mInfo.mHasAudio = true;
     mInfo.mAudioRate = mOpusState->mRate;
-    mInfo.mAudioChannels = mOpusState->mChannels;
+    mInfo.mAudioChannels = mOpusState->mChannels > 2 ? 2 : mOpusState->mChannels;
     mOpusSerial = mOpusState->mSerial;
     mOpusPreSkip = mOpusState->mPreSkip;
   }
@@ -423,9 +426,12 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
   NS_ASSERTION(aPacket->granulepos != -1, "Must know opus granulepos!");
 
   // Maximum value is 63*2880.
-  PRInt32 frames = opus_decoder_get_nb_samples(mOpusState->mDecoder,
-                                               aPacket->packet,
-                                               aPacket->bytes);
+  PRInt32 frames_number = opus_packet_get_nb_frames(aPacket->packet,
+                                                    aPacket->bytes);
+  PRInt32 samples = opus_packet_get_samples_per_frame(aPacket->packet,
+                                                      (opus_int32) mOpusState->mRate);
+  PRInt32 frames = frames_number*samples;
+
   if (frames <= 0)
     return NS_ERROR_FAILURE;
   PRUint32 channels = mOpusState->mChannels;
@@ -433,13 +439,13 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
 
   // Decode to the appropriate sample type.
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  int ret = opus_decode_float(mOpusState->mDecoder,
-                              aPacket->packet, aPacket->bytes,
-                              buffer, frames, false);
+  int ret = opus_multistream_decode_float(mOpusState->mDecoder,
+                                          aPacket->packet, aPacket->bytes,
+                                          buffer, frames, false);
 #else
-  int ret = opus_decode(mOpusState->mDecoder,
-                        aPacket->packet, aPacket->bytes,
-                        buffer, frames, false);
+  int ret = opus_multistream_decode(mOpusState->mDecoder,
+                                    aPacket->packet, aPacket->bytes,
+                                    buffer, frames, false);
 #endif
   if (ret < 0)
     return NS_ERROR_FAILURE;
@@ -503,6 +509,45 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
     }
   }
 #endif
+
+  // More than 2 decoded channels must be downmixed to stereo.
+  if (channels > 2) {
+    // Opus doesn't provide a channel mapping for more than 8 channels,
+    // so we can't downmix more than that.
+    if (channels > 8)
+      return NS_ERROR_FAILURE;
+
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+    PRUint32 out_channels;
+    out_channels = 2;
+
+    // dBuffer stores the downmixed sample data.
+    nsAutoArrayPtr<AudioDataValue> dBuffer(new AudioDataValue[frames * out_channels]);
+    // Downmix matrix for channels up to 8, normalized to 2.0.
+    static const float dmatrix[6][8][2]= {
+        /*3*/{ {0.5858f,0}, {0.4142f,0.4142f}, {0,0.5858f}},
+        /*4*/{ {0.4226f,0}, {0,0.4226f}, {0.366f,0.2114f}, {0.2114f,0.366f}},
+        /*5*/{ {0.651f,0}, {0.46f,0.46f}, {0,0.651f}, {0.5636f,0.3254f}, {0.3254f,0.5636f}},
+        /*6*/{ {0.529f,0}, {0.3741f,0.3741f}, {0,0.529f}, {0.4582f,0.2645f}, {0.2645f,0.4582f}, {0.3741f,0.3741f}},
+        /*7*/{ {0.4553f,0}, {0.322f,0.322f}, {0,4553}, {0.3943f,0.2277f}, {0.2277f,0.3943f}, {0.2788f,0.2788f}, {0.322f,0.322f}},
+        /*8*/{ {0.3886f,0}, {0.2748f,0.2748f}, {0,0.3886f}, {0.3366f,0.1943f}, {0.1943f,0.3366f}, {0.3366f,0.1943f}, {0.1943f,0.3366f}, {0.2748f,0.2748f}},
+    };
+    for (PRInt32 i = 0; i < frames; i++) {
+      float sampL = 0.0;
+      float sampR = 0.0;
+      for (PRUint32 j = 0; j < channels; j++) {
+        sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
+        sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
+      }
+      dBuffer[i*out_channels]=sampL;
+      dBuffer[i*out_channels+1]=sampR;
+    }
+    channels = out_channels;
+    buffer = dBuffer;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+  }
 
   LOG(PR_LOG_DEBUG, ("Opus decoder pushing %d frames", frames));
   PRInt64 startTime = mOpusState->Time(startFrame);

@@ -62,9 +62,11 @@ public:
                                PRUint32 sourceOffset, PRUint32 count)
     {
         nsresult rv;
-        PRUint32 read, len;
-        rv = inStr->Available(&len);
+        PRUint32 read;
+        PRUint64 len64;
+        rv = inStr->Available(&len64);
         if (NS_FAILED(rv)) return rv;
+        PRUint32 len = (PRUint32)NS_MIN(len64, (PRUint64)(PR_UINT32_MAX - 1));
 
         char *buffer = (char*)nsMemory::Alloc(len + 1);
         if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
@@ -95,7 +97,12 @@ NS_IMPL_ISUPPORTS2(EndListener,
 // EndListener END
 ////////////////////////////////////////////////////////////////////////
 
-
+static PRUint32 
+saturated(PRUint64 aValue)
+{
+    return (PRUint32)NS_MIN(aValue, (PRUint64)PR_UINT32_MAX);
+}
+ 
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
     nsresult rv;
 
@@ -106,10 +113,20 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
     rv = dataStream->SetData(aData, strlen(aData));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 avail;
+    PRUint64 avail = 0;
     dataStream->Available(&avail);
 
-    return aListener->OnDataAvailable(request, nullptr, dataStream, 0, avail);
+    PRUint64 offset = 0;
+    while (avail > 0) {
+        PRUint32 count = saturated(avail);
+        rv = aListener->OnDataAvailable(request, nullptr, dataStream,
+                                        saturated(offset), count);
+        if (NS_FAILED(rv)) return rv;
+
+        offset += count;
+        avail -= count;
+    }
+    return NS_OK;
 }
 #define SEND_DATA(x) SendData(x, converterListener, request)
 

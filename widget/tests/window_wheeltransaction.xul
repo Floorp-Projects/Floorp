@@ -1089,9 +1089,13 @@ function _fireMouseMoveEvent(aOffset)
 
 function _fireWheelScrollEvent(aOffset, aIsVertical, aForward, aDelta)
 {
-  var event = { axis: aIsVertical ? "vertical" : "horizontal",
-                delta: aForward ? aDelta : -aDelta, type: "DOMMouseScroll" };
-  synthesizeMouseScroll(gRootView, aOffset.x, aOffset.y, event, window);
+  var event = { deltaMode: WheelEvent.DOM_DELTA_LINE };
+  if (aIsVertical) {
+    event.deltaY = aForward ? aDelta : -aDelta;
+  } else {
+    event.deltaX = aForward ? aDelta : -aDelta;
+  }
+  synthesizeWheel(gRootView, aOffset.x, aOffset.y, event, window);
 }
 
 function _canScroll(aElement, aIsVertical, aForward)

@@ -198,87 +198,19 @@ enum JITReportGranularity {
 };
 
 /*
- * Observer class for JIT code allocation/deallocation. Currently, this only
- * handles the method JIT, and does not get notifications when JIT code is
- * changed (patched) with no new allocation.
- */
-class JITWatcher {
-public:
-    struct NativeRegion {
-        mjit::JSActiveFrame *frame;
-        JSScript *script;
-        size_t inlinedOffset;
-        jsbytecode *pc;
-        jsbytecode *endpc;
-        uintptr_t mainOffset;
-        uintptr_t stubOffset;
-        bool enter;
-    };
-
-    typedef Vector<NativeRegion, 0, RuntimeAllocPolicy> RegionVector;
-
-    virtual JITReportGranularity granularityRequested() = 0;
-
-#ifdef JS_METHODJIT
-    static bool CollectNativeRegions(RegionVector &regions,
-                                     JSRuntime *rt,
-                                     mjit::JITChunk *jit,
-                                     mjit::JSActiveFrame *outerFrame,
-                                     mjit::JSActiveFrame **inlineFrames);
-
-    virtual void registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
-                                  mjit::JSActiveFrame *outerFrame,
-                                  mjit::JSActiveFrame **inlineFrames,
-                                  void *mainCodeAddress, size_t mainCodeSize,
-                                  void *stubCodeAddress, size_t stubCodeSize) = 0;
-
-    virtual void discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk,
-                                 void* address) = 0;
-
-    virtual void registerICCode(JSContext *cx,
-                                js::mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
-                                void *start, size_t size) = 0;
-#endif
-
-    virtual void discardExecutableRegion(void *start, size_t size) = 0;
-};
-
-/*
- * Register a JITWatcher subclass to be informed of JIT code
- * allocation/deallocation.
- */
-bool
-addJITWatcher(JITWatcher *watcher);
-
-/*
- * Remove (and destroy) a registered JITWatcher. rt may be NULL. Returns false
- * if the watcher is not found.
- */
-bool
-removeJITWatcher(JSRuntime *rt, JITWatcher *watcher);
-
-/*
- * Remove (and destroy) all registered JITWatchers. rt may be NULL.
- */
-void
-removeAllJITWatchers(JSRuntime *rt);
-
-/*
  * Finest granularity of JIT information desired by all watchers.
  */
 JITReportGranularity
-JITGranularityRequested();
+JITGranularityRequested(JSContext *cx);
 
 #ifdef JS_METHODJIT
 /*
  * New method JIT code has been created
  */
-void
+bool
 registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
                  mjit::JSActiveFrame *outerFrame,
-                 mjit::JSActiveFrame **inlineFrames,
-                 void *mainCodeAddress, size_t mainCodeSize,
-                 void *stubCodeAddress, size_t stubCodeSize);
+                 mjit::JSActiveFrame **inlineFrames);
 
 /*
  * Method JIT code is about to be discarded
@@ -289,7 +221,7 @@ discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void*
 /*
  * IC code has been allocated within the given JITChunk
  */
-void
+bool
 registerICCode(JSContext *cx,
                mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
                void *start, size_t size);
@@ -376,7 +308,7 @@ inline bool
 Probes::wantNativeAddressInfo(JSContext *cx)
 {
     return (cx->reportGranularity >= JITREPORT_GRANULARITY_FUNCTION &&
-            JITGranularityRequested() >= JITREPORT_GRANULARITY_FUNCTION);
+            JITGranularityRequested(cx) >= JITREPORT_GRANULARITY_FUNCTION);
 }
 
 inline bool

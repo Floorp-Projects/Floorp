@@ -230,6 +230,11 @@ MOCHITEST_FILES += \
 		audio.wav \
 		$(NULL)
 
+# Media plugin sample files
+MOCHITEST_FILES += \
+		gizmo.mp4 \
+		$(NULL)
+
 # Other files
 MOCHITEST_FILES += \
 		bogus.duh \

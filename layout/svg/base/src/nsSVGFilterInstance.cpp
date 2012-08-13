@@ -357,9 +357,9 @@ nsSVGFilterInstance::BuildSourcePaint(PrimitiveInfo *aPrimitive)
     gfx->Multiply(matrix);
     gfx->Rectangle(r);
     if ((aPrimitive == &mFillPaint && 
-         nsSVGUtils::SetupCairoFill(gfx, mTargetFrame)) ||
+         nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
         (aPrimitive == &mStrokePaint &&
-         nsSVGUtils::SetupCairoStroke(gfx, mTargetFrame))) {
+         nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx))) {
       gfx->Fill();
     }
   }

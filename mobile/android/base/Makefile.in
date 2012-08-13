@@ -30,6 +30,7 @@ UTIL_JAVA_FILES := \
   GeckoJarReader.java \
   INIParser.java \
   INISection.java \
+  util/EventDispatcher.java \
   util/FloatUtils.java \
   $(NULL)
 

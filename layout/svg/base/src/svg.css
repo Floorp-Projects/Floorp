@@ -45,3 +45,6 @@ foreignObject {
   -moz-transform-origin:0 0;
 }
 
+*|*::-moz-svg-text {
+  unicode-bidi: inherit;
+}

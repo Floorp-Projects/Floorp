@@ -6228,9 +6228,10 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, Value v, char **res)
 }
 
 char *
-js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
-                           JSString *fallback)
+js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
+                            HandleString fallbackArg)
 {
+    RootedString fallback(cx, fallbackArg);
     {
         char *result;
         if (!DecompileExpressionFromStack(cx, spindex, v, &result))

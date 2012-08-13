@@ -21,8 +21,7 @@ nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(nsPresContext* aPresContext,
   }
 
   if(mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
-    nsMouseScrollEvent* mouseEvent = static_cast<nsMouseScrollEvent*>(mEvent);
-    mDetail = mouseEvent->delta;
+    mDetail = static_cast<nsMouseScrollEvent*>(mEvent)->delta;
   }
 }
 
@@ -66,9 +65,8 @@ nsDOMMouseScrollEvent::InitMouseScrollEvent(const nsAString & aType, bool aCanBu
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
-    static_cast<nsMouseScrollEvent*>(mEvent)->scrollFlags =
-        (aAxis == HORIZONTAL_AXIS) ? nsMouseScrollEvent::kIsHorizontal
-                                   : nsMouseScrollEvent::kIsVertical;
+    static_cast<nsMouseScrollEvent*>(mEvent)->isHorizontal =
+                                                (aAxis == HORIZONTAL_AXIS);
   }
 
   return NS_OK;
@@ -81,9 +79,9 @@ nsDOMMouseScrollEvent::GetAxis(PRInt32* aResult)
   NS_ENSURE_ARG_POINTER(aResult);
 
   if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
-    PRUint32 flags = static_cast<nsMouseScrollEvent*>(mEvent)->scrollFlags;
-    *aResult = (flags & nsMouseScrollEvent::kIsHorizontal)
-         ? PRInt32(HORIZONTAL_AXIS) : PRInt32(VERTICAL_AXIS);
+    *aResult = static_cast<nsMouseScrollEvent*>(mEvent)->isHorizontal ?
+                 static_cast<PRInt32>(HORIZONTAL_AXIS) :
+                 static_cast<PRInt32>(VERTICAL_AXIS);
   } else {
     *aResult = 0;
   }

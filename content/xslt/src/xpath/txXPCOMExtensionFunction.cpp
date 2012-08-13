@@ -99,9 +99,9 @@ public:
     txXPCOMExtensionFunctionCall(nsISupports *aHelper, const nsIID &aIID,
                                  PRUint16 aMethodIndex,
 #ifdef TX_TO_STRING
-                                 PRInt32 aNamespaceID, nsIAtom *aName,
+                                 nsIAtom *aName,
 #endif
-                                  nsISupports *aState);
+                                 nsISupports *aState);
 
     TX_DECL_FUNCTION
 
@@ -113,7 +113,6 @@ private:
     nsIID mIID;
     PRUint16 mMethodIndex;
 #ifdef TX_TO_STRING
-    PRInt32 mNamespaceID;
     nsCOMPtr<nsIAtom> mName;
 #endif
     nsCOMPtr<nsISupports> mState;
@@ -123,7 +122,6 @@ txXPCOMExtensionFunctionCall::txXPCOMExtensionFunctionCall(nsISupports *aHelper,
                                                            const nsIID &aIID,
                                                            PRUint16 aMethodIndex,
 #ifdef TX_TO_STRING
-                                                           PRInt32 aNamespaceID,
                                                            nsIAtom *aName,
 #endif
                                                            nsISupports *aState)
@@ -131,7 +129,6 @@ txXPCOMExtensionFunctionCall::txXPCOMExtensionFunctionCall(nsISupports *aHelper,
       mIID(aIID),
       mMethodIndex(aMethodIndex),
 #ifdef TX_TO_STRING
-      mNamespaceID(aNamespaceID),
       mName(aName),
 #endif
       mState(aState)
@@ -248,7 +245,7 @@ TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
 
     *aFunction = new txXPCOMExtensionFunctionCall(helper, iid, methodIndex,
 #ifdef TX_TO_STRING
-                                                  aNamespaceID, aName,
+                                                  aName,
 #endif
                                                   aState);
 

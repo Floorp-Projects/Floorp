@@ -115,7 +115,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
      * Check for SynthesizeFrame poisoning and fast constructors which
      * didn't check their callee properly.
      */
-    Value &thisv = call.thisv();
+    Value thisv = call.thisv();
     JS_ASSERT(!thisv.isMagic());
 
 #ifdef DEBUG
@@ -125,15 +125,17 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
     if (thisv.isNullOrUndefined()) {
         JSObject *thisp = call.callee().global().thisObject(cx);
-        JS_ASSERT(!IsPoisonedPtr(thisp));
         if (!thisp)
             return false;
-        call.thisv().setObject(*thisp);
+        call.setThis(ObjectValue(*thisp));
         return true;
     }
 
-    if (!thisv.isObject())
-        return !!js_PrimitiveToObject(cx, &thisv);
+    if (!thisv.isObject()) {
+        if (!js_PrimitiveToObject(cx, &thisv))
+            return false;
+        call.setThis(thisv);
+    }
 
     return true;
 }
@@ -210,8 +212,8 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    args.calleev() = obj->getSlot(JSSLOT_FOUND_FUNCTION);
-    args.thisv() = vp[1];
+    args.setCallee(obj->getSlot(JSSLOT_FOUND_FUNCTION));
+    args.setThis(vp[1]);
     args[0] = obj->getSlot(JSSLOT_SAVED_ID);
     JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
@@ -228,7 +230,9 @@ bool
 js::ReportIsNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct)
 {
     unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
-    js_ReportValueError3(cx, error, JSDVG_SEARCH_STACK, v, NULL, NULL, NULL);
+
+    RootedValue val(cx, v);
+    js_ReportValueError3(cx, error, JSDVG_SEARCH_STACK, val, NullPtr(), NULL, NULL);
     return false;
 }
 
@@ -237,7 +241,9 @@ js::ReportIsNotFunction(JSContext *cx, const Value *vp, MaybeConstruct construct
 {
     ptrdiff_t spIndex = cx->stack.spIndexOf(vp);
     unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
-    js_ReportValueError3(cx, error, spIndex, *vp, NULL, NULL, NULL);
+
+    RootedValue val(cx, *vp);
+    js_ReportValueError3(cx, error, spIndex, val, NullPtr(), NULL, NULL);
     return false;
 }
 
@@ -344,7 +350,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     InitialFrameFlags initial = (InitialFrameFlags) construct;
 
     if (args.calleev().isPrimitive())
-        return ReportIsNotFunction(cx, &args.calleev(), construct);
+        return ReportIsNotFunction(cx, args.calleev().address(), construct);
 
     JSObject &callee = args.callee();
     Class *clasp = callee.getClass();
@@ -357,7 +363,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 #endif
         JS_ASSERT_IF(construct, !clasp->construct);
         if (!clasp->call)
-            return ReportIsNotFunction(cx, &args.calleev(), construct);
+            return ReportIsNotFunction(cx, args.calleev().address(), construct);
         return CallJSNative(cx, clasp->call, args);
     }
 
@@ -392,8 +398,8 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
 
-    args.calleev() = fval;
-    args.thisv() = thisv;
+    args.setCallee(fval);
+    args.setThis(thisv);
     PodCopy(args.array(), argv, argc);
 
     if (args.thisv().isObject()) {
@@ -405,7 +411,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
         JSObject *thisp = args.thisv().toObject().thisObject(cx);
         if (!thisp)
              return false;
-        args.thisv().setObject(*thisp);
+        args.setThis(ObjectValue(*thisp));
     }
 
     if (!Invoke(cx, args))
@@ -420,10 +426,10 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(!FunctionClass.construct);
 
-    args.thisv().setMagic(JS_IS_CONSTRUCTING);
+    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
 
     if (!args.calleev().isObject())
-        return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
+        return ReportIsNotFunction(cx, args.calleev().address(), CONSTRUCT);
 
     JSObject &callee = args.callee();
     if (callee.isFunction()) {
@@ -437,7 +443,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
         }
 
         if (!fun->isInterpretedConstructor())
-            return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
+            return ReportIsNotFunction(cx, args.calleev().address(), CONSTRUCT);
 
         if (!InvokeKernel(cx, args, CONSTRUCT))
             return false;
@@ -448,7 +454,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 
     Class *clasp = callee.getClass();
     if (!clasp->construct)
-        return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
+        return ReportIsNotFunction(cx, args.calleev().address(), CONSTRUCT);
 
     return CallJSNativeConstructor(cx, clasp->construct, args);
 }
@@ -460,8 +466,8 @@ js::InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *ar
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
 
-    args.calleev() = fval;
-    args.thisv().setMagic(JS_THIS_POISON);
+    args.setCallee(fval);
+    args.setThis(MagicValue(JS_THIS_POISON));
     PodCopy(args.array(), argv, argc);
 
     if (!InvokeConstructor(cx, args))
@@ -553,8 +559,10 @@ js::HasInstance(JSContext *cx, HandleObject obj, const Value &v, JSBool *bp)
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, &v, bp);
+
+    RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                        JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
+                        JSDVG_SEARCH_STACK, val, NullPtr());
     return JS_FALSE;
 }
 
@@ -903,8 +911,8 @@ DoIncDec(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &v, Val
 
 #define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
-        Value *vp_ = &regs.sp[n];                                             \
-        obj = ToObject(cx, (vp_));                                            \
+        HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[n]);       \
+        obj = ToObject(cx, (val));                                            \
         if (!obj)                                                             \
             goto error;                                                       \
     JS_END_MACRO
@@ -1746,9 +1754,9 @@ END_CASE(JSOP_AND)
 
 BEGIN_CASE(JSOP_IN)
 {
-    const Value &rref = regs.sp[-1];
+    HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
     if (!rref.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -2267,8 +2275,9 @@ BEGIN_CASE(JSOP_TOID)
      * There must be an object value below the id, which will not be popped
      * but is necessary in interning the id for XML.
      */
-    Value objval = regs.sp[-2];
-    Value idval = regs.sp[-1];
+    RootedValue &objval = rootValue0, &idval = rootValue1;
+    objval = regs.sp[-2];
+    idval = regs.sp[-1];
 
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
     if (!ToIdOperation(cx, objval, idval, res))
@@ -2362,8 +2371,11 @@ BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
+    RootedValue &lval = rootValue0;
+    lval = regs.sp[-1];
+
     RootedValue rval(cx);
-    if (!GetPropertyOperation(cx, script, regs.pc, regs.sp[-1], &rval))
+    if (!GetPropertyOperation(cx, script, regs.pc, &lval, &rval))
         goto error;
 
     TypeScript::Monitor(cx, script, regs.pc, rval);
@@ -2377,8 +2389,8 @@ BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
 {
-    const Value &rval = regs.sp[-1];
-    const Value &lval = regs.sp[-2];
+    HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
+    HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
     if (!SetPropertyOperation(cx, regs.pc, lval, rval))
         goto error;
@@ -2391,10 +2403,11 @@ END_CASE(JSOP_SETPROP)
 BEGIN_CASE(JSOP_GETELEM)
 BEGIN_CASE(JSOP_CALLELEM)
 {
-    Value &lref = regs.sp[-2];
-    Value &rref = regs.sp[-1];
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
-    if (!GetElementOperation(cx, op, lref, rref, res))
+    if (!GetElementOperation(cx, op, lval, rval, res))
         goto error;
     TypeScript::Monitor(cx, script, regs.pc, res);
     regs.sp--;
@@ -2455,6 +2468,8 @@ BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNCALL)
 {
+    if (regs.fp()->hasPushedSPSFrame())
+        cx->runtime->spsProfiler.updatePC(script, regs.pc);
     JS_ASSERT(regs.stackDepth() >= 2 + GET_ARGC(regs.pc));
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
 
@@ -3341,9 +3356,10 @@ BEGIN_CASE(JSOP_THROW)
 
 BEGIN_CASE(JSOP_INSTANCEOF)
 {
-    const Value &rref = regs.sp[-1];
+    RootedValue &rref = rootValue0;
+    rref = regs.sp[-1];
     if (rref.isPrimitive()) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NULL);
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3781,8 +3797,9 @@ BEGIN_CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
     if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK,
-                            ObjectValue(regs.fp()->callee()), NULL);
+        RootedValue &val = rootValue0;
+        val.setObject(regs.fp()->callee());
+        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, NullPtr());
         goto error;
     }
     regs.fp()->setReturnValue(regs.sp[-1]);
@@ -4006,15 +4023,15 @@ js::Throw(JSContext *cx, const Value &v)
 }
 
 bool
-js::GetProperty(JSContext *cx, const Value &value, PropertyName *name, MutableHandleValue vp)
+js::GetProperty(JSContext *cx, HandleValue v, PropertyName *name, MutableHandleValue vp)
 {
     if (name == cx->runtime->atomState.lengthAtom) {
         // Fast path for strings, arrays and arguments.
-        if (GetLengthProperty(value, vp))
+        if (GetLengthProperty(v, vp))
             return true;
     }
 
-    JSObject *obj = ValueToObject(cx, value);
+    JSObject *obj = ToObjectFromStack(cx, v);
     if (!obj)
         return false;
     return obj->getProperty(cx, name, vp);
@@ -4085,38 +4102,38 @@ template bool js::SetProperty<false>(JSContext *cx, HandleObject obj, HandleId i
 
 template <bool strict>
 bool
-js::DeleteProperty(JSContext *cx, const Value &val, HandlePropertyName name, JSBool *bp)
+js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool *bp)
 {
     // default op result is false (failure)
     *bp = true;
 
     // convert value to JSObject pointer
-    JSObject *obj = ValueToObject(cx, val);
+    JSObject *obj = ToObjectFromStack(cx, v);
     if (!obj)
         return false;
 
     // Call deleteProperty on obj
     RootedValue result(cx, NullValue());
     bool delprop_ok = obj->deleteProperty(cx, name, &result, strict);
-    if(!delprop_ok)
+    if (!delprop_ok)
         return false;
-    JS_ASSERT(result.isBoolean());
+
     // convert result into *bp and return
     *bp = result.toBoolean();
     return true;
 }
 
-template bool js::DeleteProperty<true> (JSContext *cx, const Value &val, HandlePropertyName name, JSBool *bp);
-template bool js::DeleteProperty<false>(JSContext *cx, const Value &val, HandlePropertyName name, JSBool *bp);
+template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
+template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
 
 bool
-js::GetElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue vp)
+js::GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue vp)
 {
     return GetElementOperation(cx, JSOP_GETELEM, lref, rref, vp);
 }
 
 bool
-js::GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref,
+js::GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref,
                         MutableHandleValue vp)
 {
     if (!GetElement(cx, lref, rref, vp))
@@ -4127,13 +4144,13 @@ js::GetElementMonitored(JSContext *cx, const Value &lref, const Value &rref,
 }
 
 bool
-js::CallElement(JSContext *cx, const Value &lref, const Value &rref, MutableHandleValue res)
+js::CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
 }
 
 bool
-js::SetObjectElement(JSContext *cx, HandleObject obj, const Value &index, const Value &value,
+js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
                      JSBool strict)
 {
     RootedId id(cx);

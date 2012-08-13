@@ -40,19 +40,20 @@ public class Tabs implements GeckoEventListener {
     private GeckoApp mActivity;
 
     private Tabs() {
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:New", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Back", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Forward", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Goto", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Purge", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Added", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Close", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
-        GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
-        GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Added", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Removed", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Share", this);
+
+        registerEventListener("SessionHistory:New");
+        registerEventListener("SessionHistory:Back");
+        registerEventListener("SessionHistory:Forward");
+        registerEventListener("SessionHistory:Goto");
+        registerEventListener("SessionHistory:Purge");
+        registerEventListener("Tab:Added");
+        registerEventListener("Tab:Close");
+        registerEventListener("Tab:Select");
+        registerEventListener("Session:RestoreBegin");
+        registerEventListener("Session:RestoreEnd");
+        registerEventListener("Reader:Added");
+        registerEventListener("Reader:Removed");
+        registerEventListener("Reader:Share");
     }
 
     public void attachToActivity(GeckoApp activity) {
@@ -400,5 +401,9 @@ public class Tabs implements GeckoEventListener {
                 TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
             }
         });
+    }
+
+    private void registerEventListener(String event) {
+        GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
     }
 }

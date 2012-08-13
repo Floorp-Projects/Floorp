@@ -510,34 +510,23 @@ pref("browser.gesture.twist.right", "");
 pref("browser.gesture.twist.left", "");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
-// 0=lines, 1=pages, 2=history , 3=text size
+// 0: Nothing happens
+// 1: Scrolling contents
+// 2: Go back or go forward, in your history
+// 3: Zoom in or out.
 #ifdef XP_MACOSX
 // On OS X, if the wheel has one axis only, shift+wheel comes through as a
 // horizontal scroll event. Thus, we can't assign anything other than normal
 // scrolling to shift+wheel.
-pref("mousewheel.withshiftkey.action",0);
-pref("mousewheel.withshiftkey.sysnumlines",true);
-pref("mousewheel.withshiftkey.numlines",1);
-pref("mousewheel.withaltkey.action",2);
-pref("mousewheel.withaltkey.sysnumlines",false);
-pref("mousewheel.withaltkey.numlines",1);
-pref("mousewheel.withmetakey.action",0);
-pref("mousewheel.withmetakey.sysnumlines",false);
-pref("mousewheel.withmetakey.numlines",1);
+pref("mousewheel.with_alt.action", 2);
+pref("mousewheel.with_shift.action", 1);
 #else
-pref("mousewheel.withshiftkey.action",2);
-pref("mousewheel.withshiftkey.sysnumlines",false);
-pref("mousewheel.withshiftkey.numlines",1);
-pref("mousewheel.withaltkey.action",0);
-pref("mousewheel.withaltkey.sysnumlines",false);
-pref("mousewheel.withaltkey.numlines",1);
-pref("mousewheel.withmetakey.action",0);
-pref("mousewheel.withmetakey.sysnumlines",true);
-pref("mousewheel.withmetakey.numlines",1);
+pref("mousewheel.with_alt.action", 1);
+pref("mousewheel.with_shift.action", 2);
 #endif
-pref("mousewheel.withcontrolkey.action",3);
-pref("mousewheel.withcontrolkey.sysnumlines",false);
-pref("mousewheel.withcontrolkey.numlines",1);
+pref("mousewheel.with_control.action",3);
+pref("mousewheel.with_meta.action", 1);  // command key on Mac
+pref("mousewheel.with_win.action", 1);
 
 // pref to control the alert notification 
 pref("alerts.slideIncrement", 1);
