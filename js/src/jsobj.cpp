@@ -2980,13 +2980,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
     }
 
-    RootedObject na(cx, a), aProto(cx, a->getProto()), nb(cx, b), bProto(cx, b->getProto());
-
-    /*
-     * Swap prototypes on the two objects, so that TradeGuts can preserve
-     * the types of the two objects.
-     */
-    return SetProto(cx, na, bProto, true) && SetProto(cx, nb, aProto, true);
+    return true;
 }
 
 void
@@ -3117,14 +3111,6 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->lastProperty()->listp = &a->shape_;
     if (b->inDictionaryMode())
         b->lastProperty()->listp = &b->shape_;
-
-    /*
-     * Swap the object's types, to restore their initial type information.
-     * The prototypes of the objects were swapped in ReserveForTradeGuts.
-     */
-    TypeObject *tmp = a->type_;
-    a->type_ = b->type_;
-    b->type_ = tmp;
 }
 
 /*
