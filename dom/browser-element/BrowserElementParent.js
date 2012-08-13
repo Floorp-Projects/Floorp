@@ -167,7 +167,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener("securitychange", this._fireEventFromMsg);
   addMessageListener("error", this._fireEventFromMsg);
   addMessageListener("scroll", this._fireEventFromMsg);
-  addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
   addMessageListener('got-screenshot', this._gotDOMRequestResult);
@@ -360,10 +359,6 @@ BrowserElementParent.prototype = {
     return new this._window.Event('mozbrowser' + evtName,
                                   { bubbles: true,
                                     cancelable: cancelable });
-  },
-
-  _sendMozAppManifestURL: function(data) {
-    return this._frameElement.getAttribute('mozapp');
   },
 
   /**
