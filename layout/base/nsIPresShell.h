@@ -1218,8 +1218,9 @@ public:
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
   enum PaintType {
-    PaintType_Composite,
-    PaintType_NoComposite
+    PaintType_Composite, /* Just composite the layers, don't do ThebesLayer painting. */
+    PaintType_NoComposite, /* Only paint ThebesLayers, don't composite. */
+    PaintType_Full /* Do a full transaction. */
   };
   virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
                      PaintType aType, bool aWillSendDidPaint) = 0;
