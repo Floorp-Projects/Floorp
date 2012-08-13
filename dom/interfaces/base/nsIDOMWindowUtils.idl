@@ -39,7 +39,7 @@ interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(97548ee0-9def-421a-ab2a-c6c98efa9a3c)]
+[scriptable, uuid(5fc61d7b-a303-4f34-adfe-b7828675ba45)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1183,4 +1183,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * The caller of this method must have UniversalXPConnect privileges.
    */
   void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
+
+  /**
+   * Prevent this window (and any child windows) from displaying any further
+   * dialogs (e.g. window.alert()).
+   */
+  void preventFurtherDialogs();
 };

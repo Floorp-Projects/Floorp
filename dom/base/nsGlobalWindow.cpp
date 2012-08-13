@@ -684,7 +684,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCleanedUp(false),
     mCallCleanUpAfterModalDialogCloses(false),
     mDialogAbuseCount(0),
-    mStopAbuseDialogs(false)
+    mStopAbuseDialogs(false),
+    mDialogsPermanentlyDisabled(false)
 {
   nsLayoutStatics::AddRef();
 
@@ -2566,6 +2567,22 @@ nsGlobalWindow::DialogsAreBlocked(bool *aBeingAbused)
     return true;
   }
 
+  if (topWindow->mDialogsPermanentlyDisabled) {
+    return true;
+  }
+
+  // Dialogs are blocked if the content viewer is hidden
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+
+    bool isHidden;
+    cv->GetIsHidden(&isHidden);
+    if (isHidden) {
+      return true;
+    }
+  }
+
   *aBeingAbused = topWindow->DialogsAreBeingAbused();
 
   return topWindow->mStopAbuseDialogs && *aBeingAbused;
@@ -2625,7 +2642,7 @@ nsGlobalWindow::ConfirmDialogIfNeeded()
                                      "ScriptDialogPreventTitle", title);
   promptSvc->Confirm(this, title.get(), label.get(), &disableDialog);
   if (disableDialog) {
-    PreventFurtherDialogs();
+    PreventFurtherDialogs(false);
     return false;
   }
 
@@ -2633,7 +2650,7 @@ nsGlobalWindow::ConfirmDialogIfNeeded()
 }
 
 void
-nsGlobalWindow::PreventFurtherDialogs()
+nsGlobalWindow::PreventFurtherDialogs(bool aPermanent)
 {
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
@@ -2644,6 +2661,9 @@ nsGlobalWindow::PreventFurtherDialogs()
   topWindow = topWindow->GetCurrentInnerWindowInternal();
   if (topWindow) {
     topWindow->mStopAbuseDialogs = true;
+    if (aPermanent) {
+      topWindow->mDialogsPermanentlyDisabled = true;
+    }
   }
 }
 
@@ -4847,7 +4867,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
     rv = prompt->AlertCheck(title.get(), final.get(), label.get(),
                             &disallowDialog);
     if (disallowDialog)
-      PreventFurtherDialogs();
+      PreventFurtherDialogs(false);
   } else {
     rv = prompt->Alert(title.get(), final.get());
   }
@@ -4914,7 +4934,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, bool* aReturn)
     rv = prompt->ConfirmCheck(title.get(), final.get(), label.get(),
                               &disallowDialog, aReturn);
     if (disallowDialog)
-      PreventFurtherDialogs();
+      PreventFurtherDialogs(false);
   } else {
     rv = prompt->Confirm(title.get(), final.get(), aReturn);
   }
@@ -4990,7 +5010,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                       &inoutValue, label.get(), &disallowDialog, &ok);
 
   if (disallowDialog) {
-    PreventFurtherDialogs();
+    PreventFurtherDialogs(false);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
