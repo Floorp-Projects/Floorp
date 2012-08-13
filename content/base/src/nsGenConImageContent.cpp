@@ -35,6 +35,10 @@ public:
   }
 
   // nsIContent overrides
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
   virtual nsEventStates IntrinsicState() const;
   
 private:
@@ -65,6 +69,28 @@ NS_NewGenConImageContent(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNo
 nsGenConImageContent::~nsGenConImageContent()
 {
   DestroyImageLoadingContent();
+}
+
+nsresult
+nsGenConImageContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                 nsIContent* aBindingParent,
+                                 bool aCompileEventHandlers)
+{
+  nsresult rv;
+  rv = nsXMLElement::BindToTree(aDocument, aParent, aBindingParent,
+                                aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
+                                    aCompileEventHandlers);
+  return NS_OK;
+}
+
+void
+nsGenConImageContent::UnbindFromTree(bool aDeep, bool aNullParent)
+{
+  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
+  nsXMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsEventStates

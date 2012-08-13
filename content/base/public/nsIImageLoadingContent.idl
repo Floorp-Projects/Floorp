@@ -34,7 +34,7 @@ interface nsIFrame;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(f7debb84-2854-4731-a57b-1bd752ad71f8)]
+[scriptable, uuid(4bf1a7c5-6edb-4191-a257-e31a90f6aa85)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -156,9 +156,4 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * as PR_FALSE to revert ImageState() to its original behaviour.
    */
   void forceImageState(in boolean aForce, in unsigned long long aState);
-
-  /**
-    * We need to be notified when our document changes.
-    */
-  [noscript, notxpcom] void NotifyOwnerDocumentChanged(in nsIDocument aOldDoc);
 };
