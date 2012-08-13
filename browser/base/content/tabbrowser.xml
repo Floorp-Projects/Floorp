@@ -1383,6 +1383,12 @@
             // activeness in the tab switcher.
             b.docShellIsActive = false;
 
+            // If we just created a new tab that loads the default
+            // newtab url, swap in a preloaded page if possible.
+            if (aURI == BROWSER_NEW_TAB_URL) {
+              gBrowserNewTabPreloader.newTab(t);
+            }
+
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
             // aReferrerURI is null or undefined if the tab is opened from
