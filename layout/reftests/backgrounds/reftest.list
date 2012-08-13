@@ -127,4 +127,6 @@ random-if(bug685516) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
 
+== really-big-background.html really-big-background-ref.html
+
 == background-repeat-1-ref.html background-repeat-1.html
