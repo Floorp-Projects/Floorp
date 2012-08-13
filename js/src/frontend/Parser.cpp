@@ -469,7 +469,7 @@ CheckStrictAssignment(JSContext *cx, Parser *parser, ParseNode *lhs)
  * tc's token stream if pn is NULL.
  */
 bool
-CheckStrictBinding(JSContext *cx, Parser *parser, PropertyName *name, ParseNode *pn)
+CheckStrictBinding(JSContext *cx, Parser *parser, HandlePropertyName name, ParseNode *pn)
 {
     if (!parser->tc->sc->needStrictChecks())
         return true;
@@ -489,7 +489,7 @@ CheckStrictBinding(JSContext *cx, Parser *parser, PropertyName *name, ParseNode 
 }
 
 static bool
-ReportBadParameter(JSContext *cx, Parser *parser, JSAtom *name, unsigned errorNumber)
+ReportBadParameter(JSContext *cx, Parser *parser, HandlePropertyName name, unsigned errorNumber)
 {
     Definition *dn = parser->tc->decls.lookupFirst(name);
     JSAutoByteString bytes;
@@ -878,13 +878,13 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
  * of CheckDestructuring and its friends.
  */
 typedef bool
-(*Binder)(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
+(*Binder)(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser);
 
 static bool
-BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
+BindLet(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser);
 
 static bool
-BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
+BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser);
 
 struct frontend::BindData {
     BindData(JSContext *cx) : let(cx) {}
@@ -1139,7 +1139,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
  * and the formals specified by the Function constructor.
  */
 bool
-frontend::DefineArg(ParseNode *pn, PropertyName *name, unsigned i, Parser *parser)
+frontend::DefineArg(ParseNode *pn, HandlePropertyName name, unsigned i, Parser *parser)
 {
     JSContext *cx = parser->context;
     TreeContext *tc = parser->tc;
@@ -1179,7 +1179,7 @@ frontend::DefineArg(ParseNode *pn, PropertyName *name, unsigned i, Parser *parse
 
 #if JS_HAS_DESTRUCTURING
 static bool
-BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
+BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 {
     TreeContext *tc = parser->tc;
     JS_ASSERT(tc->sc->inFunction());
@@ -1189,13 +1189,13 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser
      *     bindings aren't added to tc->sc->bindings until after all arguments have
      *     been parsed.
      */
-    if (tc->decls.lookupFirst(atom)) {
+    if (tc->decls.lookupFirst(name)) {
         parser->reportError(NULL, JSMSG_DESTRUCT_DUP_ARG);
         return false;
     }
 
     ParseNode *pn = data->pn;
-    if (!CheckStrictBinding(cx, parser, atom->asPropertyName(), pn))
+    if (!CheckStrictBinding(cx, parser, name, pn))
         return false;
 
     /*
@@ -1220,7 +1220,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser
     pn->setOp(JSOP_SETLOCAL);
     pn->pn_dflags |= PND_BOUND;
 
-    return Define(pn, atom, tc);
+    return Define(pn, name, tc);
 }
 #endif /* JS_HAS_DESTRUCTURING */
 
@@ -2020,11 +2020,11 @@ ReportRedeclaration(JSContext *cx, Parser *parser, ParseNode *pn, bool isConst, 
  * data->pn in a slot of the block object.
  */
 static bool
-BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
+BindLet(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 {
     TreeContext *tc = parser->tc;
     ParseNode *pn = data->pn;
-    if (!CheckStrictBinding(cx, parser, atom->asPropertyName(), pn))
+    if (!CheckStrictBinding(cx, parser, name, pn))
         return false;
 
     Rooted<StaticBlockObject *> blockObj(cx, data->let.blockObj);
@@ -2040,10 +2040,10 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
      */
     if (data->let.varContext == HoistVars) {
         JS_ASSERT(!tc->atBodyLevel());
-        Definition *dn = tc->decls.lookupFirst(atom);
+        Definition *dn = tc->decls.lookupFirst(name);
         if (dn && dn->pn_blockid == tc->blockid())
-            return ReportRedeclaration(cx, parser, pn, dn->isConst(), atom);
-        if (!Define(pn, atom, tc, true))
+            return ReportRedeclaration(cx, parser, pn, dn->isConst(), name);
+        if (!Define(pn, name, tc, true))
             return false;
     }
 
@@ -2064,11 +2064,11 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
      * slot indexed by blockCount off the class-reserved slot base.
      */
     bool redeclared;
-    RootedId id(cx, AtomToId(atom));
+    RootedId id(cx, NameToId(name));
     Shape *shape = StaticBlockObject::addVar(cx, blockObj, id, blockCount, &redeclared);
     if (!shape) {
         if (redeclared)
-            ReportRedeclaration(cx, parser, pn, false, atom);
+            ReportRedeclaration(cx, parser, pn, false, name);
         return false;
     }
 
@@ -2163,20 +2163,18 @@ BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, Tr
 }
 
 static bool
-BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
+BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 {
-    RootedAtom atom(cx, atom_);
-
     TreeContext *tc = parser->tc;
     ParseNode *pn = data->pn;
 
     /* Default best op for pn is JSOP_NAME; we'll try to improve below. */
     pn->setOp(JSOP_NAME);
 
-    if (!CheckStrictBinding(cx, parser, atom->asPropertyName(), pn))
+    if (!CheckStrictBinding(cx, parser, name, pn))
         return false;
 
-    StmtInfoTC *stmt = LexicalLookup(tc, atom, NULL, (StmtInfoTC *)NULL);
+    StmtInfoTC *stmt = LexicalLookup(tc, name, NULL, (StmtInfoTC *)NULL);
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_dflags |= PND_DEOPTIMIZED;
@@ -2184,11 +2182,11 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
         return true;
     }
 
-    DefinitionList::Range defs = tc->decls.lookupMulti(atom);
+    DefinitionList::Range defs = tc->decls.lookupMulti(name);
     JS_ASSERT_IF(stmt, !defs.empty());
 
     if (defs.empty()) {
-        if (!Define(pn, atom, tc))
+        if (!Define(pn, name, tc))
             return false;
 
         if (data->op == JSOP_DEFCONST)
@@ -2210,32 +2208,32 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
     Definition *dn = defs.front();
     Definition::Kind dn_kind = dn->kind();
     if (dn_kind == Definition::ARG) {
-        JSAutoByteString name;
-        if (!js_AtomToPrintableString(cx, atom, &name))
+        JSAutoByteString bytes;
+        if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
 
         if (data->op == JSOP_DEFCONST) {
-            parser->reportError(pn, JSMSG_REDECLARED_PARAM, name.ptr());
+            parser->reportError(pn, JSMSG_REDECLARED_PARAM, bytes.ptr());
             return false;
         }
-        if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, name.ptr()))
+        if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
             return false;
     } else {
         bool error = (data->op == JSOP_DEFCONST ||
                       dn_kind == Definition::CONST ||
                       (dn_kind == Definition::LET &&
-                       (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
+                       (stmt->type != STMT_CATCH || OuterLet(tc, stmt, name))));
 
         if (cx->hasStrictOption()
             ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
             : error)
         {
-            JSAutoByteString name;
+            JSAutoByteString bytes;
             Parser::Reporter reporter =
                 error ? &Parser::reportError : &Parser::reportStrictWarning;
-            if (!js_AtomToPrintableString(cx, atom, &name) ||
+            if (!js_AtomToPrintableString(cx, name, &bytes) ||
                 !(parser->*reporter)(pn, JSMSG_REDECLARED_VAR,
-                                     Definition::kindString(dn_kind), name.ptr()))
+                                     Definition::kindString(dn_kind), bytes.ptr()))
             {
                 return false;
             }
@@ -2329,8 +2327,10 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, Parser *parse
 {
     JS_ASSERT(pn->isKind(PNK_NAME));
 
+    RootedPropertyName name(cx, pn->pn_atom->asPropertyName());
+
     data->pn = pn;
-    if (!data->binder(cx, data, pn->pn_atom, parser))
+    if (!data->binder(cx, data, name, parser))
         return false;
 
     /*
@@ -3437,7 +3437,7 @@ Parser::tryStatement()
 
               case TOK_NAME:
               {
-                JSAtom *label = tokenStream.currentToken().name();
+                RootedPropertyName label(context, tokenStream.currentToken().name());
                 pn3 = NewBindingNode(label, this);
                 if (!pn3)
                     return NULL;
@@ -4148,7 +4148,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             return NULL;
         }
 
-        PropertyName *name = tokenStream.currentToken().name();
+        RootedPropertyName name(context, tokenStream.currentToken().name());
         pn2 = NewBindingNode(name, this, varContext);
         if (!pn2)
             return NULL;

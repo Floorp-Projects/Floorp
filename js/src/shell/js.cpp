@@ -2534,9 +2534,9 @@ NewSandbox(JSContext *cx, bool lazy)
 static JSBool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSString *str;
+    RootedString str(cx);
     RootedObject sobj(cx);
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, sobj.address()))
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", str.address(), sobj.address()))
         return false;
 
     size_t srclen;

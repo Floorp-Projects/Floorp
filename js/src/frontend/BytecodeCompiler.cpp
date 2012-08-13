@@ -303,8 +303,10 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         if (!GetOrderedBindings(cx, funsc.bindings, &names))
             return false;
 
+        RootedPropertyName name(cx);
         for (unsigned i = 0; i < nargs; i++) {
-            if (!DefineArg(fn, names[i].maybeName, i, &parser))
+            name = names[i].maybeName;
+            if (!DefineArg(fn, name, i, &parser))
                 return false;
         }
     }
