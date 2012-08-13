@@ -2287,6 +2287,22 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::PreventFurtherDialogs()
+{
+  // Permanently disable further dialogs for this window.
+
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  static_cast<nsGlobalWindow*>(window.get())->PreventFurtherDialogs(true);
+  return NS_OK;
+}
+
 static nsresult
 GetFileOrBlob(const nsAString& aName, const jsval& aBlobParts,
               const jsval& aParameters, JSContext* aCx,
