@@ -596,7 +596,7 @@ class IDLInterface(IDLObjectWithScope):
         # {getter,setter,creator,deleter}.
         specialMembersSeen = set()
         for member in self.members:
-            if member.tag != IDLInterfaceMember.Tags.Method:
+            if not member.isMethod():
                 continue
 
             if member.isGetter():
@@ -626,6 +626,46 @@ class IDLInterface(IDLObjectWithScope):
     def validate(self):
         for member in self.members:
             member.validate()
+
+            # Check that PutForwards refers to another attribute and that no
+            # cycles exist in forwarded assignments.
+            if member.isAttr():
+                iface = self
+                attr = member
+                putForwards = attr.getExtendedAttribute("PutForwards")
+                if putForwards and self.isCallback():
+                    raise WebIDLError("[PutForwards] used on an attribute "
+                                      "on interface %s which is a callback "
+                                      "interface" % self.identifier.name,
+                                      [self.location, member.location])
+
+                while putForwards is not None:
+                    forwardIface = attr.type.unroll().inner
+                    fowardAttr = None
+
+                    for forwardedMember in forwardIface.members:
+                        if (not forwardedMember.isAttr() or
+                            forwardedMember.identifier.name != putForwards[0]):
+                            continue
+                        if forwardedMember == member:
+                            raise WebIDLError("Cycle detected in forwarded "
+                                              "assignments for attribute %s on "
+                                              "%s" %
+                                              (member.identifier.name, self),
+                                              [member.location])
+                        fowardAttr = forwardedMember
+                        break
+
+                    if fowardAttr is None:
+                        raise WebIDLError("Attribute %s on %s forwards to "
+                                          "missing attribute %s" %
+                              (attr.identifier.name, iface, putForwards),
+                              [attr.location])
+
+                    iface = forwardIface
+                    attr = fowardAttr
+                    putForwards = attr.getExtendedAttribute("PutForwards")
+
 
     def isInterface(self):
         return True
@@ -2003,6 +2043,9 @@ class IDLAttribute(IDLInterfaceMember):
                                       "one of its member types's member "
                                       "types, and so on) is a sequence "
                                       "type", [self.location, f.location])
+        if not self.type.isInterface() and self.getExtendedAttribute("PutForwards"):
+            raise WebIDLError("An attribute with [PutForwards] must have an "
+                              "interface type as its type", [self.location])
 
     def validate(self):
         pass
@@ -2029,6 +2072,25 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Unforgeable] is only allowed on readonly "
                                   "attributes", [attr.location, self.location])
             self._unforgeable = True
+        elif identifier == "PutForwards":
+            if not self.readonly:
+                raise WebIDLError("[PutForwards] is only allowed on readonly "
+                                  "attributes", [attr.location, self.location])
+            if self.isStatic():
+                raise WebIDLError("[PutForwards] is only allowed on non-static "
+                                  "attributes", [attr.location, self.location])
+            if self.getExtendedAttribute("Replaceable") is not None:
+                raise WebIDLError("[PutForwards] and [Replaceable] can't both "
+                                  "appear on the same attribute",
+                                  [attr.location, self.location])
+            if not attr.hasValue():
+                raise WebIDLError("[PutForwards] takes an identifier",
+                                  [attr.location, self.location])
+        elif identifier == "Replaceable":
+            if self.getExtendedAttribute("PutForwards") is not None:
+                raise WebIDLError("[PutForwards] and [Replaceable] can't both "
+                                  "appear on the same attribute",
+                                  [attr.location, self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 
     def resolve(self, parentScope):
@@ -2501,6 +2563,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         elif identifier == "Unforgeable":
             raise WebIDLError("Methods must not be flagged as "
                               "[Unforgeable]",
+                              [attr.location, self.location])
+        elif identifier == "PutForwards":
+            raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 

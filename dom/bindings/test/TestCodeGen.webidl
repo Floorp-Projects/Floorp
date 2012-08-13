@@ -339,6 +339,9 @@ interface TestInterface {
   [Unforgeable] readonly attribute long unforgeableAttr;
   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
   void passRenamedInterface(TestRenamedInterface arg);
+  [PutForwards=writableByte] readonly attribute TestInterface putForwardsAttr;
+  [PutForwards=writableByte, LenientThis] readonly attribute TestInterface putForwardsAttr2;
+  [PutForwards=writableByte, ChromeOnly] readonly attribute TestInterface putForwardsAttr3;
 
   // If you add things here, add them to TestExampleGen as well
 };
