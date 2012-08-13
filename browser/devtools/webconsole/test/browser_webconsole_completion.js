@@ -98,6 +98,13 @@ function testCompletion(hud) {
 
   is(jsterm.completeNode.value, "                   \n      e", "multi-line completion");
 
+  // Test non-object autocompletion.
+  input.value = "Object.name.sl";
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
+  yield;
+
+  is(jsterm.completeNode.value, "              ice", "non-object completion");
+
   testDriver = jsterm = input = null;
   executeSoon(finishTest);
   yield;
