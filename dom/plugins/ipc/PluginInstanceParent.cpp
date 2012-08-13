@@ -654,6 +654,12 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     }
 
     mFrontSurface = surface;
+    if (!surface) {
+      ImageContainer* container = GetImageContainer();
+      if (container) {
+        container->SetCurrentImage(nullptr);
+      }
+    }
     RecvNPN_InvalidateRect(updatedRect);
 
     PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",

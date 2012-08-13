@@ -2338,7 +2338,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, HandleObject, const Value &, const Value &, JSBool strict);
+    typedef bool (*pf)(JSContext *, HandleObject, HandleValue, HandleValue, JSBool strict);
     static const VMFunction Info = FunctionInfo<pf>(SetObjectElement);
 
     pushArg(Imm32(current->mir()->strictModeCode()));
@@ -2896,7 +2896,7 @@ typedef bool (*GetPropertyOrNameFn)(JSContext *, HandleObject, HandlePropertyNam
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, PropertyName *, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
     pushArg(ImmGCPtr(lir->mir()->name()));
@@ -2907,7 +2907,7 @@ CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 bool
 CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
     static const VMFunction GetElementInfo = FunctionInfo<pf>(js::GetElement);
     static const VMFunction CallElementInfo = FunctionInfo<pf>(js::CallElement);
 
@@ -2927,7 +2927,7 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    typedef bool (*pf)(JSContext *, HandleObject, const Value &, const Value &, JSBool strict);
+    typedef bool (*pf)(JSContext *, HandleObject, HandleValue, HandleValue, JSBool strict);
     static const VMFunction SetObjectElementInfo = FunctionInfo<pf>(js::SetObjectElement);
 
     pushArg(Imm32(current->mir()->strictModeCode()));
@@ -3197,7 +3197,7 @@ CodeGenerator::visitOutOfLineGetElementCache(OutOfLineCache *ool)
 
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value &, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, size_t, JSObject *, HandleValue, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetElementCache);
 
     pushArg(index);
@@ -3293,7 +3293,7 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 bool
 CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, HandlePropertyName, JSBool *);
+    typedef bool (*pf)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
 
     pushArg(ImmGCPtr(lir->mir()->atom()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
@@ -3487,7 +3487,7 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 bool
 CodeGenerator::visitToIdV(LToIdV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(ToIdOperation);
 
     pushArg(ToValue(lir, LToIdV::Index));
@@ -3638,7 +3638,7 @@ CodeGenerator::visitOutOfLineLoadTypedArray(OutOfLineLoadTypedArray *ool)
     Register object = ToRegister(ins->object());
     ValueOperand out = ToOutValue(ins);
 
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(js::GetElementMonitored);
 
     if (ins->index()->isConstant())
@@ -4021,6 +4021,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
 bool
 CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
 {
+#if 0
     SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
     JS_ASSERT(profiler->enabled());
 
@@ -4050,18 +4051,21 @@ CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
     masm.movePtr(ImmWord(profiler->sizePointer()), size);
     Address addr(size, 0);
     masm.add32(Imm32(1), addr);
+#endif
     return true;
 }
 
 bool
 CodeGenerator::visitProfilingExit(LProfilingExit *exit)
 {
+#if 0
     SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
     JS_ASSERT(profiler->enabled());
     Register temp = ToRegister(exit->temp());
     masm.movePtr(ImmWord(profiler->sizePointer()), temp);
     Address addr(temp, 0);
     masm.add32(Imm32(-1), addr);
+#endif
     return true;
 }
 

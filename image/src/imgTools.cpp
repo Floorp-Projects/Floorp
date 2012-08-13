@@ -74,16 +74,17 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   }
 
   // Figure out how much data we've been passed
-  PRUint32 length;
+  PRUint64 length;
   rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(length <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   // Send the source data to the Image. WriteToRasterImage always
   // consumes everything it gets if it doesn't run out of memory.
   PRUint32 bytesRead;
   rv = inStream->ReadSegments(RasterImage::WriteToRasterImage,
                               static_cast<void*>(image),
-                              length, &bytesRead);
+                              (PRUint32)length, &bytesRead);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ABORT_IF_FALSE(bytesRead == length || image->HasError(),
   "WriteToRasterImage should consume everything or the image must be in error!");

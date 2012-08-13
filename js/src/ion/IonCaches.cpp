@@ -778,7 +778,7 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &
 }
 
 bool
-js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval,
+js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, HandleValue idval,
                          MutableHandleValue res)
 {
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
@@ -814,7 +814,8 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
-    if (!GetElementOperation(cx, JSOp(*pc), ObjectValue(*obj), idval, res))
+    RootedValue lval(cx, ObjectValue(*obj));
+    if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
         return false;
 
     types::TypeScript::Monitor(cx, script, pc, res);

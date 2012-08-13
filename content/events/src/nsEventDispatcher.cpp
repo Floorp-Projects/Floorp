@@ -22,6 +22,8 @@
 #include "sampler.h"
 #include "GeneratedEvents.h"
 
+using namespace mozilla;
+
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
 #define NS_TARGET_CHAIN_MAY_HAVE_MANAGER        (1 << 2)
@@ -734,6 +736,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aPresContext,
                                  static_cast<nsInputEvent*>(aEvent));
+    case NS_WHEEL_EVENT:
+      return NS_NewDOMWheelEvent(aDOMEvent, aPresContext,
+                                 static_cast<widget::WheelEvent*>(aEvent));
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aPresContext,
                                  static_cast<nsDragEvent*>(aEvent));

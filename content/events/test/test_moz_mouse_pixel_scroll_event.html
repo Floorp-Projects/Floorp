@@ -1,0 +1,1313 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for MozMousePixelScroll events</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .scrollable {
+      overflow: auto;
+      line-height: 1;
+      margin: 15px;
+    }
+    .scrollable > div {
+      width: 1000px;
+      height: 1000px;
+      font-size: 1000px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="Scrollable128" class="scrollable" style="font-size: 128px; width: 100px; height: 100px;">
+ <div>
+   <div id="Scrollable96" class="scrollable" style="font-size: 96px; width: 150px; height: 150px;">
+     <div>
+       <div id="Scrollable64" class="scrollable" style="font-size: 64px; width: 200px; height: 200px;">
+         <div>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
+</div>
+<div id="Scrollable32" class="scrollable" style="font-size: 32px; width: 50px; height: 50px;">
+  <div>
+  </div>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+var gScrollable128 = document.getElementById("Scrollable128");
+var gScrollable96 = document.getElementById("Scrollable96");
+var gScrollable64 = document.getElementById("Scrollable64");
+var gScrollable32 = document.getElementById("Scrollable32");
+var gRoot = document.documentElement;
+
+function prepareScrollUnits()
+{
+  var result = -1;
+  function handler(aEvent)
+  {
+    result = aEvent.detail;
+    aEvent.preventDefault();
+  }
+  window.addEventListener("MozMousePixelScroll", handler, true);
+
+  synthesizeWheel(gScrollable128, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable128.wheelLineHeight = result;
+  ok(result > 96 && result < 200, "prepareScrollUnits: gScrollable128.wheelLineHeight may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable96, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable96.wheelLineHeight = result;
+  ok(result > 64 && result < gScrollable128.wheelLineHeight, "prepareScrollUnits: gScrollable96.wheelLineHeight may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable64, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable64.wheelLineHeight = result;
+  ok(result > 32 && result < gScrollable96.wheelLineHeight, "prepareScrollUnits: gScrollable64.wheelLineHeight may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable32, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable32.wheelLineHeight = result;
+  ok(result > 16 && result < gScrollable64.wheelLineHeight, "prepareScrollUnits: gScrollable32.wheelLineHeight may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gRoot, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gRoot.wheelLineHeight = result;
+  ok(result > 10 && result < gScrollable32.wheelLineHeight, "prepareScrollUnits: gRoot.wheelLineHeight may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable128, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable128.wheelPageHeight = result;
+  ok(result >= (100 - gScrollable128.wheelLineHeight * 2) && result <= 100,
+     "prepareScrollUnits: gScrollable128.wheelLineHeight is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable96, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable96.wheelPageHeight = result;
+  ok(result >= (150 - gScrollable96.wheelLineHeight * 2) && result <= 150,
+     "prepareScrollUnits: gScrollable96.wheelLineHeight is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable64, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable64.wheelPageHeight = result;
+  ok(result >= (200 - gScrollable64.wheelLineHeight * 2) && result <= 200,
+     "prepareScrollUnits: gScrollable64.wheelLineHeight is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable32, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gScrollable32.wheelPageHeight = result;
+  ok(result >= (50 - gScrollable32.wheelLineHeight * 2) && result <= 50,
+     "prepareScrollUnits: gScrollable32.wheelLineHeight is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gRoot, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  gRoot.wheelPageHeight = result;
+  ok(window.innerHeight - result < 100 && window.innerHeight - result > 0,
+     "prepareScrollUnits: gRoot.wheelLineHeight is strange value, got " + result);
+
+
+  result = -1;
+  synthesizeWheel(gScrollable128, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable128.wheelPageWidth = result;
+  ok(result >= (100 - gScrollable128.wheelLineHeight * 2) && result <= 100,
+     "prepareScrollUnits: gScrollable128.wheelPageWidth is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable96, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable96.wheelPageWidth = result;
+  ok(result >= (150 - gScrollable96.wheelLineHeight * 2) && result <= 150,
+     "prepareScrollUnits: gScrollable96.wheelPageWidth is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable64, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable64.wheelPageWidth = result;
+  ok(result >= (200 - gScrollable64.wheelLineHeight * 2) && result <= 200,
+     "prepareScrollUnits: gScrollable64.wheelPageWidth is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable32, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable32.wheelPageWidth = result;
+  ok(result >= (50 - gScrollable32.wheelLineHeight * 2) && result <= 50,
+     "prepareScrollUnits: gScrollable32.wheelPageWidth is strange value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gRoot, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gRoot.wheelPageWidth = result;
+  ok(window.innerWidth - result < 100 && window.innerWidth - result > 0,
+     "prepareScrollUnits: gRoot.wheelPageWidth is strange value, got " + result);
+
+  window.removeEventListener("MozMousePixelScroll", handler, true);
+}
+
+function doTests()
+{
+  const kTests = [
+    // DOM_DELTA_LINE
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: gRoot
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: gRoot
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gRoot
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gRoot
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: null
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: null
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: null
+      }
+    },
+
+    // DOM_DELTA_PAGE
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: gRoot
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: gRoot
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable128
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable96
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gScrollable32
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gRoot
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: null, y: gRoot
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 128",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction",
+      target: gScrollable128,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable128.scrollLeft = 0;
+        gScrollable128.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable128, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 96",
+      target: gScrollable96,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable96, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element, even if not scrollable to the direction, 32",
+      target: gScrollable32,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable32.scrollLeft = 0;
+        gScrollable32.scrollTop = 0;
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gScrollable32, y: null
+      }
+    },
+    { description: "Should be computed from root element if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: null
+      }
+    },
+    { description: "Should be computed from root element, even if there is no scrollable element, root",
+      target: gRoot,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PAGE,
+        deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+      },
+      cleanup: function () {
+      },
+      expected: {
+        x: gRoot, y: null
+      }
+    },
+
+    // Overflow: hidden; boxes shouldn't be ignored.
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content, 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.style.overflow = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (X), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.style.overflowX = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (Y), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.style.overflowY = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: gScrollable64, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (X), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.style.overflowX = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (Y), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      prepare: function () {
+        gScrollable64.style.overflowY = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: null, y: gScrollable64
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (X), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.style.overflowX = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+    { description: "Should be computed from nearest scrollable element even if it hides overflow content (Y), 64",
+      target: gScrollable64,
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      prepare: function () {
+        gScrollable64.style.overflowY = "hidden";
+        gScrollable96.scrollLeft = 0;
+        gScrollable96.scrollTop = 0;
+        gScrollable64.scrollLeft = 0;
+        gScrollable64.scrollTop = 0;
+      },
+      cleanup: function () {
+        gScrollable64.style.overflow = "auto";
+      },
+      expected: {
+        x: gScrollable64, y: null
+      }
+    },
+  ];
+
+  var currentTest, description, firedX, firedY;
+
+  function handler(aEvent)
+  {
+    aEvent.preventDefault();
+
+    if (aEvent.axis != MouseScrollEvent.HORIZONTAL_AXIS &&
+        aEvent.axis != MouseScrollEvent.VERTICAL_AXIS) {
+      ok(false,
+         description + "The event had invalid axis (" + aEvent.axis + ")");
+      return;
+    }
+
+    var isHorizontal = (aEvent.axis == MouseScrollEvent.HORIZONTAL_AXIS);
+    if ((isHorizontal && !currentTest.expected.x) ||
+        (!isHorizontal && !currentTest.expected.y)) {
+      ok(false,
+         description + "The event fired unexpectedly (" +
+         (isHorizontal ? "Horizontal" : "Vertical") + ")");
+      return;
+    }
+
+    if (isHorizontal) {
+      firedX = true;
+    } else {
+      firedY = true;
+    }
+
+    var expectedDetail =
+      (currentTest.event.deltaMode == WheelEvent.DOM_DELTA_LINE) ?
+        (isHorizontal ? currentTest.expected.x.wheelLineHeight :
+                        currentTest.expected.y.wheelLineHeight) :
+        (isHorizontal ? currentTest.expected.x.wheelPageWidth :
+                        currentTest.expected.y.wheelPageHeight);
+    is(Math.abs(aEvent.detail), expectedDetail,
+       description + ((isHorizontal) ? "horizontal" : "vertical") + " event detail is wrong");
+  }
+
+  window.addEventListener("MozMousePixelScroll", handler, true);
+
+  for (var i = 0; i < kTests.length; i++) {
+    currentTest = kTests[i];
+    description = "doTests, " + currentTest.description + " (deltaMode: " +
+      (currentTest.event.deltaMode == WheelEvent.DOM_DELTA_LINE ?
+        "DOM_DELTA_LINE" : "DOM_DELTA_PAGE") +
+        ", deltaX: " + currentTest.event.deltaX +
+        ", deltaY: " + currentTest.event.deltaY + "): ";
+    currentTest.prepare();
+    firedX = firedY = false;
+    synthesizeWheel(currentTest.target, 10, 10, currentTest.event);
+    if (currentTest.expected.x) {
+      ok(firedX, description + "Horizontla MozMousePixelScroll event wasn't fired");
+    }
+    if (currentTest.expected.y) {
+      ok(firedY, description + "Vertical MozMousePixelScroll event wasn't fired");
+    }
+    currentTest.cleanup();
+  }
+
+  window.removeEventListener("MozMousePixelScroll", handler, true);
+}
+
+function runTests()
+{
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
+  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
+
+  prepareScrollUnits();
+  doTests();
+
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
+  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

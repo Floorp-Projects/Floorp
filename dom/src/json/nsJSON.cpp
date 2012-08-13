@@ -438,9 +438,9 @@ nsJSON::DecodeInternal(JSContext* cx,
 
   nsresult status;
   jsonChannel->GetStatus(&status);
-  PRUint32 offset = 0;
+  PRUint64 offset = 0;
   while (NS_SUCCEEDED(status)) {
-    PRUint32 available;
+    PRUint64 available;
     rv = aStream->Available(&available);
     if (rv == NS_BASE_STREAM_CLOSED) {
       rv = NS_OK;
@@ -453,8 +453,13 @@ nsJSON::DecodeInternal(JSContext* cx,
     if (!available)
       break; // blocking input stream has none available when done
 
+    if (available > PR_UINT32_MAX)
+      available = PR_UINT32_MAX;
+
     rv = jsonListener->OnDataAvailable(jsonChannel, nullptr,
-                                       aStream, offset, available);
+                                       aStream,
+                                       (PRUint32)NS_MIN(offset, (PRUint64)PR_UINT32_MAX),
+                                       (PRUint32)available);
     if (NS_FAILED(rv)) {
       jsonChannel->Cancel(rv);
       break;

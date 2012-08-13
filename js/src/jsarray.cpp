@@ -1529,7 +1529,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
     // the annotations in this function apply to both toLocaleString and join.
 
     // Step 1
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -1617,7 +1617,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
 
             if (!hole && !elt.isNullOrUndefined()) {
                 if (locale) {
-                    JSObject *robj = ToObject(cx, elt.address());
+                    JSObject *robj = ToObject(cx, elt);
                     if (!robj)
                         return false;
                     RootedId id(cx, NameToId(cx->runtime->atomState.toLocaleStringAtom));
@@ -1651,7 +1651,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
     JS_CHECK_RECURSION(cx, return false);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -1671,8 +1671,8 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
 
-    ag.calleev() = join;
-    ag.thisv().setObject(*obj);
+    ag.setCallee(join);
+    ag.setThis(ObjectValue(*obj));
 
     /* Do the call. */
     if (!Invoke(cx, ag))
@@ -1802,7 +1802,7 @@ static JSBool
 array_reverse(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2072,7 +2072,7 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
         return false;
 
     ag.setCallee(fval);
-    ag.thisv() = UndefinedValue();
+    ag.setThis(UndefinedValue());
     ag[0] = a;
     ag[1] = b;
 
@@ -2112,7 +2112,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
         fval.setNull();
     }
 
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2352,7 +2352,7 @@ JSBool
 js::array_push(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2427,7 +2427,7 @@ JSBool
 js::array_pop(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
     if (obj->isDenseArray())
@@ -2462,7 +2462,7 @@ JSBool
 js::array_shift(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return JS_FALSE;
 
@@ -2514,7 +2514,7 @@ static JSBool
 array_unshift(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2636,7 +2636,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -2855,11 +2855,13 @@ mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
 JSBool
 js::array_concat(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
-    Value *p = JS_ARGV(cx, vp) - 1;
+    Value *p = args.array() - 1;
 
     /* Create a new Array object and root it using *vp. */
-    RootedObject aobj(cx, ToObject(cx, &vp[1]));
+    RootedObject aobj(cx, ToObject(cx, args.thisv()));
     if (!aobj)
         return false;
 
@@ -2874,7 +2876,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
             return JS_FALSE;
         TryReuseArrayType(aobj, nobj);
         nobj->setArrayLength(cx, length);
-        vp->setObject(*nobj);
+        args.rval().setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
         argc--;
@@ -2883,7 +2885,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
             return JS_FALSE;
-        vp->setObject(*nobj);
+        args.rval().setObject(*nobj);
         length = 0;
     }
 
@@ -2932,7 +2934,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -3011,13 +3013,12 @@ static JSBool
 array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
 {
     uint32_t length, i, stop;
-    Value tosearch;
     int direction;
     JSBool hole;
 
-    RootedValue elt(cx);
+    RootedValue tosearch(cx), elt(cx);
 
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
     if (!js_GetLengthProperty(cx, obj, &length))
@@ -3139,7 +3140,7 @@ static inline bool
 array_readonlyCommon(JSContext *cx, CallArgs &args)
 {
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -3180,7 +3181,7 @@ array_readonlyCommon(JSContext *cx, CallArgs &args)
             if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
                 return false;
             ag.setCallee(ObjectValue(*callable));
-            ag.thisv() = thisv;
+            ag.setThis(thisv);
             ag[0] = kValue;
             ag[1] = NumberValue(k);
             ag[2] = ObjectValue(*obj);
@@ -3231,7 +3232,7 @@ array_map(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -3281,7 +3282,7 @@ array_map(JSContext *cx, unsigned argc, Value *vp)
             if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
                 return false;
             ag.setCallee(ObjectValue(*callable));
-            ag.thisv() = thisv;
+            ag.setThis(thisv);
             ag[0] = kValue;
             ag[1] = NumberValue(k);
             ag[2] = ObjectValue(*obj);
@@ -3308,7 +3309,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -3361,7 +3362,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
             if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
                 return false;
             ag.setCallee(ObjectValue(*callable));
-            ag.thisv() = thisv;
+            ag.setThis(thisv);
             ag[0] = kValue;
             ag[1] = NumberValue(k);
             ag[2] = ObjectValue(*obj);
@@ -3416,7 +3417,7 @@ static inline bool
 array_reduceCommon(JSContext *cx, CallArgs &args)
 {
     /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -3430,7 +3431,7 @@ array_reduceCommon(JSContext *cx, CallArgs &args)
         js_ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
-    JSObject *callable = ValueToCallable(cx, &args[0]);
+    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
     if (!callable)
         return false;
 
@@ -3479,7 +3480,7 @@ array_reduceCommon(JSContext *cx, CallArgs &args)
             if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 4, &ag))
                 return false;
             ag.setCallee(ObjectValue(*callable));
-            ag.thisv() = UndefinedValue();
+            ag.setThis(UndefinedValue());
             ag[0] = accumulator;
             ag[1] = kValue;
             ag[2] = NumberValue(k);
@@ -3811,9 +3812,9 @@ js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
     JSObject *array;
 
     for (unsigned i = 0; i < args.length(); i++) {
-        Value arg = args[i];
+        RootedValue arg(cx, args[i]);
 
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NullPtr());
         if (!bytes)
             return JS_FALSE;
         if (arg.isPrimitive() ||

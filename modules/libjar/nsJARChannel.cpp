@@ -132,8 +132,11 @@ nsJARInputThunk::EnsureJarStream()
     }
 
     // ask the JarStream for the content length
-    rv = mJarStream->Available((PRUint32 *) &mContentLength);
+    PRUint64 avail;
+    rv = mJarStream->Available((PRUint64 *) &avail);
     if (NS_FAILED(rv)) return rv;
+
+    mContentLength = avail < PR_INT32_MAX ? (PRInt32) avail : -1;
 
     return NS_OK;
 }
@@ -148,7 +151,7 @@ nsJARInputThunk::Close()
 }
 
 NS_IMETHODIMP
-nsJARInputThunk::Available(PRUint32 *avail)
+nsJARInputThunk::Available(PRUint64 *avail)
 {
     nsresult rv = EnsureJarStream();
     if (NS_FAILED(rv)) return rv;

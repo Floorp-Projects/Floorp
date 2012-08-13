@@ -20,6 +20,7 @@ function test() {
   }, true);
 
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref(prefName);
     gBrowser.removeTab(tab);
   });
 }

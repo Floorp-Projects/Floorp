@@ -211,8 +211,7 @@ public:
   // Pan processing
   bool IsPanEvent(LPARAM lParam);
   bool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
-  bool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
-  bool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
+  bool PanDeltaToPixelScroll(mozilla::widget::WheelEvent& aWheelEvent);
   void UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, bool& endFeedback);
   void UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, bool& endFeedback);
   void PanFeedbackFinalize(HWND hWnd, bool endFeedback);

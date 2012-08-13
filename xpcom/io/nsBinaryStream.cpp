@@ -304,7 +304,7 @@ nsBinaryOutputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
 NS_IMPL_ISUPPORTS3(nsBinaryInputStream, nsIObjectInputStream, nsIBinaryInputStream, nsIInputStream)
 
 NS_IMETHODIMP
-nsBinaryInputStream::Available(PRUint32* aResult)
+nsBinaryInputStream::Available(PRUint64* aResult)
 {
     NS_ENSURE_STATE(mInputStream);
     return mInputStream->Available(aResult);

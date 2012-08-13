@@ -343,7 +343,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
     JS_CHECK_RECURSION(cx, return false);
 
     /* Check whether we have a valid __iterator__ method. */
-    PropertyName *name = cx->runtime->atomState.iteratorIntrinsicAtom;
+    RootedPropertyName name(cx, cx->runtime->atomState.iteratorIntrinsicAtom);
     if (!GetMethod(cx, obj, name, 0, vp))
         return false;
 
@@ -368,8 +368,9 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
         JSAutoByteString bytes;
         if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
+        RootedValue val(cx, ObjectValue(*obj));
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, ObjectValue(*obj), NULL, bytes.ptr());
+                             -1, val, NullPtr(), bytes.ptr());
         return false;
     }
     return true;
@@ -578,7 +579,8 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
         // for this kind of error anyway, but it would throw an inscrutable
         // error message about |method| rather than this nice one about |obj|.
         if (!method.isObject() || !method.toObject().isCallable()) {
-            char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, ObjectOrNullValue(obj), NULL);
+            RootedValue val(cx, ObjectOrNullValue(obj));
+            char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
             if (!bytes)
                 return false;
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_ITERABLE, bytes);
@@ -589,8 +591,10 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
         if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, NULL, vp.address()))
             return false;
 
-        if (!ToObject(cx, vp.address()))
+        JSObject *obj = ToObject(cx, vp);
+        if (!obj)
             return false;
+        vp.setObject(*obj);
         return true;
     }
 
@@ -676,7 +680,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
       miss:
         if (obj->isProxy()) {
             types::MarkIteratorUnknown(cx);
-            return Proxy::iterate(cx, obj, flags, vp.address());
+            return Proxy::iterate(cx, obj, flags, vp);
         }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
@@ -855,7 +859,7 @@ const uint32_t CLOSED_INDEX = UINT32_MAX;
 JSObject *
 ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
 {
-    GlobalObject *global = GetCurrentGlobal(cx);
+    Rooted<GlobalObject*> global(cx, GetCurrentGlobal(cx));
     Rooted<JSObject*> proto(cx, global->getOrCreateElementIteratorPrototype(cx));
     if (!proto)
         return NULL;
@@ -883,16 +887,16 @@ ElementIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 bool
 ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
 {
-    JSObject *iterobj = &args.thisv().toObject();
+    RootedObject iterobj(cx, &args.thisv().toObject());
     uint32_t i, length;
-    Value target = iterobj->getReservedSlot(TargetSlot);
+    RootedValue target(cx, iterobj->getReservedSlot(TargetSlot));
     Rooted<JSObject*> obj(cx);
 
     // Get target.length.
     if (target.isString()) {
         length = uint32_t(target.toString()->length());
     } else {
-        obj = ValueToObject(cx, target);
+        obj = ToObjectFromStack(cx, target);
         if (!obj)
             goto close;
         if (!js_GetLengthProperty(cx, obj, &length))
@@ -1614,8 +1618,9 @@ generator_send_impl(JSContext *cx, CallArgs args)
     }
 
     if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
+        RootedValue val(cx, args[0]);
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                            JSDVG_SEARCH_STACK, args[0], NULL);
+                            JSDVG_SEARCH_STACK, val, NullPtr());
         return false;
     }
 

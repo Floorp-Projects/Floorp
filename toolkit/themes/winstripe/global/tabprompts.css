@@ -10,11 +10,10 @@ tabmodalprompt {
 }
 
 .mainContainer {
-  color: black;
-  background-color: white;
-  background-clip: padding-box;
+  color: -moz-fieldText;
+  background-color: -moz-field;
   border-radius: 2px;
-  border: 1px solid hsla(0,0%,0%,.5);
+  border: 1px solid threeDDarkShadow;
 }
 
 .topContainer {

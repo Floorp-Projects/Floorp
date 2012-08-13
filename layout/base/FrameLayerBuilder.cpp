@@ -3109,7 +3109,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
  
   // check to see if we can reuse a mask image
   const MaskLayerImageCache::MaskLayerImageKey* key =
-    new MaskLayerImageCache::MaskLayerImageKey(roundedRects);
+    new MaskLayerImageCache::MaskLayerImageKey(roundedRects, aLayer->Manager()->GetBackendType());
   const MaskLayerImageCache::MaskLayerImageKey* lookupKey = key;
 
   nsRefPtr<ImageContainer> container =

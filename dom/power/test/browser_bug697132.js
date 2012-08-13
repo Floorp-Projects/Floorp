@@ -1,10 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 waitForExplicitFinish();
 
-let kPrefNode = "dom.power.whitelist";
-let kPageSource1 = "data:text/html,1";
-let kPageSource2 = "data:text/html,2";
+let kUrlSource = "http://mochi.test:8888/";
+let kDataSource = "data:text/html,";
 
 let gOldPref;
 let gWin, gWin1, gWin2;
@@ -13,7 +16,7 @@ let gLock, gLock1, gLock2;
 let gCurStepIndex = -1;
 let gSteps = [
   function basicWakeLock() {
-    gTab = gBrowser.addTab(kPageSource1);
+    gTab = gBrowser.addTab(kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
@@ -51,7 +54,7 @@ let gSteps = [
     }, true);
   },
   function multiWakeLock() {
-    gTab = gBrowser.addTab(kPageSource1);
+    gTab = gBrowser.addTab(kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
@@ -100,9 +103,9 @@ let gSteps = [
     }, true);
   },
   function crossTabWakeLock1() {
-    gTab1 = gBrowser.addTab(kPageSource1);
+    gTab1 = gBrowser.addTab(kUrlSource);
     gWin1 = gBrowser.getBrowserForTab(gTab1).contentWindow;
-    gTab2 = gBrowser.addTab(kPageSource1);
+    gTab2 = gBrowser.addTab(kUrlSource);
     gWin2 = gBrowser.getBrowserForTab(gTab2).contentWindow;
 
     gBrowser.selectedTab = gTab1;
@@ -138,7 +141,7 @@ let gSteps = [
       gWin2.removeEventListener("pageshow", onPageShow, true);
       executeSoon(runNextStep);
     }, true);
-    gWin2.location = kPageSource2;
+    gWin2.location = kDataSource;
   },
   function crossTabWakeLock3() {
     is(gWin1.navigator.mozPower.getWakeLockState("test"), "unlocked",
@@ -166,7 +169,7 @@ let gSteps = [
       gWin2.removeEventListener("pageshow", onPageShow, true);
       executeSoon(runNextStep);
     }, true);
-    gWin2.location = kPageSource2;
+    gWin2.location = kDataSource;
   },
   function crossTabWakeLock6() {
     is(gWin1.navigator.mozPower.getWakeLockState("test"), "unlocked",
@@ -219,18 +222,12 @@ function runNextStep() {
   if (gCurStepIndex < gSteps.length) {
     gSteps[gCurStepIndex]();
   } else {
-    Services.prefs.setCharPref(kPrefNode, gOldPref);
+    SpecialPowers.removePermission("power", kUrlSource);
     finish();
   }
 }
 
 function test() {
-  try {
-    gOldPref = Services.prefs.getCharPref(kPrefNode);
-  } catch (e) {
-    gOldPref = "";
-  }
-  // data url inherits its parent's principal, which is |about:| here.
-  Services.prefs.setCharPref(kPrefNode, "about:");
+  SpecialPowers.addPermission("power", true, kUrlSource);
   runNextStep();
 }

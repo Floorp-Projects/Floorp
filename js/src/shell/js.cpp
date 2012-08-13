@@ -2543,9 +2543,9 @@ NewSandbox(JSContext *cx, bool lazy)
 static JSBool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSString *str;
+    RootedString str(cx);
     RootedObject sobj(cx);
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, sobj.address()))
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", str.address(), sobj.address()))
         return false;
 
     size_t srclen;
@@ -3390,6 +3390,29 @@ Wrap(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
+{
+    Value obj = JSVAL_VOID, proto = JSVAL_VOID;
+    if (argc == 2) {
+        obj = JS_ARGV(cx, vp)[0];
+        proto = JS_ARGV(cx, vp)[1];
+    }
+    if (!obj.isObject() || !proto.isObjectOrNull()) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "wrapWithProto");
+    }
+
+    JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), proto.toObjectOrNull(),
+                                     &obj.toObject().global(),
+                                     &DirectWrapper::singletonWithPrototype);
+    if (!wrapped)
+        return false;
+
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(wrapped));
+    return true;
+}
+
+static JSBool
 Serialize(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
@@ -3789,6 +3812,10 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("wrap", Wrap, 1, 0,
 "wrap(obj)",
 "  Wrap an object into a noop wrapper."),
+
+    JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
+"wrap(obj)",
+"  Wrap an object into a noop wrapper with prototype semantics."),
 
     JS_FN_HELP("serialize", Serialize, 1, 0,
 "serialize(sd)",

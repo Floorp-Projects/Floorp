@@ -278,14 +278,21 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
             return rv;
     }
 
-    PRUint32 fs, amt = 0;
-    inStr->Available(&fs);
+    PRUint64 fs64;
+    PRUint32 amt = 0;
+    rv = inStr->Available(&fs64);
+    if (NS_FAILED(rv))
+        return rv;
+    // PR_Malloc dones't support over 4GB
+    if (fs64 > PR_UINT32_MAX)
+      return NS_ERROR_FILE_TOO_BIG;
+    PRUint32 fs = (PRUint32)fs64;
 
     char *buf = (char *)PR_Malloc(fs * sizeof(char));
     if (!buf) 
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = inStr->Read(buf, fs, &amt);
+    rv = inStr->Read(buf, (PRUint32)fs, &amt);
     NS_ASSERTION((amt == fs), "failed to read the entire configuration file!!");
     if (NS_SUCCEEDED(rv)) {
         if (obscureValue > 0) {

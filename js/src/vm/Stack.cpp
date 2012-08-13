@@ -1098,7 +1098,8 @@ ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, 
 
     CopyTo dst(iag->array());
     Value *src = it.actualArgs();
-    return s.readFrameArgs(dst, src, NULL, &iag->thisv(), 0, fun->nargs, argc);
+    Value thisv = iag->thisv();
+    return s.readFrameArgs(dst, src, NULL, &thisv, 0, fun->nargs, argc);
 }
 
 StackFrame *

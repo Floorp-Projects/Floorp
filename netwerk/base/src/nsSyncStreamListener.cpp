@@ -118,7 +118,7 @@ nsSyncStreamListener::Close()
 }
 
 NS_IMETHODIMP
-nsSyncStreamListener::Available(PRUint32 *result)
+nsSyncStreamListener::Available(PRUint64 *result)
 {
     if (NS_FAILED(mStatus))
         return mStatus;
@@ -142,11 +142,11 @@ nsSyncStreamListener::Read(char     *buf,
         return NS_OK;
     }
 
-    PRUint32 avail;
-    if (NS_FAILED(Available(&avail)))
+    PRUint64 avail64;
+    if (NS_FAILED(Available(&avail64)))
         return mStatus;
 
-    avail = NS_MIN(avail, bufLen);
+    PRUint32 avail = (PRUint32)NS_MIN(avail64, (PRUint64)bufLen);
     mStatus = mPipeIn->Read(buf, avail, result);
     return mStatus;
 }
@@ -162,11 +162,11 @@ nsSyncStreamListener::ReadSegments(nsWriteSegmentFun  writer,
         return NS_OK;
     }
 
-    PRUint32 avail;
-    if (NS_FAILED(Available(&avail)))
+    PRUint64 avail64;
+    if (NS_FAILED(Available(&avail64)))
         return mStatus;
 
-    avail = NS_MIN(avail, count);
+    PRUint32 avail = (PRUint32)NS_MIN(avail64, (PRUint64)count);
     mStatus = mPipeIn->ReadSegments(writer, closure, avail, result);
     return mStatus;
 }

@@ -48,11 +48,13 @@
 #include "nsSVGLength2.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGPathElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
+#include "nsTextFrame.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/unused.h"
 
@@ -1579,18 +1581,28 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
   }
   gfxRect bbox;
   nsISVGChildFrame *svg = do_QueryFrame(aFrame);
-  if (svg) {
+  if (svg || aFrame->IsSVGText()) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
-    nsSVGTextContainerFrame* metrics = do_QueryFrame(
-      GetFirstNonAAncestorFrame(aFrame));
-    if (metrics) {
-      while (aFrame->GetType() != nsGkAtoms::svgTextFrame) {
-        aFrame = aFrame->GetParent();
+    if (NS_SVGTextCSSFramesEnabled()) {
+      nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
+      if (ancestor && ancestor->IsSVGText()) {
+        while (ancestor->GetType() != nsGkAtoms::svgTextFrame2) {
+          ancestor = ancestor->GetParent();
+        }
       }
-      svg = do_QueryFrame(aFrame);
+      svg = do_QueryFrame(ancestor);
+    } else {
+      nsSVGTextContainerFrame* metrics = do_QueryFrame(
+        GetFirstNonAAncestorFrame(aFrame));
+      if (metrics) {
+        while (aFrame->GetType() != nsGkAtoms::svgTextFrame) {
+          aFrame = aFrame->GetParent();
+        }
+        svg = do_QueryFrame(aFrame);
+      }
     }
     nsIContent* content = aFrame->GetContent();
     if (content->IsSVG() &&
@@ -1655,7 +1667,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   }
   if (style->mFill.mType == eStyleSVGPaintType_None ||
       style->mFillOpacity <= 0 ||
-      !static_cast<nsSVGPathGeometryFrame*>(aFrame)->HasStroke()) {
+      !HasStroke(aFrame)) {
     return true;
   }
   return false;
@@ -1757,12 +1769,12 @@ nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
 static gfxRect
 PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                              nsSVGGeometryFrame* aFrame,
-                              double styleExpansionFactor,
+                              nsIFrame* aFrame,
+                              double aStyleExpansionFactor,
                               const gfxMatrix& aMatrix)
 {
   double style_expansion =
-    styleExpansionFactor * aFrame->GetStrokeWidth();
+    aStyleExpansionFactor * nsSVGUtils::GetStrokeWidth(aFrame);
 
   gfxMatrix matrix = aMatrix;
   matrix.Multiply(nsSVGUtils::GetStrokeTransform(aFrame));
@@ -1780,6 +1792,15 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsSVGGeometryFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
+  return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
+}
+
+/*static*/ gfxRect
+nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
+                                          nsTextFrame* aFrame,
+                                          const gfxMatrix& aMatrix)
+{
+  NS_ASSERTION(aFrame->IsSVGText(), "expected an nsTextFrame for SVG text");
   return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
 }
 
@@ -1865,7 +1886,7 @@ MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
 }
 
 bool
-nsSVGUtils::SetupCairoFill(gfxContext *aContext, nsIFrame *aFrame)
+nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext)
 {
   const nsStyleSVG* style = aFrame->GetStyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None)
@@ -1886,7 +1907,7 @@ nsSVGUtils::SetupCairoFill(gfxContext *aContext, nsIFrame *aFrame)
 }
 
 bool
-nsSVGUtils::SetupCairoStroke(gfxContext *aContext, nsIFrame *aFrame)
+nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext)
 {
   const nsStyleSVG* style = aFrame->GetStyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None)
@@ -1906,4 +1927,200 @@ nsSVGUtils::SetupCairoStroke(gfxContext *aContext, nsIFrame *aFrame)
                             &nsStyleSVG::mStroke, opacity);
 
   return true;
+}
+
+bool
+nsSVGUtils::HasStroke(nsIFrame* aFrame)
+{
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  return style->mStroke.mType != eStyleSVGPaintType_None &&
+         style->mStrokeOpacity > 0 &&
+         GetStrokeWidth(aFrame) > 0;
+}
+
+float
+nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
+    content = content->GetParent();
+  }
+
+  nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
+
+  return nsSVGUtils::CoordToFloat(aFrame->PresContext(), ctx,
+                                  aFrame->GetStyleSVG()->mStrokeWidth);
+}
+
+void
+nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext)
+{
+  float width = GetStrokeWidth(aFrame);
+  if (width <= 0)
+    return;
+  aContext->SetLineWidth(width);
+
+  // Apply any stroke-specific transform
+  aContext->Multiply(GetStrokeTransform(aFrame));
+
+  const nsStyleSVG* style = aFrame->GetStyleSVG();
+  
+  switch (style->mStrokeLinecap) {
+  case NS_STYLE_STROKE_LINECAP_BUTT:
+    aContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+    break;
+  case NS_STYLE_STROKE_LINECAP_ROUND:
+    aContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
+    break;
+  case NS_STYLE_STROKE_LINECAP_SQUARE:
+    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+    break;
+  }
+
+  aContext->SetMiterLimit(style->mStrokeMiterlimit);
+
+  switch (style->mStrokeLinejoin) {
+  case NS_STYLE_STROKE_LINEJOIN_MITER:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_MITER);
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_ROUND:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_ROUND);
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_BEVEL:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_BEVEL);
+    break;
+  }
+}
+
+static bool
+GetStrokeDashData(nsIFrame* aFrame,
+                  FallibleTArray<gfxFloat>& aDashes,
+                  gfxFloat* aDashOffset)
+{
+  const nsStyleSVG* style = aFrame->GetStyleSVG();
+
+  PRUint32 count = style->mStrokeDasharrayLength;
+  if (!count || !aDashes.SetLength(count)) {
+    return false;
+  }
+
+  gfxFloat pathScale = 1.0;
+
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsSVG() && content->Tag() == nsGkAtoms::path) {
+    pathScale = static_cast<nsSVGPathElement*>(content)->
+                  GetPathLengthScale(nsSVGPathElement::eForStroking);
+    if (pathScale <= 0) {
+      return false;
+    }
+  }
+  
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
+    content = content->GetParent();
+  }
+
+  nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
+
+  const nsStyleCoord *dasharray = style->mStrokeDasharray;
+  nsPresContext *presContext = aFrame->PresContext();
+  gfxFloat totalLength = 0.0;
+
+  for (PRUint32 i = 0; i < count; i++) {
+    aDashes[i] =
+      nsSVGUtils::CoordToFloat(presContext,
+                               ctx,
+                               dasharray[i]) * pathScale;
+    if (aDashes[i] < 0.0) {
+      return false;
+    }
+    totalLength += aDashes[i];
+  }
+
+  *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
+                                         ctx,
+                                         style->mStrokeDashoffset);
+
+  return (totalLength > 0.0);
+}
+
+void
+nsSVGUtils::SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext* aContext)
+{
+  SetupCairoStrokeGeometry(aFrame, aContext);
+
+  AutoFallibleTArray<gfxFloat, 10> dashes;
+  gfxFloat dashOffset;
+  if (GetStrokeDashData(aFrame, dashes, &dashOffset)) {
+    aContext->SetDash(dashes.Elements(), dashes.Length(), dashOffset);
+  }
+}
+
+PRUint16
+nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
+{
+  PRUint16 flags = 0;
+
+  switch(aFrame->GetStyleVisibility()->mPointerEvents) {
+  case NS_STYLE_POINTER_EVENTS_NONE:
+    break;
+  case NS_STYLE_POINTER_EVENTS_AUTO:
+  case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+    if (aFrame->GetStyleVisibility()->IsVisible()) {
+      if (aFrame->GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+        flags |= SVG_HIT_TEST_FILL;
+      if (aFrame->GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+        flags |= SVG_HIT_TEST_STROKE;
+      if (aFrame->GetStyleSVG()->mStrokeOpacity > 0)
+        flags |= SVG_HIT_TEST_CHECK_MRECT;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
+    if (aFrame->GetStyleVisibility()->IsVisible()) {
+      flags |= SVG_HIT_TEST_FILL;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
+    if (aFrame->GetStyleVisibility()->IsVisible()) {
+      flags |= SVG_HIT_TEST_STROKE;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_VISIBLE:
+    if (aFrame->GetStyleVisibility()->IsVisible()) {
+      flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
+    }
+    break;
+  case NS_STYLE_POINTER_EVENTS_PAINTED:
+    if (aFrame->GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+      flags |= SVG_HIT_TEST_FILL;
+    if (aFrame->GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+      flags |= SVG_HIT_TEST_STROKE;
+    if (aFrame->GetStyleSVG()->mStrokeOpacity)
+      flags |= SVG_HIT_TEST_CHECK_MRECT;
+    break;
+  case NS_STYLE_POINTER_EVENTS_FILL:
+    flags |= SVG_HIT_TEST_FILL;
+    break;
+  case NS_STYLE_POINTER_EVENTS_STROKE:
+    flags |= SVG_HIT_TEST_STROKE;
+    break;
+  case NS_STYLE_POINTER_EVENTS_ALL:
+    flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
+    break;
+  default:
+    NS_ERROR("not reached");
+    break;
+  }
+
+  return flags;
+}
+
+bool
+nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext)
+{
+  if (!HasStroke(aFrame)) {
+    return false;
+  }
+  SetupCairoStrokeHitGeometry(aFrame, aContext);
+
+  return SetupCairoStrokePaint(aFrame, aContext);
 }

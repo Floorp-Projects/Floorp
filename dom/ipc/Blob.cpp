@@ -84,7 +84,7 @@ public:
   }
 
   NS_IMETHOD
-  Available(PRUint32* aAvailable) MOZ_OVERRIDE
+  Available(PRUint64* aAvailable) MOZ_OVERRIDE
   {
     // See large comment in FileInputStreamWrapper::Available.
     if (NS_IsMainThread()) {
