@@ -51,6 +51,7 @@
           const svgns="http://www.w3.org/2000/svg";
           var anim = document.createElementNS(svgns,'animate');
           anim.setAttribute('attributeName','fill');
+          anim.setAttribute('from', 'red');
           anim.setAttribute('to','green');
           anim.setAttribute('begin','0s');
           anim.setAttribute('dur','0.001s');
