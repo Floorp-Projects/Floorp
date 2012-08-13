@@ -409,6 +409,7 @@ class nsIWidget : public nsISupports {
     nsIWidget()
       : mLastChild(nullptr)
       , mPrevSibling(nullptr)
+      , mNeedsPaint(false)
     {}
 
         
@@ -1593,6 +1594,9 @@ class nsIWidget : public nsISupports {
      */
     virtual bool WidgetPaintsBackground() { return false; }
 
+    bool NeedsPaint() { 
+      return true;
+    }
     /**
      * Get the natural bounds of this widget.  This method is only
      * meaningful for widgets for which Gecko implements screen
@@ -1643,6 +1647,7 @@ protected:
     nsIWidget* mLastChild;
     nsCOMPtr<nsIWidget> mNextSibling;
     nsIWidget* mPrevSibling;
+    bool mNeedsPaint;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)
