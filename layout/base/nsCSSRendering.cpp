@@ -45,8 +45,10 @@
 #include "gfxDrawable.h"
 #include "sampler.h"
 #include "nsCSSRenderingBorders.h"
+#include "mozilla/css/ImageLoader.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 // To avoid storing this data on nsInlineFrame (bloat) and to avoid
 // recalculating this for each frame in a continuation (perf), hold
@@ -2271,7 +2273,17 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
-  aPresContext->SetupBackgroundImageLoaders(aForFrame, bg);
+  if (aBackgroundSC != aForFrame->GetStyleContext()) {
+    ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
+    
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+      if (bg->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
+        imgIRequest *image = bg->mLayers[i].mImage.GetImageData();
+
+        loader->AssociateRequestToFrame(image, aForFrame);
+      }
+    }
+  }
 
   // The background color is rendered over the entire dirty area,
   // even if the image isn't.
@@ -2574,9 +2586,11 @@ DrawBorderImage(nsPresContext*       aPresContext,
   // XXX We shouldn't really... since if anybody is passing in a
   // different style, they'll potentially have the wrong size for the
   // border too.
-  aPresContext->SetupBorderImageLoaders(aForFrame, &aStyleBorder);
-
   imgIRequest *req = aStyleBorder.GetBorderImage();
+  ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
+
+  // If this fails there's not much we can do ...
+  loader->AssociateRequestToFrame(req, aForFrame);
 
   // Get the actual image.
 
