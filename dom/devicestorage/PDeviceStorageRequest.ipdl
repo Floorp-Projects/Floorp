@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBlob;
 include protocol PContent;
 
 namespace mozilla {
@@ -21,22 +22,24 @@ struct SuccessResponse
 
 struct BlobResponse
 {
-  // todo going away
-  PRUint8[] bits;
-  nsCString contentType;
+  PBlob blob;
 };
 
 struct DeviceStorageFileValue
 {
-  // todo going away
+  nsString name;
   nsString fullpath;
-  nsString path;
 };
 
 struct EnumerationResponse
 {
   DeviceStorageFileValue[] paths;
-  // todo bent PBlob
+};
+
+struct StatStorageResponse
+{
+  PRInt64 totalBytes;
+  PRInt64 freeBytes;
 };
 
 union DeviceStorageResponseValue
@@ -45,6 +48,7 @@ union DeviceStorageResponseValue
   SuccessResponse;
   BlobResponse;
   EnumerationResponse;
+  StatStorageResponse;
 };
 
 sync protocol PDeviceStorageRequest {

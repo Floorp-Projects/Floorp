@@ -71,14 +71,21 @@ struct FontListEntry {
     PRUint8   index;
 };
 
-struct DeviceStorageAddParams
+struct DeviceStorageStatParams
 {
   nsString fullpath;
-  PRUint8[] bits;
+};
+
+struct DeviceStorageAddParams
+{
+  PBlob blob;
+  nsString name;
+  nsString fullpath;
 };
 
 struct DeviceStorageGetParams
 {
+  nsString name;
   nsString fullpath;
 };
 
@@ -99,6 +106,7 @@ union DeviceStorageParams
   DeviceStorageGetParams;
   DeviceStorageDeleteParams;
   DeviceStorageEnumerationParams;
+  DeviceStorageStatParams;
 };
 
 struct SlicedBlobConstructorParams
@@ -205,6 +213,8 @@ child:
     LastPrivateDocShellDestroyed();
 
     FilePathUpdate(nsString filepath, nsCString reasons);
+
+    FileSystemUpdate(nsString fsName, nsString mountPoint, PRInt32 fsState);
 
 parent:
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);

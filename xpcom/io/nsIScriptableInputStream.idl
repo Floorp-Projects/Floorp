@@ -11,7 +11,7 @@ interface nsIInputStream;
  * nsIScriptableInputStream provides scriptable access to an nsIInputStream
  * instance.
  */
-[scriptable, uuid(e546afd6-1248-4deb-8940-4b000b618a58)]
+[scriptable, uuid(3fce9015-472a-4080-ac3e-cd875dbe361e)]
 interface nsIScriptableInputStream : nsISupports
 { 
     /** 
@@ -33,7 +33,7 @@ interface nsIScriptableInputStream : nsISupports
      *
      * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
      */ 
-    unsigned long available(); 
+    unsigned long long available(); 
 
     /**
      * Read data from the stream.

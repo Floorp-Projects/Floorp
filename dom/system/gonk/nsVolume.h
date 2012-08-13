@@ -5,11 +5,13 @@
 #ifndef mozilla_system_nsvolume_h__
 #define mozilla_system_nsvolume_h__
 
-#include "Volume.h"
 #include "nsIVolume.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace system {
+
+class Volume;
 
 class nsVolume : public nsIVolume
 {
@@ -17,10 +19,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIVOLUME
 
-  nsVolume(const Volume *aVolume)
-    : mName(NS_ConvertUTF8toUTF16(aVolume->Name())),
-      mMountPoint(NS_ConvertUTF8toUTF16(aVolume->MountPoint())),
-      mState(aVolume->State())
+  nsVolume(const Volume *aVolume);
+
+  nsVolume(const nsAString &aName, const nsAString &aMountPoint, const PRInt32 &aState)
+    : mName(aName), mMountPoint(aMountPoint), mState(aState)
   {
   }
 
@@ -50,8 +52,8 @@ public:
   const nsString &MountPoint() const  { return mMountPoint; }
   const char *MountPointStr() const   { return NS_LossyConvertUTF16toASCII(mMountPoint).get(); }
 
-  long State() const                  { return mState; }
-  const char *StateStr() const        { return Volume::StateStr((Volume::STATE)mState); }
+  PRInt32 State() const               { return mState; }
+  const char *StateStr() const        { return NS_VolumeStateStr(mState); }
 
   typedef nsTArray<nsRefPtr<nsVolume> > Array;
 
@@ -61,7 +63,7 @@ private:
 protected:
   nsString mName;
   nsString mMountPoint;
-  long mState;
+  PRInt32  mState;
 };
 
 } // system

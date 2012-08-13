@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-
 function test() {
-  // XXX Bug 775779
-  if (Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2).isDebugBuild) {
-    ok(true, "can't run social sidebar test in debug builds because they falsely report leaks");
-    return;
-  }
-
   waitForExplicitFinish();
 
   let manifest = { // normal provider
@@ -23,7 +15,7 @@ function test() {
   runSocialTestWithProvider(manifest, doTest);
 }
 
-function doTest() {
+function doTest(finishcb) {
   ok(SocialSidebar.canShow, "social sidebar should be able to be shown");
   ok(SocialSidebar.enabled, "social sidebar should be on by default");
 
@@ -56,8 +48,8 @@ function doTest() {
 
       checkShown(true);
 
-      // Remove the test provider
-      SocialService.removeProvider(Social.provider.origin, finish);
+      // Finish the test
+      finishcb();
     });
 
     // Toggle it back on

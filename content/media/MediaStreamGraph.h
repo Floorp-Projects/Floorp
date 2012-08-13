@@ -202,6 +202,25 @@ class SourceMediaStream;
  *
  * We make them refcounted only so that stream-related messages with MediaStream*
  * pointers can be sent to the main thread safely.
+ *
+ * The lifetimes of MediaStreams are controlled from the main thread.
+ * For MediaStreams exposed to the DOM, the lifetime is controlled by the DOM
+ * wrapper; the DOM wrappers own their associated MediaStreams. When a DOM
+ * wrapper is destroyed, it sends a Destroy message for the associated
+ * MediaStream and clears its reference (the last main-thread reference to
+ * the object). When the Destroy message is processed on the graph
+ * manager thread we immediately release the affected objects (disentangling them
+ * from other objects as necessary).
+ *
+ * This could cause problems for media processing if a MediaStream is
+ * destroyed while a downstream MediaStream is still using it. Therefore
+ * the DOM wrappers must keep upstream MediaStreams alive as long as they
+ * could be being used in the media graph.
+ *
+ * At any time, however, a set of MediaStream wrappers could be
+ * collected via cycle collection. Destroy messages will be sent
+ * for those objects in arbitrary order and the MediaStreamGraph has to be able
+ * to handle this.
  */
 class MediaStream {
 public:
@@ -216,10 +235,10 @@ public:
     , mNotifiedFinished(false)
     , mAudioPlaybackStartTime(0)
     , mBlockedAudioTime(0)
-    , mMessageAffectedTime(0)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
+    , mMainThreadDestroyed(false)
   {
     for (PRUint32 i = 0; i < ArrayLength(mFirstActiveTracks); ++i) {
       mFirstActiveTracks[i] = TRACK_NONE;
@@ -257,9 +276,22 @@ public:
   void Destroy();
   // Returns the main-thread's view of how much data has been processed by
   // this stream.
-  StreamTime GetCurrentTime() { return mMainThreadCurrentTime; }
+  StreamTime GetCurrentTime()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadCurrentTime;
+  }
   // Return the main thread's view of whether this stream has finished.
-  bool IsFinished() { return mMainThreadFinished; }
+  bool IsFinished()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadFinished;
+  }
+  bool IsDestroyed()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    return mMainThreadDestroyed;
+  }
 
   friend class MediaStreamGraphImpl;
 
@@ -344,7 +376,7 @@ protected:
 
   // Precomputed blocking status (over GraphTime).
   // This is only valid between the graph's mCurrentTime and
-  // mBlockingDecisionsMadeUntilTime. The stream is considered to have
+  // mStateComputedTime. The stream is considered to have
   // not been blocked before mCurrentTime (its mBufferStartTime is increased
   // as necessary to account for that time instead) --- this avoids us having to
   // record the entire history of the stream's blocking-ness in mBlocked.
@@ -377,15 +409,12 @@ protected:
   // tracks start at the same time, the one with the lowest ID.
   TrackID mFirstActiveTracks[MediaSegment::TYPE_COUNT];
 
-  // Temporary data used by MediaStreamGraph on the graph thread
-  // The earliest time for which we would like to change this stream's output.
-  GraphTime mMessageAffectedTime;
-
   // This state is only used on the main thread.
   nsDOMMediaStream* mWrapper;
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
+  bool mMainThreadDestroyed;
 };
 
 /**

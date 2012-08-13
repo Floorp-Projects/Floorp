@@ -30,6 +30,7 @@ UTIL_JAVA_FILES := \
   GeckoJarReader.java \
   INIParser.java \
   INISection.java \
+  util/EventDispatcher.java \
   util/FloatUtils.java \
   $(NULL)
 
@@ -52,7 +53,6 @@ FENNEC_JAVA_FILES = \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
   SyncPreference.java \
-  db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
@@ -205,14 +205,14 @@ endif
 
 ifeq (,$(ANDROID_VERSION_CODE))
 ifeq ($(MIN_CPU_VERSION),7)
-ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
+ANDROID_VERSION_CODE=$(shell cat $(DEPTH)/config/buildid | cut -c1-10)
 else
 # decrement the version code by 1 for armv6 builds so armv7 builds will win any compatability ties
-ANDROID_VERSION_CODE=$(shell echo `$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10` - 1 | bc)
+ANDROID_VERSION_CODE=$(shell echo $$((`cat $(DEPTH)/config/buildid | cut -c1-10` - 1)))
 endif
 endif
 
-UA_BUILDID=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-8)
+UA_BUILDID=$(shell echo $(ANDROID_VERSION_CODE) | cut -c1-8)
 
 # Mangle our package name to avoid Bug 750548.
 DEFINES += \

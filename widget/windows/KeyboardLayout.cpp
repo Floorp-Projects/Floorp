@@ -115,6 +115,7 @@ ModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
   switch(aInputEvent.eventStructType) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     case NS_MOZTOUCH_EVENT:
@@ -127,7 +128,7 @@ void
 ModifierKeyState::InitMouseEvent(nsInputEvent& aMouseEvent) const
 {
   NS_ASSERTION(aMouseEvent.eventStructType == NS_MOUSE_EVENT ||
-               aMouseEvent.eventStructType == NS_MOUSE_SCROLL_EVENT ||
+               aMouseEvent.eventStructType == NS_WHEEL_EVENT ||
                aMouseEvent.eventStructType == NS_DRAG_EVENT ||
                aMouseEvent.eventStructType == NS_SIMPLE_GESTURE_EVENT ||
                aMouseEvent.eventStructType == NS_MOZTOUCH_EVENT,

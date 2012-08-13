@@ -1099,6 +1099,7 @@ protected:
     bool mMinCapability;
     bool mDisableExtensions;
     bool mHasRobustness;
+    bool mIsMesa;
 
     template<typename WebGLObjectType>
     void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);
@@ -2322,6 +2323,24 @@ public:
             }
         }
         return false;
+    }
+
+    size_t UpperBoundNumSamplerUniforms() {
+        size_t numSamplerUniforms = 0;
+        for (size_t i = 0; i < mAttachedShaders.Length(); ++i) {
+            const WebGLShader *shader = mAttachedShaders[i];
+            if (!shader)
+                continue;
+            for (size_t j = 0; j < shader->mUniformInfos.Length(); ++j) {
+                WebGLUniformInfo u = shader->mUniformInfos[j];
+                if (u.type == SH_SAMPLER_2D ||
+                    u.type == SH_SAMPLER_CUBE)
+                {
+                    numSamplerUniforms += u.arraySize;
+                }
+            }
+        }
+        return numSamplerUniforms;
     }
 
     bool NextGeneration()

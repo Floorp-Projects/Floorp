@@ -356,6 +356,7 @@ class Automation(object):
       {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
 
     part = """\
+user_pref("social.skipLoadingProviders", true);
 user_pref("browser.console.showInPanel", true);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("browser.firstrun.show.localepicker", false);

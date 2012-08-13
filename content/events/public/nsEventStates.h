@@ -248,10 +248,16 @@ private:
 #define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(41)
 // Platform does not support plugin content (some mobile platforms)
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM NS_DEFINE_EVENT_STATE_MACRO(42)
+// Element is ltr (for :dir pseudo-class)
+#define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(43)
+// Element is rtl (for :dir pseudo-class)
+#define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(44)
 
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!
  */
+
+#define DIRECTION_STATES (NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
 #define ESM_MANAGED_STATES (NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS |     \
                             NS_EVENT_STATE_HOVER | NS_EVENT_STATE_DRAGOVER |   \

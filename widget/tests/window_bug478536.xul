@@ -169,9 +169,9 @@ function retryAllTests()
 function fireWheelScrollEvent(aForward)
 {
   gIgnoreScrollEvent = false;
-  var event = { axis: "vertical", delta: aForward ? 4 : -4,
-                type: "DOMMouseScroll" };
-  synthesizeMouseScroll(gView, 5, 5, event, window);
+  var event = { deltaY: aForward ? 4.0 : -4.0,
+                deltaMode: WheelEvent.DOM_DELTA_LINE };
+  synthesizeWheel(gView, 5, 5, event, window);
 }
 
 function onScrollView(aEvent)

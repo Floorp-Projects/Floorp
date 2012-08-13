@@ -38,7 +38,8 @@ endif
 CSRCS := \
   inject/$(CPU).c \
   inject/$(CPU)-noinit.c \
-  test.c \
+  test-ctors.c \
+  test-array.c \
   $(NULL)
 
 ifndef CROSS_COMPILE
@@ -53,33 +54,39 @@ OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 
 include $(topsrcdir)/config/rules.mk
 
-test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
-	$(MKSHLIB) $(LDFLAGS) $<
+test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack $(filter inject/%,$(CSRCS:.c=.$(OBJ_SUFFIX)))
+	$(MKSHLIB) $(LDFLAGS) $< -nostartfiles
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error
 	@echo === and your environment \(compiler and linker versions\), and use
 	@echo === --disable-elf-hack until this is fixed.
 	@echo ===
+	# Fail if the library doesn't have $(DT_TYPE) .dynamic info
+	$(TOOLCHAIN_PREFIX)readelf -d $@ | grep '($(DT_TYPE))'
 	@rm -f $@.bak
 	$(CURDIR)/elfhack -b -f $@
 	# Fail if the backup file doesn't exist
 	[ -f "$@.bak" ]
 	# Fail if the new library doesn't contain less relocations
-	[ $$(objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
+	[ $$($(TOOLCHAIN_PREFIX)objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
 
-.PRECIOUS: test$(DLL_SUFFIX)
+test-array$(DLL_SUFFIX): DT_TYPE=INIT_ARRAY
+test-ctors$(DLL_SUFFIX): DT_TYPE=INIT
 
-GARBAGE += test$(DLL_SUFFIX) test$(DLL_SUFFIX).bak
+.PRECIOUS: test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX)
 
-libs:: test$(DLL_SUFFIX)
+GARBAGE += test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX) test-array$(DLL_SUFFIX).bak test-ctors$(DLL_SUFFIX).bak
+
+libs:: test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX)
 
 ifndef CROSS_COMPILE
-dummy: dummy.$(OBJ_SUFFIX) test$(DLL_SUFFIX)
+dummy: dummy.$(OBJ_SUFFIX)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 libs:: dummy
 	# Will either crash or return exit code 1 if elfhack is broken
-	LD_LIBRARY_PATH=$(CURDIR) $(CURDIR)/dummy
+	LD_PRELOAD=$(CURDIR)/test-array$(DLL_SUFFIX) $(CURDIR)/dummy
+	LD_PRELOAD=$(CURDIR)/test-ctors$(DLL_SUFFIX) $(CURDIR)/dummy
 
 GARBAGE += dummy
 endif
@@ -87,7 +94,7 @@ endif
 inject:
 	$(NSINSTALL) -D $@
 
-inject/%.c: inject.c | inject
+inject/%.c: inject.c $(call mkdir_deps,inject)
 	cp $< $@
 
 GARBAGE_DIRS += inject

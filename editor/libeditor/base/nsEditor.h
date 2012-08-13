@@ -85,6 +85,53 @@ struct IMEState;
 #define kMOZEditorBogusNodeAttrAtom nsEditProperty::mozEditorBogusNode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
+// This is PRInt32 instead of PRInt16 because nsIInlineSpellChecker.idl's
+// spellCheckAfterEditorChange is defined to take it as a long.
+MOZ_BEGIN_ENUM_CLASS(EditAction, PRInt32)
+  ignore = -1,
+  none = 0,
+  undo,
+  redo,
+  insertNode,
+  createNode,
+  deleteNode,
+  splitNode,
+  joinNode,
+  deleteText = 1003,
+
+  // text commands
+  insertText         = 2000,
+  insertIMEText      = 2001,
+  deleteSelection    = 2002,
+  setTextProperty    = 2003,
+  removeTextProperty = 2004,
+  outputText         = 2005,
+
+  // html only action
+  insertBreak         = 3000,
+  makeList            = 3001,
+  indent              = 3002,
+  outdent             = 3003,
+  align               = 3004,
+  makeBasicBlock      = 3005,
+  removeList          = 3006,
+  makeDefListItem     = 3007,
+  insertElement       = 3008,
+  insertQuotation     = 3009,
+  htmlPaste           = 3012,
+  loadHTML            = 3013,
+  resetTextProperties = 3014,
+  setAbsolutePosition = 3015,
+  removeAbsolutePosition = 3016,
+  decreaseZIndex      = 3017,
+  increaseZIndex      = 3018
+MOZ_END_ENUM_CLASS(EditAction)
+
+inline bool operator!(const EditAction& aOp)
+{
+  return aOp == EditAction::none;
+}
+
 /** implementation of an editor object.  it will be the controller/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
  *  manager, event interfaces. the idea for the event interfaces is to have them 
@@ -102,47 +149,6 @@ public:
   {
     kIterForward,
     kIterBackward
-  };
-
-  enum OperationID
-  {
-    kOpIgnore = -1,
-    kOpNone = 0,
-    kOpUndo,
-    kOpRedo,
-    kOpInsertNode,
-    kOpCreateNode,
-    kOpDeleteNode,
-    kOpSplitNode,
-    kOpJoinNode,
-    kOpDeleteText = 1003,
-
-    // text commands
-    kOpInsertText         = 2000,
-    kOpInsertIMEText      = 2001,
-    kOpDeleteSelection    = 2002,
-    kOpSetTextProperty    = 2003,
-    kOpRemoveTextProperty = 2004,
-    kOpOutputText         = 2005,
-
-    // html only action
-    kOpInsertBreak         = 3000,
-    kOpMakeList            = 3001,
-    kOpIndent              = 3002,
-    kOpOutdent             = 3003,
-    kOpAlign               = 3004,
-    kOpMakeBasicBlock      = 3005,
-    kOpRemoveList          = 3006,
-    kOpMakeDefListItem     = 3007,
-    kOpInsertElement       = 3008,
-    kOpInsertQuotation     = 3009,
-    kOpHTMLPaste           = 3012,
-    kOpLoadHTML            = 3013,
-    kOpResetTextProperties = 3014,
-    kOpSetAbsolutePosition = 3015,
-    kOpRemoveAbsolutePosition = 3016,
-    kOpDecreaseZIndex      = 3017,
-    kOpIncreaseZIndex      = 3018
   };
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
@@ -414,7 +420,7 @@ public:
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
-  NS_IMETHOD StartOperation(OperationID opID,
+  NS_IMETHOD StartOperation(EditAction opID,
                             nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
@@ -651,7 +657,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  nsresult HandleInlineSpellCheck(OperationID action,
+  nsresult HandleInlineSpellCheck(EditAction action,
                                     nsISelection *aSelection,
                                     nsIDOMNode *previousSelectedNode,
                                     PRInt32 previousSelectedOffset,
@@ -866,7 +872,7 @@ protected:
   PRInt32           mUpdateCount;
 
   PRInt32           mPlaceHolderBatch;   // nesting count for batching
-  OperationID       mAction;             // the current editor action
+  EditAction        mAction;             // the current editor action
   PRUint32          mHandlingActionCount;
 
   PRUint32          mIMETextOffset;    // offset in text node where IME comp string begins

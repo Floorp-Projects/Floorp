@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 LIBRARY_NAME	= gkconevents_s
 LIBXUL_LIBRARY  = 1
+FAIL_ON_WARNINGS = 1
 
 EXPORTS		= \
 		nsEventStateManager.h \
@@ -62,6 +63,7 @@ CPPSRCS		= \
 		nsDOMAnimationEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCompositionEvent.cpp \
+		DOMWheelEvent.cpp \
 		$(NULL)
 
 ifdef MOZ_B2G_RIL

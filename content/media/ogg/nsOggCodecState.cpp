@@ -770,6 +770,7 @@ nsOpusState::nsOpusState(ogg_page* aBosPage) :
 #endif
   mChannelMapping(0),
   mStreams(0),
+  mCoupledStreams(0),
   mDecoder(NULL),
   mSkip(0),
   mPrevPacketGranulepos(0),
@@ -783,7 +784,7 @@ nsOpusState::~nsOpusState() {
   Reset();
 
   if (mDecoder) {
-    opus_decoder_destroy(mDecoder);
+    opus_multistream_decoder_destroy(mDecoder);
     mDecoder = NULL;
   }
 }
@@ -799,7 +800,7 @@ nsresult nsOpusState::Reset(bool aStart)
 
   if (mActive && mDecoder) {
     // Reset the decoder.
-    opus_decoder_ctl(mDecoder, OPUS_RESET_STATE);
+    opus_multistream_decoder_ctl(mDecoder, OPUS_RESET_STATE);
     // Let the seek logic handle pre-roll if we're not seeking to the start.
     mSkip = aStart ? mPreSkip : 0;
     // This lets us distinguish the first page being the last page vs. just
@@ -827,7 +828,13 @@ bool nsOpusState::Init(void)
 
   NS_ASSERTION(mDecoder == NULL, "leaking OpusDecoder");
 
-  mDecoder = opus_decoder_create(mRate, mChannels, &error);
+  mDecoder = opus_multistream_decoder_create(mRate,
+                                             mChannels,
+                                             mStreams,
+                                             mCoupledStreams,
+                                             mMappingTable,
+                                             &error);
+
   mSkip = mPreSkip;
 
   LOG(PR_LOG_DEBUG, ("Opus decoder init, to skip %d", mSkip));
@@ -855,7 +862,17 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
         return false;
       }
 
-      mChannels= aPacket->packet[9];
+      mChannels = aPacket->packet[9];
+      if (mChannels<1) {
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: Number of channels %d", mChannels));
+        return false;
+      }
+#ifndef MOZ_SAMPLE_TYPE_FLOAT32
+      // Downmixing more than 2 channels it is not supported for integer
+      // output samples. It is only supported for float output.
+      if (mChannels>2)
+        return false;
+#endif
       mPreSkip = LEUint16(aPacket->packet + 10);
       mNominalRate = LEUint32(aPacket->packet + 12);
       double gain_dB = LEInt16(aPacket->packet + 16) / 256.0;
@@ -869,8 +886,15 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
 
       if (mChannelMapping == 0) {
         mStreams = 1;
-      } else if (aPacket->bytes > 19) {
+        mCoupledStreams = mChannels - 1;
+        mMappingTable[0] = 0;
+        mMappingTable[1] = 1;
+      } else if (aPacket->bytes>20+mChannels) {
         mStreams = aPacket->packet[19];
+        mCoupledStreams = aPacket->packet[20];
+        int i;
+        for (i=0; i<mChannels; i++)
+          mMappingTable[i] = aPacket->packet[21+i];
       } else {
         LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
                            " but no channel mapping table", mChannelMapping));

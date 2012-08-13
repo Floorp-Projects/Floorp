@@ -639,7 +639,7 @@ NS_ImplementChannelOpen(nsIChannel      *channel,
     if (NS_SUCCEEDED(rv)) {
         rv = channel->AsyncOpen(listener, nullptr);
         if (NS_SUCCEEDED(rv)) {
-            PRUint32 n;
+            PRUint64 n;
             // block until the initial response is received or an error occurs.
             rv = stream->Available(&n);
             if (NS_SUCCEEDED(rv)) {

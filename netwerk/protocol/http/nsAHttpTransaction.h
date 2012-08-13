@@ -50,7 +50,7 @@ public:
     virtual PRUint8  Caps() = 0;
 
     // called to find out how much request data is available for writing.
-    virtual PRUint32 Available() = 0;
+    virtual PRUint64 Available() = 0;
 
     // called to read request data from the transaction.
     virtual nsresult ReadSegments(nsAHttpSegmentReader *reader,
@@ -145,7 +145,7 @@ public:
     bool     IsDone(); \
     nsresult Status(); \
     PRUint8  Caps();   \
-    PRUint32 Available(); \
+    PRUint64 Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
     void     Close(nsresult reason);                                    \

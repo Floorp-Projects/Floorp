@@ -42,6 +42,9 @@ def spawn_test(test):
     cmd = test.get_command(test.js_cmd_prefix)
     os.execvp(cmd[0], cmd)
 
+def total_seconds(td):
+    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+
 def get_max_wait(tasks, results, timeout):
     """
     Return the maximum time we can wait before any task should time out.
@@ -52,7 +55,7 @@ def get_max_wait(tasks, results, timeout):
         remaining = timedelta(seconds=timeout) - (now - task.start)
         if remaining > wait:
             wait = remaining
-    wait = wait.total_seconds()
+    wait = total_seconds(wait)
 
     # The test harness uses a timeout of 0 to indicate we should wait forever,
     # but for select(), a timeout of 0 indicates a zero-length wait.  Instead,
@@ -163,7 +166,7 @@ def reap_zombies(tasks, results, timeout):
                    ''.join(ended.out),
                    ''.join(ended.err),
                    returncode,
-                   (datetime.now() - ended.start).total_seconds(),
+                   total_seconds(datetime.now() - ended.start),
                    timed_out(ended, timeout))
         results.push(out)
     return tasks

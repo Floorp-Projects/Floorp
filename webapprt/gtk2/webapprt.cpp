@@ -138,14 +138,6 @@ bool GRELoadAndLaunch(const char* firefoxDir)
     return false;
   }
 
-  if (!isProfileOverridden) {
-    // Override the class name part of the WM_CLASS property, so that the
-    // DE can match our window to the correct launcher
-    char programClass[MAXPATHLEN];
-    snprintf(programClass, MAXPATHLEN, "owa-%s", profile);
-    g_set_prgname(programClass);
-  }
-
   // NOTE: The GRE has successfully loaded, so we can use XPCOM now
   { // Scope for any XPCOM stuff we create
     ScopedLogging log;
@@ -180,7 +172,12 @@ bool GRELoadAndLaunch(const char* firefoxDir)
 
     if (!isProfileOverridden) {
       SetAllocatedString(webShellAppData->profile, profile);
-      SetAllocatedString(webShellAppData->name, profile);
+      // nsXREAppData::name is used for the class name part of the WM_CLASS
+      // property. Set it so that the DE can match our window to the correct
+      // launcher.
+      char programClass[MAXPATHLEN];
+      snprintf(programClass, MAXPATHLEN, "owa-%s", profile);
+      SetAllocatedString(webShellAppData->name, programClass);
     }
 
     nsCOMPtr<nsIFile> directory;

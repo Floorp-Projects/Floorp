@@ -104,6 +104,7 @@ typedef FrameMetrics::ViewID ViewID;
 /* static */ PRUint32 nsLayoutUtils::sFontSizeInflationEmPerLine;
 /* static */ PRUint32 nsLayoutUtils::sFontSizeInflationMinTwips;
 /* static */ PRUint32 nsLayoutUtils::sFontSizeInflationLineThreshold;
+/* static */ PRInt32 nsLayoutUtils::sFontSizeInflationMappingIntercept;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -1024,6 +1025,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
 {
   if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT &&
                   aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+                  aEvent->eventStructType != NS_WHEEL_EVENT &&
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
@@ -4634,6 +4636,8 @@ nsLayoutUtils::Initialize()
                                         "font.size.inflation.minTwips");
   mozilla::Preferences::AddUintVarCache(&sFontSizeInflationLineThreshold,
                                         "font.size.inflation.lineThreshold");
+  mozilla::Preferences::AddIntVarCache(&sFontSizeInflationMappingIntercept,
+                                       "font.size.inflation.mappingIntercept");
 }
 
 /* static */
@@ -4895,21 +4899,38 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
     }
   }
 
-  // Scale everything from 0-1.5 times min to instead fit in the range
-  // 1-1.5 times min, so that we still show some distinction rather than
-  // just enforcing a minimum.
-  // FIXME: Fiddle with this algorithm; maybe have prefs to control it?
-  float ratio = float(styleFontSize) / float(aMinFontSize);
-  if (ratio >= 1.5f) {
-    // If we're already at 1.5 or more times the minimum, don't scale.
-    return 1.0;
-  }
+  PRInt32 interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
 
-  // To scale 0-1.5 times min to instead be 1-1.5 times min, we want
-  // to the desired multiple of min to be 1 + (ratio/3) (where ratio
-  // is our input's multiple of min).  The scaling needed to produce
-  // that is that divided by |ratio|, or:
-  return (1.0f / ratio) + (1.0f / 3.0f);
+  float ratio = float(styleFontSize) / float(aMinFontSize);
+
+  // Given a minimum inflated font size m, a specified font size s, we want to
+  // find the inflated font size i and then return the ratio of i to s (i/s).
+  if (interceptParam >= 0) {
+    // Since the mapping intercept parameter P is greater than zero, we use it
+    // to determine the point where our mapping function intersects the i=s
+    // line. This means that we have an equation of the form:
+    //
+    // i = m + s·(P/2)/(1 + P/2), if s <= (1 + P/2)·m
+    // i = s, if s >= (1 + P/2)·m
+
+    float intercept = 1 + float(interceptParam)/2.0f;
+    if (ratio >= intercept) {
+      // If we're already at 1+P/2 or more times the minimum, don't scale.
+      return 1.0;
+    }
+
+    // The point (intercept, intercept) is where the part of the i vs. s graph
+    // that's not slope 1 meets the i=s line.  (This part of the
+    // graph is a line from (0, m), to that point). We calculate the
+    // intersection point to be ((1+P/2)m, (1+P/2)m), where P is the
+    // intercept parameter above. We then need to return i/s.
+    return (1.0f + (ratio * (intercept - 1) / intercept)) / ratio;
+  } else {
+    // This is the case where P is negative. We essentially want to implement
+    // the case for P=infinity here, so we make i = s + m, which means that
+    // i/s = s/s + m/s = 1 + 1/ratio
+    return 1 + 1.0f / ratio;
+  }
 }
 
 static bool

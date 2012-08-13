@@ -72,6 +72,7 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::indexedDB;
+using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -822,9 +823,9 @@ TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
 }
 
 bool
-TabChild::RecvMouseScrollEvent(const nsMouseScrollEvent& event)
+TabChild::RecvMouseWheelEvent(const WheelEvent& event)
 {
-  nsMouseScrollEvent localEvent(event);
+  WheelEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }

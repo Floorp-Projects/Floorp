@@ -20,34 +20,40 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
     private Tab mSelectedTab;
-    private HashMap<Integer, Tab> mTabs;
-    private ArrayList<Tab> mOrder;
-    private ContentResolver mResolver;
+    private final HashMap<Integer, Tab> mTabs = new HashMap<Integer, Tab>();
+    private final CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
     private boolean mRestoringSession;
+
+    // Keeps track of how much has happened since we last updated our persistent tab store.
+    private volatile int mScore = 0;
+
+    private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
+    private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
+    private static final int SCORE_THRESHOLD = 30;
 
     private GeckoApp mActivity;
 
     private Tabs() {
-        mTabs = new HashMap<Integer, Tab>();
-        mOrder = new ArrayList<Tab>();
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:New", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Back", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Forward", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Goto", this);
-        GeckoAppShell.registerGeckoEventListener("SessionHistory:Purge", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Added", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Close", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
-        GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
-        GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Added", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Removed", this);
-        GeckoAppShell.registerGeckoEventListener("Reader:Share", this);
+
+        registerEventListener("SessionHistory:New");
+        registerEventListener("SessionHistory:Back");
+        registerEventListener("SessionHistory:Forward");
+        registerEventListener("SessionHistory:Goto");
+        registerEventListener("SessionHistory:Purge");
+        registerEventListener("Tab:Added");
+        registerEventListener("Tab:Close");
+        registerEventListener("Tab:Select");
+        registerEventListener("Session:RestoreBegin");
+        registerEventListener("Session:RestoreEnd");
+        registerEventListener("Reader:Added");
+        registerEventListener("Reader:Removed");
+        registerEventListener("Reader:Share");
     }
 
     public void attachToActivity(GeckoApp activity) {
@@ -205,26 +211,12 @@ public class Tabs implements GeckoEventListener {
         return nextTab;
     }
 
-    public HashMap<Integer, Tab> getTabs() {
-        if (getCount() == 0)
-            return null;
-
-        return mTabs;
-    }
-    
-    public ArrayList<Tab> getTabsInOrder() {
-        if (getCount() == 0)
-            return null;
-
+    public Iterable<Tab> getTabsInOrder() {
         return mOrder;
     }
 
-    public void setContentResolver(ContentResolver resolver) {
-        mResolver = resolver;
-    }
-
     public ContentResolver getContentResolver() {
-        return mResolver;
+        return mActivity.getContentResolver();
     }
 
     //Making Tabs a singleton class
@@ -298,7 +290,7 @@ public class Tabs implements GeckoEventListener {
 
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                BrowserDB.addReadingListItem(mActivity.getContentResolver(), title, url);
+                BrowserDB.addReadingListItem(getContentResolver(), title, url);
                 mActivity.showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
             }
         });
@@ -307,7 +299,7 @@ public class Tabs implements GeckoEventListener {
     void handleReaderRemoved(final String url) {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                BrowserDB.removeReadingListItemWithURL(mResolver, url);
+                BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
                 mActivity.showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
             }
         });
@@ -367,6 +359,8 @@ public class Tabs implements GeckoEventListener {
     }
 
     public void notifyListeners(Tab tab, TabEvents msg, Object data) {
+        onTabChanged(tab, msg, data);
+
         if (mTabsChangedListeners == null)
             return;
 
@@ -376,4 +370,40 @@ public class Tabs implements GeckoEventListener {
         }
     }
 
+    private void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        switch(msg) {
+            case LOCATION_CHANGE:
+                mScore += SCORE_INCREMENT_TAB_LOCATION_CHANGE;
+                break;
+
+            // When one tab is deselected, another one is always selected, so only
+            // increment the score once. When tabs are added/closed, they are also
+            // selected/unselected, so it would be redundant to also listen
+            // for ADDED/CLOSED events.
+            case SELECTED:
+                mScore += SCORE_INCREMENT_TAB_SELECTED;
+            case UNSELECTED:
+                tab.onChange();
+                break;
+        }
+
+        if (mScore > SCORE_THRESHOLD) {
+            persistAllTabs();
+            mScore = 0;
+        }
+    }
+
+    // This method persists the current ordered list of tabs in our tabs content provider.
+    public void persistAllTabs() {
+        final Iterable<Tab> tabs = getTabsInOrder();
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
+            }
+        });
+    }
+
+    private void registerEventListener(String event) {
+        GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
+    }
 }

@@ -26,19 +26,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607464
 function scrollDown15PxWithPixelScrolling(scrollbox) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
-    'type': "DOMMouseScroll",
-    'axis': "vertical",
-    'delta': 1,
-    'hasPixels': true,
+    deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+    deltaY: 3.0,
+    lineOrPageDeltaY: 1
   };
-  // first a line scroll
-  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
-  // then 5 pixel scrolls with 3px each
-  event.delta *= 3;
-  event.type = "MozMousePixelScroll";
-  event.hasPixels = false;
-  for (let i = 0; i < 5; ++i) {
-    synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  // A pixel scroll with lineOrPageDeltaY.
+  synthesizeWheel(scrollbox, 10, 10, event, win);
+  // then 4 pixel scrolls without lineOrPageDeltaY.
+  event.lineOrPageDeltaY = 0;
+  for (let i = 0; i < 4; ++i) {
+    synthesizeWheel(scrollbox, 10, 10, event, win);
   }
 
   // Note: the line scroll shouldn't have any effect because it has

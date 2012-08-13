@@ -45,6 +45,8 @@
 <!ENTITY history_week_section "7 days ago">
 <!ENTITY history_older_section "Older than 7 days">
 
+<!ENTITY go "Go">
+<!ENTITY search "Search">
 <!ENTITY reload "Reload">
 <!ENTITY forward "Forward">
 <!ENTITY menu "Menu">
