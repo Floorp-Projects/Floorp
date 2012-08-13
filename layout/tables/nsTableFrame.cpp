@@ -2023,6 +2023,8 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
 /* virtual */ void
 nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
+
   if (!aOldStyleContext) //avoid this on init
     return;
 
