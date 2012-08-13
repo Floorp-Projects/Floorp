@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,10 +9,16 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+modules := \
+  utils.js \
+  WeaveCrypto.js \
+  $(NULL)
+
 MODULE = services-crypto
 
-libs::
-	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/modules/* $(FINAL_TARGET)/modules/services-crypto
+CRYPTO_MODULE_FILES := $(addprefix modules/,$(modules))
+CRYPTO_MODULE_DEST = $(FINAL_TARGET)/modules/services-crypto
+INSTALL_TARGETS += CRYPTO_MODULE
 
 TEST_DIRS += tests
 
