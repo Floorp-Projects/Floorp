@@ -10,6 +10,7 @@
 
 #include "nsCSSDataBlock.h"
 #include "mozilla/css/Declaration.h"
+#include "mozilla/css/ImageLoader.h"
 #include "nsRuleData.h"
 #include "nsStyleSet.h"
 #include "nsStyleContext.h"
@@ -47,16 +48,25 @@ ShouldIgnoreColors(nsRuleData *aRuleData)
 static void
 TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument)
 {
+  MOZ_ASSERT(aDocument);
+
   if (aValue.GetUnit() == eCSSUnit_URL) {
     aValue.StartImageLoad(aDocument);
+  }
+  else if (aValue.GetUnit() == eCSSUnit_Image) {
+    // If we already have a request, see if this document needs to clone it.
+    imgIRequest* request = aValue.GetImageValue(nsnull);
+
+    if (request) {
+      aDocument->StyleImageLoader()->MaybeRegisterCSSImage(aValue.GetImageStructValue());
+    }
   }
   else if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
     nsCSSValue::Array* arguments = aValue.GetArrayValue();
     NS_ABORT_IF_FALSE(arguments->Count() == 6, "unexpected num of arguments");
 
     const nsCSSValue& image = arguments->Item(1);
-    if (image.GetUnit() == eCSSUnit_URL)
-      image.StartImageLoad(aDocument);
+    TryToStartImageLoadOnValue(image, aDocument);
   }
 }
 
