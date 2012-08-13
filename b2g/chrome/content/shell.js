@@ -703,6 +703,15 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 }, "geolocation-device-events", false);
 })();
 
+(function headphonesStatusTracker() {
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    shell.sendChromeEvent({
+      type: 'headphones-status',
+      state: aData
+    });
+}, "headphones-status", false);
+})();
+
 (function recordingStatusTracker() {
   let gRecordingActiveCount = 0;
 
