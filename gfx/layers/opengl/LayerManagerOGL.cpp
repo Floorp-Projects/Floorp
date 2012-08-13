@@ -380,12 +380,12 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
 }
 
 bool
-LayerManagerOGL::EndEmptyTransaction()
+LayerManagerOGL::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
   if (!mRoot)
     return false;
 
-  EndTransaction(nullptr, nullptr);
+  EndTransaction(nullptr, nullptr, aFlags);
   return true;
 }
 

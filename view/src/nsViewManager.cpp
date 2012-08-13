@@ -298,11 +298,9 @@ nsIView* nsIViewManager::GetDisplayRootFor(nsIView* aView)
    aContext may be null, in which case layers should be used for
    rendering.
 */
-void nsViewManager::Refresh(nsView *aView, nsIWidget *aWidget,
-                            const nsIntRegion& aRegion,
+void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
                             bool aWillSendDidPaint)
 {
-  NS_ASSERTION(aView == nsView::GetViewFor(aWidget), "view widget mismatch");
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   // damageRegion is the damaged area, in twips, relative to the view origin
@@ -335,8 +333,14 @@ void nsViewManager::Refresh(nsView *aView, nsIWidget *aWidget,
                  "Widgets that we paint must all be display roots");
 
     if (mPresShell) {
-      mPresShell->Paint(aView, aWidget, damageRegion, aRegion,
+#ifdef DEBUG_INVALIDATIONS
+      printf("--COMPOSITE-- %p\n", mPresShell);
+#endif
+      mPresShell->Paint(aView, damageRegion, nsIPresShell::PaintType_Composite,
                         aWillSendDidPaint);
+#ifdef DEBUG_INVALIDATIONS
+      printf("--ENDCOMPOSITE--\n");
+#endif
       mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
     }
 
@@ -372,6 +376,17 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   // Push out updates after we've processed the children; ensures that
   // damage is applied based on the final widget geometry
   if (aFlushDirtyRegion) {
+    nsIWidget *widget = aView->GetWidget();
+    if (widget) {
+#ifdef DEBUG_INVALIDATIONS
+      printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
+#endif
+      nsAutoScriptBlocker scriptBlocker;
+      mPresShell->Paint(aView, nsRegion(), nsIPresShell::PaintType_NoComposite, false);
+#ifdef DEBUG_INVALIDATIONS
+      printf("---- PAINT END ----\n");
+#endif
+    }
     FlushDirtyRegionToWidget(aView);
   }
 }
@@ -760,7 +775,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           break;
 
         // Paint.
-        Refresh(view, event->widget, event->region, event->willSendDidPaint);
+        Refresh(view, event->region, event->willSendDidPaint);
 
         break;
       }

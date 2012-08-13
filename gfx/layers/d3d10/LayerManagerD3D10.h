@@ -85,7 +85,7 @@ public:
 
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
 
-  virtual bool EndEmptyTransaction();
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
 
   struct CallbackInfo {
     DrawThebesLayerCallback Callback;
