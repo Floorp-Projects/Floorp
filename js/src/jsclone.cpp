@@ -402,6 +402,15 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 {
     JS_ASSERT(v.isObject());
     RootedObject obj(w->context(), &v.toObject());
+
+    // If the object is a security wrapper, try puncturing it. This may throw
+    // if the access is not allowed.
+    if (obj->isWrapper()) {
+        JSObject *unwrapped = UnwrapObjectChecked(w->context(), obj);
+        if (!unwrapped)
+            return false;
+        obj = unwrapped;
+    }
     return w->writeTypedArray(obj);
 }
 
