@@ -13,8 +13,7 @@ function RestrictedPath(source, isVisible) {
   this.isVisible = isVisible;
 }
 
-// This doesn't implement all of nsIFile and nsILocalFile, just enough to keep
-// the EM happy.
+// This doesn't implement all of nsIFile, just enough to keep the EM happy.
 RestrictedPath.prototype = {
   // A real nsIFile that this shadows
   source: null,
@@ -87,7 +86,6 @@ RestrictedPath.prototype = {
 
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIFile)
-     || iid.equals(Components.interfaces.nsILocalFile)
      || iid.equals(Components.interfaces.nsISupports))
       return this;
 
