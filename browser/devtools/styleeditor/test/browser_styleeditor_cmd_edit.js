@@ -3,15 +3,13 @@
 
 // Tests that the edit command works
 
-const TEST_URI = TEST_BASE_HTTP + "resources.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/styleeditor/" +
+                 "test/browser_styleeditor_cmd_edit.html";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testEditStatus(browser, tab);
-    // Bug 759853
-    // testEditExec(browser, tab); // calls finish()
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testEditStatus ]);
+  // Bug 759853
+  // testEditExec
 }
 
 function testEditStatus(browser, tab) {
@@ -42,7 +40,7 @@ function testEditStatus(browser, tab) {
     typed:  "edit http",
     markup: "VVVVVIIII",
     status: "ERROR",
-    directTabText: "://example.com/browser/browser/devtools/commandline/test/resources_inpage1.css",
+    directTabText: "://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css",
     arrowTabText: "",
     emptyParameters: [ " [line]" ],
   });
@@ -52,7 +50,7 @@ function testEditStatus(browser, tab) {
     markup: "VVVVVIIIII",
     status: "ERROR",
     directTabText: "",
-    arrowTabText: "http://example.com/browser/browser/devtools/commandline/test/resources_inpage1.css",
+    arrowTabText: "http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css",
     emptyParameters: [ " [line]" ],
   });
 
@@ -61,7 +59,7 @@ function testEditStatus(browser, tab) {
     markup: "VVVVVIIIII",
     status: "ERROR",
     directTabText: "",
-    arrowTabText: "http://example.com/browser/browser/devtools/commandline/test/resources_inpage2.css",
+    arrowTabText: "http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage2.css",
     emptyParameters: [ " [line]" ],
   });
 
