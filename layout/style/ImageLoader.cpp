@@ -45,7 +45,7 @@ void
 ImageLoader::DropDocumentReference()
 {
   ClearAll();
-  mDocument = nsnull;
+  mDocument = nullptr;
 }
 
 void
@@ -66,7 +66,7 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
   MOZ_ASSERT(observer == this);
 
-  FrameSet* frameSet = nsnull;
+  FrameSet* frameSet = nullptr;
   if (mRequestToFrameMap.Get(aRequest, &frameSet)) {
     NS_ASSERTION(frameSet, "This should never be null!");
   }
@@ -78,7 +78,7 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
     frameSet = newFrameSet.forget();
   }
 
-  RequestSet* requestSet = nsnull;
+  RequestSet* requestSet = nullptr;
   if (mFrameToRequestMap.Get(aFrame, &requestSet)) {
     NS_ASSERTION(requestSet, "This should never be null");
   }
@@ -112,7 +112,7 @@ ImageLoader::MaybeRegisterCSSImage(nsCSSValue::Image* aImage)
     return;
   }
 
-  imgIRequest* canonicalRequest = aImage->mRequests.GetWeak(nsnull);
+  imgIRequest* canonicalRequest = aImage->mRequests.GetWeak(nullptr);
   if (!canonicalRequest) {
     // The image was blocked or something.
     return;
@@ -141,8 +141,8 @@ void
 ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
                                           nsIFrame* aFrame)
 {
-  FrameSet* frameSet = nsnull;
-  RequestSet* requestSet = nsnull;
+  FrameSet* frameSet = nullptr;
+  RequestSet* requestSet = nullptr;
 
   MOZ_ASSERT(mRequestToFrameMap.IsInitialized() &&
              mFrameToRequestMap.IsInitialized() &&
@@ -173,7 +173,7 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
     if (presContext) {
       nsLayoutUtils::DeregisterImageRequest(presContext,
                                             aRequest,
-                                            nsnull);
+                                            nullptr);
     }
   }
 
@@ -185,7 +185,7 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
 void
 ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 {
-  RequestSet* requestSet = nsnull;
+  RequestSet* requestSet = nullptr;
   if (!mFrameToRequestMap.Get(aFrame, &requestSet)) {
     return;
   }
@@ -241,7 +241,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
 {
   NS_ASSERTION(aImage->mRequests.Count() == 0, "Huh?");
 
-  aImage->mRequests.Put(nsnull, nsnull);
+  aImage->mRequests.Put(nullptr, nullptr);
 
   if (!aURI) {
     return;
@@ -254,7 +254,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
 
   nsCOMPtr<imgIRequest> request;
   nsContentUtils::LoadImage(aURI, mDocument, aOriginPrincipal, aReferrer,
-                            nsnull, nsIRequest::LOAD_NORMAL,
+                            nullptr, nsIRequest::LOAD_NORMAL,
                             getter_AddRefs(request));
 
   if (!request) {
@@ -270,7 +270,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  aImage->mRequests.Put(nsnull, request);
+  aImage->mRequests.Put(nullptr, request);
   aImage->mRequests.Put(mDocument, clonedRequest);
 
   AddImage(aImage);
@@ -296,12 +296,12 @@ nsPresContext*
 ImageLoader::GetPresContext()
 {
   if (!mDocument) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIPresShell* shell = mDocument->GetShell();
   if (!shell) {
-    return nsnull;
+    return nullptr;
   }
 
   return shell->GetPresContext();
@@ -378,7 +378,7 @@ ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
   if (presContext) {
     nsLayoutUtils::RegisterImageRequest(presContext,
                                         aRequest,
-                                        nsnull);
+                                        nullptr);
   }
 
   return NS_OK;
@@ -391,7 +391,7 @@ ImageLoader::OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame)
     return NS_OK;
   }
 
-  FrameSet* frameSet = nsnull;
+  FrameSet* frameSet = nullptr;
   if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
     return NS_OK;
   }
@@ -412,7 +412,7 @@ ImageLoader::FrameChanged(imgIRequest *aRequest,
     return NS_OK;
   }
 
-  FrameSet* frameSet = nsnull;
+  FrameSet* frameSet = nullptr;
   if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
     return NS_OK;
   }
