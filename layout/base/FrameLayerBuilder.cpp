@@ -2145,7 +2145,8 @@ ApplyThebesLayerInvalidation(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aContainerFrame,
                              nsDisplayItem* aContainerItem,
                              ContainerState& aState,
-                             nsPoint* aCurrentOffset)
+                             nsPoint* aCurrentOffset,
+                             nsDisplayTransform* aTransform)
 {
   *aCurrentOffset = aContainerItem ? aContainerItem->ToReferenceFrame()
     : aBuilder->ToReferenceFrame(aContainerFrame);
@@ -2155,9 +2156,20 @@ ApplyThebesLayerInvalidation(nsDisplayListBuilder* aBuilder,
     (props.Get(ThebesLayerInvalidRegionProperty()));
   if (invalidThebesContent) {
     const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
-    aState.AddInvalidThebesContent(invalidThebesContent->mRegion.
-      ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                           aState.GetAppUnitsPerDevPixel()));
+    if (aTransform) {
+      // XXX We're simplifying the transform by only using the bounds of the
+      //     region. This may have performance implications.
+      nsRect transformedBounds = aTransform->
+        TransformRectOut(invalidThebesContent->mRegion.GetBounds(),
+                         aTransform->GetUnderlyingFrame(), -(*aCurrentOffset));
+      aState.AddInvalidThebesContent(transformedBounds.
+        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
+                             aState.GetAppUnitsPerDevPixel()));
+    } else {
+      aState.AddInvalidThebesContent(invalidThebesContent->mRegion.
+        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
+                             aState.GetAppUnitsPerDevPixel()));
+    }
     // We have to preserve the current contents of invalidThebesContent
     // because there might be multiple container layers for the same
     // frame and we need to invalidate the ThebesLayer children of all
@@ -2206,6 +2218,36 @@ FrameLayerBuilder::RestoreThebesLayerItemEntries(ThebesLayerItemsEntry* aEntry, 
   }
 
   return PL_DHASH_NEXT;
+}
+
+static nsDisplayTransform* FindTransformForContainerFrame(nsIFrame* aContainerFrame,
+                                                          nsDisplayItem* aContainerItem)
+{
+  if (!aContainerFrame->IsTransformed() ||
+      aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM)
+    return nsnull;
+
+  nsTArray<nsDisplayItem*> queue;
+  queue.AppendElement(aContainerItem);
+  while (queue.Length()) {
+    nsDisplayItem* item = queue[queue.Length() - 1];
+    queue.RemoveElementAt(queue.Length() - 1);
+
+    if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
+      return static_cast<nsDisplayTransform*>(item);
+    }
+
+    if (item->GetList()) {
+      for (nsDisplayItem* child = item->GetList()->GetBottom(); child;
+           child = child->GetAbove()) {
+        if (child->GetUnderlyingFrame() == aContainerFrame) {
+          queue.AppendElement(child);
+        }
+      }
+    }
+  }
+
+  return nsnull;
 }
 
 already_AddRefed<ContainerLayer>
@@ -2301,9 +2343,15 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     }
 
     if (aManager == mRetainingManager) {
+      // If the container frame has a transform and it's contained in the
+      // container item's sub-tree, we need to transform the invalid region
+      // before applying it.
+      nsDisplayTransform* transformItem =
+        FindTransformForContainerFrame(aContainerFrame, aContainerItem);
+
       nsPoint currentOffset;
       ApplyThebesLayerInvalidation(aBuilder, aContainerFrame, aContainerItem, state,
-                                   &currentOffset);
+                                   &currentOffset, transformItem);
       SetHasContainerLayer(aContainerFrame, currentOffset);
 
       nsAutoTArray<nsIFrame*,4> mergedFrames;
@@ -2324,7 +2372,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
           entry->mInvalidRegion = thebesLayerInvalidRegion;
         }
         ApplyThebesLayerInvalidation(aBuilder, mergedFrame, nullptr, state,
-                                     &currentOffset);
+                                     &currentOffset, transformItem);
         SetHasContainerLayer(mergedFrame, currentOffset);
       }
     }
