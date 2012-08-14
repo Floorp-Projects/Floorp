@@ -87,12 +87,12 @@ if (params.closeWhenDone) {
 }
 
 if (params.failureFile) {
-  TestRunner.setFailureFile(params.failureFile);
+  TestRunner.setFailureFile(params.failureFile[0]);
 }
 
 // logFile to write our results
 if (params.logFile) {
-  var spl = new SpecialPowersLogger(params.logFile);
+  var spl = new SpecialPowersLogger(params.logFile[0]);
   TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
