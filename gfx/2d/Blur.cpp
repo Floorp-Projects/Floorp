@@ -330,7 +330,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            const Rect* aSkipRect)
  : mSpreadRadius(aSpreadRadius),
    mBlurRadius(aBlurRadius),
-   mData(NULL)
+   mData(nullptr)
 {
   Rect rect(aRect);
   rect.Inflate(Size(aBlurRadius + aSpreadRadius));
@@ -424,7 +424,7 @@ AlphaBoxBlur::GetDirtyRect()
     return &mDirtyRect;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void
