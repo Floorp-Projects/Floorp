@@ -33,10 +33,6 @@ namespace mjit {
     struct JITScript;
 }
 
-namespace mjit {
-    struct JITScript;
-}
-
 namespace ion {
     struct IonScript;
 }
@@ -1028,23 +1024,24 @@ struct CompilerOutput
     bool isIonFlag : 1;
     bool constructing : 1;
     bool barriers : 1;
-    uint32_t chunkIndex:30;
-
-    union {
-        mjit::JITScript *mjit;
-        ion::IonScript *ion;
-    } out;
+    bool pendingRecompilation : 1;
+    uint32_t chunkIndex:28;
 
     CompilerOutput();
-    explicit CompilerOutput(JSScript *script, bool isIonFlag = true);
 
     bool isJM() const { return !isIonFlag; }
     bool isIon() const { return isIonFlag; }
 
+    mjit::JITScript *mjit() const;
+    ion::IonScript *ion() const;
+
     bool isValid() const;
 
+    void setPendingRecompilation() {
+        pendingRecompilation = true;
+    }
     void invalidate() {
-        out.ion = NULL;
+        script = NULL;
     }
 };
 
@@ -1053,9 +1050,15 @@ struct RecompileInfo
     static const uint32_t NoCompilerRunning = uint32_t(-1);
     uint32_t outputIndex;
 
+    RecompileInfo()
+      : outputIndex(NoCompilerRunning)
+    {
+    }
+
     bool operator == (const RecompileInfo &o) const {
         return outputIndex == o.outputIndex;
     }
+    CompilerOutput *compilerOutput(TypeCompartment &types) const;
     CompilerOutput *compilerOutput(JSContext *cx) const;
 };
 
@@ -1097,7 +1100,7 @@ struct TypeCompartment
     Vector<CompilerOutput> *constrainedOutputs;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<CompilerOutput> *pendingRecompiles;
+    Vector<RecompileInfo> *pendingRecompiles;
 
     /*
      * Number of recompilation events and inline frame expansions that have
@@ -1168,7 +1171,6 @@ struct TypeCompartment
     void setPendingNukeTypesNoReport();
 
     /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, CompilerOutput &co);
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
     void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 

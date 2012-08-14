@@ -670,6 +670,8 @@ struct JITChunk
     ExecPoolVector execPools;
 #endif
 
+    types::RecompileInfo recompileInfo;
+
     // Additional ExecutablePools for native call and getter stubs.
     Vector<NativeCallStub, 0, SystemAllocPolicy> nativeCallStubs;
 
