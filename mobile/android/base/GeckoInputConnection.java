@@ -86,8 +86,8 @@ class GeckoInputConnection
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
     private static int mIMEState;
-    private static String mIMETypeHint;
-    private static String mIMEActionHint;
+    private static String mIMETypeHint = "";
+    private static String mIMEActionHint = "";
 
     private String mCurrentInputMethod;
 
@@ -112,8 +112,6 @@ class GeckoInputConnection
         mEditable = Editable.Factory.getInstance().newEditable("");
         spanAndSelectEditable();
         mIMEState = IME_STATE_DISABLED;
-        mIMETypeHint = "";
-        mIMEActionHint = "";
     }
 
     @Override
@@ -819,8 +817,11 @@ class GeckoInputConnection
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMEActionHint.equalsIgnoreCase("send"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
-        else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
+        else if (mIMEActionHint.length() > 0) {
+            if (DEBUG)
+                Log.w(LOGTAG, "Unexpected mIMEActionHint=\"" + mIMEActionHint + "\"");
             outAttrs.actionLabel = mIMEActionHint;
+        }
 
         GeckoApp app = GeckoApp.mAppContext;
         DisplayMetrics metrics = app.getResources().getDisplayMetrics();
@@ -1047,8 +1048,8 @@ class GeckoInputConnection
                 /* When IME is 'disabled', IME processing is disabled.
                    In addition, the IME UI is hidden */
                 mIMEState = state;
-                mIMETypeHint = typeHint;
-                mIMEActionHint = actionHint;
+                mIMETypeHint = (typeHint == null) ? "" : typeHint;
+                mIMEActionHint = (actionHint == null) ? "" : actionHint;
                 IMEStateUpdater.enableIME();
             }
         });
