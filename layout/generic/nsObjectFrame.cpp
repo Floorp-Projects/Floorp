@@ -738,32 +738,26 @@ void
 nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 {
   mInstanceOwner = aOwner;
-  if (!mInstanceOwner) {
-    nsRootPresContext* rpc = PresContext()->GetRootPresContext();
-    if (rpc) {
-      if (mWidget) {
-        if (mInnerView) {
-          mInnerView->DetachWidgetEventHandler(mWidget);
+  if (mInstanceOwner) {
+    return;
+  }
+  nsRootPresContext* rpc = PresContext()->GetRootPresContext();
+  if (rpc) {
+    rpc->UnregisterPluginForGeometryUpdates(mContent);
+  }
+  if (mWidget && mInnerView) {
+    mInnerView->DetachWidgetEventHandler(mWidget);
+    // Make sure the plugin is hidden in case an update of plugin geometry
+    // hasn't happened since this plugin became hidden.
+    nsIWidget* parent = mWidget->GetParent();
+    if (parent) {
+      nsTArray<nsIWidget::Configuration> configurations;
+      this->GetEmptyClipConfiguration(&configurations);
+      parent->ConfigureChildren(configurations);
 
-          rpc->UnregisterPluginForGeometryUpdates(mContent);
-          // Make sure the plugin is hidden in case an update of plugin geometry
-          // hasn't happened since this plugin became hidden.
-          nsIWidget* parent = mWidget->GetParent();
-          if (parent) {
-            nsTArray<nsIWidget::Configuration> configurations;
-            this->GetEmptyClipConfiguration(&configurations);
-            parent->ConfigureChildren(configurations);
-
-            mWidget->Show(false);
-            mWidget->Enable(false);
-            mWidget->SetParent(nullptr);
-          }
-        }
-      } else {
-#ifndef XP_MACOSX
-        rpc->UnregisterPluginForGeometryUpdates(mContent);
-#endif
-      }
+      mWidget->Show(false);
+      mWidget->Enable(false);
+      mWidget->SetParent(nullptr);
     }
   }
 }
