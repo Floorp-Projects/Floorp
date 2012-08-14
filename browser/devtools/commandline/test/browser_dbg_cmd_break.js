@@ -3,15 +3,23 @@
 
 // Tests that the break command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/test/browser_gcli_break.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
+                 "test/browser_dbg_cmd_break.html";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testBreakCommands();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testBreakCommands ]);
 }
 
 function testBreakCommands() {
+
+  info('###################################################');
+  info('###################################################');
+  info('###################################################');
+  info('###################################################');
+  info('###################################################');
+  info('###################################################');
+  info(content.document.documentElement.innerHTML + '\n');
+
   DeveloperToolbarTest.checkInputStatus({
     typed: "brea",
     directTabText: "k",
@@ -35,13 +43,16 @@ function testBreakCommands() {
   });
 
   let pane = DebuggerUI.toggleDebugger();
-  pane._frame.addEventListener("Debugger:Connecting", function dbgConnected() {
+
+  var dbgConnected = DeveloperToolbarTest.checkCalled(function() {
     pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
 
     // Wait for the initial resume.
     let client = pane.contentWindow.gClient;
-    client.addOneTimeListener("resumed", function() {
-      client.activeThread.addOneTimeListener("framesadded", function() {
+
+    var resumed = DeveloperToolbarTest.checkCalled(function() {
+
+      var framesAdded = DeveloperToolbarTest.checkCalled(function() {
         DeveloperToolbarTest.checkInputStatus({
           typed: "break add line " + TEST_URI + " " + content.wrappedJSObject.line0,
           status: "VALID"
@@ -61,7 +72,7 @@ function testBreakCommands() {
         });
         DeveloperToolbarTest.exec();
 
-        client.activeThread.resume(function() {
+        var cleanup = DeveloperToolbarTest.checkCalled(function() {
           DeveloperToolbarTest.checkInputStatus({
             typed: "break del 0",
             status: "VALID"
@@ -70,13 +81,19 @@ function testBreakCommands() {
             args: { breakid: 0 },
             completed: false
           });
-
-          finish();
         });
+
+        client.activeThread.resume(cleanup);
       });
+
+      client.activeThread.addOneTimeListener("framesadded", framesAdded);
 
       // Trigger newScript notifications using eval.
       content.wrappedJSObject.firstCall();
     });
-  }, true);
+
+    client.addOneTimeListener("resumed", resumed);
+  });
+
+  pane._frame.addEventListener("Debugger:Connecting", dbgConnected, true);
 }
