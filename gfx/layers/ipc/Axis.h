@@ -53,11 +53,18 @@ public:
   void StartTouch(PRInt32 aPos);
 
   /**
-   * Notify this Axis that a touch has ended. Useful for stopping flings when a
-   * user puts their finger down in the middle of one (i.e. to stop a previous
-   * touch including its fling so that a new one can take its place).
+   * Notify this Axis that a touch has ended gracefully. This may perform
+   * recalculations of the axis velocity.
    */
-  void StopTouch();
+  void EndTouch();
+
+  /**
+   * Notify this Axis that a touch has ended forcefully. Useful for stopping
+   * flings when a user puts their finger down in the middle of one (i.e. to
+   * stop a previous touch including its fling so that a new one can take its
+   * place).
+   */
+  void CancelTouch();
 
   /**
    * Sets axis locking. This prevents any panning along this axis. If the

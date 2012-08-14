@@ -329,6 +329,8 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
       ScheduleComposite();
       RequestContentRepaint();
     }
+    mX.EndTouch();
+    mY.EndTouch();
     SetState(FLING);
     return nsEventStatus_eConsumeNoDefault;
   case PINCHING:
@@ -512,8 +514,6 @@ void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
   double angle = atan2(dy, dx); // range [-pi, pi]
   angle = fabs(angle); // range [0, pi]
 
-  mX.StartTouch(touch.mScreenPoint.x);
-  mY.StartTouch(touch.mScreenPoint.y);
   SetState(PANNING);
 
   if (angle < AXIS_LOCK_ANGLE || angle > (M_PI - AXIS_LOCK_ANGLE)) {
@@ -888,8 +888,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
   if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
     mContentPainterStatus = CONTENT_IDLE;
 
-    mX.StopTouch();
-    mY.StopTouch();
+    mX.CancelTouch();
+    mY.CancelTouch();
     mFrameMetrics = aViewportFrame;
     mFrameMetrics.mResolution.width = 1 / mFrameMetrics.mResolution.width;
     mFrameMetrics.mResolution.height = 1 / mFrameMetrics.mResolution.height;
