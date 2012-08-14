@@ -233,7 +233,7 @@ SafeInstallOperation.prototype = {
     let newDir = aTargetDirectory.clone();
     newDir.append(aDirectory.leafName);
     try {
-      newDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+      newDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     }
     catch (e) {
       ERROR("Failed to create directory " + newDir.path, e);
@@ -359,7 +359,7 @@ SafeInstallOperation.prototype = {
       if (move.newFile.isDirectory()) {
         let oldDir = move.oldFile.parent.clone();
         oldDir.append(move.oldFile.leafName);
-        oldDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+        oldDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
       }
       else if (!move.oldFile) {
         // No old file means this was a copied file
@@ -880,7 +880,7 @@ function loadManifestFromDir(aDir) {
 
   try {
     let addon = loadManifestFromRDF(Services.io.newFileURI(file), bis);
-    addon._sourceBundle = aDir.clone().QueryInterface(Ci.nsILocalFile);
+    addon._sourceBundle = aDir.clone();
     addon.size = getFileSize(aDir);
 
     file = aDir.clone();
@@ -1073,7 +1073,7 @@ function extractFiles(aZipFile, aDir) {
       let target = getTargetFile(aDir, entryName);
       if (!target.exists()) {
         try {
-          target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
+          target.create(Ci.nsIFile.DIRECTORY_TYPE,
                         FileUtils.PERMS_DIRECTORY);
         }
         catch (e) {
@@ -1633,7 +1633,7 @@ var XPIProvider = {
     }
 
     for (let id in this.bootstrappedAddons) {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
       this.callBootstrapMethod(id, this.bootstrappedAddons[id].version,
                                this.bootstrappedAddons[id].type, file,
@@ -1647,7 +1647,7 @@ var XPIProvider = {
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(XPIProvider.bootstrappedAddons));
         for (let id in XPIProvider.bootstrappedAddons) {
-          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
           XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
                                           XPIProvider.bootstrappedAddons[id].type, file, "shutdown",
@@ -1865,8 +1865,6 @@ var XPIProvider = {
                                         .QueryInterface(Ci.nsIDirectoryEnumerator);
           while (xpiEntries.hasMoreElements()) {
             let file = xpiEntries.nextFile;
-            if (!(file instanceof Ci.nsILocalFile))
-              continue;
             if (file.isDirectory())
               continue;
 
@@ -2147,7 +2145,7 @@ var XPIProvider = {
     let entry;
     while (entry = entries.nextFile) {
       // Should never happen really
-      if (!(entry instanceof Ci.nsILocalFile))
+      if (!(entry instanceof Ci.nsIFile))
         continue;
 
       let id = entry.leafName;
@@ -2360,7 +2358,7 @@ var XPIProvider = {
                               BOOTSTRAP_REASONS.ADDON_UPGRADE :
                               BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
 
-          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           file.persistentDescriptor = aAddonState.descriptor;
           XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, newAddon.type, file,
                                           "install", installReason);
@@ -2442,7 +2440,7 @@ var XPIProvider = {
 
           if (aOldAddon.bootstrap) {
             // The add-on is bootstrappable so call its install script
-            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.persistentDescriptor = aAddonState.descriptor;
             XPIProvider.callBootstrapMethod(aOldAddon.id, aOldAddon.version, aOldAddon.type, file,
                                             "install",
@@ -2758,7 +2756,7 @@ var XPIProvider = {
                           BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
 
           let oldAddonFile = Cc["@mozilla.org/file/local;1"].
-                             createInstance(Ci.nsILocalFile);
+                             createInstance(Ci.nsIFile);
           oldAddonFile.persistentDescriptor = oldBootstrap.descriptor;
 
           XPIProvider.callBootstrapMethod(newAddon.id, oldBootstrap.version,
@@ -2776,7 +2774,7 @@ var XPIProvider = {
           return true;
 
         // Visible bootstrapped add-ons need to have their install method called
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.persistentDescriptor = aAddonState.descriptor;
         XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, newAddon.type, file,
                                         "install", installReason);
@@ -3594,7 +3592,7 @@ var XPIProvider = {
    * @param  aId
    *         The add-on's ID
    * @param  aFile
-   *         The nsILocalFile for the add-on
+   *         The nsIFile for the add-on
    * @param  aVersion
    *         The add-on's version
    * @return a JavaScript scope
@@ -3679,7 +3677,7 @@ var XPIProvider = {
    * @param  aType
    *         The type for the add-on
    * @param  aFile
-   *         The nsILocalFile for the add-on
+   *         The nsIFile for the add-on
    * @param  aMethod
    *         The name of the bootstrap method to call
    * @param  aReason
@@ -4120,8 +4118,7 @@ AddonInstall.prototype = {
    *         The callback to pass the initialised AddonInstall to
    */
   initLocalInstall: function(aCallback) {
-    this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL)
-                    .file.QueryInterface(Ci.nsILocalFile);
+    this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL).file;
 
     if (!this.file.exists()) {
       WARN("XPI file " + this.file.path + " does not exist");
@@ -6267,7 +6264,7 @@ DirectoryInstallLocation.prototype = {
    *
    * @param   file
    *          The file containing the directory path
-   * @return  a nsILocalFile object representing the linked directory.
+   * @return  An nsIFile object representing the linked directory.
    */
   _readDirectoryFromFile: function DirInstallLocation__readDirectoryFromFile(aFile) {
     let fis = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -6279,7 +6276,7 @@ DirectoryInstallLocation.prototype = {
     fis.close();
     if (line.value) {
       let linkedDirectory = Cc["@mozilla.org/file/local;1"].
-                            createInstance(Ci.nsILocalFile);
+                            createInstance(Ci.nsIFile);
 
       try {
         linkedDirectory.initWithPath(line.value);
@@ -6377,8 +6374,7 @@ DirectoryInstallLocation.prototype = {
   get addonLocations() {
     let locations = [];
     for (let id in this._IDToFileMap) {
-      locations.push(this._IDToFileMap[id].clone()
-                         .QueryInterface(Ci.nsILocalFile));
+      locations.push(this._IDToFileMap[id].clone());
     }
     return locations;
   },
@@ -6447,13 +6443,13 @@ DirectoryInstallLocation.prototype = {
 
     let self = this;
     function moveOldAddon(aId) {
-      let file = self._directory.clone().QueryInterface(Ci.nsILocalFile);
+      let file = self._directory.clone();
       file.append(aId);
 
       if (file.exists())
         transaction.move(file, trashDir);
 
-      file = self._directory.clone().QueryInterface(Ci.nsILocalFile);
+      file = self._directory.clone();
       file.append(aId + ".xpi");
       if (file.exists()) {
         flushJarCache(file);
@@ -6489,7 +6485,7 @@ DirectoryInstallLocation.prototype = {
       }
     }
 
-    let newFile = this._directory.clone().QueryInterface(Ci.nsILocalFile);
+    let newFile = this._directory.clone();
     newFile.append(aSource.leafName);
     try {
       newFile.lastModifiedTime = Date.now();
@@ -6581,12 +6577,12 @@ DirectoryInstallLocation.prototype = {
    *
    * @param  aId
    *         The ID of the add-on
-   * @return the nsILocalFile
+   * @return The nsIFile
    * @throws if the ID does not match any of the add-ons installed
    */
   getLocationForID: function DirInstallLocation_getLocationForID(aId) {
     if (aId in this._IDToFileMap)
-      return this._IDToFileMap[aId].clone().QueryInterface(Ci.nsILocalFile);
+      return this._IDToFileMap[aId].clone();
     throw new Error("Unknown add-on ID " + aId);
   },
 
@@ -6680,7 +6676,7 @@ WinRegInstallLocation.prototype = {
       let id = aKey.getValueName(i);
 
       let file = Cc["@mozilla.org/file/local;1"].
-                createInstance(Ci.nsILocalFile);
+                createInstance(Ci.nsIFile);
       file.initWithPath(aKey.readStringValue(id));
 
       if (!file.exists()) {
@@ -6713,8 +6709,7 @@ WinRegInstallLocation.prototype = {
   get addonLocations() {
     let locations = [];
     for (let id in this._IDToFileMap) {
-      locations.push(this._IDToFileMap[id].clone()
-                         .QueryInterface(Ci.nsILocalFile));
+      locations.push(this._IDToFileMap[id].clone());
     }
     return locations;
   },
@@ -6742,7 +6737,7 @@ WinRegInstallLocation.prototype = {
    */
   getLocationForID: function RegInstallLocation_getLocationForID(aId) {
     if (aId in this._IDToFileMap)
-      return this._IDToFileMap[aId].clone().QueryInterface(Ci.nsILocalFile);
+      return this._IDToFileMap[aId].clone();
     throw new Error("Unknown add-on ID");
   },
 
