@@ -1812,10 +1812,11 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   // Notify of our final state if we haven't already
   NotifyStateChanged(oldType, oldState, false, aNotify);
 
-  if (mType == eType_Null && mFallbackType != eFallbackAlternate) {
-    // if we're not showing alternate content, fire a pluginerror to trigger
-    // (we stopped LoadFallback from doing so above, it doesn't know of our old
-    //  state)
+  if (mType == eType_Null && !mContentType.IsEmpty() &&
+      mFallbackType != eFallbackAlternate) {
+    // if we have a content type and are not showing alternate
+    // content, fire a pluginerror to trigger (we stopped LoadFallback
+    // from doing so above, it doesn't know of our old state)
     FirePluginError(mFallbackType);
   }
 
