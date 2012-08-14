@@ -1519,7 +1519,9 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
 
-  if (!stateChange && !aForceLoad) {
+  // If nothing changed and we are not force-loading, or we're in state loading
+  // but continuing to wait on a channel, we're done
+  if ((!stateChange && !aForceLoad) || (mType == eType_Loading && mChannel)) {
     return NS_OK;
   }
 
