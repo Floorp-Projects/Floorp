@@ -1948,7 +1948,11 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
 
   if (aResetState) {
     CloseChannel();
+    mChannelLoaded = false;
     mType = eType_Loading;
+    mURI = mOriginalURI = mBaseURI = nullptr;
+    mContentType.Truncate();
+    mOriginalContentType.Truncate();
   }
 
   // This call should be last as it may re-enter
