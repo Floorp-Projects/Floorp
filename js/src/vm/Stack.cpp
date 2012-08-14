@@ -1383,7 +1383,7 @@ StackIter::settleOnNewState()
             }
 
 #ifdef JS_ION
-            if (fp_->runningInIon() || fp_->callingIntoIon()) {
+            if (fp_->beginsIonActivation()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_);
 
                 if (ionFrames_.isNative()) {

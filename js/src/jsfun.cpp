@@ -877,7 +877,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         // We do not want to use StackIter to abstract here because this is
         // supposed to be a fast path as opposed to StackIter which is doing
         // complex logic to settle on the next frame twice.
-        if (fp->runningInIon()) {
+        if (fp->beginsIonActivation()) {
             ion::IonActivationIterator activations(cx);
             ion::IonFrameIterator frame(activations);
             JS_ASSERT(frame.isNative());
