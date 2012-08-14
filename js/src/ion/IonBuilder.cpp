@@ -5787,8 +5787,15 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         if (!barrier && !IsNullOrUndefined(unary.rval))
             rvalType = unary.rval;
 
-        if (Shape *objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) {
-            // The JM IC was monomorphic, so we inline the property access.
+        Shape *objShape;
+        if ((objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
+            !objShape->inDictionary())
+        {
+            // The JM IC was monomorphic, so we inline the property access as
+            // long as the shape is not in dictionary mode. We cannot be sure
+            // that the shape is still a lastProperty, and calling
+            // Shape::search() on dictionary mode shapes that aren't
+            // lastProperty is invalid.
             MGuardShape *guard = MGuardShape::New(obj, objShape);
             current->add(guard);
 
@@ -5896,8 +5903,14 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     if (monitored) {
         ins = MCallSetProperty::New(obj, value, name, script->strictModeCode);
     } else {
-        if (Shape *objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) {
-            // The JM IC was monomorphic, so we inline the property access.
+        Shape *objShape;
+        if ((objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
+            !objShape->inDictionary())
+        {
+            // The JM IC was monomorphic, so we inline the property access as
+            // long as the shape is not in dictionary mode. We cannot be sure
+            // that the shape is still a lastProperty, and calling Shape::search
+            // on dictionary mode shapes that aren't lastProperty is invalid.
             MGuardShape *guard = MGuardShape::New(obj, objShape);
             current->add(guard);
 
