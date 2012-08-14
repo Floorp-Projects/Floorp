@@ -622,7 +622,7 @@ ion::MarkIonCompilerRoots(JSTracer *trc)
 void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
-    JS_ASSERT(cx->fp()->runningInIon());
+    JS_ASSERT(cx->fp()->runningInIon() || cx->fp()->callingIntoIon());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
 
     // Recover the innermost inlined frame.
