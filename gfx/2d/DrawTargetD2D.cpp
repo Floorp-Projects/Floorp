@@ -79,7 +79,7 @@ public:
                                1, 1);
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-    HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, NULL, byRef(tmpTexture));
+    HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpTexture));
     if (FAILED(hr)) {
       gfxWarning() << "Failed to create temporary texture to hold surface data.";
     }
@@ -128,7 +128,7 @@ public:
     RefPtr<ID2D1GeometrySink> sink;
     invClippedArea->Open(byRef(sink));
 
-    rectGeom->CombineWithGeometry(mClippedArea, D2D1_COMBINE_MODE_EXCLUDE, NULL, sink);
+    rectGeom->CombineWithGeometry(mClippedArea, D2D1_COMBINE_MODE_EXCLUDE, nullptr, sink);
     sink->Close();
 
     RefPtr<ID2D1BitmapBrush> brush;
@@ -151,7 +151,7 @@ private:
 DrawTargetD2D::DrawTargetD2D()
   : mCurrentCachedLayer(0)
   , mClipsArePushed(false)
-  , mPrivateData(NULL)
+  , mPrivateData(nullptr)
 {
 }
 
@@ -183,7 +183,7 @@ DrawTargetD2D::~DrawTargetD2D()
 
   for (int i = 0; i < kLayerCacheSize; i++) {
     if (mCachedLayers[i]) {
-      mCachedLayers[i] = NULL;
+      mCachedLayers[i] = nullptr;
       mVRAMUsageDT -= GetByteSize();
     }
   }
@@ -320,7 +320,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      Float aSigma,
                                      CompositionOp aOperator)
 {
-  RefPtr<ID3D10ShaderResourceView> srView = NULL;
+  RefPtr<ID3D10ShaderResourceView> srView = nullptr;
   if (aSurface->GetType() != SURFACE_D2D1_DRAWTARGET) {
     return;
   }
@@ -342,7 +342,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   if (!mTempRTView) {
     // This view is only needed in this path.
-    HRESULT hr = mDevice->CreateRenderTargetView(mTempTexture, NULL, byRef(mTempRTView));
+    HRESULT hr = mDevice->CreateRenderTargetView(mTempTexture, nullptr, byRef(mTempRTView));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failure to create RenderTargetView. Code: " << hr;
@@ -360,7 +360,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (mPushedClips.size()) {
     EnsureClipMaskTexture();
 
-    mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, NULL, byRef(maskSRView));
+    mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, nullptr, byRef(maskSRView));
   }
 
   IntSize srcSurfSize;
@@ -402,7 +402,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     desc.MiscFlags = D3D10_RESOURCE_MISC_GENERATE_MIPS;
 
     RefPtr<ID3D10Texture2D> mipTexture;
-    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(mipTexture));
+    hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mipTexture));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failure to create temporary texture. Size: " <<
@@ -430,7 +430,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                  dsSize.height, 1, 1);
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
     RefPtr<ID3D10Texture2D> tmpDSTexture;
-    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(tmpDSTexture));
+    hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpDSTexture));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failure to create temporary texture. Size: " << dsSize << " Code: " << hr;
@@ -444,13 +444,13 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     box.bottom = aSurface->GetSize().height;
     mDevice->CopySubresourceRegion(mipTexture, 0, 0, 0, 0, static_cast<SourceSurfaceD2DTarget*>(aSurface)->mTexture, 0, &box);
 
-    mDevice->CreateShaderResourceView(mipTexture, NULL,  byRef(srView));
+    mDevice->CreateShaderResourceView(mipTexture, nullptr,  byRef(srView));
     mDevice->GenerateMips(srView);
 
     RefPtr<ID3D10RenderTargetView> dsRTView;
     RefPtr<ID3D10ShaderResourceView> dsSRView;
-    mDevice->CreateRenderTargetView(tmpDSTexture, NULL,  byRef(dsRTView));
-    mDevice->CreateShaderResourceView(tmpDSTexture, NULL,  byRef(dsSRView));
+    mDevice->CreateRenderTargetView(tmpDSTexture, nullptr,  byRef(dsRTView));
+    mDevice->CreateShaderResourceView(tmpDSTexture, nullptr,  byRef(dsSRView));
 
     // We're not guaranteed the texture we created will be empty, we've
     // seen old content at least on NVidia drivers.
@@ -458,7 +458,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     mDevice->ClearRenderTargetView(dsRTView, color);
 
     rtViews = dsRTView;
-    mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+    mDevice->OMSetRenderTargets(1, &rtViews, nullptr);
 
     viewport.MaxDepth = 1;
     viewport.MinDepth = 0;
@@ -472,7 +472,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
       GetPassByIndex(0)->Apply(0);
 
-    mDevice->OMSetBlendState(GetBlendStateForOperator(OP_OVER), NULL, 0xffffffff);
+    mDevice->OMSetBlendState(GetBlendStateForOperator(OP_OVER), nullptr, 0xffffffff);
 
     mDevice->Draw(4, 0);
     
@@ -541,15 +541,15 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                1, 1);
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-    mDevice->CreateTexture2D(&desc, NULL,  byRef(tmpTexture));
-    mDevice->CreateRenderTargetView(tmpTexture, NULL,  byRef(tmpRTView));
-    mDevice->CreateShaderResourceView(tmpTexture, NULL,  byRef(tmpSRView));
+    mDevice->CreateTexture2D(&desc, nullptr,  byRef(tmpTexture));
+    mDevice->CreateRenderTargetView(tmpTexture, nullptr,  byRef(tmpRTView));
+    mDevice->CreateShaderResourceView(tmpTexture, nullptr,  byRef(tmpSRView));
 
     tmpSurfSize = srcSurfSize;
   }
 
   rtViews = tmpRTView;
-  mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+  mDevice->OMSetRenderTargets(1, &rtViews, nullptr);
 
   mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(srView);
 
@@ -593,7 +593,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(tmpSRView);
 
   rtViews = destRTView;
-  mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+  mDevice->OMSetRenderTargets(1, &rtViews, nullptr);
 
   Point shadowDest = aDest + aOffset;
 
@@ -619,7 +619,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
       GetPassByIndex(1)->Apply(0);
   }
 
-  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), nullptr, 0xffffffff);
 
   mDevice->Draw(4, 0);
 
@@ -644,7 +644,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
       GetPassByIndex(0)->Apply(0);
   }
 
-  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), nullptr, 0xffffffff);
 
   mDevice->Draw(4, 0);
 }
@@ -868,7 +868,7 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
 
   ScaledFontDWrite *font = static_cast<ScaledFontDWrite*>(aFont);
 
-  IDWriteRenderingParams *params = NULL;
+  IDWriteRenderingParams *params = nullptr;
   if (aRenderOptions) {
     if (aRenderOptions->GetType() != FONT_DWRITE) {
       gfxDebug() << *this << ": Ignoring incompatible GlyphRenderingOptions.";
@@ -927,7 +927,7 @@ DrawTargetD2D::Mask(const Pattern &aSource,
 
   layer = GetCachedLayer();
 
-  rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), NULL,
+  rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), nullptr,
                                       D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
                                       D2D1::IdentityMatrix(),
                                       1.0f, maskBrush),
@@ -951,8 +951,8 @@ DrawTargetD2D::PushClip(const Path *aPath)
     return;
   }
 
-  mCurrentClipMaskTexture = NULL;
-  mCurrentClippedGeometry = NULL;
+  mCurrentClipMaskTexture = nullptr;
+  mCurrentClippedGeometry = nullptr;
 
   RefPtr<PathD2D> pathD2D = static_cast<PathD2D*>(const_cast<Path*>(aPath));
 
@@ -980,7 +980,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
 
     mRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), pathD2D->mGeometry,
                                          D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                         clip.mTransform, 1.0f, NULL,
+                                         clip.mTransform, 1.0f, nullptr,
                                          options), clip.mLayer);
   }
 }
@@ -988,8 +988,8 @@ DrawTargetD2D::PushClip(const Path *aPath)
 void
 DrawTargetD2D::PushClipRect(const Rect &aRect)
 {
-  mCurrentClipMaskTexture = NULL;
-  mCurrentClippedGeometry = NULL;
+  mCurrentClipMaskTexture = nullptr;
+  mCurrentClippedGeometry = nullptr;
   if (!mTransform.IsRectilinear()) {
     // Whoops, this isn't a rectangle in device space, Direct2D will not deal
     // with this transform the way we want it to.
@@ -1021,8 +1021,8 @@ DrawTargetD2D::PushClipRect(const Rect &aRect)
 void
 DrawTargetD2D::PopClip()
 {
-  mCurrentClipMaskTexture = NULL;
-  mCurrentClippedGeometry = NULL;
+  mCurrentClipMaskTexture = nullptr;
+  mCurrentClippedGeometry = nullptr;
   if (mClipsArePushed) {
     if (mPushedClips.back().mLayer) {
       PopCachedLayer(mRT);
@@ -1042,7 +1042,7 @@ DrawTargetD2D::CreateSourceSurfaceFromData(unsigned char *aData,
   RefPtr<SourceSurfaceD2D> newSurf = new SourceSurfaceD2D();
 
   if (!newSurf->InitFromData(aData, aSize, aStride, aFormat, mRT)) {
-    return NULL;
+    return nullptr;
   }
 
   return newSurf;
@@ -1052,7 +1052,7 @@ TemporaryRef<SourceSurface>
 DrawTargetD2D::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
   // Unsupported!
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<SourceSurface>
@@ -1060,7 +1060,7 @@ DrawTargetD2D::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurfac
 {
   if (aSurface.mType != NATIVE_SURFACE_D3D10_TEXTURE) {
     gfxDebug() << *this << ": Failure to create source surface from non-D3D10 texture native surface.";
-    return NULL;
+    return nullptr;
   }
   RefPtr<SourceSurfaceD2D> newSurf = new SourceSurfaceD2D();
 
@@ -1069,7 +1069,7 @@ DrawTargetD2D::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurfac
                                 mRT))
   {
     gfxWarning() << *this << ": Failed to create SourceSurface from texture.";
-    return NULL;
+    return nullptr;
   }
 
   return newSurf;
@@ -1083,7 +1083,7 @@ DrawTargetD2D::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aForm
 
   if (!newTarget->Init(aSize, aFormat)) {
     gfxDebug() << *this << ": Failed to create optimal draw target. Size: " << aSize;
-    return NULL;
+    return nullptr;
   }
 
   return newTarget;
@@ -1097,14 +1097,14 @@ DrawTargetD2D::CreatePathBuilder(FillRule aFillRule) const
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create Direct2D Path Geometry. Code: " << hr;
-    return NULL;
+    return nullptr;
   }
 
   RefPtr<ID2D1GeometrySink> sink;
   hr = path->Open(byRef(sink));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to access Direct2D Path Geometry. Code: " << hr;
-    return NULL;
+    return nullptr;
   }
 
   if (aFillRule == FILL_WINDING) {
@@ -1134,7 +1134,7 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create GradientStopCollection. Code: " << hr;
-    return NULL;
+    return nullptr;
   }
 
   return new GradientStopsD2D(stopCollection);
@@ -1144,7 +1144,7 @@ void*
 DrawTargetD2D::GetNativeSurface(NativeSurfaceType aType)
 {
   if (aType != NATIVE_SURFACE_D3D10_TEXTURE) {
-    return NULL;
+    return nullptr;
   }
 
   return mTexture;
@@ -1173,7 +1173,7 @@ DrawTargetD2D::Init(const IntSize &aSize, SurfaceFormat aFormat)
                              1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-  hr = mDevice->CreateTexture2D(&desc, NULL, byRef(mTexture));
+  hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mTexture));
 
   if (FAILED(hr)) {
     gfxDebug() << "Failed to init Direct2D DrawTarget. Size: " << mSize << " Code: " << hr;
@@ -1243,7 +1243,7 @@ DrawTargetD2D::InitD3D10Data()
   createD3DEffect = (D3D10CreateEffectFromMemoryFunc)
       GetProcAddress(d3dModule, "D3D10CreateEffectFromMemory");
 
-  hr = createD3DEffect((void*)d2deffect, sizeof(d2deffect), 0, mDevice, NULL, byRef(mPrivateData->mEffect));
+  hr = createD3DEffect((void*)d2deffect, sizeof(d2deffect), 0, mDevice, nullptr, byRef(mPrivateData->mEffect));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to initialize Direct2D required effects. Code: " << hr;
@@ -1375,7 +1375,7 @@ DrawTargetD2D::MarkChanged()
   if (mSnapshot) {
     if (mSnapshot->hasOneRef()) {
       // Just destroy it, since no-one else knows about it.
-      mSnapshot = NULL;
+      mSnapshot = nullptr;
     } else {
       mSnapshot->DrawTargetWillChange();
       // The snapshot will no longer depend on this target.
@@ -1533,7 +1533,7 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
   }
 
   ID3D10RenderTargetView *rtViews = mRTView;
-  mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+  mDevice->OMSetRenderTargets(1, &rtViews, nullptr);
 
   UINT stride = sizeof(Vertex);
   UINT offset = 0;
@@ -1573,7 +1573,7 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
     SetupEffectForRadialGradient(pat);
   }
 
-  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), nullptr, 0xffffffff);
   
   mDevice->Draw(4, 0);
 }
@@ -1671,7 +1671,7 @@ DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aForm
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to QI texture to surface.";
-    return NULL;
+    return nullptr;
   }
 
   D3D10_TEXTURE2D_DESC desc;
@@ -1689,7 +1689,7 @@ DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aForm
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create D2D render target for texture.";
-    return NULL;
+    return nullptr;
   }
 
   return rt;
@@ -1710,7 +1710,7 @@ DrawTargetD2D::EnsureViews()
                              1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-  hr = mDevice->CreateTexture2D(&desc, NULL, byRef(mTempTexture));
+  hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mTempTexture));
 
   if (FAILED(hr)) {
     gfxWarning() << *this << "Failed to create temporary texture for rendertarget. Size: "
@@ -1718,14 +1718,14 @@ DrawTargetD2D::EnsureViews()
     return;
   }
 
-  hr = mDevice->CreateShaderResourceView(mTempTexture, NULL, byRef(mSRView));
+  hr = mDevice->CreateShaderResourceView(mTempTexture, nullptr, byRef(mSRView));
 
   if (FAILED(hr)) {
     gfxWarning() << *this << "Failed to create shader resource view for temp texture. Code: " << hr;
     return;
   }
 
-  hr = mDevice->CreateRenderTargetView(mTexture, NULL, byRef(mRTView));
+  hr = mDevice->CreateRenderTargetView(mTexture, nullptr, byRef(mRTView));
 
   if (FAILED(hr)) {
     gfxWarning() << *this << "Failed to create rendertarget view for temp texture. Code: " << hr;
@@ -1756,7 +1756,7 @@ DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
 
       aRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), iter->mPath->mGeometry,
                                             D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                            iter->mTransform, 1.0f, NULL,
+                                            iter->mTransform, 1.0f, nullptr,
                                             options), iter->mLayer);
     } else {
       aRT->PushAxisAlignedClip(iter->mBounds, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
@@ -1789,7 +1789,7 @@ DrawTargetD2D::EnsureClipMaskTexture()
                              1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-  HRESULT hr = mDevice->CreateTexture2D(&desc, NULL, byRef(mCurrentClipMaskTexture));
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mCurrentClipMaskTexture));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create texture for ClipMask!";
@@ -1909,7 +1909,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
   }
 
   RefPtr<ID3D10ShaderResourceView> srView;
-  hr = mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
+  hr = mDevice->CreateShaderResourceView(tex, nullptr, byRef(srView));
 
   if (FAILED(hr)) {
     return false;
@@ -1960,7 +1960,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
     EnsureClipMaskTexture();
 
     RefPtr<ID3D10ShaderResourceView> srViewMask;
-    hr = mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, NULL, byRef(srViewMask));
+    hr = mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, nullptr, byRef(srViewMask));
 
     if (FAILED(hr)) {
       return false;
@@ -1979,10 +1979,10 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
 
   RefPtr<ID3D10RenderTargetView> rtView;
   ID3D10RenderTargetView *rtViews;
-  mDevice->CreateRenderTargetView(mTexture, NULL, byRef(rtView));
+  mDevice->CreateRenderTargetView(mTexture, nullptr, byRef(rtView));
 
   rtViews = rtView;
-  mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+  mDevice->OMSetRenderTargets(1, &rtViews, nullptr);
 
   mDevice->Draw(4, 0);
   return true;
@@ -2014,7 +2014,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return NULL;
+      return nullptr;
     }
 
     if (pat->mBegin == pat->mEnd) {
@@ -2043,7 +2043,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return NULL;
+      return nullptr;
     }
 
     // This will not be a complex radial gradient brush.
@@ -2063,7 +2063,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!pat->mSurface) {
       gfxDebug() << "No source surface specified for surface pattern";
-      return NULL;
+      return nullptr;
     }
 
     RefPtr<ID2D1Bitmap> bitmap;
@@ -2078,7 +2078,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         bitmap = surf->mBitmap;
 
         if (!bitmap) {
-          return NULL;
+          return nullptr;
         }
       }
       break;
@@ -2097,7 +2097,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         bitmap = CreatePartialBitmapForSurface(dataSurf, mat, pat->mExtendMode);
         
         if (!bitmap) {
-          return NULL;
+          return nullptr;
         }
       }
       break;
@@ -2116,7 +2116,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
   }
 
   gfxWarning() << "Invalid pattern type detected.";
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<ID2D1StrokeStyle>
@@ -2183,7 +2183,7 @@ DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
       D2D1::StrokeStyleProperties(capStyle, capStyle,
                                   capStyle, joinStyle,
                                   aStrokeOptions.mMiterLimit),
-      NULL, 0, byRef(style));
+      nullptr, 0, byRef(style));
   }
 
   if (FAILED(hr)) {
@@ -2285,7 +2285,7 @@ DrawTargetD2D::CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, cons
 
   if (FAILED(hr)) {
     delete [] texture;
-    return NULL;
+    return nullptr;
   }
 
   int alignedBufferSize = aBounds.width * aBounds.height * 4;
@@ -2324,7 +2324,7 @@ DrawTargetD2D::CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, cons
   delete [] texture;
 
   if (FAILED(hr)) {
-    return NULL;
+    return nullptr;
   }
 
   return tex;
@@ -2344,7 +2344,7 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
   Matrix invTransform = transform = aMatrix * transform;
   if (!invTransform.Invert()) {
     // Singular transform, nothing to be drawn.
-    return NULL;
+    return nullptr;
   }
 
   Rect rect(0, 0, mSize.width, mSize.height);
@@ -2412,7 +2412,7 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
     if (Bpp != 4) {
       // This shouldn't actually happen in practice!
       MOZ_ASSERT(false);
-      return NULL;
+      return nullptr;
     }
 
     ImageHalfScaler scaler(aSurface->GetData(), stride, size);
@@ -2469,7 +2469,7 @@ DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPatter
   RefPtr<ID3D10Texture2D> tex = CreateGradientTexture(stops);
 
   RefPtr<ID3D10ShaderResourceView> srView;
-  mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
+  mDevice->CreateShaderResourceView(tex, nullptr, byRef(srView));
 
   mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(srView);
 
@@ -2563,7 +2563,7 @@ DrawTargetD2D::factory()
 
   if (!createD2DFactory) {
     gfxWarning() << "Failed to locate D2D1CreateFactory function.";
-    return NULL;
+    return nullptr;
   }
 
   D2D1_FACTORY_OPTIONS options;
@@ -2599,7 +2599,7 @@ DrawTargetD2D::GetDWriteFactory()
 
   if (!createDWriteFactory) {
     gfxWarning() << "Failed to locate DWriteCreateFactory function.";
-    return NULL;
+    return nullptr;
   }
 
   HRESULT hr = createDWriteFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
