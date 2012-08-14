@@ -50,7 +50,9 @@ nsClipboard::SetData(nsITransferable *aTransferable,
       return NS_ERROR_NOT_IMPLEMENTED;
 
   } else {
-    ContentChild::GetSingleton()->SendSetClipboardText(buffer, aWhichClipboard);
+    ContentChild::GetSingleton()->SendSetClipboardText(buffer,
+                                                    aTransferable->GetIsPrivateData(),
+                                                    aWhichClipboard);
   }
 
   return NS_OK;

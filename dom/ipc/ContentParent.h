@@ -201,7 +201,7 @@ private:
 
     virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);
 
-    virtual bool RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard);
+    virtual bool RecvSetClipboardText(const nsString& text, const bool& isPrivateData, const PRInt32& whichClipboard);
     virtual bool RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text);
     virtual bool RecvEmptyClipboard();
     virtual bool RecvClipboardHasText(bool* hasText);
