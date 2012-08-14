@@ -493,7 +493,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   if (aAssumeVScroll) {
     nsSize vScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mInner.mVScrollbarBox,
-                        &vScrollbarPrefSize, nsnull, true);
+                        nsnull, &vScrollbarPrefSize, true);
     availWidth = NS_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
 
