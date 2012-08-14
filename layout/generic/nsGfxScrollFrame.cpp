@@ -482,7 +482,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   if (aAssumeHScroll) {
     nsSize hScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mInner.mHScrollbarBox,
-                        nsnull, &hScrollbarPrefSize, false);
+                        nullptr, &hScrollbarPrefSize, false);
     if (computedHeight != NS_UNCONSTRAINEDSIZE)
       computedHeight = NS_MAX(0, computedHeight - hScrollbarPrefSize.height);
     computedMinHeight = NS_MAX(0, computedMinHeight - hScrollbarPrefSize.height);
@@ -493,7 +493,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   if (aAssumeVScroll) {
     nsSize vScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mInner.mVScrollbarBox,
-                        &vScrollbarPrefSize, nsnull, true);
+                        nullptr, &vScrollbarPrefSize, true);
     availWidth = NS_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
 
@@ -2917,7 +2917,7 @@ void
 nsGfxScrollFrameInner::Destroy()
 {
   if (mScrollbarActivity) {
-    mScrollbarActivity = nsnull;
+    mScrollbarActivity = nullptr;
   }
 
   // Unbind any content created in CreateAnonymousContent from the tree

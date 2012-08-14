@@ -5,7 +5,8 @@ This directory is for tests that are sync'ed with the official
 W3C CSS test suites at http://test.csswg.org/.
  
 submitted/ is for tests that are to be submitted to W3C.
-This directory is sync'ed automatically with the contributors/mozilla/
+This directory is sync'ed automatically with the
+contributors/mozilla/submitted/mozilla-central-reftests/
 directory in the CSSWG repository. The master copy is Mozilla's.
 
 received/ is for tests that are received from W3C.

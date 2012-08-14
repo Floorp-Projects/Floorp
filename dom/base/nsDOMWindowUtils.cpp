@@ -64,7 +64,6 @@
 #include "sampler.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMFileHandle.h"
-#include "nsIDOMApplicationRegistry.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2288,6 +2287,22 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::PreventFurtherDialogs()
+{
+  // Permanently disable further dialogs for this window.
+
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  static_cast<nsGlobalWindow*>(window.get())->PreventFurtherDialogs(true);
+  return NS_OK;
+}
+
 static nsresult
 GetFileOrBlob(const nsAString& aName, const jsval& aBlobParts,
               const jsval& aParameters, JSContext* aCx,
@@ -2560,47 +2575,6 @@ nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aH
     nsPresContext::CSSPixelsToAppUnits(aHeight));
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SetIsApp(bool aValue)
-{
-  if (!IsUniversalXPConnectCapable()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  static_cast<nsGlobalWindow*>(window.get())->SetIsApp(aValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SetApp(const nsAString& aManifestURL)
-{
-  if (!IsUniversalXPConnectCapable()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  return static_cast<nsGlobalWindow*>(window.get())->SetApp(aManifestURL);
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetApp(mozIDOMApplication** aApplication)
-{
-  if (!IsUniversalXPConnectCapable()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  return static_cast<nsGlobalWindow*>(window.get())->GetApp(aApplication);
 }
 
 nsresult

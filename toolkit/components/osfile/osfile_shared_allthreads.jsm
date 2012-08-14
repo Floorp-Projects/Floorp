@@ -4,12 +4,10 @@
 
 {
   if (typeof Components != "undefined") {
-    // We do not wish osfile_shared.jsm to be used directly as a main thread
-    // module yet. When time comes, it will be loaded by a combination of
-    // a main thread front-end/worker thread implementation that makes sure
-    // that we are not executing synchronous IO code in the main thread.
-
-    throw new Error("osfile_shared_allthreads.jsm cannot be used from the main thread yet");
+    var EXPORTED_SYMBOLS = ["OS"];
+    Components.utils.import("resource://gre/modules/ctypes.jsm");
+    Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
+      getService(Components.interfaces.nsIOSFileConstantsService).init();
   }
 
   (function(exports) {
@@ -86,6 +84,25 @@
        Object.defineProperty(this, "implementation", { value: implementation });
      }
      Type.prototype = {
+       /**
+        * Serialize a value of |this| |Type| into a format that can
+        * be transmitted as a message (not necessarily a string).
+        *
+        * In the default implementation, the method returns the
+        * value unchanged.
+        */
+       toMsg: function default_toMsg(value) {
+         return value;
+       },
+       /**
+        * Deserialize a message to a value of |this| |Type|.
+        *
+        * In the default implementation, the method returns the
+        * message unchanged.
+        */
+       fromMsg: function default_fromMsg(msg) {
+         return msg;
+       },
        /**
         * Import a value from C.
         *
@@ -190,6 +207,56 @@
        Type.call(this, name, implementation);
      }
      PtrType.prototype = Object.create(Type.prototype);
+
+     /**
+      * Convert a value to a pointer.
+      *
+      * Protocol:
+      * - |null| returns |null|
+      * - a string returns |{string: value}|
+      * - an ArrayBuffer returns |{ptr: address_of_buffer}|
+      * - a C array returns |{ptr: address_of_buffer}|
+      * everything else raises an error
+      */
+     PtrType.prototype.toMsg = function ptr_toMsg(value) {
+       if (value == null) {
+         return null;
+       }
+       if (typeof value == "string") {
+         return { string: value };
+       }
+       let normalized;
+       if ("byteLength" in value) { // ArrayBuffer
+         normalized = Types.uint8_t.in_ptr.implementation(value);
+       } else if ("addressOfElement" in value) { // C array
+         normalized = value.addressOfElement(0);
+       } else if ("isNull" in value) { // C pointer
+         normalized = value;
+       } else {
+         throw new TypeError("Value " + value +
+           " cannot be converted to a pointer");
+       }
+       let cast = Types.uintptr_t.cast(normalized);
+       return {ptr: cast.value.toString()};
+     };
+
+     /**
+      * Convert a message back to a pointer.
+      */
+     PtrType.prototype.fromMsg = function ptr_fromMsg(msg) {
+       if (msg == null) {
+         return null;
+       }
+       if ("string" in msg) {
+         return msg.string;
+       }
+       if ("ptr" in msg) {
+         let address = ctypes.uintptr_t(msg.ptr);
+         return this.cast(address);
+       }
+       throw new TypeError("Message " + msg.toSource() +
+         " does not represent a pointer");
+     };
 
      exports.OS.Shared.Type = Type;
      let Types = Type;
@@ -756,6 +823,9 @@
        }
        return Strings.importWString(decoded);
      };
+
+     exports.OS.Shared.Utils = { Strings: Strings };
+
 
      /**
       * Specific tools that don't really fit anywhere.
