@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780035
+-->
+<title>Test for Bug 780035</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=780035">Mozilla Bug 780035</a>
+<div contenteditable style="font-size: 13.3333px"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  document.querySelector("div").focus();
+  document.execCommand("stylewithcss", false, true);
+  sendKey("ENTER");
+  sendChar("x");
+  is(document.querySelector("div").innerHTML, "x<br>",
+     "No <font> tag should be generated");
+  SimpleTest.finish();
+});
+</script>
