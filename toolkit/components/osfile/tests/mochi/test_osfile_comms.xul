@@ -22,45 +22,64 @@ let test = function test() {
   SimpleTest.ok(true, "test_osfile_comms.xul: Starting test");
   Components.utils.import("resource://gre/modules/ctypes.jsm");
   Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  if (OS.Constants.Win) {
+    // We are under Windows
+    Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
+    OS.File = { Error: OS.Shared.Win.Error}; // Hack to be able to (de)serialize exceptions
+  } else {
+    // We are under Unix
+    Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
+    OS.File = { Error: OS.Shared.Unix.Error}; // Hack to be able to (de)serialize exceptions
+  }
   worker = new ChromeWorker("worker_test_osfile_comms.js");
   SimpleTest.waitForExplicitFinish();
-  worker.onerror = function onerror(error) {
-    SimpleTest.ok(false, "received error "+error);
-  }
-  worker.onmessage = function onmessage(msg) {
+  try {
+    worker.onerror = function onerror(error) {
+      SimpleTest.ok(false, "received error "+error);
+    }
+   worker.onmessage = function onmessage(msg) {
     Components.utils.forceShrinkingGC();
     switch (msg.data.kind) {
-    case "is":
-      SimpleTest.ok(msg.data.outcome, msg.data.description +
-         " ("+ msg.data.a + " ==? " + msg.data.b + ")" );
-      return;
-    case "isnot":
-      SimpleTest.ok(msg.data.outcome, msg.data.description +
-      " ("+ msg.data.a + " !=? " + msg.data.b + ")" );
-         return;
-    case "ok":
-      SimpleTest.ok(msg.data.condition, msg.data.description);
-      return;
-    case "finish":
-      SimpleTest.finish();
-      return;
-    case "value":
-      SimpleTest.ok(true, "test_osfile_comms.xul: Received value " + JSON.stringify(msg.data.value));
-      let type = eval(msg.data.typename);
-      let check = eval(msg.data.check);
-      let value = msg.data.value;
-      let deserialized = type.fromMsg(value);
-      check(deserialized, "Main thread test: ");
-      return;
-    default:
-      SimpleTest.ok(false, "test_osfile_comms.xul: wrong message "+JSON.stringify(msg.data));
-      return;
-    }
-  };
-
-  worker.postMessage(0)
-  ok(true, "Worker launched");
+      case "is":
+        SimpleTest.ok(msg.data.outcome, msg.data.description +
+        " ("+ msg.data.a + " ==? " + msg.data.b + ")" );
+        return;
+      case "isnot":
+        SimpleTest.ok(msg.data.outcome, msg.data.description +
+        " ("+ msg.data.a + " !=? " + msg.data.b + ")" );
+        return;
+      case "ok":
+        SimpleTest.ok(msg.data.condition, msg.data.description);
+        return;
+      case "finish":
+        delete OS.File.Error; // Avoid leak
+        OS.File = null;
+        SimpleTest.finish();
+        return;
+      case "value":
+        SimpleTest.ok(true, "test_osfile_comms.xul: Received value " + JSON.stringify(msg.data.value));
+        let type = eval(msg.data.typename);
+        let check = eval(msg.data.check);
+        let value = msg.data.value;
+        let deserialized = type.fromMsg(value);
+        check(deserialized, "Main thread test: ");
+       return;
+      default:
+        SimpleTest.ok(false, "test_osfile_comms.xul: wrong message "+JSON.stringify(msg.data));
+        return;
+      }
+    };
+    worker.postMessage(0)
+    ok(true, "Worker launched");
+  } catch(x) {
+    // As we have set |waitForExplicitFinish|, we add this fallback
+    // in case of uncaught error, to ensure that the test does not
+    // just freeze.
+    ok(false, "Caught exception " + x + " at " + x.stack);
+    SimpleTest.finish();
+  }
 };
+
 ]]>
   </script>
 
