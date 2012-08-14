@@ -426,18 +426,6 @@ WeaveSvc.prototype = {
     }
   },
 
-  // Update cluster if required.
-  // Returns false if the update was not required.
-  _updateCluster: function _updateCluster() {
-    this._log.info("Updating cluster.");
-    let cTime = Date.now();
-    let lastUp = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
-    if (!lastUp || ((cTime - lastUp) >= CLUSTER_BACKOFF)) {
-      return this._clusterManager.setCluster();
-    }
-    return false;
-  },
-
   /**
    * Perform the info fetch as part of a login or key fetch.
    */

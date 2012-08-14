@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -11,7 +14,7 @@ function do_check_throws(func) {
   do_check_true(raised);
 }
 
-function test_findCluster() {
+add_test(function test_findCluster() {
   _("Test Service._findCluster()");
   let server;
   try {
@@ -60,13 +63,12 @@ function test_findCluster() {
   } finally {
     Svc.Prefs.resetBranch("");
     if (server) {
-      server.stop(runNextTest);
+      server.stop(run_next_test);
     }
   }
-}
+});
 
-
-function test_setCluster() {
+add_test(function test_setCluster() {
   _("Test Service._setCluster()");
   let server = httpd_setup({
     "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://weave.user.node/"),
@@ -94,63 +96,11 @@ function test_setCluster() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(runNextTest);
+    server.stop(run_next_test);
   }
-}
-
-function test_updateCluster() {
-  _("Test Service._updateCluster()");
-  let server = httpd_setup({
-    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://weave.user.node/"),
-    "/user/1.0/janedoe/node/weave": httpd_handler(200, "OK", "http://weave.cluster.url/")
-  });
-  try {
-    Service.serverURL = TEST_SERVER_URL;
-    Identity.account = "johndoe";
-
-    _("Check initial state.");
-    do_check_eq(Service.clusterURL, "");
-    do_check_eq(Svc.Prefs.get("lastClusterUpdate"), null);
-
-    _("Set the cluster URL.");
-    let before = Date.now();
-    do_check_true(Service._updateCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");
-    let lastUpdate = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
-    do_check_true(lastUpdate >= before);
-
-    _("Trying to update the cluster URL within the backoff timeout won't do anything.");
-    do_check_false(Service._updateCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");
-    do_check_eq(parseFloat(Svc.Prefs.get("lastClusterUpdate")), lastUpdate);
-
-    _("Time travel 30 mins into the past and the update will work.");
-    Identity.account = "janedoe";
-    Svc.Prefs.set("lastClusterUpdate", (lastUpdate - 30*60*1000).toString());
-
-    before = Date.now();
-    do_check_true(Service._updateCluster());
-    do_check_eq(Service.clusterURL, "http://weave.cluster.url/");
-    lastUpdate = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
-    do_check_true(lastUpdate >= before);
-  
-  } finally {
-    Svc.Prefs.resetBranch("");
-    server.stop(runNextTest);
-  }
-}
-
-let tests = [test_findCluster, test_setCluster, test_updateCluster];
+});
 
 function run_test() {
-  do_test_pending();
-  runNextTest();
+  initTestLogging();
+  run_next_test();
 }
-
-function runNextTest() {
-  if (tests.length)
-    tests.pop()();
-  else
-    do_test_finished();
-}
-
