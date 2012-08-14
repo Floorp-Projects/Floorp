@@ -526,7 +526,7 @@ ContextStack::currentScript(jsbytecode **ppc) const
         return NULL;
 
 #ifdef JS_ION
-    if (regs && regs->fp()->runningInIon()) {
+    if (regs && regs->fp()->beginsIonActivation()) {
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
         return script;
