@@ -53,14 +53,14 @@ const PDU_HEX_OCTET_SIZE = 4;
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
-let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
-let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
-// This flag defaults to true since on RIL v6 and later, we get the
-// version number via the UNSOLICITED_RIL_CONNECTED parcel.
-let RILQUIRKS_V5_LEGACY = true;
-let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = false;
-let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = false;
-let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = false;
+let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = libcutils.property_get("ro.moz.ril.callstate_extra_int");
+let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = libcutils.property_get("ro.moz.ril.callstate_down_is_up");
+// This may change at runtime since in RIL v6 and later, we get the version
+// number via the UNSOLICITED_RIL_CONNECTED parcel.
+let RILQUIRKS_V5_LEGACY = libcutils.property_get("ro.moz.ril.v5_legacy");
+let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = libcutils.property_get("ro.moz.ril.dial_emergency_call");
+let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = libcutils.property_get("ro.moz.ril.emergency_by_default");
+let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.simstate_extra_field");
 
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
@@ -689,71 +689,6 @@ let RIL = {
       this.setMute(val);
       this._muted = val;
     }
-  },
-
-
-  /**
-   * Set quirk flags based on the RIL model detected. Note that this
-   * requires the RIL being "warmed up" first, which happens when on
-   * an incoming or outgoing voice call or data call.
-   */
-  rilQuirksInitialized: false,
-  initRILQuirks: function initRILQuirks() {
-    if (this.rilQuirksInitialized) {
-      return;
-    }
-
-    let ril_impl = libcutils.property_get("gsm.version.ril-impl");
-    if (DEBUG) debug("Detected RIL implementation " + ril_impl);
-    switch (ril_impl) {
-      case "Samsung RIL(IPC) v2.0":
-        // The Samsung Galaxy S2 I-9100 radio sends an extra Uint32 in the
-        // call state.
-        let model_id = libcutils.property_get("ril.model_id");
-        if (DEBUG) debug("Detected RIL model " + model_id);
-        if (!model_id) {
-          // On some RIL models, the RIL has to be "warmed up" for us to read this property.
-          // It apparently isn't warmed up yet, going to try again later.
-          if (DEBUG) debug("Could not detect correct model_id. Going to try later.");
-          return;
-        }
-        if (model_id == "I9100") {
-          if (DEBUG) {
-            debug("Detected I9100, enabling " +
-                  "RILQUIRKS_CALLSTATE_EXTRA_UINT32, " +
-                  "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP, " +
-                  "RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL.");
-          }
-          RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
-          RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
-          RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = true;
-        }
-        if (model_id == "I9023" || model_id == "I9020") {
-          if (DEBUG) {
-            debug("Detected I9020/I9023, enabling " +
-                  "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP");
-          }
-          RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
-        }
-        break;
-      case "Qualcomm RIL 1.0":
-        let product_model = libcutils.property_get("ro.product.model");
-        if (DEBUG) debug("Detected product model " + product_model);
-        if (product_model == "otoro1") {
-          if (DEBUG) debug("Enabling RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS.");
-          RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = true;
-        }
-        if (DEBUG) {
-          debug("Detected Qualcomm RIL 1.0, " +
-                "disabling RILQUIRKS_V5_LEGACY and " +
-                "enabling RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE.");
-        }
-        RILQUIRKS_V5_LEGACY = false;
-        RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = true;
-        break;
-    }
-
-    this.rilQuirksInitialized = true;
   },
 
   /**
@@ -2261,8 +2196,6 @@ let RIL = {
   },
 
   _processVoiceRegistrationState: function _processVoiceRegistrationState(state) {
-    this.initRILQuirks();
-
     let rs = this.voiceRegistrationState;
     let stateChanged = this._processCREG(rs, state);
     if (stateChanged && rs.connected) {
@@ -2951,8 +2884,6 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
     return;
   }
 
-  this.initRILQuirks();
-
   let calls_length = 0;
   // The RIL won't even send us the length integer if there are no active calls.
   // So only read this integer if the parcel actually has it.
@@ -3469,6 +3400,17 @@ RIL.readDataCall_v6 = function readDataCall_v6(options) {
   if (options.gw) {
     options.gw = options.gw.split(" ")[0];
   }
+  options.ip = null;
+  options.netmask = null;
+  options.broadcast = null;
+  if (options.ipaddr) {
+    options.ip = options.ipaddr.split("/")[0];
+    let ip_value = netHelpers.stringToIP(options.ip);
+    let prefix_len = options.ipaddr.split("/")[1];
+    let mask_value = netHelpers.makeMask(prefix_len);
+    options.netmask = netHelpers.ipToString(mask_value);
+    options.broadcast = netHelpers.ipToString((ip_value & mask_value) + ~mask_value);
+  }
   return options;
 };
 
@@ -3477,7 +3419,6 @@ RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
     return;
   }
 
-  this.initRILQuirks();
   if (!length) {
     this._processDataCallList(null);
     return;
@@ -3736,7 +3677,6 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   // Prevent response id collision between UNSOLICITED_RIL_CONNECTED and
   // UNSOLICITED_VOICE_RADIO_TECH_CHANGED for Akami on gingerbread branch.
   if (!length) {
-    this.initRILQuirks();
     return;
   }
 

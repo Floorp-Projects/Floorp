@@ -541,7 +541,7 @@ RadioInterfaceLayer.prototype = {
       newInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
       (!newInfo.roaming || this._isDataRoamingEnabled());
     let haveDataConnection =
-      newInfo.type != GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
+      newInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
 
     if (isRegistered && haveDataConnection) {
       debug("Radio is ready for data connection.");
@@ -680,8 +680,9 @@ RadioInterfaceLayer.prototype = {
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
-        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
-                                     nsIAudioManager.FORCE_NONE);
+        let force = this.speakerEnabled ? nsIAudioManager.FORCE_SPEAKER
+                                        : nsIAudioManager.FORCE_NONE;
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
         break;
@@ -1764,6 +1765,16 @@ let RILNetworkInterface = {
 
   dhcp: false,
 
+  ip: null,
+
+  netmask: null,
+
+  broadcast: null,
+
+  dns1: null,
+
+  dns2: null,
+
   httpProxyHost: null,
 
   httpProxyPort: null,
@@ -1778,6 +1789,12 @@ let RILNetworkInterface = {
       this.connecting = false;
       this.cid = datacall.cid;
       this.name = datacall.ifname;
+      this.ip = datacall.ip;
+      this.netmask = datacall.netmask;
+      this.broadcast = datacall.broadcast;
+      this.gateway = datacall.gw;
+      this.dns1 = datacall.dns[0];
+      this.dns2 = datacall.dns[1];
       if (!this.registeredAsNetworkInterface) {
         let networkManager = Cc["@mozilla.org/network/manager;1"]
                                .getService(Ci.nsINetworkManager);

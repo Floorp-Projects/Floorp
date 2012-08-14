@@ -3331,11 +3331,6 @@ stack[anonid=browserStack][responsivemode] {
     -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
 }
 
-.web-console-panel {
-  -moz-appearance: none;
-  background-color: white;
-}
-
 /* Developer Toolbar */
 
 .developer-toolbar-button {

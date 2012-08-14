@@ -596,10 +596,12 @@ JS_ValueToUint64(JSContext *cx, jsval v, uint64_t *ip)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ValueToInt32(JSContext *cx, jsval v, int32_t *ip)
+JS_ValueToInt32(JSContext *cx, jsval vArg, int32_t *ip)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
+
+    RootedValue v(cx, vArg);
     assertSameCompartment(cx, v);
 
     if (v.isInt32()) {
@@ -616,7 +618,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32_t *ip)
 
     if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
         js_ReportValueError(cx, JSMSG_CANT_CONVERT,
-                            JSDVG_SEARCH_STACK, v, NULL);
+                            JSDVG_SEARCH_STACK, v, NullPtr());
         return false;
     }
 
@@ -2299,7 +2301,7 @@ JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c)
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx)
 {
-    AssertHeapIsIdle(cx);
+    AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
     return GetGlobalForScopeChain(cx);
 }
@@ -4957,12 +4959,14 @@ JS_BindCallable(JSContext *cx, JSObject *targetArg, JSRawObject newThis)
 JSBool
 js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     JSFunctionSpec *fs = (JSFunctionSpec *)
         vp->toObject().toFunction()->getExtendedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
-        js_ReportMissingArg(cx, *vp, 0);
+        js_ReportMissingArg(cx, args.calleev(), 0);
         return JS_FALSE;
     }
 
@@ -5918,8 +5922,8 @@ JS_New(JSContext *cx, JSObject *ctorArg, unsigned argc, jsval *argv)
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return NULL;
 
-    args.calleev().setObject(*ctor);
-    args.thisv().setNull();
+    args.setCallee(ObjectValue(*ctor));
+    args.setThis(NullValue());
     PodCopy(args.array(), argv, argc);
 
     if (!InvokeConstructor(cx, args))

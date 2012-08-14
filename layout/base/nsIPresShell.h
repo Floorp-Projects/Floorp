@@ -1217,9 +1217,13 @@ public:
    */
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
-  virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
-                     const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
-                     bool aWillSendDidPaint) = 0;
+  enum PaintType {
+    PaintType_Composite, /* Just composite the layers, don't do ThebesLayer painting. */
+    PaintType_NoComposite, /* Only paint ThebesLayers, don't composite. */
+    PaintType_Full /* Do a full transaction. */
+  };
+  virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
+                     PaintType aType, bool aWillSendDidPaint) = 0;
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,

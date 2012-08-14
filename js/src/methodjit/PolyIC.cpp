@@ -679,6 +679,14 @@ struct GetPropHelper {
             if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
                 return Lookup_Uncacheable;
 
+            /*
+             * Don't generate missing property ICs if we skipped a non-native
+             * object, as lookups may extend beyond the prototype chain (e.g.
+             * for ListBase proxies).
+             */
+            if (!obj->isNative())
+                return Lookup_Uncacheable;
+
 #if JS_HAS_NO_SUCH_METHOD
             /*
              * The __noSuchMethod__ hook may substitute in a valid method.
@@ -1948,6 +1956,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         }
     }
 
+    RootedValue objval(f.cx, f.regs.sp[-1]);
+
     if (f.regs.sp[-1].isString()) {
         GetPropCompiler cc(f, NULL, *pic, name, stub);
         if (name == f.cx->runtime->atomState.lengthAtom) {
@@ -1960,7 +1970,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             LookupStatus status = cc.generateStringPropertyStub();
             if (status == Lookup_Error)
                 THROW();
-            JSObject *obj = ValueToObject(f.cx, f.regs.sp[-1]);
+            JSObject *obj = ToObjectFromStack(f.cx, objval);
             if (!obj)
                 THROW();
             if (!obj->getProperty(f.cx, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))
@@ -1971,7 +1981,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 
     RecompilationMonitor monitor(f.cx);
 
-    RootedObject obj(f.cx, ValueToObject(f.cx, f.regs.sp[-1]));
+    RootedObject obj(f.cx, ToObjectFromStack(f.cx, objval));
     if (!obj)
         THROW();
 
@@ -1983,7 +1993,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 
     RootedValue v(f.cx);
     if (cached) {
-        if (!GetPropertyOperation(f.cx, f.script(), f.pc(), f.regs.sp[-1], v.address()))
+        if (!GetPropertyOperation(f.cx, f.pc(), &objval, &v))
             THROW();
     } else {
         if (!obj->getProperty(f.cx, name, &v))
@@ -2013,7 +2023,8 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
 
     RecompilationMonitor monitor(f.cx);
 
-    JSObject *obj = ValueToObject(f.cx, f.regs.sp[-2]);
+    RootedValue objval(f.cx, f.regs.sp[-2]);
+    JSObject *obj = ToObjectFromStack(f.cx, objval);
     if (!obj)
         THROW();
 
@@ -2550,12 +2561,12 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         return;
     }
 
-    RootedValue idval_(cx, f.regs.sp[-1]);
-    Value &idval = idval_.get();
+    RootedValue idval(cx, f.regs.sp[-1]);
 
     RecompilationMonitor monitor(cx);
 
-    RootedObject obj(cx, ValueToObject(cx, f.regs.sp[-2]));
+    RootedValue objval(f.cx, f.regs.sp[-2]);
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
@@ -2583,7 +2594,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 #ifdef DEBUG
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
-        LookupStatus status = ic->update(f, obj, idval_, id, res);
+        LookupStatus status = ic->update(f, obj, idval, id, res);
         if (status != Lookup_Uncacheable && status != Lookup_NoProperty) {
             if (status == Lookup_Error)
                 THROW();

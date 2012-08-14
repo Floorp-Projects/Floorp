@@ -67,7 +67,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
-    sourceMapMap(NULL),
     debugScriptMap(NULL)
 {
     setGCMaxMallocBytes(rt->gcMaxMallocBytes);
@@ -77,7 +76,6 @@ JSCompartment::~JSCompartment()
 {
     Foreground::delete_(watchpointMap);
     Foreground::delete_(scriptCountsMap);
-    Foreground::delete_(sourceMapMap);
     Foreground::delete_(debugScriptMap);
 }
 

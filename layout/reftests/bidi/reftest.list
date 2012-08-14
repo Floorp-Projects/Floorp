@@ -123,3 +123,4 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 746987-2.html 746987-2-ref.html
 == 746987-3.html 746987-3-ref.html
 == 746987-4.html 746987-4-ref.html
+== 779003-1.html 779003-1-ref.html

@@ -1474,7 +1474,7 @@ HasTerminalNewline(const nsTextFrame* aFrame)
 }
 
 static nscoord
-LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
 {
   if (aFrame->IsSVGText()) {
     return 0;
@@ -1486,7 +1486,7 @@ LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
 }
 
 static nscoord
-WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nsnull)
+WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
 {
   if (aFrame->IsSVGText()) {
     return 0;

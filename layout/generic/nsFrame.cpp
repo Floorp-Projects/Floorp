@@ -4691,11 +4691,6 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
 
   if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
       !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
-    // XXX for now I'm going to assume this is in the local coordinate space
-    // This only matters for frames with transforms and retained layers,
-    // which can't happen right now since transforms trigger fallback
-    // rendering and the display items that trigger layers are nested inside
-    // the nsDisplayTransform
     // XXX need to set INVALIDATE_NO_THEBES_LAYERS for certain kinds of
     // invalidation, e.g. video update, 'opacity' change
     FrameLayerBuilder::InvalidateThebesLayerContents(this,
@@ -5394,6 +5389,11 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   if (mContent && !mContent->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString buf;
     mContent->Tag()->ToString(buf);
+    if (GetType() == nsGkAtoms::subDocumentFrame) {
+      nsAutoString src;
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+      buf.Append(NS_LITERAL_STRING(" src=") + src);
+    }
     aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
   }
   char buf[40];
