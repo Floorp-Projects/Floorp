@@ -268,6 +268,25 @@ public:
    */
   void SetRemoteBrowser(nsITabParent* aTabParent);
 
+  /**
+   * Stashes a detached view on the frame loader. We do this when we're
+   * destroying the nsSubDocumentFrame. If the nsSubdocumentFrame is
+   * being reframed we'll restore the detached view when it's recreated,
+   * otherwise we'll discard the old presentation and set the detached
+   * subdoc view to null. aContainerDoc is the document containing the
+   * the subdoc frame. This enables us to detect when the containing
+   * document has changed during reframe, so we can discard the presentation 
+   * in that case.
+   */
+  void SetDetachedSubdocView(nsIView* aDetachedView,
+                             nsIDocument* aContainerDoc);
+
+  /**
+   * Retrieves the detached view and the document containing the view,
+   * as set by SetDetachedSubdocView().
+   */
+  nsIView* GetDetachedSubdocView(nsIDocument** aContainerDoc) const;
+
 private:
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -326,6 +345,16 @@ public:
   nsRefPtr<nsFrameMessageManager> mMessageManager;
   nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
 private:
+  // Stores the root view of the subdocument while the subdocument is being
+  // reframed. Used to restore the presentation after reframing.
+  nsIView* mDetachedSubdocViews;
+  // Stores the containing document of the frame corresponding to this
+  // frame loader. This is reference is kept valid while the subframe's
+  // presentation is detached and stored in mDetachedSubdocViews. This
+  // enables us to detect whether the frame has moved documents during
+  // a reframe, so that we know not to restore the presentation.
+  nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
+
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;
   bool mDestroyCalled : 1;

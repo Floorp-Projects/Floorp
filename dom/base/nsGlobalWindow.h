@@ -74,11 +74,11 @@
 
 // Amount of time allowed between alert/prompt/confirm before enabling
 // the stop dialog checkbox.
-#define SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
+#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
 
-// During click or mousedown events (and others, see nsDOMEvent) we allow modal
-// dialogs up to this limit, even if they were disabled.
-#define MAX_DIALOG_COUNT 10
+// Maximum number of successive dialogs before we prompt users to disable
+// dialogs for this window.
+#define MAX_SUCCESSIVE_DIALOG_COUNT 5
 
 // Idle fuzz time upper limit
 #define MAX_IDLE_FUZZ_TIME_MS 90000
@@ -384,8 +384,6 @@ public:
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
   virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
-  virtual NS_HIDDEN_(bool) IsPartOfApp();
-  virtual NS_HIDDEN_(bool) IsInAppOrigin();
 
   // nsIDOMStorageIndexedDB
   NS_DECL_NSIDOMSTORAGEINDEXEDDB
@@ -440,22 +438,22 @@ public:
     return nullptr;
   }
 
-  // Call this when a modal dialog is about to be opened.  Returns
-  // true if we've reached the state in this top level window where we
-  // ask the user if further dialogs should be blocked.
-  bool DialogOpenAttempted();
+  // Returns true if dialogs need to be prevented from appearings for this
+  // window. beingAbused returns whether dialogs are being abused.
+  bool DialogsAreBlocked(bool *aBeingAbused);
 
-  // Returns true if dialogs have already been blocked for this
-  // window.
-  bool AreDialogsBlocked();
+  // Returns true if we've reached the state in this top level window where we
+  // ask the user if further dialogs should be blocked. This method must only
+  // be called on the scriptable top inner window.
+  bool DialogsAreBeingAbused();
 
-  // Ask the user if further dialogs should be blocked. This is used
-  // in the cases where we have no modifiable UI to show, in that case
-  // we show a separate dialog when asking this question.
-  bool ConfirmDialogAllowed();
+  // Ask the user if further dialogs should be blocked, if dialogs are currently
+  // being abused. This is used in the cases where we have no modifiable UI to
+  // show, in that case we show a separate dialog to ask this question.
+  bool ConfirmDialogIfNeeded();
 
   // Prevent further dialogs in this (top level) window
-  void PreventFurtherDialogs();
+  void PreventFurtherDialogs(bool aPermanent);
 
   virtual void SetHasAudioAvailableEventListeners();
 
@@ -625,12 +623,6 @@ protected:
 
   friend class HashchangeCallback;
   friend class nsBarProp;
-
-  enum TriState {
-    TriState_Unknown = -1,
-    TriState_False,
-    TriState_True
-  };
 
   // Object Management
   virtual ~nsGlobalWindow();
@@ -898,10 +890,6 @@ protected:
   nsresult CloneStorageEvent(const nsAString& aType,
                              nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
-  void SetIsApp(bool aValue);
-  nsresult SetApp(const nsAString& aManifestURL);
-  nsresult GetApp(mozIDOMApplication** aApplication);
-
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
@@ -976,14 +964,6 @@ protected:
 
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
-
-  // Whether the window is the window of an application frame.
-  // This is TriState_Unknown if the object is the content window of an
-  // iframe which is neither mozBrowser nor mozApp.
-  TriState               mIsApp : 2;
-
-  // Principal of the web app running in this window, if any.
-  nsCOMPtr<nsIPrincipal>        mAppPrincipal;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
@@ -1062,27 +1042,33 @@ protected:
 
   nsCOMPtr<nsIIDBFactory> mIndexedDB;
 
-  // In the case of a "trusted" dialog (@see PopupControlState), we
-  // set this counter to ensure a max of MAX_DIALOG_LIMIT
+  // This counts the number of windows that have been opened in rapid succession
+  // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
+  // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
+  // have elapsed without any other dialogs.
   PRUint32                      mDialogAbuseCount;
 
-  // This holds the time when the last modal dialog was shown, if two
-  // dialogs are shown within CONCURRENT_DIALOG_TIME_LIMIT the
-  // checkbox is shown. In the case of ShowModalDialog another Confirm
-  // dialog will be shown, the result of the checkbox/confirm dialog
-  // will be stored in mDialogDisabled variable.
+  // This holds the time when the last modal dialog was shown. If more than
+  // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
+  // dom.successive_dialog_time_limit, we show a checkbox or confirmation prompt
+  // to allow disabling of further dialogs from this window.
   TimeStamp                     mLastDialogQuitTime;
-  bool                          mDialogDisabled;
+
+  // This is set to true once the user has opted-in to preventing further
+  // dialogs for this window. Subsequent dialogs may still open if
+  // mDialogAbuseCount gets reset.
+  bool                          mStopAbuseDialogs;
+
+  // This flag gets set when dialogs should be permanently disabled for this
+  // window (e.g. when we are closing the tab and therefore are guaranteed to be
+  // destroying this window).
+  bool                          mDialogsPermanentlyDisabled;
 
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<PRUint32> mEnabledSensors;
-
-  // The application associated with this window.
-  // This should only be non-null if mIsApp's value is TriState_True.
-  nsCOMPtr<mozIDOMApplication> mApp;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

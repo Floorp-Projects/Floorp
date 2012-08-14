@@ -9,6 +9,14 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+aitc_modules := \
+  browserid.js \
+  client.js \
+  main.js \
+  manager.js \
+  storage.js \
+  $(NULL)
+
 EXTRA_COMPONENTS = \
   AitcComponents.manifest \
   Aitc.js \
@@ -16,8 +24,9 @@ EXTRA_COMPONENTS = \
 
 PREF_JS_EXPORTS = $(srcdir)/services-aitc.js
 
-libs::
-	$(NSINSTALL) $(srcdir)/modules/* $(FINAL_TARGET)/modules/services-aitc
+AITC_MODULE_FILES := $(addprefix modules/,$(aitc_modules))
+AITC_MODULE_DEST = $(FINAL_TARGET)/modules/services-aitc
+INSTALL_TARGETS += AITC_MODULE
 
 TEST_DIRS += tests
 

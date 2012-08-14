@@ -14,12 +14,50 @@ weave_version := 1.19.0
 weave_channel := rel
 weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 
-sync_pp_defines := \
+# Preprocess files.
+SYNC_PP := modules/constants.js
+SYNC_PP_FLAGS := \
  -Dweave_version=$(weave_version) \
  -Dweave_channel=$(weave_channel) \
  -Dweave_id=$(weave_id)
+SYNC_PP_PATH = $(FINAL_TARGET)/modules/services-sync
+PP_TARGETS += SYNC_PP
 
-DIRS := locales
+# The set of core JavaScript modules for Sync. These are copied as-is.
+sync_modules := \
+  addonsreconciler.js \
+  addonutils.js \
+  engines.js \
+  identity.js \
+  jpakeclient.js \
+  keys.js \
+  main.js \
+  notifications.js \
+  policies.js \
+  record.js \
+  resource.js \
+  rest.js \
+  service.js \
+  status.js \
+  util.js \
+  $(NULL)
+
+# The set of JavaScript modules provide engines for Sync. These are
+# copied as-is.
+sync_engine_modules := \
+  addons.js \
+  apps.js \
+  bookmarks.js \
+  clients.js \
+  forms.js \
+  history.js \
+  passwords.js \
+  prefs.js \
+  tabs.js \
+  $(NULL)
+
+DIRS += locales
+TEST_DIRS += tests
 
 EXTRA_COMPONENTS := \
   SyncComponents.manifest \
@@ -28,31 +66,13 @@ EXTRA_COMPONENTS := \
 
 PREF_JS_EXPORTS := $(srcdir)/services-sync.js
 
-# Preprocess constants (by preprocessing everything).
-# The 'HERE' idiom avoids a dependency on pushd. We need to do this fiddling in
-# order to get relative paths, so we can process services/sync/modules/* into
-# modules/services-sync/*.
-# 
-# Note that we find candidates, make directories, then 'copy' files.
-libs::
-ifndef NO_DIST_INSTALL
-	$(EXIT_ON_ERROR) \
-	HERE=$(CURDIR); \
-	cd $(srcdir)/modules; \
-	dirs=`find * -type d`; \
-	files=`find * -type f`; \
-	cd $$HERE; \
-	for d in $$dirs; do \
-		$(PYTHON) $(topsrcdir)/config/nsinstall.py -D $(FINAL_TARGET)/modules/services-sync/$$d; \
-	done; \
-	for i in $$files; do \
-		src=$(srcdir)/modules/$$i; \
-		dest=$(FINAL_TARGET)/modules/services-sync/$$i; \
-		$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(sync_pp_defines) $$src > $$dest ; \
-	done
-endif
+# Install JS module files.
+SYNC_MAIN_FILES := $(addprefix modules/,$(sync_modules))
+SYNC_MAIN_DEST = $(FINAL_TARGET)/modules/services-sync
+INSTALL_TARGETS += SYNC_MAIN
 
-
-TEST_DIRS += tests
+SYNC_ENGINES_FILES := $(addprefix modules/engines/,$(sync_engine_modules))
+SYNC_ENGINES_DEST = $(FINAL_TARGET)/modules/services-sync/engines
+INSTALL_TARGETS += SYNC_ENGINES
 
 include $(topsrcdir)/config/rules.mk

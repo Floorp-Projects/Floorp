@@ -10,7 +10,7 @@
       var low = document.getElementById("low");
       low.parentNode.insertBefore(low, low.parentNode.firstChild);
 
-      setTimeAndSnapshot(3.1, true);
+      setTimeAndSnapshot(103.1, true);
     }
     window.addEventListener("MozReftestInvalidate", swapAnimations, false);
   ]]></script>
@@ -29,8 +29,8 @@
   <g transform="translate(5, 5)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
     height="30">
-     <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
-     <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
     </rect>
   </g>
   <!-- Additive group -->
@@ -39,8 +39,8 @@
   <g transform="translate(5, 45)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
     height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
         additive="sum"/>
     </rect>
   </g>
@@ -51,9 +51,9 @@
   <g transform="translate(5, 85)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
         additive="sum"/>
-     <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
+     <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
     </rect>
   </g>
   <!-- Additive group -->
@@ -63,9 +63,9 @@
   <g transform="translate(5, 125)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
-        additive="sum" begin="1ms"/>
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100.001s" dur="3s" fill="freeze"
+        additive="sum"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
     </rect>
   </g>
   <!-- Not additive group -->
@@ -74,9 +74,8 @@
   <g transform="translate(5, 165)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
-        begin="1ms"/>
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100.001s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
         additive="sum"/>
     </rect>
   </g>
@@ -85,8 +84,8 @@
   <g transform="translate(5, 205)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
-      <animate attributeName="x" by="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" by="100" dur="3s" begin="100s" fill="freeze"
         additive="replace"/>
     </rect>
   </g>
@@ -97,8 +96,8 @@
   <g transform="translate(5, 245)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
         additive="sum" id="low"/>
     </rect>
   </g>
@@ -109,9 +108,9 @@
   <g transform="translate(5, 285)">
     <rect style="stroke: black; fill: lightskyblue" x="0" y="0" width="30"
       height="30">
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"
         additive="sum" id="high"/>
-      <animate attributeName="x" from="0" to="100" dur="3s" fill="freeze"/>
+      <animate attributeName="x" from="0" to="100" begin="100s" dur="3s" fill="freeze"/>
     </rect>
   </g>
 </svg>

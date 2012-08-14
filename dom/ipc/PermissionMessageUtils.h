@@ -16,7 +16,7 @@ class Principal {
   friend struct ParamTraits<Principal>;
 
 public:
-  Principal() : mPrincipal(nsnull) {}
+  Principal() : mPrincipal(nullptr) {}
   Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
   operator nsIPrincipal*() const { return mPrincipal.get(); }
 

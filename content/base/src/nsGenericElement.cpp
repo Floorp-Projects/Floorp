@@ -607,10 +607,7 @@ PRInt32
 nsGenericElement::GetScrollTop()
 {
   nsIScrollableFrame* sf = GetScrollFrame();
-
-  return sf ?
-         nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollPosition().y) :
-         0;
+  return sf ? sf->GetScrollPositionCSSPixels().y : 0;
 }
 
 NS_IMETHODIMP
@@ -626,9 +623,7 @@ nsGenericElement::SetScrollTop(PRInt32 aScrollTop)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
-    nsPoint pt = sf->GetScrollPosition();
-    sf->ScrollToCSSPixels(nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                                     aScrollTop));
+    sf->ScrollToCSSPixels(nsIntPoint(sf->GetScrollPositionCSSPixels().x, aScrollTop));
   }
   return NS_OK;
 }
@@ -637,10 +632,7 @@ PRInt32
 nsGenericElement::GetScrollLeft()
 {
   nsIScrollableFrame* sf = GetScrollFrame();
-
-  return sf ?
-         nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollPosition().x) :
-         0;
+  return sf ? sf->GetScrollPositionCSSPixels().x : 0;
 }
 
 NS_IMETHODIMP
@@ -656,9 +648,7 @@ nsGenericElement::SetScrollLeft(PRInt32 aScrollLeft)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
-    nsPoint pt = sf->GetScrollPosition();
-    sf->ScrollToCSSPixels(nsIntPoint(aScrollLeft,
-                                     nsPresContext::AppUnitsToIntCSSPixels(pt.y)));
+    sf->ScrollToCSSPixels(nsIntPoint(aScrollLeft, sf->GetScrollPositionCSSPixels().y));
   }
   return NS_OK;
 }
@@ -2810,7 +2800,7 @@ static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
   nsCOMPtr<nsPIDOMWindow> win = aDoc->GetWindow();
-  if (win && win->IsInAppOrigin()) {
+  if (aDoc->NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED) {
     // Request is in a web app and in the same origin as the web app.
     // Don't enforce as strict security checks for web apps, the user
     // is supposed to have trust in them. However documents cross-origin

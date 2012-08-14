@@ -18,6 +18,7 @@ import java.io.PrintWriter;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import java.lang.Class;
 import java.lang.reflect.InvocationTargetException;
@@ -420,6 +421,20 @@ public class FennecNativeDriver implements Driver {
             retVal.put(parts[0].trim(), parts[1].trim());
         }
         return retVal;
+    }
+
+    public static void logAllStackTraces(LogLevel level) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("Dumping ALL the threads!\n");
+        Map<Thread, StackTraceElement[]> allStacks = Thread.getAllStackTraces();
+        for (Thread t : allStacks.keySet()) {
+            sb.append(t.toString()).append('\n');
+            for (StackTraceElement ste : allStacks.get(t)) {
+                sb.append(ste.toString()).append('\n');
+            }
+            sb.append('\n');
+        }
+        log(level, sb.toString());
     }
 
     /** 
