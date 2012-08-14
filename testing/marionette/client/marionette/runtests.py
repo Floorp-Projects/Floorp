@@ -27,9 +27,9 @@ except ImportError:
     import sys
     sys.exit(1)
 
-
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase
+
 
 class MarionetteTestResult(unittest._TextTestResult):
 
@@ -89,8 +89,10 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
     def run(self, test):
         "Run the given test case or test suite."
         result = self._makeResult()
-        result.failfast = self.failfast
-        result.buffer = self.buffer
+        if hasattr(self, 'failfast'):
+            result.failfast = self.failfast
+        if hasattr(self, 'buffer'):
+            result.buffer = self.buffer
         startTime = time.time()
         startTestRun = getattr(result, 'startTestRun', None)
         if startTestRun is not None:
@@ -470,13 +472,19 @@ class MarionetteTestRunner(object):
                                                     results in results_list])))
         assembly.setAttribute('passed', str(sum([results.passed for
                                                      results in results_list])))
-        assembly.setAttribute('failed', str(sum([len(results.failures) +
-                                                 len(results.errors) +
-                                                 len(results.unexpectedSuccesses)
+
+        def failed_count(results):
+            count = len(results.failures) + len(results.errors)
+            if hasattr(results, 'unexpectedSuccesses'):
+                count += len(results.unexpectedSuccesses)
+            return count
+
+        assembly.setAttribute('failed', str(sum([failed_count(results)
                                                  for results in results_list])))
-        assembly.setAttribute('skipped', str(sum([len(results.skipped) +
-                                                  len(results.expectedFailures)
-                                                  for results in results_list])))
+        if hasattr(results, 'skipped'):
+            assembly.setAttribute('skipped', str(sum([len(results.skipped) +
+                                                      len(results.expectedFailures)
+                                                      for results in results_list])))
 
         for results in results_list:
             classes = {} # str -> xml class element
@@ -487,15 +495,18 @@ class MarionetteTestRunner(object):
             for tup in results.failures:
                 _extract_xml(*tup, result='Fail')
 
-            for test in results.unexpectedSuccesses:
-                # unexpectedSuccesses is a list of Testcases only, no tuples
-                _extract_xml(test, text='TEST-UNEXPECTED-PASS', result='Fail')
+            if hasattr(results, 'unexpectedSuccesses'):
+                for test in results.unexpectedSuccesses:
+                    # unexpectedSuccesses is a list of Testcases only, no tuples
+                    _extract_xml(test, text='TEST-UNEXPECTED-PASS', result='Fail')
 
-            for tup in results.skipped:
-                _extract_xml(*tup, result='Skip')
+            if hasattr(results, 'skipped'):
+                for tup in results.skipped:
+                    _extract_xml(*tup, result='Skip')
 
-            for tup in results.expectedFailures:
-                _extract_xml(*tup, result='Skip')
+            if hasattr(results, 'expectedFailures'):
+                for tup in results.expectedFailures:
+                    _extract_xml(*tup, result='Skip')
 
             for test in results.tests_passed:
                 _extract_xml(test)

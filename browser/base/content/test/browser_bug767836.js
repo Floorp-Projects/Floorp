@@ -84,8 +84,13 @@ function togglePrivateBrowsing(aCallback) {
 function openNewTab(aCallback) {
   // Open a new tab
   BrowserOpenTab();
-  
+
   let browser = gBrowser.selectedBrowser;
+  if (browser.contentDocument.readyState == "complete") {
+    executeSoon(aCallback);
+    return;
+  }
+
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
     executeSoon(aCallback);
