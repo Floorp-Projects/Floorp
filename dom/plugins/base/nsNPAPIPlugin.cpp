@@ -2443,7 +2443,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nullptr);
-      return inst->SetCached(bCached);
+      inst->SetCached(bCached);
+      return NPERR_NO_ERROR;
     }
 
     case NPPVpluginUsesDOMForCursorBool: {
