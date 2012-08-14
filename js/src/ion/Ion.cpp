@@ -156,7 +156,14 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     bool mustMarkEnterJIT = false;
     for (IonActivationIterator iter(trc->runtime); iter.more(); ++iter) {
-        if (iter.activation()->compartment() != compartment)
+        IonActivation *activation = iter.activation();
+
+        if (activation->compartment() != compartment)
+            continue;
+
+        // Activations may be tied to the Method JIT, in which case enterJIT
+        // is not present on the activation's call stack.
+        if (!activation->entryfp() || activation->entryfp()->callingIntoIon())
             continue;
 
         // Both OSR and normal function calls depend on the EnterJIT code
