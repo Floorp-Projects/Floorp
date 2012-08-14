@@ -26,7 +26,6 @@ conformance/glsl/functions/glsl-function-smoothstep-float.html
 conformance/glsl/functions/glsl-function-smoothstep-gentype.html
 conformance/glsl/functions/glsl-function-step-float.html
 conformance/glsl/functions/glsl-function-step-gentype.html
-conformance/glsl/misc/glsl-function-nodes.html
 conformance/glsl/misc/shared.html
 conformance/misc/null-object-behaviour.html
 conformance/renderbuffers/framebuffer-object-attachment.html
