@@ -621,3 +621,14 @@ nsTransferable::GetIsPrivateData(bool *aIsPrivateData)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTransferable::SetIsPrivateData(bool aIsPrivateData)
+{
+  MOZ_ASSERT(mInitialized);
+
+  mPrivateData = aIsPrivateData;
+
+  return NS_OK;
+}
+
