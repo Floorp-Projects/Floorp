@@ -3,14 +3,11 @@
 
 // Tests that the inspect command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/test/browser_gcli_inspect.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/highlighter/" +
+                 "test/browser_inspector_cmd_inspect.html";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testInspect();
-
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testInspect ]);
 }
 
 function testInspect() {
