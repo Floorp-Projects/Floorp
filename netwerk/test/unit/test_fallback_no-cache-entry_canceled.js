@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 // Need to randomize, because apparently no one clears our cache
@@ -53,7 +58,7 @@ function finish_test(request, buffer)
 
 function run_test()
 {
-  httpServer = new nsHttpServer();
+  httpServer = new HttpServer();
   httpServer.registerPathHandler("/masterEntry", masterEntryHandler);
   httpServer.registerPathHandler("/manifest", manifestHandler);
   httpServer.registerPathHandler("/content", contentHandler);

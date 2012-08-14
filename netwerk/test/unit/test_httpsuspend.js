@@ -1,7 +1,12 @@
 // This file ensures that suspending a channel directly after opening it
 // suspends future notifications correctly.
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 const MIN_TIME_DIFFERENCE = 3000;
 const RESUME_DELAY = 5000;
@@ -58,7 +63,7 @@ function makeChan(url) {
 var httpserv = null;
 
 function run_test() {
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
   httpserv.registerPathHandler("/woo", data);
   httpserv.start(4444);
 
