@@ -57,6 +57,7 @@ sync_engine_modules := \
   $(NULL)
 
 sync_stage_modules := \
+  cluster.js \
   enginesync.js \
   $(NULL)
 

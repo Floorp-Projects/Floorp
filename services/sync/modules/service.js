@@ -34,6 +34,7 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/stages/cluster.js");
 Cu.import("resource://services-sync/stages/enginesync.js");
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
@@ -294,6 +295,8 @@ WeaveSvc.prototype = {
 
     this._log.info("Loading Weave " + WEAVE_VERSION);
 
+    this._clusterManager = new ClusterManager(this);
+
     this.enabled = true;
 
     this._registerEngines();
@@ -423,61 +426,6 @@ WeaveSvc.prototype = {
     }
   },
 
-  // gets cluster from central LDAP server and returns it, or null on error
-  _findCluster: function _findCluster() {
-    this._log.debug("Finding cluster for user " + this._identity.username);
-
-    let fail;
-    let res = new Resource(this.userAPI + this._identity.username + "/node/weave");
-    try {
-      let node = res.get();
-      switch (node.status) {
-        case 400:
-          Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-          fail = "Find cluster denied: " + ErrorHandler.errorStr(node);
-          break;
-        case 404:
-          this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-          return this.serverURL;
-        case 0:
-        case 200:
-          if (node == "null") {
-            node = null;
-          }
-          this._log.trace("_findCluster successfully returning " + node);
-          return node;
-        default:
-          ErrorHandler.checkServerError(node);
-          fail = "Unexpected response code: " + node.status;
-          break;
-      }
-    } catch (e) {
-      this._log.debug("Network error on findCluster");
-      Status.login = LOGIN_FAILED_NETWORK_ERROR;
-      ErrorHandler.checkServerError(e);
-      fail = e;
-    }
-    throw fail;
-  },
-
-  // gets cluster from central LDAP server and sets this.clusterURL
-  _setCluster: function _setCluster() {
-    // Make sure we didn't get some unexpected response for the cluster
-    let cluster = this._findCluster();
-    this._log.debug("Cluster value = " + cluster);
-    if (cluster == null)
-      return false;
-
-    // Don't update stuff if we already have the right cluster
-    if (cluster == this.clusterURL)
-      return false;
-
-    this._log.debug("Setting cluster to " + cluster);
-    this.clusterURL = cluster;
-    Svc.Prefs.set("lastClusterUpdate", Date.now().toString());
-    return true;
-  },
-
   // Update cluster if required.
   // Returns false if the update was not required.
   _updateCluster: function _updateCluster() {
@@ -485,7 +433,7 @@ WeaveSvc.prototype = {
     let cTime = Date.now();
     let lastUp = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
     if (!lastUp || ((cTime - lastUp) >= CLUSTER_BACKOFF)) {
-      return this._setCluster();
+      return this._clusterManager.setCluster();
     }
     return false;
   },
@@ -655,7 +603,7 @@ WeaveSvc.prototype = {
       // Make sure we have a cluster to verify against.
       // This is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage.
-      if (this.clusterURL == "" && !this._setCluster()) {
+      if (this.clusterURL == "" && !this._clusterManager.setCluster()) {
         Status.sync = NO_SYNC_NODE_FOUND;
         Svc.Obs.notify("weave:service:sync:delayed");
         return true;
@@ -695,7 +643,7 @@ WeaveSvc.prototype = {
 
         case 404:
           // Check that we're verifying with the correct cluster
-          if (this._setCluster()) {
+          if (this._clusterManager.setCluster()) {
             return this.verifyLogin();
           }
 
