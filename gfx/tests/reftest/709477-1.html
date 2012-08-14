@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>glyph clipping (test)</title>
+  <style>
+    #clip { position: absolute;
+            overflow: hidden;
+            font-size: 16px;
+            width: 500px;
+            height: 300px;}
+    /* Offsets keep the text far enough away from clip boundaries so that
+       cairo knows the text is within the clip.  Non-unit alpha color makes
+       the bug show even without antialiasing.  */
+    #text { position: absolute;
+            left: 100px;
+            top: 100px;
+            color: rgba(0,0,0,0.4)}
+    #cover { position: absolute;
+             top: 90px;
+             left: 120px;
+             height: 50px;
+             width: 60px;
+             background: green; }
+    #mod { position: absolute;
+             top: 400px;
+             left: 0px;
+             height: 2000px;
+             width: 600px;
+             background: green; }
+  </style>
+  <script>
+
+function doPaint()
+{
+  window.addEventListener("MozAfterPaint", doScroll, false);
+  var cover = document.getElementById("cover");
+  cover.style.background = "transparent";
+  var mod = document.getElementById("mod");
+  mod.style.background = "transparent";
+}
+
+function doScroll()
+{
+  window.removeEventListener("MozAfterPaint", doScroll, false);
+  window.addEventListener("MozAfterPaint", endTest, false);
+  scrollTo(0,1);
+}
+
+function endTest()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doPaint, false);
+  </script>
+</head>
+<body>
+  <div id="clip">
+    <div id="text">
+    Some text that was</br>
+    initially partially covered.</br>
+    </div>
+  </div>
+  <div id="cover">
+  </div>
+  <div id="mod">
+  </div>
+</body>
+</html>
