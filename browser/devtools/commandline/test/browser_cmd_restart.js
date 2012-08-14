@@ -6,10 +6,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,gcli-command-restart";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testRestart();
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testRestart ]);
 }
 
 function testRestart() {

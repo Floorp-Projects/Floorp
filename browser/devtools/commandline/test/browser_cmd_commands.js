@@ -9,13 +9,7 @@ Components.utils.import("resource:///modules/HUDService.jsm", imported);
 const TEST_URI = "data:text/html;charset=utf-8,gcli-commands";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testEcho();
-    testConsole(tab);
-
-    imported = undefined;
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testEcho, testConsole ]);
 }
 
 function testEcho() {
@@ -28,7 +22,7 @@ function testEcho() {
   */
 }
 
-function testConsole(tab) {
+function testConsole(browser, tab) {
   let hud = null;
   function onWebConsoleOpen(aSubject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
@@ -70,6 +64,5 @@ function testConsole(tab) {
     ok(!(hud.hudId in imported.HUDService.hudReferences), "console closed");
 
     imported = undefined;
-    finish();
   }
 }
