@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PREF_JS_EXPORTS = $(srcdir)/services-common.js
-
 modules := \
   async.js \
   log4moz.js \
@@ -23,24 +21,24 @@ modules := \
   utils.js \
   $(NULL)
 
-source_modules = $(foreach module,$(modules),$(srcdir)/$(module))
-module_dir = $(FINAL_TARGET)/modules/services-common
-
-libs::
-	$(NSINSTALL) -D $(module_dir)
-	$(NSINSTALL) $(source_modules) $(module_dir)
-
-TEST_DIRS += tests
-
 testing_modules := \
   aitcserver.js \
   storageserver.js \
   utils.js \
   $(NULL)
 
-TESTING_JS_MODULES := $(foreach file,$(testing_modules),modules-testing/$(file))
+TEST_DIRS += tests
 
+PREF_JS_EXPORTS = $(srcdir)/services-common.js
+
+MODULES_FILES := $(modules)
+MODULES_DEST = $(FINAL_TARGET)/modules/services-common
+INSTALL_TARGETS += MODULES
+
+TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services-common
+
+include $(topsrcdir)/config/rules.mk
 
 # What follows is a helper to launch a standalone storage server instance.
 # Most of the code lives in a Python script in the tests directory. If we
@@ -64,4 +62,3 @@ aitc-server:
 	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
 		$(MOZ_BUILD_ROOT) run_aitc_server.js --port $(aitc_server_port)
 
-include $(topsrcdir)/config/rules.mk

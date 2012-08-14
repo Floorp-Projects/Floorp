@@ -205,7 +205,7 @@ static JSPropertySpec namespace_props[] = {
 static JSBool
 namespace_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return JS_FALSE;
     if (!obj->isNamespace()) {
@@ -395,7 +395,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
 static JSBool
 qname_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return false;
 
@@ -1897,8 +1897,9 @@ ToXML(JSContext *cx, jsval v)
     return obj;
 
 bad:
+    RootedValue val(cx, v);
     js_ReportValueError(cx, JSMSG_BAD_XML_CONVERSION,
-                        JSDVG_IGNORE_STACK, v, NULL);
+                        JSDVG_IGNORE_STACK, val, NullPtr());
     return NULL;
 }
 
@@ -1973,8 +1974,9 @@ ToXMLList(JSContext *cx, jsval v)
     return listobj;
 
 bad:
+    RootedValue val(cx, v);
     js_ReportValueError(cx, JSMSG_BAD_XMLLIST_CONVERSION,
-                        JSDVG_IGNORE_STACK, v, NULL);
+                        JSDVG_IGNORE_STACK, val, NullPtr());
     return NULL;
 }
 
@@ -2789,8 +2791,9 @@ ToAttributeName(JSContext *cx, jsval v)
         uri = prefix = cx->runtime->emptyString;
     } else {
         if (JSVAL_IS_PRIMITIVE(v)) {
+            RootedValue val(cx, v);
             js_ReportValueError(cx, JSMSG_BAD_XML_ATTR_NAME,
-                                JSDVG_IGNORE_STACK, v, NULL);
+                                JSDVG_IGNORE_STACK, val, NullPtr());
             return NULL;
         }
 
@@ -2825,7 +2828,8 @@ ToAttributeName(JSContext *cx, jsval v)
 static void
 ReportBadXMLName(JSContext *cx, const Value &idval)
 {
-    js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, idval, NULL);
+    RootedValue val(cx, idval);
+    js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, val, NullPtr());
 }
 
 namespace js {
@@ -5372,7 +5376,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, MutableHandleObject objp)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
     JS_ASSERT(JSVAL_TO_OBJECT(*vp)->isFunction());
 
-    objp.set(ToObject(cx, &vp[1]));
+    objp.set(ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!objp)
         return NULL;
     if (!objp->isXML()) {
@@ -5406,7 +5410,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, MutableHandleObject objp)
 
 /* Beware: these two are not bracketed by JS_BEGIN/END_MACRO. */
 #define XML_METHOD_PROLOG                                                     \
-    JSObject *obj = ToObject(cx, &vp[1]);                                     \
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));                                     \
     if (!obj)                                                                 \
         return JS_FALSE;                                                      \
     if (!obj->isXML()) {                                                      \
@@ -5490,7 +5494,8 @@ xml_attribute(JSContext *cx, unsigned argc, jsval *vp)
     JSObject *qn;
 
     if (argc == 0) {
-        js_ReportMissingArg(cx, *vp, 0);
+        RootedValue val(cx, *vp);
+        js_ReportMissingArg(cx, val, 0);
         return JS_FALSE;
     }
 
@@ -5500,7 +5505,7 @@ xml_attribute(JSContext *cx, unsigned argc, jsval *vp)
     vp[2] = OBJECT_TO_JSVAL(qn);        /* local root */
 
     RootedId id(cx, OBJECT_TO_JSID(qn));
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!obj)
         return JS_FALSE;
     return GetProperty(cx, obj, id, MutableHandleValue::fromMarkedLocation(vp));
@@ -5516,7 +5521,7 @@ xml_attributes(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
 
     RootedId id(cx, OBJECT_TO_JSID(qn));
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!obj)
         return JS_FALSE;
     return GetProperty(cx, obj, id, MutableHandleValue::fromMarkedLocation(vp));
@@ -5676,7 +5681,7 @@ xml_childIndex(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 xml_children(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!obj)
         return false;
     RootedId name(cx, NameToId(cx->runtime->atomState.starAtom));
@@ -5883,7 +5888,7 @@ xml_hasOwnProperty(JSContext *cx, unsigned argc, jsval *vp)
     jsval name;
     JSBool found;
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return JS_FALSE;
     if (!obj->isXML()) {
@@ -6925,7 +6930,7 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
 static JSBool
 xml_toSource(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return JS_FALSE;
     JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), TO_SOURCE_FLAG);
@@ -6952,7 +6957,7 @@ xml_toString(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 xml_toXMLString(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return JS_FALSE;
     JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), 0);
@@ -6966,7 +6971,7 @@ xml_toXMLString(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 xml_valueOf(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
     if (!obj)
         return false;
     *vp = OBJECT_TO_JSVAL(obj);
@@ -7066,7 +7071,7 @@ xml_settings(JSContext *cx, unsigned argc, jsval *vp)
     if (!settings)
         return false;
     *vp = OBJECT_TO_JSVAL(settings);
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!obj)
         return false;
     return CopyXMLSettings(cx, obj, settings);
@@ -7078,7 +7083,7 @@ xml_setSettings(JSContext *cx, unsigned argc, jsval *vp)
     jsval v;
     JSBool ok;
 
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, HandleValue::fromMarkedLocation(&vp[1])));
     if (!obj)
         return JS_FALSE;
     v = (argc == 0) ? JSVAL_VOID : vp[2];
@@ -7882,7 +7887,8 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
          * value stored in sp[-2].
          */
         if (!VALUE_IS_XML(sp[-2])) {
-            js_ReportValueError(cx, JSMSG_NON_XML_FILTER, -2, sp[-2], NULL);
+            RootedValue val(cx, sp[-2]);
+            js_ReportValueError(cx, JSMSG_NON_XML_FILTER, -2, val, NullPtr());
             return JS_FALSE;
         }
         obj = JSVAL_TO_OBJECT(sp[-2]);

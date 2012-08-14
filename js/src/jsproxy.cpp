@@ -352,8 +352,10 @@ bool
 BaseProxyHandler::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
+
+    RootedValue val(cx, ObjectValue(*proxy));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                        JSDVG_SEARCH_STACK, ObjectValue(*proxy), NULL);
+                        JSDVG_SEARCH_STACK, val, NullPtr());
     return false;
 }
 
@@ -493,7 +495,7 @@ bool
 IndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                     CallArgs args)
 {
-    args.thisv() = ObjectValue(*GetProxyTargetObject(&args.thisv().toObject()));
+    args.setThis(ObjectValue(*GetProxyTargetObject(&args.thisv().toObject())));
     if (!test(args.thisv())) {
         ReportIncompatible(cx, args);
         return false;
@@ -825,8 +827,9 @@ ReturnedValueMustNotBePrimitive(JSContext *cx, JSObject *proxy, JSAtom *atom, co
     if (v.isPrimitive()) {
         JSAutoByteString bytes;
         if (js_AtomToPrintableString(cx, atom, &bytes)) {
+            RootedValue val(cx, ObjectOrNullValue(proxy));
             js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                                 JSDVG_SEARCH_STACK, ObjectOrNullValue(proxy), NULL, bytes.ptr());
+                                 JSDVG_SEARCH_STACK, val, NullPtr(), bytes.ptr());
         }
         return false;
     }
@@ -1074,10 +1077,12 @@ class AutoPendingProxyOperation {
 
 
 bool
-Proxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+Proxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy_, jsid id_, bool set,
                              PropertyDescriptor *desc)
 {
     JS_CHECK_RECURSION(cx, return false);
+    RootedObject proxy(cx, proxy_);
+    RootedId id(cx, id_);
     AutoPendingProxyOperation pending(cx, proxy);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     if (!handler->hasPrototype())
@@ -1193,9 +1198,11 @@ Proxy::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 }
 
 bool
-Proxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+Proxy::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
+    RootedObject proxy(cx, proxy_);
+    RootedId id(cx, id_);
     AutoPendingProxyOperation pending(cx, proxy);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     if (!handler->hasPrototype())
@@ -1258,14 +1265,14 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
-    JSObject *proto;
+    RootedObject proto(cx);
     if (handler->hasPrototype()) {
         // If we're using a prototype, we still want to use the proxy trap unless
         // we have a non-own property with a setter.
         bool hasOwn;
         AutoPropertyDescriptorRooter desc(cx);
         if (handler->hasOwn(cx, proxy, id, &hasOwn) && !hasOwn &&
-            handler->getPrototypeOf(cx, proxy, &proto) && proto &&
+            handler->getPrototypeOf(cx, proxy, proto.address()) && proto &&
             JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc) &&
             desc.obj && desc.setter)
         {

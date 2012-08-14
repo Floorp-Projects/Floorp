@@ -329,6 +329,8 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
 static JSBool
 obj_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     bool comma = false;
     const jschar *vchars;
     size_t vlength;
@@ -345,7 +347,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
     /* If outermost, we need parentheses to be an expression, not a block. */
     bool outermost = (cx->sharpObjectMap.depth == 0);
 
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -364,7 +366,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
         JSString *str = js_NewStringCopyZ(cx, "{}");
         if (!str)
             return false;
-        vp->setString(str);
+        args.rval().setString(str);
         return true;
     }
 
@@ -537,7 +539,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
     JSString *str = buf.finishString();
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 #endif /* JS_HAS_TOSOURCE */
@@ -594,22 +596,22 @@ InformalValueTypeName(const Value &v)
 static JSBool
 obj_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    Value &thisv = vp[1];
+    CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    if (thisv.isUndefined()) {
-        vp->setString(cx->runtime->atomState.objectUndefinedAtom);
+    if (args.thisv().isUndefined()) {
+        args.rval().setString(cx->runtime->atomState.objectUndefinedAtom);
         return true;
     }
 
     /* Step 2. */
-    if (thisv.isNull()) {
-        vp->setString(cx->runtime->atomState.objectNullAtom);
+    if (args.thisv().isNull()) {
+        args.rval().setString(cx->runtime->atomState.objectNullAtom);
         return true;
     }
 
     /* Step 3. */
-    JSObject *obj = ToObject(cx, &thisv);
+    JSObject *obj = ToObject(cx, args.thisv());
     if (!obj)
         return false;
 
@@ -617,7 +619,7 @@ obj_toString(JSContext *cx, unsigned argc, Value *vp)
     JSString *str = js::obj_toStringHelper(cx, obj);
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -630,7 +632,7 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSObject *obj = ToObject(cx, &args.thisv());
+    JSObject *obj = ToObject(cx, args.thisv());
     if (!obj)
         return false;
 
@@ -642,10 +644,11 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, args.thisv());
     if (!obj)
         return false;
-    vp->setObject(*obj);
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -684,20 +687,22 @@ obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
 static JSBool
 obj_watch(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     if (argc <= 1) {
-        js_ReportMissingArg(cx, *vp, 1);
+        js_ReportMissingArg(cx, args.calleev(), 1);
         return false;
     }
 
-    RootedObject callable(cx, ValueToCallable(cx, &vp[3]));
+    RootedObject callable(cx, ValueToCallable(cx, &args[1]));
     if (!callable)
         return false;
 
     RootedId propid(cx);
-    if (!ValueToId(cx, vp[2], propid.address()))
+    if (!ValueToId(cx, args[0], propid.address()))
         return false;
 
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -706,7 +711,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
         return false;
 
-    vp->setUndefined();
+    args.rval().setUndefined();
 
     if (obj->isDenseArray() && !JSObject::makeDenseArraySlow(cx, obj))
         return false;
@@ -716,13 +721,15 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-    vp->setUndefined();
+    args.rval().setUndefined();
     jsid id;
     if (argc != 0) {
-        if (!ValueToId(cx, vp[2], &id))
+        if (!ValueToId(cx, args[0], &id))
             return false;
     } else {
         id = JSID_VOID;
@@ -741,21 +748,25 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-    return js_HasOwnPropertyHelper(cx, obj->getOps()->lookupGeneric, argc, vp);
+    return js_HasOwnPropertyHelper(cx, obj->getOps()->lookupGeneric, argc, args.rval().address());
 }
 
 JSBool
 js_HasOwnPropertyHelper(JSContext *cx, LookupGenericOp lookup, unsigned argc,
                         Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     RootedId id(cx);
-    if (!ValueToId(cx, argc != 0 ? vp[2] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
         return JS_FALSE;
 
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
     RootedObject obj2(cx);
@@ -764,12 +775,12 @@ js_HasOwnPropertyHelper(JSContext *cx, LookupGenericOp lookup, unsigned argc,
         bool has;
         if (!Proxy::hasOwn(cx, obj, id, &has))
             return false;
-        vp->setBoolean(has);
+        args.rval().setBoolean(has);
         return true;
     }
     if (!js_HasOwnProperty(cx, lookup, obj, id, &obj2, &prop))
         return JS_FALSE;
-    vp->setBoolean(!!prop);
+    args.rval().setBoolean(!!prop);
     return JS_TRUE;
 }
 
@@ -808,19 +819,21 @@ js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, Handl
 static JSBool
 obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Step 1. */
-    if (argc < 1 || !vp[2].isObject()) {
-        vp->setBoolean(false);
+    if (args.length() < 1 || !args[0].isObject()) {
+        args.rval().setBoolean(false);
         return true;
     }
 
     /* Step 2. */
-    JSObject *obj = ToObject(cx, &vp[1]);
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
     /* Step 3. */
-    vp->setBoolean(js_IsDelegate(cx, obj, vp[2]));
+    args.rval().setBoolean(js_IsDelegate(cx, obj, args[0]));
     return true;
 }
 
@@ -828,18 +841,20 @@ obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Step 1. */
     RootedId id(cx);
-    if (!ValueToId(cx, argc != 0 ? vp[2] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
         return false;
 
     /* Step 2. */
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
     /* Steps 3-5. */
-    return js_PropertyIsEnumerable(cx, obj, id, vp);
+    return js_PropertyIsEnumerable(cx, obj, id, args.rval().address());
 }
 
 JSBool
@@ -941,32 +956,34 @@ js::obj_defineSetter(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     RootedId id(cx);
-    if (!ValueToId(cx, argc != 0 ? vp[2] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
         return JS_FALSE;
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return JS_FALSE;
     if (obj->isProxy()) {
         // The vanilla getter lookup code below requires that the object is
         // native. Handle proxies separately.
-        vp->setUndefined();
+        args.rval().setUndefined();
         AutoPropertyDescriptorRooter desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
         if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
-            *vp = CastAsObjectJsval(desc.getter);
+            args.rval().set(CastAsObjectJsval(desc.getter));
         return JS_TRUE;
     }
     RootedObject pobj(cx);
     RootedShape shape(cx);
     if (!obj->lookupGeneric(cx, id, &pobj, &shape))
         return JS_FALSE;
-    vp->setUndefined();
+    args.rval().setUndefined();
     if (shape) {
         if (pobj->isNative()) {
             if (shape->hasGetterValue())
-                *vp = shape->getterValue();
+                args.rval().set(shape->getterValue());
         }
     }
     return JS_TRUE;
@@ -975,32 +992,34 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     RootedId id(cx);
-    if (!ValueToId(cx, argc != 0 ? vp[2] : UndefinedValue(), id.address()))
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
         return JS_FALSE;
-    RootedObject obj(cx, ToObject(cx, &vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return JS_FALSE;
     if (obj->isProxy()) {
         // The vanilla setter lookup code below requires that the object is
         // native. Handle proxies separately.
-        vp->setUndefined();
+        args.rval().setUndefined();
         AutoPropertyDescriptorRooter desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
         if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
-            *vp = CastAsObjectJsval(desc.setter);
+            args.rval().set(CastAsObjectJsval(desc.setter));
         return JS_TRUE;
     }
     RootedObject pobj(cx);
     RootedShape shape(cx);
     if (!obj->lookupGeneric(cx, id, &pobj, &shape))
         return JS_FALSE;
-    vp->setUndefined();
+    args.rval().setUndefined();
     if (shape) {
         if (pobj->isNative()) {
             if (shape->hasSetterValue())
-                *vp = shape->setterValue();
+                args.rval().set(shape->setterValue());
         }
     }
     return JS_TRUE;
@@ -1020,7 +1039,8 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
     }
 
     if (args[0].isPrimitive()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, vp[2], NULL);
+        RootedValue val(cx, args[0]);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1038,8 +1058,8 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
     InvokeArgsGuard nested;
     if (!cx->stack.pushInvokeArgs(cx, 0, &nested))
         return false;
-    nested.calleev() = cx->global()->protoGetter();
-    nested.thisv() = args[0];
+    nested.setCallee(cx->global()->protoGetter());
+    nested.setThis(args[0]);
     if (!Invoke(cx, nested))
         return false;
     args.rval().set(nested.rval());
@@ -1189,9 +1209,9 @@ GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *me
         return false;
     }
 
-    const Value &v = vp[2];
+    RootedValue v(cx, vp[2]);
     if (!v.isObject()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -1397,9 +1417,10 @@ bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber)
 {
     if (js_ErrorFormatString[errorNumber].argCount == 1) {
+        RootedValue val(cx, ObjectValue(*obj));
         js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
-                                 JSDVG_IGNORE_STACK, ObjectValue(*obj),
-                                 NULL, NULL, NULL);
+                                 JSDVG_IGNORE_STACK, val, NullPtr(),
+                                 NULL, NULL);
     } else {
         JS_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
@@ -1924,19 +1945,22 @@ js_PopulateObject(JSContext *cx, HandleObject newborn, HandleObject props)
 static JSBool
 obj_defineProperties(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Steps 1 and 7. */
     RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperties", &obj))
+    if (!GetFirstArgumentAsObject(cx, args.length(), vp, "Object.defineProperties", &obj))
         return false;
-    vp->setObject(*obj);
+    args.rval().setObject(*obj);
 
     /* Step 2. */
-    if (argc < 2) {
+    if (args.length() < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.defineProperties", "0", "s");
         return false;
     }
-    RootedObject props(cx, ToObject(cx, &vp[3]));
+    RootedValue val(cx, args[1]);
+    RootedObject props(cx, ToObject(cx, val));
     if (!props)
         return false;
 
@@ -1955,9 +1979,9 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     }
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    const Value &v = args[0];
+    RootedValue v(cx, args[0]);
     if (!v.isObjectOrNull()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -2873,6 +2897,14 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
      * swaps can be performed infallibly.
      */
 
+    /*
+     * Swap prototypes on the two objects, so that TradeGuts can preserve
+     * the types of the two objects.
+     */
+    RootedObject na(cx, a), aProto(cx, a->getProto()), nb(cx, b), bProto(cx, b->getProto());
+    if (!SetProto(cx, na, bProto, false) || !SetProto(cx, nb, aProto, false))
+        return false;
+
     if (a->sizeOfThis() == b->sizeOfThis())
         return true;
 
@@ -3087,6 +3119,14 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->lastProperty()->listp = &a->shape_;
     if (b->inDictionaryMode())
         b->lastProperty()->listp = &b->shape_;
+
+    /*
+     * Swap the object's types, to restore their initial type information.
+     * The prototypes of the objects were swapped in ReserveForTradeGuts.
+     */
+    TypeObject *tmp = a->type_;
+    a->type_ = b->type_;
+    b->type_ = tmp;
 }
 
 /*
@@ -3712,7 +3752,6 @@ bool
 SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycles)
 {
     JS_ASSERT_IF(!checkForCycles, obj != proto);
-    JS_ASSERT(obj->isExtensible());
 
 #if JS_HAS_XML_SUPPORT
     if (proto && proto->isXML()) {
@@ -4697,9 +4736,10 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
             cx->stack.currentScript()->warnedAboutUndefinedProp = true;
 
             /* Ok, bad undefined property reference: whine about it. */
+            RootedValue val(cx, IdToValue(id));
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                          JSDVG_IGNORE_STACK, IdToValue(id),
-                                          NULL, NULL, NULL))
+                                          JSDVG_IGNORE_STACK, val, NullPtr(),
+                                          NULL, NULL))
             {
                 return false;
             }
@@ -4809,25 +4849,28 @@ js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 bool
 JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
 {
+    RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, IdToValue(id), NULL,
+                                    JSDVG_IGNORE_STACK, val, NullPtr(),
                                     NULL, NULL);
 }
 
 bool
 JSObject::reportNotConfigurable(JSContext *cx, jsid id, unsigned report)
 {
+    RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                    JSDVG_IGNORE_STACK, IdToValue(id), NULL,
+                                    JSDVG_IGNORE_STACK, val, NullPtr(),
                                     NULL, NULL);
 }
 
 bool
 JSObject::reportNotExtensible(JSContext *cx, unsigned report)
 {
+    RootedValue val(cx, ObjectValue(*this));
     return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                    JSDVG_IGNORE_STACK, ObjectValue(*this),
-                                    NULL, NULL, NULL);
+                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    NULL, NULL);
 }
 
 bool
@@ -5265,7 +5308,7 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
     }
 
     /* Avoid recursive death when decompiling in js_ReportValueError. */
-    JSString *str;
+    RootedString str(cx);
     if (hint == JSTYPE_STRING) {
         str = JS_InternString(cx, clasp->name);
         if (!str)
@@ -5274,7 +5317,8 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
         str = NULL;
     }
 
-    js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, ObjectValue(*obj), str,
+    RootedValue val(cx, ObjectValue(*obj));
+    js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
                          (hint == JSTYPE_VOID) ? "primitive type" : JS_TYPE_STR(hint));
     return false;
 }
@@ -5489,21 +5533,22 @@ namespace js {
 
 /* Callers must handle the already-object case . */
 JSObject *
-ToObjectSlow(JSContext *cx, Value *vp)
+ToObjectSlow(JSContext *cx, HandleValue val, bool reportScanStack)
 {
-    JS_ASSERT(!vp->isMagic());
-    JS_ASSERT(!vp->isObject());
+    JS_ASSERT(!val.isMagic());
+    JS_ASSERT(!val.isObject());
 
-    if (vp->isNullOrUndefined()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
-                            vp->isNull() ? "null" : "undefined", "object");
+    if (val.isNullOrUndefined()) {
+        if (reportScanStack) {
+            js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+        } else {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+                                 val.isNull() ? "null" : "undefined", "object");
+        }
         return NULL;
     }
 
-    JSObject *obj = PrimitiveToObject(cx, *vp);
-    if (obj)
-        vp->setObject(*obj);
-    return obj;
+    return PrimitiveToObject(cx, val);
 }
 
 }
@@ -5515,8 +5560,10 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
 
     if (!js_ValueToObjectOrNull(cx, v, &obj))
         return NULL;
-    if (!obj)
-        js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, v, NULL);
+    if (!obj) {
+        RootedValue val(cx, v);
+        js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+    }
     return obj;
 }
 

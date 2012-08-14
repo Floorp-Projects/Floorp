@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Testing OS.File on a chrome worker thread"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+"use strict";
+
+let worker;
+
+let test = function test() {
+  SimpleTest.ok(true, "test_osfile_comms.xul: Starting test");
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  worker = new ChromeWorker("worker_test_osfile_comms.js");
+  SimpleTest.waitForExplicitFinish();
+  worker.onerror = function onerror(error) {
+    SimpleTest.ok(false, "received error "+error);
+  }
+  worker.onmessage = function onmessage(msg) {
+    Components.utils.forceShrinkingGC();
+    switch (msg.data.kind) {
+    case "is":
+      SimpleTest.ok(msg.data.outcome, msg.data.description +
+         " ("+ msg.data.a + " ==? " + msg.data.b + ")" );
+      return;
+    case "isnot":
+      SimpleTest.ok(msg.data.outcome, msg.data.description +
+      " ("+ msg.data.a + " !=? " + msg.data.b + ")" );
+         return;
+    case "ok":
+      SimpleTest.ok(msg.data.condition, msg.data.description);
+      return;
+    case "finish":
+      SimpleTest.finish();
+      return;
+    case "value":
+      SimpleTest.ok(true, "test_osfile_comms.xul: Received value " + JSON.stringify(msg.data.value));
+      let type = eval(msg.data.typename);
+      let check = eval(msg.data.check);
+      let value = msg.data.value;
+      let deserialized = type.fromMsg(value);
+      check(deserialized, "Main thread test: ");
+      return;
+    default:
+      SimpleTest.ok(false, "test_osfile_comms.xul: wrong message "+JSON.stringify(msg.data));
+      return;
+    }
+  };
+
+  worker.postMessage(0)
+  ok(true, "Worker launched");
+};
+]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
