@@ -31,7 +31,7 @@ CairoFormatToSurfaceFormat(cairo_format_t format)
 SourceSurfaceCairo::SourceSurfaceCairo(cairo_surface_t* aSurface,
                                        const IntSize& aSize,
                                        const SurfaceFormat& aFormat,
-                                       DrawTargetCairo* aDrawTarget /* = NULL */)
+                                       DrawTargetCairo* aDrawTarget /* = nullptr */)
  : mSize(aSize)
  , mFormat(aFormat)
  , mSurface(aSurface)
@@ -92,7 +92,7 @@ void
 SourceSurfaceCairo::DrawTargetWillChange()
 {
   if (mDrawTarget) {
-    mDrawTarget = NULL;
+    mDrawTarget = nullptr;
 
     // We're about to lose our version of the surface, so make a copy of it.
     cairo_surface_t* surface = cairo_surface_create_similar(mSurface,
@@ -116,7 +116,7 @@ SourceSurfaceCairo::MarkIndependent()
 {
   if (mDrawTarget) {
     mDrawTarget->RemoveSnapshot(this);
-    mDrawTarget = NULL;
+    mDrawTarget = nullptr;
   }
 }
 
