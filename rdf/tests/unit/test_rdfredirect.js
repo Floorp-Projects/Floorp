@@ -1,9 +1,14 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 function getRDFService()
 {
-  return Components.classes["@mozilla.org/rdf/rdf-service;1"].
-    getService(Components.interfaces.nsIRDFService);
+  return Cc["@mozilla.org/rdf/rdf-service;1"].
+    getService(Ci.nsIRDFService);
 }
 
 var server1, server2;
@@ -11,14 +16,14 @@ var server1, server2;
 function run_test()
 {
   var samplefile = do_get_file('sample.rdf');
-  
-  server1 = new nsHttpServer();
+
+  server1 = new HttpServer();
   server1.registerPathHandler("/sample-xs.rdf", xsRedirect);
   server1.registerPathHandler("/sample-local.rdf", localRedirect);
   server1.registerFile('/sample.rdf', samplefile);
   server1.start(4444);
 
-  server2 = new nsHttpServer();
+  server2 = new HttpServer();
   server2.registerFile('/sample.rdf', samplefile);
   server2.start(4445);
 
@@ -36,12 +41,12 @@ function rdfLoadObserver(uri, shouldPass)
 {
   this.shouldPass = shouldPass;
   this.uri = uri;
-  
+
   ++gPending;
-  
+
   var rdfService = getRDFService();
   this.ds = rdfService.GetDataSource(uri).
-    QueryInterface(Components.interfaces.nsIRDFXMLSink);
+    QueryInterface(Ci.nsIRDFXMLSink);
   this.ds.addXMLSinkObserver(this);
 }
 
@@ -52,22 +57,22 @@ rdfLoadObserver.prototype =
   onResume : function() { },
   onEndLoad : function() {
     print("Testing results of loading " + this.uri);
-    
+
     var rdfs = getRDFService();
     var res = rdfs.GetResource("urn:mozilla:sample-data");
     var arc = rdfs.GetResource("http://purl.org/dc/elements/1.1/title");
     var answer = this.ds.GetTarget(res, arc, true);
     if (answer !== null) {
       do_check_true(this.shouldPass);
-      do_check_true(answer instanceof Components.interfaces.nsIRDFLiteral);
+      do_check_true(answer instanceof Ci.nsIRDFLiteral);
       do_check_eq(answer.Value, "Sample");
     }
     else {
       do_check_false(this.shouldPass);
     }
-      
+
     gPending -= 1;
-      
+
     this.ds.removeXMLSinkObserver(this);
 
     if (gPending == 0) {
