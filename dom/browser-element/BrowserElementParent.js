@@ -157,6 +157,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   }
 
   addMessageListener("hello", this._recvHello);
+  addMessageListener("get-name", this._recvGetName);
   addMessageListener("contextmenu", this._fireCtxMenuEvent);
   addMessageListener("locationchange", this._fireEventFromMsg);
   addMessageListener("loadstart", this._fireEventFromMsg);
@@ -167,7 +168,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener("securitychange", this._fireEventFromMsg);
   addMessageListener("error", this._fireEventFromMsg);
   addMessageListener("scroll", this._fireEventFromMsg);
-  addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
   addMessageListener('got-screenshot', this._gotDOMRequestResult);
@@ -260,6 +260,10 @@ BrowserElementParent.prototype = {
     if (this._window.document.mozHidden) {
       this._ownerVisibilityChange();
     }
+  },
+
+  _recvGetName: function(data) {
+    return this._frameElement.getAttribute('name');
   },
 
   _fireCtxMenuEvent: function(data) {
@@ -360,10 +364,6 @@ BrowserElementParent.prototype = {
     return new this._window.Event('mozbrowser' + evtName,
                                   { bubbles: true,
                                     cancelable: cancelable });
-  },
-
-  _sendMozAppManifestURL: function(data) {
-    return this._frameElement.getAttribute('mozapp');
   },
 
   /**

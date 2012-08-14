@@ -608,9 +608,22 @@ interface nsIDocShell : nsISupports
   readonly attribute boolean isInBrowserElement;
 
   /**
-   * Returns true iif the docshell is inside an application.
-   * However, it will return false if the docshell is inside a browser element
-   * that is inside an application.
+   * Returns true iif the docshell is inside an application.  However, it will
+   * return false if the docshell is inside a browser element that is inside
+   * an application.
+   *
+   * Note: Do not use this method for permissions checks!  An app may contain
+   * an <iframe> pointing at arbitrary web code.  This iframe's docshell will
+   * have isInApp() == true, but the iframe's content is not "app code", and
+   * so should not be granted more trust than vanilla web content.
+   *
+   * (For example, suppose when web content calls API method X, we show a
+   * permission prompt, but when "app code" calls method X, we don't.  In this
+   * case, it would be /incorrect/ to show the permission prompt if
+   * !isInApp().)
+   *
+   * If you're doing a security check, use the content's principal instead of
+   * this method.
    */
   readonly attribute boolean isInApp;
 

@@ -679,6 +679,14 @@ struct GetPropHelper {
             if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
                 return Lookup_Uncacheable;
 
+            /*
+             * Don't generate missing property ICs if we skipped a non-native
+             * object, as lookups may extend beyond the prototype chain (e.g.
+             * for ListBase proxies).
+             */
+            if (!obj->isNative())
+                return Lookup_Uncacheable;
+
 #if JS_HAS_NO_SUCH_METHOD
             /*
              * The __noSuchMethod__ hook may substitute in a valid method.

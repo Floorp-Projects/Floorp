@@ -8,6 +8,7 @@
 
 #include "tests.h"
 #include "jsscript.h"
+#include "jsstr.h"
 
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
@@ -254,3 +255,40 @@ BEGIN_TEST(testXDR_source)
     return true;
 }
 END_TEST(testXDR_source)
+
+BEGIN_TEST(testXDR_sourceMap)
+{
+    const char *sourceMaps[] = {
+        "http://example.com/source-map.json",
+        "file:///var/source-map.json",
+        NULL
+    };
+    for (const char **sm = sourceMaps; *sm; sm++) {
+        JSScript *script = JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__);
+        CHECK(script);
+
+        size_t len = strlen(*sm);
+        jschar *expected = js::InflateString(cx, *sm, &len);
+        CHECK(expected);
+
+        // The script source takes responsibility of free'ing |expected|.
+        script->scriptSource()->setSourceMap(expected);
+        script = FreezeThaw(cx, script);
+        CHECK(script);
+        CHECK(script->scriptSource());
+        CHECK(script->scriptSource()->hasSourceMap());
+
+        const jschar *actual = script->scriptSource()->sourceMap();
+        CHECK(actual);
+
+        while (*expected) {
+            CHECK(*actual);
+            CHECK(*expected == *actual);
+            expected++;
+            actual++;
+        }
+        CHECK(!*actual);
+    }
+    return true;
+}
+END_TEST(testXDR_sourceMap)

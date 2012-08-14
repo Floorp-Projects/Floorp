@@ -631,17 +631,14 @@ abstract public class GeckoApp
     }
 
     void processThumbnail(Tab thumbnailTab, Bitmap bitmap, byte[] compressed) {
-        if (shouldUpdateThumbnail(thumbnailTab)) {
-            if (compressed == null) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-                compressed = bos.toByteArray();
-            }
-        }
-
         try {
-            if (bitmap == null)
+            if (bitmap == null) {
+                if (compressed == null) {
+                    Log.e(LOGTAG, "processThumbnail: one of bitmap or compressed must be non-null!");
+                    return;
+                }
                 bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
+            }
             thumbnailTab.updateThumbnail(bitmap);
         } catch (OutOfMemoryError ome) {
             Log.w(LOGTAG, "decoding byte array ran out of memory", ome);
