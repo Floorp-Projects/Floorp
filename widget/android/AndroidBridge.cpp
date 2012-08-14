@@ -2503,6 +2503,10 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt
 
     void* data = env->GetDirectBufferAddress(buffer);
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride, gfxASurface::ImageFormatRGB16_565);
+    if (surf->CairoStatus() != 0) {
+        ALOG_BRIDGE("Error creating gfxImageSurface");
+        return NS_ERROR_FAILURE;
+    }
     nsRefPtr<gfxContext> context = new gfxContext(surf);
     gfxPoint pt(dstX, dstY);
     context->Translate(pt);
