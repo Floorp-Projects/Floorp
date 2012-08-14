@@ -16,6 +16,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_dbg_cmd.js \
   browser_cmd_addon.js \
   browser_cmd_calllog.js \
+  browser_cmd_calllog_chrome.js \
   browser_cmd_commands.js \
   browser_cmd_cookie.js \
   browser_cmd_integrate.js \

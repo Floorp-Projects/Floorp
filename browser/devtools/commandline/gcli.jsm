@@ -106,6 +106,14 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   require('gcli/commands/help').startup();
   require('gcli/commands/pref').startup();
 
+
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var Cu = Components.utils;
+  var prefSvc = "@mozilla.org/preferences-service;1";
+  var prefService = Cc[prefSvc].getService(Ci.nsIPrefService);
+  var prefBranch = prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
   exports.removeCommand = require('gcli/canon').removeCommand;
@@ -131,6 +139,9 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
     return new FFDisplay(opts);
   };
 
+  exports.hiddenByChromePref = function() {
+    return !prefBranch.prefHasUserValue("devtools.chrome.enabled");
+  };
 });
 /*
  * Copyright 2012, Mozilla Foundation and contributors
