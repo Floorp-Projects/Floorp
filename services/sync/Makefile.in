@@ -56,6 +56,10 @@ sync_engine_modules := \
   tabs.js \
   $(NULL)
 
+sync_stage_modules := \
+  enginesync.js \
+  $(NULL)
+
 DIRS += locales
 TEST_DIRS += tests
 
@@ -74,5 +78,9 @@ INSTALL_TARGETS += SYNC_MAIN
 SYNC_ENGINES_FILES := $(addprefix modules/engines/,$(sync_engine_modules))
 SYNC_ENGINES_DEST = $(FINAL_TARGET)/modules/services-sync/engines
 INSTALL_TARGETS += SYNC_ENGINES
+
+SYNC_STAGES_FILES := $(addprefix modules/stages/,$(sync_stage_modules))
+SYNC_STAGES_DEST = $(FINAL_TARGET)/modules/services-sync/stages
+INSTALL_TARGETS += SYNC_STAGES
 
 include $(topsrcdir)/config/rules.mk

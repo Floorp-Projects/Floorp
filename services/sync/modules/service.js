@@ -19,8 +19,6 @@ const PBKDF2_KEY_BYTES = 16;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/record.js");
@@ -36,6 +34,7 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/stages/enginesync.js");
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_USAGE,
@@ -1188,228 +1187,19 @@ WeaveSvc.prototype = {
   /**
    * Sync up engines with the server.
    */
-  _lockedSync: function _lockedSync()
-    this._lock("service.js: sync",
-               this._notify("sync", "", function onNotify() {
+  _lockedSync: function _lockedSync() {
+    return this._lock("service.js: sync",
+                      this._notify("sync", "", function onNotify() {
 
-    this._log.info("In sync().");
+      let synchronizer = new EngineSynchronizer(this);
+      let cb = Async.makeSpinningCallback();
+      synchronizer.onComplete = cb;
 
-    let syncStartTime = Date.now();
-
-    Status.resetSync();
-
-    // Make sure we should sync or record why we shouldn't
-    let reason = this._checkSync();
-    if (reason) {
-      if (reason == kSyncNetworkOffline) {
-        Status.sync = LOGIN_FAILED_NETWORK_ERROR;
-      }
-      // this is a purposeful abort rather than a failure, so don't set
-      // any status bits
-      reason = "Can't sync: " + reason;
-      throw reason;
-    }
-
-    // if we don't have a node, get one.  if that fails, retry in 10 minutes
-    if (this.clusterURL == "" && !this._setCluster()) {
-      Status.sync = NO_SYNC_NODE_FOUND;
-      return;
-    }
-
-    // Ping the server with a special info request once a day.
-    let infoURL = this.infoURL;
-    let now = Math.floor(Date.now() / 1000);
-    let lastPing = Svc.Prefs.get("lastPing", 0);
-    if (now - lastPing > 86400) { // 60 * 60 * 24
-      infoURL += "?v=" + WEAVE_VERSION;
-      Svc.Prefs.set("lastPing", now);
-    }
-
-    // Figure out what the last modified time is for each collection
-    let info = this._fetchInfo(infoURL);
-
-    // Convert the response to an object and read out the modified times
-    for each (let engine in [Clients].concat(Engines.getAll()))
-      engine.lastModified = info.obj[engine.name] || 0;
-
-    if (!(this._remoteSetup(info)))
-      throw "aborting sync, remote setup failed";
-
-    // Make sure we have an up-to-date list of clients before sending commands
-    this._log.debug("Refreshing client list.");
-    if (!this._syncEngine(Clients)) {
-      // Clients is an engine like any other; it can fail with a 401,
-      // and we can elect to abort the sync.
-      this._log.warn("Client engine sync failed. Aborting.");
-      return;
-    }
-
-    // Wipe data in the desired direction if necessary
-    switch (Svc.Prefs.get("firstSync")) {
-      case "resetClient":
-        this.resetClient(Engines.getEnabled().map(function(e) e.name));
-        break;
-      case "wipeClient":
-        this.wipeClient(Engines.getEnabled().map(function(e) e.name));
-        break;
-      case "wipeRemote":
-        this.wipeRemote(Engines.getEnabled().map(function(e) e.name));
-        break;
-    }
-
-    if (Clients.localCommands) {
-      try {
-        if (!(Clients.processIncomingCommands())) {
-          Status.sync = ABORT_SYNC_COMMAND;
-          throw "aborting sync, process commands said so";
-        }
-
-        // Repeat remoteSetup in-case the commands forced us to reset
-        if (!(this._remoteSetup(info)))
-          throw "aborting sync, remote setup failed after processing commands";
-      }
-      finally {
-        // Always immediately attempt to push back the local client (now
-        // without commands).
-        // Note that we don't abort here; if there's a 401 because we've
-        // been reassigned, we'll handle it around another engine.
-        this._syncEngine(Clients);
-      }
-    }
-
-    // Update engines because it might change what we sync.
-    try {
-      this._updateEnabledEngines();
-    } catch (ex) {
-      this._log.debug("Updating enabled engines failed: " +
-                      Utils.exceptionStr(ex));
-      ErrorHandler.checkServerError(ex);
-      throw ex;
-    }
-
-    try {
-      for each (let engine in Engines.getEnabled()) {
-        // If there's any problems with syncing the engine, report the failure
-        if (!(this._syncEngine(engine)) || Status.enforceBackoff) {
-          this._log.info("Aborting sync");
-          break;
-        }
-      }
-
-      // If _syncEngine fails for a 401, we might not have a cluster URL here.
-      // If that's the case, break out of this immediately, rather than
-      // throwing an exception when trying to fetch metaURL.
-      if (!this.clusterURL) {
-        this._log.debug("Aborting sync, no cluster URL: " +
-                        "not uploading new meta/global.");
-        return;
-      }
-
-      // Upload meta/global if any engines changed anything
-      let meta = Records.get(this.metaURL);
-      if (meta.isNew || meta.changed) {
-        new Resource(this.metaURL).put(meta);
-        delete meta.isNew;
-        delete meta.changed;
-      }
-
-      // If there were no sync engine failures
-      if (Status.service != SYNC_FAILED_PARTIAL) {
-        Svc.Prefs.set("lastSync", new Date().toString());
-        Status.sync = SYNC_SUCCEEDED;
-      }
-    } finally {
-      Svc.Prefs.reset("firstSync");
-
-      let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
-      let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
-      this._log.info("Sync completed at " + dateStr
-                     + " after " + syncTime + " secs.");
-    }
-  }))(),
-
-
-  _updateEnabledEngines: function _updateEnabledEngines() {
-    this._log.info("Updating enabled engines: " + SyncScheduler.numClients + " clients.");
-    let meta = Records.get(this.metaURL);
-    if (meta.isNew || !meta.payload.engines)
-      return;
-
-    // If we're the only client, and no engines are marked as enabled,
-    // thumb our noses at the server data: it can't be right.
-    // Belt-and-suspenders approach to Bug 615926.
-    if ((SyncScheduler.numClients <= 1) &&
-        ([e for (e in meta.payload.engines) if (e != "clients")].length == 0)) {
-      this._log.info("One client and no enabled engines: not touching local engine status.");
-      return;
-    }
-
-    this._ignorePrefObserver = true;
-
-    let enabled = [eng.name for each (eng in Engines.getEnabled())];
-    for (let engineName in meta.payload.engines) {
-      if (engineName == "clients") {
-        // Clients is special.
-        continue;
-      }
-      let index = enabled.indexOf(engineName);
-      if (index != -1) {
-        // The engine is enabled locally. Nothing to do.
-        enabled.splice(index, 1);
-        continue;
-      }
-      let engine = Engines.get(engineName);
-      if (!engine) {
-        // The engine doesn't exist locally. Nothing to do.
-        continue;
-      }
-
-      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
-        // The engine was disabled locally. Wipe server data and
-        // disable it everywhere.
-        this._log.trace("Wiping data for " + engineName + " engine.");
-        engine.wipeServer();
-        delete meta.payload.engines[engineName];
-        meta.changed = true;
-      } else {
-        // The engine was enabled remotely. Enable it locally.
-        this._log.trace(engineName + " engine was enabled remotely.");
-        engine.enabled = true;
-      }
-    }
-
-    // Any remaining engines were either enabled locally or disabled remotely.
-    for each (let engineName in enabled) {
-      let engine = Engines.get(engineName);
-      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
-        this._log.trace("The " + engineName + " engine was enabled locally.");
-      } else {
-        this._log.trace("The " + engineName + " engine was disabled remotely.");
-        engine.enabled = false;
-      }
-    }
-
-    Svc.Prefs.resetBranch("engineStatusChanged.");
-    this._ignorePrefObserver = false;
-  },
-
-  // Returns true if sync should proceed.
-  // false / no return value means sync should be aborted.
-  _syncEngine: function _syncEngine(engine) {
-    try {
-      engine.sync();
-    }
-    catch(e) {
-      if (e.status == 401) {
-        // Maybe a 401, cluster update perhaps needed?
-        // We rely on ErrorHandler observing the sync failure notification to
-        // schedule another sync and clear node assignment values.
-        // Here we simply want to muffle the exception and return an
-        // appropriate value.
-        return false;
-      }
-    }
-    return true;
+      synchronizer.sync();
+      // wait() throws if the first argument is truthy, which is exactly what
+      // we want.
+      let result = cb.wait();
+    }))();
   },
 
   /**
