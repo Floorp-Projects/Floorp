@@ -5,17 +5,14 @@
 import select
 import socket
 import SocketServer
-import time, datetime
+import time
 import os
 import re
-import hashlib
 import posixpath
 import subprocess
 from threading import Thread
-import traceback
-import sys
 import StringIO
-from devicemanager import DeviceManager, DMError, FileError, NetworkTools, _pop_last_line
+from devicemanager import DeviceManager, FileError, NetworkTools, _pop_last_line
 import errno
 
 class AgentError(Exception):
@@ -126,7 +123,6 @@ class DeviceManagerSUT(DeviceManager):
     one fails.  this is necessary in particular for pushFile(), where we don't want
     to accidentally send extra data if a failure occurs during data transmission.
     '''
-    done = False
     while self.retries < self.retrylimit:
       try:
         self._doCmds(cmdlist, outputfile, timeout)
@@ -503,7 +499,7 @@ class DeviceManagerSUT(DeviceManager):
         return None
 
     try:
-      data = self.runCmds([{ 'cmd': 'exec ' + appname }])
+      self.runCmds([{ 'cmd': 'exec ' + appname }])
     except AgentError:
       return None
 
@@ -547,7 +543,7 @@ class DeviceManagerSUT(DeviceManager):
     if forceKill:
       print "WARNING: killProcess(): forceKill parameter unsupported on SUT"
     try:
-      data = self.runCmds([{ 'cmd': 'kill ' + appname }])
+      self.runCmds([{ 'cmd': 'kill ' + appname }])
     except AgentError:
       return False
 
@@ -640,7 +636,8 @@ class DeviceManagerSUT(DeviceManager):
     # or, if error,
     # <filename>,-1\n<error message>
     try:
-      data = self.runCmds([{ 'cmd': 'pull ' + remoteFile }])
+      # just send the command first, we read the response inline below
+      self.runCmds([{ 'cmd': 'pull ' + remoteFile }])
     except AgentError:
       return None
 
@@ -880,7 +877,6 @@ class DeviceManagerSUT(DeviceManager):
     cmd = 'rebt'
 
     if (self.debug > 3): print "INFO: sending rebt command"
-    callbacksvrstatus = None
 
     if (ipAddr is not None):
     #create update.info file:
