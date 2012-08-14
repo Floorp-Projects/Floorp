@@ -49,7 +49,7 @@ static const float MIN_SKATE_SPEED = 0.5f;
 /**
  * Angle from axis within which we stay axis-locked.
  */
-static const float AXIS_LOCK_ANGLE = M_PI / 6.0;
+static const float AXIS_LOCK_ANGLE = M_PI / 9.0;
 
 /**
  * Duration of a zoom to animation.
