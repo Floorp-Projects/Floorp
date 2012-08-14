@@ -55,7 +55,7 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument)
   }
   else if (aValue.GetUnit() == eCSSUnit_Image) {
     // If we already have a request, see if this document needs to clone it.
-    imgIRequest* request = aValue.GetImageValue(nsnull);
+    imgIRequest* request = aValue.GetImageValue(nullptr);
 
     if (request) {
       aDocument->StyleImageLoader()->MaybeRegisterCSSImage(aValue.GetImageStructValue());
