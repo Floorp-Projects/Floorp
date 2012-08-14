@@ -11,7 +11,7 @@
 namespace {
 
 #if defined(XP_WIN)
-#include <Windows.h>
+#include <windows.h>
 
 /**
  * Set the OS-specific error to inform the OS that
