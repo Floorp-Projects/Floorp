@@ -336,10 +336,6 @@ public class testBrowserProvider extends ContentProviderTest {
         }
     }
 
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     abstract class Test implements Runnable {
         public void run() {
             try {
