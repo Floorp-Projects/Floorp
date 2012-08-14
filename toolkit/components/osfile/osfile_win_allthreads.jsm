@@ -110,7 +110,7 @@ if (typeof Components != "undefined") {
         " while fetching system error message";
     }
     return "Win error " + this.winLastError + " during operation "
-      + this.operation + " (" + buf.readString() + " )";
+      + this.operation + " (" + buf.readString() + ")";
   };
 
   /**
@@ -131,6 +131,24 @@ if (typeof Components != "undefined") {
       return this.winLastError == exports.OS.Constants.Win.ERROR_FILE_NOT_FOUND;
     }
   });
+
+  /**
+   * Serialize an instance of OSError to something that can be
+   * transmitted across threads (not necessarily a string).
+   */
+  OSError.toMsg = function toMsg(error) {
+    return {
+      operation: error.operation,
+     winLastError: error.winLastError
+    };
+  };
+
+  /**
+   * Deserialize a message back to an instance of OSError
+   */
+  OSError.fromMsg = function fromMsg(msg) {
+    return new OSError(msg.operation, msg.winLastError);
+  };
 
   exports.OS.Shared.Win.Error = OSError;
 
