@@ -789,7 +789,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   if (aPrivilege != Chrome) {
     rv = ss->SetQuotaForFilenamePattern(pattern,
                                         GetIndexedDBQuotaMB() * 1024 * 1024,
-                                        mQuotaCallbackSingleton, nsnull);
+                                        mQuotaCallbackSingleton, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -115,7 +115,7 @@ TiledThebesLayerOGL::TiledThebesLayerOGL(LayerManagerOGL *aManager)
   : ShadowThebesLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mVideoMemoryTiledBuffer(aManager->gl())
-  , mReusableTileStore(nsnull)
+  , mReusableTileStore(nullptr)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -149,7 +149,7 @@ TiledThebesLayerOGL::ProcessUploadQueue()
   // tiles is not useful and often results in rendering artifacts.
   if (mReusableTileStore && mIsFixedPosition) {
     delete mReusableTileStore;
-    mReusableTileStore = nsnull;
+    mReusableTileStore = nullptr;
   } else if (!mReusableTileStore && !mIsFixedPosition) {
     // XXX Add a pref for reusable tile store size
     mReusableTileStore = new ReusableTileStoreOGL(gl(), 1);

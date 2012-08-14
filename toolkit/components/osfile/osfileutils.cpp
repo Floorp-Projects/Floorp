@@ -95,7 +95,7 @@ MOZ_EXPORT_API(PRUnichar*) osfile_DecodeAll(
 {
   if (!aEncoding || !aSource) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   nsresult rv;
@@ -103,14 +103,14 @@ MOZ_EXPORT_API(PRUnichar*) osfile_DecodeAll(
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     error_not_supported();
-    return nsnull;
+    return nullptr;
   }
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
   rv = manager->GetUnicodeDecoder(aEncoding, getter_AddRefs(decoder));
   if (NS_FAILED(rv)) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   // Compute an upper bound to the number of chars, allocate buffer
@@ -123,9 +123,9 @@ MOZ_EXPORT_API(PRUnichar*) osfile_DecodeAll(
   int32_t bufSize = (upperBoundChars + 1) * sizeof (PRUnichar);
 
   mozilla::ScopedFreePtr<PRUnichar> dest((PRUnichar*)NS_Alloc(bufSize));
-  if (dest.get() == nsnull) {
+  if (dest.get() == nullptr) {
     error_no_memory();
-    return nsnull;
+    return nullptr;
   }
 
   // Convert, add trailing \0
@@ -133,7 +133,7 @@ MOZ_EXPORT_API(PRUnichar*) osfile_DecodeAll(
   rv = decoder->Convert(aSource, &srcBytes, dest.rwget(), &upperBoundChars);
   if (NS_FAILED(rv)) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   dest.rwget()[upperBoundChars] = '\0';
@@ -148,7 +148,7 @@ MOZ_EXPORT_API(char*) osfile_EncodeAll(
 {
   if (!aEncoding || !aSource || !aBytesProduced) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   nsresult rv;
@@ -156,14 +156,14 @@ MOZ_EXPORT_API(char*) osfile_EncodeAll(
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     error_not_supported();
-    return nsnull;
+    return nullptr;
   }
 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   rv = manager->GetUnicodeEncoder(aEncoding, getter_AddRefs(encoder));
   if (NS_FAILED(rv)) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   int32_t srcChars = NS_strlen(aSource);
@@ -176,15 +176,15 @@ MOZ_EXPORT_API(char*) osfile_EncodeAll(
   int32_t bufSize = upperBoundBytes;
   mozilla::ScopedFreePtr<char> dest((char*)NS_Alloc(bufSize));
 
-  if (dest.get() == nsnull) {
+  if (dest.get() == nullptr) {
     error_no_memory();
-    return nsnull;
+    return nullptr;
   }
 
   rv = encoder->Convert(aSource, &srcChars, dest.rwget(), &upperBoundBytes);
   if (NS_FAILED(rv)) {
     error_invalid_argument();
-    return nsnull;
+    return nullptr;
   }
 
   *aBytesProduced = upperBoundBytes;
