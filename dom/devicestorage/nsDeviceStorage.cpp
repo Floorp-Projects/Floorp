@@ -1389,10 +1389,6 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage()
   : mIsWatchingFile(false)
-#ifdef MOZ_WIDGET_GONK
-  , mLastVolumeState(nsIVolume::STATE_INIT)
-#endif
-
 { }
 
 nsresult
@@ -1730,7 +1726,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
 
 #ifdef MOZ_WIDGET_GONK
 void
-nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
+nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aType)
 {
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
@@ -1739,8 +1735,7 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
   nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
                                                  true, false,
                                                  NS_LITERAL_STRING(""), 
-                                                 aMounted ? NS_LITERAL_STRING("available")
-                                                          : NS_LITERAL_STRING("unavailable"));
+                                                 aType);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1847,16 +1842,18 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
       return NS_OK;
     }
 
-    if (mLastVolumeState != state) {
-      mLastVolumeState = state;
-      if (state == nsIVolume::STATE_MOUNTED ||
-	  state == nsIVolume::STATE_NOMEDIA ||
-	  state == nsIVolume::STATE_SHARED  ) {
-	bool mounted = (state == nsIVolume::STATE_MOUNTED);
-	DispatchMountChangeEvent(mounted);
-      }
+    nsString type;
+    if (state == nsIVolume::STATE_MOUNTED) {
+      type.Assign(NS_LITERAL_STRING("available"));
+    } else if (state == nsIVolume::STATE_SHARED || state == nsIVolume::STATE_SHAREDMNT) {
+      type.Assign(NS_LITERAL_STRING("shared"));
+    } else if (state == nsIVolume::STATE_NOMEDIA || state == nsIVolume::STATE_UNMOUNTING) {
+      type.Assign(NS_LITERAL_STRING("unavailable"));
+    } else {
+      // ignore anything else.
       return NS_OK;
     }
+    DispatchMountChangeEvent(type);
     return NS_OK;
   }
 #endif
