@@ -20,6 +20,7 @@ self.onmessage = function onmessage_start(msg) {
     test_open_non_existing_file();
     test_copy_existing_file();
     test_read_write_file();
+    test_position();
     test_move_file();
     test_iter_dir();
     test_info();
@@ -292,6 +293,35 @@ function test_iter_dir()
   ok(true, "test_iter_dir: Cleaning up");
   iterator.close();
   ok(true, "test_iter_dir: Complete");
+}
+
+function test_position() {
+  ok(true, "test_position: Starting");
+
+  ok("POS_START" in OS.File, "test_position: POS_START exists");
+  ok("POS_CURRENT" in OS.File, "test_position: POS_CURRENT exists");
+  ok("POS_END" in OS.File, "test_position: POS_END exists");
+
+  let ARBITRARY_POSITION = 321;
+  let src_file_name = "chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js";
+
+
+  let file = OS.File.open(src_file_name);
+  is(file.getPosition(), 0, "test_position: Initial position is 0");
+
+  let size = 0 + file.stat().size; // Hack: We can remove this 0 + once 776259 has landed
+
+  file.setPosition(ARBITRARY_POSITION, OS.File.POS_START);
+  is(file.getPosition(), ARBITRARY_POSITION, "test_position: Setting position from start");
+
+  file.setPosition(-ARBITRARY_POSITION, OS.File.POS_END);
+  is(file.getPosition(), size - ARBITRARY_POSITION, "test_position: Setting position from end");
+
+  file.setPosition(ARBITRARY_POSITION, OS.File.POS_CURRENT);
+  is(file.getPosition(), size, "test_position: Setting position from current");
+
+  file.close();
+  ok(true, "test_position: Complete");
 }
 
 function test_info() {
