@@ -5358,6 +5358,11 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   if (mContent && !mContent->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString buf;
     mContent->Tag()->ToString(buf);
+    if (GetType() == nsGkAtoms::subDocumentFrame) {
+      nsAutoString src;
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+      buf.Append(NS_LITERAL_STRING(" src=") + src);
+    }
     aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
   }
   char buf[40];
