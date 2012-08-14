@@ -183,7 +183,7 @@ class DeviceManagerSUT(DeviceManager):
           sent = self._sock.send(cmd['data'])
           if sent != len(cmd['data']):
               raise AgentError("ERROR: we had %s bytes of data to send, but "
-                               "only sent %s" % (len(cmd['data'], sent)))
+                               "only sent %s" % (len(cmd['data']), sent))
 
         if (self.debug >= 4): print "sent cmd: " + str(cmd['cmd'])
       except socket.error, msg:
