@@ -179,6 +179,12 @@ protected:
   PRInt32 mPos;
   PRInt32 mStartPos;
   float mVelocity;
+  // Acceleration is represented by an int, which is the power we raise a
+  // constant to and then multiply the velocity by whenever it is sampled. We do
+  // this only when we detect that the user wants to do a fast fling; that is,
+  // they are flinging multiple times in a row very quickly, probably trying to
+  // reach one of the extremes of the page.
+  PRInt32 mAcceleration;
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
   bool mLockPanning;
 };
