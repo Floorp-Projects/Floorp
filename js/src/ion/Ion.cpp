@@ -397,7 +397,8 @@ IonScript::IonScript()
     safepointsStart_(0),
     safepointsSize_(0),
     refcount_(0),
-    slowCallCount(0)
+    slowCallCount(0),
+    recompileInfo_()
 {
 }
 static const int DataAlignment = 4;
@@ -477,6 +478,8 @@ IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapsh
 
     script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
+
+    script->recompileInfo_ = cx->compartment->types.compiledInfo;
 
     return script;
 }
@@ -1381,25 +1384,26 @@ ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
     }
 }
 
+
 void
-ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool resetUses)
+ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
+                const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
     bool anyInvalidation = false;
     for (size_t i = 0; i < invalid.length(); i++) {
-        const types::CompilerOutput &co = invalid[i];
-        JS_ASSERT(co.isValid());
+        const types::CompilerOutput &co = *invalid[i].compilerOutput(types);
         if (co.isIon()) {
-            JS_ASSERT(co.script->hasIonScript() && co.out.ion == co.script->ionScript());
+            JS_ASSERT(co.isValid());
             IonSpew(IonSpew_Invalidate, " Invalidate %s:%u, IonScript %p",
-                    co.script->filename, co.script->lineno, co.out.ion);
+                    co.script->filename, co.script->lineno, co.ion());
 
             // Keep the ion script alive during the invalidation and flag this
             // ionScript as being invalidated.  This increment is removed by the
             // loop after the calls to InvalidateActivation.
-            co.out.ion->incref();
+            co.ion()->incref();
             anyInvalidation = true;
         }
     }
@@ -1416,10 +1420,11 @@ ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool 
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
-        const types::CompilerOutput &co = invalid[i];
+        types::CompilerOutput &co = *invalid[i].compilerOutput(types);
         if (co.isIon()) {
+            JS_ASSERT(co.isValid());
             JSScript *script = co.script;
-            IonScript *ionScript = co.out.ion;
+            IonScript *ionScript = script->ionScript();
 
             JSCompartment *compartment = script->compartment();
             if (compartment->needsBarrier()) {
@@ -1430,17 +1435,22 @@ ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool 
                 IonScript::Trace(compartment->barrierTracer(), ionScript);
             }
 
-            co.out.ion->decref(fop);
+            ionScript->decref(fop);
             script->ion = NULL;
+            co.invalidate();
+
+            // Wait for the scripts to get warm again before doing another
+            // compile, unless we are recompiling *because* a script got hot.
+            if (resetUses)
+                script->resetUseCount();
         }
     }
+}
 
-    // Wait for the scripts to get warm again before doing another compile,
-    // unless we are recompiling *because* a script got hot.
-    if (resetUses) {
-        for (size_t i = 0; i < invalid.length(); i++)
-            invalid[i].script->resetUseCount();
-    }
+void
+ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
+{
+    ion::Invalidate(cx->compartment->types, cx->runtime->defaultFreeOp(), invalid, resetUses);
 }
 
 bool
@@ -1448,12 +1458,9 @@ ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
 {
     JS_ASSERT(script->hasIonScript());
 
-    Vector<types::CompilerOutput> scripts(cx);
-    types::CompilerOutput co(script);
-    if (!scripts.append(co))
-        return false;
-
-    Invalidate(cx->runtime->defaultFreeOp(), scripts, resetUses);
+    Vector<types::RecompileInfo> scripts(cx);
+    scripts.append(script->ionScript()->recompileInfo());
+    Invalidate(cx, scripts, resetUses);
     return true;
 }
 
@@ -1467,8 +1474,12 @@ ion::FinishInvalidation(FreeOp *fop, JSScript *script)
      * If this script has Ion code on the stack, invalidation() will return
      * true. In this case we have to wait until destroying it.
      */
-    if (!script->ion->invalidated())
+    if (!script->ion->invalidated()) {
+        types::TypeCompartment &types = script->compartment()->types;
+        script->ion->recompileInfo().compilerOutput(types)->invalidate();
+
         ion::IonScript::Destroy(fop, script->ion);
+    }
 
     /* In all cases, NULL out script->ion to avoid re-entry. */
     script->ion = NULL;

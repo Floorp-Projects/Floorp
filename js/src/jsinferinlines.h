@@ -36,42 +36,68 @@ CompilerOutput::CompilerOutput()
     barriers(false),
     chunkIndex(false)
 {
-    out.mjit = NULL;
 }
 
-inline
-CompilerOutput::CompilerOutput(JSScript *script, bool isIonFlag)
-  : script(script),
-    isIonFlag(isIonFlag),
-    constructing(false),
-    barriers(false),
-    chunkIndex(false)
+inline mjit::JITScript *
+CompilerOutput::mjit() const
 {
-    out.mjit = NULL;
 #ifdef JS_METHODJIT
-    if (isJM() && script->hasMJITInfo())
-        out.mjit = script->getJIT(constructing, barriers);
+    JS_ASSERT(isJM() && isValid());
+    return script->getJIT(constructing, barriers);
+#else
+    return NULL;
 #endif
-    if (isIon() && script->hasIonScript())
-        out.ion = script->ionScript();
+}
+
+inline ion::IonScript *
+CompilerOutput::ion() const
+{
+    JS_ASSERT(isIon() && isValid());
+    return script->ionScript();
 }
 
 inline bool
 CompilerOutput::isValid() const
 {
-#ifdef JS_METHODJIT
-    if (isJM() && out.mjit != NULL && script->getJIT(constructing, barriers) == out.mjit)
-        return true;
+    if (!script)
+        return false;
+
+#ifdef DEBUG
+    TypeCompartment &types = script->compartment()->types;
 #endif
-    if (isIon() && script->hasIonScript() && script->ionScript() == out.ion)
+
+#ifdef JS_METHODJIT
+    if (isJM()) {
+        mjit::JITScript *jit = script->getJIT(constructing, barriers);
+        if (!jit)
+            return false;
+        mjit::JITChunk *chunk = jit->chunkDescriptor(chunkIndex).chunk;
+        if (!chunk)
+            return false;
+        JS_ASSERT(this == chunk->recompileInfo.compilerOutput(types));
         return true;
+    }
+#endif
+
+    if (isIon()) {
+        if (!script->hasIonScript())
+            return false;
+        JS_ASSERT(this == script->ion->recompileInfo().compilerOutput(types));
+        return true;
+    }
     return false;
+}
+
+inline CompilerOutput*
+RecompileInfo::compilerOutput(TypeCompartment &types) const
+{
+    return &(*types.constrainedOutputs)[outputIndex];
 }
 
 inline CompilerOutput*
 RecompileInfo::compilerOutput(JSContext *cx) const
 {
-    return &(*cx->compartment->types.constrainedOutputs)[outputIndex];
+    return compilerOutput(cx->compartment->types);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -314,10 +340,19 @@ struct AutoEnterCompilation
     {
         CompilerOutput co;
         co.script = script;
+        co.isIonFlag = (mode == Ion);
         co.constructing = constructing;
         co.barriers = cx->compartment->needsBarrier();
         co.chunkIndex = chunkIndex;
 
+        // This flag is used to prevent adding the current compiled script in
+        // the list of compiler output which should be invalided.  This is
+        // necessary because we can run some analysis might discard the script
+        // it-self, which can happen when the monitored value does not reflect
+        // the types propagated by the type inference.
+        co.pendingRecompilation = true;
+
+        JS_ASSERT(!co.isValid());
         TypeCompartment &types = cx->compartment->types;
         if (!types.constrainedOutputs) {
             types.constrainedOutputs = cx->new_< Vector<CompilerOutput> >(cx);
@@ -340,18 +375,10 @@ struct AutoEnterCompilation
     ~AutoEnterCompilation()
     {
         CompilerOutput *co = info.compilerOutput(cx);
-#ifdef JS_METHODJIT
-        if (mode == JM) {
-            co->isIonFlag = false;
-            if (co->script->hasMJITInfo())
-                co->out.mjit = co->script->getJIT(co->constructing, co->barriers);
-        }
-#endif
-        if (mode == Ion) {
-            co->isIonFlag = true;
-            if (co->script->hasIonScript())
-                co->out.ion = co->script->ionScript();
-        }
+        co->pendingRecompilation = false;
+        if (!co->isValid())
+            co->invalidate();
+
         info.outputIndex = RecompileInfo::NoCompilerRunning;
     }
 };
