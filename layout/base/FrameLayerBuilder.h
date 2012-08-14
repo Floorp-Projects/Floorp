@@ -239,6 +239,7 @@ public:
    * the NS_FRAME_HAS_CONTAINER_LAYER state bit. Only the nearest
    * ancestor frame of the damaged frame that has
    * NS_FRAME_HAS_CONTAINER_LAYER needs to be invalidated this way.
+   * It is assumed that aRect does NOT have the frame's transforms applied.
    */
   static void InvalidateThebesLayerContents(nsIFrame* aFrame,
                                             const nsRect& aRect);

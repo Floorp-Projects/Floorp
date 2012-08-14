@@ -788,7 +788,7 @@
         </toolbarbutton>
       </toolbaritem>
 
-      <hbox id="window-controls" hidden="true" fullscreencontrol="true" pack="end">
+      <hbox id="window-controls" hidden="true" pack="end">
         <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>

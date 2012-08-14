@@ -597,10 +597,7 @@ var FullScreen = {
       fullscreenctls.setAttribute("flex", "1");
       navbar.appendChild(fullscreenctls);
     }
-
-    var controls = document.getElementsByAttribute("fullscreencontrol", "true");
-    for (var i = 0; i < controls.length; ++i)
-      controls[i].hidden = aShow;
+    fullscreenctls.hidden = aShow;
   }
 };
 XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", function() {
