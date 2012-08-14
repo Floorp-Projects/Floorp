@@ -1120,11 +1120,10 @@ nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
   return NS_OK;
 }
 
-nsresult
+void
 nsNPAPIPluginInstance::SetCached(bool aCache)
 {
   mCached = aCache;
-  return NS_OK;
 }
 
 bool
