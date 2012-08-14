@@ -783,7 +783,7 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
 #ifdef JS_ION
-    if (cx->fp()->runningInIon() || cx->fp()->callingIntoIon()) {
+    if (cx->fp()->beginsIonActivation()) {
         ion::GetPcScript(cx, script, pc);
         return;
     }

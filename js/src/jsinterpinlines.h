@@ -692,7 +692,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 return false;
         } while(0);
     } else {
-        if (!cx->fp()->runningInIon()) {
+        if (!cx->fp()->beginsIonActivation()) {
             // Don't update getStringElement if called from Ion code, since
             // ion::GetPcScript is expensive.
             JSScript *script;
@@ -797,7 +797,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
                 obj->setDenseArrayElementWithType(cx, i, value);
                 return true;
             } else {
-                if (!cx->fp()->runningInIon()) {
+                if (!cx->fp()->beginsIonActivation()) {
                     JSScript *script;
                     jsbytecode *pc;
                     types::TypeScript::GetPcScript(cx, &script, &pc);
