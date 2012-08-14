@@ -5958,7 +5958,7 @@ nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
                       false,          // aNavigate
                       nullptr, nullptr,  // No args
                       GetPrincipal(),    // aCalleePrincipal
-                      nsnull,            // aJSCallerContext
+                      nullptr,           // aJSCallerContext
                       _retval);
 
 }
