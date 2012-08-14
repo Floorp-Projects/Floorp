@@ -56,6 +56,18 @@ public:
     NS_DECL_NSIWEBGLEXTENSION
 };
 
+class WebGLExtensionDepthTexture :
+    public nsIWebGLExtensionDepthTexture,
+    public WebGLExtension
+{
+public:
+    WebGLExtensionDepthTexture(WebGLContext* context);
+    virtual ~WebGLExtensionDepthTexture();
+
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIWEBGLEXTENSION
+};
+
 }
 
 #endif // WEBGLEXTENSIONS_H_

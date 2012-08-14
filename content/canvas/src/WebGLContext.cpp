@@ -1007,6 +1007,18 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext)
                 isSupported = true;
             }
             break;
+        case WEBGL_depth_texture:
+            if (gl->IsGLES2() && 
+                gl->IsExtensionSupported(GLContext::OES_packed_depth_stencil) &&
+                gl->IsExtensionSupported(GLContext::OES_depth_texture)) 
+            {
+                isSupported = true;
+            } else if (!gl->IsGLES2() &&
+                       gl->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) 
+            {
+                isSupported = true;
+            }
+            break;
         default:
             MOZ_ASSERT(false, "should not get there.");
     }
@@ -1072,6 +1084,12 @@ WebGLContext::GetExtension(const nsAString& aName)
         if (IsExtensionSupported(WEBGL_compressed_texture_s3tc))
             ext = WEBGL_compressed_texture_s3tc;
     }
+    else if (aName.Equals(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"),
+             nsCaseInsensitiveStringComparator()))
+    {
+        if (IsExtensionSupported(WEBGL_depth_texture))
+            ext = WEBGL_depth_texture;
+    }
 
     if (ext == WebGLExtensionID_unknown_extension) {
       return nullptr;
@@ -1090,6 +1108,9 @@ WebGLContext::GetExtension(const nsAString& aName)
                 break;
             case WEBGL_compressed_texture_s3tc:
                 mExtensions[ext] = new WebGLExtensionCompressedTextureS3TC(this);
+                break;
+            case WEBGL_depth_texture:
+                mExtensions[ext] = new WebGLExtensionDepthTexture(this);
                 break;
             default:
                 // create a generic WebGLExtension object for any extensions that don't
@@ -1667,6 +1688,8 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
     if (IsExtensionSupported(WEBGL_compressed_texture_s3tc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
+    if (IsExtensionSupported(WEBGL_depth_texture))
+        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
 }
 
 NS_IMETHODIMP

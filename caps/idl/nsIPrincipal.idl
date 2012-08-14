@@ -240,6 +240,18 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute unsigned short appStatus;
 
+    %{C++
+    PRUint16 GetAppStatus()
+    {
+      PRUint16 appStatus;
+      nsresult rv = GetAppStatus(&appStatus);
+      if (NS_FAILED(rv)) {
+        return APP_STATUS_NOT_INSTALLED;
+      }
+      return appStatus;
+    }
+    %}
+
     /**
      * Returns the app id the principal is in, or returns
      * nsIScriptSecurityManager::NO_APP_ID if this principal isn't part of an

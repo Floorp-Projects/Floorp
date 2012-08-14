@@ -3245,11 +3245,6 @@ stack[anonid=browserStack][responsivemode] {
   border-top: none;
 }
 
-.web-console-panel {
-  -moz-appearance: none;
-  background-color: white;
-}
-
 /* Developer Toolbar */
 
 .developer-toolbar-button {

@@ -4,6 +4,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
+import android.view.ViewGroup;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ExpandableListView;
@@ -128,10 +129,24 @@ public class testHistoryTab extends BaseTest {
         mSolo.clickLongOnView(child);
         mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
 
+        // wait for the history list to be populated
         waitForTest(new BooleanTest() {
             public boolean test() {
                 if (list.getChildAt(1) == null) {
                     return false;
+                }
+                View firstChild = list.getChildAt(1);
+                if (firstChild instanceof android.view.ViewGroup) {
+                    ViewGroup group = (ViewGroup)firstChild;
+                    if (group.getChildCount() < 1) {
+                        return false;
+                    }
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        View grandChild = group.getChildAt(i);
+                        if (grandChild instanceof android.widget.TextView) {
+                            mAsserter.ok(true, "found TextView:", ((android.widget.TextView)grandChild).getText().toString());
+                        }
+                    }
                 }
                 return true;
             }

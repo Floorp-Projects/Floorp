@@ -213,7 +213,7 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
 JS_ALWAYS_INLINE JSAtom *
 JSFixedString::morphAtomizedStringIntoAtom()
 {
-    d.lengthAndFlags = buildLengthAndFlags(length(), NON_STATIC_ATOM_FLAGS);
+    d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_FLAGS);
     return &asAtom();
 }
 

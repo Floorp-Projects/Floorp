@@ -61,7 +61,12 @@ protected:
   enum GestureState {
     // There's no gesture going on, and we don't think we're about to enter one.
     GESTURE_NONE,
-    // There's a pinch happening, which occurs when there are two touch inputs.
+    // We have detected that two or more fingers are on the screen, but there
+    // hasn't been enough movement yet to make us start actually zooming the
+    // screen.
+    GESTURE_WAITING_PINCH,
+    // There are two or more fingers on the screen, and the user has already
+    // pinched enough for us to start zooming the screen.
     GESTURE_PINCH,
     // A touch start has happened and it may turn into a tap. We use this
     // because, if we put down two fingers and then lift them very quickly, this
@@ -136,6 +141,14 @@ protected:
    * Current gesture we're dealing with.
    */
   GestureState mState;
+
+  /**
+   * Total change in span since we detected a pinch gesture. Only used when we
+   * are in the |GESTURE_WAITING_PINCH| state and need to know how far zoomed
+   * out we are compared to our original pinch span. Note that this does _not_
+   * continue to be updated once we jump into the |GESTURE_PINCH| state.
+   */
+  float mSpanChange;
 
   /**
    * Previous span calculated for the purposes of setting inside a

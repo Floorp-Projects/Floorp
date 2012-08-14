@@ -87,7 +87,7 @@ interface nsITransferable : nsISupports
   const long kFlavorHasDataProvider = 0;
 
   /**
-   * Initializes a transferable object.  This should be called on alli
+   * Initializes a transferable object.  This should be called on all
    * transferable objects.  Failure to do so will result in fatal assertions in
    * debug builds.
    *
