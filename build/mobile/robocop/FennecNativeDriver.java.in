@@ -20,12 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.lang.Class;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-import java.lang.Long;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
@@ -49,17 +47,16 @@ public class FennecNativeDriver implements Driver {
 
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
-    private Class mGel;
-    private Class mGe;
-    private Class mGas;
-    private Method mRegisterGEL;
-    private Method mUnregisterGEL;
-    private Method mSendGE;
-    private Method _startFrameRecording;
-    private Method _stopFrameRecording;
-    private Method _startCheckerboardRecording;
-    private Method _stopCheckerboardRecording;
-    private Method _getPixels;
+    private Class mApiClass;
+    private Class mEventListenerClass;
+    private Class mPanningPerfClass;
+    private Method mRegisterEventListener;
+    private Method mGetPixels;
+    private Method mStartFrameRecording;
+    private Method mStopFrameRecording;
+    private Method mStartCheckerboardRecording;
+    private Method mStopCheckerboardRecording;
+    private Object mRobocopApi;
 
     public enum LogLevel {
         DEBUG(1),
@@ -89,33 +86,20 @@ public class FennecNativeDriver implements Driver {
         // Set up reflexive access of java classes and methods.
         try {
             mClassLoader = activity.getClassLoader();
-            mGel = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
-            mGe = mClassLoader.loadClass("org.mozilla.gecko.GeckoEvent");
-            mGas = mClassLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
-            Class [] parameters = new Class[2];
-            parameters[0] = String.class;
-            parameters[1] = mGel;
-            mRegisterGEL = mGas.getMethod("registerEventListener", parameters);
-            mUnregisterGEL = mGas.getMethod("unregisterEventListener", parameters);
-            parameters = new Class[1];
-            parameters[0] = mGe;
-            mSendGE = mGas.getMethod("sendEventToGecko", parameters);
 
-            Class gfx = mClassLoader.loadClass("org.mozilla.gecko.gfx.PanningPerfAPI");
-            _startFrameRecording = gfx.getDeclaredMethod("startFrameTimeRecording");
-            _stopFrameRecording = gfx.getDeclaredMethod("stopFrameTimeRecording");
-            _startCheckerboardRecording = gfx.getDeclaredMethod("startCheckerboardRecording");
-            _stopCheckerboardRecording = gfx.getDeclaredMethod("stopCheckerboardRecording");
+            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
+            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
+            mPanningPerfClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.PanningPerfAPI");
 
-            Class layerView = mClassLoader.loadClass("org.mozilla.gecko.gfx.LayerView");
-            _getPixels = layerView.getDeclaredMethod("getPixels");
-        } catch (ClassNotFoundException e) {
-            log(LogLevel.ERROR, e);
-        } catch (SecurityException e) {
-            log(LogLevel.ERROR, e);
-        } catch (NoSuchMethodException e) {
-            log(LogLevel.ERROR, e);
-        } catch (IllegalArgumentException e) {
+            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
+            mGetPixels = mApiClass.getMethod("getViewPixels", View.class);
+            mStartFrameRecording = mPanningPerfClass.getDeclaredMethod("startFrameTimeRecording");
+            mStopFrameRecording = mPanningPerfClass.getDeclaredMethod("stopFrameTimeRecording");
+            mStartCheckerboardRecording = mPanningPerfClass.getDeclaredMethod("startCheckerboardRecording");
+            mStopCheckerboardRecording = mPanningPerfClass.getDeclaredMethod("stopCheckerboardRecording");
+
+            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
+        } catch (Exception e) {
             log(LogLevel.ERROR, e);
         }
     }
@@ -189,8 +173,7 @@ public class FennecNativeDriver implements Driver {
 
     public void startFrameRecording() {
         try {
-            Object [] params = null;
-            _startFrameRecording.invoke(null, params);
+            mStartFrameRecording.invoke(null);
         } catch (IllegalAccessException e) {
             log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
@@ -199,12 +182,8 @@ public class FennecNativeDriver implements Driver {
     }
 
     public int stopFrameRecording() {
-        Class [] parameters = new Class[1];
-        parameters[0] = null;
-
         try {
-            Object [] params = null;
-            List<Long> frames = (List<Long>)_stopFrameRecording.invoke(null, params);
+            List<Long> frames = (List<Long>)mStopFrameRecording.invoke(null);
             int badness = 0;
             for (int i = 1; i < frames.size(); i++) {
                 long frameTime = frames.get(i) - frames.get(i - 1);
@@ -230,8 +209,7 @@ public class FennecNativeDriver implements Driver {
 
     public void startCheckerboardRecording() {
         try {
-            Object [] params = null;
-            _startCheckerboardRecording.invoke(null, params);
+            mStartCheckerboardRecording.invoke(null);
         } catch (IllegalAccessException e) {
             log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
@@ -240,12 +218,8 @@ public class FennecNativeDriver implements Driver {
     }
 
     public float stopCheckerboardRecording() {
-        Class [] parameters = new Class[1];
-        parameters[0] = null;
-
         try {
-            Object [] params = null;
-            List<Float> checkerboard = (List<Float>)_stopCheckerboardRecording.invoke(null, params);
+            List<Float> checkerboard = (List<Float>)mStopCheckerboardRecording.invoke(null);
             float total = 0;
             for (float val : checkerboard) {
                 total += val;
@@ -281,7 +255,7 @@ public class FennecNativeDriver implements Driver {
         }
         IntBuffer pixelBuffer;
         try {
-            pixelBuffer = (IntBuffer)_getPixels.invoke(view);
+            pixelBuffer = (IntBuffer)mGetPixels.invoke(mRobocopApi, view);
         } catch (Exception e) {
             log(LogLevel.ERROR, e);
             return null;
@@ -368,11 +342,11 @@ public class FennecNativeDriver implements Driver {
         //Setup scrollHandler to catch "robocop:scroll" events. 
         try {
             Class [] interfaces = new Class[1];
-            interfaces[0] = mGel;
+            interfaces[0] = mEventListenerClass;
             Object[] finalParams = new Object[2];
             finalParams[0] = "robocop:scroll";
             finalParams[1] = Proxy.newProxyInstance(mClassLoader, interfaces, new scrollHandler());
-            mRegisterGEL.invoke(null, finalParams);
+            mRegisterEventListener.invoke(mRobocopApi, finalParams);
         } catch (IllegalAccessException e) {
             log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
