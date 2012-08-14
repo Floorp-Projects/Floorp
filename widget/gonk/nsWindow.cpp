@@ -525,6 +525,7 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     if (mLayerManager)
         return mLayerManager;
 
+    LOG("Creating layer Manaer\n");
     // Set mUseAcceleratedRendering here to make it consistent with
     // nsBaseWidget::GetLayerManager
     mUseAcceleratedRendering = GetShouldAccelerate();
@@ -633,6 +634,15 @@ nsIntRect
 nsWindow::GetNaturalBounds()
 {
     return gScreenBounds;
+}
+
+bool
+nsWindow::NeedsPaint()
+{
+  if (!mLayerManager) {
+    return false;
+  }
+  return nsIWidget::NeedsPaint();
 }
 
 // nsScreenGonk.cpp
