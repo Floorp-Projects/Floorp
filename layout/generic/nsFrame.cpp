@@ -5058,6 +5058,10 @@ nsIFrame::GetPreEffectsVisualOverflowRect() const
 /* virtual */ bool
 nsFrame::UpdateOverflow()
 {
+  MOZ_ASSERT(!(mState & NS_FRAME_SVG_LAYOUT) ||
+             !(mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+             "Non-display SVG do not maintain visual overflow rects");
+
   nsRect rect(nsPoint(0, 0), GetSize());
   nsOverflowAreas overflowAreas(rect, rect);
 
