@@ -2501,13 +2501,8 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    /*
-     * Atoms are not in the cross-compartment map. So if there are any
-     * compartments that are not being collected, we are not allowed to collect
-     * atoms. Otherwise, the non-collected compartments could contain pointers
-     * to atoms that we would miss.
-     */
-    MarkAtomState(trc, rt->gcKeepAtoms || (IS_GC_MARKING_TRACER(trc) && !rt->gcIsFull));
+    if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->isCollecting())
+        MarkAtomState(trc);
     rt->staticStrings.trace(trc);
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
@@ -3487,6 +3482,7 @@ BeginSweepPhase(JSRuntime *rt)
         if (!c->isCollecting())
             isFull = false;
     }
+    JS_ASSERT_IF(isFull, rt->gcIsFull);
 
     rt->gcSweepOnBackgroundThread =
         (rt->hasContexts() && rt->gcHelperThread.prepareForBackgroundSweep());
@@ -3507,7 +3503,7 @@ BeginSweepPhase(JSRuntime *rt)
     WeakMapBase::sweepAll(&rt->gcMarker);
     rt->debugScopes->sweep();
 
-    {
+    if (rt->atomsCompartment->wasGCStarted()) {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_ATOMS);
         SweepAtomState(rt);
     }
@@ -3703,14 +3699,26 @@ AutoTraceSession::~AutoTraceSession()
 AutoGCSession::AutoGCSession(JSRuntime *rt)
   : AutoTraceSession(rt, JSRuntime::Collecting)
 {
+    bool all = true;
     DebugOnly<bool> any = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->isGCScheduled()) {
             c->setCollecting(true);
             any = true;
+        } else {
+            all = false;
         }
     }
     JS_ASSERT(any);
+
+    /*
+     * Atoms are not in the cross-compartment map. So if there are any
+     * compartments that are not being collected, we are not allowed to collect
+     * atoms. Otherwise, the non-collected compartments could contain pointers
+     * to atoms that we would miss.
+     */
+    if (rt->gcKeepAtoms || !all)
+        rt->atomsCompartment->setCollecting(false);
 
     runtime->gcIsNeeded = false;
     runtime->gcInterFrameGC = true;
