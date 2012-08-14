@@ -316,14 +316,6 @@ input > .anonymous-div:after {
   margin: 16px;
 }
 
-/*
- * Enforce nearest scaling for video in order not to lose too much performance
- * after fixing bug 598736 ("Use higher-quality imageinterpolation on mobile")
- */
-video {
-    image-rendering: -moz-crisp-edges;
-}
-
 xul|menulist {
   -moz-binding: url("chrome://browser/content/bindings/menulist.xml#menulist");
 }
