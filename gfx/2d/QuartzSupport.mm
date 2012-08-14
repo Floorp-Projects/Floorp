@@ -251,9 +251,9 @@ void MacIOSurfaceLib::LoadLibrary() {
       dlclose(sOpenGLFramework);
     if (sCoreGraphicsFramework)
       dlclose(sCoreGraphicsFramework);
-    sIOSurfaceFramework = nsnull;
-    sOpenGLFramework = nsnull;
-    sCoreGraphicsFramework = nsnull;
+    sIOSurfaceFramework = nullptr;
+    sOpenGLFramework = nullptr;
+    sCoreGraphicsFramework = nullptr;
     return;
   }
 
@@ -974,18 +974,18 @@ void nsCARenderer::SaveToDisk(MacIOSurface *surf) {
 
 CGImageRef MacIOSurface::CreateImageFromIOSurfaceContext(CGContextRef aContext) {
   if (!MacIOSurfaceLib::isInit())
-    return nsnull;
+    return nullptr;
 
   return MacIOSurfaceLib::IOSurfaceContextCreateImage(aContext);
 }
 
 TemporaryRef<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(CGContextRef aContext) {
   if (!MacIOSurfaceLib::isInit())
-    return nsnull;
+    return nullptr;
 
   IOSurfacePtr surfaceRef = MacIOSurfaceLib::IOSurfaceContextGetSurface(aContext);
   if (!surfaceRef)
-    return nsnull;
+    return nullptr;
 
   // Retain the IOSurface because MacIOSurface will release it
   CFRetain(surfaceRef);
@@ -993,7 +993,7 @@ TemporaryRef<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(CGContextRef
   RefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
-    return nsnull;
+    return nullptr;
   }
   return ioSurface.forget();
 }
