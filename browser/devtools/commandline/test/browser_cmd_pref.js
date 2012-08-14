@@ -22,19 +22,16 @@ imports.XPCOMUtils.defineLazyGetter(imports, "supportsString", function() {
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    setup();
-
-    testPrefSetEnable();
-    testPrefStatus();
-    testPrefBoolExec();
-    testPrefNumberExec();
-    testPrefStringExec();
-    testPrefSetDisable();
-
-    shutdown();
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [
+    setup,
+    testPrefSetEnable,
+    testPrefStatus,
+    testPrefBoolExec,
+    testPrefNumberExec,
+    testPrefStringExec,
+    testPrefSetDisable,
+    shutdown
+  ]);
 }
 
 let tiltEnabledOrig = undefined;

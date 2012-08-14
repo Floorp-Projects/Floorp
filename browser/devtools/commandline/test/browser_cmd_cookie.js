@@ -6,10 +6,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,gcli-cookie";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testCookieCommands();
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testCookieCommands ]);
 }
 
 function testCookieCommands() {
