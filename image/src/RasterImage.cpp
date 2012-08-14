@@ -93,7 +93,7 @@ InitPrefCaches()
 #define CONTAINER_ENSURE_SUCCESS(status)      \
   PR_BEGIN_MACRO                              \
   nsresult _status = status; /* eval once */  \
-  if (_status) {                              \
+  if (NS_FAILED(_status)) {                   \
     LOG_CONTAINER_ERROR;                      \
     DoError();                                \
     return _status;                           \
