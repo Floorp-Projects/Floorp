@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 const modules = [
   "addonutils.js",
   "addonsreconciler.js",
@@ -21,6 +24,7 @@ const modules = [
   "resource.js",
   "rest.js",
   "service.js",
+  "stages/enginesync.js",
   "status.js",
   "util.js",
 ];
