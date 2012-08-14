@@ -19,7 +19,7 @@ protected:
   SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
     : SVGFEUnstyledLeafFrameBase(aContext)
   {
-    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+    AddStateBits(NS_FRAME_SVG_LAYOUT | NS_STATE_SVG_NONDISPLAY_CHILD);
   }
 
 public:
@@ -53,6 +53,11 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32  aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32  aModType);
+
+  virtual bool UpdateOverflow() {
+    // We don't maintain a visual overflow rect
+    return false;
+  }
 };
 
 nsIFrame*
