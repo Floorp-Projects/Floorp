@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserv = null;
 var test_nr = 0;
@@ -40,7 +45,7 @@ var listener = {
 };
 
 function run_test() {
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
   httpserv.registerPathHandler("/bug482601/nocache", bug482601_nocache);
   httpserv.registerPathHandler("/bug482601/partial", bug482601_partial);
   httpserv.registerPathHandler("/bug482601/cached", bug482601_cached);
