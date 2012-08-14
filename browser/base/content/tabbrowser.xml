@@ -1383,6 +1383,12 @@
             // activeness in the tab switcher.
             b.docShellIsActive = false;
 
+            // If we just created a new tab that loads the default
+            // newtab url, swap in a preloaded page if possible.
+            if (aURI == BROWSER_NEW_TAB_URL) {
+              gBrowserNewTabPreloader.newTab(t);
+            }
+
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
             // aReferrerURI is null or undefined if the tab is opened from
@@ -1813,6 +1819,33 @@
         </body>
       </method>
 
+      <method name="swapNewTabWithBrowser">
+        <parameter name="aNewTab"/>
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            // The browser must be standalone.
+            if (aBrowser.getTabBrowser())
+              throw Cr.NS_ERROR_INVALID_ARG;
+
+            // The tab is definitely not loading.
+            aNewTab.removeAttribute("busy");
+            if (aNewTab == this.selectedTab) {
+              this.mIsBusy = false;
+            }
+
+            this._swapBrowserDocShells(aNewTab, aBrowser);
+
+            // Update the new tab's title.
+            this.setTabTitle(aNewTab);
+
+            if (aNewTab == this.selectedTab) {
+              this.updateCurrentBrowser(true);
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="swapBrowsersAndCloseOther">
         <parameter name="aOurTab"/>
         <parameter name="aOtherTab"/>
@@ -1827,29 +1860,10 @@
             if (!remoteBrowser._beginRemoveTab(aOtherTab, true, true))
               return;
 
-            // Unhook our progress listener
-            var ourIndex = aOurTab._tPos;
-            const filter = this.mTabFilters[ourIndex];
-            var tabListener = this.mTabListeners[ourIndex];
-            var ourBrowser = this.getBrowserForTab(aOurTab);
-            ourBrowser.webProgress.removeProgressListener(filter);
-            filter.removeProgressListener(tabListener);
-            var tabListenerBlank = tabListener.mBlank;
-
-            var otherBrowser = aOtherTab.linkedBrowser;
-
-            // Restore current registered open URI.
-            if (ourBrowser.registeredOpenURI) {
-              this._placesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
-              delete ourBrowser.registeredOpenURI;
-            }
-            if (otherBrowser.registeredOpenURI) {
-              ourBrowser.registeredOpenURI = otherBrowser.registeredOpenURI;
-              delete otherBrowser.registeredOpenURI;
-            }
-
             // Workarounds for bug 458697
             // Icon might have been set on DOMLinkAdded, don't override that.
+            let ourBrowser = this.getBrowserForTab(aOurTab);
+            let otherBrowser = aOtherTab.linkedBrowser;
             if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
               this.setIcon(aOurTab, otherBrowser.mIconURL);
             var isBusy = aOtherTab.hasAttribute("busy");
@@ -1860,21 +1874,10 @@
                 this.mIsBusy = true;
             }
 
-            // Swap the docshells
-            ourBrowser.swapDocShells(otherBrowser);
+            this._swapBrowserDocShells(aOurTab, otherBrowser);
 
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(aOtherTab);
-
-            // Restore the progress listener
-            tabListener = this.mTabProgressListener(aOurTab, ourBrowser,
-                                                    tabListenerBlank);
-            this.mTabListeners[ourIndex] = tabListener;
-            filter.addProgressListener(tabListener,
-              Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-
-            ourBrowser.webProgress.addProgressListener(filter,
-              Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
             if (isBusy)
               this.setTabTitleLoading(aOurTab);
@@ -1885,6 +1888,43 @@
             // of replaceTabWithWindow), notify onLocationChange, etc.
             if (aOurTab == this.selectedTab)
               this.updateCurrentBrowser(true);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_swapBrowserDocShells">
+        <parameter name="aOurTab"/>
+        <parameter name="aOtherBrowser"/>
+        <body>
+          <![CDATA[
+            // Unhook our progress listener
+            let index = aOurTab._tPos;
+            const filter = this.mTabFilters[index];
+            let tabListener = this.mTabListeners[index];
+            let ourBrowser = this.getBrowserForTab(aOurTab);
+            ourBrowser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(tabListener);
+
+            // Restore current registered open URI.
+            if (ourBrowser.registeredOpenURI) {
+              this._placesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
+              delete ourBrowser.registeredOpenURI;
+            }
+            if (aOtherBrowser.registeredOpenURI) {
+              ourBrowser.registeredOpenURI = aOtherBrowser.registeredOpenURI;
+              delete aOtherBrowser.registeredOpenURI;
+            }
+
+            // Swap the docshells
+            ourBrowser.swapDocShells(aOtherBrowser);
+
+            // Restore the progress listener
+            this.mTabListeners[index] = tabListener =
+              this.mTabProgressListener(aOurTab, ourBrowser, false);
+
+            const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
+            filter.addProgressListener(tabListener, notifyAll);
+            ourBrowser.webProgress.addProgressListener(filter, notifyAll);
           ]]>
         </body>
       </method>
