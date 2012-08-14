@@ -227,10 +227,10 @@ private:
     nsresult AddExistingItems(uint32_t aType,
                               nsTArray<nsCString>* namespaceFilter = nullptr);
     nsresult ScheduleImplicit();
-    nsresult AssociateDocuments(nsIApplicationCache* cache);
+    void AssociateDocuments(nsIApplicationCache* cache);
 
-    nsresult GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
-    nsresult NotifyState(uint32_t state);
+    void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
+    void NotifyState(uint32_t state);
     nsresult Finish();
     nsresult FinishNoNotify();
 
