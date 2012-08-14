@@ -100,6 +100,7 @@ FENNEC_JAVA_FILES = \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
   RemoteTabs.java \
+  RobocopAPI.java \
   SetupScreen.java \
   SiteIdentityPopup.java \
   SuggestClient.java \
