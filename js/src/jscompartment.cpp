@@ -69,7 +69,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
-    sourceMapMap(NULL),
     debugScriptMap(NULL)
 #ifdef JS_ION
     , ionCompartment_(NULL)
@@ -80,14 +79,12 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-
 #ifdef JS_ION
     Foreground::delete_(ionCompartment_);
 #endif
 
     Foreground::delete_(watchpointMap);
     Foreground::delete_(scriptCountsMap);
-    Foreground::delete_(sourceMapMap);
     Foreground::delete_(debugScriptMap);
 }
 

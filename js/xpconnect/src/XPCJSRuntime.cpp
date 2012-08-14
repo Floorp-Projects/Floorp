@@ -2023,11 +2023,20 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
       case JS_TELEMETRY_GC_MS:
         Telemetry::Accumulate(Telemetry::GC_MS, sample);
         break;
+      case JS_TELEMETRY_GC_MAX_PAUSE_MS:
+        Telemetry::Accumulate(Telemetry::GC_MAX_PAUSE_MS, sample);
+        break;
       case JS_TELEMETRY_GC_MARK_MS:
         Telemetry::Accumulate(Telemetry::GC_MARK_MS, sample);
         break;
       case JS_TELEMETRY_GC_SWEEP_MS:
         Telemetry::Accumulate(Telemetry::GC_SWEEP_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MARK_ROOTS_MS:
+        Telemetry::Accumulate(Telemetry::GC_MARK_ROOTS_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MARK_GRAY_MS:
+        Telemetry::Accumulate(Telemetry::GC_MARK_GRAY_MS, sample);
         break;
       case JS_TELEMETRY_GC_SLICE_MS:
         Telemetry::Accumulate(Telemetry::GC_SLICE_MS, sample);

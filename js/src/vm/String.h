@@ -100,7 +100,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  |
  * JSFixedString                 - / may have external pointers into char array
  *  | \  \  \
- *  |  \  \ JSUndependedString   - / original dependent base
+ *  |  \  \ JSUndependedString   original dependent base / -
  *  |   \  \
  *  |    \ JSExternalString      - / char array memory managed by embedding
  *  |     \
@@ -168,8 +168,8 @@ class JSString : public js::gc::Cell
      *
      * Instead of using a dense index to represent the most-derived type, string
      * types are encoded to allow single-op tests for hot queries (isRope,
-     * isDependent, isFlat, isAtom, isStaticAtom) which, in view of subtyping,
-     * would require slower (isX() || isY() || isZ()).
+     * isDependent, isFlat, isAtom) which, in view of subtyping, would require
+     * slower (isX() || isY() || isZ()).
      *
      * The string type encoding can be summarized as follows. The "instance
      * encoding" entry for a type specifies the flag bits used to create a
@@ -194,7 +194,6 @@ class JSString : public js::gc::Cell
      *   Atom         1000       x000
      *   InlineAtom   1000       1000 && is Inline
      *   ShortAtom    1000       1000 && is Short
-     *   StaticAtom   0000       0000
      */
 
     static const size_t LENGTH_SHIFT          = 4;
@@ -208,7 +207,7 @@ class JSString : public js::gc::Cell
     static const size_t UNDEPENDED_FLAGS      = JS_BIT(1) | JS_BIT(3);
 
     static const size_t ATOM_MASK             = JS_BITMASK(3);
-    static const size_t NON_STATIC_ATOM_FLAGS = JS_BIT(3);
+    static const size_t ATOM_FLAGS            = JS_BIT(3);
 
     static const size_t MAX_LENGTH            = JS_BIT(32 - LENGTH_SHIFT) - 1;
 
