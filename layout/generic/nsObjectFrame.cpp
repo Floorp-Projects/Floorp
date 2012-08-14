@@ -430,7 +430,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
     }
 #endif
 
-    rpc->RegisterPluginForGeometryUpdates(this);
+    rpc->RegisterPluginForGeometryUpdates(mContent);
     rpc->RequestUpdatePluginGeometry(this);
 
     // Here we set the background color for this widget because some plugins will use 
@@ -450,7 +450,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
     FixupWindow(GetContentRectRelativeToSelf().Size());
 
 #ifndef XP_MACOSX
-    rpc->RegisterPluginForGeometryUpdates(this);
+    rpc->RegisterPluginForGeometryUpdates(mContent);
     rpc->RequestUpdatePluginGeometry(this);
 #endif
   }
@@ -745,7 +745,7 @@ nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
         if (mInnerView) {
           mInnerView->DetachWidgetEventHandler(mWidget);
 
-          rpc->UnregisterPluginForGeometryUpdates(this);
+          rpc->UnregisterPluginForGeometryUpdates(mContent);
           // Make sure the plugin is hidden in case an update of plugin geometry
           // hasn't happened since this plugin became hidden.
           nsIWidget* parent = mWidget->GetParent();
@@ -761,7 +761,7 @@ nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
         }
       } else {
 #ifndef XP_MACOSX
-        rpc->UnregisterPluginForGeometryUpdates(this);
+        rpc->UnregisterPluginForGeometryUpdates(mContent);
 #endif
       }
     }
@@ -2221,7 +2221,7 @@ nsObjectFrame::BeginSwapDocShells(nsIContent* aContent, void*)
                "Plugin windows must not be toplevel");
   nsRootPresContext* rootPC = objectFrame->PresContext()->GetRootPresContext();
   NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
-  rootPC->UnregisterPluginForGeometryUpdates(objectFrame);
+  rootPC->UnregisterPluginForGeometryUpdates(aContent);
 }
 
 /*static*/ void
@@ -2247,7 +2247,7 @@ nsObjectFrame::EndSwapDocShells(nsIContent* aContent, void*)
     objectFrame->CallSetWindow();
 
     // Register for geometry updates and make a request.
-    rootPC->RegisterPluginForGeometryUpdates(objectFrame);
+    rootPC->RegisterPluginForGeometryUpdates(aContent);
     rootPC->RequestUpdatePluginGeometry(objectFrame);
   }
 }
