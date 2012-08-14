@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 var uri = "http://localhost:4444/multipart";
@@ -71,12 +76,12 @@ var multipartListener = {
     } catch (ex) {
       do_throw("Error in closure function: " + ex);
     }
-  }  
+  }
 };
 
 function run_test()
 {
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.registerPathHandler("/multipart", contentHandler);
   httpserver.start(4444);
 
