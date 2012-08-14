@@ -9,11 +9,7 @@ Components.utils.import("resource:///modules/HUDService.jsm", imported);
 const TEST_URI = "data:text/html;charset=utf-8,gcli-calllog";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    testCallLogStatus();
-    testCallLogExec();
-    finish();
-  });
+  DeveloperToolbarTest.test(TEST_URI, [ testCallLogStatus, testCallLogExec ]);
 }
 
 function testCallLogStatus() {

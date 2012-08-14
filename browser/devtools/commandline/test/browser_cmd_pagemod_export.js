@@ -3,20 +3,23 @@
 
 // Tests that the inspect command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/test/browser_gcli_inspect.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/commandline/"+
+                 "test/browser_cmd_pagemod_export.html";
 
 function test() {
   let initialHtml = "";
 
-  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
-    initialHtml = content.document.documentElement.innerHTML;
+  DeveloperToolbarTest.test(TEST_URI, [
+    init,
+    testExportHtml,
+    testPageModReplace,
+    testPageModRemoveElement,
+    testPageModRemoveAttribute
+  ]);
 
-    testExportHtml();
-    testPageModReplace();
-    testPageModRemoveElement();
-    testPageModRemoveAttribute();
-    finish();
-  });
+  function init() {
+    initialHtml = content.document.documentElement.innerHTML;
+  }
 
   function testExportHtml() {
     DeveloperToolbarTest.checkInputStatus({
