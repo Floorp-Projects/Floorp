@@ -209,6 +209,8 @@ IonCompartment::generateInvalidator(JSContext *cx)
 IonCode *
 IonCompartment::generateArgumentsRectifier(JSContext *cx)
 {
+    // Do not erase the frame pointer in this function.
+
     MacroAssembler masm(cx);
 
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
@@ -225,7 +227,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     masm.moveValue(UndefinedValue(), r10);
 
-    masm.movq(rsp, rbp); // Save %rsp.
+    masm.movq(rsp, r9); // Save %rsp.
 
     // Push undefined.
     {
@@ -240,7 +242,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     }
 
     // Get the topmost argument.
-    BaseIndex b = BaseIndex(rbp, r8, TimesEight, sizeof(IonRectifierFrameLayout));
+    BaseIndex b = BaseIndex(r9, r8, TimesEight, sizeof(IonRectifierFrameLayout));
     masm.lea(Operand(b), rcx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
@@ -261,13 +263,13 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     }
 
     // Construct descriptor.
-    masm.subq(rsp, rbp);
-    masm.makeFrameDescriptor(rbp, IonFrame_Rectifier);
+    masm.subq(rsp, r9);
+    masm.makeFrameDescriptor(r9, IonFrame_Rectifier);
 
     // Construct IonJSFrameLayout.
     masm.push(rdx); // numActualArgs
     masm.push(rax); // calleeToken
-    masm.push(rbp); // descriptor
+    masm.push(r9); // descriptor
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
@@ -278,11 +280,11 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.call(rax);
 
     // Remove the rectifier frame.
-    masm.pop(rbp);            // rbp <- descriptor with FrameType.
-    masm.shrq(Imm32(FRAMESIZE_SHIFT), rbp);
+    masm.pop(r9);             // r9 <- descriptor with FrameType.
+    masm.shrq(Imm32(FRAMESIZE_SHIFT), r9);
     masm.pop(r11);            // Discard calleeToken.
     masm.pop(r11);            // Discard numActualArgs.
-    masm.addq(rbp, rsp);      // Discard pushed arguments.
+    masm.addq(r9, rsp);       // Discard pushed arguments.
 
     masm.ret();
 
