@@ -161,8 +161,7 @@
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
     _(InterruptCheck)               \
-    _(ProfilingEnter)               \
-    _(ProfilingExit)                \
+    _(FunctionBoundary)             \
     _(GetDOMProperty)               \
     _(SetDOMProperty)               \
     _(CallDOMNative)

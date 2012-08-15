@@ -53,7 +53,7 @@ bool
 LIRGeneratorX86Shared::visitInterruptCheck(MInterruptCheck *ins)
 {
     LInterruptCheck *lir = new LInterruptCheck();
-    if (!add(lir))
+    if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;

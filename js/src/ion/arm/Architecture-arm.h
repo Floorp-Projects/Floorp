@@ -132,7 +132,8 @@ class Registers
 
     // Registers returned from a JS -> C call.
     static const uint32 CallMask =
-        (1 << Registers::r0);
+        (1 << Registers::r0) |
+        (1 << Registers::r1);  // used for double-size returns
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };

@@ -298,41 +298,6 @@ class SPSInstrumentation
 
   public:
     /*
-     * SPS instruments calls to track leaving and reentering a function. A call
-     * is one made to C++ other other JS. This is a helper class to assist with
-     * the calls to leave()/reenter() to an SPSInstrumentation instance. It uses
-     * RAII to invoke leave() on construction and reenter() on destruction.
-     */
-    class CallScope
-    {
-        SPSInstrumentation *sps;
-        jsbytecode *pc;
-        Assembler &masm;
-        Register reg;
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-      public:
-
-        /*
-         * Each parameter will be passed along to the instrumentation's
-         * leave()/reenter() methods. The given instrumentation can be NULL, in
-         * which case this object will do nothing.
-         */
-        CallScope(SPSInstrumentation *sps, jsbytecode *pc, Assembler &masm,
-                  Register reg JS_GUARD_OBJECT_NOTIFIER_PARAM)
-          : sps(sps), pc(pc), masm(masm), reg(reg)
-        {
-            JS_GUARD_OBJECT_NOTIFIER_INIT;
-            if (sps)
-                sps->leave(pc, masm, reg);
-        }
-
-        ~CallScope() {
-            if (sps)
-                sps->reenter(masm, reg);
-        }
-    };
-
-    /*
      * Creates instrumentation which writes information out the the specified
      * profiler's stack and constituent fields.
      */
@@ -403,7 +368,6 @@ class SPSInstrumentation
     void setPushed(JSScript *script) {
         if (!enabled())
             return;
-        JS_ASSERT(frame->script == NULL);
         JS_ASSERT(frame->left == 0);
         frame->script = script;
     }
@@ -444,8 +408,11 @@ class SPSInstrumentation
      * corresponding reenter() actually emits instrumentation.
      */
     void leave(jsbytecode *pc, Assembler &masm, Register scratch) {
-        if (enabled() && frame->script && frame->left++ == 0)
+        if (enabled() && frame->script && frame->left++ == 0) {
+            JS_ASSERT(frame->script->code <= pc &&
+                      pc < frame->script->code + frame->script->length);
             masm.spsUpdatePCIdx(profiler_, pc - frame->script->code, scratch);
+        }
     }
 
     /*
