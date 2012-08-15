@@ -27,7 +27,7 @@ public:
   virtual SurfaceFormat GetFormat() const { return mA->GetFormat(); }
 
   /* Readback from this surface type is not supported! */
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface() { return nullptr; }
+  virtual TemporaryRef<DataSourceSurface> GetDataSurface() { return NULL; }
 private:
   friend class DualSurface;
   friend class DualPattern;

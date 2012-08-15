@@ -38,7 +38,7 @@ ScaledFontMac::~ScaledFontMac()
 SkTypeface* ScaledFontMac::GetSkTypeface()
 {
   if (!mTypeface) {
-    CTFontRef fontFace = CTFontCreateWithGraphicsFont(mFont, mSize, nullptr, nullptr);
+    CTFontRef fontFace = CTFontCreateWithGraphicsFont(mFont, mSize, NULL, NULL);
     mTypeface = SkCreateTypefaceFromCTFont(fontFace);
     CFRelease(fontFace);
   }
