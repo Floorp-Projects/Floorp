@@ -347,7 +347,8 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
     type: 'open-app',
     url: msg.uri,
     origin: origin,
-    manifest: msg.manifest
+    manifest: msg.manifest,
+    target: msg.target
   });
 }, 'system-messages-open-app', false);
 
