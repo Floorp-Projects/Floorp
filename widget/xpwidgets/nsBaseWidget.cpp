@@ -22,6 +22,8 @@
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
+#include "nsIXULWindow.h"
+#include "nsIDocShell.h"
 #include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsEventStateManager.h"
@@ -30,6 +32,10 @@
 #include "base/thread.h"
 #include "prenv.h"
 #include "mozilla/Attributes.h"
+
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -1339,16 +1345,34 @@ const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
   return mSizeConstraints;
 }
 
-static nsIPresShell* GetPresShell(nsIWidget* aWidget)
+// If clientData is non-null, then get the presShell from either the window
+// or the view. Otherwise, assume that this is a widget attached to a view.
+static nsIPresShell* GetPresShell(nsIWidget* aWidget, void* clientData)
 {
-  nsIView* view = nsView::GetViewFor(aWidget);
-  return view ? view->GetViewManager()->GetPresShell() : nullptr;
+  nsCOMPtr<nsIXULWindow> window(do_QueryInterface(static_cast<nsISupports *>(clientData)));
+  if (window) {
+    nsCOMPtr<nsIDocShell> docShell;
+    window->GetDocShell(getter_AddRefs(docShell));
+    if (docShell) {
+      nsCOMPtr<nsIPresShell> presShell;
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      return presShell.get();
+    }
+  }
+  else {
+    nsIView* view = nsView::GetViewFor(aWidget);
+    if (view) {
+      return view->GetViewManager()->GetPresShell();
+    }
+  }
+ 
+  return nullptr;
 }
 
 void
 nsBaseWidget::NotifySizeMoveDone()
 {
-  nsIPresShell* presShell = GetPresShell(this);
+  nsIPresShell* presShell = GetPresShell(this, nullptr);
   if (presShell) {
     presShell->WindowSizeMoveDone();
   }
@@ -1357,7 +1381,7 @@ nsBaseWidget::NotifySizeMoveDone()
 void
 nsBaseWidget::NotifySysColorChanged()
 {
-  nsIPresShell* presShell = GetPresShell(this);
+  nsIPresShell* presShell = GetPresShell(this, nullptr);
   if (presShell) {
     presShell->SysColorChanged();
   }
@@ -1366,11 +1390,37 @@ nsBaseWidget::NotifySysColorChanged()
 void
 nsBaseWidget::NotifyThemeChanged()
 {
-  nsIPresShell* presShell = GetPresShell(this);
+  nsIPresShell* presShell = GetPresShell(this, nullptr);
   if (presShell) {
     presShell->ThemeChanged();
   }
 }
+
+#ifdef ACCESSIBILITY
+
+Accessible*
+nsBaseWidget::GetAccessible()
+{
+  nsIPresShell* presShell = GetPresShell(this, mClientData);
+  NS_ENSURE_TRUE(presShell, nullptr);
+
+  // If container is null then the presshell is not active. This often happens
+  // when a preshell is being held onto for fastback.
+  nsPresContext* presContext = presShell->GetPresContext();
+  nsCOMPtr<nsISupports> container = presContext->GetContainer();
+  NS_ENSURE_TRUE(container, nullptr);
+
+  // Accessible creation might be not safe so use IsSafeToRunScript to
+  // make sure it's not created at unsafe times.
+  nsCOMPtr<nsIAccessibilityService> accService = services::GetAccessibilityService();
+  if (accService) {
+    return accService->GetRootDocumentAccessible(presShell, nsContentUtils::IsSafeToRunScript());
+  }
+
+  return nullptr;
+}
+
+#endif
 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////

@@ -1925,16 +1925,12 @@ nsChildView::GetDocumentAccessible()
   }
 
   // need to fetch the accessible anew, because it has gone away.
-  nsEventStatus status;
-  nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
-  DispatchEvent(&event, status);
-
   // cache the accessible in our weak ptr
-  mAccessible =
-    do_GetWeakReference(static_cast<nsIAccessible*>(event.mAccessible));
+  Accessible* acc = GetAccessible();
+  mAccessible = do_GetWeakReference(static_cast<nsIAccessible *>(acc));
 
-  NS_IF_ADDREF(event.mAccessible);
-  return event.mAccessible;
+  NS_IF_ADDREF(acc);
+  return acc;
 }
 #endif
 
