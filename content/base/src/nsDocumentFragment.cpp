@@ -13,7 +13,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
 #include "nsContentUtils.h"

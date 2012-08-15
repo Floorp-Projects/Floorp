@@ -1418,6 +1418,10 @@ pref("mousewheel.with_win.delta_multiplier_x", 100);
 pref("mousewheel.with_win.delta_multiplier_y", 100);
 pref("mousewheel.with_win.delta_multiplier_z", 100);
 
+// If line-height is lower than this value (in device pixels), 1 line scroll
+// scrolls this height.
+pref("mousewheel.min_line_scroll_amount", 5);
+
 // These define the smooth scroll behavior (min ms, max ms) for different triggers
 // Some triggers:
 // mouseWheel: Discrete mouse wheel events, Synaptics touchpads on windows (generate wheel events)
@@ -1665,17 +1669,6 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 pref("dom.ipc.plugins.java.enabled", false);
 
 pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
-
-#ifndef ANDROID
-#ifndef XP_MACOSX
-#ifdef XP_UNIX
-// Linux plugins using Xt instead of Xembed don't work out-of-process yet.
-pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
-pref("dom.ipc.plugins.enabled.nppdf.so", false);
-pref("dom.ipc.plugins.enabled.602plugin.so", false);
-#endif
-#endif
-#endif
 
 pref("dom.ipc.processCount", 1);
 
@@ -3509,9 +3502,6 @@ pref("image.mem.decode_bytes_at_a_time", 4096);
 
 // The longest time we can spend in an iteration of an async decode
 pref("image.mem.max_ms_before_yield", 5);
-
-// The maximum source data size for which we auto sync decode
-pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // The maximum amount of decoded image data we'll willingly keep around (we
 // might keep around more than this, but we'll try to get down to this value).

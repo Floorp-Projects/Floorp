@@ -14,7 +14,7 @@
 #include "nsStyleConsts.h"
 #include "nsContentList.h"
 #include "nsRuleData.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

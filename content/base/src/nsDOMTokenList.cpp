@@ -10,7 +10,7 @@
 
 #include "nsAttrValue.h"
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGenericElement.h"
 #include "dombindings.h"
 

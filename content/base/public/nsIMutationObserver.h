@@ -20,8 +20,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IMUTATION_OBSERVER_IID \
-{ 0x85eea794, 0xed8e, 0x4e1b, \
-  { 0xa1, 0x28, 0xd0, 0x93, 0x00, 0xae, 0x51, 0xaa } }
+{ 0x16fe5e3e, 0xeadc, 0x4312, \
+  { 0x9d, 0x44, 0xb6, 0xbe, 0xdd, 0x6b, 0x54, 0x74 } }
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -191,6 +191,20 @@ public:
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
                                 PRInt32      aModType) = 0;
+
+  /**
+   * Notification that an attribute of an element has been
+   * set to the value it already had.
+   *
+   * @param aDocument    The owner-document of aContent.
+   * @param aElement     The element whose attribute changed
+   * @param aNameSpaceID The namespace id of the changed attribute
+   * @param aAttribute   The name of the changed attribute
+   */
+  virtual void AttributeSetToCurrentValue(nsIDocument* aDocument,
+                                          mozilla::dom::Element* aElement,
+                                          PRInt32 aNameSpaceID,
+                                          nsIAtom* aAttribute) {}
 
   /**
    * Notification that one or more content nodes have been appended to the

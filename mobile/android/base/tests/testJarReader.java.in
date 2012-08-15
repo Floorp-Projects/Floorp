@@ -69,7 +69,4 @@ public class testJarReader extends BaseTest {
         return new java.util.Scanner(stream).useDelimiter("\\A").next();
     }
 
-    public void tearDown() throws Exception {
-      super.tearDown();
-    }
 }

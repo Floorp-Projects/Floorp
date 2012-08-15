@@ -14,7 +14,7 @@ function run_test()
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
-  var httpserv = new nsHttpServer();
+  var httpserv = new HttpServer();
   httpserv.start(HTTP_SERVER_PORT);
 
   let stmt = db.createStatement(

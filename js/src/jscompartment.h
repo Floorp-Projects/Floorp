@@ -174,22 +174,19 @@ struct JSCompartment
 
   private:
     enum CompartmentGCState {
-        NoGCScheduled,
-        GCScheduled,
-        GCRunning
+        NoGC,
+        Collecting
     };
 
+    bool                         gcScheduled;
     CompartmentGCState           gcState;
     bool                         gcPreserveCode;
-    bool                         gcStarted;
 
   public:
     bool isCollecting() const {
-        /* Allow this if we're in the middle of an incremental GC. */
-        if (rt->isHeapBusy()) {
-            return gcState == GCRunning;
+        if (rt->isHeapCollecting()) {
+            return gcState != NoGC;
         } else {
-            JS_ASSERT(gcState != GCRunning);
             return needsBarrier();
         }
     }
@@ -203,31 +200,25 @@ struct JSCompartment
      * tracer.
      */
     bool requireGCTracer() const {
-        return gcState == GCRunning;
+        return rt->isHeapCollecting() && gcState != NoGC;
     }
 
     void setCollecting(bool collecting) {
         JS_ASSERT(rt->isHeapBusy());
-        if (collecting)
-            gcState = GCRunning;
-        else
-            gcState = NoGCScheduled;
+        gcState = collecting ? Collecting : NoGC;
     }
 
     void scheduleGC() {
         JS_ASSERT(!rt->isHeapBusy());
-        JS_ASSERT(gcState != GCRunning);
-        gcState = GCScheduled;
+        gcScheduled = true;
     }
 
     void unscheduleGC() {
-        JS_ASSERT(!rt->isHeapBusy());
-        JS_ASSERT(gcState != GCRunning);
-        gcState = NoGCScheduled;
+        gcScheduled = false;
     }
 
     bool isGCScheduled() const {
-        return gcState == GCScheduled;
+        return gcScheduled;
     }
 
     void setPreservingCode(bool preserving) {
@@ -235,16 +226,11 @@ struct JSCompartment
     }
 
     bool wasGCStarted() const {
-        return gcStarted;
-    }
-
-    void setGCStarted(bool started) {
-        JS_ASSERT(rt->isHeapBusy());
-        gcStarted = started;
+        return gcState != NoGC;
     }
 
     bool isGCSweeping() {
-        return wasGCStarted() && rt->gcIncrementalState == js::gc::SWEEP;
+        return gcState != NoGC && rt->gcIncrementalState == js::gc::SWEEP;
     }
 
     size_t                       gcBytes;

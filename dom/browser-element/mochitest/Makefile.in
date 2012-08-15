@@ -75,6 +75,9 @@ MOCHITEST_FILES = \
 		browserElement_ForwardName.js \
 		test_browserElement_inproc_ForwardName.html \
 		file_browserElement_ForwardName.html \
+		browserElement_TargetBlank.js \
+		test_browserElement_inproc_TargetBlank.html \
+		file_browserElement_TargetBlank.html \
 		browserElement_PromptCheck.js \
 		test_browserElement_inproc_PromptCheck.html \
 		browserElement_PromptConfirm.js \
@@ -147,6 +150,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_TargetTop.html \
 		test_browserElement_oop_ForwardName.html \
+		test_browserElement_oop_TargetBlank.html \
 		test_browserElement_oop_PromptCheck.html \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \

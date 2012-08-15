@@ -158,6 +158,8 @@ nsTableRowFrame::Init(nsIContent*      aContent,
 /* virtual */ void
 nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
+
   if (!aOldStyleContext) //avoid this on init
     return;
      

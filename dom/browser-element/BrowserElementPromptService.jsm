@@ -29,7 +29,7 @@ BrowserElementPrompt.prototype = {
 
   alert: function(title, text) {
     this._browserElementChild.showModalPrompt(
-      this._win, {promptType: "alert", title: title, message: text});
+      this._win, {promptType: "alert", title: title, message: text, returnValue: undefined});
   },
 
   alertCheck: function(title, text, checkMsg, checkState) {
@@ -40,7 +40,7 @@ BrowserElementPrompt.prototype = {
 
   confirm: function(title, text) {
     return this._browserElementChild.showModalPrompt(
-      this._win, {promptType: "confirm", title: title, message: text});
+      this._win, {promptType: "confirm", title: title, message: text, returnValue: undefined});
   },
 
   confirmCheck: function(title, text, checkMsg, checkState) {
