@@ -128,8 +128,8 @@ public:
      different users. If aPassthrough is set, we ignore the
      random value and copy prefix directly into output.
   */
-  static nsresult KeyedHash(PRUint32 aPref, PRUint32 aDomain,
-                            PRUint32 aKey, PRUint32* aOut,
+  static nsresult KeyedHash(PRUint32 aPref, PRUint32 aHostKey,
+                            PRUint32 aUserKey, PRUint32* aOut,
                             bool aPassthrough);
 
   LookupCache(const nsACString& aTableName, nsIFile* aStoreFile,
