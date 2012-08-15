@@ -67,7 +67,10 @@
 
         let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
         mm.addMessageListener("test:ipcClonedMessage", function(message) {
-          is(message.json, messages[receivedMessageIndex++],
+          // We need to wrap to access message.json, and unwrap to do the
+          // identity check.
+          is(SpecialPowers.unwrap(SpecialPowers.wrap(message).json),
+             messages[receivedMessageIndex++],
              "Got correct round-tripped response");
           if (receivedMessageIndex == messages.length) {
             SimpleTest.finish();

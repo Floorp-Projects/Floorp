@@ -91,6 +91,8 @@ public:
     }
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
+    NS_IMETHOD MakeFullScreen(bool aFullScreen) /*MOZ_OVERRIDE*/;
+
     virtual float GetDPI();
     virtual mozilla::layers::LayerManager*
         GetLayerManager(PLayersChild* aShadowManager = nullptr,
