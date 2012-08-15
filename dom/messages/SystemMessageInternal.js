@@ -58,7 +58,10 @@ SystemMessageInternal.prototype = {
       }
 
       // We don't need to send the full object to observers.
-      let page = { uri: aPage.uri, manifest: aPage.manifest };
+      let page = { uri: aPage.uri,
+                   manifest: aPage.manifest,
+                   type: aPage.type,
+                   target: aMessage.target };
       debug("Asking to open  " + JSON.stringify(page));
       Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
     }.bind(this))

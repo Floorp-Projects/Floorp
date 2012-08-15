@@ -224,7 +224,8 @@ let Activities = {
         let result = aResults.options[aChoice];
         sysmm.sendMessage("activity", {
           "id": aMsg.id,
-          "payload": aMsg.options
+          "payload": aMsg.options,
+          "target": result.description
         }, Services.io.newURI(result.manifest, null, null));
 
         if (!result.description.returnValue) {
