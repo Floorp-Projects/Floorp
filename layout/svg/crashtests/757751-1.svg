@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <svg id="x" viewBox=" 0 0 10 10"/>
+  </defs>
+  <script>
+    window.addEventListener("load", function() { document.getElementById("x").setAttribute("width", "2"); }, false);
+  </script>
+</svg>
