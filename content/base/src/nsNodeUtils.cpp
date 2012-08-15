@@ -109,6 +109,16 @@ nsNodeUtils::AttributeChanged(Element* aElement,
 }
 
 void
+nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
+                                        PRInt32 aNameSpaceID,
+                                        nsIAtom* aAttribute)
+{
+  nsIDocument* doc = aElement->OwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
+                             (doc, aElement, aNameSpaceID, aAttribute));
+}
+
+void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
                              nsIContent* aFirstNewContent,
                              PRInt32 aNewIndexInContainer)
