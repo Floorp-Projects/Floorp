@@ -3949,27 +3949,6 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   return result;
 }
 
-// Deal with accessibile event
-#ifdef ACCESSIBILITY
-Accessible*
-nsWindow::DispatchAccessibleEvent(PRUint32 aEventType)
-{
-  if (nullptr == mEventCallback) {
-    return nullptr;
-  }
-
-  nsAccessibleEvent event(true, aEventType, this);
-  InitEvent(event, nullptr);
-
-  ModifierKeyState modifierKeyState;
-  modifierKeyState.InitInputEvent(event);
-
-  DispatchWindowEvent(&event);
-
-  return event.mAccessible;
-}
-#endif
-
 bool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
 {
   if (aEventType == NS_ACTIVATE)
@@ -7413,8 +7392,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 
 #ifdef DEBUG_WMGETOBJECT
 #define NS_LOG_WMGETOBJECT_WNDACC(aWnd)                                        \
-  Accessible* acc = aWnd ?                                                   \
-    aWnd->DispatchAccessibleEvent(NS_GETACCESSIBLE) : nullptr;                  \
+  Accessible* acc = aWnd ? aWind->GetAccessible() : nullptr;                   \
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("     acc: %p", acc));                   \
   if (acc) {                                                                   \
     nsAutoString name;                                                         \
@@ -7422,7 +7400,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
     PR_LOG(gWindowsLog, PR_LOG_ALWAYS,                                         \
            (", accname: %s", NS_ConvertUTF16toUTF8(name).get()));              \
     nsCOMPtr<nsIAccessibleDocument> doc = do_QueryObject(acc);                 \
-    void *hwnd = nullptr;                                                       \
+    void *hwnd = nullptr;                                                      \
     doc->GetWindowHandle(&hwnd);                                               \
     PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (", acc hwnd: %d", hwnd));              \
   }
@@ -7466,7 +7444,7 @@ nsWindow::GetRootAccessible()
   NS_LOG_WMGETOBJECT_THISWND
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
 
-  return DispatchAccessibleEvent(NS_GETACCESSIBLE);
+  return GetAccessible();
 }
 #endif
 

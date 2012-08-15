@@ -206,7 +206,6 @@ public:
   void                    SuppressBlurEvents(bool aSuppress); // Called from nsFilePicker
   bool                    BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
-  Accessible* DispatchAccessibleEvent(PRUint32 aEventType);
   Accessible* GetRootAccessible();
 #endif // ACCESSIBILITY
 

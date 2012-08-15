@@ -384,12 +384,6 @@ private:
     void                CreateRootAccessible();
 
     /**
-     * Generate the NS_GETACCESSIBLE event to get accessible for this window
-     * and return it.
-     */
-    Accessible       *DispatchAccessibleEvent();
-
-    /**
      * Dispatch accessible event for the top level window accessible.
      *
      * @param  aEventType  [in] the accessible event type to dispatch

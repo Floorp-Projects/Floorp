@@ -59,9 +59,6 @@ class nsInputEvent;
 class nsMouseEvent_base;
 class nsMouseEvent;
 class nsDragEvent;
-#ifdef ACCESSIBILITY
-class nsAccessibleEvent;
-#endif
 class nsKeyEvent;
 class nsTextEvent;
 class nsCompositionEvent;
