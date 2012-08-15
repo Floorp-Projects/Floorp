@@ -43,7 +43,10 @@ def spawn_test(test):
     os.execvp(cmd[0], cmd)
 
 def total_seconds(td):
-    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+    """
+    Return the total number of seconds contained in the duration as a float
+    """
+    return (float(td.microseconds) + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
 
 def get_max_wait(tasks, results, timeout):
     """
@@ -200,4 +203,3 @@ def run_all_tests(tests, results, options):
         results.pb.poke()
 
     return True
-
