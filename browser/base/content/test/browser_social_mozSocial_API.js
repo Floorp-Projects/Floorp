@@ -29,7 +29,7 @@ var tests = {
 
     function triggerIconPanel() {
       let statusIcons = document.getElementById("social-status-iconbox");
-      ok(!statusIcons.firstChild.hidden, "status icon is visible");
+      ok(!statusIcons.firstChild.collapsed, "status icon is visible");
       // Click the button to trigger its contentPanel
       let panel = document.getElementById("social-notification-panel");
       EventUtils.synthesizeMouseAtCenter(statusIcons.firstChild, {});
