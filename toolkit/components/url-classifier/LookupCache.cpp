@@ -713,12 +713,8 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
 
-  FallibleTArray<PRUint32> array;
-  nsresult rv;
-  if (!array.SetCapacity(aAddPrefixes.Length())) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto error_bailout;
-  }
+  nsTArray<PRUint32> array;
+  array.SetCapacity(aAddPrefixes.Length());
 
   for (uint32 i = 0; i < aAddPrefixes.Length(); i++) {
     array.AppendElement(aAddPrefixes[i].PrefixHash().ToUint32());
@@ -735,7 +731,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 #endif
 
   // construct new one, replace old entries
-  rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
+  nsresult rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
   if (NS_FAILED(rv)) {
     goto error_bailout;
   }
@@ -756,9 +752,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
   sentinel.Clear();
   sentinel.AppendElement(0);
   mPrefixSet->SetPrefixes(sentinel.Elements(), sentinel.Length());
-  if (rv == NS_ERROR_OUT_OF_MEMORY) {
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PS_OOM, 1);
-  }
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PS_FAILURE, 1);
   return rv;
 }
 
