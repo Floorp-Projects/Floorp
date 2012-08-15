@@ -21,11 +21,11 @@ function runTest() {
   mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
   mm.addMessageListener('test-success', function(msg) {
     numPendingChildTests--;
-    ok(true, msg.json);
+    ok(true, SpecialPowers.wrap(msg).json);
   });
   mm.addMessageListener('test-fail', function(msg) {
     numPendingChildTests--;
-    ok(false, msg.json);
+    ok(false, SpecialPowers.wrap(msg).json);
   });
 
   // Wait for the initial load to finish, then navigate the page, then wait

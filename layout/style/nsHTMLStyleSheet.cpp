@@ -33,7 +33,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/Element.h"

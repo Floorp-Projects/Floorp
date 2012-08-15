@@ -125,7 +125,7 @@ function run_test() {
   DownloadListener.init();
   Services.prefs.setBoolPref("browser.download.manager.showWhenStarting", false);
 
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.start(4444);
   do_test_pending();
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 
 var server = null;
 
@@ -36,7 +36,7 @@ function headerCheckHandler(metadata, response) {
 }
 
 function run_test() {
-  var server = new nsHttpServer();
+  var server = new HttpServer();
   server.registerPathHandler(redirectPath, redirectHandler);
   server.registerPathHandler(headerCheckPath, headerCheckHandler);
   server.start(SERVER_PORT);

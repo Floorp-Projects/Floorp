@@ -1,35 +1,33 @@
-/*
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
-# * Session Storage and Restoration
-# *
-# * Overview
-# * This service reads user's session file at startup, and makes a determination
-# * as to whether the session should be restored. It will restore the session
-# * under the circumstances described below.  If the auto-start Private Browsing
-# * mode is active, however, the session is never restored.
-# *
-# * Crash Detection
-# * The session file stores a session.state property, that
-# * indicates whether the browser is currently running. When the browser shuts
-# * down, the field is changed to "stopped". At startup, this field is read, and
-# * if its value is "running", then it's assumed that the browser had previously
-# * crashed, or at the very least that something bad happened, and that we should
-# * restore the session.
-# *
-# * Forced Restarts
-# * In the event that a restart is required due to application update or extension
-# * installation, set the browser.sessionstore.resume_session_once pref to true,
-# * and the session will be restored the next time the browser starts.
-# *
-# * Always Resume
-# * This service will always resume the session if the integer pref
-# * browser.startup.page is set to 3.
-*/
+ * Session Storage and Restoration
+ *
+ * Overview
+ * This service reads user's session file at startup, and makes a determination
+ * as to whether the session should be restored. It will restore the session
+ * under the circumstances described below.  If the auto-start Private Browsing
+ * mode is active, however, the session is never restored.
+ *
+ * Crash Detection
+ * The session file stores a session.state property, that
+ * indicates whether the browser is currently running. When the browser shuts
+ * down, the field is changed to "stopped". At startup, this field is read, and
+ * if its value is "running", then it's assumed that the browser had previously
+ * crashed, or at the very least that something bad happened, and that we should
+ * restore the session.
+ *
+ * Forced Restarts
+ * In the event that a restart is required due to application update or extension
+ * installation, set the browser.sessionstore.resume_session_once pref to true,
+ * and the session will be restored the next time the browser starts.
+ *
+ * Always Resume
+ * This service will always resume the session if the integer pref
+ * browser.startup.page is set to 3.
+ */
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
 

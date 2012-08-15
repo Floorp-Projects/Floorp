@@ -8,7 +8,7 @@
 #include "MediaResource.h"
 
 #include "nsHTMLMediaElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 using namespace mozilla;
 

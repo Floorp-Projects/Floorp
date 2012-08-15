@@ -32,7 +32,6 @@
 #include "mozilla/TimeStamp.h"
 #include "prclist.h"
 
-class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -359,49 +358,6 @@ public:
   PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
   bool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
   PRUint8 GetFocusRingStyle() const { return mFocusRingStyle; }
-
-  /**
-   * The types of image load types that the pres context needs image
-   * loaders to track invalidation for.
-   */
-  enum ImageLoadType {
-    BACKGROUND_IMAGE,
-    BORDER_IMAGE,
-    IMAGE_LOAD_TYPE_COUNT
-  };
-
-  /**
-   * Set the list of image loaders that track invalidation for a
-   * specific frame and type of image.  This list will replace any
-   * previous list for that frame and image type (and null will remove
-   * any previous list).
-   */
-  NS_HIDDEN_(void) SetImageLoaders(nsIFrame* aTargetFrame,
-                                   ImageLoadType aType,
-                                   nsImageLoader* aImageLoaders);
-
-  /**
-   * Make an appropriate SetImageLoaders call (including potentially
-   * with null aImageLoaders) given that aFrame draws its background
-   * based on aStyleBackground.
-   */
-  NS_HIDDEN_(void) SetupBackgroundImageLoaders(nsIFrame* aFrame,
-                                               const nsStyleBackground*
-                                                 aStyleBackground);
-
-  /**
-   * Make an appropriate SetImageLoaders call (including potentially
-   * with null aImageLoaders) given that aFrame draws its border
-   * based on aStyleBorder.
-   */
-  NS_HIDDEN_(void) SetupBorderImageLoaders(nsIFrame* aFrame,
-                                           const nsStyleBorder* aStyleBorder);
-
-  /**
-   * This method is called when a frame is being destroyed to
-   * ensure that the image loads get disassociated from the prescontext
-   */
-  NS_HIDDEN_(void) StopImagesFor(nsIFrame* aTargetFrame);
 
   NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
@@ -933,8 +889,6 @@ public:
   }
   inline void ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
 
-  void DestroyImageLoaders();
-
   bool GetContainsUpdatePluginGeometryFrame()
   {
     return mContainsUpdatePluginGeometryFrame;
@@ -1106,9 +1060,6 @@ public:
 
 protected:
 
-  nsRefPtrHashtable<nsPtrHashKey<nsIFrame>, nsImageLoader>
-                        mImageLoaders[IMAGE_LOAD_TYPE_COUNT];
-
   nsWeakPtr             mContainer;
 
   PRCList               mDOMMediaQueryLists;
@@ -1276,13 +1227,13 @@ public:
    * Callers must call UnregisterPluginForGeometryUpdates before
    * the aPlugin frame is destroyed.
    */
-  void RegisterPluginForGeometryUpdates(nsIContent* aPlugin);
+  void RegisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
   /**
    * Stops a plugin receiving geometry updates (position and clip
    * region). If the plugin was not already registered, this does
    * nothing.
    */
-  void UnregisterPluginForGeometryUpdates(nsIContent* aPlugin);
+  void UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
 
   /**
    * Iterate through all plugins that are registered for geometry updates
@@ -1386,7 +1337,7 @@ protected:
 
   nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
   nsCOMPtr<nsITimer> mUpdatePluginGeometryTimer;
-  nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
+  nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
   // use as the root of the subtree to search for plugin updates, or
   // null to use the root frame of this prescontext

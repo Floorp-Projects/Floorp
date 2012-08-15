@@ -1,6 +1,11 @@
 /* Tests various aspects of nsIResumableChannel in combination with HTTP */
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 
@@ -69,7 +74,7 @@ Requestor.prototype = {
 
 function run_test() {
   dump("*** run_test\n");
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.registerPathHandler("/auth", authHandler);
   httpserver.registerPathHandler("/range", rangeHandler);
   httpserver.registerPathHandler("/acceptranges", acceptRangesHandler);
