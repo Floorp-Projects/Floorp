@@ -60,6 +60,10 @@ class MIRGenerator
         return error_;
     }
 
+    bool instrumentedProfiling() {
+        return compartment->rt->spsProfiler.enabled();
+    }
+
   public:
     JSCompartment *compartment;
 

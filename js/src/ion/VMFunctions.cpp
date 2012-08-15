@@ -358,5 +358,16 @@ NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot 
     return CallObject::create(cx, shape, type, slots, global);
 }
 
+bool SPSEnter(JSContext *cx, HandleScript script)
+{
+    return cx->runtime->spsProfiler.enter(cx, script, script->function());
+}
+
+bool SPSExit(JSContext *cx, HandleScript script)
+{
+    cx->runtime->spsProfiler.exit(cx, script, script->function());
+    return true;
+}
+
 } // namespace ion
 } // namespace js

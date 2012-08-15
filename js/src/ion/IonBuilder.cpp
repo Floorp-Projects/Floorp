@@ -289,13 +289,8 @@ IonBuilder::build()
 
     // Emit the start instruction, so we can begin real instructions.
     current->makeStart(MStart::New(MStart::StartType_Default));
-    if (instrumentedProfiling()) {
-        SPSProfiler *profiler = &cx->runtime->spsProfiler;
-        const char *string = profiler->profileString(cx, script, script->function());
-        if (!string)
-            return false;
-        current->add(MProfilingEnter::New(string));
-    }
+    if (instrumentedProfiling())
+        current->add(MFunctionBoundary::New(script, MFunctionBoundary::Enter));
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -407,18 +402,19 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     current->setCallerResumePoint(callerResumePoint);
 
-    // Flag the entry into an inlined function with a special MStart block
-    if (instrumentedProfiling()) {
-        SPSProfiler *profiler = &cx->runtime->spsProfiler;
-        const char *string = profiler->profileString(cx, script, script->function());
-        if (!string)
-            return false;
-        current->add(MProfilingEnter::New(string));
-    }
-
     // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerBuilder->current;
     JS_ASSERT(predecessor == callerResumePoint->block());
+
+    // All further instructions generated in from this scope should be
+    // considered as part of the function that we're inlining. We also need to
+    // keep track of the inlining depth because all scripts inlined on the same
+    // level contiguously have only one Inline_Exit node.
+    if (instrumentedProfiling())
+        predecessor->add(MFunctionBoundary::New(script,
+                                                MFunctionBoundary::Inline_Enter,
+                                                inliningDepth));
+
     predecessor->end(MGoto::New(current));
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
@@ -2561,7 +2557,7 @@ IonBuilder::processReturn(JSOp op)
     }
 
     if (instrumentedProfiling())
-        current->add(MProfilingExit::New());
+        current->add(MFunctionBoundary::New(script, MFunctionBoundary::Exit));
     MReturn *ret = MReturn::New(def);
     current->end(ret);
 
@@ -3229,6 +3225,12 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
         RootedFunction target(cx, func);
         if (!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
             return false;
+
+        // The Inline_Enter node is handled by buildInline, we're responsible
+        // for the Inline_Exit node (mostly for the case below)
+        if (instrumentedProfiling())
+            bottom->add(MFunctionBoundary::New(NULL, MFunctionBoundary::Inline_Exit));
+
     } else {
         // In the polymorphic case, we end the current block with a MPolyInlineDispatch instruction.
 
@@ -3254,6 +3256,20 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
         }
         top->end(disp);
 
+        // If profiling is enabled, then we need a clear-cut boundary of all of
+        // the inlined functions which is distinct from the fallback path where
+        // no inline functions are entered. In the case that there's a fallback
+        // path and a set of inline functions, we create a new block as a join
+        // point for all of the inline paths which will then go to the real end
+        // block: 'bottom'. This 'inlineBottom' block is never different from
+        // 'bottom' except for this one case where profiling is turned on.
+        MBasicBlock *inlineBottom = bottom;
+        if (instrumentedProfiling() && disp->inlinePropertyTable()) {
+            inlineBottom = newBlock(NULL, pc);
+            if (inlineBottom == NULL)
+                return false;
+        }
+
         for (size_t i = 0; i < disp->numCallees(); i++) {
             // Do the inline function build.
             MConstant *constFun = disp->getFunctionConstant(i);
@@ -3261,8 +3277,46 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
             MBasicBlock *block = disp->getSuccessor(i);
             graph().moveBlockToEnd(block);
             current = block;
-            
-            if (!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
+
+            if (!jsop_call_inline(target, argc, constructing, constFun, inlineBottom, retvalDefns))
+                return false;
+        }
+
+        // Regardless of whether inlineBottom != bottom, demarcate these exits
+        // with an Inline_Exit instruction signifying that the inlined functions
+        // on this level have all ceased running.
+        if (instrumentedProfiling())
+            inlineBottom->add(MFunctionBoundary::New(NULL, MFunctionBoundary::Inline_Exit));
+
+        // In the case where we had to create a new block, all of the returns of
+        // the inline functions need to be merged together with a phi node. This
+        // phi node resident in the 'inlineBottom' block is then an input to the
+        // phi node for this entire call sequence in the 'bottom' block.
+        if (inlineBottom != bottom) {
+            graph().moveBlockToEnd(inlineBottom);
+            inlineBottom->inheritSlots(top);
+            if (!inlineBottom->initEntrySlots())
+                return false;
+
+            // Only need to phi returns together if there's more than one
+            if (retvalDefns.length() > 1) {
+                // This is the same depth as the phi node of the 'bottom' block
+                // after all of the 'pops' happen (see pop() sequence below)
+                MPhi *phi = MPhi::New(inlineBottom->stackDepth() - argc - 2);
+                inlineBottom->addPhi(phi);
+
+                for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
+                    if (!phi->addInput(*it))
+                        return false;
+                }
+                // retvalDefns should become a singleton vector of 'phi'
+                retvalDefns.clear();
+                if (!retvalDefns.append(phi))
+                    return false;
+            }
+
+            inlineBottom->end(MGoto::New(bottom));
+            if (!bottom->addPredecessorWithoutPhis(inlineBottom))
                 return false;
         }
 

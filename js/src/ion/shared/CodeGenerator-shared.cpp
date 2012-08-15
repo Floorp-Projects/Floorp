@@ -19,13 +19,17 @@ namespace js {
 namespace ion {
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
-  : gen(gen),
+  : oolIns(NULL),
+    masm(&sps, &lastPC),
+    gen(gen),
     graph(graph),
+    current(NULL),
     deoptTable_(NULL),
 #ifdef DEBUG
     pushedArgs_(0),
 #endif
     lastOsiPointOffset_(0),
+    sps(&gen->compartment->rt->spsProfiler),
     osrEntryOffset_(0),
     frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE) +
                 graph.argumentSlotCount() * sizeof(Value))
@@ -40,11 +44,15 @@ CodeGeneratorShared::generateOutOfLineCode()
         if (!gen->temp().ensureBallast())
             return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
+        lastPC = outOfLineCode_[i]->pc();
+        sps.setPushed(outOfLineCode_[i]->script());
         outOfLineCode_[i]->bind(&masm);
 
+        oolIns = outOfLineCode_[i];
         if (!outOfLineCode_[i]->generate(this))
             return false;
     }
+    oolIns = NULL;
 
     return true;
 }
@@ -53,6 +61,13 @@ bool
 CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
 {
     code->setFramePushed(masm.framePushed());
+    // If an OOL instruction adds another OOL instruction, then use the original
+    // instruction's script/pc instead of the basic block's that we're on
+    // because they're probably not relevant any more.
+    if (oolIns)
+        code->setSource(oolIns->script(), oolIns->pc());
+    else
+        code->setSource(current ? current->mir()->info().script() : NULL, lastPC);
     return outOfLineCode_.append(code);
 }
 
@@ -343,6 +358,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     IonCode *wrapper = ion->generateVMWrapper(cx, fun);
     if (!wrapper)
         return false;
+    masm.leaveBeforeCall();
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
@@ -355,6 +371,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 
     if (!markSafepoint(ins))
         return false;
+    masm.reenterAfterCall();
 
     // Remove rest of the frame left on the stack. We remove the return address
     // which is implicitly poped when returning.

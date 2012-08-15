@@ -33,6 +33,7 @@ class OutOfLineTruncateSlow;
 class CodeGeneratorShared : public LInstructionVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;
+    OutOfLineCode *oolIns;
 
   protected:
     MacroAssembler masm;
@@ -63,6 +64,8 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     // List of stack slots that have been pushed as arguments to an MCall.
     js::Vector<uint32, 0, SystemAllocPolicy> pushedArgumentSlots_;
+
+    IonInstrumentation sps;
 
   protected:
     // The offset of the first instruction of the OSR entry block from the
@@ -290,10 +293,14 @@ class OutOfLineCode : public TempObject
     Label entry_;
     Label rejoin_;
     uint32 framePushed_;
+    jsbytecode *pc_;
+    JSScript *script_;
 
   public:
     OutOfLineCode()
-      : framePushed_(0)
+      : framePushed_(0),
+        pc_(NULL),
+        script_(NULL)
     { }
 
     virtual bool generate(CodeGeneratorShared *codegen) = 0;
@@ -312,6 +319,16 @@ class OutOfLineCode : public TempObject
     }
     uint32 framePushed() const {
         return framePushed_;
+    }
+    void setSource(JSScript *script, jsbytecode *pc) {
+        script_ = script;
+        pc_ = pc;
+    }
+    jsbytecode *pc() {
+        return pc_;
+    }
+    JSScript *script() {
+        return script_;
     }
 };
 
