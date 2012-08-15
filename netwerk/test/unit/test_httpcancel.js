@@ -8,8 +8,6 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
-const NS_BINDING_ABORTED = 0x804b0002;
-
 var observer = {
   QueryInterface: function eventsink_qi(iid) {
     if (iid.equals(Components.interfaces.nsISupports) ||
@@ -20,7 +18,7 @@ var observer = {
 
   observe: function(subject, topic, data) {
     subject = subject.QueryInterface(Components.interfaces.nsIRequest);
-    subject.cancel(NS_BINDING_ABORTED);
+    subject.cancel(Components.results.NS_BINDING_ABORTED);
 
     var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
@@ -30,7 +28,7 @@ var observer = {
 
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
-    do_check_eq(request.status, NS_BINDING_ABORTED);
+    do_check_eq(request.status, Components.results.NS_BINDING_ABORTED);
   },
 
   onDataAvailable: function test_ODA() {
