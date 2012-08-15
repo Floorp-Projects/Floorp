@@ -174,7 +174,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mVFlags = 0;
   mViewManager = aViewManager;
   mDirtyRegion = nullptr;
-  mDeletionObserver = nullptr;
   mWidgetIsTopLevel = false;
 }
 
@@ -236,10 +235,6 @@ nsView::~nsView()
   DestroyWidget();
 
   delete mDirtyRegion;
-
-  if (mDeletionObserver) {
-    mDeletionObserver->Clear();
-  }
 }
 
 void nsView::DestroyWidget()
@@ -1095,15 +1090,6 @@ bool nsIView::IsRoot() const
 bool nsIView::ExternalIsRoot() const
 {
   return nsIView::IsRoot();
-}
-
-void
-nsIView::SetDeletionObserver(nsWeakView* aDeletionObserver)
-{
-  if (mDeletionObserver && aDeletionObserver) {
-    aDeletionObserver->SetPrevious(mDeletionObserver);
-  }
-  mDeletionObserver = aDeletionObserver;
 }
 
 nsView*
