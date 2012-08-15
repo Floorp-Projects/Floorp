@@ -7,7 +7,7 @@ random-if(Android&&!browserIsRemote) == iframe-border-radius.html iframe-border-
 random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android&&!browserIsRemote) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
-HTTP == simple-1.html simple-1.html?ref
+random-if(bug685516) HTTP == simple-1.html simple-1.html?ref
 HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 HTTP == text-1.html text-1.html?ref
 HTTP == text-2.html?up text-2.html?ref
