@@ -909,6 +909,11 @@ SourceScripts.prototype = {
 
     this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
 
+    // Select the script if it's the preferred one.
+    if (aPacket.url === DebuggerView.Scripts.preferredScriptUrl) {
+      DebuggerView.Scripts.selectScript(aPacket.url);
+    }
+
     // If there are any stored breakpoints for this script, display them again,
     // both in the editor and the pane.
     for each (let breakpoint in DebuggerController.Breakpoints.store) {
@@ -927,6 +932,14 @@ SourceScripts.prototype = {
     }
     DebuggerView.Scripts.commitScripts();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
+
+    // Select the preferred script if one exists, the first entry otherwise.
+    let preferredScriptUrl = DebuggerView.Scripts.preferredScriptUrl;
+    if (preferredScriptUrl && DebuggerView.Scripts.contains(preferredScriptUrl)) {
+      DebuggerView.Scripts.selectScript(preferredScriptUrl);
+    } else {
+      DebuggerView.Scripts.selectIndex(0);
+    }
   },
 
   /**
