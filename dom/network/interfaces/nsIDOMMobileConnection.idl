@@ -8,7 +8,6 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
-interface nsIDOMMozMobileCellInfo;
 
 [scriptable, builtinclass, uuid(e7309c47-9a2e-4e12-84ab-f8f39214eaba)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
@@ -223,7 +222,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   attribute nsIDOMEventListener onussdreceived;
 };
 
-[scriptable, uuid(5ea0e4a9-4684-40da-9930-8ebb61d187f3)]
+[scriptable, uuid(6601c20e-337f-4286-8d6e-0990fc1c2372)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
@@ -277,11 +276,6 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
    */
   readonly attribute jsval relSignalStrength;
 
-  /**
-   * Cell location.
-   */
-  readonly attribute nsIDOMMozMobileCellInfo cell;
-
 };
 
 [scriptable, uuid(3bd866c7-98a5-4ef4-a464-c22d8cc6b992)]
@@ -313,18 +307,4 @@ interface nsIDOMMozMobileNetworkInfo: nsISupports
    * Possible values: 'available', 'connected', 'forbidden', or null (unknown)
    */
   readonly attribute DOMString state;
-};
-
-[scriptable, uuid(aa546788-4f34-488b-8c3e-2786e02ab992)]
-interface nsIDOMMozMobileCellInfo: nsISupports
-{
-  /**
-   * Mobile Location Area Code (LAC) for GSM/WCDMA networks.
-   */
-  readonly attribute unsigned short gsmLocationAreaCode;
-
-  /**
-   * Mobile Cell ID for GSM/WCDMA networks.
-   */
-  readonly attribute unsigned long gsmCellId;
 };
