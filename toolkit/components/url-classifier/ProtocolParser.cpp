@@ -510,7 +510,6 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         NS_ASSERTION(mChunkState.hashSize == 4, "Only 32- or 4-byte hashes can be used for add chunks.");
         Prefix hash;
         Completion domHash;
-        Prefix newHash;
         rv = LookupCache::GetKey(Substring(iter, end), &domHash, mCryptoHash);
         NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(Substring(iter, end), mCryptoHash);
@@ -518,6 +517,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
                                     &codedHash, !mPerClientRandomize);
         NS_ENSURE_SUCCESS(rv, rv);
+        Prefix newHash;
         newHash.FromUint32(codedHash);
         mTableUpdate->NewSubPrefix(addChunk, newHash, mChunkState.num);
         // Needed to knock out completes

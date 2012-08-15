@@ -81,8 +81,8 @@
 //    0...numAddChunks               uint32 addChunk
 //    0...numSubChunks               uint32 subChunk
 //    byte sliced (numAddPrefixes)   uint32 add chunk of AddPrefixes
-//    byte sliced (numSubPrefixes)   uint32 sub chunk of SubPrefixes
 //    byte sliced (numSubPrefixes)   uint32 add chunk of SubPrefixes
+//    byte sliced (numSubPrefixes)   uint32 sub chunk of SubPrefixes
 //    byte sliced (numSubPrefixes)   uint32 SubPrefixes
 //    0...numAddCompletes            32-byte Completions + uint32 addChunk
 //    0...numSubCompletes            32-byte Completions + uint32 addChunk
@@ -996,13 +996,37 @@ RemoveMatchingPrefixes(const SubPrefixArray& aSubs, nsTArray<T>* aFullHashes)
   Erase(aFullHashes, out, hashIter);
 }
 
+#ifdef DEBUG
+template <class T>
+static void EnsureSorted(nsTArray<T>* aArray)
+{
+  T* start = aArray->Elements();
+  T* end = aArray->Elements() + aArray->Length();
+  T* iter = start;
+  T* previous = start;
+
+  while (iter != end) {
+    previous = iter;
+    ++iter;
+    if (iter != end) {
+      MOZ_ASSERT(iter->Compare(*previous) >= 0);
+    }
+  }
+
+  return;
+}
+#endif
+
 nsresult
 HashStore::ProcessSubs()
 {
-  EntrySort(mAddPrefixes);
-  EntrySort(mSubPrefixes);
-  EntrySort(mAddCompletes);
-  EntrySort(mSubCompletes);
+#ifdef DEBUG
+  EnsureSorted(&mAddPrefixes);
+  EnsureSorted(&mSubPrefixes);
+  EnsureSorted(&mAddCompletes);
+  EnsureSorted(&mSubCompletes);
+  LOG(("All databases seem to have a consistent sort order."));
+#endif
 
   RemoveMatchingPrefixes(mSubPrefixes, &mAddCompletes);
   RemoveMatchingPrefixes(mSubPrefixes, &mSubCompletes);
@@ -1018,6 +1042,14 @@ HashStore::ProcessSubs()
   // and subprefixes.
   KnockoutSubs(&mSubPrefixes, &mAddPrefixes);
   KnockoutSubs(&mSubCompletes, &mAddCompletes);
+
+#ifdef DEBUG
+  EnsureSorted(&mAddPrefixes);
+  EnsureSorted(&mSubPrefixes);
+  EnsureSorted(&mAddCompletes);
+  EnsureSorted(&mSubCompletes);
+  LOG(("All databases seem to have a consistent sort order."));
+#endif
 
   return NS_OK;
 }
