@@ -127,8 +127,7 @@ namespace ion {
     _(Round)                                                                \
     _(InstanceOf)                                                           \
     _(InterruptCheck)                                                       \
-    _(ProfilingEnter)                                                       \
-    _(ProfilingExit)                                                        \
+    _(FunctionBoundary)                                                     \
     _(GetDOMProperty)                                                       \
     _(SetDOMProperty)
 

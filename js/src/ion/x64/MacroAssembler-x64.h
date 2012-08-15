@@ -351,6 +351,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Address &dest) {
         addq(imm, Operand(dest));
     }
+    void addPtr(ImmWord imm, const Register &dest) {
+        JS_ASSERT(dest != ScratchReg);
+        movq(imm, ScratchReg);
+        addq(ScratchReg, dest);
+    }
     void subPtr(Imm32 imm, const Register &dest) {
         subq(imm, dest);
     }

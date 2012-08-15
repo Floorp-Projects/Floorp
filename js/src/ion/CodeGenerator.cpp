@@ -748,9 +748,11 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Finally call the function in objreg.
     masm.bind(&makeCall);
+    masm.leaveBeforeCall();
     masm.callIon(objreg);
     if (!markSafepoint(call))
         return false;
+    masm.reenterAfterCall();
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
@@ -819,11 +821,13 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
+    masm.leaveBeforeCall();
 
     // Finally call the function in objreg.
     masm.callIon(objreg);
     if (!markSafepoint(call))
         return false;
+    masm.reenterAfterCall();
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
@@ -1075,11 +1079,13 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         }
 
         masm.bind(&rejoin);
+        masm.leaveBeforeCall();
 
         // Finally call the function in objreg, as assigned by one of the paths above.
         masm.callIon(objreg);
         if (!markSafepoint(apply))
             return false;
+        masm.reenterAfterCall();
 
         // Recover the number of arguments from the frame descriptor.
         masm.movePtr(Address(StackPointer, 0), copyreg);
@@ -4041,54 +4047,79 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
 }
 
 bool
-CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
+CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
 {
-#if 0
-    SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
-    JS_ASSERT(profiler->enabled());
+    Register temp = ToRegister(lir->temp()->output());
 
-    const char *string = lir->profileString();
+    switch (lir->type()) {
+        case MFunctionBoundary::Inline_Enter:
+            // Multiple scripts can be inlined at one depth, but there is only
+            // one Inline_Exit node to signify this. To deal with this, if we
+            // reach the entry of another inline script on the same level, then
+            // just reset the sps metadata about the frame. We must balance
+            // calls to leave()/reenter(), so perform the balance without
+            // emitting any instrumentation. Technically the previous inline
+            // call at this same depth has reentered, but the instrumentation
+            // will be emitted at the common join point for all inlines at the
+            // same depth.
+            if (sps.inliningDepth() == lir->inlineLevel()) {
+                sps.leaveInlineFrame();
+                sps.skipNextReenter();
+                sps.reenter(masm, temp);
+            }
 
-    Register size = ToRegister(lir->temp1()->output());
-    Register base = ToRegister(lir->temp2()->output());
+            sps.leave(lastPC, masm, temp);
+            if (!sps.enterInlineFrame())
+                return false;
+            // fallthrough
 
-    // Check if there's still space on the stack
-    masm.movePtr(ImmWord(profiler->sizePointer()), size);
-    masm.load32(Address(size, 0), size);
-    Label stackFull;
-    masm.branch32(Assembler::GreaterThanOrEqual, size, Imm32(profiler->maxSize()),
-                  &stackFull);
+        case MFunctionBoundary::Enter:
+            if (sps.slowAssertions()) {
+                typedef bool(*pf)(JSContext *, HandleScript);
+                static const VMFunction SPSEnterInfo = FunctionInfo<pf>(SPSEnter);
 
-    // With room, store our string onto the stack
-    masm.movePtr(ImmWord(profiler->stack()), base);
-    JS_STATIC_ASSERT(sizeof(ProfileEntry) == 2 * sizeof(void*));
-    masm.lshiftPtr(Imm32(sizeof(void*) == 4 ? 3 : 4), size);
-    masm.addPtr(size, base);
+                saveLive(lir);
+                pushArg(ImmGCPtr(lir->script()));
+                if (!callVM(SPSEnterInfo, lir))
+                    return false;
+                restoreLive(lir);
+                sps.pushManual(lir->script(), masm, temp);
+                return true;
+            }
 
-    masm.storePtr(ImmWord(string), Address(base, offsetof(ProfileEntry, string)));
-    masm.storePtr(ImmWord((uintptr_t) 0), Address(base, offsetof(ProfileEntry, sp)));
+            return sps.push(GetIonContext()->cx, lir->script(), masm, temp);
 
-    // Always increment the stack size (paired with a decrement in pop)
-    masm.bind(&stackFull);
-    masm.movePtr(ImmWord(profiler->sizePointer()), size);
-    Address addr(size, 0);
-    masm.add32(Imm32(1), addr);
-#endif
-    return true;
-}
+        case MFunctionBoundary::Inline_Exit:
+            // all inline returns were covered with ::Exit, so we just need to
+            // maintain the state of inline frames currently active and then
+            // reenter the caller
+            sps.leaveInlineFrame();
+            sps.reenter(masm, temp);
+            return true;
 
-bool
-CodeGenerator::visitProfilingExit(LProfilingExit *exit)
-{
-#if 0
-    SPSProfiler *profiler = &gen->compartment->rt->spsProfiler;
-    JS_ASSERT(profiler->enabled());
-    Register temp = ToRegister(exit->temp());
-    masm.movePtr(ImmWord(profiler->sizePointer()), temp);
-    Address addr(temp, 0);
-    masm.add32(Imm32(-1), addr);
-#endif
-    return true;
+        case MFunctionBoundary::Exit:
+            if (sps.slowAssertions()) {
+                typedef bool(*pf)(JSContext *, HandleScript);
+                static const VMFunction SPSExitInfo = FunctionInfo<pf>(SPSExit);
+
+                saveLive(lir);
+                pushArg(ImmGCPtr(lir->script()));
+                // Once we've exited, then we shouldn't emit instrumentation for
+                // the corresponding reenter() because we no longer have a
+                // frame.
+                sps.skipNextReenter();
+                if (!callVM(SPSExitInfo, lir))
+                    return false;
+                restoreLive(lir);
+                return true;
+            }
+
+            sps.pop(masm, temp);
+            return true;
+
+        default:
+            JS_NOT_REACHED("invalid LFunctionBoundary type");
+    }
 }
 
 } // namespace ion

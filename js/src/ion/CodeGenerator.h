@@ -163,8 +163,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool emitInstanceOf(LInstruction *ins, Register rhs);
     bool visitInstanceOfO(LInstanceOfO *ins);
     bool visitInstanceOfV(LInstanceOfV *ins);
-    bool visitProfilingEnter(LProfilingEnter *lir);
-    bool visitProfilingExit(LProfilingExit *lir);
+    bool visitFunctionBoundary(LFunctionBoundary *lir);
     bool visitGetDOMProperty(LGetDOMProperty *lir);
     bool visitSetDOMProperty(LSetDOMProperty *lir);
     bool visitCallDOMNative(LCallDOMNative *lir);

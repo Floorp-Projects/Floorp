@@ -183,10 +183,6 @@ class IonBuilder : public MIRGenerator
         return js_IonOptions.inlining;
     }
 
-    bool instrumentedProfiling() {
-        return cx->runtime->spsProfiler.enabled();
-    }
-
     JSFunction *getSingleCallTarget(uint32 argc, jsbytecode *pc);
     unsigned getPolyCallTargets(uint32 argc, jsbytecode *pc,
                                 AutoObjectVector &targets, uint32_t maxTargets);

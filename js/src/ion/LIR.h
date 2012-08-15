@@ -657,26 +657,27 @@ class LInstruction
 
 class LInstructionVisitor
 {
-#ifdef TRACK_SNAPSHOTS
     LInstruction *ins_;
 
   protected:
+    jsbytecode *lastPC;
+
     LInstruction *instruction() {
         return ins_;
     }
-#endif
 
   public:
     void setInstruction(LInstruction *ins) {
-#ifdef TRACK_SNAPSHOTS
         ins_ = ins;
-#endif
+        if (ins->mirRaw()) {
+            lastPC = ins->mirRaw()->trackedPc();
+            JS_ASSERT(lastPC != NULL);
+        }
     }
 
     LInstructionVisitor()
-#ifdef TRACK_SNAPSHOTS
-      : ins_(NULL)
-#endif
+      : ins_(NULL),
+        lastPC(NULL)
     {}
 
   public:

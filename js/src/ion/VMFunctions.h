@@ -439,6 +439,9 @@ HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
 JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
                         HandleObject global);
 
+bool SPSEnter(JSContext *cx, HandleScript script);
+bool SPSExit(JSContext *cx, HandleScript script);
+
 
 } // namespace ion
 } // namespace js
