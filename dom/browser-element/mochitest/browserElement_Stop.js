@@ -17,7 +17,7 @@ var imgSrc = 'http://test/tests/dom/browser-element/mochitest/file_bug709759.sjs
 
 function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addToWhitelist();
+  browserElementTestHelpers.addPermission();
 
   iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
