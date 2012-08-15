@@ -75,7 +75,7 @@ public:
   void NewSubExpiration(PRUint32 aChunk) { mSubExpirations.Set(aChunk); }
 
   void NewAddPrefix(PRUint32 aAddChunk, const Prefix& aPrefix);
-  void NewSubPrefix(PRUint32 aAddChunk, const Prefix& aPprefix, PRUint32 aSubChunk);
+  void NewSubPrefix(PRUint32 aAddChunk, const Prefix& aPrefix, PRUint32 aSubChunk);
   void NewAddComplete(PRUint32 aChunk, const Completion& aCompletion);
   void NewSubComplete(PRUint32 aAddChunk, const Completion& aCompletion,
                       PRUint32 aSubChunk);
