@@ -12,6 +12,7 @@
 
 #include "mozilla/HashFunctions.h"
 #include "js/Utility.h"
+#include "jsscript.h"
 
 /*
  * SPS Profiler integration with the JS Engine
@@ -101,7 +102,6 @@
  */
 
 struct JSFunction;
-struct JSScript;
 
 namespace js {
 
@@ -167,6 +167,7 @@ class SPSProfiler
     void updatePC(JSScript *script, jsbytecode *pc) {
         if (enabled() && *size_ - 1 < max_) {
             JS_ASSERT(*size_ > 0);
+            JS_ASSERT(stack_[*size_ - 1].script() == script);
             stack_[*size_ - 1].setPC(pc);
         }
     }
@@ -260,10 +261,218 @@ class SPSProfiler
 class SPSEntryMarker
 {
     SPSProfiler *profiler;
+    DebugOnly<uint32_t> size_before;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
     SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM);
     ~SPSEntryMarker();
+};
+
+/*
+ * SPS is the profiling backend used by the JS engine to enable time profiling.
+ * More information can be found in vm/SPSProfiler.{h,cpp}. This class manages
+ * the instrumentation portion of the profiling for JIT code.
+ *
+ * The instrumentation tracks entry into functions, leaving those functions via
+ * a function call, reentering the functions from a function call, and exiting
+ * the functions from returning. This class also handles inline frames and
+ * manages the instrumentation which needs to be attached to them as well.
+ *
+ * The basic methods which emit instrumentation are at the end of this class,
+ * and the management functions are all described in the middle.
+ */
+template<class Assembler, class Register>
+class SPSInstrumentation
+{
+    /* Because of inline frames, this is a nested structure in a vector */
+    struct FrameState {
+        JSScript *script; // script for this frame, NULL if not pushed yet
+        bool skipNext;    // should the next call to reenter be skipped?
+        int  left;        // number of leave() calls made without a matching reenter()
+    };
+
+    SPSProfiler *profiler_; // Instrumentation location management
+
+    Vector<FrameState, 1, SystemAllocPolicy> frames;
+    FrameState *frame;
+
+  public:
+    /*
+     * SPS instruments calls to track leaving and reentering a function. A call
+     * is one made to C++ other other JS. This is a helper class to assist with
+     * the calls to leave()/reenter() to an SPSInstrumentation instance. It uses
+     * RAII to invoke leave() on construction and reenter() on destruction.
+     */
+    class CallScope
+    {
+        SPSInstrumentation *sps;
+        jsbytecode *pc;
+        Assembler &masm;
+        Register reg;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+      public:
+
+        /*
+         * Each parameter will be passed along to the instrumentation's
+         * leave()/reenter() methods. The given instrumentation can be NULL, in
+         * which case this object will do nothing.
+         */
+        CallScope(SPSInstrumentation *sps, jsbytecode *pc, Assembler &masm,
+                  Register reg JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : sps(sps), pc(pc), masm(masm), reg(reg)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+            if (sps)
+                sps->leave(pc, masm, reg);
+        }
+
+        ~CallScope() {
+            if (sps)
+                sps->reenter(masm, reg);
+        }
+    };
+
+    /*
+     * Creates instrumentation which writes information out the the specified
+     * profiler's stack and constituent fields.
+     */
+    SPSInstrumentation(SPSProfiler *profiler)
+      : profiler_(profiler), frame(NULL)
+    {
+        enterInlineFrame();
+    }
+
+    /* Small proxies around SPSProfiler */
+    bool enabled() { return profiler_ && profiler_->enabled(); }
+    SPSProfiler *profiler() { JS_ASSERT(enabled()); return profiler_; }
+    bool slowAssertions() { return enabled() && profiler_->slowAssertionsEnabled(); }
+
+    /* Signals an inline function returned, reverting to the previous state */
+    void leaveInlineFrame() {
+        if (!enabled())
+            return;
+        JS_ASSERT(frame->left == 0);
+        JS_ASSERT(frame->script != NULL);
+        frames.shrinkBy(1);
+        JS_ASSERT(frames.length() > 0);
+        frame = &frames[frames.length() - 1];
+    }
+
+    /* Saves the current state and assumes a fresh one for the inline function */
+    bool enterInlineFrame() {
+        if (!enabled())
+            return true;
+        JS_ASSERT_IF(frame != NULL, frame->script != NULL);
+        JS_ASSERT_IF(frame != NULL, frame->left == 1);
+        if (!frames.growBy(1))
+            return false;
+        frame = &frames[frames.length() - 1];
+        frame->script = NULL;
+        frame->skipNext = false;
+        frame->left = 0;
+        return true;
+    }
+
+    /* Number of inline frames currently active (doesn't include original one) */
+    unsigned inliningDepth() {
+        return frames.length() - 1;
+    }
+
+    /*
+     * When debugging or with slow assertions, sometimes a C++ method will be
+     * invoked to perform the pop operation from the SPS stack. When we leave
+     * JIT code, we need to record the current PC, but upon reentering JIT code,
+     * no update back to NULL should happen. This method exists to flag this
+     * behavior. The next leave() will emit instrumentation, but the following
+     * reenter() will be a no-op.
+     */
+    void skipNextReenter() {
+        /* If we've left the frame, the reenter will be skipped anyway */
+        if (!enabled() || frame->left != 0)
+            return;
+        JS_ASSERT(frame->script);
+        JS_ASSERT(!frame->skipNext);
+        frame->skipNext = true;
+    }
+
+    /*
+     * In some cases, a frame needs to be flagged as having been pushed, but no
+     * instrumentation should be emitted. This updates internal state to flag
+     * that further instrumentation should actually be emitted.
+     */
+    void setPushed(JSScript *script) {
+        if (!enabled())
+            return;
+        JS_ASSERT(frame->script == NULL);
+        JS_ASSERT(frame->left == 0);
+        frame->script = script;
+    }
+
+    /*
+     * Flags entry into a JS function for the first time. Before this is called,
+     * no instrumentation is emitted, but after this instrumentation is emitted.
+     */
+    bool push(JSContext *cx, JSScript *script, Assembler &masm, Register scratch) {
+        if (!enabled())
+            return true;
+        const char *string = profiler_->profileString(cx, script,
+                                                      script->function());
+        if (string == NULL)
+            return false;
+        masm.spsPushFrame(profiler_, string, script, scratch);
+        setPushed(script);
+        return true;
+    }
+
+    /*
+     * Signifies that C++ performed the push() for this function. C++ always
+     * sets the current PC to something non-null, however, so as soon as JIT
+     * code is reentered this updates the current pc to NULL.
+     */
+    void pushManual(JSScript *script, Assembler &masm, Register scratch) {
+        if (!enabled())
+            return;
+        masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
+        setPushed(script);
+    }
+
+    /*
+     * Signals that the current function is leaving for a function call. This
+     * can happen both on JS function calls and also calls to C++. This
+     * internally manages how many leave() calls have been seen, and only the
+     * first leave() emits instrumentation. Similarly, only the last
+     * corresponding reenter() actually emits instrumentation.
+     */
+    void leave(jsbytecode *pc, Assembler &masm, Register scratch) {
+        if (enabled() && frame->script && frame->left++ == 0)
+            masm.spsUpdatePCIdx(profiler_, pc - frame->script->code, scratch);
+    }
+
+    /*
+     * Flags that the leaving of the current function has returned. This tracks
+     * state with leave() to only emit instrumentation at proper times.
+     */
+    void reenter(Assembler &masm, Register scratch) {
+        if (!enabled() || !frame->script || frame->left-- != 1)
+            return;
+        if (frame->skipNext)
+            frame->skipNext = false;
+        else
+            masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
+    }
+
+    /*
+     * Signifies exiting a JS frame, popping the SPS entry. Because there can be
+     * multiple return sites of a function, this does not cease instrumentation
+     * emission.
+     */
+    void pop(Assembler &masm, Register scratch) {
+        if (enabled()) {
+            JS_ASSERT(frame->left == 0);
+            JS_ASSERT(frame->script);
+            masm.spsPopFrame(profiler_, scratch);
+        }
+    }
 };
 
 } /* namespace js */
