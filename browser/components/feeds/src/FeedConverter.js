@@ -285,7 +285,7 @@ FeedConverter.prototype = {
       // getResponseHeader.
       if (!httpChannel.requestSucceeded) {
         // Just give up, but don't forget to cancel the channel first!
-        request.cancel(0x804b0002); // NS_BINDING_ABORTED
+        request.cancel(Cr.NS_BINDING_ABORTED);
         return;
       }
       var noSniff = httpChannel.getResponseHeader("X-Moz-Is-Feed");
