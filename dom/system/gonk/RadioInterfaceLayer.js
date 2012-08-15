@@ -398,14 +398,10 @@ RadioInterfaceLayer.prototype = {
       case "iccinfochange":
         this.rilContext.icc = message;
         break;
-      case "iccgetcardlock":
-        this.handleICCGetCardLock(message);
-        break;
-      case "iccsetcardlock":
-        this.handleICCSetCardLock(message);
-        break;
-      case "iccunlockcardlock":
-        this.handleICCUnlockCardLock(message);
+      case "iccGetCardLock":
+      case "iccSetCardLock":
+      case "iccUnlockCardLock":
+        this.handleICCCardLockResult(message);
         break;
       case "icccontacts":
         if (!this._contactsCallbacks) {
@@ -946,16 +942,8 @@ RadioInterfaceLayer.prototype = {
                                   [message.datacalls, message.datacalls.length]);
   },
 
-  handleICCGetCardLock: function handleICCGetCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:GetCardLock:Return:OK", message);
-  },
-
-  handleICCSetCardLock: function handleICCSetCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:SetCardLock:Return:OK", message);
-  },
-
-  handleICCUnlockCardLock: function handleICCUnlockCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:OK", message);
+  handleICCCardLockResult: function handleICCCardLockResult(message) {
+    ppmm.sendAsyncMessage("RIL:CardLockResult", message);
   },
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
@@ -1640,67 +1628,17 @@ RadioInterfaceLayer.prototype = {
   },
 
   getCardLock: function getCardLock(message) {
-    // Currently only support pin.
-    switch (message.lockType) {
-      case "pin" :
-        message.rilMessageType = "getICCPinLock";
-        break;
-      default:
-        ppmm.sendAsyncMessage("RIL:GetCardLock:Return:KO",
-                              {errorMsg: "Unsupported Card Lock.",
-                               requestId: message.requestId});
-        return;
-    }
+    message.rilMessageType = "iccGetCardLock";
     this.worker.postMessage(message);
   },
 
   unlockCardLock: function unlockCardLock(message) {
-    switch (message.lockType) {
-      case "pin":
-        message.rilMessageType = "enterICCPIN";
-        break;
-      case "pin2":
-        message.rilMessageType = "enterICCPIN2";
-        break;
-      case "puk":
-        message.rilMessageType = "enterICCPUK";
-        break;
-      case "puk2":
-        message.rilMessageType = "enterICCPUK2";
-        break;
-      default:
-        ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:KO",
-                              {errorMsg: "Unsupported Card Lock.",
-                               requestId: message.requestId});
-        return;
-    }
+    message.rilMessageType = "iccUnlockCardLock";
     this.worker.postMessage(message);
   },
 
   setCardLock: function setCardLock(message) {
-    // Change pin.
-    if (message.newPin !== undefined) {
-      switch (message.lockType) {
-        case "pin":
-          message.rilMessageType = "changeICCPIN";
-          break;
-        case "pin2":
-          message.rilMessageType = "changeICCPIN2";
-          break;
-        default:
-          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
-                                {errorMsg: "Unsupported Card Lock.",
-                                 requestId: message.requestId});
-          return;
-      }
-    } else { // Enable/Disable pin lock.
-      if (message.lockType != "pin") {
-          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
-                                {errorMsg: "Unsupported Card Lock.",
-                                 requestId: message.requestId});
-      }
-      message.rilMessageType = "setICCPinLock";
-    }
+    message.rilMessageType = "iccSetCardLock";
     this.worker.postMessage(message);
   },
 
