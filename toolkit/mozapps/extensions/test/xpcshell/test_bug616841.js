@@ -13,7 +13,6 @@ function test_string_compare() {
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
 
   do_test_pending();
 
