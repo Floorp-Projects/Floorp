@@ -264,7 +264,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
 nsresult nsChildView::Create(nsIWidget *aParent,
                              nsNativeWidget aNativeParent,
                              const nsIntRect &aRect,
-                             EVENT_CALLBACK aHandleEventFunction,
                              nsDeviceContext *aContext,
                              nsWidgetInitData *aInitData)
 {
@@ -299,7 +298,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
 
-  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aInitData);
+  BaseCreate(aParent, aRect, aContext, aInitData);
 
   // inherit things from the parent view and create our parallel 
   // NSView in the Cocoa display system
@@ -1462,22 +1461,28 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 
   aStatus = nsEventStatus_eIgnore;
 
+  nsIWidgetListener* listener = mWidgetListener;
+
+  // If the listener is NULL, check if the parent is a popup. If it is, then
+  // this child is the popup content view attached to a popup. Get the
+  // listener from the parent popup instead.
   nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
-  if (mParentWidget) {
+  if (!listener && mParentWidget) {
     nsWindowType type;
     mParentWidget->GetWindowType(type);
     if (type == eWindowType_popup) {
-      // use the parent popup's widget if there is no listener
-      nsIWidgetListener* listener = nullptr;
+      // Check just in case event->widget isn't this widget
       if (event->widget)
         listener = event->widget->GetWidgetListener();
-      if (!listener)
+      if (!listener) {
         event->widget = mParentWidget;
+        listener = mParentWidget->GetWidgetListener();
+      }
     }
   }
 
-  if (mEventCallback)
-    aStatus = (*mEventCallback)(event);
+  if (listener)
+    aStatus = listener->HandleEvent(event, mUseAttachedEvents);
 
   return NS_OK;
 }

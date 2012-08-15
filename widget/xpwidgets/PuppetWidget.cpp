@@ -83,13 +83,12 @@ NS_IMETHODIMP
 PuppetWidget::Create(nsIWidget        *aParent,
                      nsNativeWidget   aNativeParent,
                      const nsIntRect  &aRect,
-                     EVENT_CALLBACK   aHandleEventFunction,
                      nsDeviceContext *aContext,
                      nsWidgetInitData *aInitData)
 {
   NS_ABORT_IF_FALSE(!aNativeParent, "got a non-Puppet native parent");
 
-  BaseCreate(nullptr, aRect, aHandleEventFunction, aContext, aInitData);
+  BaseCreate(nullptr, aRect, aContext, aInitData);
 
   mBounds = aRect;
   mEnabled = true;
@@ -120,7 +119,6 @@ PuppetWidget::Create(nsIWidget        *aParent,
 
 already_AddRefed<nsIWidget>
 PuppetWidget::CreateChild(const nsIntRect  &aRect,
-                          EVENT_CALLBACK   aHandleEventFunction,
                           nsDeviceContext *aContext,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
@@ -129,7 +127,6 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
   return ((widget &&
            NS_SUCCEEDED(widget->Create(isPopup ? nullptr: this, nullptr, aRect,
-                                       aHandleEventFunction,
                                        aContext, aInitData))) ?
           widget.forget() : nullptr);
 }
@@ -253,7 +250,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
 
-  NS_ABORT_IF_FALSE(mViewCallback, "No view callback!");
+  NS_ABORT_IF_FALSE(mViewWrapperPtr, "No listener!");
 
   if (event->message == NS_COMPOSITION_START) {
     mIMEComposing = true;
@@ -275,7 +272,8 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
       return NS_OK;
     break;
   }
-  aStatus = (*mViewCallback)(event);
+
+  aStatus = mViewWrapperPtr->HandleEvent(event, mUseAttachedEvents);
 
   if (event->message == NS_COMPOSITION_END) {
     mIMEComposing = false;

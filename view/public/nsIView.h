@@ -30,8 +30,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0x989b0d8b, 0x255d, 0x4399, \
-    { 0xbe, 0x94, 0x15, 0x00, 0x23, 0x11, 0xd5, 0xe8 } }
+  { 0xa4577c1d, 0xbc80, 0x444c, \
+    { 0xb0, 0x9d, 0x5b, 0xef, 0x94, 0x7c, 0x43, 0x31 } }
 
 // Public view flags
 
@@ -312,7 +312,7 @@ public:
    * The caller must call DetachWidgetEventHandler before this view
    * is destroyed.
    */
-  EVENT_CALLBACK AttachWidgetEventHandler(nsIWidget* aWidget);
+  void AttachWidgetEventHandler(nsIWidget* aWidget);
   /**
    * Stop aWidget directing its events to this view.
    */

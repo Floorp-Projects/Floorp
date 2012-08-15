@@ -205,7 +205,6 @@ public:
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
-                                   EVENT_CALLBACK aHandleEventFunction,
                                    nsDeviceContext *aContext,
                                    nsWidgetInitData *aInitData = nullptr);
 
@@ -305,7 +304,6 @@ protected:
                                           nsBorderStyle aBorderStyle,
                                           bool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const nsIntRect &aRect,
-                                              EVENT_CALLBACK aHandleEventFunction,
                                               nsDeviceContext *aContext);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();

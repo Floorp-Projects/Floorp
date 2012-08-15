@@ -86,8 +86,6 @@ nsAutoRollup::~nsAutoRollup()
 nsBaseWidget::nsBaseWidget()
 : mWidgetListener(nullptr)
 , mViewWrapperPtr(nullptr)
-, mEventCallback(nullptr)
-, mViewCallback(nullptr)
 , mContext(nullptr)
 , mCursor(eCursor_standard)
 , mWindowType(eWindowType_child)
@@ -96,6 +94,7 @@ nsBaseWidget::nsBaseWidget()
 , mUseAcceleratedRendering(false)
 , mForceLayersAcceleration(false)
 , mTemporarilyUseBasicLayerManager(false)
+, mUseAttachedEvents(false)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nullptr)
 , mClipRectCount(0)
@@ -181,7 +180,6 @@ nsBaseWidget::~nsBaseWidget()
 //-------------------------------------------------------------------------
 void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                               const nsIntRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
                               nsDeviceContext *aContext,
                               nsWidgetInitData *aInitData)
 {
@@ -193,9 +191,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     gDisableNativeThemeCached = true;
   }
 
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-  
   // keep a reference to the device context
   if (aContext) {
     mContext = aContext;
@@ -242,7 +237,6 @@ void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 
 already_AddRefed<nsIWidget>
 nsBaseWidget::CreateChild(const nsIntRect  &aRect,
-                          EVENT_CALLBACK   aHandleEventFunction,
                           nsDeviceContext *aContext,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
@@ -269,7 +263,6 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
 
   if (widget &&
       NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect,
-                                  aHandleEventFunction,
                                   aContext, aInitData))) {
     return widget.forget();
   }
@@ -277,26 +270,9 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   return nullptr;
 }
 
-NS_IMETHODIMP
-nsBaseWidget::SetEventCallback(EVENT_CALLBACK aEventFunction,
-                               nsDeviceContext *aContext)
-{
-  NS_ASSERTION(aEventFunction, "Must have valid event callback!");
-
-  mEventCallback = aEventFunction;
-
-  if (aContext) {
-    NS_IF_RELEASE(mContext);
-    mContext = aContext;
-    NS_ADDREF(mContext);
-  }
-
-  return NS_OK;
-}
-
 // Attach a view to our widget which we'll send events to. 
 NS_IMETHODIMP
-nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
+nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents,
                                    nsDeviceContext *aContext)
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
@@ -305,7 +281,7 @@ nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
                 mWindowType == eWindowType_child),
                "Can't attach to window of that type");
 
-  mViewCallback = aViewEventFunction;
+  mUseAttachedEvents = aUseAttachedEvents;
 
   if (aContext) {
     if (mContext) {

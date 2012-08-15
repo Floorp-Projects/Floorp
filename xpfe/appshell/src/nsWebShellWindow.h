@@ -68,8 +68,6 @@ protected:
   bool                     ExecuteCloseHandler();
   void                     ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY);
 
-  static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
-
   nsCOMPtr<nsITimer>      mSPTimer;
   mozilla::Mutex          mSPTimerLock;
 

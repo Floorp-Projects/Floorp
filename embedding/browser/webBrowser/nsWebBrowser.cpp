@@ -1119,8 +1119,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       nsIntRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
       mInternalWidget->SetWidgetListener(this);
-      mInternalWidget->Create(nullptr, mParentNativeWindow, bounds, nullptr,
-                              nullptr, &widgetInit);  
+      mInternalWidget->Create(nullptr, mParentNativeWindow, bounds, nullptr, &widgetInit);
       }
 
     nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1", &rv));

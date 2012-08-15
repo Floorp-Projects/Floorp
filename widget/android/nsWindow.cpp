@@ -188,7 +188,6 @@ NS_IMETHODIMP
 nsWindow::Create(nsIWidget *aParent,
                  nsNativeWidget aNativeParent,
                  const nsIntRect &aRect,
-                 EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
@@ -217,7 +216,7 @@ nsWindow::Create(nsIWidget *aParent,
         mBounds.height = gAndroidBounds.height;
     }
 
-    BaseCreate(nullptr, mBounds, aHandleEventFunction, aContext, aInitData);
+    BaseCreate(nullptr, mBounds, aContext, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 
@@ -635,8 +634,8 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
 nsEventStatus
 nsWindow::DispatchEvent(nsGUIEvent *aEvent)
 {
-    if (mEventCallback) {
-        nsEventStatus status = (*mEventCallback)(aEvent);
+    if (mWidgetListener) {
+        nsEventStatus status = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
 
         switch (aEvent->message) {
         case NS_COMPOSITION_START:
