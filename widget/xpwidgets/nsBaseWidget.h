@@ -157,8 +157,8 @@ public:
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false);
   NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents, nsDeviceContext *aContext);
-  virtual ViewWrapper*    GetAttachedViewPtr();
-  NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
+  virtual nsIWidgetListener* GetAttachedWidgetListener();
+  virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener);
   NS_IMETHOD              RegisterTouchWindow();
   NS_IMETHOD              UnregisterTouchWindow();
 
@@ -329,7 +329,7 @@ protected:
   void DestroyCompositor();
 
   nsIWidgetListener* mWidgetListener;
-  ViewWrapper*      mViewWrapperPtr;
+  nsIWidgetListener* mAttachedWidgetListener;
   nsDeviceContext* mContext;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;

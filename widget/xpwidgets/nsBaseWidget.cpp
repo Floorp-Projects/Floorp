@@ -85,7 +85,7 @@ nsAutoRollup::~nsAutoRollup()
 
 nsBaseWidget::nsBaseWidget()
 : mWidgetListener(nullptr)
-, mViewWrapperPtr(nullptr)
+, mAttachedWidgetListener(nullptr)
 , mContext(nullptr)
 , mCursor(eCursor_standard)
 , mWindowType(eWindowType_child)
@@ -294,15 +294,14 @@ nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents,
   return NS_OK;
 }
 
-ViewWrapper* nsBaseWidget::GetAttachedViewPtr()
+nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener()
  {
-   return mViewWrapperPtr;
+   return mAttachedWidgetListener;
  }
  
-NS_IMETHODIMP nsBaseWidget::SetAttachedViewPtr(ViewWrapper* aViewWrapper)
+void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener)
  {
-   mViewWrapperPtr = aViewWrapper;
-   return NS_OK;
+   mAttachedWidgetListener = aListener;
  }
 
 //-------------------------------------------------------------------------
