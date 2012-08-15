@@ -1478,7 +1478,6 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_MOUSE_CLICK,"NS_MOUSE_CLICK");
     _ASSIGN_eventName(NS_MOUSE_DOUBLECLICK,"NS_MOUSE_DBLCLICK");
     _ASSIGN_eventName(NS_MOUSE_MOVE,"NS_MOUSE_MOVE");
-    _ASSIGN_eventName(NS_MOVE,"NS_MOVE");
     _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
     _ASSIGN_eventName(NS_POPSTATE,"NS_POPSTATE");
     _ASSIGN_eventName(NS_BEFORE_SCRIPT_EXECUTE,"NS_BEFORE_SCRIPT_EXECUTE");
@@ -1486,15 +1485,8 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
     _ASSIGN_eventName(NS_HASHCHANGE,"NS_HASHCHANGE");
     _ASSIGN_eventName(NS_READYSTATECHANGE,"NS_READYSTATECHANGE");
-    _ASSIGN_eventName(NS_PAINT,"NS_PAINT");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
     _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");
-    _ASSIGN_eventName(NS_SCROLLBAR_LINE_NEXT,"NS_SB_LINE_NEXT");
-    _ASSIGN_eventName(NS_SCROLLBAR_LINE_PREV,"NS_SB_LINE_PREV");
-    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_NEXT,"NS_SB_PAGE_NEXT");
-    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_PREV,"NS_SB_PAGE_PREV");
-    _ASSIGN_eventName(NS_SCROLLBAR_POS,"NS_SB_POS");
-    _ASSIGN_eventName(NS_SIZE,"NS_SIZE");
 
 #undef _ASSIGN_eventName
 
@@ -1632,10 +1624,6 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               const nsCAutoString & aWidgetName,
                               PRInt32               aWindowID)
 {
-  // NS_PAINT is handled by debug_DumpPaintEvent()
-  if (aGuiEvent->message == NS_PAINT)
-    return;
-
   if (aGuiEvent->message == NS_MOUSE_MOVE)
   {
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping"))

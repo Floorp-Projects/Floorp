@@ -147,37 +147,12 @@ class nsHashKey;
 
 // Widget may be destroyed
 #define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
-// Widget was resized
-#define NS_SIZE                         (NS_WINDOW_START + 3)
-// Widget size mode was changed
-#define NS_SIZEMODE                     (NS_WINDOW_START + 4)
-// Widget got activated
-#define NS_ACTIVATE                     (NS_WINDOW_START + 7)
-// Widget got deactivated
-#define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
-// top-level window z-level change request
-#define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
-// Widget was repainted (dispatched when it's safe to move widgets, but
-// only on some platforms (including GTK2 and Windows))
-#define NS_DID_PAINT                   (NS_WINDOW_START + 28)
-// Widget will need to be painted
-#define NS_WILL_PAINT                   (NS_WINDOW_START + 29)
-// Widget needs to be repainted
-#define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
 #define NS_KEY_PRESS                    (NS_WINDOW_START + 31)
 // Key is released within a window
 #define NS_KEY_UP                       (NS_WINDOW_START + 32)
 // Key is pressed within a window
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
-// Window has been moved to a new location.
-// The events point contains the x, y location in screen coordinates
-#define NS_MOVE                         (NS_WINDOW_START + 34) 
-
-#define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
-
-// Done sizing or moving a window, so ensure that the mousedown state was cleared.
-#define NS_DONESIZEMOVE                 (NS_WINDOW_START + 44)
 
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
@@ -216,13 +191,6 @@ class nsHashKey;
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
-
-#define NS_SCROLLBAR_MESSAGE_START      1000
-#define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
-#define NS_SCROLLBAR_PAGE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 1)
-#define NS_SCROLLBAR_PAGE_PREV          (NS_SCROLLBAR_MESSAGE_START + 2)
-#define NS_SCROLLBAR_LINE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 3)
-#define NS_SCROLLBAR_LINE_PREV          (NS_SCROLLBAR_MESSAGE_START + 4)
 
 #define NS_STREAM_EVENT_START           1100
 #define NS_LOAD                         (NS_STREAM_EVENT_START)
@@ -638,84 +606,6 @@ public:
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
-};
-
-/**
- * Window resize event
- */
-
-class nsSizeEvent : public nsGUIEvent
-{
-public:
-  nsSizeEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SIZE_EVENT),
-      windowSize(nullptr), mWinWidth(0), mWinHeight(0)
-  {
-  }
-
-  /// x,y width, height in pixels (client area)
-  nsIntRect       *windowSize;
-  /// width of entire window (in pixels)
-  PRInt32         mWinWidth;    
-  /// height of entire window (in pixels)
-  PRInt32         mWinHeight;    
-};
-
-/**
- * Window size mode event
- */
-
-class nsSizeModeEvent : public nsGUIEvent
-{
-public:
-  nsSizeModeEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SIZEMODE_EVENT),
-      mSizeMode(nsSizeMode_Normal)
-  {
-  }
-
-  nsSizeMode      mSizeMode;
-};
-
-/**
- * Window z-level event
- */
-
-class nsZLevelEvent : public nsGUIEvent
-{
-public:
-  nsZLevelEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_ZLEVEL_EVENT),
-      mPlacement(nsWindowZTop), mReqBelow(nullptr), mActualBelow(nullptr),
-      mImmediate(false), mAdjusted(false)
-  {
-  }
-
-  nsWindowZ  mPlacement;
-  nsIWidget *mReqBelow,    // widget we request being below, if any
-            *mActualBelow; // widget to be below, returned by handler
-  bool       mImmediate,   // handler should make changes immediately
-             mAdjusted;    // handler changed placement
-};
-
-/**
- * Window repaint event
- */
-
-class nsPaintEvent : public nsGUIEvent
-{
-public:
-  nsPaintEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
-      willSendDidPaint(false),
-      didSendWillPaint(false)
-  {
-  }
-
-  // area that needs repainting
-  nsIntRegion region;
-  bool willSendDidPaint;
-  bool didSendWillPaint;
 };
 
 /**
@@ -1811,9 +1701,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_UPDATE))
 
 #define NS_IS_ACTIVATION_EVENT(evnt) \
-       (((evnt)->message == NS_ACTIVATE) || \
-        ((evnt)->message == NS_DEACTIVATE) || \
-        ((evnt)->message == NS_PLUGIN_ACTIVATE) || \
+        (((evnt)->message == NS_PLUGIN_ACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_FOCUS))
 
 #define NS_IS_QUERY_CONTENT_EVENT(evnt) \
