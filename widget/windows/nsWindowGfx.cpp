@@ -235,8 +235,9 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     return true;
   }
 
-  if (mWidgetListener) {
-    mWidgetListener->WillPaintWindow(this, true);
+  nsIWidgetListener* listener = mViewWrapperPtr ? mViewWrapperPtr : mWidgetListener;
+  if (listener) {
+    listener->WillPaintWindow(this, true);
   }
 
   bool result = true;
@@ -283,7 +284,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   bool forceRepaint = NULL != aDC;
 #endif
   nsIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
-  if (!region.IsEmpty() && mWidgetListener)
+  if (!region.IsEmpty() && listener)
   {
     // Should probably pass in a real region here, using GetRandomRgn
     // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
@@ -415,7 +416,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           {
             AutoLayerManagerSetup
                 setupLayerManager(this, thebesContext, doubleBuffering);
-            result = mWidgetListener->PaintWindow(this, region, true, true);
+            result = listener->PaintWindow(this, region, true, true);
           }
 
 #ifdef MOZ_XUL
@@ -530,7 +531,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
       case LAYERS_OPENGL:
         static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
           SetClippingRegion(region);
-        result = mWidgetListener->PaintWindow(this, region, true, true);
+        result = listener->PaintWindow(this, region, true, true);
         break;
 #ifdef MOZ_ENABLE_D3D9_LAYER
       case LAYERS_D3D9:
@@ -538,7 +539,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           LayerManagerD3D9 *layerManagerD3D9 =
             static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager());
           layerManagerD3D9->SetClippingRegion(region);
-          result = mWidgetListener->PaintWindow(this, region, true, true);
+          result = listener->PaintWindow(this, region, true, true);
           if (layerManagerD3D9->DeviceWasRemoved()) {
             mLayerManager->Destroy();
             mLayerManager = nullptr;
@@ -558,7 +559,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
             Invalidate();
           } else {
-            result = mWidgetListener->PaintWindow(this, region, true, true);
+            result = listener->PaintWindow(this, region, true, true);
           }
         }
         break;
@@ -595,8 +596,8 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 
   mPainting = false;
 
-  if (mWidgetListener)
-    mWidgetListener->DidPaintWindow();
+  if (listener)
+    listener->DidPaintWindow();
 
   if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, false)) {
     OnPaint(aDC, 1);

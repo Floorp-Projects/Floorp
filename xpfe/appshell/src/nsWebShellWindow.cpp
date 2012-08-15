@@ -164,7 +164,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
                   nullptr,                            // Native parent widget
                   r,                                  // Widget dimensions
-                  nullptr,                            // Event handler function
                   nullptr,                            // Device context
                   &widgetInitData);                   // Widget initialization data
   mWindow->GetClientBounds(r);

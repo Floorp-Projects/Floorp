@@ -16,8 +16,6 @@
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
 
-static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
-
 #define VIEW_WRAPPER_IID \
   { 0xbf4e1841, 0xe9ec, 0x47f2, \
     { 0xb4, 0x77, 0x0f, 0xf6, 0x0f, 0x5a, 0xac, 0xbd } }
@@ -177,24 +175,6 @@ static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
   return aWidget ? static_cast<ViewWrapper *>(aWidget->GetWidgetListener()) : nullptr;
 }
 
-// Main events handler
-static nsEventStatus HandleEvent(nsGUIEvent *aEvent)
-{
-#if 0
-  printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->message);
-#endif
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsView *view = nsView::GetViewFor(aEvent->widget);
-
-  if (view)
-  {
-    nsCOMPtr<nsIViewManager> vm = view->GetViewManager();
-    vm->DispatchEvent(aEvent, view, &result);
-  }
-
-  return result;
-}
-
 // Attached widget event helpers
 static ViewWrapper* GetAttachedWrapperFor(nsIWidget* aWidget)
 {
@@ -212,18 +192,17 @@ static nsView* GetAttachedViewFor(nsIWidget* aWidget)
   return wrapper->GetView();
 }
 
-// event handler
-static nsEventStatus AttachedHandleEvent(nsGUIEvent *aEvent)
-{ 
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsView *view = GetAttachedViewFor(aEvent->widget);
+nsEventStatus ViewWrapper::HandleEvent(nsGUIEvent* aEvent, bool aUseAttachedEvents)
+{
+  NS_PRECONDITION(nullptr != aEvent->widget, "null widget ptr");
 
-  if (view)
-  {
+  nsEventStatus result = nsEventStatus_eIgnore;
+  nsIView* view = aUseAttachedEvents ? GetAttachedViewFor(aEvent->widget) :
+                                       nsView::GetViewFor(aEvent->widget);
+  if (view) {
     nsCOMPtr<nsIViewManager> vm = view->GetViewManager();
     vm->DispatchEvent(aEvent, view, &result);
   }
-
   return result;
 }
 
@@ -755,8 +734,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
   // XXX: using aForceUseIWidgetParent=true to preserve previous
   // semantics.  It's not clear that it's actually needed.
-  mWindow = parentWidget->CreateChild(trect, ::HandleEvent,
-                                      dx, aWidgetInitData,
+  mWindow = parentWidget->CreateChild(trect, dx, aWidgetInitData,
                                       true).get();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
@@ -787,8 +765,7 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
 
   mWindow =
-    aParentWidget->CreateChild(trect, ::HandleEvent,
-                               dx, aWidgetInitData).get();
+    aParentWidget->CreateChild(trect, dx, aWidgetInitData).get();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
   }
@@ -820,8 +797,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
   if (aParentWidget) {
     // XXX: using aForceUseIWidgetParent=true to preserve previous
     // semantics.  It's not clear that it's actually needed.
-    mWindow = aParentWidget->CreateChild(trect, ::HandleEvent,
-                                         dx, aWidgetInitData,
+    mWindow = aParentWidget->CreateChild(trect, dx, aWidgetInitData,
                                          true).get();
   }
   else {
@@ -834,8 +810,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
     }
 
     mWindow =
-      nearestParent->CreateChild(trect, ::HandleEvent,
-                                 dx, aWidgetInitData).get();
+      nearestParent->CreateChild(trect, dx, aWidgetInitData).get();
   }
   if (!mWindow) {
     return NS_ERROR_FAILURE;
@@ -885,8 +860,7 @@ nsresult nsIView::AttachToTopLevelWidget(nsIWidget* aWidget)
 
   // Note, the previous device context will be released. Detaching
   // will not restore the old one.
-  nsresult rv = aWidget->AttachViewToTopLevel(
-    nsIWidget::UsePuppetWidgets() ? ::HandleEvent : ::AttachedHandleEvent, dx);
+  nsresult rv = aWidget->AttachViewToTopLevel(!nsIWidget::UsePuppetWidgets(), dx);
   if (NS_FAILED(rv))
     return rv;
 
@@ -953,7 +927,7 @@ void nsView::AssertNoWindow()
 //
 // internal window creation functions
 //
-EVENT_CALLBACK nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
+void nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
 {
 #ifdef DEBUG
   NS_ASSERTION(!aWidget->GetWidgetListener(), "Already have a widget listener");
@@ -961,10 +935,9 @@ EVENT_CALLBACK nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
 
   ViewWrapper* wrapper = new ViewWrapper(Impl());
   if (!wrapper)
-    return nullptr;
+    return;
   NS_ADDREF(wrapper); // Will be released in DetachWidgetEventHandler
   aWidget->SetWidgetListener(wrapper);
-  return ::HandleEvent;
 }
 
 void nsIView::DetachWidgetEventHandler(nsIWidget* aWidget)

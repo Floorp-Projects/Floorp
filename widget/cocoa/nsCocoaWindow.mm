@@ -220,7 +220,6 @@ static bool UseNativePopupWindows()
 nsresult nsCocoaWindow::Create(nsIWidget *aParent,
                                nsNativeWidget aNativeParent,
                                const nsIntRect &aRect,
-                               EVENT_CALLBACK aHandleEventFunction,
                                nsDeviceContext *aContext,
                                nsWidgetInitData *aInitData)
 {
@@ -261,8 +260,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
 
-  Inherited::BaseCreate(aParent, newBounds, aHandleEventFunction, aContext,
-                        aInitData);
+  Inherited::BaseCreate(aParent, newBounds, aContext, aInitData);
 
   mParent = aParent;
 
@@ -278,7 +276,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
     if (aInitData->mIsDragPopup) {
       [mWindow setIgnoresMouseEvents:YES];
     }
-    return CreatePopupContentView(newBounds, aHandleEventFunction, aContext);
+    return CreatePopupContentView(newBounds, aContext);
   }
 
   mIsAnimationSuppressed = aInitData->mIsAnimationSuppressed;
@@ -456,7 +454,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
 }
 
 NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
-                             EVENT_CALLBACK aHandleEventFunction,
                              nsDeviceContext *aContext)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -469,8 +466,7 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   NS_ADDREF(mPopupContentView);
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
-  mPopupContentView->Create(thisAsWidget, nullptr, aRect, aHandleEventFunction,
-                            aContext, nullptr);
+  mPopupContentView->Create(thisAsWidget, nullptr, aRect, aContext, nullptr);
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];
@@ -1471,8 +1467,8 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   nsIWidget* aWidget = event->widget;
   NS_IF_ADDREF(aWidget);
 
-  if (mEventCallback)
-    aStatus = (*mEventCallback)(event);
+  if (mWidgetListener)
+    aStatus = mWidgetListener->HandleEvent(event, mUseAttachedEvents);
 
   NS_IF_RELEASE(aWidget);
 

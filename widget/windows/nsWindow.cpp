@@ -442,7 +442,6 @@ nsresult
 nsWindow::Create(nsIWidget *aParent,
                  nsNativeWidget aNativeParent,
                  const nsIntRect &aRect,
-                 EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
@@ -463,7 +462,7 @@ nsWindow::Create(nsIWidget *aParent,
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
 
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aInitData);
+  BaseCreate(baseParent, aRect, aContext, aInitData);
 
   HWND parent;
   if (aParent) { // has a nsIWidget parent
@@ -3490,12 +3489,11 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   // to the underlying base window and the view. Added when we combined the
   // base chrome window with the main content child for nc client area (title
   // bar) rendering.
-  if (mViewCallback) {
-    // attached view events
-    aStatus = (*mViewCallback)(event);
+  if (mViewWrapperPtr) {
+    aStatus = mViewWrapperPtr->HandleEvent(event, mUseAttachedEvents);
   }
-  else if (mEventCallback) {
-    aStatus = (*mEventCallback)(event);
+  else if (mWidgetListener) {
+    aStatus = mWidgetListener->HandleEvent(event, mUseAttachedEvents);
   }
 
   // the window can be destroyed during processing of seemingly innocuous events like, say,
@@ -3697,7 +3695,7 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
   UserActivity();
 
-  if (!mEventCallback) {
+  if (!mWidgetListener) {
     return result;
   }
 
@@ -3880,7 +3878,7 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   event.pluginEvent = (void *)&pluginEvent;
 
   // call the event callback
-  if (nullptr != mEventCallback) {
+  if (mWidgetListener) {
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Disable();
     if (aEventType == NS_MOUSE_MOVE) {
@@ -4932,7 +4930,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     // gJustGotDeactivate flags and activate/deactivate once the focus
     // events arrive.
     case WM_ACTIVATE:
-      if (mEventCallback) {
+      if (mWidgetListener) {
         PRInt32 fActive = LOWORD(wParam);
 
         if (WA_INACTIVE == fActive) {
@@ -6935,13 +6933,13 @@ void nsWindow::OnDestroy()
     NotifyWindowDestroyed();
 
   // Prevent the widget from sending additional events.
-  mEventCallback = nullptr;
+  mWidgetListener = nullptr;
 
   // Free our subclass and clear |this| stored in the window props. We will no longer
   // receive events from Windows after this point.
   SubclassWindow(FALSE);
 
-  // Once mEventCallback is cleared and the subclass is reset, sCurrentWindow can be
+  // Once mWidgetListener is cleared and the subclass is reset, sCurrentWindow can be
   // cleared. (It's used in tracking windows for mouse events.)
   if (sCurrentWindow == this)
     sCurrentWindow = nullptr;
@@ -7024,6 +7022,11 @@ bool nsWindow::OnResize(nsIntRect &aWindowRect)
     Invalidate();
   }
 #endif
+
+  // If there is an attached view, inform it as well as the normal widget listener.
+  if (mViewWrapperPtr) {
+    mViewWrapperPtr->WindowResized(this, aWindowRect.width, aWindowRect.height);
+  }
 
   return mWidgetListener ?
          mWidgetListener->WindowResized(this, aWindowRect.width, aWindowRect.height) : false;
