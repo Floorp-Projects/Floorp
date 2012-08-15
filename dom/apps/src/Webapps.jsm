@@ -58,7 +58,7 @@ let DOMApplicationRegistry = {
                     "Webapps:Launch", "Webapps:GetAll",
                     "Webapps:InstallPackage", "Webapps:GetBasePath",
                     "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL",
-                    "WebApps:GetAppByLocalId", "Webapps:GetManifestURLByLocalId"];
+                    "WebApps:GetAppByLocalId", "WebApps:GetManifestURLByLocalId"];
 
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
