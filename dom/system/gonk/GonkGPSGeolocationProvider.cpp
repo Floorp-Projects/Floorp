@@ -24,7 +24,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINetworkManager.h"
 #include "nsIRadioInterfaceLayer.h"
-#include "nsIDOMMobileConnection.h"
 #include "nsThreadUtils.h"
 
 #ifdef AGPS_TYPE_INVALID
@@ -372,15 +371,11 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
       icc->GetMcc(&location.u.cellID.mcc);
       icc->GetMnc(&location.u.cellID.mnc);
     }
-    nsCOMPtr<nsIDOMMozMobileConnectionInfo> voice;
-    rilCtx->GetVoice(getter_AddRefs(voice));
-    if (voice) {
-      nsCOMPtr<nsIDOMMozMobileCellInfo> cell;
-      voice->GetCell(getter_AddRefs(cell));
-      if (cell) {
-        cell->GetGsmLocationAreaCode(&location.u.cellID.lac);
-        cell->GetGsmCellId(&location.u.cellID.cid);
-      }
+    nsCOMPtr<nsICellLocation> cell;
+    rilCtx->GetCell(getter_AddRefs(cell));
+    if (cell) {
+      cell->GetLac(&location.u.cellID.lac);
+      cell->GetCid(&location.u.cellID.cid);
     }
     if (mAGpsRilInterface) {
       mAGpsRilInterface->set_ref_location(&location, sizeof(location));
