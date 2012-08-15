@@ -20,7 +20,7 @@
 #include "nsMIMEHeaderParamImpl.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsIUnicodeDecoder.h"
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp

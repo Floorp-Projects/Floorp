@@ -7,7 +7,7 @@
 #ifndef nsNetUtil_h__
 #define nsNetUtil_h__
 
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsNetCID.h"
 #include "nsStringGlue.h"
 #include "nsMemory.h"

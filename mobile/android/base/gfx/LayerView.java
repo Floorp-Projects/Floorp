@@ -194,7 +194,7 @@ public class LayerView extends FrameLayout {
         return mRenderer.getMaxTextureSize();
     }
 
-    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
+    /** Used by robocop for testing purposes. Not for production use! */
     public IntBuffer getPixels() {
         return mRenderer.getPixels();
     }

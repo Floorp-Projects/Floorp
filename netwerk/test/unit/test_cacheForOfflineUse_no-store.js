@@ -1,7 +1,12 @@
-"use strict"; 
+"use strict";
 // https://bugzilla.mozilla.org/show_bug.cgi?id=760955
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 const testFileName = "test_nsHttpChannel_CacheForOfflineUse-no-store";
@@ -112,7 +117,7 @@ function run_test()
 {
   do_get_profile();
 
-  httpServer = new nsHttpServer();
+  httpServer = new HttpServer();
   httpServer.registerPathHandler(basePath + normalEntry, normalHandler);
   httpServer.registerPathHandler(basePath + noStoreEntry, noStoreHandler);
   httpServer.start(4444);

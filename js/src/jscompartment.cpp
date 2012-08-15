@@ -45,9 +45,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcStoreBuffer(&gcNursery),
 #endif
     needsBarrier_(false),
-    gcState(NoGCScheduled),
+    gcScheduled(false),
+    gcState(NoGC),
     gcPreserveCode(false),
-    gcStarted(false),
     gcBytes(0),
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),

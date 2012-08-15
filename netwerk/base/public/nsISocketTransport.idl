@@ -161,23 +161,3 @@ interface nsISocketTransport : nsITransport
     attribute octet QoSBits;
 
 };
-
-%{C++
-/**
- * #define's with the correct type, for use by C++ code
- */
-#define NS_NET_STATUS_RESOLVING_HOST \
-  static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVING)
-#define NS_NET_STATUS_RESOLVED_HOST \
-  static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVED)
-#define NS_NET_STATUS_CONNECTED_TO \
-  static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTED_TO)
-#define NS_NET_STATUS_SENDING_TO \
-  static_cast<nsresult>(nsISocketTransport::STATUS_SENDING_TO)
-#define NS_NET_STATUS_RECEIVING_FROM \
-  static_cast<nsresult>(nsISocketTransport::STATUS_RECEIVING_FROM)
-#define NS_NET_STATUS_CONNECTING_TO \
-  static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTING_TO)
-#define NS_NET_STATUS_WAITING_FOR \
-  static_cast<nsresult>(nsISocketTransport::STATUS_WAITING_FOR)
-%}

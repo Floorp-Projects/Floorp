@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
