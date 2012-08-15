@@ -153,12 +153,10 @@ public:
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, bool aIsHorizontal, PRInt32 &aOverriddenDelta);
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
-              EVENT_CALLBACK   aHandleEventFunction,
               nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false);
-  NS_IMETHOD              SetEventCallback(EVENT_CALLBACK aEventFunction, nsDeviceContext *aContext);
-  NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
+  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
   NS_IMETHOD              RegisterTouchWindow();
@@ -249,7 +247,6 @@ protected:
   virtual void            OnDestroy();
   virtual void            BaseCreate(nsIWidget *aParent,
                                      const nsIntRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
                                      nsDeviceContext *aContext,
                                      nsWidgetInitData *aInitData);
 
@@ -333,8 +330,6 @@ protected:
 
   nsIWidgetListener* mWidgetListener;
   ViewWrapper*      mViewWrapperPtr;
-  EVENT_CALLBACK    mEventCallback;
-  EVENT_CALLBACK    mViewCallback;
   nsDeviceContext* mContext;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;
@@ -349,6 +344,7 @@ protected:
   bool              mUseAcceleratedRendering;
   bool              mForceLayersAcceleration;
   bool              mTemporarilyUseBasicLayerManager;
+  bool              mUseAttachedEvents;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped

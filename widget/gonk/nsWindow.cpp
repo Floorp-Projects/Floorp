@@ -283,20 +283,21 @@ nsWindow::DispatchInputEvent(nsGUIEvent &aEvent)
         return nsEventStatus_eIgnore;
 
     gFocusedWindow->UserActivity();
-    aEvent.widget = gFocusedWindow;
-    return gFocusedWindow->mEventCallback(&aEvent);
+
+    nsEventStatus status;
+    gFocusedWindow->DispatchEvent(&aEvent, status);
+    return status;
 }
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget *aParent,
                  void *aNativeParent,
                  const nsIntRect &aRect,
-                 EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
     BaseCreate(aParent, IS_TOPLEVEL() ? sVirtualBounds : aRect,
-               aHandleEventFunction, aContext, aInitData);
+               aContext, aInitData);
 
     mBounds = aRect;
 
@@ -478,7 +479,8 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 NS_IMETHODIMP
 nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
 {
-    aStatus = (*mEventCallback)(aEvent);
+    if (mWidgetListener)
+      aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
     return NS_OK;
 }
 

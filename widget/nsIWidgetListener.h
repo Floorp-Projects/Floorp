@@ -130,6 +130,14 @@ public:
    * On some platforms, indicates that a paint occurred.
    */
   virtual void DidPaintWindow() { }
+
+  /**
+   * Handle an event.
+   */
+  virtual nsEventStatus HandleEvent(nsGUIEvent* event, bool useAttachedEvents)
+  {
+    return nsEventStatus_eIgnore;
+  }
 };
 
 #endif

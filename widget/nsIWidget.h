@@ -428,7 +428,6 @@ class nsIWidget : public nsISupports {
      * @param     aParent       parent nsIWidget
      * @param     aNativeParent native parent widget
      * @param     aRect         the widget dimension
-     * @param     aHandleEventFunction the event handler callback function
      * @param     aContext
      * @param     aInitData     data that is used for widget initialization
      *
@@ -436,7 +435,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Create(nsIWidget        *aParent,
                       nsNativeWidget   aNativeParent,
                       const nsIntRect  &aRect,
-                      EVENT_CALLBACK   aHandleEventFunction,
                       nsDeviceContext *aContext,
                       nsWidgetInitData *aInitData = nullptr) = 0;
 
@@ -458,40 +456,34 @@ class nsIWidget : public nsISupports {
      */
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect  &aRect,
-                EVENT_CALLBACK   aHandleEventFunction,
                 nsDeviceContext  *aContext,
                 nsWidgetInitData *aInitData = nullptr,
                 bool             aForceUseIWidgetParent = false) = 0;
 
     /**
-     * Set the event callback for a widget. If a device context is not
-     * provided then the existing device context will remain, it will
-     * not be nulled out.
-     */
-    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
-                                nsDeviceContext *aContext) = 0;
-
-    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
-     * container, attach a secondary event callback and update the device
-     * context. The primary event callback will continue to be called, so the
-     * owning base window will continue to function.
+     * container, attach a secondary listener and update the device
+     * context. The primary widget listener will continue to be called for
+     * notifications relating to the top-level window, whereas other
+     * notifications such as painting and events will instead be called via
+     * the attached listener. SetAttachedWidgetListener should be used to
+     * assign the attached listener.
      *
-     * aViewEventFunction Event callback that will receive mirrored
-     *                    events.
+     * aUseAttachedEvents if true, events are sent to the attached listener
+     * instead of the normal listener.
      * aContext The new device context for the view
      */
-    NS_IMETHOD AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
+    NS_IMETHOD AttachViewToTopLevel(bool aUseAttachedEvents,
                                     nsDeviceContext *aContext) = 0;
 
     /**
-     * Accessor functions to get and set secondary client data. Used by
+     * Accessor functions to get and set the attached listener. Used by
      * nsIView in connection with AttachViewToTopLevel above.
      */
-    NS_IMETHOD SetAttachedViewPtr(ViewWrapper* aViewWrapper) = 0;
-    virtual ViewWrapper* GetAttachedViewPtr() = 0;
+    virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
+    virtual nsIWidgetListener* GetAttachedWidgetListener() = 0;
 
     /**
      * Accessor functions to get and set the listener which handles various
@@ -793,9 +785,7 @@ class nsIWidget : public nsISupports {
      *               widget's toplevel window.
      *               If false, the appropriate toplevel window (which in
      *               the case of popups may not be this widget's toplevel
-     *               window) is already active, and this function indicates
-     *               that keyboard events should be reported through the
-     *               aHandleEventFunction provided to this->Create().
+     *               window) is already active.
      */
     NS_IMETHOD SetFocus(bool aRaise = false) = 0;
 
