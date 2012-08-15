@@ -90,6 +90,23 @@ self.onmessage = function(msg) {
           cast = cast.increment();
         }
       }
+    },
+    { typename: "OS.File.Error",
+      valuedescr: "OS Error",
+      type: OS.File.Error,
+      value: new OS.File.Error("foo", 1),
+      check: function check_error(candidate, prefix) {
+        ok(candidate instanceof OS.File.Error,
+          prefix + "Error is an OS.File.Error");
+        ok(candidate.unixErrno == 1 || candidate.winLastError == 1,
+           prefix + "Error code is correct");
+        try {
+          let string = candidate.toString();
+          ok(true, prefix + ".toString() works " + string);
+        } catch (x) {
+          ok(false, prefix + ".toString() fails " + x);
+        }
+      }
     }
   ];
   samples.forEach(function test(sample) {

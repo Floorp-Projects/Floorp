@@ -2511,6 +2511,13 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
     nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.width),
     nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.height));
 
+  // XXX We don't deal with fractional amount in legacy event, though the
+  //     default action handler (DoScrollText()) deals with it.
+  //     If we implemented such strict computation, we would need additional
+  //     accumulated delta values. It would made the code more complicated.
+  //     And also it would compute different delta values from the older
+  //     version.  It doesn't make sense to implement such code for legacy
+  //     events and rare cases.
   PRInt32 scrollDeltaX, scrollDeltaY, pixelDeltaX, pixelDeltaY;
   switch (aEvent->deltaMode) {
     case nsIDOMWheelEvent::DOM_DELTA_PAGE:
@@ -2729,26 +2736,23 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
       continue;
     }
 
-    // Check if the scrollable view can be scrolled any further.
-    if (frameToScroll->GetLineScrollAmount().height) {
-      // For default action, we should climb up the tree if cannot scroll it
-      // by the event actually.
-      bool canScroll = CanScrollOn(frameToScroll,
-                                   aEvent->deltaX, aEvent->deltaY);
-      // Comboboxes need special care.
-      nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
-      if (comboBox) {
-        if (comboBox->IsDroppedDown()) {
-          // Don't propagate to parent when drop down menu is active.
-          return canScroll ? frameToScroll : nullptr;
-        }
-        // Always propagate when not dropped down (even if focused).
-        continue;
+    // For default action, we should climb up the tree if cannot scroll it
+    // by the event actually.
+    bool canScroll = CanScrollOn(frameToScroll,
+                                 aEvent->deltaX, aEvent->deltaY);
+    // Comboboxes need special care.
+    nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
+    if (comboBox) {
+      if (comboBox->IsDroppedDown()) {
+        // Don't propagate to parent when drop down menu is active.
+        return canScroll ? frameToScroll : nullptr;
       }
+      // Always propagate when not dropped down (even if focused).
+      continue;
+    }
 
-      if (canScroll) {
-        return frameToScroll;
-      }
+    if (canScroll) {
+      return frameToScroll;
     }
   }
 
@@ -2797,10 +2801,6 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   MOZ_ASSERT(aScrollableFrame);
   MOZ_ASSERT(aEvent);
 
-  aEvent->overflowDeltaX = aEvent->deltaX;
-  aEvent->overflowDeltaY = aEvent->deltaY;
-  WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
-
   nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
   MOZ_ASSERT(scrollFrame);
   nsWeakFrame scrollFrameWeak(scrollFrame);
@@ -2824,18 +2824,6 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     return;
   }
 
-  // If the wheel event is line scroll and the delta value is computed from
-  // system settings, allow to override the system speed.
-  bool allowScrollSpeedOverride =
-    (!aEvent->customizedByUserPrefs &&
-     aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
-  DeltaValues acceleratedDelta =
-    nsMouseWheelTransaction::AccelerateWheelDelta(aEvent,
-                                                  allowScrollSpeedOverride);
-
-  bool isDeltaModePixel =
-    (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL);
-
   // Default action's actual scroll amount should be computed from device
   // pixels.
   nsPresContext* pc = scrollFrame->PresContext();
@@ -2843,17 +2831,9 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   nsIntSize scrollAmountInDevPixels(
     pc->AppUnitsToDevPixels(scrollAmount.width),
     pc->AppUnitsToDevPixels(scrollAmount.height));
-
-  nsIntPoint actualDevPixelScrollAmount(0, 0);
-  if (isDeltaModePixel) {
-    actualDevPixelScrollAmount.x = RoundDown(acceleratedDelta.deltaX);
-    actualDevPixelScrollAmount.y = RoundDown(acceleratedDelta.deltaY);
-  } else {
-    actualDevPixelScrollAmount.x =
-      RoundDown(scrollAmountInDevPixels.width * acceleratedDelta.deltaX);
-    actualDevPixelScrollAmount.y =
-      RoundDown(scrollAmountInDevPixels.height * acceleratedDelta.deltaY);
-  }
+  nsIntPoint actualDevPixelScrollAmount =
+    DeltaAccumulator::GetInstance()->
+      ComputeScrollAmountForDefaultAction(aEvent, scrollAmountInDevPixels);
 
   nsIAtom* origin = nullptr;
   switch (aEvent->deltaMode) {
@@ -2886,6 +2866,9 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
       (actualDevPixelScrollAmount.y >= 0) ? devPixelPageSize.height :
                                             -devPixelPageSize.height;
   }
+
+  bool isDeltaModePixel =
+    (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL);
 
   nsIScrollableFrame::ScrollMode mode;
   switch (aEvent->scrollType) {
@@ -3251,6 +3234,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // transaction.
           nsIScrollableFrame* scrollTarget =
             ComputeScrollTarget(aTargetFrame, wheelEvent, true);
+          wheelEvent->overflowDeltaX = wheelEvent->deltaX;
+          wheelEvent->overflowDeltaY = wheelEvent->deltaY;
+          WheelPrefs::GetInstance()->
+            CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           if (scrollTarget) {
             DoScrollText(scrollTarget, wheelEvent);
           } else {
@@ -3265,6 +3252,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case WheelPrefs::ACTION_ZOOM:
           DoScrollZoom(aTargetFrame, wheelEvent->GetPreferredIntDelta());
           break;
+
         default:
           break;
       }
@@ -5081,13 +5069,6 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   MOZ_ASSERT(aESM);
   MOZ_ASSERT(aEvent);
 
-  if (!(aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
-        aEvent->isPixelOnlyDevice) &&
-      !WheelPrefs::GetInstance()->NeedToComputeLineOrPageDelta(aEvent)) {
-    Reset();
-    return;
-  }
-
   // Reset if the previous wheel event is too old.
   if (!mLastTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastTime;
@@ -5096,7 +5077,7 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     }
   }
   // If we have accumulated delta,  we may need to reset it.
-  if (mHandlingDeltaMode != PR_UINT32_MAX) {
+  if (IsInTransaction()) {
     // If wheel event type is changed, reset the values.
     if (mHandlingDeltaMode != aEvent->deltaMode ||
         mHandlingPixelOnlyDevice != aEvent->isPixelOnlyDevice) {
@@ -5115,6 +5096,17 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
 
   mHandlingDeltaMode = aEvent->deltaMode;
   mHandlingPixelOnlyDevice = aEvent->isPixelOnlyDevice;
+
+  // If it's handling neither pixel scroll mode for pixel only device nor
+  // delta values multiplied by prefs, we must not modify lineOrPageDelta
+  // values.
+  if (!(mHandlingDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+        mHandlingPixelOnlyDevice) &&
+      !nsEventStateManager::WheelPrefs::GetInstance()->
+        NeedToComputeLineOrPageDelta(aEvent)) {
+    mLastTime = TimeStamp::Now();
+    return;
+  }
 
   mX += aEvent->deltaX;
   mY += aEvent->deltaY;
@@ -5156,8 +5148,43 @@ void
 nsEventStateManager::DeltaAccumulator::Reset()
 {
   mX = mY = 0.0;
+  mPendingScrollAmountX = mPendingScrollAmountY = 0.0;
   mHandlingDeltaMode = PR_UINT32_MAX;
   mHandlingPixelOnlyDevice = false;
+}
+
+nsIntPoint
+nsEventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction(
+                       widget::WheelEvent* aEvent,
+                       const nsIntSize& aScrollAmountInDevPixels)
+{
+  MOZ_ASSERT(aEvent);
+
+  // If the wheel event is line scroll and the delta value is computed from
+  // system settings, allow to override the system speed.
+  bool allowScrollSpeedOverride =
+    (!aEvent->customizedByUserPrefs &&
+     aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
+  DeltaValues acceleratedDelta =
+    nsMouseWheelTransaction::AccelerateWheelDelta(aEvent,
+                                                  allowScrollSpeedOverride);
+
+  nsIntPoint result(0, 0);
+  if (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    mPendingScrollAmountX += acceleratedDelta.deltaX;
+    mPendingScrollAmountY += acceleratedDelta.deltaY;
+  } else {
+    mPendingScrollAmountX +=
+      aScrollAmountInDevPixels.width * acceleratedDelta.deltaX;
+    mPendingScrollAmountY +=
+      aScrollAmountInDevPixels.height * acceleratedDelta.deltaY;
+  }
+  result.x = RoundDown(mPendingScrollAmountX);
+  result.y = RoundDown(mPendingScrollAmountY);
+  mPendingScrollAmountX -= result.x;
+  mPendingScrollAmountY -= result.y;
+
+  return result;
 }
 
 /******************************************************************/

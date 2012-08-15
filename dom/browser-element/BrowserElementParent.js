@@ -28,6 +28,33 @@ function getBoolPref(prefName, def) {
   }
 }
 
+function exposeAll(obj) {
+  // Filter for Objects and Arrays.
+  if (typeof obj !== "object" || !obj)
+    return;
+
+  // Recursively expose our children.
+  Object.keys(obj).forEach(function(key) {
+    exposeAll(obj[key]);
+  });
+
+  // If we're not an Array, generate an __exposedProps__ object for ourselves.
+  if (obj instanceof Array)
+    return;
+  var exposed = {};
+  Object.keys(obj).forEach(function(key) {
+    exposed[key] = 'rw';
+  });
+  obj.__exposedProps__ = exposed;
+}
+
+function defineAndExpose(obj, name, value) {
+  obj[name] = value;
+  if (!('__exposedProps__' in obj))
+    obj.__exposedProps__ = {};
+  obj.__exposedProps__[name] = 'r';
+}
+
 /**
  * BrowserElementParent implements one half of <iframe mozbrowser>.  (The other
  * half is, unsurprisingly, BrowserElementChild.)
@@ -275,9 +302,9 @@ BrowserElementParent.prototype = {
 
     if (detail.contextmenu) {
       var self = this;
-      XPCNativeWrapper.unwrap(evt.detail).contextMenuItemSelected = function(id) {
+      defineAndExpose(evt.detail, 'contextMenuItemSelected', function(id) {
         self._sendAsyncMsg('fire-ctx-callback', {menuitem: id});
-      };
+      });
     }
     // The embedder may have default actions on context menu events, so
     // we fire a context menu event even if the child didn't define a
@@ -338,9 +365,9 @@ BrowserElementParent.prototype = {
       self._sendAsyncMsg('unblock-modal-prompt', data);
     }
 
-    XPCNativeWrapper.unwrap(evt.detail).unblock = function() {
+    defineAndExpose(evt.detail, 'unblock', function() {
       sendUnblockMsg();
-    };
+    });
 
     this._frameElement.dispatchEvent(evt);
 
@@ -355,6 +382,7 @@ BrowserElementParent.prototype = {
     // This will have to change if we ever want to send a CustomEvent with null
     // detail.  For now, it's OK.
     if (detail !== undefined && detail !== null) {
+      exposeAll(detail);
       return new this._window.CustomEvent('mozbrowser' + evtName,
                                           { bubbles: true,
                                             cancelable: cancelable,

@@ -508,6 +508,28 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(bool aFullScreen)
+{
+    if (mWindowType != eWindowType_toplevel) {
+        // Ignore fullscreen request for non-toplevel windows.
+        NS_WARNING("MakeFullScreen() on a dialog or child widget?");
+        return nsBaseWidget::MakeFullScreen(aFullScreen);
+    }
+
+    if (aFullScreen) {
+        // Fullscreen is "sticky" for toplevel widgets on gonk: we
+        // must paint the entire screen, and should only have one
+        // toplevel widget, so it doesn't make sense to ever "exit"
+        // fullscreen.  If we do, we can leave parts of the screen
+        // unpainted.
+        Resize(sVirtualBounds.x, sVirtualBounds.y,
+               sVirtualBounds.width, sVirtualBounds.height,
+               /*repaint*/true);
+    }
+    return NS_OK;
+}
+
 float
 nsWindow::GetDPI()
 {
@@ -522,10 +544,18 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
 {
     if (aAllowRetaining)
         *aAllowRetaining = true;
-    if (mLayerManager)
+    if (mLayerManager) {
+        // This layer manager might be used for painting outside of DoDraw(), so we need
+        // to set the correct rotation on it.
+        if (mLayerManager->GetBackendType() == LAYERS_BASIC) {
+            BasicLayerManager* manager =
+                static_cast<BasicLayerManager*>(mLayerManager.get());
+            manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE, 
+                                                   ScreenRotation(EffectiveScreenRotation()));
+        }
         return mLayerManager;
+    }
 
-    LOG("Creating layer Manaer\n");
     // Set mUseAcceleratedRendering here to make it consistent with
     // nsBaseWidget::GetLayerManager
     mUseAcceleratedRendering = GetShouldAccelerate();
