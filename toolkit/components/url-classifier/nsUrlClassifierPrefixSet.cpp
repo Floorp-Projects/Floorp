@@ -225,6 +225,10 @@ nsUrlClassifierPrefixSet::GetPrefixes(PRUint32* aCount,
     PRUint32 start = mIndexStarts[i];
     PRUint32 end = (i == (prefixLength - 1)) ? mDeltas.Length()
                                              : mIndexStarts[i + 1];
+    if (end > mDeltas.Length()) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
     aArray.AppendElement(prefix);
     for (PRUint32 j = start; j < end; j++) {
       prefix += mDeltas[j];
