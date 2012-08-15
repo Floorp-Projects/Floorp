@@ -2361,13 +2361,13 @@ nsRootPresContext::~nsRootPresContext()
 }
 
 void
-nsRootPresContext::RegisterPluginForGeometryUpdates(nsIContent* aPlugin)
+nsRootPresContext::RegisterPluginForGeometryUpdates(nsObjectFrame* aPlugin)
 {
   mRegisteredPlugins.PutEntry(aPlugin);
 }
 
 void
-nsRootPresContext::UnregisterPluginForGeometryUpdates(nsIContent* aPlugin)
+nsRootPresContext::UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin)
 {
   mRegisteredPlugins.RemoveEntry(aPlugin);
 }
@@ -2382,14 +2382,10 @@ struct PluginGeometryClosure {
   nsTArray<nsIWidget::Configuration>* mOutputConfigurations;
 };
 static PLDHashOperator
-PluginBoundsEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
+PluginBoundsEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
 {
   PluginGeometryClosure* closure = static_cast<PluginGeometryClosure*>(userArg);
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
-  if (!f) {
-    NS_WARNING("Null frame in PluginBoundsEnumerator");
-    return PL_DHASH_NEXT;
-  }
+  nsObjectFrame* f = aEntry->GetKey();
   nsRect fBounds = f->GetContentRect() +
       f->GetParent()->GetOffsetToCrossDoc(closure->mRootFrame);
   PRInt32 APD = f->PresContext()->AppUnitsPerDevPixel();
@@ -2670,13 +2666,9 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
 }
 
 static PLDHashOperator
-PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
+PluginDidSetGeometryEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
 {
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
-  if (!f) {
-    NS_WARNING("Null frame in PluginDidSetGeometryEnumerator");
-    return PL_DHASH_NEXT;
-  }
+  nsObjectFrame* f = aEntry->GetKey();
   f->DidSetWidgetGeometry();
   return PL_DHASH_NEXT;
 }
