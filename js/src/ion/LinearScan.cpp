@@ -523,7 +523,7 @@ LinearScanAllocator::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
-                for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++) {
+                for (AnyRegisterIterator iter(allRegisters); iter.more(); iter++) {
                     if (!addFixedRangeAtHead(*iter, inputOf(*ins), outputOf(*ins)))
                         return false;
                 }
@@ -1611,7 +1611,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     // Compute free-until positions for all registers
     CodePosition freeUntilPos[AnyRegister::Total];
     bool needFloat = current->reg()->isDouble();
-    for (AnyRegisterIterator regs(RegisterSet::All()); regs.more(); regs++) {
+    for (AnyRegisterIterator regs(allRegisters); regs.more(); regs++) {
         AnyRegister reg = *regs;
         if (reg.isFloat() == needFloat)
             freeUntilPos[reg.code()] = CodePosition::MAX;
@@ -1704,7 +1704,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     // Compute next-used positions for all registers
     CodePosition nextUsePos[AnyRegister::Total];
     bool needFloat = current->reg()->isDouble();
-    for (AnyRegisterIterator regs(RegisterSet::All()); regs.more(); regs++) {
+    for (AnyRegisterIterator regs(allRegisters); regs.more(); regs++) {
         AnyRegister reg = *regs;
         if (reg.isFloat() == needFloat)
             nextUsePos[reg.code()] = CodePosition::MAX;

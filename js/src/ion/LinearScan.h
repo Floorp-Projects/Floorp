@@ -611,6 +611,9 @@ class LinearScanAllocator
     SlotList finishedSlots_;
     SlotList finishedDoubleSlots_;
 
+    // Pool of all registers that should be considered allocateable
+    RegisterSet allRegisters;
+
     // Run-time state
     UnhandledQueue unhandled;
     InlineList<LiveInterval> active;
@@ -684,8 +687,12 @@ class LinearScanAllocator
   public:
     LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
       : lir(lir),
-        graph(graph)
-    { }
+        graph(graph),
+        allRegisters(RegisterSet::All())
+    {
+        if (FramePointer != InvalidReg && lir->mir()->instrumentedProfiling())
+            allRegisters.take(AnyRegister(FramePointer));
+    }
 
     bool go();
 };

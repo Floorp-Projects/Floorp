@@ -40,6 +40,7 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
+static const Register FramePointer = ebp;
 static const Register ReturnReg = eax;
 static const FloatRegister ReturnFloatReg = xmm0;
 static const FloatRegister ScratchFloatReg = xmm7;
