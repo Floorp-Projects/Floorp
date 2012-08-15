@@ -39,9 +39,6 @@ namespace plugins {
 }
 }
 
-#ifdef ACCESSIBILITY
-class Accessible;
-#endif
 class nsRenderingContext;
 class nsIMenuItem;
 class nsIContent;
@@ -67,7 +64,6 @@ class nsHashKey;
 #define NS_MOUSE_SCROLL_EVENT             16
 #define NS_SCROLLPORT_EVENT               18
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
-#define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
 #define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
@@ -295,10 +291,6 @@ class nsHashKey;
 #define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
 
 // Mutation events defined elsewhere starting at 1800
-
-// accessible events
-#define NS_ACCESSIBLE_START           1900
-#define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
 
 #define NS_USER_DEFINED_EVENT         2000
  
@@ -1032,24 +1024,6 @@ public:
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
   bool userCancelled;
 };
-
-#ifdef ACCESSIBILITY
-/**
- * Accessible event
- */
-
-class nsAccessibleEvent : public nsInputEvent
-{
-public:
-  nsAccessibleEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_ACCESSIBLE_EVENT),
-      mAccessible(nullptr)
-  {
-  }
-
-  Accessible *mAccessible;
-};
-#endif
 
 /**
  * Keyboard event
@@ -1798,7 +1772,6 @@ enum nsDragDropEventStatus {
 
 #define NS_IS_INPUT_EVENT(evnt) \
        (((evnt)->eventStructType == NS_INPUT_EVENT) || \
-        ((evnt)->eventStructType == NS_ACCESSIBLE_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_EVENT) || \
         ((evnt)->eventStructType == NS_KEY_EVENT) || \
         ((evnt)->eventStructType == NS_TEXT_EVENT) || \
@@ -1940,8 +1913,7 @@ inline bool NS_IsEventUsingCoordinates(nsEvent* aEvent)
   return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_RELATED_EVENT(aEvent) &&
          !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
          !NS_IS_PLUGIN_EVENT(aEvent) &&
-         !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
-         aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
+         !NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 }
 
 /**
