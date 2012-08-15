@@ -104,15 +104,6 @@ struct IonOptions
     // Default: 100
     uint32 smallFunctionMaxBytecodeLength;
 
-    // The compile useCount for small functions.
-    //
-    // This value has been arrived at empirically.
-    // We may want to revisit this tuning after other optimizations have
-    // gone in.
-    //
-    // Default: usesBeforeCompile / 4
-    uint32 smallFunctionUsesBeforeCompile;
-
     // The inlining limit for small functions.
     //
     // This value has been arrived at empirically via benchmarking.
@@ -167,7 +158,6 @@ struct IonOptions
         maxStackArgs(4096),
         maxInlineDepth(3),
         smallFunctionMaxBytecodeLength(100),
-        smallFunctionUsesBeforeCompile(usesBeforeCompile / 4),
         smallFunctionUsesBeforeInlining(usesBeforeInlining / 4),
         polyInlineMax(4),
         inlineMaxTotalBytecodeLength(800),
