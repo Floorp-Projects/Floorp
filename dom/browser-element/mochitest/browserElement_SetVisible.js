@@ -28,6 +28,7 @@ function runTest() {
   document.body.appendChild(iframe1);
 
   function recvVisibilityChanged(msg) {
+    msg = SpecialPowers.wrap(msg);
     numEvents++;
     if (numEvents === 1) {
       ok(true, 'iframe recieved visibility changed');
