@@ -249,18 +249,17 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         thisObj->setPrivate(map);
     }
 
-    // Preserve wrapped native keys to prevent wrapper optimization.
-    if (key->getClass()->ext.isWrappedNative) {
-        MOZ_ASSERT(cx->runtime->preserveWrapperCallback, "wrapped native weak map key needs preserveWrapperCallback");
-        if (!cx->runtime->preserveWrapperCallback(cx, key)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);
-            return false;
-        }
-    }
-
     if (!map->put(key, value)) {
         JS_ReportOutOfMemory(cx);
         return false;
+    }
+
+    // Preserve wrapped native keys to prevent wrapper optimization.
+    if (key->getClass()->ext.isWrappedNative) {
+        if (!cx->runtime->preserveWrapperCallback ||
+            !cx->runtime->preserveWrapperCallback(cx, key)) {
+            JS_ReportWarning(cx, "Failed to preserve wrapper of wrapped native weak map key.");
+        }
     }
 
     args.rval().setUndefined();
