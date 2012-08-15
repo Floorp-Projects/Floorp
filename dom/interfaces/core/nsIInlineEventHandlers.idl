@@ -7,7 +7,7 @@
 #include "jspubtd.h"
 %}
 
-[scriptable, uuid(5b3f9656-9d81-40e4-85ba-01f302177815)]
+[scriptable, uuid(22df6ed6-d094-4e45-97fc-a8eca11c390c)]
 interface nsIInlineEventHandlers : nsISupports
 {
   [implicit_jscontext] attribute jsval onabort;
@@ -69,6 +69,7 @@ interface nsIInlineEventHandlers : nsISupports
   [implicit_jscontext] attribute jsval ontimeupdate;
   [implicit_jscontext] attribute jsval onvolumechange;
   [implicit_jscontext] attribute jsval onwaiting;
+  [implicit_jscontext] attribute jsval onwheel;
 
   /**
    * Non-HTML5 event attributes
