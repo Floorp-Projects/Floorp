@@ -1525,9 +1525,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
 
-  // If nothing changed and we are not force-loading, or we're in state loading
-  // but continuing to wait on a channel, we're done
-  if ((!stateChange && !aForceLoad) || (mType == eType_Loading && mChannel)) {
+  if (!stateChange && !aForceLoad) {
     return NS_OK;
   }
 
@@ -1570,6 +1568,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     return NS_OK;
   }
 
+  // Determine what's going on with our channel
   if (stateChange & eParamChannelChanged) {
     // If the channel params changed, throw away the channel, but unset
     // mChannelLoaded so we'll still try to open a new one for this load if
@@ -1581,6 +1580,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     // away. mChannelLoaded will indicate that we tried to load a channel at one
     // point so we wont recurse
     CloseChannel();
+  } else if (mType == eType_Loading && mChannel) {
+    // We're still waiting on a channel load, already opened one, and
+    // channel parameters didn't change
+    return NS_OK;
   } else if (mChannelLoaded && mChannel != aLoadingChannel) {
     // The only time we should have a loaded channel with a changed state is
     // when the channel has just opened -- in which case this call should
