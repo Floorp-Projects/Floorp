@@ -217,6 +217,17 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   return rv;
 }
 
+nsIPresShell*
+nsWebShellWindow::GetPresShell()
+{
+  if (!mDocShell)
+    return nullptr;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  return presShell.get();
+}
+
 bool
 nsWebShellWindow::WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y)
 {
