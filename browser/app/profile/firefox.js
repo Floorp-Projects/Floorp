@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# -*- Mode: JavaScript; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -728,6 +728,9 @@ pref("urlclassifier.alternate_error_page", "blocked");
 // The number of random entries to send with a gethash request.
 pref("urlclassifier.gethashnoise", 4);
 
+// Randomize all UrlClassifier data with a per-client key.
+pref("urlclassifier.randomizeclient", true);
+
 // The list of tables that use the gethash request to confirm partial results.
 pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 
@@ -735,12 +738,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
-
-// Maximum size of the sqlite3 cache during an update, in bytes
-pref("urlclassifier.updatecachemax", 41943040);
-
-// Maximum size of the sqlite3 cache for lookups, in bytes
-pref("urlclassifier.lookupcachemax", 1048576);
 #endif
 
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");

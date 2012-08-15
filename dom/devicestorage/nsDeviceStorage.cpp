@@ -41,6 +41,7 @@
 #undef CreateEvent
 
 #ifdef MOZ_WIDGET_GONK
+#include "nsIVolume.h"
 #include "nsIVolumeService.h"
 #endif
 
@@ -346,6 +347,34 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, PRUint64 aSoFar)
 NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
 #ifdef MOZ_WIDGET_GONK
+nsresult
+GetSDCardStatus(nsAString& aState) {
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+  if (!vs) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIVolume> vol;
+  vs->GetVolumeByName(NS_LITERAL_STRING("sdcard"), getter_AddRefs(vol));
+  if (!vol) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 state;
+  nsresult rv = vol->GetState(&state);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (state == nsIVolume::STATE_MOUNTED) {
+    aState.AssignASCII("available");
+  } else if (state == nsIVolume::STATE_SHARED || state == nsIVolume::STATE_SHAREDMNT) {
+    aState.AssignASCII("shared");
+  } else {
+    aState.AssignASCII("unavailable");
+  }
+  return NS_OK;
+}
+
 static void
 RegisterForSDCardChanges(nsIObserver* aObserver)
 {
@@ -827,9 +856,10 @@ nsDOMDeviceStorageCursor::IPDLRelease()
 class PostStatResultEvent : public nsRunnable
 {
 public:
-  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, PRInt64 aFreeBytes, PRInt64 aTotalBytes)
+  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, PRInt64 aFreeBytes, PRInt64 aTotalBytes, nsAString& aState)
     : mFreeBytes(aFreeBytes)
     , mTotalBytes(aTotalBytes)
+    , mState(aState)
     {
       mRequest.swap(aRequest);
     }
@@ -840,7 +870,7 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes);
+    nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes, mState);
 
     jsval result = InterfaceToJsval(mRequest->GetOwner(),
 				    domstat,
@@ -853,6 +883,7 @@ public:
 
 private:
   PRInt64 mFreeBytes, mTotalBytes;
+  nsString mState;
   nsRefPtr<DOMRequest> mRequest;
 };
 
@@ -1038,8 +1069,17 @@ public:
       NS_DispatchToMainThread(r);
       return NS_OK;
     }
-
-    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace);
+    nsString state;
+    state.Assign(NS_LITERAL_STRING("available"));
+#ifdef MOZ_WIDGET_GONK
+    rv = GetSDCardStatus(state);
+    if (NS_FAILED(rv)) {
+      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN, mFile);
+      NS_DispatchToMainThread(r);
+      return NS_OK;
+    }
+#endif
+    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace, state);
     NS_DispatchToMainThread(r);
     return NS_OK;
   }
@@ -1349,10 +1389,6 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage()
   : mIsWatchingFile(false)
-#ifdef MOZ_WIDGET_GONK
-  , mLastVolumeState(nsIVolume::STATE_INIT)
-#endif
-
 { }
 
 nsresult
@@ -1690,7 +1726,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
 
 #ifdef MOZ_WIDGET_GONK
 void
-nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
+nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aType)
 {
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
@@ -1699,8 +1735,7 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(bool aMounted)
   nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
                                                  true, false,
                                                  NS_LITERAL_STRING(""), 
-                                                 aMounted ? NS_LITERAL_STRING("available")
-                                                          : NS_LITERAL_STRING("unavailable"));
+                                                 aType);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1721,9 +1756,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMDeviceStorageStat)
 NS_IMPL_RELEASE(nsDOMDeviceStorageStat)
 
-nsDOMDeviceStorageStat::nsDOMDeviceStorageStat(PRUint64 aFreeBytes, PRUint64 aTotalBytes)
+nsDOMDeviceStorageStat::nsDOMDeviceStorageStat(PRUint64 aFreeBytes, PRUint64 aTotalBytes, nsAString& aState)
   : mFreeBytes(aFreeBytes)
   , mTotalBytes(aTotalBytes)
+  , mState(aState)
 {
 }
 
@@ -1742,6 +1778,13 @@ NS_IMETHODIMP
 nsDOMDeviceStorageStat::GetFreeBytes(PRUint64 *aFreeBytes)
 {
   *aFreeBytes = mFreeBytes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDeviceStorageStat::GetState(nsAString& aState)
+{
+  aState.Assign(mState);
   return NS_OK;
 }
 
@@ -1799,16 +1842,18 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
       return NS_OK;
     }
 
-    if (mLastVolumeState != state) {
-      mLastVolumeState = state;
-      if (state == nsIVolume::STATE_MOUNTED ||
-	  state == nsIVolume::STATE_NOMEDIA ||
-	  state == nsIVolume::STATE_SHARED  ) {
-	bool mounted = (state == nsIVolume::STATE_MOUNTED);
-	DispatchMountChangeEvent(mounted);
-      }
+    nsString type;
+    if (state == nsIVolume::STATE_MOUNTED) {
+      type.Assign(NS_LITERAL_STRING("available"));
+    } else if (state == nsIVolume::STATE_SHARED || state == nsIVolume::STATE_SHAREDMNT) {
+      type.Assign(NS_LITERAL_STRING("shared"));
+    } else if (state == nsIVolume::STATE_NOMEDIA || state == nsIVolume::STATE_UNMOUNTING) {
+      type.Assign(NS_LITERAL_STRING("unavailable"));
+    } else {
+      // ignore anything else.
       return NS_OK;
     }
+    DispatchMountChangeEvent(type);
     return NS_OK;
   }
 #endif

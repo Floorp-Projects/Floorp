@@ -672,37 +672,56 @@ protected:
   }
 
   // Window Control Functions
+
+  virtual nsresult
+  OpenNoNavigate(const nsAString& aUrl,
+                 const nsAString& aName,
+                 const nsAString& aOptions,
+                 nsIDOMWindow **_retval);
+
   /**
-   * @param aURL the URL to load in the new window
-   * @param aName the name to use for the new window
-   * @param aOptions the window options to use for the new window
-   * @param aDialog true when called from variants of OpenDialog.  If this is
-   *                true, this method will skip popup blocking checks.  The
-   *                aDialog argument is passed on to the window watcher.
-   * @param aCalledNoScript true when called via the [noscript] open()
-   *                        and openDialog() methods.  When this is true, we do
-   *                        NOT want to use the JS stack for things like caller
-   *                        determination.
-   * @param aDoJSFixups true when this is the content-accessible JS version of
-   *                    window opening.  When true, popups do not cause us to
-   *                    throw, we save the caller's principal in the new window
-   *                    for later consumption, and we make sure that there is a
-   *                    document in the newly-opened window.  Note that this
-   *                    last will only be done if the newly-opened window is
-   *                    non-chrome.
-   * @param argv The arguments to pass to the new window.  The first
-   *             three args, if present, will be aURL, aName, and aOptions.  So
-   *             this param only matters if there are more than 3 arguments.
-   * @param argc The number of arguments in argv.
-   * @param aExtraArgument Another way to pass arguments in.  This is mutually
-   *                       exclusive with the argv/argc approach.
-   * @param aJSCallerContext The calling script's context. This must be nullptr
-   *                         when aCalledNoScript is true.
-   * @param aReturn [out] The window that was opened, if any.
+   * @param aUrl the URL we intend to load into the window.  If aNavigate is
+   *        true, we'll actually load this URL into the window. Otherwise,
+   *        aUrl is advisory; OpenInternal will not load the URL into the
+   *        new window.
    *
-   * @note that the boolean args are const because the function shouldn't be
-   * messing with them.  That also makes it easier for the compiler to sort out
-   * its build warning stuff.
+   * @param aName the name to use for the new window
+   *
+   * @param aOptions the window options to use for the new window
+   *
+   * @param aDialog true when called from variants of OpenDialog.  If this is
+   *        true, this method will skip popup blocking checks.  The aDialog
+   *        argument is passed on to the window watcher.
+   *
+   * @param aCalledNoScript true when called via the [noscript] open()
+   *        and openDialog() methods.  When this is true, we do NOT want to use
+   *        the JS stack for things like caller determination.
+   *
+   * @param aDoJSFixups true when this is the content-accessible JS version of
+   *        window opening.  When true, popups do not cause us to throw, we save
+   *        the caller's principal in the new window for later consumption, and
+   *        we make sure that there is a document in the newly-opened window.
+   *        Note that this last will only be done if the newly-opened window is
+   *        non-chrome.
+   *
+   * @param aNavigate true if we should navigate to the provided URL, false
+   *        otherwise.  When aNavigate is false, we also skip our can-load
+   *        security check, on the assumption that whoever *actually* loads this
+   *        page will do their own security check.
+   *
+   * @param argv The arguments to pass to the new window.  The first
+   *        three args, if present, will be aUrl, aName, and aOptions.  So this
+   *        param only matters if there are more than 3 arguments.
+   *
+   * @param argc The number of arguments in argv.
+   *
+   * @param aExtraArgument Another way to pass arguments in.  This is mutually
+   *        exclusive with the argv/argc approach.
+   *
+   * @param aJSCallerContext The calling script's context. This must be null
+   *        when aCalledNoScript is true.
+   *
+   * @param aReturn [out] The window that was opened, if any.
    */
   NS_HIDDEN_(nsresult) OpenInternal(const nsAString& aUrl,
                                     const nsAString& aName,
@@ -711,6 +730,7 @@ protected:
                                     bool aContentModal,
                                     bool aCalledNoScript,
                                     bool aDoJSFixups,
+                                    bool aNavigate,
                                     nsIArray *argv,
                                     nsISupports *aExtraArgument,
                                     nsIPrincipal *aCalleePrincipal,

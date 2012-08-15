@@ -24,7 +24,7 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
-#include "ImageErrors.h"
+#include "nsError.h"
 #include "imgIRequest.h"
 #include "imgStatusTracker.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -230,6 +230,7 @@ private:
   bool mIsMultiPartChannel : 1;
   bool mGotData : 1;
   bool mIsInCache : 1;
+  bool mBlockingOnload : 1;
 };
 
 #endif

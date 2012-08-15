@@ -9,7 +9,7 @@
 #include "nsPresContext.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsMutationEvent.h"
 #include NEW_H

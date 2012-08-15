@@ -29,7 +29,7 @@
 #include "nsPresContext.h"
 #include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMClassInfoID.h"
 #include "nsCRT.h"
 #include "nsIProtocolHandler.h"

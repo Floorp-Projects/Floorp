@@ -52,7 +52,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"

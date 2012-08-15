@@ -69,6 +69,7 @@ class nsWindowSizes;
 namespace mozilla {
 namespace css {
 class Loader;
+class ImageLoader;
 } // namespace css
 
 namespace dom {
@@ -78,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xbd70ee06, 0x2a7d, 0x4258, \
-  { 0x86, 0x4b, 0xbd, 0x28, 0xad, 0x9f, 0xd1, 0x41 } }
+{ 0xdb888523, 0x541f, 0x49e3, \
+  { 0xa9, 0x71, 0xb5, 0xea, 0xd1, 0xf0, 0xc3, 0xcf } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -583,6 +584,13 @@ public:
    */
   mozilla::css::Loader* CSSLoader() const {
     return mCSSLoader;
+  }
+
+  /**
+   * Get this document's StyleImageLoader.  This is guaranteed to not return null.
+   */
+  mozilla::css::ImageLoader* StyleImageLoader() const {
+    return mStyleImageLoader;
   }
 
   /**
@@ -1739,6 +1747,7 @@ protected:
   // We hold a strong reference to mNodeInfoManager through mNodeInfo
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
+  mozilla::css::ImageLoader* mStyleImageLoader; // [STRONG]
   nsHTMLStyleSheet* mAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
