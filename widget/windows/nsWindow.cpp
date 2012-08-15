@@ -3489,8 +3489,8 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   // to the underlying base window and the view. Added when we combined the
   // base chrome window with the main content child for nc client area (title
   // bar) rendering.
-  if (mViewWrapperPtr) {
-    aStatus = mViewWrapperPtr->HandleEvent(event, mUseAttachedEvents);
+  if (mAttachedWidgetListener) {
+    aStatus = mAttachedWidgetListener->HandleEvent(event, mUseAttachedEvents);
   }
   else if (mWidgetListener) {
     aStatus = mWidgetListener->HandleEvent(event, mUseAttachedEvents);
@@ -6934,6 +6934,7 @@ void nsWindow::OnDestroy()
 
   // Prevent the widget from sending additional events.
   mWidgetListener = nullptr;
+  mAttachedWidgetListener = nullptr;
 
   // Free our subclass and clear |this| stored in the window props. We will no longer
   // receive events from Windows after this point.
@@ -7024,8 +7025,8 @@ bool nsWindow::OnResize(nsIntRect &aWindowRect)
 #endif
 
   // If there is an attached view, inform it as well as the normal widget listener.
-  if (mViewWrapperPtr) {
-    mViewWrapperPtr->WindowResized(this, aWindowRect.width, aWindowRect.height);
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->WindowResized(this, aWindowRect.width, aWindowRect.height);
   }
 
   return mWidgetListener ?
