@@ -270,7 +270,7 @@ template<class T>
 class EntryCompare {
 public:
   typedef T elem_type;
-  static int Compare(const void* e1, const void* e2, void* data) {
+  static int Compare(const void* e1, const void* e2) {
     const elem_type* a = static_cast<const elem_type*>(e1);
     const elem_type* b = static_cast<const elem_type*>(e2);
     return a->Compare(*b);
@@ -286,8 +286,8 @@ template<class T>
 void
 EntrySort(nsTArray<T>& aArray)
 {
-  NS_QuickSort(aArray.Elements(), aArray.Length(), sizeof(T),
-               EntryCompare<T>::Compare, 0);
+  qsort(aArray.Elements(), aArray.Length(), sizeof(T),
+        EntryCompare<T>::Compare);
 }
 
 template<class T>
