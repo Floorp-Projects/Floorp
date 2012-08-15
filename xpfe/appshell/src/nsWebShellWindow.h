@@ -12,6 +12,7 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsXULWindow.h"
+#include "nsIWidgetListener.h"
 
 /* Forward declarations.... */
 class nsIURI;
@@ -21,7 +22,8 @@ class WebShellWindowTimerCallback;
 } // namespace mozilla
 
 class nsWebShellWindow : public nsXULWindow,
-                         public nsIWebProgressListener
+                         public nsIWebProgressListener,
+                         public nsIWidgetListener
 {
 public:
   nsWebShellWindow(PRUint32 aChromeFlags);
@@ -43,6 +45,19 @@ public:
 
   // nsIBaseWindow
   NS_IMETHOD Destroy();
+
+  // nsIWidgetListener
+  virtual nsIXULWindow* GetXULWindow() { return this; }
+
+  virtual bool WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y);
+  virtual bool WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight);
+  virtual bool RequestWindowClose(nsIWidget* aWidget);
+  virtual void SizeModeChanged(nsSizeMode sizeMode);
+  virtual void OSToolbarButtonPressed();
+  virtual bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
+                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
+  virtual void WindowActivated();
+  virtual void WindowDeactivated();
 
 protected:
   friend class mozilla::WebShellWindowTimerCallback;

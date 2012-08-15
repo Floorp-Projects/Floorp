@@ -28,6 +28,7 @@
 #include "nsView.h"
 #include "nsIViewManager.h"
 #include "nsEventStateManager.h"
+#include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
 #include "base/thread.h"
@@ -86,7 +87,7 @@ nsAutoRollup::~nsAutoRollup()
 //-------------------------------------------------------------------------
 
 nsBaseWidget::nsBaseWidget()
-: mClientData(nullptr)
+: mWidgetListener(nullptr)
 , mViewWrapperPtr(nullptr)
 , mEventCallback(nullptr)
 , mViewCallback(nullptr)
@@ -232,16 +233,14 @@ NS_IMETHODIMP nsBaseWidget::CaptureMouse(bool aCapture)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsBaseWidget::GetClientData(void*& aClientData)
+nsIWidgetListener* nsBaseWidget::GetWidgetListener()
 {
-  aClientData = mClientData;
-  return NS_OK;
+  return mWidgetListener;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
+void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 {
-  mClientData = aClientData;
-  return NS_OK;
+  mWidgetListener = aWidgetListener;
 }
 
 already_AddRefed<nsIWidget>
@@ -1346,11 +1345,12 @@ const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
   return mSizeConstraints;
 }
 
-// If clientData is non-null, then get the presShell from either the window
+// If widgetListener is non-null, then get the presShell from either the window
 // or the view. Otherwise, assume that this is a widget attached to a view.
 static nsIPresShell* GetPresShell(nsIWidget* aWidget, void* clientData)
 {
-  nsCOMPtr<nsIXULWindow> window(do_QueryInterface(static_cast<nsISupports *>(clientData)));
+  nsCOMPtr<nsIXULWindow> window =
+    aWidgetListener ? aWidgetListener->GetXULWindow() : nullptr;
   if (window) {
     nsCOMPtr<nsIDocShell> docShell;
     window->GetDocShell(getter_AddRefs(docShell));
@@ -1373,9 +1373,13 @@ static nsIPresShell* GetPresShell(nsIWidget* aWidget, void* clientData)
 void
 nsBaseWidget::NotifyWindowDestroyed()
 {
-  nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(static_cast<nsISupports *>(mClientData)));
-  if (window) {
-    window->Destroy();
+  if (!mWidgetListener)
+    return;
+
+  nsCOMPtr<nsIXULWindow> window = mWidgetListener->GetXULWindow();
+  nsCOMPtr<nsIBaseWindow> xulWindow(do_QueryInterface(window));
+  if (xulWindow) {
+    xulWindow->Destroy();
   }
 }
 
@@ -1410,8 +1414,7 @@ void
 nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
                                    UIStateChangeType aShowFocusRings)
 {
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell(this, mClientData);
-
+  nsIPresShell* presShell = GetPresShell(this, mWidgetListener);
   nsIDocument* doc = presShell->GetDocument();
   if (doc) {
     nsPIDOMWindow* win = doc->GetWindow();
@@ -1426,7 +1429,7 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
 Accessible*
 nsBaseWidget::GetAccessible()
 {
-  nsIPresShell* presShell = GetPresShell(this, mClientData);
+  nsIPresShell* presShell = GetPresShell(this, mWidgetListener);
   NS_ENSURE_TRUE(presShell, nullptr);
 
   // If container is null then the presshell is not active. This often happens
@@ -1684,18 +1687,17 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 /* static */ void
 nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
-                                   nsPaintEvent *        aPaintEvent,
+                                   const nsIntRegion &   aRegion,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID)
 {
   NS_ASSERTION(nullptr != aFileOut,"cmon, null output FILE");
   NS_ASSERTION(nullptr != aWidget,"cmon, the widget is null");
-  NS_ASSERTION(nullptr != aPaintEvent,"cmon, the paint event is null");
 
   if (!debug_GetCachedBoolPref("nglayout.debug.paint_dumping"))
     return;
   
-  nsIntRect rect = aPaintEvent->region.GetBounds();
+  nsIntRect rect = aRegion.GetBounds();
   fprintf(aFileOut,
           "%4d PAINT      widget=%p name=%-12s id=%-8p bounds-rect=%3d,%-3d %3d,%-3d", 
           _GetPrintCount(),

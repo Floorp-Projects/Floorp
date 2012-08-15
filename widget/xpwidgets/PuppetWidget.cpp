@@ -17,6 +17,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "PuppetWidget.h"
+#include "nsIWidgetListener.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -184,8 +185,11 @@ PuppetWidget::Resize(PRInt32 aWidth,
     InvalidateRegion(this, dirty);
   }
 
-  if (!oldBounds.IsEqualEdges(mBounds)) {
-    DispatchResizeEvent();
+  // XXXndeakin this isn't the right widget listener to use. It should use
+  // the view wrapper pointer but that won't compile. This will be fixed up
+  // in a later patch.
+  if (!oldBounds.IsEqualEdges(mBounds) && mWidgetListener) {
+    mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
 
   return NS_OK;
@@ -476,61 +480,41 @@ PuppetWidget::SetCursor(nsCursor aCursor)
 }
 
 nsresult
-PuppetWidget::DispatchPaintEvent()
+PuppetWidget::Paint()
 {
   NS_ABORT_IF_FALSE(!mDirtyRegion.IsEmpty(), "paint event logic messed up");
 
-  nsIntRect dirtyRect = mDirtyRegion.GetBounds();
-  nsPaintEvent event(true, NS_PAINT, this);
-  event.refPoint.x = dirtyRect.x;
-  event.refPoint.y = dirtyRect.y;
-  event.region = mDirtyRegion;
-  event.willSendDidPaint = true;
+  if (!mWidgetListener)
+    return NS_OK;
+
+  nsIntRegion region = mDirtyRegion;
 
   // reset repaint tracking
   mDirtyRegion.SetEmpty();
   mPaintTask.Revoke();
 
-  nsEventStatus status;
   {
 #ifdef DEBUG
-    debug_DumpPaintEvent(stderr, this, &event,
+    debug_DumpPaintEvent(stderr, this, region,
                          nsCAutoString("PuppetWidget"), 0);
 #endif
 
     if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
-      DispatchEvent(&event, status);
+      mWidgetListener->PaintWindow(this, region, false, true);
     } else {
       nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BUFFER_NONE);
-      DispatchEvent(&event, status);
+      mWidgetListener->PaintWindow(this, region, false, true);
       mTabChild->NotifyPainted();
     }
   }
 
-  nsPaintEvent didPaintEvent(true, NS_DID_PAINT, this);
-  DispatchEvent(&didPaintEvent, status);
+  mWidgetListener->DidPaintWindow();
 
   return NS_OK;
-}
-
-nsresult
-PuppetWidget::DispatchResizeEvent()
-{
-  nsSizeEvent event(true, NS_SIZE, this);
-
-  nsIntRect rect = mBounds;     // copy in case something messes with it
-  event.windowSize = &rect;
-  event.refPoint.x = rect.x;
-  event.refPoint.y = rect.y;
-  event.mWinWidth = rect.width;
-  event.mWinHeight = rect.height;
-
-  nsEventStatus status;
-  return DispatchEvent(&event, status);
 }
 
 void
@@ -547,7 +531,7 @@ NS_IMETHODIMP
 PuppetWidget::PaintTask::Run()
 {
   if (mWidget) {
-    mWidget->DispatchPaintEvent();
+    mWidget->Paint();
   }
   return NS_OK;
 }

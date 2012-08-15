@@ -29,6 +29,7 @@
 #include "nsChildView.h"
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
+#include "nsIWidgetListener.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1407,17 +1408,10 @@ bool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 
 
 NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 {
-  nsZLevelEvent event(true, NS_SETZLEVEL, this);
-
-  event.refPoint.x = mBounds.x;
-  event.refPoint.y = mBounds.y;
-  event.time = PR_IntervalNow();
-
-  event.mImmediate = true;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  DispatchEvent(&event, status);
-
+  nsWindowZ placement = nsWindowZTop;
+  nsIWidget* actualBelow;
+  if (mWidgetListener)
+    mWidgetListener->ZLevelChanged(true, &placement, nullptr, &actualBelow);
   return NS_OK;
 }
 
@@ -1517,12 +1511,8 @@ nsCocoaWindow::ReportMoveEvent()
   UpdateBounds();
 
   // Dispatch the move event to Gecko
-  nsGUIEvent guiEvent(true, NS_MOVE, this);
-  guiEvent.refPoint.x = mBounds.x;
-  guiEvent.refPoint.y = mBounds.y;
-  guiEvent.time = PR_IntervalNow();
-  nsEventStatus status = nsEventStatus_eIgnore;
-  DispatchEvent(&guiEvent, status);
+  if (mWidgetListener)
+    mWidgetListener->WindowMoved(this, mBounds.x, mBounds.y);
 
   mInReportMoveEvent = false;
 
@@ -1546,12 +1536,9 @@ nsCocoaWindow::DispatchSizeModeEvent()
   }
 
   mSizeMode = newMode;
-  nsSizeModeEvent event(true, NS_SIZEMODE, this);
-  event.mSizeMode = mSizeMode;
-  event.time = PR_IntervalNow();
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  DispatchEvent(&event, status);
+  if (mWidgetListener) {
+    mWidgetListener->SizeModeChanged(newMode);
+  }
 }
 
 void
@@ -1561,17 +1548,11 @@ nsCocoaWindow::ReportSizeEvent()
 
   UpdateBounds();
 
-  nsSizeEvent sizeEvent(true, NS_SIZE, this);
-  sizeEvent.time = PR_IntervalNow();
-
-  nsIntRect innerBounds;
-  GetClientBounds(innerBounds);
-  sizeEvent.windowSize = &innerBounds;
-  sizeEvent.mWinWidth  = mBounds.width;
-  sizeEvent.mWinHeight = mBounds.height;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  DispatchEvent(&sizeEvent, status);
+  if (mWidgetListener) {
+    nsIntRect innerBounds;
+    GetClientBounds(innerBounds);
+    mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2136,11 +2117,9 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 
 - (BOOL)windowShouldClose:(id)sender
 {
-  // We only want to send NS_XUL_CLOSE and let gecko close the window
-  nsGUIEvent guiEvent(true, NS_XUL_CLOSE, mGeckoWindow);
-  guiEvent.time = PR_IntervalNow();
-  nsEventStatus status = nsEventStatus_eIgnore;
-  mGeckoWindow->DispatchEvent(&guiEvent, status);
+  nsIWidgetListener* listener = mGeckoWindow ? mGeckoWindow->GetWidgetListener() : nullptr;
+  if (listener)
+    listener->RequestWindowClose(mGeckoWindow);
   return NO; // gecko will do it
 }
 
@@ -2175,17 +2154,6 @@ bool nsCocoaWindow::ShouldFocusPlugin()
   return YES;
 }
 
-- (void)sendFocusEvent:(PRUint32)eventType
-{
-  if (!mGeckoWindow)
-    return;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent focusGuiEvent(true, eventType, mGeckoWindow);
-  focusGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
-}
-
 - (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2217,16 +2185,20 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 
 - (void)sendToplevelActivateEvents
 {
-  if (!mToplevelActiveState) {
-    [self sendFocusEvent:NS_ACTIVATE];
+  if (!mToplevelActiveState && mGeckoWindow) {
+    nsIWidgetListener* listener = mGeckoWindow->GetWidgetListener();
+    if (listener)
+      listener->WindowActivated();
     mToplevelActiveState = true;
   }
 }
 
 - (void)sendToplevelDeactivateEvents
 {
-  if (mToplevelActiveState) {
-    [self sendFocusEvent:NS_DEACTIVATE];
+  if (mToplevelActiveState && mGeckoWindow) {
+    nsIWidgetListener* listener = mGeckoWindow->GetWidgetListener();
+    if (listener)
+      listener->WindowDeactivated();
     mToplevelActiveState = false;
   }
 }
@@ -2677,10 +2649,10 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     nsCocoaWindow *geckoWindow = [windowDelegate geckoWidget];
     if (!geckoWindow)
       return;
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsGUIEvent guiEvent(true, NS_OS_TOOLBAR, geckoWindow);
-    guiEvent.time = PR_IntervalNow();
-    geckoWindow->DispatchEvent(&guiEvent, status);
+
+    nsIWidgetListener* listener = geckoWindow->GetWidgetListener();
+    if (listener)
+      listener->OSToolbarButtonPressed();
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

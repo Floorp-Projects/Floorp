@@ -64,8 +64,8 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(bool aCapture);
-  NS_IMETHOD              GetClientData(void*& aClientData);
-  NS_IMETHOD              SetClientData(void* aClientData);
+  virtual nsIWidgetListener*  GetWidgetListener();
+  virtual void            SetWidgetListener(nsIWidgetListener* alistener);
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
@@ -331,7 +331,7 @@ protected:
    */
   void DestroyCompositor();
 
-  void*             mClientData;
+  nsIWidgetListener* mWidgetListener;
   ViewWrapper*      mViewWrapperPtr;
   EVENT_CALLBACK    mEventCallback;
   EVENT_CALLBACK    mViewCallback;
@@ -383,7 +383,7 @@ protected:
 
   static void debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
-                                   nsPaintEvent *        aPaintEvent,
+                                   const nsIntRegion &   aPaintEvent,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 

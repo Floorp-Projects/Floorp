@@ -166,8 +166,7 @@ public:
   virtual float GetDPI();
 
 private:
-  nsresult DispatchPaintEvent();
-  nsresult DispatchResizeEvent();
+  nsresult Paint();
 
   void SetChild(PuppetWidget* aChild);
 

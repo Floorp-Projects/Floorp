@@ -82,7 +82,7 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
-    nsEventStatus DoPaint( QPainter* aPainter, const QStyleOptionGraphicsItem * aOption, QWidget* aWidget);
+    bool DoPaint( QPainter* aPainter, const QStyleOptionGraphicsItem * aOption, QWidget* aWidget);
 
     static void ReleaseGlobals();
 
