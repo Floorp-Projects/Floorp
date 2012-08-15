@@ -68,14 +68,14 @@ random-if(bug685516) == background-size-body-percent-percent-no-repeat.html back
 random-if(bug685516) == background-size-body-percent-percent-not-fixed.html background-size-body-percent-percent-ref.html
 random-if(bug685516) == background-size-body-cover.html background-size-body-cover-ref.html
 random-if(bug685516) == background-size-body-cover-no-repeat.html background-size-body-cover-ref.html
-!= background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
-!= background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
+random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
+random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
 
 # relies on reftest window having greater height than width
 random-if(bug685516) == background-size-body-contain.html background-size-body-cover-ref.html
-!= background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
-!= background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
-!= background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
+random-if(bug685516) != background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
+random-if(bug685516) != background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
+random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
 
 != background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
 
@@ -124,9 +124,9 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 random-if(bug685516) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 
-HTTP == root-background-1.html root-background-ref.html
+random-if(bug685516) HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
 
 == really-big-background.html really-big-background-ref.html
 
-== background-repeat-1-ref.html background-repeat-1.html
+random-if(bug685516) == background-repeat-1-ref.html background-repeat-1.html

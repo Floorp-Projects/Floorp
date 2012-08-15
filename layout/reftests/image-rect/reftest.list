@@ -12,5 +12,5 @@ random-if(bug685516) == background-zoom-1.html background-zoom-1-ref.html
 random-if(bug685516) == background-zoom-2.html background-zoom-2-ref.html
 random-if(bug685516) == background-zoom-3.html background-zoom-3-ref.html
 random-if(bug685516) == background-zoom-4.html background-zoom-4-ref.html
-== dom-api-computed-style.html dom-api-ref.html
-== dom-api.html dom-api-ref.html
+random-if(bug685516) == dom-api-computed-style.html dom-api-ref.html
+random-if(bug685516) == dom-api.html dom-api-ref.html
