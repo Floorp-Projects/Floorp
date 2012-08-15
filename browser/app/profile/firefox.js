@@ -735,12 +735,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
-
-// Maximum size of the sqlite3 cache during an update, in bytes
-pref("urlclassifier.updatecachemax", 41943040);
-
-// Maximum size of the sqlite3 cache for lookups, in bytes
-pref("urlclassifier.lookupcachemax", 1048576);
 #endif
 
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
