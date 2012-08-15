@@ -31,6 +31,7 @@ function runTest() {
 }
 
 function iframeBodyRecv(data) {
+  data = SpecialPowers.wrap(data);
   var previousCount = countAcc;
   var currentCount = parseInt(data.json.data, 10);
   countAcc = currentCount;
