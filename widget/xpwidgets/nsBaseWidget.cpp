@@ -22,6 +22,9 @@
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
+#include "nsView.h"
+#include "nsIViewManager.h"
+#include "nsEventStateManager.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
 #include "base/thread.h"
@@ -1334,6 +1337,39 @@ void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
 const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
 {
   return mSizeConstraints;
+}
+
+static nsIPresShell* GetPresShell(nsIWidget* aWidget)
+{
+  nsIView* view = nsView::GetViewFor(aWidget);
+  return view ? view->GetViewManager()->GetPresShell() : nullptr;
+}
+
+void
+nsBaseWidget::NotifySizeMoveDone()
+{
+  nsIPresShell* presShell = GetPresShell(this);
+  if (presShell) {
+    presShell->WindowSizeMoveDone();
+  }
+}
+
+void
+nsBaseWidget::NotifySysColorChanged()
+{
+  nsIPresShell* presShell = GetPresShell(this);
+  if (presShell) {
+    presShell->SysColorChanged();
+  }
+}
+
+void
+nsBaseWidget::NotifyThemeChanged()
+{
+  nsIPresShell* presShell = GetPresShell(this);
+  if (presShell) {
+    presShell->ThemeChanged();
+  }
 }
 
 #ifdef DEBUG

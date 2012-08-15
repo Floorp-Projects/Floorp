@@ -719,20 +719,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         break;
       }
 
-    case NS_DONESIZEMOVE:
-      {
-        if (mPresShell) {
-          nsPresContext* presContext = mPresShell->GetPresContext();
-          if (presContext) {
-            nsEventStateManager::ClearGlobalActiveContent(nullptr);
-          }
-
-        }
-
-        nsIPresShell::ClearMouseCapture(nullptr);
-      }
-      break;
-  
     case NS_XUL_CLOSE:
       {
         // if this is a popup, make a request to hide it. Note that a popuphidden
@@ -843,26 +829,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
          @see bug 112861 */
       *aStatus = nsEventStatus_eConsumeNoDefault;
       break;
-
-    case NS_DISPLAYCHANGED:
-
-      //Destroy the cached backbuffer to force a new backbuffer
-      //be constructed with the appropriate display depth.
-      //@see bugzilla bug 6061
-      *aStatus = nsEventStatus_eConsumeDoDefault;
-      break;
-
-    case NS_SYSCOLORCHANGED:
-      {
-        if (mPresShell) {
-          // Hold a refcount to the presshell. The continued existence of the observer will
-          // delay deletion of this view hierarchy should the event want to cause its
-          // destruction in, say, some JavaScript event handler.
-          nsCOMPtr<nsIPresShell> presShell = mPresShell;
-          presShell->HandleEvent(aView->GetFrame(), aEvent, false, aStatus);
-        }
-      }
-      break; 
 
     default:
       {

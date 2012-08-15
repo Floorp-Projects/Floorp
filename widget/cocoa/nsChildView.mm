@@ -2185,11 +2185,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)systemMetricsChanged
 {
-  if (!mGeckoChild)
-    return;
-
-  nsGUIEvent guiEvent(true, NS_THEMECHANGED, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(guiEvent);
+  if (mGeckoChild)
+    mGeckoChild->NotifyThemeChanged();
 }
 
 - (void)setNeedsPendingDisplay
