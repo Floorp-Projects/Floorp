@@ -369,8 +369,6 @@ class IonBuilder : public MIRGenerator
     types::TypeSet *getInlineArgTypeSet(uint32 argc, uint32 arg);
     MIRType getInlineArgType(uint32 argc, uint32 arg);
 
-    InliningStatus inlineNanResult(int argc);
-
     // Array natives.
     InliningStatus inlineArray(uint32 argc, bool constructing);
     InliningStatus inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool constructing);
