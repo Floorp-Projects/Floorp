@@ -77,7 +77,7 @@ random-if(bug685516) != background-size-body-contain-no-repeat.html background-s
 random-if(bug685516) != background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
 random-if(bug685516) != background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
 
-!= background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
+random-if(bug685516) != background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
 
 random-if(bug685516) == background-size-zoom-no-repeat.html background-size-zoom-no-repeat-ref.html
 
