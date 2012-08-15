@@ -150,8 +150,6 @@ class nsHashKey;
 
 #define NS_WINDOW_START                 100
 
-// Widget is being created
-#define NS_CREATE                       (NS_WINDOW_START)
 // Widget may be destroyed
 #define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
 // Widget is being destroyed
@@ -182,9 +180,6 @@ class nsHashKey;
 // Window has been moved to a new location.
 // The events point contains the x, y location in screen coordinates
 #define NS_MOVE                         (NS_WINDOW_START + 34) 
-
-// Tab control's selected tab has changed
-#define NS_TABCHANGE                    (NS_WINDOW_START + 35)
 
 #define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
 

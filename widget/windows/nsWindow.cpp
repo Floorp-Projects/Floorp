@@ -586,9 +586,6 @@ nsWindow::Create(nsIWidget *aParent,
     ::SetWindowLongPtrW(scrollableWnd, GWLP_USERDATA, (LONG_PTR)oldWndProc);
   }
 
-  // call the event callback to notify about creation
-
-  DispatchStandardEvent(NS_CREATE);
   SubclassWindow(TRUE);
 
   // If the internal variable set by the config.trim_on_minimize pref has not
@@ -4522,22 +4519,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSCOLORCHANGE:
       OnSysColorChanged();
       break;
-
-    case WM_NOTIFY:
-      // TAB change
-    {
-      LPNMHDR pnmh = (LPNMHDR) lParam;
-
-        switch (pnmh->code) {
-          case TCN_SELCHANGE:
-          {
-            DispatchStandardEvent(NS_TABCHANGE);
-            result = true;
-          }
-          break;
-        }
-    }
-    break;
 
     case WM_THEMECHANGED:
     {

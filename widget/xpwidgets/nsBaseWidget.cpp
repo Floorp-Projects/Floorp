@@ -1396,7 +1396,6 @@ case _value: eventName.AssignLiteral(_name) ; break
   switch(aGuiEvent->message)
   {
     _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
-    _ASSIGN_eventName(NS_CREATE,"NS_CREATE");
     _ASSIGN_eventName(NS_DESTROY,"NS_DESTROY");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
     _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
