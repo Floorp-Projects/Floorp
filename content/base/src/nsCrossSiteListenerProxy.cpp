@@ -6,7 +6,7 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"

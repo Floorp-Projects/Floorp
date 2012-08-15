@@ -6,7 +6,7 @@
 #ifndef TRANSFRMX_TXTOPLEVELITEMS_H
 #define TRANSFRMX_TXTOPLEVELITEMS_H
 
-#include "txError.h"
+#include "nsError.h"
 #include "txOutputFormat.h"
 #include "txXMLUtils.h"
 #include "txStylesheet.h"

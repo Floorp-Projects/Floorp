@@ -3812,30 +3812,34 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
     return NS_OK;
   }
 
+  // Clamp radii to prevent completely insane values:
+  rx = NS_MIN(rx, 100000);
+  ry = NS_MIN(ry, 100000);
+
   PRUint8* sourceData = aSources[0]->mImage->Data();
   PRUint8* targetData = aTarget->mImage->Data();
-  PRUint32 stride = aTarget->mImage->Stride();
+  PRInt32 stride = aTarget->mImage->Stride();
   PRUint8 extrema[4];         // RGBA magnitude of extrema
   PRUint16 op = mEnumAttributes[OPERATOR].GetAnimValue();
 
   // Scan the kernel for each pixel to determine max/min RGBA values.
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    PRUint32 startY = NS_MAX(0, y - ry);
+    PRInt32 startY = NS_MAX(0, y - ry);
     // We need to read pixels not just in 'rect', which is limited to
     // the dirty part of our filter primitive subregion, but all pixels in
     // the given radii from the source surface, so use the surface size here.
-    PRUint32 endY = NS_MIN(y + ry, instance->GetSurfaceHeight() - 1);
+    PRInt32 endY = NS_MIN(y + ry, instance->GetSurfaceHeight() - 1);
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint32 startX = NS_MAX(0, x - rx);
-      PRUint32 endX = NS_MIN(x + rx, instance->GetSurfaceWidth() - 1);
-      PRUint32 targIndex = y * stride + 4 * x;
+      PRInt32 startX = NS_MAX(0, x - rx);
+      PRInt32 endX = NS_MIN(x + rx, instance->GetSurfaceWidth() - 1);
+      PRInt32 targIndex = y * stride + 4 * x;
 
-      for (PRUint32 i = 0; i < 4; i++) {
+      for (PRInt32 i = 0; i < 4; i++) {
         extrema[i] = sourceData[targIndex + i];
       }
-      for (PRUint32 y1 = startY; y1 <= endY; y1++) {
-        for (PRUint32 x1 = startX; x1 <= endX; x1++) {
-          for (PRUint32 i = 0; i < 4; i++) {
+      for (PRInt32 y1 = startY; y1 <= endY; y1++) {
+        for (PRInt32 x1 = startX; x1 <= endX; x1++) {
+          for (PRInt32 i = 0; i < 4; i++) {
             PRUint8 pixel = sourceData[y1 * stride + 4 * x1 + i];
             if ((extrema[i] > pixel &&
                  op == nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE) ||
@@ -5490,11 +5494,12 @@ NS_IMPL_RELEASE_INHERITED(nsSVGFEImageElement,nsSVGFEImageElementBase)
 DOMCI_NODE_DATA(SVGFEImageElement, nsSVGFEImageElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGFEImageElement)
-  NS_NODE_INTERFACE_TABLE8(nsSVGFEImageElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE9(nsSVGFEImageElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEImageElement, nsIDOMSVGURIReference,
-                           imgIDecoderObserver, nsIImageLoadingContent)
+                           imgIDecoderObserver, nsIImageLoadingContent,
+                           imgIOnloadBlocker)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEImageElementBase)
 
@@ -5604,6 +5609,9 @@ nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                     aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
+                                    aCompileEventHandlers);
+
   if (mStringAttributes[HREF].IsExplicitlySet()) {
     // FIXME: Bug 660963 it would be nice if we could just have
     // ClearBrokenState update our state and do it fast...
@@ -5614,6 +5622,13 @@ nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   return rv;
+}
+ 
+void
+nsSVGFEImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
+{
+  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
+  nsSVGFEImageElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsEventStates

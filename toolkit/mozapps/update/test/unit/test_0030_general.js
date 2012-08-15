@@ -23,7 +23,7 @@ function run_test() {
   do_execute_soon(run_test_pt1);
 }
 
-// The nsHttpServer must be stopped before calling do_test_finished
+// The HttpServer must be stopped before calling do_test_finished
 function finish_test() {
   stop_httpserver(do_test_finished);
 }

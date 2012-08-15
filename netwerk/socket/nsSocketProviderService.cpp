@@ -7,7 +7,7 @@
 #include "nsIServiceManager.h"
 #include "nsISocketProvider.h"
 #include "nsSocketProviderService.h"
-#include "nsNetError.h"
+#include "nsError.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

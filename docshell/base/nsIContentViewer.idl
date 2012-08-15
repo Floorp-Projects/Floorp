@@ -27,7 +27,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsIViewPtr(nsIView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
-[scriptable, builtinclass, uuid(26b2380b-4a1a-46cd-b7d8-7600e41c1688)]
+[scriptable, builtinclass, uuid(b9d92b8b-5623-4079-ae11-36bb341f322e)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -134,10 +134,10 @@ interface nsIContentViewer : nsISupports
    */
   void clearHistoryEntry();
 
-  /*
+  /**
    * Change the layout to view the document with page layout (like print preview), but
    * dynamic and editable (like Galley layout).
-  */
+   */
   void setPageMode(in boolean aPageMode, in nsIPrintSettings aPrintSettings);
 
   /**
@@ -146,7 +146,7 @@ interface nsIContentViewer : nsISupports
    */
   readonly attribute nsISHEntry historyEntry;
 
-  /*
+  /**
    * Indicates when we're in a state where content shouldn't be allowed to
    * trigger a tab-modal prompt (as opposed to a window-modal prompt) because
    * we're part way through some operation (eg beforeunload) that shouldn't be
@@ -154,6 +154,11 @@ interface nsIContentViewer : nsISupports
    * See bug 613800.
    */
   readonly attribute boolean isTabModalPromptAllowed;
+
+  /**
+   * Returns whether this content viewer is in a hidden state.
+   */
+  readonly attribute boolean isHidden;
 
   [noscript] readonly attribute nsIPresShellPtr presShell;
   [noscript] readonly attribute nsPresContextPtr presContext;

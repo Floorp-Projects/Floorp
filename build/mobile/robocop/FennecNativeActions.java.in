@@ -5,15 +5,10 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
-import java.lang.Class;
-import java.lang.ClassLoader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-import java.lang.Long;
-import java.lang.NoSuchMethodException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.ArrayList;
 
@@ -40,15 +35,16 @@ public class FennecNativeActions implements Actions {
 
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
-    private Class mGel;
-    private Class mGe;
-    private Class mGas;
-    private Class mDrawListener;
-    private Method mRegisterGEL;
-    private Method mUnregisterGEL;
-    private Method mSendGE;
-    private Method mGetLayerClient;
+    private Class mApiClass;
+    private Class mEventListenerClass;
+    private Class mDrawListenerClass;
+    private Method mRegisterEventListener;
+    private Method mUnregisterEventListener;
+    private Method mBroadcastEvent;
     private Method mSetDrawListener;
+    private Method mQuerySql;
+    private Object mRobocopApi;
+
     private static final String LOGTAG = "FennecNativeActions";
 
     public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation, Assert asserter) {
@@ -59,29 +55,19 @@ public class FennecNativeActions implements Actions {
         // Set up reflexive access of java classes and methods.
         try {
             mClassLoader = activity.getClassLoader();
-            mGel = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
-            mGe = mClassLoader.loadClass("org.mozilla.gecko.GeckoEvent");
-            mGas = mClassLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
-            Class [] parameters = new Class[2];
-            parameters[0] = String.class;
-            parameters[1] = mGel;
-            mRegisterGEL = mGas.getMethod("registerEventListener", parameters);
-            mUnregisterGEL = mGas.getMethod("unregisterEventListener", parameters);
-            parameters = new Class[1];
-            parameters[0] = mGe;
-            mSendGE = mGas.getMethod("sendEventToGecko", parameters);
 
-            mGetLayerClient = activity.getClass().getMethod("getLayerClient");
-            Class gslc = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient");
-            mDrawListener = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
-            mSetDrawListener = gslc.getDeclaredMethod("setDrawListener", mDrawListener);
-        } catch (ClassNotFoundException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (SecurityException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (NoSuchMethodException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (IllegalArgumentException e) {
+            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
+            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
+            mDrawListenerClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
+
+            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
+            mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
+            mBroadcastEvent = mApiClass.getMethod("broadcastEvent", String.class, String.class);
+            mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
+            mQuerySql = mApiClass.getMethod("querySql", String.class, String.class);
+
+            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
+        } catch (Exception e) {
             FennecNativeDriver.log(LogLevel.ERROR, e);
         }
     }
@@ -144,7 +130,7 @@ public class FennecNativeActions implements Actions {
                 }
             }
             try {
-                mUnregisterGEL.invoke(null, mRegistrationParams);
+                mUnregisterEventListener.invoke(mRobocopApi, mRegistrationParams);
             } catch (IllegalAccessException e) {
                 FennecNativeDriver.log(LogLevel.ERROR, e);
             } catch (InvocationTargetException e) {
@@ -192,7 +178,7 @@ public class FennecNativeActions implements Actions {
                 startTime = endTime;
             }
             try {
-                mUnregisterGEL.invoke(null, mRegistrationParams);
+                mUnregisterEventListener.invoke(mRobocopApi, mRegistrationParams);
             } catch (IllegalAccessException e) {
                 FennecNativeDriver.log(LogLevel.ERROR, e);
             } catch (InvocationTargetException e) {
@@ -220,17 +206,14 @@ public class FennecNativeActions implements Actions {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
             "waiting for "+geckoEvent);
         try {
-            Class [] interfaces = new Class[1];
-            interfaces[0] = mGel;
             Object[] finalParams = new Object[2];
             finalParams[0] = geckoEvent;
-         
             GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
             wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
-            Object proxy = Proxy.newProxyInstance(mClassLoader, interfaces, wIH);
+            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mEventListenerClass }, wIH);
             finalParams[1] = proxy;
-            mRegisterGEL.invoke(null, finalParams);
-            
+
+            mRegisterEventListener.invoke(mRobocopApi, finalParams);
             return expecter;
         } catch (IllegalAccessException e) {
             FennecNativeDriver.log(LogLevel.ERROR, e);
@@ -242,11 +225,7 @@ public class FennecNativeActions implements Actions {
 
     public void sendGeckoEvent(String geckoEvent, String data) {
         try {
-            Method cbe = mGe.getMethod("createBroadcastEvent", String.class, String.class);
-            Object event = cbe.invoke(null, geckoEvent, data);
-            mSendGE.invoke(null, event);
-        } catch (NoSuchMethodException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
+            mBroadcastEvent.invoke(mRobocopApi, geckoEvent, data);
         } catch (IllegalAccessException e) {
             FennecNativeDriver.log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
@@ -284,8 +263,8 @@ public class FennecNativeActions implements Actions {
         private static final int MAX_WAIT_MS = 90000;
 
         PaintExpecter() throws IllegalAccessException, InvocationTargetException {
-            mLayerClient = mGetLayerClient.invoke(mGeckoApp);
-            mSetDrawListener.invoke(mLayerClient, Proxy.newProxyInstance(mClassLoader, new Class[] { mDrawListener }, new DrawListenerProxy(this)));
+            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mDrawListenerClass }, new DrawListenerProxy(this));
+            mSetDrawListener.invoke(mRobocopApi, proxy);
         }
 
         void notifyOfEvent() {
@@ -312,7 +291,7 @@ public class FennecNativeActions implements Actions {
                 }
             }
             try {
-                mSetDrawListener.invoke(mLayerClient, (Object)null);
+                mSetDrawListener.invoke(mRobocopApi, (Object)null);
             } catch (Exception e) {
                 FennecNativeDriver.log(LogLevel.ERROR, e);
             }
@@ -360,7 +339,7 @@ public class FennecNativeActions implements Actions {
                 startTime = endTime;
             }
             try {
-                mSetDrawListener.invoke(mLayerClient, (Object)null);
+                mSetDrawListener.invoke(mRobocopApi, (Object)null);
             } catch (Exception e) {
                 FennecNativeDriver.log(LogLevel.ERROR, e);
             }
@@ -415,30 +394,9 @@ public class FennecNativeActions implements Actions {
 
     public Cursor querySql(String dbPath, String sql) {
         try {
-            ClassLoader classLoader = mGeckoApp.getClassLoader();
-            Class sqlClass = classLoader.loadClass("org.mozilla.gecko.sqlite.SQLiteBridge");
-            Class stringClass = String.class;
-            Class stringArrayClass = String[].class;
-            Class appshell = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
-            Class contextClass = Context.class;
-    
-            Constructor bridgeConstructor = sqlClass.getConstructor(stringClass);
-            Method query = sqlClass.getMethod("rawQuery", stringClass, stringArrayClass);
-            Method loadSQLiteLibs = appshell.getMethod("loadSQLiteLibs", contextClass, stringClass);
-    
-            Object bridge = bridgeConstructor.newInstance(dbPath);
-    
-            String resourcePath = mGeckoApp.getApplication().getPackageResourcePath();
-            loadSQLiteLibs.invoke(null, mGeckoApp, resourcePath);
-            return (Cursor)query.invoke(bridge, sql, null);
-        } catch(ClassNotFoundException ex) {
-            Log.e(LOGTAG, "Error getting class", ex);
-        } catch(NoSuchMethodException ex) {
-            Log.e(LOGTAG, "Error getting method", ex);
+            return (Cursor)mQuerySql.invoke(mRobocopApi, dbPath, sql);
         } catch(InvocationTargetException ex) {
             Log.e(LOGTAG, "Error invoking method", ex);
-        } catch(InstantiationException ex) {
-            Log.e(LOGTAG, "Error calling constructor", ex);
         } catch(IllegalAccessException ex) {
             Log.e(LOGTAG, "Error using field", ex);
         }

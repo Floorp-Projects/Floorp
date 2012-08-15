@@ -69,6 +69,7 @@ public class FennecNativeElement implements Element {
             if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
                 FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
                     "click: time-out waiting for UI thread");
+                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
             }
         } catch (InterruptedException e) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
@@ -121,6 +122,7 @@ public class FennecNativeElement implements Element {
             if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
                 FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
                     "getText: time-out waiting for UI thread");
+                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
             }
         } catch (InterruptedException e) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
@@ -157,6 +159,7 @@ public class FennecNativeElement implements Element {
             if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
                 FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
                     "isDisplayed: time-out waiting for UI thread");
+                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
             }
         } catch (InterruptedException e) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);

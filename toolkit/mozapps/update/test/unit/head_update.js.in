@@ -1612,15 +1612,15 @@ const updateCheckListener = {
 function start_httpserver(aRelativeDirName) {
   var dir = do_get_file(aRelativeDirName);
   if (!dir.exists())
-    do_throw("The directory used by nsHttpServer does not exist! path: " +
+    do_throw("The directory used by HttpServer does not exist! path: " +
              dir.path + "\n");
 
   if (!dir.isDirectory())
-    do_throw("A file instead of a directory was specified for nsHttpServer " +
+    do_throw("A file instead of a directory was specified for HttpServer " +
              "registerDirectory! path: " + dir.path + "\n");
 
-  do_load_httpd_js();
-  gTestserver = new nsHttpServer();
+  Components.utils.import("resource://testing-common/httpd.js");
+  gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", dir);
   gTestserver.start(4444);
 }

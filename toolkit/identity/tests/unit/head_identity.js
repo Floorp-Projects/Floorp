@@ -1,9 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This has the side-effect of populating Cc, Ci, Cu, Cr. It's best not to
-// ask questions and just accept it.
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 // The following boilerplate makes sure that XPCom calls
 // that use the profile directory work.

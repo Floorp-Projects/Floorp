@@ -80,6 +80,7 @@ MOCHITEST_FILES = \
   test_pluginstream_src_referer.html \
   plugin-stream-referer.sjs \
   test_src_url_change.html \
+  test_secondPlugin.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491

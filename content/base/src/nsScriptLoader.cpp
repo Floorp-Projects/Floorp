@@ -31,7 +31,7 @@
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
 #include "nsIXPConnect.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsThreadUtils.h"
 #include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"

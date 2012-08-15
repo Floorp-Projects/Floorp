@@ -78,7 +78,7 @@ function runNextTest() {
         onHidden.call(nextTest, this);
         if (!onHiddenArray.length)
           goNext();
-      });
+      }.bind(this));
     }, onHiddenArray.length);
     info("[Test #" + gTestIndex + "] added listeners; panel state: " + PopupNotifications.isPanelOpen);
   }

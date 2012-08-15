@@ -15,7 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "nsServiceManagerUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGlobalWindow.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsAlgorithm.h"

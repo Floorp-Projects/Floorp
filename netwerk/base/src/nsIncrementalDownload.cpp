@@ -25,16 +25,6 @@
 #include "prio.h"
 #include "prprf.h"
 
-// Error code used internally by the incremental downloader to cancel the
-// network channel when the download is already complete.
-#define NS_ERROR_DOWNLOAD_COMPLETE \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 1)
-
-// Error code used internally by the incremental downloader to cancel the
-// network channel when the response to a range request is 200 instead of 206.
-#define NS_ERROR_DOWNLOAD_NOT_PARTIAL \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 2)
-
 // Default values used to initialize a nsIncrementalDownload object.
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
 #define DEFAULT_INTERVAL    60          // seconds

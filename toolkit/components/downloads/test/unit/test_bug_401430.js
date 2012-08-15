@@ -86,7 +86,7 @@ function run_test()
   // Don't finish until the download is finished
   do_test_pending();
 
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(4444);
 

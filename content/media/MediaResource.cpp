@@ -22,7 +22,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsHTMLMediaElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsICachingChannel.h"
 #include "nsURILoader.h"
 #include "nsIAsyncVerifyRedirectCallback.h"

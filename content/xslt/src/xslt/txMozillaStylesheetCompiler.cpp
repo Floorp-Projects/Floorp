@@ -38,7 +38,7 @@
 #include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "nsCrossSiteListenerProxy.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 

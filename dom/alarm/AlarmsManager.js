@@ -154,11 +154,9 @@ AlarmsManager.prototype = {
                               "AlarmsManager:GetAll:Return:OK", "AlarmsManager:GetAll:Return:KO"]);
 
     // Get the manifest URL if this is an installed app
-    this._manifestURL = null;
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let app = utils.getApp();
-    if (app)
-      this._manifestURL = app.manifestURL;
+    let appsService = Cc["@mozilla.org/AppsService;1"]
+                        .getService(Ci.nsIAppsService);
+    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
   },
 
   // Called from DOMRequestIpcHelper.

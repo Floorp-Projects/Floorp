@@ -1,0 +1,33 @@
+<html>
+  <head>
+     <title>Second Test Plug-in Test</title>
+
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+
+  <body onload="run()">
+    <object id="plugin" type="application/x-second-test" width=200 height=200></object>
+
+    <script class="testbody" type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      function run() {
+        var foundFirstPlugin = false;
+        var foundSecondPlugin = false;
+        for (var index in navigator.plugins) {
+          var plugin = navigator.plugins[index];
+          if (plugin.name == "Test Plug-in") foundFirstPlugin = true;
+          if (plugin.name == "Second Test Plug-in") foundSecondPlugin = true;
+        }
+        ok(foundFirstPlugin, "Should have a plugin named 'Test Plug-in'");
+        ok(foundSecondPlugin, "Should have a plugin named 'Second Test Plug-in'");
+
+        var pluginElement = document.getElementById("plugin");
+        is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
+</html>

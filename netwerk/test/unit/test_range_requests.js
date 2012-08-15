@@ -10,12 +10,17 @@
 //   3) the cached entry does not have a "no-store" Cache-Control header
 //   4) the cached entry does not have a Content-Encoding (see bug #613159)
 //   5) the request does not have a conditional-request header set by client
-//   6) nsHttpResponseHead::IsResumable() is true for the cached entry 
+//   6) nsHttpResponseHead::IsResumable() is true for the cached entry
 //
 //  The test has one handler for each case and run_tests() fires one request
 //  for each. None of the handlers should see a Range-header.
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 
@@ -225,7 +230,7 @@ function received_partial_6(request, data) {
   chan.asyncOpen(new ChannelListener(received_cleartext, null), null);
 }
 
-// Simple mechanism to keep track of tests and stop the server 
+// Simple mechanism to keep track of tests and stop the server
 var numTestsFinished = 0;
 function testFinished() {
   if (++numTestsFinished == 5)
@@ -233,7 +238,7 @@ function testFinished() {
 }
 
 function run_test() {
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.registerPathHandler("/test_2", handler_2);
   httpserver.registerPathHandler("/test_3", handler_3);
   httpserver.registerPathHandler("/test_4", handler_4);

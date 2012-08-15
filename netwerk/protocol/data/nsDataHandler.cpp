@@ -14,7 +14,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsNetCID.h"
-#include "nsNetError.h"
+#include "nsError.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 

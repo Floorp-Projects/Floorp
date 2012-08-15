@@ -45,7 +45,7 @@
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
@@ -1883,13 +1883,7 @@ nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
       }
       bool valueMatches = aValue.EqualsAsStrings(*info.mValue);
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {
-        if (OwnerDoc()->MayHaveDOMMutationObservers()) {
-          // For backward compatibility, don't fire mutation events
-          // when setting an attribute to its old value.
-          *aHasListeners = false;
-        } else {
-          return true;
-        }
+        return true;
       }
       modification = true;
     }
@@ -1920,8 +1914,8 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   nsAttrValueOrString value(aValue);
   nsAttrValue oldValue;
 
-  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
-                            oldValue, &modType, &hasListeners)) {
+  if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
+                             oldValue, &modType, &hasListeners)) {
     return NS_OK;
   }
 
@@ -1967,8 +1961,8 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   nsAttrValueOrString value(aParsedValue);
   nsAttrValue oldValue;
 
-  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
-                            oldValue, &modType, &hasListeners)) {
+  if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
+                             oldValue, &modType, &hasListeners)) {
     return NS_OK;
   }
 
@@ -2800,7 +2794,7 @@ static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
   nsCOMPtr<nsPIDOMWindow> win = aDoc->GetWindow();
-  if (win && win->IsInAppOrigin()) {
+  if (aDoc->NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED) {
     // Request is in a web app and in the same origin as the web app.
     // Don't enforce as strict security checks for web apps, the user
     // is supposed to have trust in them. However documents cross-origin

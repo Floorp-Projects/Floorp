@@ -539,6 +539,7 @@ pref("ui.dragThresholdY", 25);
 
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.async-video.enabled", true);
 
 pref("notification.feature.enabled", true);
 
@@ -608,9 +609,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
-
-// Maximum size of the sqlite3 cache during an update, in bytes
-pref("urlclassifier.updatecachemax", 4194304);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");

@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 
@@ -24,7 +29,7 @@ function finish_test(request, buffer)
 
 function run_test()
 {
-  httpServer = new nsHttpServer();
+  httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(4444);
 

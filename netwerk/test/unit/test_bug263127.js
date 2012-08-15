@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var server;
 const BUGID = "263127";
@@ -34,7 +39,7 @@ var listener = {
 
 function run_test() {
   // start server
-  server = new nsHttpServer();
+  server = new HttpServer();
   server.start(4444);
 
   // Initialize downloader

@@ -62,9 +62,6 @@ function testLeavePage() {
   let dialogsAccepted = 0;
 
   whenDialogOpened(function onDialogOpened(dialog) {
-    if (++dialogsAccepted < 3)
-      whenDialogOpened(onDialogOpened);
-
     // Leave page
     dialog.acceptDialog();
   });

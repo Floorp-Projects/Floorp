@@ -103,6 +103,7 @@ function runTest() {
   }
 
   function ctxCallbackRecieved(msg) {
+    msg = SpecialPowers.wrap(msg);
     ctxCallbackEvents++;
     if (ctxCallbackEvents === 1) {
       ok(msg.json.data === 'inner2', 'Callback function got fired correctly');

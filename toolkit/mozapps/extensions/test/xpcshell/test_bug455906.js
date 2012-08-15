@@ -11,6 +11,7 @@ Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://localhost:4444/block
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 

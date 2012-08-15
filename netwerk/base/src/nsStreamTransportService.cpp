@@ -7,7 +7,7 @@
 #include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
 #include "nsStreamUtils.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsNetCID.h"
 
 #include "nsIServiceManager.h"

@@ -456,6 +456,16 @@ uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
         return 0;
     }
 
+    if (format == LOCAL_GL_DEPTH_COMPONENT) {
+        if (type == LOCAL_GL_UNSIGNED_SHORT)
+            return 2;
+        else if (type == LOCAL_GL_UNSIGNED_INT)
+            return 4;
+    } else if (format == LOCAL_GL_DEPTH_STENCIL) {
+        if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
+            return 4;
+    }
+
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
         int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
         switch (format) {
@@ -491,6 +501,48 @@ uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
                                               uint32_t *texelSize, const char *info)
 {
+    if (IsExtensionEnabled(WEBGL_depth_texture)) {
+        if (format == LOCAL_GL_DEPTH_COMPONENT) {
+            if (jsArrayType != -1) {
+                if ((type == LOCAL_GL_UNSIGNED_SHORT && jsArrayType != js::ArrayBufferView::TYPE_UINT16) ||
+                    (type == LOCAL_GL_UNSIGNED_INT && jsArrayType != js::ArrayBufferView::TYPE_UINT32)) {
+                    ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
+                    return false;
+                }
+            }
+
+            switch(type) {
+                case LOCAL_GL_UNSIGNED_SHORT:
+                    *texelSize = 2;
+                    break;
+                case LOCAL_GL_UNSIGNED_INT:
+                    *texelSize = 4;
+                    break;
+                default:
+                    ErrorInvalidOperation("%s: invalid type 0x%x", info, type);
+                    return false;
+            }
+
+            return true;
+
+        } else if (format == LOCAL_GL_DEPTH_STENCIL) {
+            if (type != LOCAL_GL_UNSIGNED_INT_24_8_EXT) {
+                ErrorInvalidOperation("%s: invalid format 0x%x", info, format);
+                return false;
+            }
+            if (jsArrayType != -1) {
+                if (jsArrayType != js::ArrayBufferView::TYPE_UINT32) {
+                    ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
+                    return false;
+                }
+            }
+
+            *texelSize = 4;
+            return true;
+        }
+    }
+
+
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
         (IsExtensionEnabled(OES_texture_float) && type == LOCAL_GL_FLOAT))
     {

@@ -2,14 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
 //load('CSPUtils.jsm');
-Components.utils.import('resource://gre/modules/CSPUtils.jsm');
-Components.utils.import('resource://gre/modules/NetUtil.jsm');
+Cu.import('resource://gre/modules/CSPUtils.jsm');
+Cu.import('resource://gre/modules/NetUtil.jsm');
 
 // load the HTTP server
-do_load_httpd_js();
+Cu.import("resource://testing-common/httpd.js");
 
-var httpServer = new nsHttpServer();
+var httpServer = new HttpServer();
 
 const POLICY_FROM_URI = "allow 'self'; img-src *";
 const POLICY_PORT = 9000;
@@ -18,8 +23,8 @@ const POLICY_URI_RELATIVE = "/policy";
 
 //converts string to nsIURI
 function URI(uriString) {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService);
   return ioService.newURI(uriString, null, null);
 }
 

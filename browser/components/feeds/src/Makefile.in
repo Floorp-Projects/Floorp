@@ -22,12 +22,12 @@ DEFINES += \
 
 EXTRA_COMPONENTS = \
   BrowserFeeds.manifest \
+	FeedConverter.js \
+	WebContentConverter.js \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-	FeedConverter.js \
 	FeedWriter.js \
-	WebContentConverter.js \
 	$(NULL)
 
 

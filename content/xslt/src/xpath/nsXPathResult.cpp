@@ -6,7 +6,7 @@
 #include "nsXPathResult.h"
 #include "txExprResult.h"
 #include "txNodeSet.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAttribute.h"
 #include "nsDOMClassInfoID.h"

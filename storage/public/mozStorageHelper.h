@@ -10,7 +10,7 @@
 
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
-#include "mozStorage.h"
+#include "nsError.h"
 
 
 /**

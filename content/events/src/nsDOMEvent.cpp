@@ -10,7 +10,7 @@
 
 #include "IPC/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMEvent.h"
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"

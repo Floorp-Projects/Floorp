@@ -20,7 +20,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIClassInfoImpl.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "jswrapper.h"

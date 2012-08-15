@@ -6,7 +6,7 @@
 #include "nsStreamLoader.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "sampler.h"
 
 nsStreamLoader::nsStreamLoader()

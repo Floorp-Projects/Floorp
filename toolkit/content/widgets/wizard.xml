@@ -267,7 +267,7 @@
           if (this.currentPage && !this._fireEvent(this.currentPage, "pageadvanced"))
             return;
 
-          if (this.onLastPage) {
+          if (this.onLastPage && !aPageId) {
             if (this._fireEvent(this, "wizardfinish"))
               window.setTimeout(function() {window.close();}, 1);
           } else {

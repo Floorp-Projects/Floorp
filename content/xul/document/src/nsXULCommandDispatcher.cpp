@@ -31,7 +31,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMClassInfoID.h"
 

@@ -401,6 +401,7 @@
 @BINPATH@/components/nsPlacesExpiration.js
 @BINPATH@/components/PlacesProtocolHandler.js
 @BINPATH@/components/PlacesCategoriesStarter.js
+@BINPATH@/components/ColorAnalyzer.js
 @BINPATH@/components/PageThumbsProtocol.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js

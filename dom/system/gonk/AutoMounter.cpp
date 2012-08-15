@@ -235,6 +235,16 @@ public:
 
   void UpdateState();
 
+  const char *ModeStr(int32_t aMode)
+  {
+    switch (aMode) {
+      case AUTOMOUNTER_DISABLE:                 return "Disable";
+      case AUTOMOUNTER_ENABLE:                  return "Enable";
+      case AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED:  return "DisableWhenUnplugged";
+    }
+    return "??? Unknown ???";
+  }
+
   void SetMode(int32_t aMode)
   {
     if ((aMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) &&
@@ -243,9 +253,12 @@ public:
       // AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED implies "enabled until unplugged"
       aMode = AUTOMOUNTER_DISABLE;
     }
-    mMode = aMode;
-    DBG("Calling UpdateState due to mode set to %d", mMode);
-    UpdateState();
+    if (aMode != mMode) {
+      LOG("Changing mode from '%s' to '%s'", ModeStr(mMode), ModeStr(aMode));
+      mMode = aMode;
+      DBG("Calling UpdateState due to mode set to %d", mMode);
+      UpdateState();
+    }
   }
 
 private:

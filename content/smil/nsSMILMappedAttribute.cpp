@@ -6,7 +6,7 @@
 /* representation of a SMIL-animatable mapped attribute on an element */
 #include "nsSMILMappedAttribute.h"
 #include "nsAttrValue.h"
-#include "nsContentErrors.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
+#include "nsError.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
 #include "nsSMILValue.h"
 #include "nsSMILCSSValueType.h"
 #include "nsIDocument.h"

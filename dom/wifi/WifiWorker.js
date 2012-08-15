@@ -946,6 +946,12 @@ var WifiManager = (function() {
           WifiNetworkInterface.registered = true;
         }
         WifiNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+        WifiNetworkInterface.ip = null;
+        WifiNetworkInterface.netmask = null;
+        WifiNetworkInterface.broadcast = null;
+        WifiNetworkInterface.gateway = null;
+        WifiNetworkInterface.dns1 = null;
+        WifiNetworkInterface.dns2 = null;
         Services.obs.notifyObservers(WifiNetworkInterface,
                                      kNetworkInterfaceStateChangedTopic,
                                      null);
@@ -999,8 +1005,8 @@ var WifiManager = (function() {
       terminateSupplicant(function (ok) {
         manager.connectionDropped(function () {
           stopSupplicant(function (status) {
-            manager.state = "UNINITIALIZED";
             closeSupplicantConnection(function () {
+              manager.state = "UNINITIALIZED";
               disableInterface(manager.ifname, function (ok) {
                 unloadDriver(callback);
               });
@@ -1267,6 +1273,16 @@ let WifiNetworkInterface = {
   // to the Network Manager.
   dhcp: false,
 
+  ip: null,
+
+  netmask: null,
+
+  broadcast: null,
+
+  dns1: null,
+
+  dns2: null,
+
   httpProxyHost: null,
 
   httpProxyPort: null,
@@ -1404,6 +1420,7 @@ function WifiWorker() {
   }
   WifiManager.onsupplicantlost = function() {
     WifiManager.enabled = WifiManager.supplicantStarted = false;
+    WifiManager.state = "UNINITIALIZED";
     debug("Supplicant died!");
 
     // Check if we need to fire request replies first:
@@ -1415,7 +1432,9 @@ function WifiWorker() {
   }
   WifiManager.onsupplicantfailed = function() {
     WifiManager.enabled = WifiManager.supplicantStarted = false;
+    WifiManager.state = "UNINITIALIZED";
     debug("Couldn't connect to supplicant");
+
     if (self._stateRequests.length > 0)
       self._notifyAfterStateChange(false, false);
   }
@@ -1498,6 +1517,12 @@ function WifiWorker() {
 
         WifiNetworkInterface.state =
           Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+        WifiNetworkInterface.ip = null;
+        WifiNetworkInterface.netmask = null;
+        WifiNetworkInterface.broadcast = null;
+        WifiNetworkInterface.gateway = null;
+        WifiNetworkInterface.dns1 = null;
+        WifiNetworkInterface.dns2 = null;
         Services.obs.notifyObservers(WifiNetworkInterface,
                                      kNetworkInterfaceStateChangedTopic,
                                      null);
@@ -1510,6 +1535,12 @@ function WifiWorker() {
     if (this.info) {
       WifiNetworkInterface.state =
         Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+      WifiNetworkInterface.ip = this.info.ipaddr_str;
+      WifiNetworkInterface.netmask = this.info.mask_str;
+      WifiNetworkInterface.broadcast = this.info.broadcast_str;
+      WifiNetworkInterface.gateway = this.info.gateway_str;
+      WifiNetworkInterface.dns1 = this.info.dns1_str;
+      WifiNetworkInterface.dns2 = this.info.dns2_str;
       Services.obs.notifyObservers(WifiNetworkInterface,
                                    kNetworkInterfaceStateChangedTopic,
                                    null);

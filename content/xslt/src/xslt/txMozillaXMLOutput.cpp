@@ -37,7 +37,7 @@
 #include "nsContentSink.h"
 #include "nsINode.h"
 #include "nsContentCreatorFunctions.h"
-#include "txError.h"
+#include "nsError.h"
 #include "nsIFrame.h"
 
 using namespace mozilla::dom;

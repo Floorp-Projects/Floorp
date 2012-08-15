@@ -513,8 +513,6 @@ public:
 // Base class' CC participant should return NS_SUCCESS_INTERRUPTED_TRAVERSE
 // from Traverse if it wants derived classes to not traverse anything from
 // their CC participant.
-#define NS_SUCCESS_INTERRUPTED_TRAVERSE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 2)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \

@@ -20,9 +20,18 @@ namespace layers {
  */
 static const int MAX_TAP_TIME = 300;
 
+/**
+ * Amount of change in span needed to take us from the GESTURE_WAITING_PINCH
+ * state to the GESTURE_PINCH state. This is measured as a change in distance
+ * between the fingers used to compute the span ratio. Note that it is a
+ * distance, not a displacement.
+ */
+static const float PINCH_START_THRESHOLD = 35.0f;
+
 GestureEventListener::GestureEventListener(AsyncPanZoomController* aAsyncPanZoomController)
   : mAsyncPanZoomController(aAsyncPanZoomController),
     mState(GESTURE_NONE),
+    mSpanChange(0.0f),
     mLastTouchInput(MultiTouchInput::MULTITOUCH_START, 0)
 {
 }
@@ -145,6 +154,10 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       mState = GESTURE_NONE;
     }
 
+    if (!mTouches.Length()) {
+      mSpanChange = 0.0f;
+    }
+
     break;
   }
   case MultiTouchInput::MULTITOUCH_CANCEL:
@@ -172,17 +185,31 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
       float(NS_hypot(firstTouch.x - secondTouch.x,
                      firstTouch.y - secondTouch.y));
 
-    if (mState == GESTURE_NONE) {
-      PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_START,
-                                   aEvent.mTime,
-                                   focusPoint,
-                                   currentSpan,
-                                   currentSpan);
+    switch (mState) {
+    case GESTURE_NONE:
+      mPreviousSpan = currentSpan;
+      mState = GESTURE_WAITING_PINCH;
+      // Deliberately fall through. If the user pinched and took their fingers
+      // off the screen such that they still had 1 left on it, we want there to
+      // be no resistance. We should only reset |mSpanChange| once all fingers
+      // are off the screen.
+    case GESTURE_WAITING_PINCH: {
+      mSpanChange += fabsf(currentSpan - mPreviousSpan);
+      if (mSpanChange > PINCH_START_THRESHOLD) {
+        PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_START,
+                                     aEvent.mTime,
+                                     focusPoint,
+                                     currentSpan,
+                                     currentSpan);
 
-      mAsyncPanZoomController->HandleInputEvent(pinchEvent);
+        mAsyncPanZoomController->HandleInputEvent(pinchEvent);
 
-      mState = GESTURE_PINCH;
-    } else {
+        mState = GESTURE_PINCH;
+      }
+
+      break;
+    }
+    case GESTURE_PINCH: {
       PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_SCALE,
                                    aEvent.mTime,
                                    focusPoint,
@@ -190,6 +217,11 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
                                    mPreviousSpan);
 
       mAsyncPanZoomController->HandleInputEvent(pinchEvent);
+      break;
+    }
+    default:
+      // What?
+      break;
     }
 
     mPreviousSpan = currentSpan;

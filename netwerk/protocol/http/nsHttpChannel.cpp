@@ -27,7 +27,7 @@
 #include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
 #include "mozilla/TimeStamp.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsAlgorithm.h"
 #include "sampler.h"
 #include "nsIConsoleService.h"

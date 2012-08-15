@@ -1484,8 +1484,6 @@ XRE_GetBinaryPath(const char* argv0, nsIFile* *aResult)
   return mozilla::BinaryPath::GetFile(argv0, aResult);
 }
 
-#define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
-
 #ifdef XP_WIN
 #include "nsWindowsRestart.cpp"
 #include <shellapi.h>

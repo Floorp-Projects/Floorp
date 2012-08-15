@@ -4,11 +4,16 @@
 
 // This file tests the download manager backend
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
 do_get_profile();
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
 
 var downloadUtils = { };
 XPCOMUtils.defineLazyServiceGetter(downloadUtils,

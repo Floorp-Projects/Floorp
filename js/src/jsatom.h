@@ -346,7 +346,7 @@ FinishAtomState(JSRuntime *rt);
  * Atom tracing and garbage collection hooks.
  */
 extern void
-MarkAtomState(JSTracer *trc, bool markAll);
+MarkAtomState(JSTracer *trc);
 
 extern void
 SweepAtomState(JSRuntime *rt);

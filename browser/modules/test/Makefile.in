@@ -14,9 +14,10 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
                  browser_NetworkPrioritizer.js \
                  browser_TelemetryTimestamps.js \
+                 browser_SignInToWebsite.js \
                  $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 _BROWSER_FILES += \
                  browser_taskbar_preview.js \
                  $(NULL)

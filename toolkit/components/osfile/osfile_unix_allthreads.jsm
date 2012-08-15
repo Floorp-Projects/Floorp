@@ -122,5 +122,29 @@ if (typeof Components != "undefined") {
     }
   });
 
+  /**
+   * Serialize an instance of OSError to something that can be
+   * transmitted across threads (not necessarily a string).
+   */
+  OSError.toMsg = function toMsg(error) {
+    return {
+      operation: error.operation,
+      unixErrno: error.unixErrno
+    };
+  };
+
+  /**
+   * Deserialize a message back to an instance of OSError
+   */
+  OSError.fromMsg = function fromMsg(msg) {
+    return new OSError(msg.operation, msg.unixErrno);
+  };
+
   exports.OS.Shared.Unix.Error = OSError;
+
+  // Special constants that need to be defined on all platforms
+
+   Object.defineProperty(exports.OS.Shared, "POS_START", { value: exports.OS.Constants.libc.SEEK_SET });
+   Object.defineProperty(exports.OS.Shared, "POS_CURRENT", { value: exports.OS.Constants.libc.SEEK_CUR });
+   Object.defineProperty(exports.OS.Shared, "POS_END", { value: exports.OS.Constants.libc.SEEK_END });
 })(this);

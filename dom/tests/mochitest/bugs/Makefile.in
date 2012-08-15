@@ -129,6 +129,7 @@ MOCHITEST_FILES	= \
 		worker_bug743615.js \
 		test_bug750051.html \
 		test_bug755320.html \
+		test_bug777628.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

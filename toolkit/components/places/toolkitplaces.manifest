@@ -18,3 +18,7 @@ component {803938d5-e26d-4453-bf46-ad4b26e41114} PlacesCategoriesStarter.js
 contract @mozilla.org/places/categoriesStarter;1 {803938d5-e26d-4453-bf46-ad4b26e41114}
 category idle-daily PlacesCategoriesStarter @mozilla.org/places/categoriesStarter;1
 category bookmark-observers PlacesCategoriesStarter @mozilla.org/places/categoriesStarter;1
+
+# ColorAnalyzer.js
+component {d056186c-28a0-494e-aacc-9e433772b143} ColorAnalyzer.js
+contract @mozilla.org/places/colorAnalyzer;1 {d056186c-28a0-494e-aacc-9e433772b143}

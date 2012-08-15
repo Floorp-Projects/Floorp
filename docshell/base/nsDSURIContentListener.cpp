@@ -14,7 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
 

@@ -64,7 +64,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     {
       StatStorageResponse r = aValue;
 
-      nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(r.freeBytes(), r.totalBytes());
+      nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(r.freeBytes(), r.totalBytes(), r.mountState());
       jsval result = InterfaceToJsval(mRequest->GetOwner(), domstat, &NS_GET_IID(nsIDOMDeviceStorageStat));
       mRequest->FireSuccess(result);
       break;

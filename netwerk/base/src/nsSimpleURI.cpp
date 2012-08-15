@@ -17,7 +17,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsEscape.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsIProgrammingLanguage.h"
 #include "mozilla/Util.h" // for DebugOnly
 

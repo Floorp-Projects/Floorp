@@ -38,7 +38,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 
-#include "nsPluginError.h"
+#include "nsError.h"
 
 // Util headers
 #include "prenv.h"
@@ -540,7 +540,7 @@ IsPluginEnabledForType(const nsCString& aMIMEType)
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
@@ -605,10 +605,13 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
 
 nsresult
 nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
-                                   nsIContent* /*aParent*/,
-                                   nsIContent* /*aBindingParent*/,
-                                   bool /*aCompileEventHandlers*/)
+                                   nsIContent* aParent,
+                                   nsIContent* aBindingParent,
+                                   bool aCompileEventHandlers)
 {
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
+                                    aCompileEventHandlers);
+
   if (aDocument) {
     return aDocument->AddPlugin(this);
   }
@@ -616,8 +619,10 @@ nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
+nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
+
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
   MOZ_ASSERT(thisContent);
@@ -635,7 +640,8 @@ nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
     if (appShell) {
       appShell->RunInStableState(event);
     }
-  } else {
+  } else if (mType != eType_Image) {
+    // nsImageLoadingContent handles the image case.
     // Reset state and clear pending events
     /// XXX(johns): The implementation for GenericFrame notes that ideally we
     ///             would keep the docshell around, but trash the frameloader
@@ -720,7 +726,7 @@ nsObjectLoadingContent::InstantiatePluginInstance()
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   // If you add early return(s), be sure to balance this call to
