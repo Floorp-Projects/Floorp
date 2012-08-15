@@ -39,7 +39,7 @@ interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(5fc61d7b-a303-4f34-adfe-b7828675ba45)]
+[scriptable, uuid(f7222baa-7c4b-4079-a9e0-db13cf797f58)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -215,6 +215,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
+   * @param aPressure touch input pressure: 0.0 -> 1.0
+   * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
+   *        defaults to mouse input.
    */
   void sendMouseEvent(in AString aType,
                       in float aX,
@@ -222,7 +225,9 @@ interface nsIDOMWindowUtils : nsISupports {
                       in long aButton,
                       in long aClickCount,
                       in long aModifiers,
-                      [optional] in boolean aIgnoreRootScrollFrame);
+                      [optional] in boolean aIgnoreRootScrollFrame,
+                      [optional] in float aPressure,
+                      [optional] in unsigned short aInputSourceArg);
 
   /** Synthesize a touch event. The event types supported are:
    *    touchstart, touchend, touchmove, and touchcancel
@@ -272,7 +277,9 @@ interface nsIDOMWindowUtils : nsISupports {
                               in long aButton,
                               in long aClickCount,
                               in long aModifiers,
-                              [optional] in boolean aIgnoreRootScrollFrame);
+                              [optional] in boolean aIgnoreRootScrollFrame,
+                              [optional] in float aPressure,
+                              [optional] in unsigned short aInputSourceArg);
 
   /** Synthesize a wheel event for a window. The event types supported is only
    *  wheel.

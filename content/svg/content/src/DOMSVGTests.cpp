@@ -5,7 +5,7 @@
 
 #include "DOMSVGTests.h"
 #include "DOMSVGStringList.h"
-#include "nsContentErrors.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
+#include "nsError.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
 #include "nsSVGFeatures.h"
 #include "nsSVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"

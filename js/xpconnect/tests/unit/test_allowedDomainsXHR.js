@@ -1,14 +1,14 @@
 
-do_load_httpd_js();
+var cu = Components.utils;
+cu.import("resource://testing-common/httpd.js");
 
-var httpserver = new nsHttpServer();
+var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "<?xml version='1.0' ?><root>0123456789</root>";
 
-var cu = Components.utils;
-var sb = cu.Sandbox(["http://www.example.com", 
-	             "http://localhost:4444/simple"],
-	             {wantXHRConstructor: true});
+var sb = cu.Sandbox(["http://www.example.com",
+                     "http://localhost:4444/simple"],
+                     {wantXHRConstructor: true});
 
 function createXHR(async)
 {
@@ -16,7 +16,7 @@ function createXHR(async)
   xhr.open("GET", "http://localhost:4444/simple", async);
   return xhr;
 }
- 
+
 function checkResults(xhr)
 {
   if (xhr.readyState != 4)

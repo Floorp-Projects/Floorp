@@ -6,7 +6,7 @@
 #ifndef TRANSFRMX_EXPANDEDNAMEMAP_H
 #define TRANSFRMX_EXPANDEDNAMEMAP_H
 
-#include "txError.h"
+#include "nsError.h"
 #include "txXMLUtils.h"
 #include "nsTArray.h"
 

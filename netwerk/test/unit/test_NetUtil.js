@@ -8,7 +8,12 @@
  * This file tests the methods on NetUtil.jsm.
  */
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -189,7 +194,7 @@ function test_asyncFetch_with_nsIChannel()
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
-  let server = new nsHttpServer();
+  let server = new HttpServer();
   server.registerPathHandler("/test", function(aRequest, aResponse) {
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -223,7 +228,7 @@ function test_asyncFetch_with_nsIURI()
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
-  let server = new nsHttpServer();
+  let server = new HttpServer();
   server.registerPathHandler("/test", function(aRequest, aResponse) {
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -256,7 +261,7 @@ function test_asyncFetch_with_string()
   const TEST_DATA = "this is a test string";
 
   // Start the http server, and register our handler.
-  let server = new nsHttpServer();
+  let server = new HttpServer();
   server.registerPathHandler("/test", function(aRequest, aResponse) {
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.setHeader("Content-Type", "text/plain", false);

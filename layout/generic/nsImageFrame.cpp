@@ -60,7 +60,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsEventStates.h"
-#include "nsLayoutErrors.h"
+#include "nsError.h"
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 

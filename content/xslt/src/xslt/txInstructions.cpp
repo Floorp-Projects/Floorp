@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txInstructions.h"
-#include "txError.h"
+#include "nsError.h"
 #include "txExpr.h"
 #include "txStylesheet.h"
 #include "txNodeSetContext.h"

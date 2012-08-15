@@ -1,6 +1,11 @@
 // Test the plaintext-or-binary sniffer
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 // List of Content-Type headers to test.  For each header we have an array.
 // The first element in the array is the Content-Type header string.  The
@@ -179,15 +184,15 @@ function run_test() {
   if ("@mozilla.org/windows-registry-key;1" in Cc) {
     return;
   }
-  
-  httpserv = new nsHttpServer();
+
+  httpserv = new HttpServer();
 
   for (i = 0; i < contentTypeHeaderList.length; ++i) {
     for (j = 0; j < bodyList.length; ++j) {
       httpserv.registerPathHandler("/" + i + "/" + j, makeHandler(i, j));
     }
   }
-  
+
   httpserv.start(4444);
 
   doTest(0, 0);
