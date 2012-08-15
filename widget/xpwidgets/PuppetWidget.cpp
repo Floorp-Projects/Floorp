@@ -182,11 +182,8 @@ PuppetWidget::Resize(PRInt32 aWidth,
     InvalidateRegion(this, dirty);
   }
 
-  // XXXndeakin this isn't the right widget listener to use. It should use
-  // the view wrapper pointer but that won't compile. This will be fixed up
-  // in a later patch.
-  if (!oldBounds.IsEqualEdges(mBounds) && mWidgetListener) {
-    mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
+  if (!oldBounds.IsEqualEdges(mBounds) && mAttachedWidgetListener) {
+    mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
 
   return NS_OK;
@@ -250,7 +247,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
 
-  NS_ABORT_IF_FALSE(mViewWrapperPtr, "No listener!");
+  NS_ABORT_IF_FALSE(mAttachedWidgetListener, "No listener!");
 
   if (event->message == NS_COMPOSITION_START) {
     mIMEComposing = true;
@@ -273,7 +270,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
     break;
   }
 
-  aStatus = mViewWrapperPtr->HandleEvent(event, mUseAttachedEvents);
+  aStatus = mAttachedWidgetListener->HandleEvent(event, mUseAttachedEvents);
 
   if (event->message == NS_COMPOSITION_END) {
     mIMEComposing = false;
@@ -482,7 +479,7 @@ PuppetWidget::Paint()
 {
   NS_ABORT_IF_FALSE(!mDirtyRegion.IsEmpty(), "paint event logic messed up");
 
-  if (!mWidgetListener)
+  if (!mAttachedWidgetListener)
     return NS_OK;
 
   nsIntRegion region = mDirtyRegion;
@@ -498,19 +495,19 @@ PuppetWidget::Paint()
 #endif
 
     if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
-      mWidgetListener->PaintWindow(this, region, false, true);
+      mAttachedWidgetListener->PaintWindow(this, region, false, true);
     } else {
       nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BUFFER_NONE);
-      mWidgetListener->PaintWindow(this, region, false, true);
+      mAttachedWidgetListener->PaintWindow(this, region, false, true);
       mTabChild->NotifyPainted();
     }
   }
 
-  mWidgetListener->DidPaintWindow();
+  mAttachedWidgetListener->DidPaintWindow();
 
   return NS_OK;
 }

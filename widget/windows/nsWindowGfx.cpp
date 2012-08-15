@@ -235,7 +235,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     return true;
   }
 
-  nsIWidgetListener* listener = mViewWrapperPtr ? mViewWrapperPtr : mWidgetListener;
+  nsIWidgetListener* listener = mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
   if (listener) {
     listener->WillPaintWindow(this, true);
   }
