@@ -393,8 +393,7 @@ function shutdownManager() {
   }, "addon-repository-shutdown", false);
 
   obs.notifyObservers(null, "quit-application-granted", null);
-  let scope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
-  scope.AddonManagerInternal.shutdown();
+  gInternalManager.observe(null, "xpcom-shutdown", null);
   gInternalManager = null;
 
   AddonRepository.shutdown();
@@ -417,7 +416,7 @@ function shutdownManager() {
 
   // Force the XPIProvider provider to reload to better
   // simulate real-world usage.
-  scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
+  let scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
   AddonManagerPrivate.unregisterProvider(scope.XPIProvider);
   Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
 }

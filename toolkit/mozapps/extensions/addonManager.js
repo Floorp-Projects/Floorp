@@ -54,7 +54,12 @@ amManager.prototype = {
 
     switch (aTopic) {
     case "addons-startup":
+      os.addObserver(this, "xpcom-shutdown", false);
       AddonManagerPrivate.startup();
+      break;
+    case "xpcom-shutdown":
+      os.removeObserver(this, "xpcom-shutdown");
+      AddonManagerPrivate.shutdown();
       break;
     }
   },
