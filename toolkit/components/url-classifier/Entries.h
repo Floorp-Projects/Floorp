@@ -271,28 +271,6 @@ public:
   }
 };
 
-template<>
-class EntryCompare<SubPrefix> {
-public:
-  typedef SubPrefix elem_type;
-  static int Compare(const void* e1, const void* e2, void* data) {
-    const elem_type* a = static_cast<const elem_type*>(e1);
-    const elem_type* b = static_cast<const elem_type*>(e2);
-    return a->Compare(*b);
-  }
-};
-
-template<>
-class EntryCompare<SubComplete> {
-public:
-  typedef SubComplete elem_type;
-  static int Compare(const void* e1, const void* e2, void* data) {
-    const elem_type *a = static_cast<const elem_type*>(e1);
-    const elem_type *b = static_cast<const elem_type*>(e2);
-    return a->Compare(*b);
-  }
-};
-
 /**
  * Sort an array of store entries.  nsTArray::Sort uses Equal/LessThan
  * to sort, this does a single Compare so it's a bit quicker over the
