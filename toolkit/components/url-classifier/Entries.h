@@ -128,19 +128,25 @@ struct SafebrowsingHash
   }
 #endif
   PRUint32 ToUint32() const {
-    PRUint32 res = 0;
-    memcpy(&res, buf, NS_MIN<size_t>(4, S));
-    return res;
+      return *((uint32*)buf);
   }
   void FromUint32(PRUint32 aHash) {
-    memcpy(buf, &aHash, NS_MIN<size_t>(4, S));
+      *((uint32*)buf) = aHash;
   }
 };
 
 class PrefixComparator {
 public:
   static int Compare(const PRUint8* a, const PRUint8* b) {
-    return *((uint32*)a) - *((uint32*)b);
+      uint32 first = *((uint32*)a);
+      uint32 second = *((uint32*)b);
+      if (first > second) {
+          return 1;
+      } else if (first == second) {
+          return 0;
+      } else {
+          return -1;
+      }
   }
 };
 typedef SafebrowsingHash<PREFIX_SIZE, PrefixComparator> Prefix;
