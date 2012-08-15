@@ -8,12 +8,11 @@ var target = 0;
 
 function startTest() {
   if (completed)
-    return false;
+    return;
   target = v.duration / 2;
   v.currentTime = target;
   v.currentTime = target;
   v._seekTarget = target;
-  return false;
 }
 
 function startSeeking() {
@@ -28,7 +27,7 @@ function startSeeking() {
 
 function seekEnded() {
   if (completed)
-    return false;
+    return;
 
   if (v.currentTime > 0) {
     ok(v.currentTime > target - 0.1 && v.currentTime < target + 0.1,
@@ -41,8 +40,6 @@ function seekEnded() {
     completed = true;
     finish();
   }
-
-  return false;
 }
 
 v.addEventListener("loadedmetadata", startTest, false);
