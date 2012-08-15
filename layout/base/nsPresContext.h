@@ -1227,13 +1227,13 @@ public:
    * Callers must call UnregisterPluginForGeometryUpdates before
    * the aPlugin frame is destroyed.
    */
-  void RegisterPluginForGeometryUpdates(nsIContent* aPlugin);
+  void RegisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
   /**
    * Stops a plugin receiving geometry updates (position and clip
    * region). If the plugin was not already registered, this does
    * nothing.
    */
-  void UnregisterPluginForGeometryUpdates(nsIContent* aPlugin);
+  void UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
 
   /**
    * Iterate through all plugins that are registered for geometry updates
@@ -1337,7 +1337,7 @@ protected:
 
   nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
   nsCOMPtr<nsITimer> mUpdatePluginGeometryTimer;
-  nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
+  nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
   // use as the root of the subtree to search for plugin updates, or
   // null to use the root frame of this prescontext

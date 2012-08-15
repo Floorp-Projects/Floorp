@@ -14,7 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 # in the list below, we make sure that the tests that require focus
 # run before test_plugin_clipping, which can steal focus for its window.
 MOCHITEST_FILES = \
-  test_contained_plugin_transplant.html \
   bug344830_testembed.svg \
   plugin_clipping_helper.xhtml \
   plugin_clipping_helper2.xhtml \
