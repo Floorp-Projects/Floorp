@@ -577,7 +577,7 @@ class ProfileEntry
     const char * volatile string; // Descriptive string of this entry
     void * volatile sp;           // Relevant stack pointer for the entry
     JSScript * volatile script_;  // if js(), non-null script which is running
-    uint32_t volatile idx;        // if js(), idx of pc, otherwise line number
+    int32_t volatile idx;         // if js(), idx of pc, otherwise line number
 
   public:
     /*
@@ -610,6 +610,13 @@ class ProfileEntry
     static size_t offsetOfStackAddress() { return offsetof(ProfileEntry, sp); }
     static size_t offsetOfPCIdx() { return offsetof(ProfileEntry, idx); }
     static size_t offsetOfScript() { return offsetof(ProfileEntry, script_); }
+
+    /*
+     * The index used in the entry can either be a line number or the offset of
+     * a pc into a script's code. To signify a NULL pc, use a -1 index. This is
+     * checked against in pc() and setPC() to set/get the right pc.
+     */
+    static const int32_t NullPCIndex = -1;
 };
 
 JS_FRIEND_API(void)
