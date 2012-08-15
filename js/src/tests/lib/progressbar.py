@@ -1,7 +1,7 @@
 # Text progress bar library, like curl or scp.
 
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 if sys.platform.startswith('win'):
     from lib.terminal_win import Terminal
@@ -13,6 +13,7 @@ class NullProgressBar(object):
     def poke(self): pass
     def finish(self, complete=True): pass
     def message(self, msg): sys.stdout.write(msg + '\n')
+    def update_granularity(self): return timedelta.max
 
 class ProgressBar(object):
     def __init__(self, limit, fmt):
@@ -32,6 +33,9 @@ class ProgressBar(object):
             self.counters_width += 1 # | (or ']' for the last one)
 
         self.barlen = 64 - self.counters_width
+
+    def update_granularity(self):
+        return timedelta(seconds=0.1)
 
     def update(self, current, data):
         # Record prior for poke.
