@@ -2113,12 +2113,15 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #endif
 
+/*
+  // XXXndeakin review note: I don't see how this would ever be called.
   if (anEvent->message == NS_DESTROY) {
 #ifdef MAC_CARBON_PLUGINS
     mInstanceOwner->CancelTimer();
 #endif
     return rv;
   }
+*/
 
   return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 }

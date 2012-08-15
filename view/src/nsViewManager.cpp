@@ -821,7 +821,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
       break;
     }
 
-    case NS_DESTROY:
     case NS_SETZLEVEL:
       /* Don't pass these events through. Passing them through
          causes performance problems on pages with lots of views/frames 

@@ -147,8 +147,6 @@ class nsHashKey;
 
 // Widget may be destroyed
 #define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
-// Widget is being destroyed
-#define NS_DESTROY                      (NS_WINDOW_START + 2)
 // Widget was resized
 #define NS_SIZE                         (NS_WINDOW_START + 3)
 // Widget size mode was changed

@@ -519,7 +519,6 @@ public:
 
 protected:
 
-  bool              ReportDestroyEvent();
   bool              ReportMoveEvent();
   bool              ReportSizeEvent();
 

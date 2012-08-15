@@ -497,9 +497,7 @@ nsWindow::OnDestroy(void)
     nsBaseWidget::Destroy();
     mParent = nullptr;
 
-    nsGUIEvent event(true, NS_DESTROY, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    NotifyWindowDestroyed();
 }
 
 bool
