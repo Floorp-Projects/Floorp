@@ -16,6 +16,7 @@
 #include "nsCSSProperty.h"
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
@@ -26,6 +27,8 @@ class nsIDocument;
 class nsIPrincipal;
 class nsPresContext;
 class nsIURI;
+template <class T>
+class nsPtrHashKey;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -354,6 +357,12 @@ public:
     return mValue.mURL;
   }
 
+  Image* GetImageStructValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
+    return mValue.mImage;
+  }
+
   const PRUnichar* GetOriginalURLValue() const
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
@@ -366,7 +375,7 @@ public:
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
-  imgIRequest* GetImageValue() const;
+  imgIRequest* GetImageValue(nsIDocument* aDocument) const;
 
   nscoord GetFixedLength(nsPresContext* aPresContext) const;
   nscoord GetPixelLength() const;
@@ -485,7 +494,7 @@ public:
 
     // Inherit operator== from nsCSSValue::URL
 
-    nsCOMPtr<imgIRequest> mRequest; // null == image load blocked or somehow failed
+    nsInterfaceHashtable<nsISupportsHashKey, imgIRequest> mRequests; 
 
     // Override AddRef and Release to not only log ourselves correctly, but
     // also so that we delete correctly without a virtual destructor

@@ -119,9 +119,8 @@ protected:
 
   virtual int GetSkipSides() const;
 
-  // Show our document viewer. The document viewer is hidden via a script
-  // runner, so that we can save and restore the presentation if we're
-  // being reframed.
+  // Hide or show our document viewer
+  void HideViewer();
   void ShowViewer();
 
   /* Obtains the frame we should use for intrinsic size information if we are

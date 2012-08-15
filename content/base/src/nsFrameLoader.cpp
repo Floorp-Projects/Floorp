@@ -288,7 +288,6 @@ NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
-  , mDetachedSubdocViews(nullptr)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
   , mDestroyCalled(false)
@@ -2376,20 +2375,5 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
 
   ShowRemoteFrame(nsIntSize(0, 0));
-}
-
-void
-nsFrameLoader::SetDetachedSubdocView(nsIView* aDetachedViews,
-                                     nsIDocument* aContainerDoc)
-{
-  mDetachedSubdocViews = aDetachedViews;
-  mContainerDocWhileDetached = aContainerDoc;
-}
-
-nsIView*
-nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
-{
-  NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);
-  return mDetachedSubdocViews;
 }
 
