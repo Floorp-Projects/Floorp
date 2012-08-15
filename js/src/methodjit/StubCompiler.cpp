@@ -18,7 +18,7 @@ StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame)
 : cx(cx),
   cc(cc),
   frame(frame),
-  masm(&cc.sps),
+  masm(&cc.sps, &cc.PC),
   generation(1),
   lastGeneration(0),
   exits(CompilerAllocPolicy(cx, cc)),
