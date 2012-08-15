@@ -200,6 +200,10 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   if (mState & stateDecodeStarted)
     proxy->OnStartDecode();
 
+  // BlockOnload
+  if (mState & stateBlockingOnload)
+    proxy->BlockOnload();
+
   if (mImage) {
     PRInt16 imageType = mImage->GetType();
     // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
@@ -483,6 +487,7 @@ imgStatusTracker::RecordStartRequest()
   mState &= ~stateDecodeStarted;
   mState &= ~stateDecodeStopped;
   mState &= ~stateRequestStopped;
+  mState &= ~stateBlockingOnload;
 
   mState |= stateRequestStarted;
 }
@@ -513,5 +518,35 @@ imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsres
   if (!aProxy->NotificationsDeferred()) {
     aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     aProxy->OnStopRequest(aLastPart);
+  }
+}
+
+void
+imgStatusTracker::RecordBlockOnload()
+{
+  MOZ_ASSERT(!(mState & stateBlockingOnload));
+  mState |= stateBlockingOnload;
+}
+
+void
+imgStatusTracker::SendBlockOnload(imgRequestProxy* aProxy)
+{
+  if (!aProxy->NotificationsDeferred()) {
+    aProxy->BlockOnload();
+  }
+}
+
+void
+imgStatusTracker::RecordUnblockOnload()
+{
+  MOZ_ASSERT(mState & stateBlockingOnload);
+  mState &= ~stateBlockingOnload;
+}
+
+void
+imgStatusTracker::SendUnblockOnload(imgRequestProxy* aProxy)
+{
+  if (!aProxy->NotificationsDeferred()) {
+    aProxy->UnblockOnload();
   }
 }

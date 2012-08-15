@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/syncSetup.css" type="text/css"?>
@@ -479,10 +479,10 @@
         </vbox>
       </deck>
   </wizardpage>
-# In terms of the wizard flow shown to the user, the 'syncOptionsConfirm'
-# page above is not the last wizard page. To prevent the wizard binding from
-# assuming that it is, we're inserting this dummy page here. This also means
-# that the wizard needs to always be closed manually via wizardFinish().
+  <!-- In terms of the wizard flow shown to the user, the 'syncOptionsConfirm'
+       page above is not the last wizard page. To prevent the wizard binding from
+       assuming that it is, we're inserting this dummy page here. This also means
+      that the wizard needs to always be closed manually via wizardFinish(). -->
   <wizardpage>
   </wizardpage>
 </wizard>

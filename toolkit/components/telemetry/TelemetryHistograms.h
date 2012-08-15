@@ -52,8 +52,11 @@ HISTOGRAM(FORGET_SKIPPABLE_MAX, 1, 10000, 50, EXPONENTIAL, "Max time spent on on
 HISTOGRAM_ENUMERATED_VALUES(GC_REASON_2, js::gcreason::NUM_TELEMETRY_REASONS, "Reason (enum value) for initiating a GC")
 HISTOGRAM_BOOLEAN(GC_IS_COMPARTMENTAL, "Is it a compartmental GC?")
 HISTOGRAM(GC_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC (ms)")
+HISTOGRAM(GC_MAX_PAUSE_MS, 1, 1000, 50, LINEAR, "Longest GC slice in a GC (ms)")
 HISTOGRAM(GC_MARK_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC mark phase (ms)")
 HISTOGRAM(GC_SWEEP_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC sweep phase (ms)")
+HISTOGRAM(GC_MARK_ROOTS_MS, 1, 200, 50, LINEAR, "Time spent marking GC roots (ms)")
+HISTOGRAM(GC_MARK_GRAY_MS, 1, 200, 50, LINEAR, "Time spent marking gray GC objects (ms)")
 HISTOGRAM(GC_SLICE_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running a JS GC slice (ms)")
 HISTOGRAM(GC_MMU_50, 1, 100, 20, LINEAR, "Minimum percentage of time spent outside GC over any 50ms window")
 HISTOGRAM_BOOLEAN(GC_RESET, "Was an incremental GC canceled?")
@@ -301,7 +304,6 @@ HISTOGRAM(PLUGIN_SHUTDOWN_MS, 1, 5000, 20, EXPONENTIAL, "Time spent shutting dow
   SQLITE_TIME_SPENT(OTHER_ ## NAME, DESC) \
   SQLITE_TIME_SPENT(PLACES_ ## NAME, DESC) \
   SQLITE_TIME_SPENT(COOKIES_ ## NAME, DESC) \
-  SQLITE_TIME_SPENT(URLCLASSIFIER_ ## NAME, DESC) \
   SQLITE_TIME_SPENT(WEBAPPS_ ## NAME, DESC)
 
 SQLITE_TIME_SPENT(OPEN, "Time spent on SQLite open() (ms)")
@@ -314,11 +316,9 @@ SQLITE_TIME_PER_FILE(SYNC, "Time spent on SQLite fsync() (ms)")
 HISTOGRAM(MOZ_SQLITE_OTHER_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_PLACES_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_COOKIES_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
-HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_WEBAPPS_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_PLACES_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_COOKIES_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
-HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_WEBAPPS_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_OTHER_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_STORAGE_ASYNC_REQUESTS_MS, 1, 32768, 20, EXPONENTIAL, "mozStorage async requests completion (ms)")
@@ -347,11 +347,15 @@ HISTOGRAM(IDLE_NOTIFY_IDLE_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners n
  * Url-Classifier telemetry
  */
 #ifdef MOZ_URL_CLASSIFIER
+HISTOGRAM(URLCLASSIFIER_LOOKUP_TIME, 1, 500, 10, EXPONENTIAL, "Time spent per dbservice lookup (ms)")
+HISTOGRAM(URLCLASSIFIER_CL_CHECK_TIME, 1, 500, 10, EXPONENTIAL, "Time spent per classifier lookup (ms)")
+HISTOGRAM(URLCLASSIFIER_CL_UPDATE_TIME, 20, 15000, 15, EXPONENTIAL, "Time spent per classifier update (ms)")
 HISTOGRAM(URLCLASSIFIER_PS_FILELOAD_TIME, 1, 1000, 10, EXPONENTIAL, "Time spent loading PrefixSet from file (ms)")
 HISTOGRAM(URLCLASSIFIER_PS_FALLOCATE_TIME, 1, 1000, 10, EXPONENTIAL, "Time spent fallocating PrefixSet (ms)")
 HISTOGRAM(URLCLASSIFIER_PS_CONSTRUCT_TIME, 1, 5000, 15, EXPONENTIAL, "Time spent constructing PrefixSet from DB (ms)")
-HISTOGRAM(URLCLASSIFIER_PS_LOOKUP_TIME, 1, 500, 10, EXPONENTIAL, "Time spent per PrefixSet lookup (ms)")
-HISTOGRAM_BOOLEAN(URLCLASSIFIER_PS_OOM, "Did UrlClassifier run out of memory during PrefixSet construction?")
+HISTOGRAM(URLCLASSIFIER_LC_PREFIXES, 1, 1500000, 15, LINEAR, "Size of the prefix cache in entries")
+HISTOGRAM(URLCLASSIFIER_LC_COMPLETIONS, 1, 200, 10, EXPONENTIAL, "Size of the completion cache in entries")
+HISTOGRAM_BOOLEAN(URLCLASSIFIER_PS_FAILURE, "Did UrlClassifier fail to construct the PrefixSet?")
 #endif
 
 /**

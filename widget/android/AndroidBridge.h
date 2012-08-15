@@ -146,13 +146,6 @@ public:
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
-    /* These are defined in mobile/android/base/GeckoAppShell.java */
-    enum {
-        SCREENSHOT_THUMBNAIL = 0,
-        SCREENSHOT_WHOLE_PAGE = 1,
-        SCREENSHOT_UPDATE = 2
-    };
-
     nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstY, PRInt32 dstX, PRInt32 dstW, PRInt32 dstH, PRInt32 bufW, PRInt32 bufH, PRInt32 tabId, PRInt32 token, jobject buffer);
 
     static void NotifyPaintedRect(float top, float left, float bottom, float right);

@@ -6,7 +6,7 @@
 #ifndef TRANSFRMX_VARIABLEMAP_H
 #define TRANSFRMX_VARIABLEMAP_H
 
-#include "txError.h"
+#include "nsError.h"
 #include "txXMLUtils.h"
 #include "txExprResult.h"
 #include "txExpandedNameMap.h"

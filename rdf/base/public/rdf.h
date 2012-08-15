@@ -40,33 +40,6 @@ static const char kURI##prefix##_##name[] = ns #name
 #define NC_NAMESPACE_URI   "http://home.netscape.com/NC-rdf#"
 #define DEVMO_NAMESPACE_URI_PREFIX "http://developer.mozilla.org/rdf/vocabulary/"
 
-/**
- * @name Standard RDF error codes
- */
-
-/*@{*/
-
-/* Returned from nsIRDFCursor::Advance() if the cursor has no more
-   elements to enuemrate */
-#define NS_RDF_CURSOR_EMPTY       NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 1)
-
-/* Returned from nsIRDFDataSource::GetSource() and GetTarget() if the source/target
-   has no value */
-#define NS_RDF_NO_VALUE           NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 2)
-
-/* Returned from nsIRDFDataSource::Assert() and Unassert() if the assertion (or
-   unassertion was accepted by the datasource*/
-#define NS_RDF_ASSERTION_ACCEPTED NS_OK
-
-/* Returned from nsIRDFDataSource::Assert() and Unassert() if the assertion (or
-   unassertion) was rejected by the datasource; i.e., the datasource was not
-   willing to record the statement. */
-#define NS_RDF_ASSERTION_REJECTED NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 3)
-
-/* Return this from rdfITripleVisitor to stop cycling */
-#define NS_RDF_STOP_VISIT         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 4)
-
-
 
 /* ContractID prefixes for RDF DLL registration. */
 #define NS_RDF_CONTRACTID                           "@mozilla.org/rdf"

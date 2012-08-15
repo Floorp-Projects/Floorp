@@ -1013,18 +1013,22 @@ struct CompilerOutput
     JSScript *script;
     bool constructing : 1;
     bool barriers : 1;
-    uint32_t chunkIndex:30;
+    bool pendingRecompilation : 1;
+    uint32_t chunkIndex:29;
 
-#ifdef JS_METHODJIT
-    js::mjit::JITScript *mjit;       /* Information attached by JM */
-#endif
+    CompilerOutput();
+
+    bool isJM() const { return true; }
+
+    mjit::JITScript * mjit() const;
 
     bool isValid() const;
 
+    void setPendingRecompilation() {
+        pendingRecompilation = true;
+    }
     void invalidate() {
-#ifdef JS_METHODJIT
-        mjit = NULL;
-#endif
+        script = NULL;
     }
 };
 
@@ -1033,9 +1037,15 @@ struct RecompileInfo
     static const uint32_t NoCompilerRunning = uint32_t(-1);
     uint32_t outputIndex;
 
+    RecompileInfo()
+      : outputIndex(NoCompilerRunning)
+    {
+    }
+
     bool operator == (const RecompileInfo &o) const {
         return outputIndex == o.outputIndex;
     }
+    CompilerOutput *compilerOutput(TypeCompartment &types) const;
     CompilerOutput *compilerOutput(JSContext *cx) const;
 };
 
@@ -1077,7 +1087,7 @@ struct TypeCompartment
     Vector<CompilerOutput> *constrainedOutputs;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<CompilerOutput> *pendingRecompiles;
+    Vector<RecompileInfo> *pendingRecompiles;
 
     /*
      * Number of recompilation events and inline frame expansions that have
@@ -1148,7 +1158,6 @@ struct TypeCompartment
     void setPendingNukeTypesNoReport();
 
     /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, CompilerOutput &co);
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
     void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 

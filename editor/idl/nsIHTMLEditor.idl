@@ -13,9 +13,6 @@ interface nsISelection;
 interface nsIContentFilter;
 
 %{C++
-#define NS_EDITOR_ELEMENT_NOT_FOUND \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
-
 namespace mozilla {
 namespace dom {
 class Element;

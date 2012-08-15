@@ -8,7 +8,7 @@
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
 #include "string.h"

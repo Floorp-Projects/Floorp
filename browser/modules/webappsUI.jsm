@@ -113,7 +113,7 @@ let webappsUI = {
         let app = WebappsInstaller.install(aData);
         if (app) {
           let localDir = null;
-          if (app.appcacheDefined && app.appProfile) {
+          if (app.appProfile) {
             localDir = app.appProfile.localDir;
           }
 

@@ -8,7 +8,7 @@
 #include "nsServerSocket.h"
 #include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsNetCID.h"
 #include "prnetdb.h"
 #include "prio.h"

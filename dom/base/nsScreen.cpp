@@ -353,29 +353,46 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
     return NS_OK;
   }
 
-  if (!GetOwner()) {
-    return NS_OK;
-  }
+  // Determine whether we can lock the screen orientation.
+  bool canLockOrientation = false;
+  do {
+    nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+    if (!owner) {
+      break;
+    }
 
-  // Chrome code and apps can always lock the screen orientation.
-  if (!IsChromeType(GetOwner()->GetDocShell()) &&
-      !static_cast<nsGlobalWindow*>(GetOwner())->IsPartOfApp()) {
-    nsCOMPtr<nsIDOMDocument> doc;
-    GetOwner()->GetDocument(getter_AddRefs(doc));
+    // Chrome can always lock the screen orientation.
+    if (IsChromeType(owner->GetDocShell())) {
+      canLockOrientation = true;
+      break;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    owner->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     if (!doc) {
-      return NS_OK;
+      break;
     }
 
-    // Non-apps content can lock orientation only if fullscreen.
+    // Apps can always lock the screen orientation.
+    if (doc->NodePrincipal()->GetAppStatus() >=
+          nsIPrincipal::APP_STATUS_INSTALLED) {
+      canLockOrientation = true;
+      break;
+    }
+
+    // Other content must be full-screen in order to lock orientation.
     bool fullscreen;
-    doc->GetMozFullScreen(&fullscreen);
+    domDoc->GetMozFullScreen(&fullscreen);
     if (!fullscreen) {
-      return NS_OK;
+      break;
     }
 
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+    // If we're full-screen, register a listener so we learn when we leave
+    // full-screen.
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(owner);
     if (!target) {
-      return NS_OK;
+      break;
     }
 
     if (!mEventListener) {
@@ -383,10 +400,14 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
     }
 
     target->AddSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
-                                   mEventListener, true);
+                                   mEventListener, /* useCapture = */ true);
+    canLockOrientation = true;
+  } while(0);
+
+  if (canLockOrientation) {
+    *aReturn = hal::LockScreenOrientation(orientation);
   }
 
-  *aReturn = hal::LockScreenOrientation(orientation);
   return NS_OK;
 }
 

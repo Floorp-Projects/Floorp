@@ -13,7 +13,7 @@ const PERMA_REDIR_PATH = "/permaredir";
 const TEMP_REDIR_PATH = "/tempredir";
 const FOUND_PATH = "/found";
 
-const HTTPSVR = new nsHttpServer();
+const HTTPSVR = new HttpServer();
 const PORT = 4444;
 HTTPSVR.registerPathHandler(PERMA_REDIR_PATH, permaRedirHandler);
 HTTPSVR.registerPathHandler(TEMP_REDIR_PATH, tempRedirHandler);

@@ -152,13 +152,3 @@ interface nsIAppStartup : nsISupports
      */
     attribute boolean interrupted;
 };
-
-%{C++
-/**
- * This success code may be returned by nsIAppStartup::Run to indicate that the
- * application should be restarted.  This condition corresponds to the case in
- * which nsIAppStartup::Quit was called with the eRestart flag.
- */
-#define NS_SUCCESS_RESTART_APP \
-    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
-%}

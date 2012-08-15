@@ -132,12 +132,4 @@ interface nsIAuthModule : nsISupports
  */
 #define NS_AUTH_MODULE_CONTRACTID_PREFIX \
     "@mozilla.org/network/auth-module;1?name="
-
-/**
- * This success code may be returned by nsIAuthModule::getNextToken to 
- * indicate that the authentication is finished and thus there's no need 
- * to call getNextToken again.
- */
-#define NS_SUCCESS_AUTH_FINISHED \
-    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_NETWORK, 40)
 %}

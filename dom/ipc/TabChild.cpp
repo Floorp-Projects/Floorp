@@ -810,7 +810,7 @@ TabChild::RecvMouseEvent(const nsString& aType,
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
   NS_ENSURE_TRUE(utils, true);
   utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame);
+                        aIgnoreRootScrollFrame, 0, 0);
   return true;
 }
 

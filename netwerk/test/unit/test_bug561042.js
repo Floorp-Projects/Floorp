@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 const SERVER_PORT = 8080;
 const baseURL = "http://localhost:" + SERVER_PORT + "/";
@@ -23,7 +28,7 @@ var listener = {
 };
 
 function run_test() {
-    var server = new nsHttpServer();
+    var server = new HttpServer();
     server.start(SERVER_PORT);
     server.registerPathHandler('/', function(metadata, response) {
         response.setStatusLine(metadata.httpVersion, 200, "OK");

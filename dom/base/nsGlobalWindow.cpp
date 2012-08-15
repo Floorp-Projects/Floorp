@@ -19,7 +19,7 @@
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIIdleService.h"
 
 #ifdef XP_WIN
@@ -132,7 +132,6 @@
 #include "nsComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
-#include "nsDOMError.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
@@ -671,7 +670,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
     mNotifiedIDDestroyed(false),
-    mIsApp(TriState_Unknown),
     mTimeoutInsertionPoint(nullptr),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -685,7 +683,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCleanedUp(false),
     mCallCleanUpAfterModalDialogCloses(false),
     mDialogAbuseCount(0),
-    mDialogDisabled(false)
+    mStopAbuseDialogs(false),
+    mDialogsPermanentlyDisabled(false)
 {
   nsLayoutStatics::AddRef();
 
@@ -2552,67 +2551,80 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 bool
-nsGlobalWindow::DialogOpenAttempted()
+nsGlobalWindow::DialogsAreBlocked(bool *aBeingAbused)
 {
+  *aBeingAbused = false;
+
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
-    NS_ERROR("DialogOpenAttempted() called without a top window?");
-
-    return false;
+    NS_ERROR("DialogsAreBlocked() called without a top window?");
+    return true;
   }
 
   topWindow = topWindow->GetCurrentInnerWindowInternal();
-  if (!topWindow ||
-      topWindow->mLastDialogQuitTime.IsNull() ||
+  if (!topWindow) {
+    return true;
+  }
+
+  if (topWindow->mDialogsPermanentlyDisabled) {
+    return true;
+  }
+
+  // Dialogs are blocked if the content viewer is hidden
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+
+    bool isHidden;
+    cv->GetIsHidden(&isHidden);
+    if (isHidden) {
+      return true;
+    }
+  }
+
+  *aBeingAbused = topWindow->DialogsAreBeingAbused();
+
+  return topWindow->mStopAbuseDialogs && *aBeingAbused;
+}
+
+bool
+nsGlobalWindow::DialogsAreBeingAbused()
+{
+  NS_ASSERTION(GetScriptableTop() &&
+               GetScriptableTop()->GetCurrentInnerWindowInternal() == this,
+               "DialogsAreBeingAbused called with invalid window");
+            
+  if (mLastDialogQuitTime.IsNull() ||
       nsContentUtils::CallerHasUniversalXPConnect()) {
     return false;
   }
+ 
+  TimeDuration dialogInterval(TimeStamp::Now() - mLastDialogQuitTime);
+  if (dialogInterval.ToSeconds() <
+      Preferences::GetInt("dom.successive_dialog_time_limit",
+                          DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT)) {
+    mDialogAbuseCount++;
 
-  TimeDuration dialogDuration(TimeStamp::Now() -
-                              topWindow->mLastDialogQuitTime);
-
-  if (dialogDuration.ToSeconds() <
-        Preferences::GetInt("dom.successive_dialog_time_limit",
-                            SUCCESSIVE_DIALOG_TIME_LIMIT)) {
-    topWindow->mDialogAbuseCount++;
-
-    return (topWindow->GetPopupControlState() > openAllowed ||
-            topWindow->mDialogAbuseCount > MAX_DIALOG_COUNT);
+    return GetPopupControlState() > openAllowed ||
+           mDialogAbuseCount > MAX_SUCCESSIVE_DIALOG_COUNT;
   }
 
-  topWindow->mDialogAbuseCount = 0;
+  // Reset the abuse counter
+  mDialogAbuseCount = 0;
 
   return false;
 }
 
 bool
-nsGlobalWindow::AreDialogsBlocked()
+nsGlobalWindow::ConfirmDialogIfNeeded()
 {
-  nsGlobalWindow *topWindow = GetScriptableTop();
-  if (!topWindow) {
-    NS_ASSERTION(!mDocShell, "AreDialogsBlocked() called without a top window?");
-
-    return true;
-  }
-
-  topWindow = topWindow->GetCurrentInnerWindowInternal();
-
-  return !topWindow ||
-         (topWindow->mDialogDisabled &&
-          (topWindow->GetPopupControlState() > openAllowed ||
-           topWindow->mDialogAbuseCount >= MAX_DIALOG_COUNT));
-}
-
-bool
-nsGlobalWindow::ConfirmDialogAllowed()
-{
-  FORWARD_TO_OUTER(ConfirmDialogAllowed, (), false);
+  FORWARD_TO_OUTER(ConfirmDialogIfNeeded, (), false);
 
   NS_ENSURE_TRUE(mDocShell, false);
   nsCOMPtr<nsIPromptService> promptSvc =
     do_GetService("@mozilla.org/embedcomp/prompt-service;1");
 
-  if (!DialogOpenAttempted() || !promptSvc) {
+  if (!promptSvc) {
     return true;
   }
 
@@ -2629,7 +2641,7 @@ nsGlobalWindow::ConfirmDialogAllowed()
                                      "ScriptDialogPreventTitle", title);
   promptSvc->Confirm(this, title.get(), label.get(), &disableDialog);
   if (disableDialog) {
-    PreventFurtherDialogs();
+    PreventFurtherDialogs(false);
     return false;
   }
 
@@ -2637,19 +2649,21 @@ nsGlobalWindow::ConfirmDialogAllowed()
 }
 
 void
-nsGlobalWindow::PreventFurtherDialogs()
+nsGlobalWindow::PreventFurtherDialogs(bool aPermanent)
 {
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
     NS_ERROR("PreventFurtherDialogs() called without a top window?");
-
     return;
   }
 
   topWindow = topWindow->GetCurrentInnerWindowInternal();
-
-  if (topWindow)
-    topWindow->mDialogDisabled = true;
+  if (topWindow) {
+    topWindow->mStopAbuseDialogs = true;
+    if (aPermanent) {
+      topWindow->mDialogsPermanentlyDisabled = true;
+    }
+  }
 }
 
 nsresult
@@ -4793,12 +4807,10 @@ nsGlobalWindow::Alert(const nsAString& aString)
 {
   FORWARD_TO_OUTER(Alert, (aString), NS_ERROR_NOT_INITIALIZED);
 
-  if (AreDialogsBlocked())
+  bool needToPromptForAbuse;
+  if (DialogsAreBlocked(&needToPromptForAbuse)) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  // We have to capture this now so as not to get confused with the
-  // popup state we push next
-  bool shouldEnableDisableDialog = DialogOpenAttempted();
+  }
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
@@ -4845,7 +4857,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
                              GetCurrentInnerWindowInternal()->mDoc :
                              nullptr);
-  if (shouldEnableDisableDialog) {
+  if (needToPromptForAbuse) {
     bool disallowDialog = false;
     nsXPIDLString label;
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
@@ -4854,7 +4866,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
     rv = prompt->AlertCheck(title.get(), final.get(), label.get(),
                             &disallowDialog);
     if (disallowDialog)
-      PreventFurtherDialogs();
+      PreventFurtherDialogs(false);
   } else {
     rv = prompt->Alert(title.get(), final.get());
   }
@@ -4867,12 +4879,10 @@ nsGlobalWindow::Confirm(const nsAString& aString, bool* aReturn)
 {
   FORWARD_TO_OUTER(Confirm, (aString, aReturn), NS_ERROR_NOT_INITIALIZED);
 
-  if (AreDialogsBlocked())
+  bool needToPromptForAbuse;
+  if (DialogsAreBlocked(&needToPromptForAbuse)) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  // We have to capture this now so as not to get confused with the popup state
-  // we push next
-  bool shouldEnableDisableDialog = DialogOpenAttempted();
+  }
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
@@ -4914,7 +4924,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, bool* aReturn)
   nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
                              GetCurrentInnerWindowInternal()->mDoc :
                              nullptr);
-  if (shouldEnableDisableDialog) {
+  if (needToPromptForAbuse) {
     bool disallowDialog = false;
     nsXPIDLString label;
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
@@ -4923,7 +4933,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, bool* aReturn)
     rv = prompt->ConfirmCheck(title.get(), final.get(), label.get(),
                               &disallowDialog, aReturn);
     if (disallowDialog)
-      PreventFurtherDialogs();
+      PreventFurtherDialogs(false);
   } else {
     rv = prompt->Confirm(title.get(), final.get(), aReturn);
   }
@@ -4940,12 +4950,10 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   SetDOMStringToNull(aReturn);
 
-  if (AreDialogsBlocked())
+  bool needToPromptForAbuse;
+  if (DialogsAreBlocked(&needToPromptForAbuse)) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  // We have to capture this now so as not to get confused with the popup state
-  // we push next
-  bool shouldEnableDisableDialog = DialogOpenAttempted();
+  }
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
@@ -4988,7 +4996,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   bool disallowDialog = false;
 
   nsXPIDLString label;
-  if (shouldEnableDisableDialog) {
+  if (needToPromptForAbuse) {
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                        "ScriptDialogLabel", label);
   }
@@ -5001,7 +5009,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                       &inoutValue, label.get(), &disallowDialog, &ok);
 
   if (disallowDialog) {
-    PreventFurtherDialogs();
+    PreventFurtherDialogs(false);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5259,8 +5267,14 @@ nsGlobalWindow::Print()
   if (Preferences::GetBool("dom.disable_window_print", false))
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (AreDialogsBlocked() || !ConfirmDialogAllowed())
+  bool needToPromptForAbuse;
+  if (DialogsAreBlocked(&needToPromptForAbuse)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (needToPromptForAbuse && !ConfirmDialogIfNeeded()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
   if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
@@ -5887,9 +5901,10 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       false,          // aContentModal
                       true,           // aCalledNoScript
                       false,          // aDoJSFixups
-                      nullptr, nullptr,    // No args
+                      true,           // aNavigate
+                      nullptr, nullptr,  // No args
                       GetPrincipal(),    // aCalleePrincipal
-                      nullptr,            // aJSCallerContext
+                      nullptr,           // aJSCallerContext
                       _retval);
 }
 
@@ -5902,7 +5917,8 @@ nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                       false,          // aContentModal
                       false,          // aCalledNoScript
                       true,           // aDoJSFixups
-                      nullptr, nullptr,    // No args
+                      true,           // aNavigate
+                      nullptr, nullptr,  // No args
                       GetPrincipal(),    // aCalleePrincipal
                       nsContentUtils::GetCurrentJSContext(), // aJSCallerContext
                       _retval);
@@ -5920,10 +5936,31 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       false,                   // aContentModal
                       true,                    // aCalledNoScript
                       false,                   // aDoJSFixups
-                      nullptr, aExtraArgument,     // Arguments
+                      true,                    // aNavigate
+                      nullptr, aExtraArgument,    // Arguments
                       GetPrincipal(),             // aCalleePrincipal
-                      nullptr,                     // aJSCallerContext
+                      nullptr,                    // aJSCallerContext
                       _retval);
+}
+
+// Like Open, but passes aNavigate=false.
+/* virtual */ nsresult
+nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
+                               const nsAString& aName,
+                               const nsAString& aOptions,
+                               nsIDOMWindow **_retval)
+{
+  return OpenInternal(aUrl, aName, aOptions,
+                      false,          // aDialog
+                      false,          // aContentModal
+                      true,           // aCalledNoScript
+                      false,          // aDoJSFixups
+                      false,          // aNavigate
+                      nullptr, nullptr,  // No args
+                      GetPrincipal(),    // aCalleePrincipal
+                      nullptr,           // aJSCallerContext
+                      _retval);
+
 }
 
 NS_IMETHODIMP
@@ -5966,7 +6003,8 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       false,            // aContentModal
                       false,            // aCalledNoScript
                       false,            // aDoJSFixups
-                      argvArray, nullptr,   // Arguments
+                      true,                // aNavigate
+                      argvArray, nullptr,  // Arguments
                       GetPrincipal(),      // aCalleePrincipal
                       cx,                  // aJSCallerContext
                       _retval);
@@ -7191,8 +7229,14 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  if (AreDialogsBlocked() || !ConfirmDialogAllowed())
+  bool needToPromptForAbuse;
+  if (DialogsAreBlocked(&needToPromptForAbuse)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (needToPromptForAbuse && !ConfirmDialogIfNeeded()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCOMPtr<nsIDOMWindow> dlgWin;
   nsAutoString options(NS_LITERAL_STRING("-moz-internal-modal=1,status=1"));
@@ -7209,7 +7253,8 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              true,           // aContentModal
                              true,           // aCalledNoScript
                              true,           // aDoJSFixups
-                             nullptr, aArgs,     // args
+                             true,           // aNavigate
+                             nullptr, aArgs, // args
                              GetPrincipal(),    // aCalleePrincipal
                              nullptr,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
@@ -9038,7 +9083,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetUrl(url);
   aEvent->GetStorageArea(getter_AddRefs(storageArea));
 
-  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), nsnull, nsnull);
+  NS_NewDOMStorageEvent(getter_AddRefs(domEvent), nullptr, nullptr);
   aEvent = do_QueryInterface(domEvent);
   return aEvent->InitStorageEvent(aType, canBubble, cancelable,
                                   key, oldValue, newValue,
@@ -9129,7 +9174,8 @@ nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              const nsAString& aOptions, bool aDialog,
                              bool aContentModal, bool aCalledNoScript,
-                             bool aDoJSFixups, nsIArray *argv,
+                             bool aDoJSFixups, bool aNavigate,
+                             nsIArray *argv,
                              nsISupports *aExtraArgument,
                              nsIPrincipal *aCalleePrincipal,
                              JSContext *aJSCallerContext,
@@ -9137,8 +9183,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 {
   FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
                                   aContentModal, aCalledNoScript, aDoJSFixups,
-                                  argv, aExtraArgument, aCalleePrincipal,
-                                  aJSCallerContext, aReturn),
+                                  aNavigate, argv, aExtraArgument,
+                                  aCalleePrincipal, aJSCallerContext, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
 #ifdef DEBUG
@@ -9153,6 +9199,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
 
+  // Calls to window.open from script should navigate.
+  MOZ_ASSERT(aCalledNoScript || aNavigate);
+
   *aReturn = nullptr;
 
   nsCOMPtr<nsIWebBrowserChrome> chrome;
@@ -9165,8 +9214,15 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   NS_ASSERTION(mDocShell, "Must have docshell here");
 
+  // Popups from apps are never blocked.
+  bool isApp = false;
+  if (mDoc) {
+    isApp = mDoc->NodePrincipal()->GetAppStatus() >=
+              nsIPrincipal::APP_STATUS_INSTALLED;
+  }
+
   const bool checkForPopup = !nsContentUtils::IsCallerChrome() &&
-    !IsPartOfApp() && !aDialog && !WindowExists(aName, !aCalledNoScript);
+    !isApp && !aDialog && !WindowExists(aName, !aCalledNoScript);
 
   // Note: it's very important that this be an nsXPIDLCString, since we want
   // .get() on it to return nullptr until we write stuff to it.  The window
@@ -9180,10 +9236,13 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (!aUrl.IsEmpty()) {
     AppendUTF16toUTF8(aUrl, url);
 
-    /* Check whether the URI is allowed, but not for dialogs --
-       see bug 56851. The security of this function depends on
-       window.openDialog being inaccessible from web scripts */
-    if (url.get() && !aDialog)
+    // It's safe to skip the security check below if we're not a dialog
+    // because window.openDialog is not callable from content script.  See bug
+    // 56851.
+    //
+    // If we're not navigating, we assume that whoever *does* navigate the
+    // window will do a security check of their own.
+    if (url.get() && !aDialog && aNavigate)
       rv = SecurityCheckURL(url.get());
   }
 
@@ -9224,6 +9283,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   const char *options_ptr = aOptions.IsEmpty() ? nullptr : options.get();
   const char *name_ptr = aName.IsEmpty() ? nullptr : name.get();
 
+  nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+  NS_ENSURE_STATE(pwwatch);
+
   {
     // Reset popup state while opening a window to prevent the
     // current state from being active the whole time a modal
@@ -9231,15 +9293,12 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     nsAutoPopupStatePusher popupStatePusher(openAbused, true);
 
     if (!aCalledNoScript) {
-      nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-      NS_ASSERTION(pwwatch,
-                   "Unable to open windows from JS because window watcher "
-                   "is broken");
-      NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
-        
-      rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                 aDialog, argv,
-                                 getter_AddRefs(domReturn));
+      // We asserted at the top of this function that aNavigate is true for
+      // !aCalledNoScript.
+      rv = pwwatch->OpenWindow2(this, url.get(), name_ptr, options_ptr,
+                                /* aCalledFromScript = */ true,
+                                aDialog, aNavigate, argv,
+                                getter_AddRefs(domReturn));
     } else {
       // Push a null JSContext here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
@@ -9255,9 +9314,11 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         rv = stack->Push(nullptr);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-        
-      rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
-                              aExtraArgument, getter_AddRefs(domReturn));
+
+      rv = pwwatch->OpenWindow2(this, url.get(), name_ptr, options_ptr,
+                                /* aCalledFromScript = */ false,
+                                aDialog, aNavigate, aExtraArgument,
+                                getter_AddRefs(domReturn));
 
       if (stack) {
         JSContext* cx;
@@ -10671,112 +10732,6 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOMOther +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
-}
-
-void
-nsGlobalWindow::SetIsApp(bool aValue)
-{
-  FORWARD_TO_OUTER_VOID(SetIsApp, (aValue));
-
-  // You shouldn't call SetIsApp() more than once.
-  MOZ_ASSERT(mIsApp == TriState_Unknown);
-
-  mIsApp = aValue ? TriState_True : TriState_False;
-}
-
-bool
-nsGlobalWindow::IsInAppOrigin()
-{
-  FORWARD_TO_OUTER(IsInAppOrigin, (), false);
-
-  nsIPrincipal* principal = GetPrincipal();
-  NS_ENSURE_TRUE(principal != nullptr, false);
-
-  // We go trough all window parents until we find one with |mIsApp| set to
-  // something. If none is found, we are not part of an application.
-  for (nsGlobalWindow* w = static_cast<nsGlobalWindow*>(this); w;
-      w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
-    if (w->mIsApp == TriState_True) {
-      // The window should be part of an application.
-      MOZ_ASSERT(w->mApp);
-      bool sameOrigin = false;
-      return w->mAppPrincipal &&
-             principal &&
-             NS_SUCCEEDED(principal->Equals(w->mAppPrincipal, &sameOrigin)) &&
-             sameOrigin;
-    } else if (w->mIsApp == TriState_False) {
-      return false;
-    }
-  }
-
-  return false;
-}
-
-bool
-nsGlobalWindow::IsPartOfApp()
-{
-  nsCOMPtr<mozIDOMApplication> app;
-
-  return NS_SUCCEEDED(GetApp(getter_AddRefs(app))) ? app != nullptr : false;
-}
-
-nsresult
-nsGlobalWindow::SetApp(const nsAString& aManifestURL)
-{
-  // SetIsApp(true) should be called before calling SetApp().
-  if (mIsApp != TriState_True) {
-    MOZ_ASSERT(false);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  if (!appsService) {
-    NS_ERROR("Apps Service is not available!");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<mozIDOMApplication> app;
-  appsService->GetAppByManifestURL(aManifestURL, getter_AddRefs(app));
-  if (!app) {
-    NS_WARNING("No application found with the specified manifest URL");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult res = NS_NewURI(getter_AddRefs(uri), aManifestURL);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  res = ssm->GetSimpleCodebasePrincipal(uri, getter_AddRefs(mAppPrincipal));
-  NS_ENSURE_SUCCESS(res, res);
-
-  mApp = app.forget();
-
-  return NS_OK;
-}
-
-nsresult
-nsGlobalWindow::GetApp(mozIDOMApplication** aApplication)
-{
-  *aApplication = nullptr;
-
-  FORWARD_TO_OUTER(GetApp, (aApplication), NS_OK);
-
-  // We go trough all window parents until we find one with |mIsApp| set to
-  // something. If none is found, we are not part of an application.
-  for (nsGlobalWindow* w = this; w;
-       w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
-    if (w->mIsApp == TriState_True) {
-      // The window should be part of an application.
-      MOZ_ASSERT(w->mApp);
-      NS_IF_ADDREF(*aApplication = w->mApp);
-      return NS_OK;
-    } else if (w->mIsApp == TriState_False) {
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
 }
 
 // nsGlobalChromeWindow implementation

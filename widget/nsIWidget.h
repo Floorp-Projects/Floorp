@@ -102,13 +102,6 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_STYLE_WINDOW_SHADOW_SHEET            4
 
 /**
- * nsIWidget::OnIMEFocusChange should be called during blur,
- * but other OnIME*Change methods should not be called
- */
-#define NS_SUCCESS_IME_NO_UPDATES \
-    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_WIDGET, 1)
-
-/**
  * Cursor types.
  */
 

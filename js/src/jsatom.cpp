@@ -204,27 +204,19 @@ js::FinishCommonAtoms(JSRuntime *rt)
 }
 
 void
-js::MarkAtomState(JSTracer *trc, bool markAll)
+js::MarkAtomState(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
     JSAtomState *state = &rt->atomState;
 
-    if (markAll) {
-        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            JSAtom *tmp = r.front().asPtr();
-            MarkStringRoot(trc, &tmp, "locked_atom");
-            JS_ASSERT(tmp == r.front().asPtr());
-        }
-    } else {
-        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            AtomStateEntry entry = r.front();
-            if (!entry.isTagged())
-                continue;
+    for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
+        AtomStateEntry entry = r.front();
+        if (!entry.isTagged())
+            continue;
 
-            JSAtom *tmp = entry.asPtr();
-            MarkStringRoot(trc, &tmp, "interned_atom");
-            JS_ASSERT(tmp == entry.asPtr());
-        }
+        JSAtom *tmp = entry.asPtr();
+        MarkStringRoot(trc, &tmp, "interned_atom");
+        JS_ASSERT(tmp == entry.asPtr());
     }
 }
 
@@ -243,8 +235,6 @@ js::SweepAtomState(JSRuntime *rt)
 
         if (!isMarked)
             e.removeFront();
-        else
-            e.rekeyFront(AtomHasher::Lookup(atom), AtomStateEntry(atom, entry.isTagged()));
     }
 }
 

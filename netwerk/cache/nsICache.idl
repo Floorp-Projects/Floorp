@@ -143,5 +143,5 @@ interface nsICache
 };
 
 %{C++
-#include "nsNetError.h"
+#include "nsError.h"
 %}

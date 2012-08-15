@@ -35,7 +35,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-09.js \
 	browser_dbg_propertyview-10.js \
 	browser_dbg_propertyview-edit.js \
-	browser_dbg_reload-same-script.js \
+	$(warning browser_dbg_reload-same-script.js temporarily disabled due to oranges, see bug 780198 & bug 782179) \
 	browser_dbg_panesize.js \
 	browser_dbg_panesize-inner.js \
 	browser_dbg_stack-01.js \

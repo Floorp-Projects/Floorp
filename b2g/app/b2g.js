@@ -142,6 +142,10 @@ pref("browser.xul.error_pages.enabled", true);
 // disable color management
 pref("gfx.color_management.mode", 0);
 
+//prefer Azure/Cairo canvas
+pref("gfx.canvas.azure.enabled", true);
+pref("gfx.canvas.azure.backends", "cairo");
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
@@ -315,6 +319,9 @@ pref("urlclassifier.alternate_error_page", "blocked");
 // The number of random entries to send with a gethash request.
 pref("urlclassifier.gethashnoise", 4);
 
+// Randomize all UrlClassifier data with a per-client key.
+pref("urlclassifier.randomizeclient", true);
+
 // The list of tables that use the gethash request to confirm partial results.
 pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 
@@ -322,9 +329,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
-
-// Maximum size of the sqlite3 cache during an update, in bytes
-pref("urlclassifier.updatecachemax", 4194304);
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");

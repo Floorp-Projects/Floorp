@@ -94,4 +94,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/layout/base \
   -I$(topsrcdir)/xpcom/ds \
+  -I$(topsrcdir)/layout/generic \
+  -I$(topsrcdir)/layout/xul/base/src \
+  -I$(topsrcdir)/content/base/src \
   $(NULL)

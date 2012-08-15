@@ -72,7 +72,7 @@ ScrollbarActivity::CancelActivityFinishedTimer()
 {
   if (mActivityFinishedTimer) {
     mActivityFinishedTimer->Cancel();
-    mActivityFinishedTimer = nsnull;
+    mActivityFinishedTimer = nullptr;
   }
 }
 
@@ -80,9 +80,9 @@ nsIContent*
 ScrollbarActivity::GetScrollbarContent(bool aVertical)
 {
   nsIFrame* box = mScrollableFrame->GetScrollbarBox(aVertical);
-  return box ? box->GetContent() : nsnull;
+  return box ? box->GetContent() : nullptr;
 
-  return nsnull;
+  return nullptr;
 }
 
 } // namespace mozilla

@@ -6,7 +6,7 @@
 <!ENTITY % webConsoleDTD SYSTEM "chrome://browser/locale/devtools/webConsole.dtd">
 %webConsoleDTD;
 ]>
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webconsole.css"
                  type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>

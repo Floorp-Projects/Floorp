@@ -16,7 +16,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIPropertyBag2.h"
 #include "nsIWritablePropertyBag2.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsChannelProperties.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsAsyncRedirectVerifyHelper.h"

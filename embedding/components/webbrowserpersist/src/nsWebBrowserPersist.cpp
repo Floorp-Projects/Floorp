@@ -95,8 +95,6 @@ using namespace mozilla;
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
 
-#define NS_SUCCESS_DONT_FIXUP NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
-
 // Information about a DOM document
 struct DocData
 {

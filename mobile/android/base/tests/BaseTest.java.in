@@ -83,7 +83,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.setTestName(this.getClass().getName());
 
         // Set up Robotium.solo and Driver objects
-        mSolo = new Solo(getInstrumentation());
+        mSolo = new Solo(getInstrumentation(), mActivity);
         mDriver = new FennecNativeDriver(mActivity, mSolo);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
     }
@@ -106,11 +106,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public void tearDown() throws Exception {
         try {
             mAsserter.endTest();
-            mSolo.finalize();
+            mSolo.finishOpenedActivities();
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        getActivity().finish();
         super.tearDown();
     }
 

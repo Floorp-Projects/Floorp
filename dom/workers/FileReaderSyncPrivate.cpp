@@ -10,7 +10,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMFile.h"
 #include "nsCharsetAlias.h"
 #include "nsICharsetDetector.h"

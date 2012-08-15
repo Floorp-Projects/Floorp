@@ -136,13 +136,16 @@ BasicLayerManager::~BasicLayerManager()
 }
 
 void
-BasicLayerManager::SetDefaultTarget(gfxContext* aContext,
-                                    BufferMode aDoubleBuffering,
-                                    ScreenRotation aRotation)
+BasicLayerManager::SetDefaultTarget(gfxContext* aContext)
 {
   NS_ASSERTION(!InTransaction(),
                "Must set default target outside transaction");
   mDefaultTarget = aContext;
+}
+
+void
+BasicLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation)
+{
   mDoubleBuffering = aDoubleBuffering;
 }
 
@@ -966,11 +969,9 @@ BasicShadowLayerManager::GetMaxTextureSize() const
 }
 
 void
-BasicShadowLayerManager::SetDefaultTarget(gfxContext* aContext,
-                                          BufferMode aDoubleBuffering,
-                                          ScreenRotation aRotation)
+BasicShadowLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation)
 {
-  BasicLayerManager::SetDefaultTarget(aContext, aDoubleBuffering, aRotation);
+  BasicLayerManager::SetDefaultTargetConfiguration(aDoubleBuffering, aRotation);
   mTargetRotation = aRotation;
   if (mWidget) {
     mTargetBounds = mWidget->GetNaturalBounds();

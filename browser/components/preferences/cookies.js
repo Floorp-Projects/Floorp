@@ -1,7 +1,7 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const nsICookie = Components.interfaces.nsICookie;
 
@@ -572,54 +572,54 @@ var gCookiesWindow = {
   },
 
   deleteCookie: function () {
-#   // Selection Notes
-#   // - Selection always moves to *NEXT* adjacent item unless item
-#   //   is last child at a given level in which case it moves to *PREVIOUS*
-#   //   item
-#   //
-#   // Selection Cases (Somewhat Complicated)
-#   //
-#   // 1) Single cookie selected, host has single child
-#   //    v cnn.com
-#   //    //// cnn.com ///////////// goksdjf@ ////
-#   //    > atwola.com
-#   //
-#   //    Before SelectedIndex: 1   Before RowCount: 3
-#   //    After  SelectedIndex: 0   After  RowCount: 1
-#   //
-#   // 2) Host selected, host open
-#   //    v goats.com ////////////////////////////
-#   //         goats.com             sldkkfjl
-#   //         goat.scom             flksj133
-#   //    > atwola.com
-#   //
-#   //    Before SelectedIndex: 0   Before RowCount: 4
-#   //    After  SelectedIndex: 0   After  RowCount: 1
-#   //
-#   // 3) Host selected, host closed
-#   //    > goats.com ////////////////////////////
-#   //    > atwola.com
-#   //
-#   //    Before SelectedIndex: 0   Before RowCount: 2
-#   //    After  SelectedIndex: 0   After  RowCount: 1
-#   //
-#   // 4) Single cookie selected, host has many children
-#   //    v goats.com
-#   //         goats.com             sldkkfjl
-#   //    //// goats.com /////////// flksjl33 ////
-#   //    > atwola.com
-#   //
-#   //    Before SelectedIndex: 2   Before RowCount: 4
-#   //    After  SelectedIndex: 1   After  RowCount: 3
-#   //
-#   // 5) Single cookie selected, host has many children
-#   //    v goats.com
-#   //    //// goats.com /////////// flksjl33 ////
-#   //         goats.com             sldkkfjl
-#   //    > atwola.com
-#   //
-#   //    Before SelectedIndex: 1   Before RowCount: 4
-#   //    After  SelectedIndex: 1   After  RowCount: 3
+    // Selection Notes
+    // - Selection always moves to *NEXT* adjacent item unless item
+    //   is last child at a given level in which case it moves to *PREVIOUS*
+    //   item
+    //
+    // Selection Cases (Somewhat Complicated)
+    //
+    // 1) Single cookie selected, host has single child
+    //    v cnn.com
+    //    //// cnn.com ///////////// goksdjf@ ////
+    //    > atwola.com
+    //
+    //    Before SelectedIndex: 1   Before RowCount: 3
+    //    After  SelectedIndex: 0   After  RowCount: 1
+    //
+    // 2) Host selected, host open
+    //    v goats.com ////////////////////////////
+    //         goats.com             sldkkfjl
+    //         goat.scom             flksj133
+    //    > atwola.com
+    //
+    //    Before SelectedIndex: 0   Before RowCount: 4
+    //    After  SelectedIndex: 0   After  RowCount: 1
+    //
+    // 3) Host selected, host closed
+    //    > goats.com ////////////////////////////
+    //    > atwola.com
+    //
+    //    Before SelectedIndex: 0   Before RowCount: 2
+    //    After  SelectedIndex: 0   After  RowCount: 1
+    //
+    // 4) Single cookie selected, host has many children
+    //    v goats.com
+    //         goats.com             sldkkfjl
+    //    //// goats.com /////////// flksjl33 ////
+    //    > atwola.com
+    //
+    //    Before SelectedIndex: 2   Before RowCount: 4
+    //    After  SelectedIndex: 1   After  RowCount: 3
+    //
+    // 5) Single cookie selected, host has many children
+    //    v goats.com
+    //    //// goats.com /////////// flksjl33 ////
+    //         goats.com             sldkkfjl
+    //    > atwola.com
+    //
+    //    Before SelectedIndex: 1   Before RowCount: 4
+    //    After  SelectedIndex: 1   After  RowCount: 3
     var seln = this._view.selection;
     var tbo = this._tree.treeBoxObject;
 

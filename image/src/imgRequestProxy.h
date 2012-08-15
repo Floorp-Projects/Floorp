@@ -153,6 +153,10 @@ protected:
   void OnStartRequest();
   void OnStopRequest(bool aLastPart);
 
+  /* non-virtual imgIOnloadBlocker methods */
+  void BlockOnload();
+  void UnblockOnload();
+
   /* Finish up canceling ourselves */
   void DoCancel(nsresult status);
 

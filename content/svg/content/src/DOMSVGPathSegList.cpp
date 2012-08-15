@@ -6,7 +6,7 @@
 #include "nsSVGElement.h"
 #include "DOMSVGPathSegList.h"
 #include "DOMSVGPathSeg.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "SVGAnimatedPathSegList.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"

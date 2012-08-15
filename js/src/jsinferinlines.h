@@ -27,14 +27,55 @@ namespace types {
 // CompilerOutput & RecompileInfo
 /////////////////////////////////////////////////////////////////////
 
+inline
+CompilerOutput::CompilerOutput()
+  : script(NULL),
+    constructing(false),
+    barriers(false),
+    chunkIndex(false)
+{
+}
+
+inline mjit::JITScript *
+CompilerOutput::mjit() const
+{
+#ifdef JS_METHODJIT
+    JS_ASSERT(isJM() && isValid());
+    return script->getJIT(constructing, barriers);
+#else
+    return NULL;
+#endif
+}
+
 inline bool
 CompilerOutput::isValid() const
 {
+    if (!script)
+        return false;
+
+#ifdef DEBUG
+    TypeCompartment &types = script->compartment()->types;
+#endif
+
 #ifdef JS_METHODJIT
-    if (mjit != NULL && script->getJIT(constructing, barriers) == mjit)
+    if (isJM()) {
+        mjit::JITScript *jit = script->getJIT(constructing, barriers);
+        if (!jit)
+            return false;
+        mjit::JITChunk *chunk = jit->chunkDescriptor(chunkIndex).chunk;
+        if (!chunk)
+            return false;
+        JS_ASSERT(this == chunk->recompileInfo.compilerOutput(types));
         return true;
+    }
 #endif
     return false;
+}
+
+inline CompilerOutput*
+RecompileInfo::compilerOutput(TypeCompartment &types) const
+{
+    return &(*types.constrainedOutputs)[outputIndex];
 }
 
 inline CompilerOutput*
@@ -261,6 +302,14 @@ struct AutoEnterCompilation
         co.barriers = cx->compartment->needsBarrier();
         co.chunkIndex = chunkIndex;
 
+        // This flag is used to prevent adding the current compiled script in
+        // the list of compiler output which should be invalided.  This is
+        // necessary because we can run some analysis might discard the script
+        // it-self, which can happen when the monitored value does not reflect
+        // the types propagated by the type inference.
+        co.pendingRecompilation = true;
+
+        JS_ASSERT(!co.isValid());
         TypeCompartment &types = cx->compartment->types;
         if (!types.constrainedOutputs) {
             types.constrainedOutputs = cx->new_< Vector<CompilerOutput> >(cx);
@@ -282,10 +331,10 @@ struct AutoEnterCompilation
     ~AutoEnterCompilation()
     {
         CompilerOutput *co = info.compilerOutput(cx);
-#ifdef JS_METHODJIT
-        if (co->script->hasMJITInfo())
-            co->mjit = co->script->getJIT(co->constructing, co->barriers);
-#endif
+        co->pendingRecompilation = false;
+        if (!co->isValid())
+            co->invalidate();
+
         info.outputIndex = RecompileInfo::NoCompilerRunning;
     }
 };

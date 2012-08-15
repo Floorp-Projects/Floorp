@@ -48,7 +48,7 @@ function run_test()
   /**
    * 2. Start the http server that can handle resume
    */
-  let httpserv = new nsHttpServer();
+  let httpserv = new HttpServer();
   let didResumeServer = false;
   httpserv.registerPathHandler("/resume", function(meta, resp) {
     let body = data;

@@ -19,9 +19,6 @@
 
 using namespace mozilla::a11y;
 
-#define NS_OK_NO_NAME_CLAUSE_HANDLED \
-NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x24)
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 

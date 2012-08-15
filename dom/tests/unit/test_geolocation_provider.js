@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 var geolocation = null;
@@ -11,14 +16,14 @@ function terminate(succ) {
     }
 
 function successCallback(pos){ terminate(true); }
-function errorCallback(pos) { terminate(false); } 
+function errorCallback(pos) { terminate(false); }
 
 var observer = {
     QueryInterface: function(iid) {
-	if (iid.equals(Components.interfaces.nsISupports) ||
-	    iid.equals(Components.interfaces.nsIObserver))
-	    return this;
-	throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIObserver))
+        return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     observe: function(subject, topic, data) {
@@ -62,17 +67,17 @@ function run_test()
 {
     // only kill this test when shutdown is called on the provider.
     do_test_pending();
-  
-    httpserver = new nsHttpServer();
+
+    httpserver = new HttpServer();
     httpserver.registerPathHandler("/geo", geoHandler);
     httpserver.start(4444);
-  
+
     var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     prefs.setCharPref("geo.wifi.uri", "http://localhost:4444/geo");
 
     var obs = Cc["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Ci.nsIObserverService);
-    obs.addObserver(observer, "geolocation-device-events", false); 
+    obs.addObserver(observer, "geolocation-device-events", false);
 
     geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsIDOMGeoGeolocation);
     watchID = geolocation.watchPosition(successCallback, errorCallback);

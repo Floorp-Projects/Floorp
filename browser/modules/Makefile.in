@@ -14,16 +14,18 @@ include $(topsrcdir)/config/config.mk
 TEST_DIRS += test
 
 EXTRA_JS_MODULES = \
+	BrowserNewTabPreloader.jsm \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
 	NewTabUtils.jsm \
 	offlineAppCache.jsm \
+	SignInToWebsite.jsm \
 	TelemetryTimestamps.jsm \
 	Social.jsm \
 	webappsUI.jsm \
 	$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXTRA_JS_MODULES += \
 	WindowsPreviewPerTab.jsm \
 	WindowsJumpLists.jsm \

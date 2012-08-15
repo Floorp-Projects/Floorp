@@ -11,7 +11,7 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"

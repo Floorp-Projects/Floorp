@@ -7,7 +7,7 @@
 #include "DOMSVGTransform.h"
 #include "DOMSVGMatrix.h"
 #include "SVGAnimatedTransformList.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include <math.h>
 #include "nsContentUtils.h"
 

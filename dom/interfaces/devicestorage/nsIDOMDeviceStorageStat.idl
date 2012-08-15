@@ -4,9 +4,12 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(b951ec07-d5db-42fc-bf4c-4eded202f7f5)]
+[scriptable, uuid(0e22289a-469d-42c0-98dd-ae9831bd6a6d)]
 interface nsIDOMDeviceStorageStat : nsISupports
 {
   readonly attribute PRUint64 totalBytes;
   readonly attribute PRUint64 freeBytes;
+
+  // "shared", "available", "unavailable"
+  readonly attribute DOMString state;
 };

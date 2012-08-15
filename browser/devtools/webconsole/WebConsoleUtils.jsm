@@ -953,7 +953,7 @@ function JSPropertyProvider(aScope, aInputValue)
     return null;
   }
 
-  let matches = Object.keys(getMatchedProps(obj, matchProp));
+  let matches = Object.keys(getMatchedProps(obj, {matchProp:matchProp}));
 
   return {
     matchProp: matchProp,
@@ -962,51 +962,60 @@ function JSPropertyProvider(aScope, aInputValue)
 }
 
 /**
- * Get all accessible properties on this object.
+ * Get all accessible properties on this JS value.
  * Filter those properties by name.
  * Take only a certain number of those.
  *
- * @param object obj
- *        Object whose properties we want to collect.
+ * @param mixed aObj
+ *        JS value whose properties we want to collect.
  *
- * @param string matchProp
- *        Filter for properties that match this one.
- *        Defaults to the empty string (which always matches).
+ * @param object aOptions
+ *        Options that the algorithm takes.
+ *        - matchProp (string): Filter for properties that match this one.
+ *          Defaults to the empty string (which always matches).
  *
  * @return object
  *         Object whose keys are all accessible properties on the object.
  */
-function getMatchedProps(aObj, aMatchProp = "")
+function getMatchedProps(aObj, aOptions = {matchProp: ""})
 {
+  // Argument defaults.
+  aOptions.matchProp = aOptions.matchProp || "";
+
+  if (aObj == null) { return {}; }
+  try {
+    Object.getPrototypeOf(aObj);
+  } catch(e) {
+    aObj = aObj.constructor.prototype;
+  }
   let c = MAX_COMPLETIONS;
   let names = {};   // Using an Object to avoid duplicates.
-  let ownNames = Object.getOwnPropertyNames(aObj);
-  for (let i = 0; i < ownNames.length; i++) {
-    if (ownNames[i].indexOf(aMatchProp) == 0) {
-      if (names[ownNames[i]] != true) {
-        c--;
-        if (c < 0) {
-          return names;
-        }
+
+  // We need to go up the prototype chain.
+  let ownNames = null;
+  while (aObj !== null) {
+    ownNames = Object.getOwnPropertyNames(aObj);
+    for (let i = 0; i < ownNames.length; i++) {
+      // Filtering happens here.
+      // If we already have it in, no need to append it.
+      if (ownNames[i].indexOf(aOptions.matchProp) != 0 ||
+          names[ownNames[i]] == true) {
+        continue;
+      }
+      c--;
+      if (c < 0) {
+        return names;
+      }
+      // If it is an array index, we can't take it.
+      // This uses a trick: converting a string to a number yields NaN if
+      // the operation failed, and NaN is not equal to itself.
+      if (+ownNames[i] != +ownNames[i]) {
         names[ownNames[i]] = true;
       }
     }
+    aObj = Object.getPrototypeOf(aObj);
   }
 
-  // We need to recursively go up the prototype chain.
-  aObj = Object.getPrototypeOf(aObj);
-  if (aObj !== null) {
-    let parentScope = getMatchedProps(aObj, aMatchProp);
-    for (let name in parentScope) {
-      if (names[name] != true) {
-        c--;
-        if (c < 0) {
-          return names;
-        }
-        names[name] = true;
-      }
-    }
-  }
   return names;
 }
 

@@ -25,8 +25,8 @@ enum AllowOfflineRendererEnum { ALLOW_OFFLINE_RENDERER, DISALLOW_OFFLINE_RENDERE
 
 class nsCARenderer : public mozilla::RefCounted<nsCARenderer> {
 public:
-  nsCARenderer() : mCARenderer(nsnull), mFBOTexture(0), mOpenGLContext(nsnull),
-                   mCGImage(nsnull), mCGData(nsnull), mIOSurface(nsnull), mFBO(0),
+  nsCARenderer() : mCARenderer(nullptr), mFBOTexture(0), mOpenGLContext(nullptr),
+                   mCGImage(nullptr), mCGData(nullptr), mIOSurface(nullptr), mFBO(0),
                    mIOTexture(0),
                    mUnsupportedWidth(UINT32_MAX), mUnsupportedHeight(UINT32_MAX),
                    mAllowOfflineRenderer(DISALLOW_OFFLINE_RENDERER) {}
@@ -34,7 +34,7 @@ public:
   nsresult SetupRenderer(void* aCALayer, int aWidth, int aHeight,
                          AllowOfflineRendererEnum aAllowOfflineRenderer);
   nsresult Render(int aWidth, int aHeight, CGImageRef *aOutCAImage);
-  bool isInit() { return mCARenderer != nsnull; }
+  bool isInit() { return mCARenderer != nullptr; }
   /*
    * Render the CALayer to an IOSurface. If no IOSurface
    * is attached then an internal pixel buffer will be

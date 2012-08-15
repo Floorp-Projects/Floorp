@@ -6,9 +6,14 @@
  * var uri.
  */
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
 
-var server = new nsHttpServer();
+Cu.import("resource://testing-common/httpd.js");
+
+var server = new HttpServer();
 server.registerDirectory("/", do_get_file(''));
 server.registerContentType("sjs", "sjs");
 server.start(8088);

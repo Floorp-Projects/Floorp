@@ -37,7 +37,7 @@
 #include "nsSyncLoadService.h"
 #include "nsContentPolicyUtils.h"
 #include "nsTArray.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"

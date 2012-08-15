@@ -151,6 +151,12 @@ XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
 });
 #endif
 
+XPCOMUtils.defineLazyGetter(this, "gBrowserNewTabPreloader", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/BrowserNewTabPreloader.jsm", tmp);
+  return new tmp.BrowserNewTabPreloader();
+});
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -214,7 +220,7 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 */
 function pageShowEventHandlers(event) {
   // Filter out events that are not about the document load we are interested in
-  if (event.originalTarget == content.document) {
+  if (event.target == content.document) {
     charsetLoadListener(event);
     XULBrowserWindow.asyncUpdateUI();
 
@@ -1401,6 +1407,12 @@ var gBrowserInit = {
     gSyncUI.init();
 #endif
 
+    // Don't preload new tab pages when the toolbar is hidden
+    // (i.e. when the current window is a popup window).
+    if (window.toolbar.visible) {
+      gBrowserNewTabPreloader.init(window);
+    }
+
     gBrowserThumbnails.init();
     TabView.init();
 
@@ -1556,6 +1568,10 @@ var gBrowserInit = {
     FullScreen.cleanup();
 
     Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
+
+    if (!__lookupGetter__("gBrowserNewTabPreloader")) {
+      gBrowserNewTabPreloader.uninit();
+    }
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -2515,6 +2531,9 @@ let BrowserOnClick = {
     else if (/^about:blocked/.test(ownerDoc.documentURI)) {
       this.onAboutBlocked(originalTarget, ownerDoc);
     }
+    else if (/^about:neterror/.test(ownerDoc.documentURI)) {
+      this.onAboutNetError(originalTarget, ownerDoc);
+    }
     else if (/^about:home$/i.test(ownerDoc.documentURI)) {
       this.onAboutHome(originalTarget, ownerDoc);
     }
@@ -2679,6 +2698,13 @@ let BrowserOnClick = {
     // Persist the notification until the user removes so it
     // doesn't get removed on redirects.
     notification.persistence = -1;
+  },
+
+  onAboutNetError: function BrowserOnClick_onAboutNetError(aTargetElm, aOwnerDoc) {
+    let elmId = aTargetElm.getAttribute("id");
+    if (elmId != "errorTryAgain" || !/e=netOffline/.test(aOwnerDoc.documentURI))
+      return;
+    Services.io.offline = false;
   },
 
   onAboutHome: function BrowserOnClick_onAboutHome(aTargetElm, aOwnerDoc) {
@@ -4476,11 +4502,11 @@ var TabsProgressListener = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
         /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
-      aBrowser.addEventListener("click", BrowserOnClick, false);
+      aBrowser.addEventListener("click", BrowserOnClick, true);
       aBrowser.addEventListener("pagehide", function onPageHide(event) {
         if (event.target.defaultView.frameElement)
           return;
-        aBrowser.removeEventListener("click", BrowserOnClick, false);
+        aBrowser.removeEventListener("click", BrowserOnClick, true);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
       }, true);
 

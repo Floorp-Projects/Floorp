@@ -16,12 +16,17 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug399606.js \
 	browser_bug646422.js \
 	browser_bug680727.js \
+	browser_colorAnalyzer.js \
 	browser_notfound.js \
 	browser_redirect.js \
 	browser_visituri.js \
 	browser_visituri_nohistory.js \
 	browser_visituri_privatebrowsing.js \
 	browser_settitle.js \
+	colorAnalyzer/category-discover.png \
+	colorAnalyzer/dictionaryGeneric-16.png \
+	colorAnalyzer/extensionGeneric-16.png \
+	colorAnalyzer/localeGeneric.png \
 	$(NULL)
 
 # These are files that need to be loaded via the HTTP proxy server

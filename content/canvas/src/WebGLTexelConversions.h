@@ -109,6 +109,7 @@ inline size_t TexelBytesForFormat(int format) {
         case WebGLTexelConversions::RGBA5551:
         case WebGLTexelConversions::RGBA4444:
         case WebGLTexelConversions::RGB565:
+        case WebGLTexelConversions::D16:
             return 2;
         case WebGLTexelConversions::RGB8:
             return 3;
@@ -117,6 +118,8 @@ inline size_t TexelBytesForFormat(int format) {
         case WebGLTexelConversions::BGRX8:
         case WebGLTexelConversions::R32F:
         case WebGLTexelConversions::A32F:
+        case WebGLTexelConversions::D32:
+        case WebGLTexelConversions::D24S8:
             return 4;
         case WebGLTexelConversions::RA32F:
             return 8;

@@ -44,7 +44,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsINameSpaceManager.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsScriptLoader.h"
 #include "nsRuleData.h"
 

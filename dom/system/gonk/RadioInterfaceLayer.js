@@ -1765,6 +1765,16 @@ let RILNetworkInterface = {
 
   dhcp: false,
 
+  ip: null,
+
+  netmask: null,
+
+  broadcast: null,
+
+  dns1: null,
+
+  dns2: null,
+
   httpProxyHost: null,
 
   httpProxyPort: null,
@@ -1779,6 +1789,12 @@ let RILNetworkInterface = {
       this.connecting = false;
       this.cid = datacall.cid;
       this.name = datacall.ifname;
+      this.ip = datacall.ip;
+      this.netmask = datacall.netmask;
+      this.broadcast = datacall.broadcast;
+      this.gateway = datacall.gw;
+      this.dns1 = datacall.dns[0];
+      this.dns2 = datacall.dns[1];
       if (!this.registeredAsNetworkInterface) {
         let networkManager = Cc["@mozilla.org/network/manager;1"]
                                .getService(Ci.nsINetworkManager);

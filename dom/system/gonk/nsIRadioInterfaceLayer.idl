@@ -75,7 +75,7 @@ interface nsIRILVoicemailCallback : nsISupports
   void voicemailNotification(in nsIDOMMozVoicemailStatus status);
 };
 
-[scriptable, uuid(8a711703-1ee5-4675-9d9a-0b188e944cfe)]
+[scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
 interface nsIRILDataCallInfo : nsISupports
 {
   /**
@@ -86,6 +86,11 @@ interface nsIRILDataCallInfo : nsISupports
   readonly attribute AString cid;
   readonly attribute AString apn;
   readonly attribute AString ifname;
+  readonly attribute AString ip;
+  readonly attribute AString netmask;
+  readonly attribute AString broadcast;
+  readonly attribute AString gw;
+  readonly attribute jsval dns;
 };
 
 [scriptable, uuid(5bcac053-c245-46f0-bb45-d0039bfb89f5)]

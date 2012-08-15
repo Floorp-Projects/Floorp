@@ -18,7 +18,6 @@ mozFlushType.h \
 nsIContent.h \
 nsIAttribute.h \
 nsIContentIterator.h \
-nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
