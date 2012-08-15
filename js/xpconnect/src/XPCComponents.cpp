@@ -33,6 +33,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIScriptContext.h"
 #include "nsJSEnvironment.h"
+#include "nsXMLHttpRequest.h"
 
 using namespace mozilla;
 using namespace js;
@@ -2945,16 +2946,23 @@ SandboxImport(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *global = JS_GetGlobalForScopeChain(cx);
-    MOZ_ASSERT(global);
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm)
+        return false;
 
-    nsCOMPtr<nsISupports> inst;
-    nsresult rv;
-    inst = do_CreateInstance("@mozilla.org/xmlextras/xmlhttprequest;1", &rv);
+    nsIPrincipal *subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
+    if (!subjectPrincipal)
+        return false;
+
+    nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
+    nsresult rv = xhr->Init(subjectPrincipal, NULL, NULL, NULL);
     if (NS_FAILED(rv))
         return false;
 
-    rv = nsContentUtils::WrapNative(cx, global, inst, vp);
+    JSObject *global = JS_GetGlobalForScopeChain(cx);
+    MOZ_ASSERT(global);
+
+    rv = nsContentUtils::WrapNative(cx, global, xhr, vp);
     if (NS_FAILED(rv))
         return false;
 
@@ -3633,7 +3641,7 @@ AssembleSandboxMemoryReporterName(JSContext *cx, nsCString &sandboxName)
         PRInt32 lineNumber = 0;
         frame->GetFilename(getter_Copies(location));
         frame->GetLineNumber(&lineNumber);
-        
+
         sandboxName.AppendLiteral(" (from: ");
         sandboxName.Append(location);
         sandboxName.AppendLiteral(":");
@@ -4434,7 +4442,7 @@ nsXPCComponents_Utils::NukeSandbox(const JS::Value &obj, JSContext *cx)
     NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);
     JSObject *sb = UnwrapObject(wrapper);
     NS_ENSURE_TRUE(GetObjectJSClass(sb) == &SandboxClass, NS_ERROR_INVALID_ARG);
-    NukeCrossCompartmentWrappers(cx, AllCompartments(), 
+    NukeCrossCompartmentWrappers(cx, AllCompartments(),
                                  SingleCompartment(GetObjectCompartment(sb)),
                                  NukeWindowReferences);
     return NS_OK;
