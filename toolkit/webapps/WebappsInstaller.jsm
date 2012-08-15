@@ -114,8 +114,6 @@ function NativeApp(aData) {
   }
   this.shortDescription = sanitize(shortDesc);
 
-  this.appcacheDefined = (app.manifest.appcache_path != undefined);
-
   // The app registry is the Firefox profile from which the app
   // was installed.
   this.registryFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -293,9 +291,6 @@ WinNativeApp.prototype = {
    * Creates the profile to be used for this app.
    */
   _createAppProfile: function() {
-    if (!this.appcacheDefined)
-      return;
-
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
@@ -542,9 +537,6 @@ MacNativeApp.prototype = {
   },
 
   _createAppProfile: function() {
-    if (!this.appcacheDefined)
-      return;
-
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
@@ -758,9 +750,6 @@ LinuxNativeApp.prototype = {
   },
 
   _createAppProfile: function() {
-    if (!this.appcacheDefined)
-      return;
-
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
