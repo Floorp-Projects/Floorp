@@ -123,7 +123,7 @@ function starttest(){
   var bis = new BinaryInputStream();
   ok(/nsISupports/.exec(bis.toString()), "Should get the proper object out of the constructor");
   function TestConstructor() {
-    this.foo = 2;
+    SpecialPowers.wrap(this).foo = 2;
   }
   var WrappedConstructor = SpecialPowers.wrap(TestConstructor);
   is((new WrappedConstructor()).foo, 2, "JS constructors work properly when wrapped");
