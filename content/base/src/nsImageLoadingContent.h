@@ -15,6 +15,7 @@
 
 #include "imgIContainerObserver.h"
 #include "imgIDecoderObserver.h"
+#include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
@@ -27,7 +28,8 @@ class nsIDocument;
 class imgILoader;
 class nsIIOService;
 
-class nsImageLoadingContent : public nsIImageLoadingContent
+class nsImageLoadingContent : public nsIImageLoadingContent,
+                              public imgIOnloadBlocker
 {
   /* METHODS */
 public:
@@ -37,6 +39,7 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_NSIIMAGELOADINGCONTENT
+  NS_DECL_IMGIONLOADBLOCKER
 
 protected:
   /**
@@ -87,13 +90,14 @@ protected:
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
   /**
-   * helper to get the document for this content (from the nodeinfo
-   * and such).  Not named GetDocument to prevent ambiguous method
-   * names in subclasses
+   * helpers to get the document for this content (from the nodeinfo
+   * and such).  Not named GetOwnerDoc/GetCurrentDoc to prevent ambiguous
+   * method names in subclasses
    *
    * @return the document we belong to
    */
-  nsIDocument* GetOurDocument();
+  nsIDocument* GetOurOwnerDoc();
+  nsIDocument* GetOurCurrentDoc();
 
   /**
    * Helper function to get the frame associated with this content. Not named
@@ -151,6 +155,11 @@ protected:
    * default implementation returns CORS_NONE unconditionally.
    */
   virtual mozilla::CORSMode GetCORSMode();
+
+  // Subclasses are *required* to call BindToTree/UnbindFromTree.
+  void BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                  nsIContent* aBindingParent, bool aCompileEventHandlers);
+  void UnbindFromTree(bool aDeep, bool aNullParent);
 
 private:
   /**
@@ -308,6 +317,16 @@ protected:
   /* MEMBERS */
   nsCOMPtr<imgIRequest> mCurrentRequest;
   nsCOMPtr<imgIRequest> mPendingRequest;
+  PRUint32 mCurrentRequestFlags;
+  PRUint32 mPendingRequestFlags;
+
+  enum {
+    // Set if the request needs 
+    REQUEST_NEEDS_ANIMATION_RESET = 0x00000001U,
+    // Set if the request should be tracked.  This is true if the request is
+    // not tracked iff this node is not in the document.
+    REQUEST_SHOULD_BE_TRACKED = 0x00000002U
+  };
 
   // If the image was blocked or if there was an error loading, it's nice to
   // still keep track of what the URI was despite not having an imgIRequest.
@@ -349,11 +368,6 @@ private:
   bool mUserDisabled : 1;
   bool mSuppressed : 1;
 
-  /**
-   * Whether we're currently blocking document load.
-   */
-  bool mBlockingOnload : 1;
-
 protected:
   /**
    * A hack to get animations to reset, see bug 594771. On requests
@@ -366,9 +380,6 @@ protected:
   bool mNewRequestsWillNeedAnimationReset : 1;
 
 private:
-  bool mPendingRequestNeedsResetAnimation : 1;
-  bool mCurrentRequestNeedsResetAnimation : 1;
-
   /* The number of nested AutoStateChangers currently tracking our state. */
   PRUint8 mStateChangerDepth;
 

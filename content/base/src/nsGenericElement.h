@@ -36,7 +36,7 @@
 #include "nsIInlineEventHandlers.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
-
+#include "nsContentUtils.h"
 #include "nsISMILAttr.h"
 
 class nsIDOMAttr;
@@ -102,6 +102,22 @@ public:
                              const nsAttrValueOrString& aValue,
                              bool aNotify, nsAttrValue& aOldValue,
                              PRUint8* aModType, bool* aHasListeners);
+
+  bool OnlyNotifySameValueSet(PRInt32 aNamespaceID, nsIAtom* aName,
+                              nsIAtom* aPrefix,
+                              const nsAttrValueOrString& aValue,
+                              bool aNotify, nsAttrValue& aOldValue,
+                              PRUint8* aModType, bool* aHasListeners)
+  {
+    if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                              aOldValue, aModType, aHasListeners)) {
+      nsAutoScriptBlocker scriptBlocker;
+      nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
+      return true;
+    }
+    return false;
+  }
+
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify);
   virtual nsresult SetParsedAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
