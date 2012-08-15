@@ -466,18 +466,12 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
     MakeProgress();
 }
 
-#if REFTEST_B2G
-function OnDocumentLoad()
-{
-    var currentDoc = content.document;
-#else
 function OnDocumentLoad(event)
 {
     var currentDoc = content.document;
     if (event.target != currentDoc)
         // Ignore load events for subframes.
         return;
-#endif
 
     if (gClearingForAssertionCheck &&
         currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
@@ -818,7 +812,6 @@ function SendUpdateCanvasForEvent(event)
 }
 #if REFTEST_B2G
 OnInitialLoad();
-OnDocumentLoad();
 #else
 addEventListener("load", OnInitialLoad, true);
 #endif
