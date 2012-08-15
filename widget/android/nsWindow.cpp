@@ -22,6 +22,7 @@ using mozilla::unused;
 #include "nsWindow.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
+#include "nsIWidgetListener.h"
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
@@ -570,8 +571,10 @@ nsWindow::BringToFront()
     gTopLevelWindows.InsertElementAt(0, this);
 
     if (oldTop) {
-        nsGUIEvent event(true, NS_DEACTIVATE, oldTop);
-        DispatchEvent(&event);
+      nsIWidgetListener* listener = oldTop->GetWidgetListener();
+      if (listener) {
+          listener->WindowDeactivated();
+      }
     }
 
     if (Destroyed()) {
@@ -583,8 +586,9 @@ nsWindow::BringToFront()
         newTop = gTopLevelWindows[0];
     }
 
-    nsGUIEvent event(true, NS_ACTIVATE, newTop);
-    DispatchEvent(&event);
+    if (mWidgetListener) {
+        mWidgetListener->WindowActivated();
+    }
 
     // force a window resize
     nsAppShell::gAppShell->ResendLastResizeEvent(newTop);
@@ -964,11 +968,10 @@ bool
 nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 {
     mozilla::layers::RenderTraceScope trace("DrawTo", "717171");
-    if (!mIsVisible)
+    if (!mIsVisible || !mWidgetListener)
         return false;
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
 
     // Figure out if any of our children cover this widget completely
@@ -984,8 +987,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 
     // If we have no covering child, then we need to render this.
     if (coveringChildIndex == -1) {
-        nsPaintEvent event(true, NS_PAINT, this);
-        event.region = invalidRect;
+        bool painted = false;
+        nsIntRegion region = invalidRect;
 
         switch (GetLayerManager(nullptr)->GetBackendType()) {
             case mozilla::layers::LAYERS_BASIC: {
@@ -997,13 +1000,13 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-                    status = DispatchEvent(&event);
+                    painted = mWidgetListener->PaintWindow(this, region, false, false);
                 }
 
                 // XXX uhh.. we can't just ignore this because we no longer have
                 // what we needed before, but let's keep drawing the children anyway?
 #if 0
-                if (status == nsEventStatus_eIgnore)
+                if (!painted)
                     return false;
 #endif
 
@@ -1017,7 +1020,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
-                status = DispatchEvent(&event);
+                painted = mWidgetListener->PaintWindow(this, region, false, false);
                 break;
             }
 
@@ -1227,24 +1230,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 void
 nsWindow::OnSizeChanged(const gfxIntSize& aSize)
 {
-    int w = aSize.width;
-    int h = aSize.height;
+    ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width, aSize.height);
 
-    ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, w, h);
+    mBounds.width = aSize.width;
+    mBounds.height = aSize.height;
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    nsSizeEvent event(true, NS_SIZE, this);
-    InitEvent(event);
-
-    nsIntRect wsz(0, 0, w, h);
-    event.windowSize = &wsz;
-    event.mWinWidth = w;
-    event.mWinHeight = h;
-
-    mBounds.width = w;
-    mBounds.height = h;
-
-    DispatchEvent(&event);
+    if (mWidgetListener) {
+        mWidgetListener->WindowResized(this, aSize.width, aSize.height);
+    }
 }
 
 void

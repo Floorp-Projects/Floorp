@@ -85,7 +85,6 @@ public:
     // event handling code
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
-    void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
     virtual nsresult DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
     
@@ -363,7 +362,7 @@ private:
                         mIsFullyObscured : 1,
                         mRetryPointerGrab : 1;
     GtkWindow          *mTransientParent;
-    PRInt32             mSizeState;
+    nsSizeMode          mSizeState;
     PluginType          mPluginType;
 
     PRInt32             mTransparencyBitmapWidth;
