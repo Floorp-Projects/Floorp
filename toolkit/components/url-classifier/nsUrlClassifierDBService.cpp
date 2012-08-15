@@ -150,6 +150,9 @@ private:
 
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
+  nsAutoPtr<Classifier> mClassifier;
+  nsAutoPtr<ProtocolParser> mProtocolParser;
+
   // Directory where to store the SB databases.
   nsCOMPtr<nsIFile> mCacheDir;
 

@@ -182,6 +182,8 @@ Classifier::Open(nsIFile& aCacheDirectory)
     return NS_ERROR_FAILURE;
   }
 
+  RegenActiveTables();
+
   return NS_OK;
 }
 
@@ -214,6 +216,7 @@ Classifier::Reset()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTableFreshness.Clear();
+  RegenActiveTables();
 
   return NS_OK;
 }
@@ -368,6 +371,7 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
     }
   }
   aUpdates->Clear();
+  RegenActiveTables();
   LOG(("Done applying updates."));
 
 #if defined(PR_LOGGING)
@@ -406,6 +410,41 @@ Classifier::DropStores()
 }
 
 nsresult
+Classifier::RegenActiveTables()
+{
+  mActiveTablesCache.Clear();
+
+  nsTArray<nsCString> foundTables;
+  ScanStoreDir(foundTables);
+
+  for (uint32 i = 0; i < foundTables.Length(); i++) {
+    nsAutoPtr<HashStore> store(new HashStore(nsCString(foundTables[i]), mStoreDirectory));
+    if (!store)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = store->Open();
+    if (NS_FAILED(rv))
+      continue;
+
+    LookupCache *lookupCache = GetLookupCache(store->TableName());
+    if (!lookupCache) {
+      continue;
+    }
+
+    const ChunkSet &adds = store->AddChunks();
+    const ChunkSet &subs = store->SubChunks();
+
+    if (adds.Length() == 0 && subs.Length() == 0)
+      continue;
+
+    LOG(("Active table: %s", store->TableName().get()));
+    mActiveTablesCache.AppendElement(store->TableName());
+  }
+
+  return NS_OK;
+}
+
+nsresult
 Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
@@ -438,35 +477,7 @@ Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 nsresult
 Classifier::ActiveTables(nsTArray<nsCString>& aTables)
 {
-  aTables.Clear();
-
-  nsTArray<nsCString> foundTables;
-  ScanStoreDir(foundTables);
-
-  for (uint32 i = 0; i < foundTables.Length(); i++) {
-    nsAutoPtr<HashStore> store(new HashStore(nsCString(foundTables[i]), mStoreDirectory));
-    if (!store)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = store->Open();
-    if (NS_FAILED(rv))
-      continue;
-
-    LookupCache *lookupCache = GetLookupCache(store->TableName());
-    if (!lookupCache) {
-      continue;
-    }
-
-    const ChunkSet &adds = store->AddChunks();
-    const ChunkSet &subs = store->SubChunks();
-
-    if (adds.Length() == 0 && subs.Length() == 0)
-      continue;
-
-    LOG(("Active table: %s", store->TableName().get()));
-    aTables.AppendElement(store->TableName());
-  }
-
+  aTables = mActiveTablesCache;
   return NS_OK;
 }
 
