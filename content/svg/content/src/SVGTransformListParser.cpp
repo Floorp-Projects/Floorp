@@ -9,7 +9,7 @@
 #include "SVGTransformListParser.h"
 #include "SVGTransform.h"
 #include "prdtoa.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsCRT.h"
 #include "nsDOMClassInfoID.h"

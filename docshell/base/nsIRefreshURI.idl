@@ -71,14 +71,3 @@ interface nsIRefreshURI : nsISupports {
      */
    readonly attribute boolean refreshPending;
 };
-
-
-/**
- * This success code indicates that a refresh header was found and
- * successfully setup.
- */
-%{C++
-#define NS_REFRESHURI_HEADER_FOUND \
-     NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_URILOADER, \
-                               2)
-%}

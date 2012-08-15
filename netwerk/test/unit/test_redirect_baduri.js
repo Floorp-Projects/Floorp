@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 /*
  * Test whether we fail bad URIs in HTTP redirect as CORRUPTED_CONTENT.
@@ -6,7 +11,7 @@ do_load_httpd_js();
 
 var httpServer = null;
 
-var BadRedirectPath = "/BadRedirect"; 
+var BadRedirectPath = "/BadRedirect";
 var BadRedirectURI = "http://localhost:4444" + BadRedirectPath;
 
 function make_channel(url, callback, ctx) {
@@ -31,12 +36,12 @@ function checkFailed(request, buffer)
 
 function run_test()
 {
-  httpServer = new nsHttpServer();
+  httpServer = new HttpServer();
   httpServer.registerPathHandler(BadRedirectPath, BadRedirectHandler);
   httpServer.start(4444);
 
   var chan = make_channel(BadRedirectURI);
-  chan.asyncOpen(new ChannelListener(checkFailed, null, CL_EXPECT_FAILURE), 
+  chan.asyncOpen(new ChannelListener(checkFailed, null, CL_EXPECT_FAILURE),
                  null);
   do_test_pending();
 }

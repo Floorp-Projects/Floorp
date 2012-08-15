@@ -10,7 +10,12 @@
  * <copied from="test_authentication.js"/>
  */
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
@@ -216,7 +221,7 @@ var current_test = 0;
 var httpserv = null;
 
 function run_test() {
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
   httpserv.registerPathHandler("/", proxyAuthHandler);
   httpserv.identity.add("http", "somesite", 80);
   httpserv.start(4444);

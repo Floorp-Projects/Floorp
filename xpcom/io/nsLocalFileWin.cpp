@@ -57,14 +57,8 @@ using namespace mozilla;
     PR_END_MACRO
 
 // CopyFileEx only supports unbuffered I/O in Windows Vista and above
+#ifndef COPY_FILE_NO_BUFFERING
 #define COPY_FILE_NO_BUFFERING 0x00001000
-
-// _mbsstr isn't declared in w32api headers but it's there in the libs
-#ifdef __MINGW32__
-extern "C" {
-unsigned char *_mbsstr( const unsigned char *str,
-                        const unsigned char *substr );
-}
 #endif
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
@@ -209,7 +203,7 @@ private:
         SHELLEXECUTEINFOW seinfo;
         memset(&seinfo, 0, sizeof(seinfo));
         seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-        seinfo.fMask  = NULL;
+        seinfo.fMask  = 0;
         seinfo.hwnd   = NULL;
         seinfo.lpVerb = NULL;
         seinfo.lpFile = mResolvedPath.get();
@@ -275,11 +269,11 @@ private:
         return NS_OK;
     }
 
-    // Stores the path to perform the operation on
-    nsString mResolvedPath;
-
     // Stores the operation that will be performed on the thread
     AsyncLocalFileWinOperation::FileOp mOperation;
+
+    // Stores the path to perform the operation on
+    nsString mResolvedPath;
 };
 
 class nsDriveEnumerator : public nsISimpleEnumerator
@@ -545,7 +539,7 @@ IsShortcutPath(const nsAString &path)
     // i.e. "c:\foo.lnk\bar.txt" is invalid.
     NS_ABORT_IF_FALSE(!path.IsEmpty(), "don't pass an empty string");
     PRInt32 len = path.Length();
-    return (StringTail(path, 4).LowerCaseEqualsASCII(".lnk"));
+    return len >= 4 && (StringTail(path, 4).LowerCaseEqualsASCII(".lnk"));
 }
 
 //-----------------------------------------------------------------------------
@@ -815,8 +809,8 @@ CloseDir(nsDir *&d)
 // nsDirEnumerator
 //-----------------------------------------------------------------------------
 
-class nsDirEnumerator : public nsISimpleEnumerator,
-                        public nsIDirectoryEnumerator
+class nsDirEnumerator MOZ_FINAL : public nsISimpleEnumerator,
+                                  public nsIDirectoryEnumerator
 {
     public:
 
@@ -2055,7 +2049,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
             return rv;
         }
 
-        bool more;
+        bool more = false;
         while (NS_SUCCEEDED(dirEnum.HasMoreElements(&more)) && more)
         {
             nsCOMPtr<nsISupports> item;
@@ -2232,7 +2226,7 @@ nsLocalFile::Remove(bool recursive)
             if (NS_FAILED(rv))
                 return rv;
 
-            bool more;
+            bool more = false;
             while (NS_SUCCEEDED(dirEnum.HasMoreElements(&more)) && more)
             {
                 nsCOMPtr<nsISupports> item;

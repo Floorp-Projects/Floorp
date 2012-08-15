@@ -33,7 +33,6 @@
 #include "nsITableCellLayout.h" // For efficient access to table cell
 #include "nsITableEditor.h"
 #include "nsITableLayout.h"     //  data owned by the table and cell frames
-#include "nsLayoutErrors.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
 #include "nsString.h"

@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{0x05995519, 0xde6e, 0x428c, \
-  {0x9e, 0x96, 0x61, 0xd6, 0x0f, 0x34, 0x45, 0x3e}}
+{0x66660102, 0xd875, 0x47e2, \
+  {0xa1, 0xf7, 0x12, 0xbc, 0x83, 0xc9, 0x93, 0xa9}}
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -608,6 +608,13 @@ public:
    * and that the compartment principal needs to be updated.
    */
   virtual void RefreshCompartmentPrincipal() = 0;
+
+  /**
+   * Like nsIDOMWindow::Open, except that we don't navigate to the given URL.
+   */
+  virtual nsresult
+  OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
+                 const nsAString& aOptions, nsIDOMWindow **_retval) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

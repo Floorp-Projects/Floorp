@@ -14,7 +14,7 @@
 #include "txExpr.h"
 #include "txStack.h"
 #include "nsGkAtoms.h"
-#include "txError.h"
+#include "nsError.h"
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
 #include "txXPathNode.h"
