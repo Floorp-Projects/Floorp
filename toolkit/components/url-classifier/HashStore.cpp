@@ -473,7 +473,8 @@ static nsresult
 Merge(ChunkSet* aStoreChunks,
       nsTArray<T>* aStorePrefixes,
       ChunkSet& aUpdateChunks,
-      nsTArray<T>& aUpdatePrefixes)
+      nsTArray<T>& aUpdatePrefixes,
+      bool aAllowMerging = false)
 {
   EntrySort(aUpdatePrefixes);
 
@@ -488,6 +489,12 @@ Merge(ChunkSet* aStoreChunks,
   nsTArray<T> adds;
 
   for (; updateIter != updateEnd; updateIter++) {
+    // skip this chunk if we already have it, unless we're
+    // merging completions, in which case we'll always already
+    // have the chunk from the original prefix
+    if (aStoreChunks->Has(updateIter->Chunk()))
+      if (!aAllowMerging)
+        continue;
     // XXX: binary search for insertion point might be faster in common
     // case?
     while (storeIter < storeEnd && (storeIter->Compare(*updateIter) < 0)) {
@@ -502,8 +509,8 @@ Merge(ChunkSet* aStoreChunks,
     }
   }
 
-  // chunks can be empty, but we should still report we have them
-  // to make the chunkranges continuous
+  // Chunks can be empty, but we should still report we have them
+  // to make the chunkranges continuous.
   aStoreChunks->Merge(aUpdateChunks);
 
   aStorePrefixes->AppendElements(adds);
@@ -529,7 +536,7 @@ HashStore::ApplyUpdate(TableUpdate &update)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mAddChunks, &mAddCompletes,
-             update.AddChunks(), update.AddCompletes());
+             update.AddChunks(), update.AddCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubPrefixes,
@@ -537,7 +544,7 @@ HashStore::ApplyUpdate(TableUpdate &update)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubCompletes,
-             update.SubChunks(), update.SubCompletes());
+             update.SubChunks(), update.SubCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
