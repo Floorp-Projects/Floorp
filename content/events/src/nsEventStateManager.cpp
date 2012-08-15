@@ -2801,10 +2801,6 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   MOZ_ASSERT(aScrollableFrame);
   MOZ_ASSERT(aEvent);
 
-  aEvent->overflowDeltaX = aEvent->deltaX;
-  aEvent->overflowDeltaY = aEvent->deltaY;
-  WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
-
   nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
   MOZ_ASSERT(scrollFrame);
   nsWeakFrame scrollFrameWeak(scrollFrame);
@@ -3238,6 +3234,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // transaction.
           nsIScrollableFrame* scrollTarget =
             ComputeScrollTarget(aTargetFrame, wheelEvent, true);
+          wheelEvent->overflowDeltaX = wheelEvent->deltaX;
+          wheelEvent->overflowDeltaY = wheelEvent->deltaY;
+          WheelPrefs::GetInstance()->
+            CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           if (scrollTarget) {
             DoScrollText(scrollTarget, wheelEvent);
           } else {
@@ -3252,6 +3252,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case WheelPrefs::ACTION_ZOOM:
           DoScrollZoom(aTargetFrame, wheelEvent->GetPreferredIntDelta());
           break;
+
         default:
           break;
       }
