@@ -695,7 +695,7 @@ pref("reader.color_scheme", "light");
 pref("reader.has_used_toolbar", false);
 
 // Media plugins for libstagefright playback on android
-pref("media.plugins.enabled", false);
+pref("media.plugins.enabled", true);
 
 // Coalesce touch events to prevent them from flooding the event queue
 pref("dom.event.touch.coalescing.enabled", true);
