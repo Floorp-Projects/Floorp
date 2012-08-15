@@ -217,21 +217,7 @@ interface nsIICCRecords : nsISupports
   readonly attribute jsval fdn;
 };
 
-[scriptable, uuid(1b47459d-d0bc-4e91-8509-cc106054b9ee)]
-interface nsICellLocation : nsISupports
-{
-  /**
-   * Location Area Code
-   */
-  readonly attribute unsigned short lac;
-
-  /**
-   * Cell Identity
-   */
-  readonly attribute unsigned long cid;
-};
-
-[scriptable, uuid(a6f6977e-f4ee-42b4-ae79-798c8c47c360)]
+[scriptable, uuid(e6dc89f2-0d4e-46fc-902c-cfeeaee15e40)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString radioState;
@@ -239,8 +225,6 @@ interface nsIRilContext : nsISupports
   readonly attribute DOMString cardState;
 
   readonly attribute nsIICCRecords icc;
-
-  readonly attribute nsICellLocation cell;
 
   readonly attribute nsIDOMMozMobileConnectionInfo voice;
 
