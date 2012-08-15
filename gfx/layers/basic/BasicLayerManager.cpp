@@ -152,6 +152,7 @@ BasicLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, Sc
 void
 BasicLayerManager::BeginTransaction()
 {
+  mInTransaction = true;
   mUsingDefaultTarget = true;
   BeginTransactionWithTarget(mDefaultTarget);
 }
@@ -204,6 +205,8 @@ BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxCon
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  mInTransaction = true;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("[----- BeginTransaction"));
   Log();
@@ -390,6 +393,8 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData,
                                   EndTransactionFlags aFlags)
 {
+  mInTransaction = false;
+
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
 
@@ -401,6 +406,7 @@ BasicLayerManager::AbortTransaction()
   mPhase = PHASE_NONE;
 #endif
   mUsingDefaultTarget = false;
+  mInTransaction = false;
 }
 
 bool
@@ -529,6 +535,8 @@ BasicLayerManager::FlashWidgetUpdateArea(gfxContext *aContext)
 bool
 BasicLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
+  mInTransaction = false;
+
   if (!mRoot) {
     return false;
   }
