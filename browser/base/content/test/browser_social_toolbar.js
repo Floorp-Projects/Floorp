@@ -62,7 +62,7 @@ var tests = {
     ok(userButton.hidden, "username is not visible");
     let ambience = document.getElementById("social-status-iconbox").firstChild;
     while (ambience) {
-      ok(ambience.collapsed, "ambient icon (" + ambience.id + ") is collapsed");
+      ok(ambience.collapsed, "ambient icon is collapsed");
       ambience = ambience.nextSibling;
     }
     
