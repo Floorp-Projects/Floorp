@@ -48,10 +48,6 @@ struct nsTextRange;
 class nsEvent;
 class nsGUIEvent;
 class nsScriptErrorEvent;
-class nsSizeEvent;
-class nsSizeModeEvent;
-class nsZLevelEvent;
-class nsPaintEvent;
 class nsScrollbarEvent;
 class nsScrollPortEvent;
 class nsScrollAreaEvent;
@@ -76,7 +72,6 @@ class nsUIEvent;
 class nsSimpleGestureEvent;
 class nsTransitionEvent;
 class nsAnimationEvent;
-class nsUIStateChangeEvent;
 class nsPluginEvent;
 
 namespace mozilla {
