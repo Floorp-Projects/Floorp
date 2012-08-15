@@ -227,7 +227,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     masm.moveValue(UndefinedValue(), ebx, edi);
 
-    masm.movl(esp, ebp); // Save %esp.
+    masm.push(FramePointer);
+    masm.movl(esp, FramePointer); // Save %esp.
 
     // Push undefined.
     {
@@ -242,8 +243,10 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &undefLoopTop);
     }
 
-    // Get the topmost argument.
-    BaseIndex b = BaseIndex(ebp, esi, TimesEight, sizeof(IonRectifierFrameLayout));
+    // Get the topmost argument. We did a push of %ebp earlier, so be sure to
+    // account for this in the offset
+    BaseIndex b = BaseIndex(FramePointer, esi, TimesEight,
+                            sizeof(IonRectifierFrameLayout) + sizeof(void*));
     masm.lea(Operand(b), ecx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
@@ -264,14 +267,15 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 
-    // Construct descriptor.
-    masm.subl(esp, ebp);
-    masm.makeFrameDescriptor(ebp, IonFrame_Rectifier);
+    // Construct descriptor, accounting for pushed frame pointer above
+    masm.lea(Operand(FramePointer, sizeof(void*)), ebx);
+    masm.subl(esp, ebx);
+    masm.makeFrameDescriptor(ebx, IonFrame_Rectifier);
 
     // Construct IonJSFrameLayout.
     masm.push(edx); // number of actual arguments
     masm.push(eax); // calleeToken
-    masm.push(ebp); // descriptor
+    masm.push(ebx); // descriptor
 
     // Call the target function.
     // Note that this assumes the function is JITted.
@@ -282,12 +286,16 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.call(eax);
 
     // Remove the rectifier frame.
-    masm.pop(ebp);            // ebp <- descriptor with FrameType.
-    masm.shrl(Imm32(FRAMESIZE_SHIFT), ebp); // ebp <- descriptor.
+    masm.pop(ebx);            // ebx <- descriptor with FrameType.
+    masm.shrl(Imm32(FRAMESIZE_SHIFT), ebx); // ebx <- descriptor.
     masm.pop(edi);            // Discard calleeToken.
     masm.pop(edi);            // Discard number of actual arguments.
-    masm.addl(ebp, esp);      // Discard pushed arguments.
 
+    // Discard pushed arguments, but not the pushed frame pointer.
+    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -sizeof(void*));
+    masm.lea(Operand(unwind), esp);
+
+    masm.pop(FramePointer);
     masm.ret();
 
     Linker linker(masm);

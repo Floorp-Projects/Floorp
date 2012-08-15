@@ -63,6 +63,7 @@ static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
+static const Register FramePointer = rbp;
 static const Register JSReturnReg = rcx;
 // Avoid, except for assertions.
 static const Register JSReturnReg_Type = JSReturnReg;
