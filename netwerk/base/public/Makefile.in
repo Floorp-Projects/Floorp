@@ -125,7 +125,6 @@ endif
 
 EXPORTS		= \
 		netCore.h \
-		nsNetError.h \
 		nsNetUtil.h \
 		nsNetStrings.h \
 		nsChannelProperties.h \

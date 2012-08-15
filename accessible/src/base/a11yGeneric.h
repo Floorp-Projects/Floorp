@@ -20,9 +20,6 @@
     return NS_OK;                                                              \
   } else
 
-#define NS_OK_DEFUNCT_OBJECT                                                   \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x22)
-
 #define NS_ENSURE_A11Y_SUCCESS(res, ret)                                       \
   PR_BEGIN_MACRO                                                               \
     nsresult __rv = res; /* Don't evaluate |res| more than once */             \

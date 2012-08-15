@@ -17,10 +17,6 @@
 class Accessible;
 class nsIAccessibleTraversalRule;
 
-// raised when current pivot's position is needed but it is not in the tree.
-#define NS_ERROR_NOT_IN_TREE \
-NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 0x26)
-
 /**
  * Class represents an accessible pivot.
  */

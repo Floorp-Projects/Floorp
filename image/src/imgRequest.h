@@ -24,7 +24,7 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
-#include "ImageErrors.h"
+#include "nsError.h"
 #include "imgIRequest.h"
 #include "imgStatusTracker.h"
 #include "nsIAsyncVerifyRedirectCallback.h"

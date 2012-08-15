@@ -210,13 +210,13 @@ IdentityRelyingParty.prototype = {
    */
   request: function request(aRPId, aOptions) {
     log("request: rpId:", aRPId);
+    let rp = this._rpFlows[aRPId];
 
     // Notify UX to display identity picker.
     // Pass the doc id to UX so it can pass it back to us later.
-    let options = {rpId: aRPId};
+    let options = {rpId: aRPId, origin: rp.origin};
 
     // Append URLs after resolving
-    let rp = this._rpFlows[aRPId];
     let baseURI = Services.io.newURI(rp.origin, null, null);
     for (let optionName of ["privacyPolicy", "termsOfService"]) {
       if (aOptions[optionName]) {

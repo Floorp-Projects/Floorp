@@ -30,7 +30,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsDOMCID.h"
 #include "nsDOMCSSAttrDeclaration.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMMutationObserver.h"
 #include "nsDOMString.h"
 #include "nsDOMTokenList.h"
