@@ -37,10 +37,10 @@ ScaledFontBase::ScaledFontBase(Float aSize)
   : mSize(aSize)
 {
 #ifdef USE_SKIA
-  mTypeface = nullptr;
+  mTypeface = NULL;
 #endif
 #ifdef USE_CAIRO
-  mScaledFont = nullptr;
+  mScaledFont = NULL;
 #endif
 }
 
@@ -95,7 +95,7 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
     return builder->Finish();
   }
 #endif
-  return nullptr;
+  return NULL;
 }
 
 void

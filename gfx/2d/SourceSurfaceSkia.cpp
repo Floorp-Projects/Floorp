@@ -15,7 +15,7 @@ namespace mozilla {
 namespace gfx {
 
 SourceSurfaceSkia::SourceSurfaceSkia()
-  : mDrawTarget(nullptr)
+  : mDrawTarget(NULL)
 {
 }
 
@@ -90,7 +90,7 @@ void
 SourceSurfaceSkia::DrawTargetWillChange()
 {
   if (mDrawTarget) {
-    mDrawTarget = nullptr;
+    mDrawTarget = NULL;
     SkBitmap temp = mBitmap;
     mBitmap.reset();
     temp.copyTo(&mBitmap, temp.getConfig());
@@ -100,7 +100,7 @@ SourceSurfaceSkia::DrawTargetWillChange()
 void
 SourceSurfaceSkia::DrawTargetDestroyed()
 {
-  mDrawTarget = nullptr;
+  mDrawTarget = NULL;
 }
 
 void
@@ -108,7 +108,7 @@ SourceSurfaceSkia::MarkIndependent()
 {
   if (mDrawTarget) {
     mDrawTarget->RemoveSnapshot(this);
-    mDrawTarget = nullptr;
+    mDrawTarget = NULL;
   }
 }
 

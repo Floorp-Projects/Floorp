@@ -53,9 +53,9 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
                                SurfaceFormat aFormat)
 {
   //XXX: we should avoid creating this colorspace everytime
-  CGColorSpaceRef colorSpace = nullptr;
+  CGColorSpaceRef colorSpace = NULL;
   CGBitmapInfo bitinfo = 0;
-  CGDataProviderRef dataProvider = nullptr;
+  CGDataProviderRef dataProvider = NULL;
   int bitsPerComponent = 0;
   int bitsPerPixel = 0;
 
@@ -110,7 +110,7 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
 			    colorSpace,
 			    bitinfo,
 			    dataProvider,
-			    nullptr,
+			    NULL,
 			    true,
 			    kCGRenderingIntentDefault);
   }
@@ -118,7 +118,7 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
   CGDataProviderRelease(dataProvider);
   CGColorSpaceRelease (colorSpace);
 
-  return mImage != nullptr;
+  return mImage != NULL;
 }
 
 DataSourceSurfaceCG::~DataSourceSurfaceCG()
@@ -144,9 +144,9 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
                                SurfaceFormat aFormat)
 {
   //XXX: we should avoid creating this colorspace everytime
-  CGColorSpaceRef colorSpace = nullptr;
+  CGColorSpaceRef colorSpace = NULL;
   CGBitmapInfo bitinfo = 0;
-  CGDataProviderRef dataProvider = nullptr;
+  CGDataProviderRef dataProvider = NULL;
   int bitsPerComponent = 0;
   int bitsPerPixel = 0;
 
@@ -199,7 +199,7 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
 			    colorSpace,
 			    bitinfo,
 			    dataProvider,
-			    nullptr,
+			    NULL,
 			    true,
 			    kCGRenderingIntentDefault);
   }
@@ -225,10 +225,10 @@ CGContextRef CreateBitmapContextForImage(CGImageRef image)
   colorSpace = CGColorSpaceCreateDeviceRGB();
   assert(colorSpace);
 
-  // we'd like to pass nullptr as the first parameter
+  // we'd like to pass NULL as the first parameter
   // to let Quartz manage this memory for us. However,
   // on 10.5 and older CGBitmapContextGetData will return
-  // nullptr instead of the associated buffer so we need
+  // NULL instead of the associated buffer so we need
   // to manage it ourselves.
   CGContextRef cg = CGBitmapContextCreate(data,
                                           width,
@@ -248,7 +248,7 @@ DataSourceSurfaceCG::DataSourceSurfaceCG(CGImageRef aImage)
 {
   mImage = aImage;
   mCg = CreateBitmapContextForImage(aImage);
-  if (mCg == nullptr) {
+  if (mCg == NULL) {
     // error creating context
     return;
   }
@@ -295,7 +295,7 @@ SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTa
   mStride = CGBitmapContextGetBytesPerRow(mCg);
   mData = CGBitmapContextGetData(mCg);
 
-  mImage = nullptr;
+  mImage = NULL;
 }
 
 void SourceSurfaceCGBitmapContext::EnsureImage() const
@@ -309,9 +309,9 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
   // performance characteristics.
   if (!mImage) {
       //XXX: we should avoid creating this colorspace everytime
-      CGColorSpaceRef colorSpace = nullptr;
+      CGColorSpaceRef colorSpace = NULL;
       CGBitmapInfo bitinfo = 0;
-      CGDataProviderRef dataProvider = nullptr;
+      CGDataProviderRef dataProvider = NULL;
       int bitsPerComponent = 8;
       int bitsPerPixel = 32;
 
@@ -323,7 +323,7 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
           // if we have an mCg than it owns the data
           // and we don't want to tranfer ownership
           // to the CGDataProviderCreateWithData
-          info = nullptr;
+          info = NULL;
       } else {
           // otherwise we transfer ownership to
           // the dataProvider
@@ -344,7 +344,7 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
                               colorSpace,
                               bitinfo,
                               dataProvider,
-                              nullptr,
+                              NULL,
                               true,
                               kCGRenderingIntentDefault);
 
@@ -378,10 +378,10 @@ SourceSurfaceCGBitmapContext::DrawTargetWillChange()
     // drop the current image for the data associated with the CGBitmapContext
     if (mImage)
       CGImageRelease(mImage);
-    mImage = nullptr;
+    mImage = NULL;
 
-    mCg = nullptr;
-    mDrawTarget = nullptr;
+    mCg = NULL;
+    mDrawTarget = NULL;
   }
 }
 
@@ -406,7 +406,7 @@ SourceSurfaceCGIOSurfaceContext::SourceSurfaceCGIOSurfaceContext(DrawTargetCG *a
 
   // TODO use CreateImageFromIOSurfaceContext instead of reading back the surface
   //mImage = MacIOSurface::CreateImageFromIOSurfaceContext(cg);
-  mImage = nullptr;
+  mImage = NULL;
 
   aDrawTarget->Flush();
   surf->Lock();
@@ -434,9 +434,9 @@ void SourceSurfaceCGIOSurfaceContext::EnsureImage() const
   // performance characteristics.
   if (!mImage) {
       //XXX: we should avoid creating this colorspace everytime
-      CGColorSpaceRef colorSpace = nullptr;
+      CGColorSpaceRef colorSpace = NULL;
       CGBitmapInfo bitinfo = 0;
-      CGDataProviderRef dataProvider = nullptr;
+      CGDataProviderRef dataProvider = NULL;
       int bitsPerComponent = 8;
       int bitsPerPixel = 32;
 
@@ -457,7 +457,7 @@ void SourceSurfaceCGIOSurfaceContext::EnsureImage() const
                               colorSpace,
                               bitinfo,
                               dataProvider,
-                              nullptr,
+                              NULL,
                               true,
                               kCGRenderingIntentDefault);
 

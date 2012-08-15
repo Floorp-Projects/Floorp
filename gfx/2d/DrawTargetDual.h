@@ -124,7 +124,7 @@ public:
      
   virtual void *GetNativeSurface(NativeSurfaceType aType)
   {
-    return nullptr;
+    return NULL;
   }
      
 private:
