@@ -164,7 +164,7 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
   return surf;
 }
 
-// Never returns nullptr. As such, you must always pass in Cairo-compatible
+// Never returns NULL. As such, you must always pass in Cairo-compatible
 // patterns, most notably gradients with a GradientStopCairo.
 // The pattern returned must have cairo_pattern_destroy() called on it by the
 // caller.
@@ -275,7 +275,7 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 }
 
 DrawTargetCairo::DrawTargetCairo()
-  : mContext(nullptr)
+  : mContext(NULL)
 {
 }
 
@@ -318,7 +318,7 @@ DrawTargetCairo::Flush()
 }
 
 void
-DrawTargetCairo::PrepareForDrawing(cairo_t* aContext, const Path* aPath /* = nullptr */)
+DrawTargetCairo::PrepareForDrawing(cairo_t* aContext, const Path* aPath /* = NULL */)
 {
   WillChange(aPath);
 }
@@ -391,7 +391,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   AlphaBoxBlur blur(extents, IntSize(0, 0),
                     AlphaBoxBlur::CalculateBlurRadius(Point(aSigma, aSigma)),
-                    nullptr, nullptr);
+                    NULL, NULL);
   if (!blur.GetData()) {
     return;
   }
@@ -786,7 +786,7 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
     }
   }
 
-  return nullptr;
+  return NULL;
 }
 
 TemporaryRef<DrawTarget>
@@ -802,7 +802,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
     return target;
   }
 
-  return nullptr;
+  return NULL;
 }
 
 bool
@@ -824,7 +824,7 @@ DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
     return cairo_get_target(mContext);
   }
 
-  return nullptr;
+  return NULL;
 }
 
 void
@@ -857,7 +857,7 @@ DrawTargetCairo::RemoveSnapshot(SourceSurfaceCairo* aSnapshot)
 }
 
 void
-DrawTargetCairo::WillChange(const Path* aPath /* = nullptr */)
+DrawTargetCairo::WillChange(const Path* aPath /* = NULL */)
 {
   if (!mSnapshots.empty()) {
     for (std::vector<SourceSurfaceCairo*>::iterator iter = mSnapshots.begin();
@@ -871,7 +871,7 @@ DrawTargetCairo::WillChange(const Path* aPath /* = nullptr */)
   if (mPathObserver &&
       (!aPath || !mPathObserver->ContainsPath(aPath))) {
     mPathObserver->PathWillChange();
-    mPathObserver = nullptr;
+    mPathObserver = NULL;
   }
 }
 

@@ -64,11 +64,11 @@ SourceSurfaceD2DTarget::GetDataSurface()
   desc.BindFlags = 0;
   desc.MiscFlags = 0;
 
-  HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(dataSurf->mTexture));
+  HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, NULL, byRef(dataSurf->mTexture));
 
   if (FAILED(hr)) {
     gfxDebug() << "Failed to create staging texture for SourceSurface. Code: " << hr;
-    return nullptr;
+    return NULL;
   }
   Factory::GetDirect3D10Device()->CopyResource(dataSurf->mTexture, mTexture);
 
@@ -82,7 +82,7 @@ SourceSurfaceD2DTarget::GetSRView()
     return mSRView;
   }
 
-  HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, nullptr, byRef(mSRView));
+  HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, NULL, byRef(mSRView));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create ShaderResourceView. Code: " << hr;
@@ -100,10 +100,10 @@ SourceSurfaceD2DTarget::DrawTargetWillChange()
   mTexture->GetDesc(&desc);
 
   // Get a copy of the surface data so the content at snapshot time was saved.
-  Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(mTexture));
+  Factory::GetDirect3D10Device()->CreateTexture2D(&desc, NULL, byRef(mTexture));
   Factory::GetDirect3D10Device()->CopyResource(mTexture, oldTexture);
 
-  mBitmap = nullptr;
+  mBitmap = NULL;
 
   DrawTargetD2D::mVRAMUsageSS += desc.Width * desc.Height * BytesPerPixel(mFormat);
   mOwnsCopy = true;
@@ -130,7 +130,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to query interface texture to DXGISurface. Code: " << hr;
-    return nullptr;
+    return NULL;
   }
 
   D2D1_BITMAP_PROPERTIES props =
@@ -160,7 +160,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
       if (FAILED(hr)) {
         gfxWarning() << "Failed to QI texture to surface.";
-        return nullptr;
+        return NULL;
       }
 
       D2D1_RENDER_TARGET_PROPERTIES props =
@@ -169,11 +169,11 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
       if (FAILED(hr)) {
         gfxWarning() << "Failed to create D2D render target for texture.";
-        return nullptr;
+        return NULL;
       }
     }
 
-    mBitmap->CopyFromRenderTarget(nullptr, rt, nullptr);
+    mBitmap->CopyFromRenderTarget(NULL, rt, NULL);
     return mBitmap;
   }
 
@@ -185,8 +185,8 @@ SourceSurfaceD2DTarget::MarkIndependent()
 {
   if (mDrawTarget) {
     MOZ_ASSERT(mDrawTarget->mSnapshot == this);
-    mDrawTarget->mSnapshot = nullptr;
-    mDrawTarget = nullptr;
+    mDrawTarget->mSnapshot = NULL;
+    mDrawTarget = NULL;
   }
 }
 

@@ -236,7 +236,7 @@ PathBuilderD2D::Finish()
   HRESULT hr = mSink->Close();
   if (FAILED(hr)) {
     gfxDebug() << "Failed to close PathSink. Code: " << hr;
-    return nullptr;
+    return NULL;
   }
 
   return new PathD2D(mGeometry, mFigureActive, mCurrentPoint, mFillRule);
@@ -256,14 +256,14 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create PathGeometry. Code: " << hr;
-    return nullptr;
+    return NULL;
   }
 
   RefPtr<ID2D1GeometrySink> sink;
   hr = path->Open(byRef(sink));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to open Geometry for writing. Code: " << hr;
-    return nullptr;
+    return NULL;
   }
 
   if (aFillRule == FILL_WINDING) {
