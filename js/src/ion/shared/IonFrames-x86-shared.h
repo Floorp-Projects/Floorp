@@ -236,6 +236,41 @@ class IonDOMExitFrameLayout
     inline bool isSetterFrame() {
         return footer_.ionCode() == ION_FRAME_DOMSETTER;
     }
+    inline bool isMethodFrame() {
+        return footer_.ionCode() == ION_FRAME_DOMMETHOD;
+    }
+};
+
+class IonDOMMethodExitFrameLayout
+{
+    IonExitFooterFrame footer_;
+    IonExitFrameLayout exit_;
+    // This must be the last thing pushed, so as to stay common with
+    // IonDOMExitFrameLayout.
+    JSObject *thisObj_;
+    uintptr_t argc_;
+
+    Value CalleeResult_;
+
+  public:
+    static inline size_t Size() {
+        return sizeof(IonDOMMethodExitFrameLayout);
+    }
+
+    static size_t offsetOfResult() {
+        return offsetof(IonDOMMethodExitFrameLayout, CalleeResult_);
+    }
+    inline Value *vp() {
+        JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, CalleeResult_) ==
+                         (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
+        return &CalleeResult_;
+    }
+    inline JSObject **thisObjAddress() {
+        return &thisObj_;
+    }
+    inline uintptr_t argc() {
+        return argc_;
+    }
 };
 
 class IonOsrFrameLayout : public IonJSFrameLayout
