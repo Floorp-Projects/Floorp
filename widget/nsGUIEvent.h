@@ -188,17 +188,6 @@ class nsHashKey;
 
 #define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
 
-// Indicates the display has changed depth
-#define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
-
-// Indicates a theme change has occurred
-#define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
-
-// Indicates a System color has changed. It is the platform
-// toolkits responsibility to invalidate the window to 
-// ensure that it is drawn using the current system colors.
-#define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
-
 // Indicates that the ui state such as whether to show focus or
 // keyboard accelerator indicators has changed.
 #define NS_UISTATECHANGED               (NS_WINDOW_START + 43)

@@ -3264,14 +3264,12 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 void
 nsWindow::ThemeChanged()
 {
-    nsGUIEvent event(true, NS_THEMECHANGED, this);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    DispatchEvent(&event, status);
+    NotifyThemeChanged();
 
     if (!mGdkWindow || NS_UNLIKELY(mIsDestroyed))
         return;
 
-    // Dispatch NS_THEMECHANGED to all child windows
+    // Dispatch theme change notification to all child windows
     GList *children =
         gdk_window_peek_children(mGdkWindow);
     while (children) {

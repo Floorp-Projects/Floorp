@@ -2135,12 +2135,7 @@ nsWindow::DistanceBetweenPoints(const QPointF &aFirstPoint, const QPointF &aSeco
 void
 nsWindow::ThemeChanged()
 {
-    nsGUIEvent event(true, NS_THEMECHANGED, this);
-
-    DispatchEvent(&event);
-
-    // do nothing
-    return;
+    NotifyThemeChanged();
 }
 
 nsEventStatus

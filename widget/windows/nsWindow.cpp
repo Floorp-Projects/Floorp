@@ -4519,10 +4519,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = true;
       break;
 
-    case WM_DISPLAYCHANGE:
-      DispatchStandardEvent(NS_DISPLAYCHANGED);
-      break;
-
     case WM_SYSCOLORCHANGE:
       OnSysColorChanged();
       break;
@@ -4550,7 +4546,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       nsUXThemeData::InitTitlebarInfo();
       nsUXThemeData::UpdateNativeThemeInfo();
 
-      DispatchStandardEvent(NS_THEMECHANGED);
+      NotifyThemeChanged();
 
       // Invalidate the window so that the repaint will
       // pick up the new theme.
@@ -4980,7 +4976,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_EXITSIZEMOVE:
       if (!sIsInMouseCapture) {
-        DispatchStandardEvent(NS_DONESIZEMOVE);
+        NotifySizeMoveDone();
       }
       break;
 
@@ -5188,7 +5184,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     UpdateNonClientMargins();
     RemovePropW(mWnd, kManageWindowInfoProperty);
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
-    DispatchStandardEvent(NS_THEMECHANGED);
+    NotifyThemeChanged();
     UpdateGlass();
     Invalidate(true, true, true);
     break;
@@ -7264,7 +7260,7 @@ nsWindow::OnSysColorChanged()
     // But we cycle through all of the childwindows and send it to them as well
     // so all presentations get notified properly.
     // See nsWindow::GlobalMsgWindowProc.
-    DispatchStandardEvent(NS_SYSCOLORCHANGED);
+    NotifySysColorChanged();
   }
 }
 
