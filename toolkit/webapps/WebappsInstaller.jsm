@@ -46,6 +46,12 @@ let WebappsInstaller = {
       return null;
     }
 
+    let data = {
+      "installDir": shell.installDir.path,
+      "app": aData.app
+    };
+    Services.obs.notifyObservers(null, "webapp-installed", JSON.stringify(data));
+
     return shell;
   }
 }
