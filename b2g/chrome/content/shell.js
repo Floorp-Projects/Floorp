@@ -649,3 +649,24 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     }
 }, "geolocation-device-events", false);
 })();
+
+(function recordingStatusTracker() {
+  let gRecordingActiveCount = 0;
+
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    let oldCount = gRecordingActiveCount;
+    if (aData == "starting") {
+      gRecordingActiveCount += 1;
+    } else if (aData == "shutdown") {
+      gRecordingActiveCount -= 1;
+    }
+
+    // We need to track changes from 1 <-> 0
+    if (gRecordingActiveCount + oldCount == 1) {
+      shell.sendChromeEvent({
+        type: 'recording-status',
+        active: (gRecordingActiveCount == 1)
+      });
+    }
+}, "recording-device-events", false);
+})();
