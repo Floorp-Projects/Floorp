@@ -582,15 +582,15 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     // Nestle the stack up against the pushed arguments, leaving StackPointer at
     // &vp[1]
     masm.adjustStack(unusedStack);
-    masm.movePtr(StackPointer, argObj);
+    // argObj is filled with the extracted object, then returned.
+    Register obj = masm.extractObject(Address(StackPointer, 0), argObj);
+    JS_ASSERT(obj == argObj);
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
     // setitng the return value. The StackPointer is moved to &vp[0].
     masm.Push(ObjectValue(*target));
     masm.movePtr(StackPointer, argVp);
 
-    // Use argArgc as scratch.
-    Register obj = masm.extractObject(Address(argObj, 0), argArgc);
     // GetReservedSlot(obj, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate()
     masm.loadPrivate(Address(obj, JSObject::getFixedSlotOffset(0)), argPrivate);
 
@@ -599,11 +599,17 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     // Push argument into what will become the IonExitFrame
     masm.Push(argArgc);
 
+    // Push |this| object for passing HandleObject. We push after argc to
+    // maintain the same sp-relative location of the object pointer with other
+    // DOMExitFrames.
+    masm.Push(argObj);
+    masm.movePtr(StackPointer, argObj);
+
     // Construct native exit frame.
     uint32 safepointOffset;
     if (!masm.buildFakeExitFrame(argJSContext, &safepointOffset))
         return false;
-    masm.enterFakeExitFrame();
+    masm.enterFakeDOMFrame(ION_FRAME_DOMMETHOD);
 
     if (!markSafepointAt(safepointOffset, call))
         return false;
@@ -625,7 +631,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
 
     // Load the outparam vp[0] into output register(s).
-    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
+    masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()), JSReturnOperand);
     masm.jump(&success);
 
     // Handle exception case.
@@ -639,7 +645,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the native exit frame.
-    masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
+    masm.adjustStack(IonDOMMethodExitFrameLayout::Size() - unusedStack);
     JS_ASSERT(masm.framePushed() == initialStack);
 
     dropArguments(call->numStackArgs() + 1);
