@@ -595,7 +595,7 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
   for (uint8 i = 0; i < aNumEntries; i++) {
     Prefix hash;
     hash.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
-    nsresult rv = LookupCache::KeyedHash(domHash, hash.ToUint32(), mHashKey, &codedHash,
+    nsresult rv = LookupCache::KeyedHash(hash.ToUint32(), domHash, mHashKey, &codedHash,
                                          !mPerClientRandomize);
     NS_ENSURE_SUCCESS(rv, rv);
     Prefix newHash;
