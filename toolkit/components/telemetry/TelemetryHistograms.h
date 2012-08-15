@@ -355,7 +355,7 @@ HISTOGRAM(URLCLASSIFIER_PS_FALLOCATE_TIME, 1, 1000, 10, EXPONENTIAL, "Time spent
 HISTOGRAM(URLCLASSIFIER_PS_CONSTRUCT_TIME, 1, 5000, 15, EXPONENTIAL, "Time spent constructing PrefixSet from DB (ms)")
 HISTOGRAM(URLCLASSIFIER_LC_PREFIXES, 1, 1500000, 15, LINEAR, "Size of the prefix cache in entries")
 HISTOGRAM(URLCLASSIFIER_LC_COMPLETIONS, 1, 200, 10, EXPONENTIAL, "Size of the completion cache in entries")
-HISTOGRAM_BOOLEAN(URLCLASSIFIER_PS_OOM, "Did UrlClassifier run out of memory during PrefixSet construction?")
+HISTOGRAM_BOOLEAN(URLCLASSIFIER_PS_FAILURE, "Did UrlClassifier fail to construct the PrefixSet?")
 #endif
 
 /**

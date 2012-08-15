@@ -165,34 +165,24 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const PRUint32* aPrefixes, PRUint32 aLen
   }
 #endif
 
-  FallibleTArray<PRUint32> newIndexPrefixes;
-  FallibleTArray<PRUint32> newIndexStarts;
-  FallibleTArray<PRUint16> newDeltas;
+  nsTArray<PRUint32> newIndexPrefixes;
+  nsTArray<PRUint32> newIndexStarts;
+  nsTArray<PRUint16> newDeltas;
 
-  if (!newIndexPrefixes.AppendElement(aPrefixes[0])) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (!newIndexStarts.AppendElement(newDeltas.Length())) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  newIndexPrefixes.AppendElement(aPrefixes[0]);
+  newIndexStarts.AppendElement(newDeltas.Length());
 
   PRUint32 numOfDeltas = 0;
   PRUint32 currentItem = aPrefixes[0];
   for (PRUint32 i = 1; i < aLength; i++) {
     if ((numOfDeltas >= DELTAS_LIMIT) ||
           (aPrefixes[i] - currentItem >= MAX_INDEX_DIFF)) {
-      if (!newIndexStarts.AppendElement(newDeltas.Length())) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      if (!newIndexPrefixes.AppendElement(aPrefixes[i])) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      newIndexStarts.AppendElement(newDeltas.Length());
+      newIndexPrefixes.AppendElement(aPrefixes[i]);
       numOfDeltas = 0;
     } else {
       PRUint16 delta = aPrefixes[i] - currentItem;
-      if (!newDeltas.AppendElement(delta)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      newDeltas.AppendElement(delta);
       numOfDeltas++;
     }
     currentItem = aPrefixes[i];
