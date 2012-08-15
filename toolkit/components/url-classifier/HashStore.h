@@ -120,10 +120,10 @@ public:
 
   ChunkSet& AddChunks() { return mAddChunks; }
   ChunkSet& SubChunks() { return mSubChunks; }
-  const AddPrefixArray& AddPrefixes() const { return mAddPrefixes; }
-  const AddCompleteArray& AddCompletes() const { return mAddCompletes; }
-  const SubPrefixArray& SubPrefixes() const { return mSubPrefixes; }
-  const SubCompleteArray& SubCompletes() const { return mSubCompletes; }
+  AddPrefixArray& AddPrefixes() { return mAddPrefixes; }
+  AddCompleteArray& AddCompletes() { return mAddCompletes; }
+  SubPrefixArray& SubPrefixes() { return mSubPrefixes; }
+  SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
   // =======
   // Updates
