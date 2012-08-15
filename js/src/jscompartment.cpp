@@ -486,6 +486,15 @@ JSCompartment::discardJitCode(FreeOp *fop)
 #endif /* JS_METHODJIT */
 }
 
+bool
+JSCompartment::isDiscardingJitCode(JSTracer *trc)
+{
+    if (!IS_GC_MARKING_TRACER(trc))
+        return false;
+
+    return !gcPreserveCode;
+}
+
 void
 JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
