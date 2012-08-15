@@ -3153,6 +3153,8 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
       if (layerManagerD3D10->device() !=
           gfxWindowsPlatform::GetPlatform()->GetD3D10Device())
       {
+        MOZ_ASSERT(!mLayerManager->IsInTransaction());
+
         mLayerManager->Destroy();
         mLayerManager = nullptr;
       }
@@ -3184,6 +3186,8 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
 
     if (mUseAcceleratedRendering) {
       if (aPersistence == LAYER_MANAGER_PERSISTENT && !sAllowD3D9) {
+        MOZ_ASSERT(!mLayerManager || !mLayerManager->IsInTransaction());
+
         // This will clear out our existing layer manager if we have one since
         // if we hit this with a LayerManager we're always using BasicLayers.
         nsToolkit::StartAllowingD3D9();
