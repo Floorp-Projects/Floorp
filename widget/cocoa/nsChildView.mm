@@ -427,7 +427,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   nsBaseWidget::Destroy();
 
-  ReportDestroyEvent(); 
+  NotifyWindowDestroyed();
   mParentWidget = nil;
 
   TearDownView();
@@ -1494,13 +1494,6 @@ bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 }
 
 #pragma mark -
-
-bool nsChildView::ReportDestroyEvent()
-{
-  nsGUIEvent event(true, NS_DESTROY, this);
-  event.time = PR_IntervalNow();
-  return DispatchWindowEvent(event);
-}
 
 bool nsChildView::ReportMoveEvent()
 {

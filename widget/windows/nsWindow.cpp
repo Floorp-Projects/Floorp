@@ -3505,7 +3505,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
       case NS_DEACTIVATE:
       case NS_ACTIVATE:
       case NS_SIZEMODE:
-      case NS_DESTROY:
       case NS_SETZLEVEL:
       case NS_XUL_CLOSE:
       case NS_MOVE:
@@ -6992,9 +6991,9 @@ void nsWindow::OnDestroy()
   // Make sure we don't get destroyed in the process of tearing down.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   
-  // Dispatch the NS_DESTROY event. Must be called before mEventCallback is cleared.
+  // Dispatch the destroy notification.
   if (!mInDtor)
-    DispatchStandardEvent(NS_DESTROY);
+    NotifyWindowDestroyed();
 
   // Prevent the widget from sending additional events.
   mEventCallback = nullptr;

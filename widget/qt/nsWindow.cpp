@@ -3107,10 +3107,7 @@ nsWindow::OnDestroy(void)
     mParent = nullptr;
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
-
-    nsGUIEvent event(true, NS_DESTROY, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    NotifyWindowDestroyed();
 }
 
 bool

@@ -23,6 +23,7 @@
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
+#include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsView.h"
 #include "nsIViewManager.h"
@@ -1370,6 +1371,15 @@ static nsIPresShell* GetPresShell(nsIWidget* aWidget, void* clientData)
 }
 
 void
+nsBaseWidget::NotifyWindowDestroyed()
+{
+  nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(static_cast<nsISupports *>(mClientData)));
+  if (window) {
+    window->Destroy();
+  }
+}
+
+void
 nsBaseWidget::NotifySizeMoveDone()
 {
   nsIPresShell* presShell = GetPresShell(this, nullptr);
@@ -1461,7 +1471,6 @@ case _value: eventName.AssignLiteral(_name) ; break
   switch(aGuiEvent->message)
   {
     _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
-    _ASSIGN_eventName(NS_DESTROY,"NS_DESTROY");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
     _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
     _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DND_ENTER");
