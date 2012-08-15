@@ -739,7 +739,8 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
-    manager->SetDefaultTarget(aTarget, aDoubleBuffering, aRotation);
+    manager->SetDefaultTarget(aTarget);
+    manager->SetDefaultTargetConfiguration(aDoubleBuffering, aRotation);
   }
 }
 
@@ -750,8 +751,8 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
-    manager->SetDefaultTarget(nullptr, mozilla::layers::BUFFER_NONE,
-                              ROTATION_0);
+    manager->SetDefaultTarget(nullptr);
+    manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE, ROTATION_0);
   }
 }
 

@@ -1857,6 +1857,7 @@ mjit::Compiler::finishThisUp()
         }
     }
 
+    chunk->recompileInfo = cx->compartment->types.compiledInfo;
     return Compile_Okay;
 }
 

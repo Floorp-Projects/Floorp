@@ -47,7 +47,7 @@ browser.jar:
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
-*       skin/classic/browser/searchbar.css                           (searchbar.css)
+        skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/share-button.png
@@ -249,7 +249,7 @@ browser.jar:
         skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
-*       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
+        skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/share-button.png

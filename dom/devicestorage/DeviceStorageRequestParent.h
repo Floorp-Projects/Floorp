@@ -175,11 +175,13 @@ private:
     public:
       PostStatResultEvent(DeviceStorageRequestParent* aParent,
                           PRInt64 aFreeBytes,
-                          PRInt64 aTotalBytes);
+                          PRInt64 aTotalBytes,
+                          nsAString& aState);
       virtual ~PostStatResultEvent();
       virtual nsresult CancelableRun();
     private:
       PRInt64 mFreeBytes, mTotalBytes;
+      nsString mState;
    };
 
 protected:
