@@ -705,13 +705,13 @@ public class GeckoLayerClient
         return layerPoint;
     }
 
-    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
+    /** Used by robocop for testing purposes. Not for production use! */
     public void setDrawListener(DrawListener listener) {
         mDrawListener = listener;
     }
 
-    /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
-    public interface DrawListener {
+    /** Used by robocop for testing purposes. Not for production use! */
+    public static interface DrawListener {
         public void drawFinished();
     }
 }

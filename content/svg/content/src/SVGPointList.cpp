@@ -8,7 +8,7 @@
 #include "SVGPointList.h"
 #include "SVGAnimatedPointList.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
 #include "string.h"

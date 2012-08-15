@@ -137,8 +137,6 @@ public class testAllPagesTab extends BaseTest {
     }
 
     public void tearDown() throws Exception {
-        super.tearDown();
-
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
@@ -146,5 +144,7 @@ public class testAllPagesTab extends BaseTest {
         resolver.delete(uri, "url = ?", new String[] {
             "http://mochi.test:8888/tests/robocop/robocop_big_link.html"
         });
+
+        super.tearDown();
     }
 }

@@ -29,7 +29,7 @@ SimpleTest.waitForExplicitFinish();
 const DOMIdentity = Cu.import("resource://gre/modules/DOMIdentity.jsm")
                       .DOMIdentity;
 let outerWinId = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+                       .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
 
 // Reset the DOM state then run the next test
 function run_next_rp_test() {

@@ -106,8 +106,6 @@ const PRUnichar nbsp = 160;
 
 #define kInsertCookie  "_moz_Insert Here_moz_"
 
-#define NS_FOUND_TARGET NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR, 3)
-
 // some little helpers
 static bool FindIntegerAfterString(const char *aLeadingString, 
                                      nsCString &aCStr, PRInt32 &foundNumber);

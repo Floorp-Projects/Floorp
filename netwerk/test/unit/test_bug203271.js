@@ -4,10 +4,15 @@
 // specified in RFC 2616 section 14.9.3 by letting max-age
 // take precedence
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 const BUGID = "203271";
 
-var httpserver = new nsHttpServer();
+var httpserver = new HttpServer();
 var index = 0;
 var tests = [
     // original problem described in bug#203271

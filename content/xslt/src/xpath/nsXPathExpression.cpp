@@ -6,7 +6,7 @@
 #include "nsXPathExpression.h"
 #include "txExpr.h"
 #include "txExprResult.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"

@@ -10,7 +10,7 @@
 #include "nsMemory.h"
 #include "nsHTMLReflowState.h"
 #include "nsBlockDebugFlags.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 
 using namespace mozilla;
 

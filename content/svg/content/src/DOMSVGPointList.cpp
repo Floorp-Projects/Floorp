@@ -6,7 +6,7 @@
 #include "nsSVGElement.h"
 #include "DOMSVGPointList.h"
 #include "DOMSVGPoint.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "SVGAnimatedPointList.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"

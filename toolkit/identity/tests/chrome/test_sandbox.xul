@@ -217,7 +217,7 @@ function WindowObserver(aCallback) {
 
     let domWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
     ok(!domWin, "No window should be opened");
-    SimpleTest.executesoon(function() {
+    SimpleTest.executeSoon(function() {
       info("Closing opened window");
       domWin.close();
       aCallback();
