@@ -996,6 +996,26 @@ RemoveMatchingPrefixes(const SubPrefixArray& aSubs, nsTArray<T>* aFullHashes)
   Erase(aFullHashes, out, hashIter);
 }
 
+static void
+RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
+{
+  SubPrefix * subIter = aSubs.Elements();
+  SubPrefix * subEnd = aSubs.Elements() + aSubs.Length();
+
+  for (SubPrefix * iter = subIter; iter != subEnd; iter++) {
+    bool hasChunk = aAddChunks.Has(iter->AddChunk());
+    // Keep the subprefix if the chunk it refers to is one
+    // we haven't seen it yet.
+    if (!hasChunk) {
+      *subIter = *iter;
+      subIter++;
+    }
+  }
+
+  LOG(("Removed %u dead SubPrefix entries.", subEnd - subIter));
+  aSubs.SetLength(subIter - aSubs.Elements());
+}
+
 #ifdef DEBUG
 template <class T>
 static void EnsureSorted(nsTArray<T>* aArray)
@@ -1039,9 +1059,13 @@ HashStore::ProcessSubs()
   mSubChunks.Remove(dummyChunks);
 
   // Remove any remaining subbed prefixes from both addprefixes
-  // and subprefixes.
-  KnockoutSubs(&mSubPrefixes, &mAddPrefixes);
+  // and addcompletes.
+  KnockoutSubs(&mSubPrefixes,  &mAddPrefixes);
   KnockoutSubs(&mSubCompletes, &mAddCompletes);
+
+  // Remove any remaining subprefixes referring to addchunks that
+  // we have (and hence have been processed above).
+  RemoveDeadSubPrefixes(mSubPrefixes, mAddChunks);
 
 #ifdef DEBUG
   EnsureSorted(&mAddPrefixes);
