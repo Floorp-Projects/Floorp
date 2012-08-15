@@ -35,6 +35,7 @@ class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;
 class   ViewWrapper;
+class   nsIWidgetListener;
 
 namespace mozilla {
 namespace dom {
@@ -87,8 +88,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x91aafae4, 0xd814, 0x4803, \
-    { 0x9a, 0xf5, 0xb0, 0x2f, 0x1b, 0x2c, 0xaf, 0x57 } }
+  { 0xb8f43b25, 0x9036, 0x44e7, \
+    { 0xaa, 0xe2, 0x33, 0x76, 0x6c, 0x35, 0x91, 0xfc } }
 
 /*
  * Window shadow styles
@@ -493,12 +494,12 @@ class nsIWidget : public nsISupports {
     virtual ViewWrapper* GetAttachedViewPtr() = 0;
 
     /**
-     * Accessor functions to get and set the client data associated with the
-     * widget.
+     * Accessor functions to get and set the listener which handles various
+     * actions for the widget.
      */
     //@{
-    NS_IMETHOD  GetClientData(void*& aClientData) = 0;
-    NS_IMETHOD  SetClientData(void* aClientData) = 0;
+    virtual nsIWidgetListener* GetWidgetListener() = 0;
+    virtual void SetWidgetListener(nsIWidgetListener* alistener) = 0;
     //@}
 
     /**

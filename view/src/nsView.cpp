@@ -7,27 +7,34 @@
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsViewManager.h"
+#include "nsIFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIComponentManager.h"
 #include "nsGfxCIID.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/Attributes.h"
-
-//mmptemp
+#include "nsXULPopupManager.h"
+#include "nsIWidgetListener.h"
 
 static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
-
-
-//#define SHOW_VIEW_BORDERS
 
 #define VIEW_WRAPPER_IID \
   { 0xbf4e1841, 0xe9ec, 0x47f2, \
     { 0xb4, 0x77, 0x0f, 0xf6, 0x0f, 0x5a, 0xac, 0xbd } }
 
+static bool
+IsPopupWidget(nsIWidget* aWidget)
+{
+  nsWindowType type;
+  aWidget->GetWindowType(type);
+  return (type == eWindowType_popup);
+}
+
 /**
  * nsISupports-derived helper class that allows to store and get a view
  */
-class ViewWrapper MOZ_FINAL : public nsIInterfaceRequestor
+class ViewWrapper MOZ_FINAL : public nsIInterfaceRequestor,
+                              public nsIWidgetListener
 {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(VIEW_WRAPPER_IID)
@@ -39,6 +46,75 @@ class ViewWrapper MOZ_FINAL : public nsIInterfaceRequestor
     nsView* GetView() { return mView; }
   private:
     nsView* mView;
+
+  public:
+
+    bool WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y)
+    {
+      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+      if (pm && IsPopupWidget(aWidget)) {
+        pm->PopupMoved(mView->GetFrame(), nsIntPoint(x, y));
+        return true;
+      }
+
+      return false;
+    }
+
+    bool WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight)
+    {
+      nsIViewManager* viewManager = mView->GetViewManager();
+
+      // The root view may not be set if this is the resize associated with
+      // window creation
+      if (mView == viewManager->GetRootView()) {
+        nsRefPtr<nsDeviceContext> devContext;
+        viewManager->GetDeviceContext(*getter_AddRefs(devContext));
+        PRInt32 p2a = devContext->AppUnitsPerDevPixel();
+        viewManager->SetWindowDimensions(NSIntPixelsToAppUnits(aWidth, p2a),
+                                         NSIntPixelsToAppUnits(aHeight, p2a));
+        return true;
+      }
+      else if (IsPopupWidget(aWidget)) {
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm) {
+          pm->PopupResized(mView->GetFrame(), nsIntSize(aWidth, aHeight));
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool RequestWindowClose(nsIWidget* aWidget)
+    {
+      nsIFrame* frame = mView->GetFrame();
+      if (frame && IsPopupWidget(aWidget) &&
+          frame->GetType() == nsGkAtoms::menuPopupFrame) {
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm) {
+          pm->HidePopup(frame->GetContent(), false, true, false);
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    void WillPaintWindow(nsIWidget* aWidget, bool aWillSendPaint)
+    {
+      mView->GetViewManager()->WillPaintWindow(aWidget, aWillSendPaint);
+    }
+
+    bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, bool aSentWillPaint, bool aWillSendDidPaint)
+    {
+      nsCOMPtr<nsViewManager> vm = mView->GetViewManager();
+      return vm->PaintWindow(aWidget, aRegion, aSentWillPaint, aWillSendDidPaint);
+    }
+
+    void DidPaintWindow()
+    {
+      mView->GetViewManager()->DidPaintWindow();
+    }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ViewWrapper, VIEW_WRAPPER_IID)
@@ -93,23 +169,7 @@ NS_IMETHODIMP ViewWrapper::GetInterface(REFNSIID aIID, void** aInstancePtr)
  */
 static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
 {
-  // The widget's client data points back to the owning view
-  if (aWidget) {
-    void* clientData;
-    aWidget->GetClientData(clientData);
-    nsISupports* data = (nsISupports*)clientData;
-    
-    if (data) {
-      ViewWrapper* wrapper;
-      CallQueryInterface(data, &wrapper);
-      // Give a weak reference to the caller. There will still be at least one
-      // reference left, since the wrapper was addrefed when set on the widget.
-      if (wrapper)
-        wrapper->Release();
-      return wrapper;
-    }
-  }
-  return nullptr;
+  return aWidget ? static_cast<ViewWrapper *>(aWidget->GetWidgetListener()) : nullptr;
 }
 
 // Main events handler
@@ -256,7 +316,7 @@ void nsView::DestroyWidget()
       mWindow->SetAttachedViewPtr(nullptr);
     }
     else {
-      mWindow->SetClientData(nullptr);
+      mWindow->SetWidgetListener(nullptr);
       mWindow->Destroy();
     }
 
@@ -788,7 +848,7 @@ nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
 
   ViewWrapper* wrapper = new ViewWrapper(this);
   NS_ADDREF(wrapper); // Will be released in ~nsView
-  mWindow->SetClientData(wrapper);
+  mWindow->SetWidgetListener(wrapper);
 
   if (aEnableDragDrop) {
     mWindow->EnableDragDrop(true);
@@ -879,7 +939,7 @@ void nsView::AssertNoWindow()
     NS_ERROR("We already have a window for this view? BAD");
     ViewWrapper* wrapper = GetWrapperFor(mWindow);
     NS_IF_RELEASE(wrapper);
-    mWindow->SetClientData(nullptr);
+    mWindow->SetWidgetListener(nullptr);
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
@@ -891,16 +951,14 @@ void nsView::AssertNoWindow()
 EVENT_CALLBACK nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
 {
 #ifdef DEBUG
-  void* data = nullptr;
-  aWidget->GetClientData(data);
-  NS_ASSERTION(!data, "Already got client data");
+  NS_ASSERTION(!aWidget->GetWidgetListener(), "Already have a widget listener");
 #endif
 
   ViewWrapper* wrapper = new ViewWrapper(Impl());
   if (!wrapper)
     return nullptr;
   NS_ADDREF(wrapper); // Will be released in DetachWidgetEventHandler
-  aWidget->SetClientData(wrapper);
+  aWidget->SetWidgetListener(wrapper);
   return ::HandleEvent;
 }
 
@@ -909,7 +967,7 @@ void nsIView::DetachWidgetEventHandler(nsIWidget* aWidget)
   ViewWrapper* wrapper = GetWrapperFor(aWidget);
   NS_ASSERTION(!wrapper || wrapper->GetView() == this, "Wrong view");
   NS_IF_RELEASE(wrapper);
-  aWidget->SetClientData(nullptr);
+  aWidget->SetWidgetListener(nullptr);
 }
 
 #ifdef DEBUG

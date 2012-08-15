@@ -329,8 +329,7 @@ protected:
    * Event processing helpers
    */
   bool                    DispatchPluginEvent(const MSG &aMsg);
-  bool                    DispatchFocusToTopLevelWindow(PRUint32 aEventType);
-  bool                    DispatchFocus(PRUint32 aEventType);
+  void                    DispatchFocusToTopLevelWindow(bool aIsActivate);
   bool                    DispatchStandardEvent(PRUint32 aMsg);
   bool                    DispatchCommandEvent(PRUint32 aEventCommand);
   void                    RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);

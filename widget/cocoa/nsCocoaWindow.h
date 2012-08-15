@@ -151,7 +151,6 @@ typedef struct _nsCocoaWindowList {
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
-- (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
 - (bool)toplevelActiveState;
 - (void)sendToplevelActivateEvents;
