@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Classifier.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIRandomGenerator.h"
 #include "nsIInputStream.h"
@@ -62,6 +64,7 @@ namespace safebrowsing {
 
 Classifier::Classifier()
   : mFreshTime(45 * 60)
+  , mPerClientRandomize(true)
 {
 }
 
@@ -178,10 +181,8 @@ Classifier::Open(nsIFile& aCacheDirectory)
     return NS_ERROR_FAILURE;
   }
 
-  if (!mTableFreshness.Init()) {
-    return NS_ERROR_FAILURE;
-  }
-
+  mTableFreshness.Init();
+  // XXX: Disk IO potentially on the main thread during startup
   RegenActiveTables();
 
   return NS_OK;
@@ -598,10 +599,10 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   if (updateFreshness) {
     PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
     LOG(("Successfully updated %s", PromiseFlatCString(store->TableName()).get()));
-    rv = (mTableFreshness.Put(store->TableName(), now) ? NS_OK : NS_ERROR_FAILURE);
+    mTableFreshness.Put(store->TableName(), now);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 LookupCache *
@@ -613,7 +614,8 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
   }
 
-  LookupCache *cache = new LookupCache(aTable, mStoreDirectory);
+  LookupCache *cache = new LookupCache(aTable, mStoreDirectory,
+                                       mPerClientRandomize);
   nsresult rv = cache->Init();
   if (NS_FAILED(rv)) {
     return nullptr;

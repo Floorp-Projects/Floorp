@@ -94,6 +94,7 @@ public:
   nsresult CacheCompletions(const CacheResultArray& aResults);
   PRUint32 GetHashKey(void) { return mHashKey; };
   void SetFreshTime(PRUint32 aTime) { mFreshTime = aTime; };
+  void SetPerClientRandomize(bool aRandomize) { mPerClientRandomize = aRandomize; };
   /*
    * Get a bunch of extra prefixes to query for completion
    * and mask the real entry being requested
@@ -122,6 +123,7 @@ private:
   // Stores the last time a given table was updated (seconds).
   nsDataHashtable<nsCStringHashKey, PRInt64> mTableFreshness;
   PRUint32 mFreshTime;
+  bool mPerClientRandomize;
 };
 
 }

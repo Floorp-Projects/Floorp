@@ -116,9 +116,10 @@ ProtocolParser::~ProtocolParser()
 }
 
 nsresult
-ProtocolParser::Init(nsICryptoHash* aHasher)
+ProtocolParser::Init(nsICryptoHash* aHasher, bool aPerClientRandomize)
 {
   mCryptoHash = aHasher;
+  mPerClientRandomize = aPerClientRandomize;
   return NS_OK;
 }
 
@@ -482,7 +483,8 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(line, mCryptoHash);
         PRUint32 codedHash;
-        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey, &codedHash);
+        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
+                                    &codedHash, !mPerClientRandomize);
         NS_ENSURE_SUCCESS(rv, rv);
         newHash.FromUint32(codedHash);
         mTableUpdate->NewAddPrefix(mChunkState.num, newHash);
@@ -513,7 +515,8 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(Substring(iter, end), mCryptoHash);
         PRUint32 codedHash;
-        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey, &codedHash);
+        rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
+                                    &codedHash, !mPerClientRandomize);
         NS_ENSURE_SUCCESS(rv, rv);
         newHash.FromUint32(codedHash);
         mTableUpdate->NewSubPrefix(addChunk, newHash, mChunkState.num);
@@ -575,7 +578,8 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
   PRUint32 domHash = aDomain.ToUint32();
 
   if (aNumEntries == 0) {
-    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash);
+    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash,
+                                         !mPerClientRandomize);
     NS_ENSURE_SUCCESS(rv, rv);
     Prefix newHash;
     newHash.FromUint32(codedHash);
@@ -591,7 +595,8 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
   for (uint8 i = 0; i < aNumEntries; i++) {
     Prefix hash;
     hash.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
-    nsresult rv = LookupCache::KeyedHash(domHash, hash.ToUint32(), mHashKey, &codedHash);
+    nsresult rv = LookupCache::KeyedHash(domHash, hash.ToUint32(), mHashKey, &codedHash,
+                                         !mPerClientRandomize);
     NS_ENSURE_SUCCESS(rv, rv);
     Prefix newHash;
     newHash.FromUint32(codedHash);
@@ -625,7 +630,8 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, PRUint8 aNumEntries,
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
-    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash);
+    nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash,
+                                         !mPerClientRandomize);
     NS_ENSURE_SUCCESS(rv, rv);
     Prefix newHash;
     newHash.FromUint32(codedHash);
@@ -655,7 +661,8 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, PRUint8 aNumEntries,
     prefix.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
     *aStart += PREFIX_SIZE;
 
-    nsresult rv = LookupCache::KeyedHash(prefix.ToUint32(), domHash, mHashKey, &codedHash);
+    nsresult rv = LookupCache::KeyedHash(prefix.ToUint32(), domHash, mHashKey,
+                                         &codedHash, !mPerClientRandomize);
     NS_ENSURE_SUCCESS(rv, rv);
     Prefix newHash;
     newHash.FromUint32(codedHash);
