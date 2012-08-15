@@ -282,6 +282,14 @@ var SocialToolbar = {
 
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
     this.button.hidden = !Social.uiVisible;
+    if (!Social.provider.profile || !Social.provider.profile.userName) {
+      ["social-notification-box",
+       "social-status-iconbox"].forEach(function removeChildren(parentId) {
+        let parent = document.getElementById(parentId);
+        while(parent.hasChildNodes())
+          parent.removeChild(parent.firstChild);
+      });
+    }
   },
 
   updateProfile: function SocialToolbar_updateProfile() {
@@ -306,42 +314,67 @@ var SocialToolbar = {
 
   updateButton: function SocialToolbar_updateButton() {
     this.updateButtonHiddenState();
-
     let provider = Social.provider;
-    // if there are no ambient icons, we collapse them in the following loop
     let iconNames = Object.keys(provider.ambientNotificationIcons);
     let iconBox = document.getElementById("social-status-iconbox");
-    for (var i = 0; i < iconBox.childNodes.length; i++) {
-      let iconContainer = iconBox.childNodes[i];
-      if (i > iconNames.length - 1) {
-        iconContainer.collapsed = true;
-        continue;
+    let notifBox = document.getElementById("social-notification-box");
+    let notifBrowsers = document.createDocumentFragment();
+    let iconContainers = document.createDocumentFragment();
+
+    for each(let name in iconNames) {
+      let icon = provider.ambientNotificationIcons[name];
+
+      let notifBrowserId = "social-status-" + icon.name;
+      let notifBrowser = document.getElementById(notifBrowserId);
+      if (!notifBrowser) {
+        notifBrowser = document.createElement("iframe");
+        notifBrowser.setAttribute("type", "content");
+        notifBrowser.setAttribute("id", notifBrowserId);
+        notifBrowsers.appendChild(notifBrowser);
       }
+      notifBrowser.setAttribute("origin", provider.origin);
+      if (notifBrowser.getAttribute("src") != icon.contentPanel)
+        notifBrowser.setAttribute("src", icon.contentPanel);
 
-      iconContainer.collapsed = false;
-      let icon = provider.ambientNotificationIcons[iconNames[i]];
-      let iconImage = iconContainer.firstChild;
-      let iconCounter = iconImage.nextSibling;
-
-      iconImage.setAttribute("contentPanel", icon.contentPanel);
-      iconImage.setAttribute("src", icon.iconURL);
-
-      if (iconCounter.firstChild)
-        iconCounter.removeChild(iconCounter.firstChild);
-
-      if (icon.counter) {
-        iconCounter.appendChild(document.createTextNode(icon.counter));
-        iconCounter.collapsed = false;
+      let iconId = "social-notification-icon-" + icon.name;
+      let iconContainer = document.getElementById(iconId);
+      let iconImage, iconCounter;
+      if (iconContainer) {
+        iconImage = iconContainer.getElementsByClassName("social-notification-icon-image")[0];
+        iconCounter = iconContainer.getElementsByClassName("social-notification-icon-counter")[0];
       } else {
-        iconCounter.collapsed = true;
+        iconContainer = document.createElement("box");
+        iconContainer.setAttribute("id", iconId);
+        iconContainer.classList.add("social-notification-icon-container");
+        iconContainer.addEventListener("click", function (e) { SocialToolbar.showAmbientPopup(iconContainer); }, false);
+
+        iconImage = document.createElement("image");
+        iconImage.classList.add("social-notification-icon-image");
+        iconImage = iconContainer.appendChild(iconImage);
+
+        iconCounter = document.createElement("box");
+        iconCounter.classList.add("social-notification-icon-counter");
+        iconCounter.appendChild(document.createTextNode(""));
+        iconCounter = iconContainer.appendChild(iconCounter);
+
+        iconContainers.appendChild(iconContainer);
       }
+      if (iconImage.getAttribute("src") != icon.iconURL)
+        iconImage.setAttribute("src", icon.iconURL);
+      iconImage.setAttribute("notifBrowserId", notifBrowserId);
+
+      iconCounter.collapsed = !icon.counter;
+      iconCounter.firstChild.textContent = icon.counter || "";
     }
+    notifBox.appendChild(notifBrowsers);
+    iconBox.appendChild(iconContainers);
   },
 
   showAmbientPopup: function SocialToolbar_showAmbientPopup(iconContainer) {
     let iconImage = iconContainer.firstChild;
     let panel = document.getElementById("social-notification-panel");
-    let notifBrowser = document.getElementById("social-notification-browser");
+    let notifBox = document.getElementById("social-notification-box");
+    let notifBrowser = document.getElementById(iconImage.getAttribute("notifBrowserId"));
 
     panel.hidden = false;
 
@@ -349,30 +382,36 @@ var SocialToolbar = {
       // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
       // Need to handle dynamic sizing
       let doc = notifBrowser.contentDocument;
+      if (!doc) {
+        return;
+      }
       // "notif" is an implementation detail that we should get rid of
       // eventually
-      let body = doc.getElementById("notif") || (doc.body && doc.body.firstChild);
-      if (!body)
+      let body = doc.getElementById("notif") || doc.body;
+      if (!body || !body.firstChild) {
         return;
-      let h = body.scrollHeight > 0 ? body.scrollHeight : 300;
-      notifBrowser.style.width = body.scrollWidth + "px";
-      notifBrowser.style.height = h + "px";
+      }
+
+      // Clear dimensions on all browsers so the panel size will
+      // only use the selected browser.
+      let browserIter = notifBox.firstElementChild;
+      while (browserIter) {
+        browserIter.hidden = (browserIter != notifBrowser);
+        browserIter = browserIter.nextElementSibling;
+      }
+
+      let [height, width] = [body.firstChild.offsetHeight || 300, 330];
+      notifBrowser.style.width = width + "px";
+      notifBrowser.style.height = height + "px";
     }
 
-    notifBrowser.addEventListener("DOMContentLoaded", function onload() {
-      notifBrowser.removeEventListener("DOMContentLoaded", onload);
-      sizePanelToContent();
-    });
+    sizePanelToContent();
 
     panel.addEventListener("popuphiding", function onpopuphiding() {
       panel.removeEventListener("popuphiding", onpopuphiding);
-      // unload the panel
       SocialToolbar.button.removeAttribute("open");
-      notifBrowser.setAttribute("src", "about:blank");
     });
 
-    notifBrowser.setAttribute("origin", Social.provider.origin);
-    notifBrowser.setAttribute("src", iconImage.getAttribute("contentPanel"));
     this.button.setAttribute("open", "true");
     panel.openPopup(iconImage, "bottomcenter topleft", 0, 0, false, false);
   }
