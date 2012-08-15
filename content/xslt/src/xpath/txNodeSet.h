@@ -11,7 +11,7 @@
 #define txNodeSet_h__
 
 #include "txExprResult.h"
-#include "txError.h"
+#include "nsError.h"
 #include "txXPathNode.h"
 
 class txNodeSet : public txAExprResult

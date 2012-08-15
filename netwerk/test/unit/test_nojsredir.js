@@ -1,6 +1,11 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
 
-var httpserver = new nsHttpServer();
+Cu.import("resource://testing-common/httpd.js");
+
+var httpserver = new HttpServer();
 var index = 0;
 var tests = [
     {url : "/test/test",
@@ -8,7 +13,7 @@ var tests = [
 
     // Test that the http channel fails and the response body is suppressed
     // bug 255119
-    {url: "/test/test", 
+    {url: "/test/test",
      responseheader: [ "Location: javascript:alert()"],
      flags : CL_EXPECT_FAILURE,
      datalen : 0},

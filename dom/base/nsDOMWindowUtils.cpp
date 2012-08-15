@@ -6,7 +6,7 @@
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsDOMWindowUtils.h"
 #include "nsQueryContentEventResult.h"
@@ -477,10 +477,13 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  PRInt32 aButton,
                                  PRInt32 aClickCount,
                                  PRInt32 aModifiers,
-                                 bool aIgnoreRootScrollFrame)
+                                 bool aIgnoreRootScrollFrame,
+                                 float aPressure,
+                                 unsigned short aInputSourceArg)
 {
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
-                              aIgnoreRootScrollFrame, false);
+                              aIgnoreRootScrollFrame, false, aPressure,
+                              aInputSourceArg);
 }
 
 NS_IMETHODIMP
@@ -490,11 +493,14 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          PRInt32 aButton,
                                          PRInt32 aClickCount,
                                          PRInt32 aModifiers,
-                                         bool aIgnoreRootScrollFrame)
+                                         bool aIgnoreRootScrollFrame,
+                                         float aPressure,
+                                         unsigned short aInputSourceArg)
 {
   SAMPLE_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
-                              aIgnoreRootScrollFrame, true);
+                              aIgnoreRootScrollFrame, true, aPressure,
+                              aInputSourceArg);
 }
 
 static nsIntPoint
@@ -515,6 +521,8 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        PRInt32 aClickCount,
                                        PRInt32 aModifiers,
                                        bool aIgnoreRootScrollFrame,
+                                       float aPressure,
+                                       unsigned short aInputSourceArg,
                                        bool aToWindow)
 {
   if (!IsUniversalXPConnectCapable()) {
@@ -545,13 +553,18 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   } else
     return NS_ERROR_FAILURE;
 
+  if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
+    aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  }
+
   nsMouseEvent event(true, msg, widget, nsMouseEvent::eReal,
                      contextMenuKey ?
                        nsMouseEvent::eContextMenuKey : nsMouseEvent::eNormal);
   event.modifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.widget = widget;
-
+  event.pressure = aPressure;
+  event.inputSource = aInputSourceArg;
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
   event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;

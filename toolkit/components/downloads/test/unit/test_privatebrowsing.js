@@ -81,7 +81,7 @@ function run_test() {
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   do_test_pending();
-  let httpserv = new nsHttpServer();
+  let httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
 
   let tmpDir = Cc["@mozilla.org/file/directory_service;1"].

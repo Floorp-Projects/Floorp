@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 var uri = "http://localhost:4444/redirect";
@@ -61,7 +66,7 @@ function headerStreamObserver(request, buffer)
 
 function run_test()
 {
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.registerPathHandler("/redirect", redirectHandler);
   httpserver.registerPathHandler("/content", contentHandler);
   httpserver.start(4444);
@@ -69,7 +74,7 @@ function run_test()
   var prefs = Cc["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
   prefs.setBoolPref("network.http.prompt-temp-redirect", false);
-  
+
   var chan = make_channel(noRedirectURI);
   var uploadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                        .createInstance(Ci.nsIStringInputStream);

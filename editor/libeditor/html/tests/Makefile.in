@@ -79,6 +79,7 @@ MOCHITEST_FILES = \
 		test_bug738366.html \
 		test_bug757371.html \
 		test_bug767684.html \
+		test_bug780035.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))

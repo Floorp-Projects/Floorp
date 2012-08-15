@@ -22,7 +22,7 @@
 
 #include "nsPropertyTable.h"
 #include "pldhash.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsIAtom.h"
 
 struct PropertyListMapEntry : public PLDHashEntryHdr {

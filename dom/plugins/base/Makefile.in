@@ -38,7 +38,6 @@ EXPORTS = \
   nptypes.h \
   npruntime.h \
   nsPluginLogging.h \
-  nsPluginError.h \
   nsPluginNativeWindow.h \
   nsPluginsCID.h \
   nsNPAPIPluginInstance.h \

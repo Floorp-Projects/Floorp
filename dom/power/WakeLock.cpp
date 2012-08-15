@@ -6,7 +6,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"

@@ -2,13 +2,20 @@
 // Test that "max_entry_size" prefs for disk- and memory-cache prevents
 // caching resources with size out of bounds
 //
-do_load_httpd_js();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
+
 do_get_profile();
 
 const prefService = Cc["@mozilla.org/preferences-service;1"]
                        .getService(Ci.nsIPrefBranch);
 
-const httpserver = new nsHttpServer();
+const httpserver = new HttpServer();
 
 // Repeats the given data until the total size is larger than 1K
 function repeatToLargerThan1K(data) {

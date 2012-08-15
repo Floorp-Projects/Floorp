@@ -503,6 +503,10 @@ nsSVGFilterFrame::GetPostFilterBounds(nsIFrame *aFilteredFrame,
                                       const gfxRect *aOverrideBBox,
                                       const nsRect *aPreFilterBounds)
 {
+  MOZ_ASSERT(!(aFilteredFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
+             !(aFilteredFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+             "Non-display SVG do not maintain visual overflow rects");
+
   nsAutoFilterInstance instance(aFilteredFrame, this, nullptr, nullptr,
                                 aPreFilterBounds, aPreFilterBounds,
                                 aOverrideBBox);
