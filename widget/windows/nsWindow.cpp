@@ -3505,7 +3505,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
       case NS_DEACTIVATE:
       case NS_ACTIVATE:
       case NS_SIZEMODE:
-      case NS_UISTATECHANGED:
       case NS_DESTROY:
       case NS_SETZLEVEL:
       case NS_XUL_CLOSE:
@@ -5158,13 +5157,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     // the button should not.
     PRInt32 action = LOWORD(wParam);
     if (action == UIS_SET || action == UIS_CLEAR) {
-      nsUIStateChangeEvent event(true, NS_UISTATECHANGED, this);
       PRInt32 flags = HIWORD(wParam);
+      UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
+      UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
       if (flags & UISF_HIDEACCEL)
-        event.showAccelerators = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
+        showAccelerators = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
       if (flags & UISF_HIDEFOCUS)
-        event.showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
-      DispatchWindowEvent(&event);
+        showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
+      NotifyUIStateChanged(showAccelerators, showFocusRings);
     }
 
     break;
