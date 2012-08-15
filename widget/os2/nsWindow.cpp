@@ -2948,10 +2948,8 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
     return NS_OK;
   }
 
-  // if state is eInCreate, only send out NS_CREATE
   // if state is eDoingDelete, don't send out anything
-  if ((mWindowState & nsWindowState_eLive) ||
-      (mWindowState == nsWindowState_eInCreate && event->message == NS_CREATE)) {
+  if (mWindowState & nsWindowState_eLive) {
     aStatus = (*mEventCallback)(event);
   }
   return NS_OK;
