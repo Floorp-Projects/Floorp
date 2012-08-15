@@ -49,6 +49,11 @@ class ViewWrapper MOZ_FINAL : public nsIInterfaceRequestor,
 
   public:
 
+    virtual nsIPresShell* GetPresShell()
+    {
+      return mView->GetViewManager()->GetPresShell();
+    }
+
     bool WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y)
     {
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();

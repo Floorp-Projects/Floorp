@@ -24,9 +24,6 @@
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
-#include "nsView.h"
-#include "nsIViewManager.h"
 #include "nsEventStateManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
@@ -1345,31 +1342,6 @@ const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
   return mSizeConstraints;
 }
 
-// If widgetListener is non-null, then get the presShell from either the window
-// or the view. Otherwise, assume that this is a widget attached to a view.
-static nsIPresShell* GetPresShell(nsIWidget* aWidget, void* clientData)
-{
-  nsCOMPtr<nsIXULWindow> window =
-    aWidgetListener ? aWidgetListener->GetXULWindow() : nullptr;
-  if (window) {
-    nsCOMPtr<nsIDocShell> docShell;
-    window->GetDocShell(getter_AddRefs(docShell));
-    if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell;
-      docShell->GetPresShell(getter_AddRefs(presShell));
-      return presShell.get();
-    }
-  }
-  else {
-    nsIView* view = nsView::GetViewFor(aWidget);
-    if (view) {
-      return view->GetViewManager()->GetPresShell();
-    }
-  }
- 
-  return nullptr;
-}
-
 void
 nsBaseWidget::NotifyWindowDestroyed()
 {
@@ -1386,7 +1358,10 @@ nsBaseWidget::NotifyWindowDestroyed()
 void
 nsBaseWidget::NotifySizeMoveDone()
 {
-  nsIPresShell* presShell = GetPresShell(this, nullptr);
+  if (!mWidgetListener || mWidgetListener->GetXULWindow())
+    return;
+
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
   if (presShell) {
     presShell->WindowSizeMoveDone();
   }
@@ -1395,7 +1370,10 @@ nsBaseWidget::NotifySizeMoveDone()
 void
 nsBaseWidget::NotifySysColorChanged()
 {
-  nsIPresShell* presShell = GetPresShell(this, nullptr);
+  if (!mWidgetListener || mWidgetListener->GetXULWindow())
+    return;
+
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
   if (presShell) {
     presShell->SysColorChanged();
   }
@@ -1404,7 +1382,10 @@ nsBaseWidget::NotifySysColorChanged()
 void
 nsBaseWidget::NotifyThemeChanged()
 {
-  nsIPresShell* presShell = GetPresShell(this, nullptr);
+  if (!mWidgetListener || mWidgetListener->GetXULWindow())
+    return;
+
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
   if (presShell) {
     presShell->ThemeChanged();
   }
@@ -1414,7 +1395,7 @@ void
 nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
                                    UIStateChangeType aShowFocusRings)
 {
-  nsIPresShell* presShell = GetPresShell(this, mWidgetListener);
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
   nsIDocument* doc = presShell->GetDocument();
   if (doc) {
     nsPIDOMWindow* win = doc->GetWindow();
@@ -1429,7 +1410,7 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
 Accessible*
 nsBaseWidget::GetAccessible()
 {
-  nsIPresShell* presShell = GetPresShell(this, mWidgetListener);
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
 
   // If container is null then the presshell is not active. This often happens

@@ -41,6 +41,7 @@
 #include "nsIXULWindow.h"
 
 class nsIView;
+class nsIPresShell;
 
 class nsIWidgetListener
 {
@@ -57,6 +58,11 @@ public:
    * If this listener is for an nsIView, return it.
    */
   virtual nsIView* GetView() { return nullptr; }
+
+  /**
+   * Return the presshell for this widget listener.
+   */
+  virtual nsIPresShell* GetPresShell() { return nullptr; }
 
   /**
    * Called when a window is moved to location (x, y). Returns true if the

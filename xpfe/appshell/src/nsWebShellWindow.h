@@ -48,7 +48,7 @@ public:
 
   // nsIWidgetListener
   virtual nsIXULWindow* GetXULWindow() { return this; }
-
+  virtual nsIPresShell* GetPresShell();
   virtual bool WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y);
   virtual bool WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight);
   virtual bool RequestWindowClose(nsIWidget* aWidget);
