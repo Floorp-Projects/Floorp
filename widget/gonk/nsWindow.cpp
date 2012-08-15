@@ -522,10 +522,18 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
 {
     if (aAllowRetaining)
         *aAllowRetaining = true;
-    if (mLayerManager)
+    if (mLayerManager) {
+        // This layer manager might be used for painting outside of DoDraw(), so we need
+        // to set the correct rotation on it.
+        if (mLayerManager->GetBackendType() == LAYERS_BASIC) {
+            BasicLayerManager* manager =
+                static_cast<BasicLayerManager*>(mLayerManager.get());
+            manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE, 
+                                                   ScreenRotation(EffectiveScreenRotation()));
+        }
         return mLayerManager;
+    }
 
-    LOG("Creating layer Manaer\n");
     // Set mUseAcceleratedRendering here to make it consistent with
     // nsBaseWidget::GetLayerManager
     mUseAcceleratedRendering = GetShouldAccelerate();
