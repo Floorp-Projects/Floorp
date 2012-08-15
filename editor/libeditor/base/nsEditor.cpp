@@ -112,9 +112,6 @@ class nsIOutputStream;
 class nsIParserService;
 class nsITransferable;
 
-#define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
-#define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
-
 #ifdef NS_DEBUG_EDITOR
 static bool gNoisy = false;
 #endif

@@ -190,6 +190,8 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
         case LOCAL_GL_ALPHA:
         case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_LUMINANCE_ALPHA:
+        case LOCAL_GL_DEPTH_COMPONENT:
+        case LOCAL_GL_DEPTH_STENCIL:
             return false;
 
         case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:

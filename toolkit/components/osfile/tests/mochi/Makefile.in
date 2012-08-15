@@ -18,6 +18,8 @@ MOCHITEST_CHROME_FILES := \
   worker_test_osfile_win.js \
   test_osfile_front.xul \
   worker_test_osfile_front.js \
+  test_osfile_comms.xul \
+  worker_test_osfile_comms.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

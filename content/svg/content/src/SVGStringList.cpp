@@ -7,7 +7,7 @@
 
 #include "SVGStringList.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
 #include "nsTextFormatter.h"

@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserv;
 
@@ -13,7 +18,7 @@ TestListener.prototype.onStopRequest = function(request, context, status) {
 }
 
 function run_test() {
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
 
   httpserv.registerPathHandler("/bug412945", bug412945);
 

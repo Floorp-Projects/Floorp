@@ -2369,12 +2369,19 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
 
+#identity-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
+}
+
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
-.geolocation-text-link {
+#notification-popup .text-link {
   color: #fff;
+}
+
+.geolocation-text-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
@@ -3329,11 +3336,6 @@ stack[anonid=browserStack][responsivemode] {
   border-bottom: solid #a5a5a5 1px;
   background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
     -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
-}
-
-.web-console-panel {
-  -moz-appearance: none;
-  background-color: white;
 }
 
 /* Developer Toolbar */

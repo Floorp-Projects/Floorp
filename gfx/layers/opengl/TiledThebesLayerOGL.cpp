@@ -115,10 +115,9 @@ TiledThebesLayerOGL::TiledThebesLayerOGL(LayerManagerOGL *aManager)
   : ShadowThebesLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mVideoMemoryTiledBuffer(aManager->gl())
+  , mReusableTileStore(nullptr)
 {
   mImplData = static_cast<LayerOGL*>(this);
-  // XXX Add a pref for reusable tile store size
-  mReusableTileStore = new ReusableTileStoreOGL(aManager->gl(), 1);
 }
 
 TiledThebesLayerOGL::~TiledThebesLayerOGL()
@@ -144,6 +143,17 @@ TiledThebesLayerOGL::ProcessUploadQueue()
 {
   if (mRegionToUpload.IsEmpty())
     return;
+
+  // We should only be retaining old tiles if we're not fixed position.
+  // Fixed position layers don't/shouldn't move on the screen, so retaining
+  // tiles is not useful and often results in rendering artifacts.
+  if (mReusableTileStore && mIsFixedPosition) {
+    delete mReusableTileStore;
+    mReusableTileStore = nullptr;
+  } else if (!mReusableTileStore && !mIsFixedPosition) {
+    // XXX Add a pref for reusable tile store size
+    mReusableTileStore = new ReusableTileStoreOGL(gl(), 1);
+  }
 
   gfxSize resolution(1, 1);
   if (mReusableTileStore) {

@@ -68,7 +68,7 @@ class HTMLElement(object):
     def clear(self):
         return self.marionette._send_message('clearElement', 'ok', element=self.id)
 
-    def selected(self):
+    def is_selected(self):
         return self.marionette._send_message('isElementSelected', 'value', element=self.id)
 
     def enabled(self):

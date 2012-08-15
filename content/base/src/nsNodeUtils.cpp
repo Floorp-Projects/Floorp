@@ -28,7 +28,6 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
-#include "nsImageLoadingContent.h"
 #include "jsgc.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
@@ -106,6 +105,16 @@ nsNodeUtils::AttributeChanged(Element* aElement,
   IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
                               aModType));
+}
+
+void
+nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
+                                        PRInt32 aNameSpaceID,
+                                        nsIAtom* aAttribute)
+{
+  nsIDocument* doc = aElement->OwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
+                             (doc, aElement, aNameSpaceID, aAttribute));
 }
 
 void
@@ -511,16 +520,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         olc->NotifyOwnerDocumentActivityChanged();
       }
     }
-
-    // nsImageLoadingContent needs to know when its document changes
-    if (oldDoc != newDoc) {
-      nsCOMPtr<nsIImageLoadingContent> imageContent(do_QueryInterface(aNode));
-      if (imageContent) {
-        imageContent->NotifyOwnerDocumentChanged(oldDoc);
-      }
-      if (oldDoc->MayHaveDOMMutationObservers()) {
-        newDoc->SetMayHaveDOMMutationObservers();
-      }
+ 
+    if (oldDoc != newDoc && oldDoc->MayHaveDOMMutationObservers()) {
+      newDoc->SetMayHaveDOMMutationObservers();
     }
 
     if (elem) {

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=777628
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 743615</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils_bug743615.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=777628">Mozilla Bug 777628</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="ifr"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for structured cloning ImageData from another scope. **/
+
+// Set up an ImageData in another scope.
+var doc = document.getElementById('ifr').contentDocument;
+var canvas = doc.createElement('canvas');
+canvas.width = 200;
+canvas.height = 200;
+doc.body.appendChild(canvas);
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = 'rgb(';
+ctx.fillRect(30, 30, 50, 50);
+var imageData = ctx.createImageData(200, 200);
+
+// Clone it.
+window.postMessage({ imageData: imageData }, '*');
+ok(true, "Handled cross-compartment imagedata without throwing/crashing!");
+
+</script>
+</pre>
+</body>
+</html>

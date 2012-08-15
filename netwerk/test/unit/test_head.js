@@ -3,9 +3,14 @@
 //
 
 // Note: sets Cc and Ci variables
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
 
-var httpserver = new nsHttpServer();
+Cu.import("resource://testing-common/httpd.js");
+
+var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
 var channel;

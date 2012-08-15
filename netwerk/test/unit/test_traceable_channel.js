@@ -3,7 +3,12 @@
 // response. Make sure that body received by original channel's listener
 // is correctly modified.
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 var pipe = null;
@@ -142,7 +147,7 @@ function run_test() {
   var observer = new HttpResponseExaminer();
   observer.register();
 
-  httpserver = new nsHttpServer();
+  httpserver = new HttpServer();
   httpserver.registerPathHandler("/testdir", test_handler);
   httpserver.start(4444);
 

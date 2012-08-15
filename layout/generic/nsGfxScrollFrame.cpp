@@ -482,7 +482,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   if (aAssumeHScroll) {
     nsSize hScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mInner.mHScrollbarBox,
-                        nsnull, &hScrollbarPrefSize, false);
+                        nullptr, &hScrollbarPrefSize, false);
     if (computedHeight != NS_UNCONSTRAINEDSIZE)
       computedHeight = NS_MAX(0, computedHeight - hScrollbarPrefSize.height);
     computedMinHeight = NS_MAX(0, computedMinHeight - hScrollbarPrefSize.height);
@@ -493,7 +493,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   if (aAssumeVScroll) {
     nsSize vScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mInner.mVScrollbarBox,
-                        &vScrollbarPrefSize, nsnull, true);
+                        nullptr, &vScrollbarPrefSize, true);
     availWidth = NS_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
 
@@ -2548,9 +2548,16 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
   nsLayoutUtils::GetFontMetricsForFrame(mOuter, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(mOuter));
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
-  nscoord fontHeight = 1;
+  static nscoord sMinLineScrollAmountInPixels = -1;
+  if (sMinLineScrollAmountInPixels < 0) {
+    Preferences::AddIntVarCache(&sMinLineScrollAmountInPixels,
+                                "mousewheel.min_line_scroll_amount", 1);
+  }
+  PRUint32 appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
+  nscoord fontHeight =
+    NS_MAX(1, sMinLineScrollAmountInPixels) * appUnitsPerDevPixel;
   if (fm) {
-    fontHeight = fm->MaxHeight();
+    fontHeight = NS_MAX(fm->MaxHeight(), fontHeight);
   }
 
   return nsSize(fontHeight, fontHeight);
@@ -2917,7 +2924,7 @@ void
 nsGfxScrollFrameInner::Destroy()
 {
   if (mScrollbarActivity) {
-    mScrollbarActivity = nsnull;
+    mScrollbarActivity = nullptr;
   }
 
   // Unbind any content created in CreateAnonymousContent from the tree

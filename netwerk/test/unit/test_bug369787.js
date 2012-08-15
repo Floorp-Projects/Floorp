@@ -1,4 +1,9 @@
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 const BUGID = "369787";
 var server = null;
@@ -47,7 +52,7 @@ function after_channel_closed() {
 
 function run_test() {
   // start server
-  server = new nsHttpServer();
+  server = new HttpServer();
 
   server.registerPathHandler("/bug" + BUGID, bug369787);
 

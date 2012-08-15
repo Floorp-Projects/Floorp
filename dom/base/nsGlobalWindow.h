@@ -74,11 +74,11 @@
 
 // Amount of time allowed between alert/prompt/confirm before enabling
 // the stop dialog checkbox.
-#define SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
+#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
 
-// During click or mousedown events (and others, see nsDOMEvent) we allow modal
-// dialogs up to this limit, even if they were disabled.
-#define MAX_DIALOG_COUNT 10
+// Maximum number of successive dialogs before we prompt users to disable
+// dialogs for this window.
+#define MAX_SUCCESSIVE_DIALOG_COUNT 5
 
 // Idle fuzz time upper limit
 #define MAX_IDLE_FUZZ_TIME_MS 90000
@@ -384,8 +384,6 @@ public:
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
   virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
-  virtual NS_HIDDEN_(bool) IsPartOfApp();
-  virtual NS_HIDDEN_(bool) IsInAppOrigin();
 
   // nsIDOMStorageIndexedDB
   NS_DECL_NSIDOMSTORAGEINDEXEDDB
@@ -440,22 +438,22 @@ public:
     return nullptr;
   }
 
-  // Call this when a modal dialog is about to be opened.  Returns
-  // true if we've reached the state in this top level window where we
-  // ask the user if further dialogs should be blocked.
-  bool DialogOpenAttempted();
+  // Returns true if dialogs need to be prevented from appearings for this
+  // window. beingAbused returns whether dialogs are being abused.
+  bool DialogsAreBlocked(bool *aBeingAbused);
 
-  // Returns true if dialogs have already been blocked for this
-  // window.
-  bool AreDialogsBlocked();
+  // Returns true if we've reached the state in this top level window where we
+  // ask the user if further dialogs should be blocked. This method must only
+  // be called on the scriptable top inner window.
+  bool DialogsAreBeingAbused();
 
-  // Ask the user if further dialogs should be blocked. This is used
-  // in the cases where we have no modifiable UI to show, in that case
-  // we show a separate dialog when asking this question.
-  bool ConfirmDialogAllowed();
+  // Ask the user if further dialogs should be blocked, if dialogs are currently
+  // being abused. This is used in the cases where we have no modifiable UI to
+  // show, in that case we show a separate dialog to ask this question.
+  bool ConfirmDialogIfNeeded();
 
   // Prevent further dialogs in this (top level) window
-  void PreventFurtherDialogs();
+  void PreventFurtherDialogs(bool aPermanent);
 
   virtual void SetHasAudioAvailableEventListeners();
 
@@ -626,12 +624,6 @@ protected:
   friend class HashchangeCallback;
   friend class nsBarProp;
 
-  enum TriState {
-    TriState_Unknown = -1,
-    TriState_False,
-    TriState_True
-  };
-
   // Object Management
   virtual ~nsGlobalWindow();
   void CleanUp(bool aIgnoreModalDialog);
@@ -680,37 +672,56 @@ protected:
   }
 
   // Window Control Functions
+
+  virtual nsresult
+  OpenNoNavigate(const nsAString& aUrl,
+                 const nsAString& aName,
+                 const nsAString& aOptions,
+                 nsIDOMWindow **_retval);
+
   /**
-   * @param aURL the URL to load in the new window
-   * @param aName the name to use for the new window
-   * @param aOptions the window options to use for the new window
-   * @param aDialog true when called from variants of OpenDialog.  If this is
-   *                true, this method will skip popup blocking checks.  The
-   *                aDialog argument is passed on to the window watcher.
-   * @param aCalledNoScript true when called via the [noscript] open()
-   *                        and openDialog() methods.  When this is true, we do
-   *                        NOT want to use the JS stack for things like caller
-   *                        determination.
-   * @param aDoJSFixups true when this is the content-accessible JS version of
-   *                    window opening.  When true, popups do not cause us to
-   *                    throw, we save the caller's principal in the new window
-   *                    for later consumption, and we make sure that there is a
-   *                    document in the newly-opened window.  Note that this
-   *                    last will only be done if the newly-opened window is
-   *                    non-chrome.
-   * @param argv The arguments to pass to the new window.  The first
-   *             three args, if present, will be aURL, aName, and aOptions.  So
-   *             this param only matters if there are more than 3 arguments.
-   * @param argc The number of arguments in argv.
-   * @param aExtraArgument Another way to pass arguments in.  This is mutually
-   *                       exclusive with the argv/argc approach.
-   * @param aJSCallerContext The calling script's context. This must be nullptr
-   *                         when aCalledNoScript is true.
-   * @param aReturn [out] The window that was opened, if any.
+   * @param aUrl the URL we intend to load into the window.  If aNavigate is
+   *        true, we'll actually load this URL into the window. Otherwise,
+   *        aUrl is advisory; OpenInternal will not load the URL into the
+   *        new window.
    *
-   * @note that the boolean args are const because the function shouldn't be
-   * messing with them.  That also makes it easier for the compiler to sort out
-   * its build warning stuff.
+   * @param aName the name to use for the new window
+   *
+   * @param aOptions the window options to use for the new window
+   *
+   * @param aDialog true when called from variants of OpenDialog.  If this is
+   *        true, this method will skip popup blocking checks.  The aDialog
+   *        argument is passed on to the window watcher.
+   *
+   * @param aCalledNoScript true when called via the [noscript] open()
+   *        and openDialog() methods.  When this is true, we do NOT want to use
+   *        the JS stack for things like caller determination.
+   *
+   * @param aDoJSFixups true when this is the content-accessible JS version of
+   *        window opening.  When true, popups do not cause us to throw, we save
+   *        the caller's principal in the new window for later consumption, and
+   *        we make sure that there is a document in the newly-opened window.
+   *        Note that this last will only be done if the newly-opened window is
+   *        non-chrome.
+   *
+   * @param aNavigate true if we should navigate to the provided URL, false
+   *        otherwise.  When aNavigate is false, we also skip our can-load
+   *        security check, on the assumption that whoever *actually* loads this
+   *        page will do their own security check.
+   *
+   * @param argv The arguments to pass to the new window.  The first
+   *        three args, if present, will be aUrl, aName, and aOptions.  So this
+   *        param only matters if there are more than 3 arguments.
+   *
+   * @param argc The number of arguments in argv.
+   *
+   * @param aExtraArgument Another way to pass arguments in.  This is mutually
+   *        exclusive with the argv/argc approach.
+   *
+   * @param aJSCallerContext The calling script's context. This must be null
+   *        when aCalledNoScript is true.
+   *
+   * @param aReturn [out] The window that was opened, if any.
    */
   NS_HIDDEN_(nsresult) OpenInternal(const nsAString& aUrl,
                                     const nsAString& aName,
@@ -719,6 +730,7 @@ protected:
                                     bool aContentModal,
                                     bool aCalledNoScript,
                                     bool aDoJSFixups,
+                                    bool aNavigate,
                                     nsIArray *argv,
                                     nsISupports *aExtraArgument,
                                     nsIPrincipal *aCalleePrincipal,
@@ -898,10 +910,6 @@ protected:
   nsresult CloneStorageEvent(const nsAString& aType,
                              nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
-  void SetIsApp(bool aValue);
-  nsresult SetApp(const nsAString& aManifestURL);
-  nsresult GetApp(mozIDOMApplication** aApplication);
-
   // Implements Get{Real,Scriptable}Top.
   nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
@@ -976,14 +984,6 @@ protected:
 
   // whether we've sent the destroy notification for our window id
   bool                   mNotifiedIDDestroyed : 1;
-
-  // Whether the window is the window of an application frame.
-  // This is TriState_Unknown if the object is the content window of an
-  // iframe which is neither mozBrowser nor mozApp.
-  TriState               mIsApp : 2;
-
-  // Principal of the web app running in this window, if any.
-  nsCOMPtr<nsIPrincipal>        mAppPrincipal;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
@@ -1062,27 +1062,33 @@ protected:
 
   nsCOMPtr<nsIIDBFactory> mIndexedDB;
 
-  // In the case of a "trusted" dialog (@see PopupControlState), we
-  // set this counter to ensure a max of MAX_DIALOG_LIMIT
+  // This counts the number of windows that have been opened in rapid succession
+  // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
+  // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
+  // have elapsed without any other dialogs.
   PRUint32                      mDialogAbuseCount;
 
-  // This holds the time when the last modal dialog was shown, if two
-  // dialogs are shown within CONCURRENT_DIALOG_TIME_LIMIT the
-  // checkbox is shown. In the case of ShowModalDialog another Confirm
-  // dialog will be shown, the result of the checkbox/confirm dialog
-  // will be stored in mDialogDisabled variable.
+  // This holds the time when the last modal dialog was shown. If more than
+  // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
+  // dom.successive_dialog_time_limit, we show a checkbox or confirmation prompt
+  // to allow disabling of further dialogs from this window.
   TimeStamp                     mLastDialogQuitTime;
-  bool                          mDialogDisabled;
+
+  // This is set to true once the user has opted-in to preventing further
+  // dialogs for this window. Subsequent dialogs may still open if
+  // mDialogAbuseCount gets reset.
+  bool                          mStopAbuseDialogs;
+
+  // This flag gets set when dialogs should be permanently disabled for this
+  // window (e.g. when we are closing the tab and therefore are guaranteed to be
+  // destroying this window).
+  bool                          mDialogsPermanentlyDisabled;
 
   nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<PRUint32> mEnabledSensors;
-
-  // The application associated with this window.
-  // This should only be non-null if mIsApp's value is TriState_True.
-  nsCOMPtr<mozIDOMApplication> mApp;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

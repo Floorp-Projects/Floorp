@@ -155,6 +155,12 @@ interface nsIWebGLExtensionCompressedTextureS3TC : nsIWebGLExtension
     const WebGLenum COMPRESSED_RGBA_S3TC_DXT5_EXT       = 0x83F3;
 };
 
+[scriptable, builtinclass, uuid(ef36f000-c1b2-11e1-afa7-0800200c9a66)]
+interface nsIWebGLExtensionDepthTexture : nsIWebGLExtension
+{
+  const WebGLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;
+};
+
 [scriptable, builtinclass, uuid(a1fdfb76-6a08-4a1a-b0c9-d92ef3357cb9)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {

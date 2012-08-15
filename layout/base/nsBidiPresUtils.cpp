@@ -421,14 +421,15 @@ SplitInlineAncestors(nsIFrame* aParent,
     nsIFrame* grandparent = parent->GetParent();
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
-    nsresult rv = presShell->FrameConstructor()->
-      CreateContinuingFrame(presContext, parent, grandparent, &newParent, false);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
     // Split the child list after |frame|, unless it is the last child.
     if (!frame || frame->GetNextSibling()) {
+    
+      nsresult rv = presShell->FrameConstructor()->
+        CreateContinuingFrame(presContext, parent, grandparent, &newParent, false);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
       nsContainerFrame* container = do_QueryFrame(parent);
       nsFrameList tail = container->StealFramesAfter(frame);
 
@@ -443,13 +444,13 @@ SplitInlineAncestors(nsIFrame* aParent,
       if (NS_FAILED(rv)) {
         return rv;
       }
-    }
     
-    // The list name kNoReflowPrincipalList would indicate we don't want reflow
-    nsFrameList temp(newParent, newParent);
-    rv = grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent, temp);
-    if (NS_FAILED(rv)) {
-      return rv;
+      // The list name kNoReflowPrincipalList would indicate we don't want reflow
+      nsFrameList temp(newParent, newParent);
+      rv = grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent, temp);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
     
     frame = parent;

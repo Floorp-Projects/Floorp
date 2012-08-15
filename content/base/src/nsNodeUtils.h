@@ -64,6 +64,16 @@ public:
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType);
+  /**
+   * Send AttributeSetToCurrentValue notifications to nsIMutationObservers.
+   * @param aElement      Element whose data changed
+   * @param aNameSpaceID  Namespace of the attribute
+   * @param aAttribute    Local-name of the attribute
+   * @see nsIMutationObserver::AttributeSetToCurrentValue
+   */
+  static void AttributeSetToCurrentValue(mozilla::dom::Element* aElement,
+                                         PRInt32 aNameSpaceID,
+                                         nsIAtom* aAttribute);
 
   /**
    * Send ContentAppended notifications to nsIMutationObservers

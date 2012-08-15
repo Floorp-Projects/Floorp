@@ -5,7 +5,7 @@
 
 #include "FileIOObject.h"
 #include "nsDOMFile.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"

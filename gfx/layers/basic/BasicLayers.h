@@ -76,8 +76,8 @@ public:
    * mode we always completely overwrite the contents of aContext's
    * destination surface (within the clip region) using OPERATOR_SOURCE.
    */
-  virtual void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering,
-                                ScreenRotation aRotation);
+  void SetDefaultTarget(gfxContext* aContext);
+  virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation);
   gfxContext* GetDefaultTarget() { return mDefaultTarget; }
 
   nsIWidget* GetRetainerWidget() { return mWidget; }
@@ -216,8 +216,7 @@ public:
 
   virtual PRInt32 GetMaxTextureSize() const;
 
-  virtual void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering,
-                                ScreenRotation aRotation) MOZ_OVERRIDE;
+  virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation) MOZ_OVERRIDE;
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,

@@ -48,19 +48,19 @@ JSString::isExternal() const
 size_t
 JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    /* JSRope: do nothing, we'll count all children chars when we hit the leaf strings. */
+    // JSRope: do nothing, we'll count all children chars when we hit the leaf strings.
     if (isRope())
         return 0;
 
     JS_ASSERT(isLinear());
 
-    /* JSDependentString: do nothing, we'll count the chars when we hit the base string. */
+    // JSDependentString: do nothing, we'll count the chars when we hit the base string.
     if (isDependent())
         return 0;
 
     JS_ASSERT(isFlat());
 
-    /* JSExtensibleString: count the full capacity, not just the used space. */
+    // JSExtensibleString: count the full capacity, not just the used space.
     if (isExtensible()) {
         JSExtensibleString &extensible = asExtensible();
         return mallocSizeOf(extensible.chars());
@@ -68,15 +68,17 @@ JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 
     JS_ASSERT(isFixed());
 
-    /* JSExternalString: don't count, the chars could be stored anywhere. */
+    // JSExternalString: don't count, the chars could be stored anywhere.
     if (isExternal())
         return 0;
 
-    /* JSInlineString, JSShortString, JSInlineAtom, JSShortAtom: the chars are inline. */
+    // JSInlineString, JSShortString, JSInlineAtom, JSShortAtom: the chars are inline.
     if (isInline())
         return 0;
 
-    /* JSAtom, JSFixedString: count the chars. +1 for the null char. */
+    // JSAtom, JSFixedString, JSUndependedString: measure the space for the
+    // chars.  For JSUndependedString, there is no need to count the base
+    // string, for the same reason as JSDependentString above.
     JSFixedString &fixed = asFixed();
     return mallocSizeOf(fixed.chars());
 }

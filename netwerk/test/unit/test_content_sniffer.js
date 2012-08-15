@@ -1,6 +1,11 @@
 // This file tests nsIContentSniffer, introduced in bug 324985
 
-do_load_httpd_js();
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://testing-common/httpd.js");
 
 const unknownType = "application/x-unknown-content-type";
 const sniffedType = "application/x-sniffed";
@@ -91,7 +96,7 @@ var urls = [
 var httpserv = null;
 
 function run_test() {
-  httpserv = new nsHttpServer();
+  httpserv = new HttpServer();
   httpserv.start(4444);
 
   Components.manager.nsIComponentRegistrar.registerFactory(snifferCID,

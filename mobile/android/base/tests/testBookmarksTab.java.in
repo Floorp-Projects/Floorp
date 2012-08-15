@@ -212,8 +212,6 @@ public class testBookmarksTab extends BaseTest {
     }
 
     public void tearDown() throws Exception {
-        super.tearDown();
-
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
@@ -221,5 +219,7 @@ public class testBookmarksTab extends BaseTest {
         resolver.delete(uri, "title = ?", new String[] {
             "BOOKMARK_TITLE"
         });
+
+        super.tearDown();
     }
 }

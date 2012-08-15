@@ -29,7 +29,7 @@
 #include "nsIListControlFrame.h"
 #include "nsIFrame.h"
 
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsServiceManagerUtils.h"
 #include "nsRuleData.h"
 #include "nsEventDispatcher.h"

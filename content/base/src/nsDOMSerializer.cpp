@@ -13,7 +13,7 @@
 #include "nsString.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 nsDOMSerializer::nsDOMSerializer()
 {

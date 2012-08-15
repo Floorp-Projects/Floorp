@@ -738,6 +738,9 @@ class XPCShellTests(object):
         proc = self.launchProcess(completeCmd,
                     stdout=pStdout, stderr=pStderr, env=self.env, cwd=testdir)
 
+        if interactive:
+          self.log.info("TEST-INFO | %s | Process ID: %d" % (name, proc.pid))
+
         # Allow user to kill hung subprocess with SIGINT w/o killing this script
         # - don't move this line above launchProcess, or child will inherit the SIG_IGN
         signal.signal(signal.SIGINT, markGotSIGINT)

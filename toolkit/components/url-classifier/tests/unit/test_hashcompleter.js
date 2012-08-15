@@ -198,7 +198,7 @@ function run_test() {
   }
   do_test_pending();
 
-  server = new nsHttpServer();
+  server = new HttpServer();
   server.registerPathHandler(SERVER_PATH, hashCompleterServer);
 
   const SERVER_PORT = 8080;

@@ -10,7 +10,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
 #include "nsReadableUtils.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "prnetdb.h"
 #include "prerror.h"
 #include "plstr.h"

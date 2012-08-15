@@ -19,7 +19,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMText.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsGkAtoms.h"

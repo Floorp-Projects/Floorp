@@ -105,7 +105,7 @@ function run_test() {
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   do_test_pending();
-  let httpserv = new nsHttpServer();
+  let httpserv = new HttpServer();
   httpserv.registerDirectory("/file/", do_get_cwd());
   httpserv.registerPathHandler("/noresume", function (meta, response) {
     response.setHeader("Content-Type", "text/html", false);

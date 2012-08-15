@@ -6,7 +6,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMLists.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"

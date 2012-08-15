@@ -46,7 +46,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
@@ -2374,12 +2374,6 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   MOZ_ASSERT(!mCurrentRemoteFrame);
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
 
-  EnsureMessageManager();
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (OwnerIsBrowserFrame() && os) {
-    mRemoteBrowserInitialized = true;
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "remote-browser-frame-shown", NULL);
-  }
+  ShowRemoteFrame(nsIntSize(0, 0));
 }
 

@@ -11,7 +11,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIFrame.h"
 #include "nsSVGTextPathElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

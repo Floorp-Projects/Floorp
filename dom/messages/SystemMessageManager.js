@@ -168,15 +168,13 @@ SystemMessageManager.prototype = {
   init: function sysMessMgr_init(aWindow) {
     debug("init");
     this.initHelper(aWindow, ["SystemMessageManager:Message"]);
-    this._uri = aWindow.document.nodePrincipal.URI.spec;
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-    // Get the manifest url is this is an installed app.
-    this._manifest = null;
-    let app = utils.getApp();
-    if (app)
-      this._manifest = app.manifestURL;
+    let principal = aWindow.document.nodePrincipal;
+    this._uri = principal.URI.spec;
+
+    let appsService = Cc["@mozilla.org/AppsService;1"]
+                        .getService(Ci.nsIAppsService);
+    this._manifest = appsService.getManifestURLByLocalId(principal.appId);
   },
 
   classID: Components.ID("{bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2}"),

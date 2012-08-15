@@ -7107,8 +7107,9 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
   {
     bool isSet = false;
     nsAutoString outValue;
-    if (!useCSS)
-    {
+    // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
+    if (!useCSS || (mCachedStyles[j].tag == nsGkAtoms::font &&
+                    mCachedStyles[j].attr.EqualsLiteral("size"))) {
       mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag,
                                               &(mCachedStyles[j].attr), nullptr,
                                               isSet, &outValue);

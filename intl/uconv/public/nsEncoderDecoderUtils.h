@@ -6,12 +6,6 @@
 #ifndef nsEncoderDecoderUtils_h__
 #define nsEncoderDecoderUtils_h__
 
-#define NS_ERROR_UCONV_NOCONV \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
-
-#define NS_SUCCESS_USING_FALLBACK_LOCALE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 0x02)
-
 #define NS_UNICODEDECODER_NAME "Charset Decoders"
 #define NS_UNICODEENCODER_NAME "Charset Encoders"
 

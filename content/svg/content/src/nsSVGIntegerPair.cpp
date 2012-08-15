@@ -6,7 +6,7 @@
 #include "nsSVGIntegerPair.h"
 #include "nsSVGUtils.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsMathUtils.h"
 #include "nsSMILValue.h"
 #include "SVGIntegerPairSMILType.h"

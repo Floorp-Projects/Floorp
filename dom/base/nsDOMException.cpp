@@ -7,7 +7,7 @@
 #include "nsCRTGlue.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMException.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDocument.h"

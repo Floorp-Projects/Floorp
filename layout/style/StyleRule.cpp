@@ -37,7 +37,7 @@
 #include "nsTArray.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "mozAutoDocUpdate.h"
 
 #include "prlog.h"

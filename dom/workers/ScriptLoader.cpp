@@ -18,12 +18,11 @@
 
 #include "jsapi.h"
 #include "nsChannelPolicy.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
 #include "nsISupportsPrimitives.h"
-#include "nsNetError.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsStringGlue.h"
@@ -34,8 +33,6 @@
 #include "Principal.h"
 #include "WorkerFeature.h"
 #include "WorkerPrivate.h"
-
-#include "nsDOMError.h"
 
 #define MAX_CONCURRENT_SCRIPTS 1000
 

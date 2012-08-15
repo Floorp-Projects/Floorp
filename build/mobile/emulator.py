@@ -268,10 +268,9 @@ class Emulator(object):
         local_port = s.getsockname()[1]
         s.close()
 
-        output = self._run_adb(['-s', 'emulator-%d' % self.port,
-                                'forward',
-                                'tcp:%d' % local_port,
-                                'tcp:%d' % remote_port])
+        self._run_adb(['-s', 'emulator-%d' % self.port, 'forward',
+                       'tcp:%d' % local_port,
+                       'tcp:%d' % remote_port])
 
         self.local_port = local_port
 

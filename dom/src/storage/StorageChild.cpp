@@ -6,7 +6,7 @@
 
 #include "StorageChild.h"
 #include "mozilla/dom/ContentChild.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 #include "sampler.h"
 

@@ -38,9 +38,8 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
-interface mozIDOMApplication;
 
-[scriptable, uuid(97548ee0-9def-421a-ab2a-c6c98efa9a3c)]
+[scriptable, uuid(f7222baa-7c4b-4079-a9e0-db13cf797f58)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -216,6 +215,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
+   * @param aPressure touch input pressure: 0.0 -> 1.0
+   * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
+   *        defaults to mouse input.
    */
   void sendMouseEvent(in AString aType,
                       in float aX,
@@ -223,7 +225,9 @@ interface nsIDOMWindowUtils : nsISupports {
                       in long aButton,
                       in long aClickCount,
                       in long aModifiers,
-                      [optional] in boolean aIgnoreRootScrollFrame);
+                      [optional] in boolean aIgnoreRootScrollFrame,
+                      [optional] in float aPressure,
+                      [optional] in unsigned short aInputSourceArg);
 
   /** Synthesize a touch event. The event types supported are:
    *    touchstart, touchend, touchmove, and touchcancel
@@ -273,7 +277,9 @@ interface nsIDOMWindowUtils : nsISupports {
                               in long aButton,
                               in long aClickCount,
                               in long aModifiers,
-                              [optional] in boolean aIgnoreRootScrollFrame);
+                              [optional] in boolean aIgnoreRootScrollFrame,
+                              [optional] in float aPressure,
+                              [optional] in unsigned short aInputSourceArg);
 
   /** Synthesize a wheel event for a window. The event types supported is only
    *  wheel.
@@ -1186,25 +1192,8 @@ interface nsIDOMWindowUtils : nsISupports {
   void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
 
   /**
-   * Mark if the window is an application window or not.
-   * This should only be set for top-level mozApp or mozBrowser frames.
-   * It should not be set for other frames unless you want a frame (and its
-   * children) to have a different value for IsPartOfApp than the frame's
-   * parent.
+   * Prevent this window (and any child windows) from displaying any further
+   * dialogs (e.g. window.alert()).
    */
-  void setIsApp(in boolean value);
-
-  /**
-   * Associate the window with an application by passing the URL of the
-   * application's manifest.
-   *
-   * This method will throw an exception if the manifest URL isn't a valid URL
-   * or isn't the manifest URL of an installed application.
-   */
-  void setApp(in DOMString manifestURL);
-  /**
-    * Retrieves the Application object associated to this window.
-    * Can be null if |setApp()| has not been called.
-    */
-  mozIDOMApplication getApp();
+  void preventFurtherDialogs();
 };

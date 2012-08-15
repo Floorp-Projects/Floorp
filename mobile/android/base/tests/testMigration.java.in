@@ -346,7 +346,11 @@ public class testMigration extends ContentProviderTest {
       // remove the database file
       File profile = new File(mProfile);
       File db = new File(profile, DB_NAME);
-      db.delete();
+      if (db.delete()) {
+          mAsserter.dumpLog("tearDown deleted "+db.toString());
+      } else {
+          mAsserter.dumpLog("tearDown did not delete "+db.toString());
+      }
 
       super.tearDown();
     }

@@ -7,7 +7,7 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(57b56c6f-4c3f-4c55-bf1b-e5af22407931)]
+[scriptable, uuid(49cc227c-3fe7-40a2-bdb5-55e9af797fde)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -43,6 +43,36 @@ interface nsINetworkInterface : nsISupports
    * Indicates whether DHCP should be run when the interface connects.
    */
   readonly attribute boolean dhcp;
+
+  /**
+   * IP Address
+   */
+  readonly attribute DOMString ip;
+
+  /**
+   * Netmask
+   */
+  readonly attribute DOMString netmask;
+
+  /**
+   * Broadcast
+   */
+  readonly attribute DOMString broadcast;
+
+  /**
+   * Default gateway
+   */
+  readonly attribute DOMString gateway;
+
+  /**
+   * Primary DNS address
+   */
+  readonly attribute DOMString dns1;
+
+  /**
+   * Secondary DNS address
+   */
+  readonly attribute DOMString dns2;
 
   /**
    * The host name of the http proxy server.

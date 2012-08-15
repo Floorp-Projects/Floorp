@@ -190,6 +190,9 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         parser.freeTree(pn);
     }
 
+    if (tokenStream.hasSourceMap())
+        ss->setSourceMap(tokenStream.releaseSourceMap());
+
 #if JS_HAS_XML_SUPPORT
     /*
      * Prevent XML data theft via <script src="http://victim.com/foo.xml">.
@@ -337,6 +340,9 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         fn->pn_body->pn_pos = pn->pn_pos;
         pn = fn->pn_body;
     }
+
+    if (parser.tokenStream.hasSourceMap())
+        ss->setSourceMap(parser.tokenStream.releaseSourceMap());
 
     if (!EmitFunctionScript(cx, &funbce, pn))
         return false;
