@@ -997,13 +997,8 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
     if (cx->methodJitEnabled) {
         // If JM is enabled we use getUseCount instead of incUseCount to avoid
         // bumping the use count twice.
-        if (script->length < js_IonOptions.smallFunctionMaxBytecodeLength) {
-            if (script->getUseCount() < js_IonOptions.smallFunctionUsesBeforeCompile)
-                return Method_Skipped;
-        } else {
-            if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
-                return Method_Skipped;
-        }
+        if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
+            return Method_Skipped;
     } else {
         if (script->incUseCount() < js_IonOptions.usesBeforeCompileNoJaeger)
             return Method_Skipped;
