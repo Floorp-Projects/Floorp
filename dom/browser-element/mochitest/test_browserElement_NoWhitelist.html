@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.setWhitelistPref(' http://foobar.com');
+  browserElementTestHelpers.addPermissionForUrl('http://foobar.com');
 
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;

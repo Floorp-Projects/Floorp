@@ -19,7 +19,7 @@ var countAcc;
 
 function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addToWhitelist();
+  browserElementTestHelpers.addPermission();
 
   iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
