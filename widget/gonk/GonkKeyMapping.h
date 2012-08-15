@@ -24,7 +24,7 @@ static const unsigned long kKeyMapping[] = {
     NS_VK_HOME, // HOME
     0, // BACK
     0, // CALL
-    0, // ENDCALL
+    NS_VK_SLEEP, // ENDCALL
     NS_VK_0,
     NS_VK_1,
     NS_VK_2,
