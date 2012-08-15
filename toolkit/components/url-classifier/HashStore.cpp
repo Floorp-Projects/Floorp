@@ -217,8 +217,12 @@ HashStore::Open()
     return NS_OK;
   }
 
+  PRInt64 fileSize;
+  rv = storeFile->GetFileSize(&fileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream), origStream,
-                                 BUFFER_SIZE);
+                                 fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckChecksum(storeFile);
@@ -784,6 +788,10 @@ HashStore::WriteFile()
   rv = safeOut->Finish();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRInt64 fileSize;
+  rv = storeFile->GetFileSize(&fileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Reopen the file now that we've rewritten it.
   nsCOMPtr<nsIInputStream> origStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(origStream), storeFile,
@@ -791,7 +799,7 @@ HashStore::WriteFile()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream), origStream,
-                                 BUFFER_SIZE);
+                                 fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

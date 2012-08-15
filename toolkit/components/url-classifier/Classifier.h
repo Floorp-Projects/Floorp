@@ -104,6 +104,7 @@ public:
                             PrefixArray* aNoiseEntries);
 private:
   void DropStores();
+  nsresult RegenActiveTables();
   nsresult ScanStoreDir(nsTArray<nsCString>& aTables);
 
   nsresult ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
@@ -116,6 +117,7 @@ private:
   nsCOMPtr<nsIFile> mStoreDirectory;
   nsTArray<HashStore*> mHashStores;
   nsTArray<LookupCache*> mLookupCaches;
+  nsTArray<nsCString> mActiveTablesCache;
   PRUint32 mHashKey;
   // Stores the last time a given table was updated (seconds).
   nsDataHashtable<nsCStringHashKey, PRInt64> mTableFreshness;
