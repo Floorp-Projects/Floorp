@@ -811,7 +811,6 @@ TelemetryPing.prototype = {
   },
 
   finishTelemetrySave: function finishTelemetrySave(ok, stream) {
-    stream.QueryInterface(Ci.nsISafeOutputStream).finish();
     stream.close();
     if (this._doLoadSaveNotifications && ok) {
       Services.obs.notifyObservers(null, "telemetry-test-save-complete", null);
@@ -825,7 +824,7 @@ TelemetryPing.prototype = {
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
-    let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
+    let ostream = Cc["@mozilla.org/network/file-output-stream;1"]
                   .createInstance(Ci.nsIFileOutputStream);
     ostream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                  RW_OWNER, ostream.DEFER_OPEN);
