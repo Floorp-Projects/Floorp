@@ -85,7 +85,6 @@ class nsHashKey;
 #define NS_SELECTION_EVENT                38
 #define NS_CONTENT_COMMAND_EVENT          39
 #define NS_GESTURENOTIFY_EVENT            40
-#define NS_UISTATECHANGE_EVENT            41
 #define NS_MOZTOUCH_EVENT                 42
 #define NS_PLUGIN_EVENT                   43
 #define NS_TOUCH_EVENT                    44
@@ -178,10 +177,6 @@ class nsHashKey;
 #define NS_MOVE                         (NS_WINDOW_START + 34) 
 
 #define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
-
-// Indicates that the ui state such as whether to show focus or
-// keyboard accelerator indicators has changed.
-#define NS_UISTATECHANGED               (NS_WINDOW_START + 43)
 
 // Done sizing or moving a window, so ensure that the mousedown state was cleared.
 #define NS_DONESIZEMOVE                 (NS_WINDOW_START + 44)
@@ -1723,20 +1718,6 @@ public:
 
   nsString animationName;
   float elapsedTime;
-};
-
-class nsUIStateChangeEvent : public nsGUIEvent
-{
-public:
-  nsUIStateChangeEvent(bool isTrusted, PRUint32 msg, nsIWidget* w)
-    : nsGUIEvent(isTrusted, msg, w, NS_UISTATECHANGE_EVENT),
-      showAccelerators(UIStateChangeType_NoChange),
-      showFocusRings(UIStateChangeType_NoChange)
-  {
-  }
-
-  UIStateChangeType showAccelerators;
-  UIStateChangeType showFocusRings;
 };
 
 /**
