@@ -62,7 +62,7 @@ public:
 
   nsresult Status() const { return mUpdateStatus; }
 
-  nsresult Init(nsICryptoHash* aHasher);
+  nsresult Init(nsICryptoHash* aHasher, bool mPerClientRandomize);
 
   nsresult InitHMAC(const nsACString& aClientKey,
                     const nsACString& aServerMAC);
@@ -128,6 +128,7 @@ private:
   ChunkState mChunkState;
 
   PRUint32 mHashKey;
+  bool mPerClientRandomize;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
   nsresult mUpdateStatus;

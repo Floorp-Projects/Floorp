@@ -93,6 +93,10 @@ private:
   // uris on document loads.
   bool mCheckPhishing;
 
+  // TRUE if we randomize the prefixes/domains per client to prevent
+  // simulatenous collisions for all Firefox users
+  bool mPerClientRandomize;
+
   // TRUE if a BeginUpdate() has been called without an accompanying
   // CancelUpdate()/FinishUpdate().  This is used to prevent competing
   // updates, not to determine whether an update is still being

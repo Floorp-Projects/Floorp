@@ -39,6 +39,7 @@
 #include "Entries.h"
 #include "mozilla/Attributes.h"
 #include "nsIPrincipal.h"
+#include "Classifier.h"
 #include "ProtocolParser.h"
 
 using namespace mozilla;
@@ -60,6 +61,9 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 
 #define CHECK_PHISHING_PREF     "browser.safebrowsing.enabled"
 #define CHECK_PHISHING_DEFAULT  false
+
+#define RANDOMIZE_CLIENT_PREF      "urlclassifier.randomizeclient"
+#define RANDOMIZE_CLIENT_DEFAULT   true
 
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
@@ -112,7 +116,8 @@ public:
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
   NS_DECL_NSIURLCLASSIFIERDBSERVICEWORKER
 
-  nsresult Init(PRInt32 gethashNoise, nsCOMPtr<nsIFile> aCacheDir);
+  nsresult Init(PRInt32 gethashNoise, nsCOMPtr<nsIFile> aCacheDir,
+                bool aPerClientRandomize);
 
   // Queue a lookup for the worker to perform, called in the main thread.
   nsresult QueueLookup(const nsACString& lookupKey,
@@ -181,6 +186,9 @@ private:
   // The number of noise entries to add to the set of lookup results.
   PRInt32 mGethashNoise;
 
+  // Randomize clients with a key or not.
+  bool mPerClientRandomize;
+
   // Pending lookups are stored in a queue for processing.  The queue
   // is protected by mPendingLookupLock.
   Mutex mPendingLookupLock;
@@ -203,6 +211,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mInStream(false)
   , mGethashNoise(0)
+  , mPerClientRandomize(true)
   , mPendingLookupLock("nsUrlClassifierDBServerWorker.mPendingLookupLock")
 {
 }
@@ -216,10 +225,12 @@ nsUrlClassifierDBServiceWorker::~nsUrlClassifierDBServiceWorker()
 
 nsresult
 nsUrlClassifierDBServiceWorker::Init(PRInt32 gethashNoise,
-                                     nsCOMPtr<nsIFile> aCacheDir)
+                                     nsCOMPtr<nsIFile> aCacheDir,
+                                     bool aPerClientRandomize)
 {
   mGethashNoise = gethashNoise;
   mCacheDir = aCacheDir;
+  mPerClientRandomize = aPerClientRandomize;
 
   ResetUpdate();
 
@@ -476,7 +487,7 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
   if (!mProtocolParser)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mProtocolParser->Init(mCryptoHash);
+  mProtocolParser->Init(mCryptoHash, mPerClientRandomize);
 
   nsresult rv;
 
@@ -762,6 +773,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   }
 
   classifier->SetFreshTime(gFreshnessGuarantee);
+  classifier->SetPerClientRandomize(mPerClientRandomize);
 
   nsresult rv = classifier->Open(*mCacheDir);
   if (NS_FAILED(rv)) {
@@ -1093,6 +1105,7 @@ nsUrlClassifierDBService::GetInstance(nsresult *result)
 nsUrlClassifierDBService::nsUrlClassifierDBService()
  : mCheckMalware(CHECK_MALWARE_DEFAULT)
  , mCheckPhishing(CHECK_PHISHING_DEFAULT)
+ , mPerClientRandomize(true)
  , mInUpdate(false)
 {
 }
@@ -1144,6 +1157,15 @@ nsUrlClassifierDBService::Init()
     PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
 
     prefs->AddObserver(CONFIRM_AGE_PREF, this, false);
+
+    rv = prefs->GetBoolPref(RANDOMIZE_CLIENT_PREF, &tmpbool);
+    mPerClientRandomize = NS_SUCCEEDED(rv) ? tmpbool : RANDOMIZE_CLIENT_DEFAULT;
+
+    LOG(("Per client randomization is %s",
+         mPerClientRandomize ? "enabled" : "DISABLED"));
+
+    /* We do not observe for runtime changes as changing this preference
+       in flight kills the database, so it's not really supported. */
   }
 
   // Force PSM loading on main thread
@@ -1168,7 +1190,7 @@ nsUrlClassifierDBService::Init()
   if (!mWorker)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mWorker->Init(gethashNoise, cacheDir);
+  rv = mWorker->Init(gethashNoise, cacheDir, mPerClientRandomize);
   if (NS_FAILED(rv)) {
     mWorker = nullptr;
     return rv;
