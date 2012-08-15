@@ -9,7 +9,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsNetError.h"
+#include "nsError.h"
 
 namespace mozilla {
 namespace css {
