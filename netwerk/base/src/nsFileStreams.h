@@ -114,10 +114,7 @@ public:
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     NS_IMETHOD Close();
-    NS_IMETHOD Available(PRUint64* _retval)
-    {
-        return nsFileStreamBase::Available(_retval);
-    }
+    NS_IMETHOD Available(PRUint64* _retval);
     NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32* _retval);
     NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
                             PRUint32 aCount, PRUint32* _retval)
@@ -132,12 +129,12 @@ public:
     
     // Overrided from nsFileStreamBase
     NS_IMETHOD Seek(PRInt32 aWhence, PRInt64 aOffset);
+    NS_IMETHOD Tell(PRInt64 *aResult);
 
     nsFileInputStream()
       : mIOFlags(0), mPerm(0)
-    {
-        mLineBuffer = nullptr;
-    }
+      : mLineBuffer(nullptr), mCachedPosition(0)
+    { }
 
     virtual ~nsFileInputStream() 
     {
@@ -163,16 +160,17 @@ protected:
      */
     PRInt32 mPerm;
 
+    /**
+     * Cached position for Tell for automatically reopening streams.
+     */
+    PRInt64 mCachedPosition;
+
 protected:
     /**
      * Internal, called to open a file.  Parameters are the same as their
      * Init() analogues.
      */
     nsresult Open(nsIFile* file, PRInt32 ioFlags, PRInt32 perm);
-    /**
-     * Reopen the file (for OPEN_ON_READ only!)
-     */
-    nsresult Reopen() { return Open(mFile, mIOFlags, mPerm); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
