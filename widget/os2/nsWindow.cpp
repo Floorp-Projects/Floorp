@@ -1925,9 +1925,7 @@ void nsWindow::OnDestroy()
   // from the Release() below.  This is very bad...
   if (!(nsWindowState_eDoingDelete & mWindowState)) {
     AddRef();
-    nsGUIEvent event(true, NS_DESTROY, this);
-    InitEvent(event);
-    DispatchWindowEvent(&event);
+    NotifyWindowDestroyed();
     Release();
   }
 

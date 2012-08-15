@@ -164,6 +164,7 @@ public:
   NS_IMETHOD              RegisterTouchWindow();
   NS_IMETHOD              UnregisterTouchWindow();
 
+  void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
 
   // Should be called by derived implementations to notify on system color and

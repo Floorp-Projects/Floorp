@@ -369,13 +369,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           eventWindow->Destroy();
         break;
       }
-      /*
-       * Notify the ApplicationShellService that the window is being closed...
-       */
-      case NS_DESTROY: {
-        eventWindow->Destroy();
-        break;
-      }
 
       case NS_SETZLEVEL: {
         nsZLevelEvent *zEvent = (nsZLevelEvent *) aEvent;
