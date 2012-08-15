@@ -84,8 +84,9 @@
 //    byte sliced (numSubPrefixes)   uint32 sub chunk of SubPrefixes
 //    byte sliced (numSubPrefixes)   uint32 add chunk of SubPrefixes
 //    byte sliced (numSubPrefixes)   uint32 SubPrefixes
-//    0...numAddCompletes           32-byte Completions
-//    0...numSubCompletes           32-byte Completions
+//    0...numAddCompletes            32-byte Completions + uint32 addChunk
+//    0...numSubCompletes            32-byte Completions + uint32 addChunk
+//                                                       + uint32 subChunk
 //    16-byte MD5 of all preceding data
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
