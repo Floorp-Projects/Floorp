@@ -142,6 +142,10 @@ pref("browser.xul.error_pages.enabled", true);
 // disable color management
 pref("gfx.color_management.mode", 0);
 
+//prefer Azure/Cairo canvas
+pref("gfx.canvas.azure.enabled", true);
+pref("gfx.canvas.azure.backends", "cairo");
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
