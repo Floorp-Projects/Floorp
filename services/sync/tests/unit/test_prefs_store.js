@@ -7,9 +7,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
-loadAddonTestFunctions();
-startupManager();
-
 function makePersona(id) {
   return {
     id: id || Math.random().toString(),
