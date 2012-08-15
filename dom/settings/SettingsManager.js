@@ -104,8 +104,16 @@ SettingsLock.prototype = {
 
             for (var i in event.target.result) {
               let result = event.target.result[i];
-              results[result.settingName] = result.settingValue;
-              results.__exposedProps__[result.settingName] = "r";
+              var name = result.settingName;
+              var value = result.settingValue;
+              results[name] = value;
+              results.__exposedProps__[name] = "r";
+              // If the value itself is an object, expose the properties.
+              if (typeof value == "object") {
+                var exposed = {};
+                Object.keys(value).forEach(function(key) { exposed[key] = 'r'; });
+                results[name].__exposedProps__ = exposed;
+              }
             }
 
             this._open = true;
@@ -269,7 +277,8 @@ SettingsManager.prototype = {
           if (this._callbacks && this._callbacks[msg.key]) {
             debug("observe callback called! " + msg.key + " " + this._callbacks[msg.key].length);
             this._callbacks[msg.key].forEach(function(cb) {
-              cb({settingName: msg.key, settingValue: msg.value});
+              cb({settingName: msg.key, settingValue: msg.value,
+                  __exposedProps__: {settingName: 'r', settingValue: 'r'}});
             });
           }
         } else {
