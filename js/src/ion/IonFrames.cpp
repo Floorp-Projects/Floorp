@@ -123,7 +123,9 @@ IonFrameIterator::isDOMExit() const
     if (type_ != IonFrame_Exit)
         return false;
     IonCode *code = exitFrame()->footer()->ionCode();
-    return code == ION_FRAME_DOMGETTER || code == ION_FRAME_DOMSETTER;
+    return code == ION_FRAME_DOMGETTER ||
+           code == ION_FRAME_DOMSETTER ||
+           code == ION_FRAME_DOMMETHOD;
 }
 
 bool
@@ -517,8 +519,15 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
     if (frame.isDOMExit()) {
         IonDOMExitFrameLayout *dom = frame.exitFrame()->DOMExit();
         gc::MarkObjectRoot(trc, dom->thisObjAddress(), "ion-dom-args");
-        if (dom->isSetterFrame())
+        if (dom->isSetterFrame()) {
             gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
+        } else if (dom->isMethodFrame()) {
+            IonDOMMethodExitFrameLayout *method =
+                reinterpret_cast<IonDOMMethodExitFrameLayout *>(dom);
+            size_t len = method->argc() + 2;
+            Value *vp = method->vp();
+            gc::MarkValueRootRange(trc, len, vp, "ion-dom-args");
+        }
         return;
     }
 
