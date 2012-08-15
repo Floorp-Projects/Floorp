@@ -36,6 +36,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.view.inputmethod.InputMethodManager;
 
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
@@ -83,6 +84,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         private String label = "";
         private String type  = "";
         private String hint  = "";
+        private Boolean autofocus = false;
         private JSONObject mJSONInput = null;
         private View view = null;
 
@@ -96,6 +98,9 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             } catch(Exception ex) { }
             try {
                 hint  = aJSONInput.getString("hint");
+            } catch(Exception ex) { }
+            try {
+                autofocus  = aJSONInput.getBoolean("autofocus");
             } catch(Exception ex) { }
         }
 
@@ -125,6 +130,18 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 if (!hint.equals("")) {
                     input.setHint(hint);
                 }
+
+                if (autofocus) {
+                    input.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                        public void onFocusChange(View v, boolean hasFocus) {
+                            if (hasFocus) {
+                                ((InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(v, 0);
+                            }
+                        }
+                    });
+                    input.requestFocus();
+                }
+
                 view = (View)input;
             } else if (type.equals("menulist")) {
                 Spinner spinner = new Spinner(GeckoApp.mAppContext);
