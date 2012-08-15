@@ -44,8 +44,7 @@ function checkContents(pset, prefixes) {
 }
 
 function wrappedProbe(pset, prefix) {
-  let dummy = {};
-  return pset.probe(prefix, dummy);
+  return pset.contains(prefix);
 };
 
 // doRandomLookups: we use this to test for false membership with random input
