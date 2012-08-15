@@ -1004,19 +1004,20 @@ HashStore::ProcessSubs()
   EntrySort(mAddCompletes);
   EntrySort(mSubCompletes);
 
-  KnockoutSubs(&mSubPrefixes, &mAddPrefixes);
-
   RemoveMatchingPrefixes(mSubPrefixes, &mAddCompletes);
   RemoveMatchingPrefixes(mSubPrefixes, &mSubCompletes);
 
-  KnockoutSubs(&mSubCompletes, &mAddCompletes);
-
-  // Clean up temporary subs used for knocking out completes
+  // Clean up temporary subs (without per-client randomization),
+  // that we temporarily stored so we could knock out completes.
   ChunkSet dummyChunks;
   dummyChunks.Set(0);
   ExpireEntries(&mSubPrefixes, dummyChunks);
-  ExpireEntries(&mSubCompletes, dummyChunks);
   mSubChunks.Remove(dummyChunks);
+
+  // Remove any remaining subbed prefixes from both addprefixes
+  // and subprefixes.
+  KnockoutSubs(&mSubPrefixes, &mAddPrefixes);
+  KnockoutSubs(&mSubCompletes, &mAddCompletes);
 
   return NS_OK;
 }
