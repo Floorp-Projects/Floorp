@@ -1396,6 +1396,21 @@ nsBaseWidget::NotifyThemeChanged()
   }
 }
 
+void
+nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
+                                   UIStateChangeType aShowFocusRings)
+{
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell(this, mClientData);
+
+  nsIDocument* doc = presShell->GetDocument();
+  if (doc) {
+    nsPIDOMWindow* win = doc->GetWindow();
+    if (win) {
+      win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
+    }
+  }
+}
+
 #ifdef ACCESSIBILITY
 
 Accessible*
