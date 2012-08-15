@@ -322,6 +322,8 @@ LayerManagerD3D10::SetRoot(Layer *aRoot)
 void
 LayerManagerD3D10::BeginTransaction()
 {
+  mInTransaction = true;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("[----- BeginTransaction"));
   Log();
@@ -331,12 +333,15 @@ LayerManagerD3D10::BeginTransaction()
 void
 LayerManagerD3D10::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  mInTransaction = true;
   mTarget = aTarget;
 }
 
 bool
 LayerManagerD3D10::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
+  mInTransaction = false;
+
   if (!mRoot)
     return false;
 
@@ -349,6 +354,8 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData,
                                   EndTransactionFlags aFlags)
 {
+  mInTransaction = false;
+
   if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     mCurrentCallbackInfo.Callback = aCallback;
     mCurrentCallbackInfo.CallbackData = aCallbackData;
