@@ -43,6 +43,7 @@ MOCHITEST_CHROME_FILES = \
     test_bug752226-3.xul \
     test_bug752226-4.xul \
     test_bug682305.html \
+    test_bug780199.xul \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -19,9 +19,9 @@
 == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
 == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
 HTTP(..) == CSS21-t100301.xhtml CSS21-t100301-ref.xhtml
-== CSS21-t100303.xhtml CSS21-t100303-ref.xhtml
-== CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml
-== CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align-ref.xhtml
+random-if(bug685516) == CSS21-t100303.xhtml CSS21-t100303-ref.xhtml
+random-if(bug685516) == CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml
+random-if(bug685516) == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align-ref.xhtml
 == clip-auto.html clip-auto-ref.html
 == clip-rect-auto.html clip-rect-auto-ref.html
 == width-rounding.html width-rounding-ref.html

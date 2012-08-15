@@ -64,6 +64,12 @@ using namespace mozilla::dom;
     method_(req);                                                           \
   }
 
+#define NS_SET_IMAGE_REQUEST_WITH_DOC(method_, context_, requestgetter_)      \
+  {                                                                           \
+    nsIDocument* doc = (context_)->PresContext()->Document();                 \
+    NS_SET_IMAGE_REQUEST(method_, context_, requestgetter_(doc))              \
+  }
+
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
  */
@@ -937,9 +943,9 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
 
   // <uri>
   if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
-    NS_SET_IMAGE_REQUEST(aResult.SetImageData,
-                         aStyleContext,
-                         arr->Item(1).GetImageValue())
+    NS_SET_IMAGE_REQUEST_WITH_DOC(aResult.SetImageData,
+                                  aStyleContext,
+                                  arr->Item(1).GetImageValue)
   } else {
     NS_WARNING("nsCSSValue::Image::Image() failed?");
   }
@@ -969,9 +975,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 
   switch (aValue.GetUnit()) {
     case eCSSUnit_Image:
-      NS_SET_IMAGE_REQUEST(aResult.SetImageData,
-                           aStyleContext,
-                           aValue.GetImageValue())
+      NS_SET_IMAGE_REQUEST_WITH_DOC(aResult.SetImageData,
+                                    aStyleContext,
+                                    aValue.GetImageValue)
       break;
     case eCSSUnit_Function:
       if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
@@ -3947,9 +3953,10 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                         cursorUnit).get());
       const nsCSSValueList* list = cursorValue->GetListValue();
       const nsCSSValueList* list2 = list;
+      nsIDocument* doc = aContext->PresContext()->Document();
       PRUint32 arrayLength = 0;
       for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext)
-        if (list->mValue.GetArrayValue()->Item(0).GetImageValue())
+        if (list->mValue.GetArrayValue()->Item(0).GetImageValue(doc))
           ++arrayLength;
 
       if (arrayLength != 0) {
@@ -3961,7 +3968,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                list2->mValue.GetUnit() == eCSSUnit_Array;
                list2 = list2->mNext) {
             nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
-            imgIRequest *req = arr->Item(0).GetImageValue();
+            imgIRequest *req = arr->Item(0).GetImageValue(doc);
             if (req) {
               item->SetImage(req);
               if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
@@ -6046,8 +6053,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   // border-image-source
   const nsCSSValue* borderImageSource = aRuleData->ValueForBorderImageSource();
   if (borderImageSource->GetUnit() == eCSSUnit_Image) {
-    NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
-                         borderImageSource->GetImageValue());
+    NS_SET_IMAGE_REQUEST_WITH_DOC(border->SetBorderImage,
+                                  aContext,
+                                  borderImageSource->GetImageValue);
   } else if (borderImageSource->GetUnit() == eCSSUnit_Inherit) {
     canStoreInRuleTree = false;
     NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
@@ -6301,9 +6309,9 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    NS_SET_IMAGE_REQUEST(list->SetListStyleImage,
-                         aContext,
-                         imageValue->GetImageValue())
+    NS_SET_IMAGE_REQUEST_WITH_DOC(list->SetListStyleImage,
+                                  aContext,
+                                  imageValue->GetImageValue)
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
@@ -6727,7 +6735,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           }
           data.mType = type;
           if (type == eStyleContentType_Image) {
-            NS_SET_IMAGE_REQUEST(data.SetImage, aContext, value.GetImageValue());
+            NS_SET_IMAGE_REQUEST_WITH_DOC(data.SetImage,
+                                          aContext,
+                                          value.GetImageValue);
           }
           else if (type <= eStyleContentType_Attr) {
             value.GetStringValue(buffer);
