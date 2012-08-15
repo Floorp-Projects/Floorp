@@ -547,7 +547,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
 
     applied++;
 
-    LOG(("Applied update to table %s:", PromiseFlatCString(store->TableName()).get()));
+    LOG(("Applied update to table %s:", store->TableName().get()));
     LOG(("  %d add chunks", update->AddChunks().Length()));
     LOG(("  %d add prefixes", update->AddPrefixes().Length()));
     LOG(("  %d add completions", update->AddCompletes().Length()));
@@ -566,12 +566,12 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
     delete update;
   }
 
-  LOG(("Applied %d update(s) to %s.", applied, PromiseFlatCString(store->TableName()).get()));
+  LOG(("Applied %d update(s) to %s.", applied, store->TableName().get()));
 
   rv = store->Rebuild();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("Table %s now has:", PromiseFlatCString(store->TableName()).get()));
+  LOG(("Table %s now has:", store->TableName().get()));
   LOG(("  %d add chunks", store->AddChunks().Length()));
   LOG(("  %d add prefixes", store->AddPrefixes().Length()));
   LOG(("  %d add completions", store->AddCompletes().Length()));
@@ -598,7 +598,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
 
   if (updateFreshness) {
     PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
-    LOG(("Successfully updated %s", PromiseFlatCString(store->TableName()).get()));
+    LOG(("Successfully updated %s", store->TableName().get()));
     mTableFreshness.Put(store->TableName(), now);
   }
 
