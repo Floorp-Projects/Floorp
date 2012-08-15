@@ -62,6 +62,7 @@ extern "C" {
 #include "certdb.h"
 #include "secmod.h"
 #include "nsISaveAsCharset.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "ssl.h" // For SSL_ClearSessionCache
 
@@ -2972,11 +2973,11 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   
-  char *modName = ToNewCString(aModuleName);
+  NS_ConvertUTF16toUTF8 modName(aModuleName);
   PRInt32 modType;
-  SECStatus srv = SECMOD_DeleteModule(modName, &modType);
+  SECStatus srv = SECMOD_DeleteModule(modName.get(), &modType);
   if (srv == SECSuccess) {
-    SECMODModule *module = SECMOD_FindModule(modName);
+    SECMODModule *module = SECMOD_FindModule(modName.get());
     if (module) {
       nssComponent->ShutdownSmartCardThread(module);
       SECMOD_DestroyModule(module);
@@ -2985,7 +2986,6 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
   } else {
     rv = NS_ERROR_FAILURE;
   }
-  NS_Free(modName);
   return rv;
 }
 
@@ -3000,22 +3000,21 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
-  char *moduleName = ToNewCString(aModuleName);
-  char *fullPath   = ToNewCString(aLibraryFullPath);
+  NS_ConvertUTF16toUTF8 moduleName(aModuleName);
+  nsCString fullPath;
+  // NSS doesn't support Unicode path.  Use native charset
+  NS_CopyUnicodeToNative(aLibraryFullPath, fullPath);
   PRUint32 mechFlags = SECMOD_PubMechFlagstoInternal(aCryptoMechanismFlags);
   PRUint32 cipherFlags = SECMOD_PubCipherFlagstoInternal(aCipherFlags);
-  SECStatus srv = SECMOD_AddNewModule(moduleName, fullPath, 
+  SECStatus srv = SECMOD_AddNewModule(moduleName.get(), fullPath.get(), 
                                       mechFlags, cipherFlags);
   if (srv == SECSuccess) {
-    SECMODModule *module = SECMOD_FindModule(moduleName);
+    SECMODModule *module = SECMOD_FindModule(moduleName.get());
     if (module) {
       nssComponent->LaunchSmartCardThread(module);
       SECMOD_DestroyModule(module);
     }
   }
-
-  nsMemory::Free(moduleName);
-  nsMemory::Free(fullPath);
 
   // The error message we report to the user depends directly on 
   // what the return value for SEDMOD_AddNewModule is
