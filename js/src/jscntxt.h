@@ -697,6 +697,8 @@ struct JSRuntime : js::RuntimeFriendFields
     bool needZealousGC() { return false; }
 #endif
 
+    bool                gcValidate;
+
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
