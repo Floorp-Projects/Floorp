@@ -179,6 +179,13 @@ tier_platform_dirs	+= \
 		xpfe/appshell \
 		$(NULL)
 
+# This needs to be built after the gfx/ directory
+# to ensure all dependencies for skia (e.g. mozalloc, xpcom)
+# have been built
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+tier_platform_dirs += other-licenses/skia-npapi
+endif
+
 ifdef MOZ_UNIVERSALCHARDET
 tier_platform_dirs += extensions/universalchardet
 endif
