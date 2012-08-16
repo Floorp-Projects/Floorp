@@ -1953,15 +1953,15 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
     MarkActive();
   }
 
-  nsRect invalidateRect, displayport;
+  nsRect invalidateRect, displayPort;
+  bool hasDisplayPort =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
   if (IsIgnoringViewportClipping()) {
     nsRect visualOverflow = mScrolledFrame->GetVisualOverflowRect();
     invalidateRect.UnionRect(visualOverflow + mScrolledFrame->GetPosition(),
             visualOverflow + aOldScrolledFramePos);
   } else {
-    invalidateRect =
-      (nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayport)) ?
-      displayport : mScrollPort;
+    invalidateRect = hasDisplayPort ? displayPort : mScrollPort;
   }
 
   mOuter->InvalidateWithFlags(invalidateRect, flags);
@@ -1970,10 +1970,29 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
     nsRect update =
       GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
-    update = update.ConvertAppUnitsRoundOut(
+    nsRect displayRootUpdate = update.ConvertAppUnitsRoundOut(
       mOuter->PresContext()->AppUnitsPerDevPixel(),
       displayRoot->PresContext()->AppUnitsPerDevPixel());
-    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, update);
+    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, displayRootUpdate);
+
+    // Invalidate content that has scrolled into view. Normally, this will
+    // already be invalid, because it shouldn't have been drawn in any layer,
+    // but there can be stray rows/columns of pixels that partially overlapped
+    // the layer's visible region and hence were drawn and added to the layer's
+    // visible region, but these pixels ended up outside the cliprect after
+    // snapping so their contents need to be updated now that new content has
+    // scrolled into the cliprect.
+    nsPoint scrollDelta = mScrolledFrame->GetPosition() - aOldScrolledFramePos;
+    if (!hasDisplayPort) {
+      displayPort = GetScrollPortRect();
+    }
+    nsRect preservedContents = displayPort + scrollDelta;
+    nsRegion invalidate;
+    invalidate.Sub(displayPort, preservedContents);
+    nsRegionRectIterator iter(invalidate);
+    while (const nsRect* r = iter.Next()) {
+      mOuter->InvalidateWithFlags(*r, nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
+    }
   }
 }
 
