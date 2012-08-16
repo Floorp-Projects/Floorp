@@ -1072,12 +1072,10 @@ public:
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsIRunnable> r;
     PRUint64 diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
-    PRInt64 freeSpace = 0;
+    PRInt64 freeSpace;
     nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
     if (NS_FAILED(rv)) {
-      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN, mFile);
-      NS_DispatchToMainThread(r);
-      return NS_OK;
+      freeSpace = 0;
     }
 
     r = new PostStatResultEvent(mRequest, diskUsage, freeSpace);
