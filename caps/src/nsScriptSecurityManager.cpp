@@ -2257,8 +2257,8 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
     if (cx)
     {
         // Get principals from innermost JavaScript frame.
-        JSStackFrame *fp = nullptr; // tell JS_FrameIterator to start at innermost
-        for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp))
+        JSStackFrame *fp = nullptr; // tell JS_BrokenFrameIterator to start at innermost
+        for (fp = JS_BrokenFrameIterator(cx, &fp); fp; fp = JS_BrokenFrameIterator(cx, &fp))
         {
             nsIPrincipal* result = GetFramePrincipal(cx, fp, rv);
             if (result)
@@ -2286,7 +2286,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             if (result)
             {
                 JSStackFrame *inner = nullptr;
-                *frameResult = JS_FrameIterator(cx, &inner);
+                *frameResult = JS_BrokenFrameIterator(cx, &inner);
                 return result;
             }
         }
@@ -2451,7 +2451,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     nsresult rv;
     JSStackFrame *fp = nullptr;
     JSContext *cx = GetCurrentJSContext();
-    fp = cx ? JS_FrameIterator(cx, &fp) : nullptr;
+    fp = cx ? JS_BrokenFrameIterator(cx, &fp) : nullptr;
 
     if (!fp)
     {
@@ -2502,7 +2502,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         // the JS engine via JS_EvaluateScript or similar APIs.
         if (JS_IsGlobalFrame(cx, fp))
             break;
-    } while ((fp = JS_FrameIterator(cx, &fp)) != nullptr);
+    } while ((fp = JS_BrokenFrameIterator(cx, &fp)) != nullptr);
 
     if (!previousPrincipal)
     {

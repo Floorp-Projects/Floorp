@@ -50,6 +50,30 @@ class JS_PUBLIC_API(AutoEnterFrameCompartment) : public AutoEnterScriptCompartme
     bool enter(JSContext *cx, JSStackFrame *target);
 };
 
+struct FrameDescription
+{
+    JSScript *script;
+    unsigned lineno;
+    JSFunction *fun;
+};
+
+struct StackDescription
+{
+    unsigned nframes;
+    FrameDescription *frames;
+};
+
+extern JS_PUBLIC_API(StackDescription *)
+DescribeStack(JSContext *cx, unsigned maxFrames);
+
+extern JS_PUBLIC_API(void)
+FreeStackDescription(JSContext *cx, StackDescription *desc);
+
+extern JS_PUBLIC_API(char *)
+FormatStackDump(JSContext *cx, char *buf,
+                    JSBool showArgs, JSBool showLocals,
+                    JSBool showThisProps);
+
 } /* namespace JS */
 
 #ifdef DEBUG
@@ -200,14 +224,16 @@ extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptOriginPrincipals(JSScript *script);
 
 /*
- * Stack Frame Iterator
+ * This function does not work when IonMonkey is active. It remains for legacy
+ * code: caps/principal clamping, which will be removed shortly after
+ * compartment-per-global, and jsd, which can only be used when IonMonkey is
+ * disabled.
  *
- * Used to iterate through the JS stack frames to extract
- * information from the frames.
+ * To find the calling script and line number, use JS_DescribeSciptedCaller.
+ * To summarize the call stack, use JS::DescribeStack.
  */
-
 extern JS_PUBLIC_API(JSStackFrame *)
-JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp);
+JS_BrokenFrameIterator(JSContext *cx, JSStackFrame **iteratorp);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fp);
