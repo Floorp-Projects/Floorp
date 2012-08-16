@@ -41,6 +41,10 @@ struct THEBES_API gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> 
         y = floor(y + 0.5);
         return *this;
     }
+
+    bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
+        return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
+    }
 };
 
 #endif /* GFX_POINT_H */
