@@ -739,13 +739,13 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     key.kind = kind;
 
     if (!cx->compartment->types.allocationSiteTable)
-        return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
+        return cx->compartment->types.addAllocationSiteTypeObject(cx, key);
 
     AllocationSiteTable::Ptr p = cx->compartment->types.allocationSiteTable->lookup(key);
 
     if (p)
         return p->value;
-    return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
+    return cx->compartment->types.addAllocationSiteTypeObject(cx, key);
 }
 
 /* Set the type to use for obj according to the site it was allocated at. */
