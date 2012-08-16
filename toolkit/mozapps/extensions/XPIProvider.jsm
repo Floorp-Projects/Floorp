@@ -2144,9 +2144,6 @@ var XPIProvider = {
                            .QueryInterface(Ci.nsIDirectoryEnumerator);
     let entry;
     while (entry = entries.nextFile) {
-      // Should never happen really
-      if (!(entry instanceof Ci.nsIFile))
-        continue;
 
       let id = entry.leafName;
 
