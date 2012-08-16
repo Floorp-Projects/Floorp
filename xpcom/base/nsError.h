@@ -82,7 +82,7 @@
  * @return 0 or 1
  */
 
-#if defined(NS_STATIC_CHECKING) && defined(__cplusplus)
+#ifdef __cplusplus
 inline int NS_FAILED(nsresult _nsresult) {
   return   _nsresult & 0x80000000;
 }
