@@ -413,6 +413,14 @@ public class SyncAccounts {
     ContentResolver.setSyncAutomatically(account, authority, syncAutomatically);
   }
 
+  public static void backgroundSetSyncAutomatically(final Account account, final boolean syncAutomatically) {
+    ThreadPool.run(new Runnable() {
+      @Override
+      public void run() {
+        setSyncAutomatically(account, syncAutomatically);
+      }
+    });
+  }
   /**
    * Bug 721760: try to start a vendor-specific Accounts & Sync activity on Moto
    * Blur devices.
