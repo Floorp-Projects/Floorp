@@ -232,6 +232,10 @@ public:
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive() const { return mScrollingActive || ShouldBuildLayer(); }
+  void ResetScrollPositionForLayerPixelAlignment()
+  {
+    mScrollPosForLayerPixelAlignment = GetScrollPosition();
+  }
 
   bool UpdateOverflow();
 
@@ -290,6 +294,7 @@ public:
   nsExpirationState mActivityExpirationState;
 
   nsCOMPtr<nsITimer> mScrollActivityTimer;
+  nsPoint mScrollPosForLayerPixelAlignment;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
@@ -510,6 +515,9 @@ public:
   }
   virtual bool IsScrollingActive() MOZ_OVERRIDE {
     return mInner.IsScrollingActive();
+  }
+  virtual void ResetScrollPositionForLayerPixelAlignment() {
+    mInner.ResetScrollPositionForLayerPixelAlignment();
   }
   virtual bool UpdateOverflow() {
     return mInner.UpdateOverflow();
@@ -758,6 +766,9 @@ public:
   }
   virtual bool IsScrollingActive() MOZ_OVERRIDE {
     return mInner.IsScrollingActive();
+  }
+  virtual void ResetScrollPositionForLayerPixelAlignment() {
+    mInner.ResetScrollPositionForLayerPixelAlignment();
   }
   virtual bool UpdateOverflow() {
     return mInner.UpdateOverflow();

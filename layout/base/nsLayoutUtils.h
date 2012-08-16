@@ -323,7 +323,7 @@ public:
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
-  static nsIScrollableFrame* GetScrollableFrameFor(nsIFrame *aScrolledFrame);
+  static nsIScrollableFrame* GetScrollableFrameFor(const nsIFrame *aScrolledFrame);
 
   /**
    * GetNearestScrollableFrameForDirection locates the first ancestor of
