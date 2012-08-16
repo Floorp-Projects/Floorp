@@ -856,10 +856,9 @@ nsDOMDeviceStorageCursor::IPDLRelease()
 class PostStatResultEvent : public nsRunnable
 {
 public:
-  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, PRInt64 aFreeBytes, PRInt64 aTotalBytes, nsAString& aState)
+  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, PRInt64 aFreeBytes, PRInt64 aTotalBytes)
     : mFreeBytes(aFreeBytes)
     , mTotalBytes(aTotalBytes)
-    , mState(aState)
     {
       mRequest.swap(aRequest);
     }
@@ -870,7 +869,18 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes, mState);
+    nsString state;
+    state.Assign(NS_LITERAL_STRING("available"));
+#ifdef MOZ_WIDGET_GONK
+    nsresult rv = GetSDCardStatus(state);
+    if (NS_FAILED(rv)) {
+      mRequest->FireError(NS_ERROR_FAILURE);
+      mRequest = nullptr;
+      return NS_OK;
+    }
+#endif
+
+    nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(mFreeBytes, mTotalBytes, state);
 
     jsval result = InterfaceToJsval(mRequest->GetOwner(),
 				    domstat,
@@ -1069,17 +1079,8 @@ public:
       NS_DispatchToMainThread(r);
       return NS_OK;
     }
-    nsString state;
-    state.Assign(NS_LITERAL_STRING("available"));
-#ifdef MOZ_WIDGET_GONK
-    rv = GetSDCardStatus(state);
-    if (NS_FAILED(rv)) {
-      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN, mFile);
-      NS_DispatchToMainThread(r);
-      return NS_OK;
-    }
-#endif
-    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace, state);
+
+    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace);
     NS_DispatchToMainThread(r);
     return NS_OK;
   }
