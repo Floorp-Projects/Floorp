@@ -108,7 +108,7 @@ invoke_copy_to_stack(uint32_t* stk, uint32_t *end,
     }
 }
 
-typedef uint32_t (*vtable_func)(nsISupports *, uint32_t, uint32_t, uint32_t);
+typedef nsresult (*vtable_func)(nsISupports *, uint32_t, uint32_t, uint32_t);
 
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
