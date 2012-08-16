@@ -224,6 +224,93 @@ typedef enum {
 
 #endif
 
+typedef enum {
+    /* output devices */      
+    AUDIO_DEVICE_OUT_EARPIECE                  = 0x1,
+    AUDIO_DEVICE_OUT_SPEAKER                   = 0x2,
+    AUDIO_DEVICE_OUT_WIRED_HEADSET             = 0x4,
+    AUDIO_DEVICE_OUT_WIRED_HEADPHONE           = 0x8,
+    AUDIO_DEVICE_OUT_BLUETOOTH_SCO             = 0x10,
+    AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET     = 0x20,
+    AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT      = 0x40,
+    AUDIO_DEVICE_OUT_BLUETOOTH_A2DP            = 0x80,
+    AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES = 0x100,
+    AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER    = 0x200,
+    AUDIO_DEVICE_OUT_AUX_DIGITAL               = 0x400,
+    AUDIO_DEVICE_OUT_ANLG_DOCK_HEADSET         = 0x800,
+    AUDIO_DEVICE_OUT_DGTL_DOCK_HEADSET         = 0x1000,
+    AUDIO_DEVICE_OUT_FM                        = 0x2000,
+    AUDIO_DEVICE_OUT_ANC_HEADSET               = 0x4000,
+    AUDIO_DEVICE_OUT_ANC_HEADPHONE             = 0x8000,
+    AUDIO_DEVICE_OUT_FM_TX                     = 0x10000,
+    AUDIO_DEVICE_OUT_DIRECTOUTPUT              = 0x20000,
+    AUDIO_DEVICE_OUT_PROXY                     = 0x40000,
+    AUDIO_DEVICE_OUT_DEFAULT                   = 0x80000,
+    AUDIO_DEVICE_OUT_ALL      = (AUDIO_DEVICE_OUT_EARPIECE |
+                                 AUDIO_DEVICE_OUT_SPEAKER |
+                                 AUDIO_DEVICE_OUT_WIRED_HEADSET |
+                                 AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_SCO |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_A2DP |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER |
+                                 AUDIO_DEVICE_OUT_AUX_DIGITAL |
+                                 AUDIO_DEVICE_OUT_ANLG_DOCK_HEADSET |
+                                 AUDIO_DEVICE_OUT_DGTL_DOCK_HEADSET |
+                                 AUDIO_DEVICE_OUT_FM |
+                                 AUDIO_DEVICE_OUT_ANC_HEADSET |
+                                 AUDIO_DEVICE_OUT_ANC_HEADPHONE |
+                                 AUDIO_DEVICE_OUT_FM_TX |
+                                 AUDIO_DEVICE_OUT_DIRECTOUTPUT |
+                                 AUDIO_DEVICE_OUT_PROXY |
+                                 AUDIO_DEVICE_OUT_DEFAULT),
+    AUDIO_DEVICE_OUT_ALL_A2DP = (AUDIO_DEVICE_OUT_BLUETOOTH_A2DP |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER),
+    AUDIO_DEVICE_OUT_ALL_SCO  = (AUDIO_DEVICE_OUT_BLUETOOTH_SCO |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET |
+                                 AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT),
+    /* input devices */
+    AUDIO_DEVICE_IN_COMMUNICATION         = 0x100000,
+    AUDIO_DEVICE_IN_AMBIENT               = 0x200000,
+    AUDIO_DEVICE_IN_BUILTIN_MIC           = 0x400000,
+    AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET = 0x800000,
+    AUDIO_DEVICE_IN_WIRED_HEADSET         = 0x1000000,
+    AUDIO_DEVICE_IN_AUX_DIGITAL           = 0x2000000,
+    AUDIO_DEVICE_IN_VOICE_CALL            = 0x4000000,
+    AUDIO_DEVICE_IN_BACK_MIC              = 0x8000000,
+    AUDIO_DEVICE_IN_ANC_HEADSET           = 0x10000000,
+    AUDIO_DEVICE_IN_FM_RX                 = 0x20000000,
+    AUDIO_DEVICE_IN_FM_RX_A2DP            = 0x40000000,
+    AUDIO_DEVICE_IN_DEFAULT               = 0x80000000,
+    
+    AUDIO_DEVICE_IN_ALL     = (AUDIO_DEVICE_IN_COMMUNICATION |
+                               AUDIO_DEVICE_IN_AMBIENT |
+                               AUDIO_DEVICE_IN_BUILTIN_MIC |
+                               AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET |
+                               AUDIO_DEVICE_IN_WIRED_HEADSET |
+                               AUDIO_DEVICE_IN_AUX_DIGITAL |
+                               AUDIO_DEVICE_IN_VOICE_CALL |
+                               AUDIO_DEVICE_IN_BACK_MIC |
+                               AUDIO_DEVICE_IN_ANC_HEADSET |
+                               AUDIO_DEVICE_IN_FM_RX |
+                               AUDIO_DEVICE_IN_FM_RX_A2DP |
+                               AUDIO_DEVICE_IN_DEFAULT),
+    AUDIO_DEVICE_IN_ALL_SCO = AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
+} audio_devices_t;
+
+/* device connection states used for audio_policy->set_device_connection_state()
+ *  */
+typedef enum {
+    AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE,
+    AUDIO_POLICY_DEVICE_STATE_AVAILABLE,
+    
+    AUDIO_POLICY_DEVICE_STATE_CNT,
+    AUDIO_POLICY_DEVICE_STATE_MAX = AUDIO_POLICY_DEVICE_STATE_CNT - 1,
+} audio_policy_dev_state_t;
+
 namespace android {
 
 typedef void (*audio_error_callback)(status_t err);
@@ -570,6 +657,7 @@ public:
                                         uint32_t format = FORMAT_DEFAULT,
                                         uint32_t channels = CHANNEL_OUT_STEREO,
                                         output_flags flags = OUTPUT_FLAG_INDIRECT);
+    static status_t setDeviceConnectionState(audio_devices_t device, audio_policy_dev_state_t state, const char *device_address);
 #else
     static status_t setForceUse(force_use usage, forced_config config) __attribute__((weak));
     static forced_config getForceUse(force_use usage) __attribute__((weak));
@@ -586,6 +674,8 @@ public:
                                         uint32_t format = AUDIO_FORMAT_DEFAULT,
                                         uint32_t channels = AUDIO_CHANNEL_OUT_STEREO,
                                         audio_policy_output_flags_t flags = AUDIO_POLICY_OUTPUT_FLAG_INDIRECT) __attribute__((weak));
+    static status_t setDeviceConnectionState(audio_devices_t device, audio_policy_dev_state_t state, const char *device_address) __attribute__((weak));
+
 #endif
     static status_t startOutput(audio_io_handle_t output,
                                 AudioSystem::stream_type stream,
