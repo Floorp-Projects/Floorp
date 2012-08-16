@@ -252,7 +252,7 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
@@ -261,7 +261,7 @@ NS_IMPL_CI_INTERFACE_GETTER5(nsBufferedInputStream,
                              nsIBufferedInputStream,
                              nsISeekableStream,
                              nsIStreamBufferAccess,
-                             nsIIPCSerializable)
+                             nsIIPCSerializableObsolete)
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

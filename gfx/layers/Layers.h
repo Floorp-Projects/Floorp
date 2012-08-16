@@ -139,7 +139,11 @@ class THEBES_API LayerManager {
   NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
-  LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true), mId(0)
+  LayerManager()
+    : mDestroyed(false)
+    , mSnapEffectiveTransforms(true)
+    , mId(0)
+    , mInTransaction(false)
   {
     InitLog();
   }
@@ -455,6 +459,8 @@ public:
 
   virtual bool IsCompositingCheap() { return true; }
 
+  bool IsInTransaction() const { return mInTransaction; }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -468,6 +474,7 @@ protected:
   static void InitLog();
   static PRLogModuleInfo* sLog;
   uint64_t mId;
+  bool mInTransaction;
 private:
   TimeStamp mLastFrameTime;
   nsTArray<float> mFrameTimes;

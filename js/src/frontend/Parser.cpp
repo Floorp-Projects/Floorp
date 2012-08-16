@@ -242,9 +242,6 @@ Parser::trace(JSTracer *trc)
             static_cast<FunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
-
-    for (TreeContext *tc = this->tc; tc; tc = tc->parent)
-        tc->trace(trc);
 }
 
 static bool
@@ -488,31 +485,6 @@ CheckStrictBinding(JSContext *cx, Parser *parser, HandlePropertyName name, Parse
     return true;
 }
 
-static bool
-ReportBadParameter(JSContext *cx, Parser *parser, HandlePropertyName name, unsigned errorNumber)
-{
-    Definition *dn = parser->tc->decls.lookupFirst(name);
-    JSAutoByteString bytes;
-    return js_AtomToPrintableString(cx, name, &bytes) &&
-           parser->reportStrictModeError(dn, errorNumber, bytes.ptr());
-}
-
-static bool
-BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kind)
-{
-    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-
-    unsigned index = tc->sc->bindings.numVars();
-    Rooted<JSAtom*> atom(cx, pn->pn_atom);
-    if (!tc->sc->bindings.add(cx, atom, kind))
-        return false;
-
-    if (!pn->pn_cookie.set(cx, tc->staticLevel, index))
-        return false;
-    pn->pn_dflags |= PND_BOUND;
-    return true;
-}
-
 ParseNode *
 Parser::functionBody(FunctionBodyType type)
 {
@@ -554,18 +526,20 @@ Parser::functionBody(FunctionBodyType type)
         }
     }
 
-    if (pn) {
-        JS_ASSERT(!tc->topStmt->isBlockScope);
-        FinishPopStatement(tc);
+    if (!pn)
+        return NULL;
 
-        /* Check for falling off the end of a function that returns a value. */
-        if (context->hasStrictOption() && tc->hasReturnExpr &&
-            !CheckFinalReturn(context, this, pn))
-        {
-            pn = NULL;
-        }
+    JS_ASSERT(!tc->topStmt->isBlockScope);
+    FinishPopStatement(tc);
+
+    /* Check for falling off the end of a function that returns a value. */
+    if (context->hasStrictOption() && tc->hasReturnExpr &&
+        !CheckFinalReturn(context, this, pn))
+    {
+        pn = NULL;
     }
 
+    /* Time to implement the odd semantics of 'arguments'. */
     Rooted<PropertyName*> arguments(context, context->runtime->atomState.argumentsAtom);
 
     /*
@@ -581,44 +555,36 @@ Parser::functionBody(FunctionBodyType type)
             PropertyName *name = r.front()->asPropertyName();
             if (name == arguments)
                 tc->sc->setBindingsAccessedDynamically();
-            else if (Definition *dn = tc->decls.lookupFirst(name))
+            else if (Definition *dn = tc->decls().lookupFirst(name))
                 dn->pn_dflags |= PND_CLOSED;
         }
     }
 
     /*
      * As explained by the ContextFlags::funArgumentsHasLocalBinding comment,
-     * turn uses of 'arguments' into bindings. Use of 'arguments' should never
-     * escape a nested function as an upvar.
+     * create a declaration for 'arguments' if there are any unbound uses in
+     * the function body.
      */
     for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
-        JSAtom *atom = r.front().key();
-        Definition *dn = r.front().value();
-        JS_ASSERT(dn->isPlaceholder());
-        if (atom == arguments) {
-            /*
-             * Turn 'dn' into a proper definition so uses will be bound as
-             * GETLOCAL in the emitter. The PND_IMPLICITARGUMENTS flag informs
-             * CompExprTransplanter (and anyone else) that this definition node
-             * has no proper declaration in the parse tree.
-             */
-            if (!BindLocalVariable(context, tc, dn, VARIABLE))
-                return NULL;
-            dn->setOp(JSOP_GETLOCAL);
-            dn->pn_dflags &= ~PND_PLACEHOLDER;
-            dn->pn_dflags |= PND_IMPLICITARGUMENTS;
-
-            /* NB: this leaves r invalid so we must break immediately. */
+        if (r.front().key() == arguments) {
+            Definition *dn = r.front().value();
             tc->lexdeps->remove(arguments);
+            dn->pn_dflags |= PND_IMPLICITARGUMENTS;
+            if (!tc->define(context, arguments, dn, Definition::VAR))
+                return NULL;
             break;
         }
     }
 
-    BindingIter maybeArgBinding(context, tc->sc->bindings.lookup(context, arguments));
-
-    /* Report error if both rest parameters and 'arguments' are used. */
+    /*
+     * Report error if both rest parameters and 'arguments' are used. Do this
+     * check before adding artificial 'arguments' below.
+     */
+    Definition *maybeArgDef = tc->decls().lookupFirst(arguments);
+    bool argumentsHasBinding = !!maybeArgDef;
+    bool argumentsHasLocalBinding = maybeArgDef && maybeArgDef->kind() != Definition::ARG;
     bool hasRest = tc->sc->fun()->hasRest();
-    if (hasRest && maybeArgBinding && maybeArgBinding->kind != ARGUMENT) {
+    if (hasRest && argumentsHasLocalBinding) {
         reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
         return NULL;
     }
@@ -628,10 +594,14 @@ Parser::functionBody(FunctionBodyType type)
      * forces an 'arguments' binding. The exception is that functions with rest
      * parameters are free from 'arguments'.
      */
-    if (!maybeArgBinding && tc->sc->bindingsAccessedDynamically() && !hasRest) {
-        if (!tc->sc->bindings.addVariable(context, arguments))
+    if (!argumentsHasBinding && tc->sc->bindingsAccessedDynamically() && !hasRest) {
+        ParseNode *pn = NameNode::create(PNK_NAME, arguments, this, tc);
+        if (!pn)
             return NULL;
-        maybeArgBinding = tc->sc->bindings.lookup(context, arguments);
+        if (!tc->define(context, arguments, pn, Definition::VAR))
+            return NULL;
+        argumentsHasBinding = true;
+        argumentsHasLocalBinding = true;
     }
 
     /*
@@ -639,7 +609,7 @@ Parser::functionBody(FunctionBodyType type)
      * 'arguments' has a local binding and whether it unconditionally needs an
      * arguments object. (Also see the flags' comments in ContextFlags.)
      */
-    if (maybeArgBinding && maybeArgBinding->kind != ARGUMENT) {
+    if (argumentsHasLocalBinding) {
         tc->sc->setFunArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
@@ -654,7 +624,7 @@ Parser::functionBody(FunctionBodyType type)
          * might, in the case of calls to eval) be assigned.
          */
         if (tc->sc->needStrictChecks()) {
-            for (AtomDefnListMap::Range r = tc->decls.all(); !r.empty(); r.popFront()) {
+            for (AtomDefnListMap::Range r = tc->decls().all(); !r.empty(); r.popFront()) {
                 DefinitionList &dlist = r.front().value();
                 for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
                     Definition *dn = dr.front();
@@ -686,56 +656,6 @@ MakePlaceholder(ParseNode *pn, Parser *parser, TreeContext *tc)
     dn->setDefn(true);
     dn->pn_dflags |= PND_PLACEHOLDER;
     return dn;
-}
-
-static bool
-Define(ParseNode *pn, JSAtom *atom, TreeContext *tc, bool let = false)
-{
-    JS_ASSERT(!pn->isUsed());
-    JS_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
-
-    bool foundLexdep = false;
-    Definition *dn = NULL;
-
-    if (let)
-        dn = tc->decls.lookupFirst(atom);
-
-    if (!dn) {
-        dn = tc->lexdeps.lookupDefn(atom);
-        foundLexdep = !!dn;
-    }
-
-    if (dn && dn != pn) {
-        ParseNode **pnup = &dn->dn_uses;
-        ParseNode *pnu;
-        unsigned start = let ? pn->pn_blockid : tc->bodyid;
-
-        while ((pnu = *pnup) != NULL && pnu->pn_blockid >= start) {
-            JS_ASSERT(pnu->isUsed());
-            pnu->pn_lexdef = (Definition *) pn;
-            pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
-            pnup = &pnu->pn_link;
-        }
-
-        if (!pnu || pnu != dn->dn_uses) {
-            *pnup = pn->dn_uses;
-            pn->dn_uses = dn->dn_uses;
-            dn->dn_uses = pnu;
-
-            if ((!pnu || pnu->pn_blockid < tc->bodyid) && foundLexdep)
-                tc->lexdeps->remove(atom);
-        }
-
-        pn->pn_dflags |= dn->pn_dflags & PND_CLOSED;
-    }
-
-    Definition *toAdd = (Definition *) pn;
-    bool ok = let ? tc->decls.addShadow(atom, toAdd) : tc->decls.addUnique(atom, toAdd);
-    if (!ok)
-        return false;
-    pn->setDefn(true);
-    pn->pn_dflags &= ~PND_PLACEHOLDER;
-    return true;
 }
 
 static void
@@ -787,25 +707,8 @@ MakeAssignment(ParseNode *pn, ParseNode *rhs, Parser *parser)
 static bool
 MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
 {
-    TreeContext *tc = parser->tc;
-
-    /*
-     * In a function, dn must have been bound to an argument or local to be in
-     * tc->decls. pn is going to take dn's place in tc->decls, so copy over the
-     * cookie and op so that pn gets the same binding.
-     */
-    if (tc->sc->inFunction()) {
-        JS_ASSERT(!dn->pn_cookie.isFree());
-        JS_ASSERT(dn->isBound());
-        pn->pn_cookie = dn->pn_cookie;
-        JS_ASSERT(JOF_OPTYPE(dn->getOp()) == JOF_QARG || JOF_OPTYPE(dn->getOp()) == JOF_LOCAL);
-        pn->setOp(JOF_OPTYPE(dn->getOp()) == JOF_QARG ? JSOP_GETARG : JSOP_GETLOCAL);
-        pn->pn_dflags |= PND_BOUND;
-    }
-
     /* Turn pn into a definition. */
-    parser->tc->decls.updateFirst(atom, (Definition *) pn);
-    pn->setDefn(true);
+    parser->tc->updateDecl(atom, pn);
 
     /* Change all uses of dn to be uses of pn. */
     for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
@@ -990,6 +893,7 @@ static bool
 LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
               FunctionSyntaxKind kind = Expression)
 {
+    JSContext *cx = parser->context;
     TreeContext *funtc = parser->tc;
     TreeContext *tc = funtc->parent;
     tc->blockidGen = funtc->blockidGen;
@@ -1001,16 +905,8 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
 
-    /*
-     * Propagate unresolved lexical names up to tc->lexdeps, and save a copy
-     * of funtc->lexdeps in a TOK_UPVARS node wrapping the function's formal
-     * params and body. We do this only if there are lexical dependencies not
-     * satisfied by the function's declarations, to avoid penalizing functions
-     * that use only their arguments and other local bindings.
-     */
+    /* Propagate unresolved lexical names up to tc->lexdeps. */
     if (funtc->lexdeps->count()) {
-        int foundCallee = 0;
-
         for (AtomDefnRange r = funtc->lexdeps->all(); !r.empty(); r.popFront()) {
             JSAtom *atom = r.front().key();
             Definition *dn = r.front().value();
@@ -1018,16 +914,17 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
             if (atom == funName && kind == Expression) {
                 dn->setOp(JSOP_CALLEE);
-                if (!dn->pn_cookie.set(parser->context, funtc->staticLevel,
+                if (!dn->pn_cookie.set(cx, funtc->staticLevel,
                                        UpvarCookie::CALLEE_SLOT))
                     return false;
                 dn->pn_dflags |= PND_BOUND;
-                foundCallee = 1;
                 JS_ASSERT(dn->kind() == Definition::NAMED_LAMBDA);
+                if (dn->isClosed())
+                    funtc->sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
 
-            Definition *outer_dn = tc->decls.lookupFirst(atom);
+            Definition *outer_dn = tc->decls().lookupFirst(atom);
 
             /*
              * Make sure to deoptimize lexical dependencies that are polluted
@@ -1083,98 +980,98 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * case), and nowhere else, currently.
              */
             if (dn != outer_dn) {
-                ParseNode **pnup = &dn->dn_uses;
-                ParseNode *pnu;
-
-                while ((pnu = *pnup) != NULL) {
-                    pnu->pn_lexdef = outer_dn;
-                    pnup = &pnu->pn_link;
+                if (ParseNode *pnu = dn->dn_uses) {
+                    while (true) {
+                        pnu->pn_lexdef = outer_dn;
+                        if (!pnu->pn_link)
+                            break;
+                        pnu = pnu->pn_link;
+                    }
+                    pnu->pn_link = outer_dn->dn_uses;
+                    outer_dn->dn_uses = dn->dn_uses;
+                    dn->dn_uses = NULL;
                 }
 
-                /*
-                 * Make dn be a use that redirects to outer_dn, because we
-                 * can't replace dn with outer_dn in all the pn_namesets in
-                 * the AST where it may be. Instead we make it forward to
-                 * outer_dn. See Definition::resolve.
-                 */
-                *pnup = outer_dn->dn_uses;
-                outer_dn->dn_uses = dn;
                 outer_dn->pn_dflags |= dn->pn_dflags & ~PND_PLACEHOLDER;
-                dn->setDefn(false);
-                dn->setUsed(true);
-                dn->pn_lexdef = outer_dn;
             }
 
             /* Mark the outer dn as escaping. */
             outer_dn->pn_dflags |= PND_CLOSED;
         }
-
-        if (funtc->lexdeps->count() - foundCallee != 0) {
-            ParseNode *body = fn->pn_body;
-
-            fn->pn_body = NameSetNode::create(PNK_UPVARS, parser);
-            if (!fn->pn_body)
-                return false;
-
-            fn->pn_body->pn_pos = body->pn_pos;
-            if (foundCallee)
-                funtc->lexdeps->remove(funName);
-            /* Transfer ownership of the lexdep map to the parse node. */
-            fn->pn_body->pn_names = funtc->lexdeps;
-            funtc->lexdeps.clearMap();
-            fn->pn_body->pn_tree = body;
-        } else {
-            funtc->lexdeps.releaseMap(funtc->sc->context);
-        }
-
     }
 
-    funbox->bindings.transfer(&funtc->sc->bindings);
+    if (!funtc->generateFunctionBindings(cx, &funbox->bindings))
+        return false;
 
+    funtc->lexdeps.releaseMap(cx);
     return true;
 }
 
 /*
- * DefineArg is called for both the formals of a regular function definition
- * and the formals specified by the Function constructor.
+ * DefineArg is called for both the arguments of a regular function definition
+ * and the arguments specified by the Function constructor.
+ *
+ * The 'destructuringArg' bool indicates whether there have been any
+ * destructuring arguments up to this point.
+ *
+ * If 'duplicatedArg' is non-null, then DefineArg assigns to it any previous
+ * argument with the same name.
  */
 bool
-frontend::DefineArg(ParseNode *pn, HandlePropertyName name, unsigned i, Parser *parser)
+frontend::DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name, bool destructuringArg,
+                    Definition **duplicatedArg)
 {
     JSContext *cx = parser->context;
     TreeContext *tc = parser->tc;
     SharedContext *sc = tc->sc;
 
-    /*
-     * Make an argument definition node, distinguished by being in
-     * parser->tc->decls but having PNK_NAME kind and JSOP_NOP op. Insert it in
-     * a PNK_ARGSBODY list node returned via pn->pn_body.
-     */
-    ParseNode *argpn = NameNode::create(PNK_NAME, name, parser, tc);
-    if (!argpn)
-        return false;
-    JS_ASSERT(argpn->isKind(PNK_NAME) && argpn->isOp(JSOP_NOP));
+    /* Handle duplicate argument names. */
+    if (Definition *prevDecl = tc->decls().lookupFirst(name)) {
+        /*
+         * Strict-mode disallows duplicate args. We may not know whether we are
+         * in strict mode or not (since the function body hasn't been parsed).
+         * In such cases, reportStrictModeError will queue up the potential
+         * error and return 'true'.
+         */
+        if (sc->needStrictChecks()) {
+            JSAutoByteString bytes;
+            if (!js_AtomToPrintableString(cx, name, &bytes))
+                return false;
+            if (!parser->reportStrictModeError(prevDecl, JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
+                return false;
+        }
 
-    if (sc->needStrictChecks() && tc->decls.lookupFirst(name)) {
-        if (!ReportBadParameter(cx, parser, name, JSMSG_DUPLICATE_FORMAL))
+        /*
+         * ECMA-262 requires us to support duplicate parameter names, but if
+         * the parameter list includes destructuring, we consider the code to
+         * have "opted in" to higher standards and forbid duplicates. We may
+         * see a destructuring parameter later, so always note duplicates now.
+         */
+        if (destructuringArg) {
+            parser->reportError(prevDecl, JSMSG_DESTRUCT_DUP_ARG);
             return false;
+        }
+
+        /*
+         * Remember that duplicate argument is allowed in case we encounter a
+         * destructuring parameter later.
+         */
+        if (duplicatedArg)
+            *duplicatedArg = prevDecl;
+
+        /* TreeContext::define assumes and asserts prevDecl is not in decls. */
+        tc->prepareToAddDuplicateArg(prevDecl);
     }
 
-    if (!CheckStrictBinding(cx, parser, name, argpn))
+    ParseNode *argpn = NameNode::create(PNK_NAME, name, parser, parser->tc);
+    if (!argpn)
         return false;
 
-    /* Arguments are initialized by definition. */
-    if (!Define(argpn, name, tc))
+    if (!CheckStrictBinding(parser->context, parser, name, argpn))
         return false;
 
-    ParseNode *argsbody = pn->pn_body;
-    argsbody->append(argpn);
-
-    argpn->setOp(JSOP_GETARG);
-    if (!argpn->pn_cookie.set(cx, tc->staticLevel, i))
-        return false;
-    argpn->pn_dflags |= PND_BOUND;
-    return true;
+    funcpn->pn_body->append(argpn);
+    return parser->tc->define(parser->context, name, argpn, Definition::ARG);
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -1184,43 +1081,15 @@ BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Par
     TreeContext *tc = parser->tc;
     JS_ASSERT(tc->sc->inFunction());
 
-    /*
-     * NB: Check tc->decls rather than tc->sc->bindings, because destructuring
-     *     bindings aren't added to tc->sc->bindings until after all arguments have
-     *     been parsed.
-     */
-    if (tc->decls.lookupFirst(name)) {
+    if (tc->decls().lookupFirst(name)) {
         parser->reportError(NULL, JSMSG_DESTRUCT_DUP_ARG);
         return false;
     }
 
-    ParseNode *pn = data->pn;
-    if (!CheckStrictBinding(cx, parser, name, pn))
+    if (!CheckStrictBinding(cx, parser, name, data->pn))
         return false;
 
-    /*
-     * Distinguish destructured-to binding nodes as vars, not args, by setting
-     * pn_op to JSOP_SETLOCAL. Parser::functionDef checks for this pn_op value
-     * when processing the destructuring-assignment AST prelude induced by such
-     * destructuring args in Parser::functionArguments.
-     *
-     * We must set the PND_BOUND flag too to prevent pn_op from being reset to
-     * JSOP_SETNAME by BindDestructuringVar. The only field not initialized is
-     * pn_cookie; it gets set in functionDef in the first "if (prelude)" block.
-     * We have to wait to set the cookie until we can call JSFunction::addLocal
-     * with kind = JSLOCAL_VAR, after all JSLOCAL_ARG locals have been added.
-     *
-     * Thus a destructuring formal parameter binds an ARG (as in arguments[i]
-     * element) with a null atom name for the object or array passed in to be
-     * destructured, and zero or more VARs (as in named local variables) for
-     * the destructured-to identifiers in the property value positions within
-     * the object or array destructuring pattern, and all ARGs for the formal
-     * parameter list bound as locals before any VAR for a destructured name.
-     */
-    pn->setOp(JSOP_SETLOCAL);
-    pn->pn_dflags |= PND_BOUND;
-
-    return Define(pn, name, tc);
+    return tc->define(cx, name, data->pn, Definition::VAR);
 }
 #endif /* JS_HAS_DESTRUCTURING */
 
@@ -1232,7 +1101,8 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
         return false;
     }
 
-    tc->sc->funbox()->bufStart = tokenStream.offsetOfToken(tokenStream.currentToken());
+    FunctionBox *funbox = tc->sc->funbox();
+    funbox->bufStart = tokenStream.offsetOfToken(tokenStream.currentToken());
 
     hasRest = false;
 
@@ -1241,13 +1111,15 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
         return false;
     argsbody->setOp(JSOP_NOP);
     argsbody->makeEmpty();
-    tc->sc->funbox()->node->pn_body = argsbody;
+
+    ParseNode *funcpn = funbox->node;
+    funcpn->pn_body = argsbody;
 
     if (!tokenStream.matchToken(TOK_RP)) {
         bool hasDefaults = false;
-#if JS_HAS_DESTRUCTURING
-        JSAtom *duplicatedArg = NULL;
+        Definition *duplicatedArg = NULL;
         bool destructuringArg = false;
+#if JS_HAS_DESTRUCTURING
         ParseNode *list = NULL;
 #endif
 
@@ -1262,8 +1134,11 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
               case TOK_LC:
               {
                 /* See comment below in the TOK_NAME case. */
-                if (duplicatedArg)
-                    goto report_dup_and_destructuring;
+                if (duplicatedArg) {
+                    reportError(duplicatedArg, JSMSG_DESTRUCT_DUP_ARG);
+                    return false;
+                }
+
                 if (hasDefaults) {
                     reportError(NULL, JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
                     return false;
@@ -1286,27 +1161,17 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                     return false;
 
                 /*
-                 * Adjust fun->nargs to count the single anonymous positional
-                 * parameter that is to be destructured.
-                 */
-                uint16_t slot;
-                if (!tc->sc->bindings.addDestructuring(context, &slot))
-                    return false;
-
-                /*
                  * Synthesize a destructuring assignment from the single
                  * anonymous positional parameter into the destructuring
                  * left-hand-side expression and accumulate it in list.
                  */
-                ParseNode *rhs = NameNode::create(PNK_NAME, context->runtime->atomState.emptyAtom,
-                                                  this, this->tc);
+                PropertyName *name = context->runtime->atomState.emptyAtom;
+                ParseNode *rhs = NameNode::create(PNK_NAME, name, this, this->tc);
                 if (!rhs)
                     return false;
-                rhs->setOp(JSOP_GETARG);
-                if (!rhs->pn_cookie.set(context, tc->staticLevel, slot))
+
+                if (!tc->define(context, name, rhs, Definition::ARG))
                     return false;
-                rhs->pn_dflags |= PND_BOUND;
-                rhs->setDefn(true);
 
                 ParseNode *item = new_<BinaryNode>(PNK_ASSIGN, JSOP_NOP, lhs->pn_pos, lhs, rhs);
                 if (!item)
@@ -1337,37 +1202,8 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
 
               case TOK_NAME:
               {
-                Rooted<PropertyName*> name(context, tokenStream.currentToken().name());
-
-#ifdef JS_HAS_DESTRUCTURING
-                /*
-                 * ECMA-262 requires us to support duplicate parameter names,
-                 * but if the parameter list includes destructuring, we
-                 * consider the code to have "opted in" to higher standards and
-                 * forbid duplicates. We may see a destructuring parameter
-                 * later, so always note duplicates now.
-                 *
-                 * Duplicates are warned about (strict option) or cause errors
-                 * (strict mode code), but we do those tests in one place
-                 * below, after having parsed the body in case it begins with a
-                 * "use strict"; directive.
-                 *
-                 * NB: Check tc->decls rather than tc->sc->bindings, because
-                 *     destructuring bindings aren't added to tc->sc->bindings
-                 *     until after all arguments have been parsed.
-                 */
-                if (tc->decls.lookupFirst(name)) {
-                    tc->sc->bindings.noteDup();
-                    duplicatedArg = name;
-                    if (destructuringArg)
-                        goto report_dup_and_destructuring;
-                }
-#endif
-
-                uint16_t slot;
-                if (!tc->sc->bindings.addArgument(context, name, &slot))
-                    return false;
-                if (!DefineArg(tc->sc->funbox()->node, name, slot, this))
+                RootedPropertyName name(context, tokenStream.currentToken().name());
+                if (!DefineArg(this, funcpn, name, destructuringArg, &duplicatedArg))
                     return false;
 
                 if (tokenStream.matchToken(TOK_ASSIGN)) {
@@ -1379,10 +1215,10 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                     ParseNode *def_expr = assignExprWithoutYield(JSMSG_YIELD_IN_DEFAULT);
                     if (!def_expr)
                         return false;
-                    ParseNode *arg = tc->sc->funbox()->node->pn_body->last();
+                    ParseNode *arg = funcpn->pn_body->last();
                     arg->pn_dflags |= PND_DEFAULT;
                     arg->pn_expr = def_expr;
-                    tc->sc->funbox()->ndefaults++;
+                    funbox->ndefaults++;
                 } else if (!hasRest && hasDefaults) {
                     reportError(NULL, JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
                     return false;
@@ -1396,13 +1232,6 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 /* FALL THROUGH */
               case TOK_ERROR:
                 return false;
-
-#if JS_HAS_DESTRUCTURING
-              report_dup_and_destructuring:
-                Definition *dn = tc->decls.lookupFirst(duplicatedArg);
-                reportError(dn, JSMSG_DESTRUCT_DUP_ARG);
-                return false;
-#endif
             }
         } while (tokenStream.matchToken(TOK_COMMA));
 
@@ -1435,7 +1264,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
          * Handle redeclaration and optimize cases where we can statically bind the
          * function (thereby avoiding JSOP_DEFFUN and dynamic name lookup).
          */
-        if (Definition *dn = tc->decls.lookupFirst(funName)) {
+        if (Definition *dn = tc->decls().lookupFirst(funName)) {
             JS_ASSERT(!dn->isUsed());
             JS_ASSERT(dn->isDefn());
 
@@ -1483,25 +1312,8 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
                 pn = fn;
             }
 
-            if (!Define(pn, funName, tc))
+            if (!tc->define(context, funName, pn, Definition::VAR))
                 return NULL;
-
-            /*
-             * A function directly inside another's body needs only a local
-             * variable to bind its name to its value, and not an activation object
-             * property (it might also need the activation property, if the outer
-             * function contains with statements, e.g., but the stack slot wins
-             * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
-             * into a JSOP_GETLOCAL bytecode).
-             */
-            if (tc->sc->inFunction()) {
-                unsigned varIndex = tc->sc->bindings.numVars();
-                if (!tc->sc->bindings.addVariable(context, funName))
-                    return NULL;
-                if (!pn->pn_cookie.set(context, tc->staticLevel, varIndex))
-                    return NULL;
-                pn->setOp(JSOP_GETLOCAL);
-            }
         }
 
         /*
@@ -1520,7 +1332,6 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
             JS_ASSERT(pn->pn_cookie.isFree());
             tc->sc->setFunMightAliasLocals();
             tc->sc->setFunHasExtensibleScope();
-            tc->sc->setFunIsHeavyweight();
             pn->setOp(JSOP_DEFFUN);
 
             /*
@@ -1572,37 +1383,11 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (!functionArguments(&prelude, hasRest))
         return NULL;
 
-    fun->setArgCount(funsc.bindings.numArgs());
+    fun->setArgCount(funtc.numArgs());
     if (funbox->ndefaults)
         fun->setHasDefaults();
     if (hasRest)
         fun->setHasRest();
-
-#if JS_HAS_DESTRUCTURING
-    /*
-     * If there were destructuring formal parameters, bind the destructured-to
-     * local variables now that we've parsed all the regular and destructuring
-     * formal parameters. Because js::Bindings::add must be called first for
-     * all ARGUMENTs, then all VARIABLEs and CONSTANTs, and finally all UPVARs,
-     * we can't bind vars induced by formal parameter destructuring until after
-     * Parser::functionArguments has returned.
-     */
-    if (prelude) {
-        for (AtomDefnListMap::Range r = tc->decls.all(); !r.empty(); r.popFront()) {
-            DefinitionList &dlist = r.front().value();
-            for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
-                Definition *apn = dr.front();
-
-                /* Filter based on pn_op -- see BindDestructuringArg, above. */
-                if (!apn->isOp(JSOP_SETLOCAL))
-                    continue;
-
-                if (!BindLocalVariable(context, &funtc, apn, VARIABLE))
-                    return NULL;
-            }
-        }
-    }
-#endif
 
     if (type == Getter && fun->nargs > 0) {
         reportError(NULL, JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
@@ -1693,15 +1478,11 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 #endif
 
     /*
-     * If we collected flags that indicate nested heavyweight functions, or
-     * this function contains heavyweight-making statements (with statement,
-     * visible eval call, or assignment to 'arguments'), flag the function as
-     * heavyweight (requiring a call object per invocation).
+     * If any nested function scope does a dynamic scope access, all enclosing
+     * scopes may be accessed dynamically.
      */
-    if (funsc.funIsHeavyweight()) {
-        fun->flags |= JSFUN_HEAVYWEIGHT;
-        outertc->sc->setFunIsHeavyweight();
-    }
+    if (funsc.bindingsAccessedDynamically())
+        outertc->sc->setBindingsAccessedDynamically();
 
 
     pn->pn_funbox = funbox;
@@ -2035,29 +1816,27 @@ BindLet(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
     }
 
     /*
-     * For bindings that are hoisted to the beginning of the block/function,
-     * Define() right now. For the rest, delay Define() until PushLetScope.
-     */
-    if (data->let.varContext == HoistVars) {
-        JS_ASSERT(!tc->atBodyLevel());
-        Definition *dn = tc->decls.lookupFirst(name);
-        if (dn && dn->pn_blockid == tc->blockid())
-            return ReportRedeclaration(cx, parser, pn, dn->isConst(), name);
-        if (!Define(pn, name, tc, true))
-            return false;
-    }
-
-    /*
      * Assign block-local index to pn->pn_cookie right away, encoding it as an
      * upvar cookie whose skip tells the current static level. The emitter will
      * adjust the node's slot based on its stack depth model -- and, for global
      * and eval code, js::frontend::CompileScript will adjust the slot
      * again to include script->nfixed.
      */
-    pn->setOp(JSOP_GETLOCAL);
     if (!pn->pn_cookie.set(parser->context, tc->staticLevel, uint16_t(blockCount)))
         return false;
-    pn->pn_dflags |= PND_LET | PND_BOUND;
+
+    /*
+     * For bindings that are hoisted to the beginning of the block/function,
+     * define() right now. Otherwise, delay define until PushLetScope.
+     */
+    if (data->let.varContext == HoistVars) {
+        JS_ASSERT(!tc->atBodyLevel());
+        Definition *dn = tc->decls().lookupFirst(name);
+        if (dn && dn->pn_blockid == tc->blockid())
+            return ReportRedeclaration(cx, parser, pn, dn->isConst(), name);
+        if (!tc->define(cx, name, pn, Definition::LET))
+            return false;
+    }
 
     /*
      * Define the let binding's property before storing pn in the the binding's
@@ -2079,7 +1858,7 @@ BindLet(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 
 template <class Op>
 static inline bool
-ForEachLetDef(TreeContext *tc, StaticBlockObject &blockObj, Op op)
+ForEachLetDef(JSContext *cx, TreeContext *tc, StaticBlockObject &blockObj, Op op)
 {
     for (Shape::Range r = blockObj.lastProperty()->all(); !r.empty(); r.popFront()) {
         Shape &shape = r.front();
@@ -2088,21 +1867,21 @@ ForEachLetDef(TreeContext *tc, StaticBlockObject &blockObj, Op op)
         if (JSID_IS_INT(shape.propid()))
             continue;
 
-        if (!op(tc, blockObj, shape, JSID_TO_ATOM(shape.propid())))
+        if (!op(cx, tc, blockObj, shape, JSID_TO_ATOM(shape.propid())))
             return false;
     }
     return true;
 }
 
-struct RemoveDecl {
-    bool operator()(TreeContext *tc, StaticBlockObject &, const Shape &, JSAtom *atom) {
-        tc->decls.remove(atom);
+struct PopLetDecl {
+    bool operator()(JSContext *, TreeContext *tc, StaticBlockObject &, const Shape &, JSAtom *atom) {
+        tc->popLetDecl(atom);
         return true;
     }
 };
 
 static void
-PopStatementTC(TreeContext *tc)
+PopStatementTC(JSContext *cx, TreeContext *tc)
 {
     StaticBlockObject *blockObj = tc->topStmt->blockObj;
     JS_ASSERT(!!blockObj == (tc->topStmt->isBlockScope));
@@ -2111,7 +1890,7 @@ PopStatementTC(TreeContext *tc)
 
     if (blockObj) {
         JS_ASSERT(!blockObj->inDictionaryMode());
-        ForEachLetDef(tc, *blockObj, RemoveDecl());
+        ForEachLetDef(cx, tc, *blockObj, PopLetDecl());
         blockObj->resetPrevBlockChainFromParser();
     }
 }
@@ -2130,43 +1909,11 @@ OuterLet(TreeContext *tc, StmtInfoTC *stmt, HandleAtom atom)
 }
 
 static bool
-BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, TreeContext *tc)
-{
-    JS_ASSERT(tc->sc->inFunction());
-    ParseNode *pn = data->pn;
-
-    BindingIter bi(cx, tc->sc->bindings.lookup(cx, pn->pn_atom->asPropertyName()));
-    if (!bi) {
-        /*
-         * Property not found in current variable scope: we have not seen this
-         * variable before, so bind a new local variable for it. Any locals
-         * declared in a with statement body are handled at runtime, by script
-         * prolog JSOP_DEFVAR opcodes generated for global and heavyweight-
-         * function-local vars.
-         */
-        BindingKind kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
-
-        if (!BindLocalVariable(cx, tc, pn, kind))
-            return false;
-        pn->setOp(JSOP_GETLOCAL);
-        return true;
-    }
-
-    if (bi->kind == ARGUMENT) {
-        JS_ASSERT(tc->sc->inFunction());
-        JS_ASSERT(!defs.empty() && defs.front()->kind() == Definition::ARG);
-    } else {
-        JS_ASSERT(bi->kind == VARIABLE || bi->kind == CONSTANT);
-    }
-
-    return true;
-}
-
-static bool
 BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 {
     TreeContext *tc = parser->tc;
     ParseNode *pn = data->pn;
+    bool isConstDecl = data->op == JSOP_DEFCONST;
 
     /* Default best op for pn is JSOP_NAME; we'll try to improve below. */
     pn->setOp(JSOP_NAME);
@@ -2182,21 +1929,11 @@ BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *p
         return true;
     }
 
-    DefinitionList::Range defs = tc->decls.lookupMulti(name);
+    DefinitionList::Range defs = tc->decls().lookupMulti(name);
     JS_ASSERT_IF(stmt, !defs.empty());
 
-    if (defs.empty()) {
-        if (!Define(pn, name, tc))
-            return false;
-
-        if (data->op == JSOP_DEFCONST)
-            pn->pn_dflags |= PND_CONST;
-
-        if (tc->sc->inFunction())
-            return BindFunctionLocal(cx, data, defs, tc);
-
-        return true;
-    }
+    if (defs.empty())
+        return tc->define(cx, name, pn, isConstDecl ? Definition::CONST : Definition::VAR);
 
     /*
      * There was a previous declaration with the same name. The standard
@@ -2212,14 +1949,14 @@ BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *p
         if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
 
-        if (data->op == JSOP_DEFCONST) {
+        if (isConstDecl) {
             parser->reportError(pn, JSMSG_REDECLARED_PARAM, bytes.ptr());
             return false;
         }
         if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
             return false;
     } else {
-        bool error = (data->op == JSOP_DEFCONST ||
+        bool error = (isConstDecl ||
                       dn_kind == Definition::CONST ||
                       (dn_kind == Definition::LET &&
                        (stmt->type != STMT_CATCH || OuterLet(tc, stmt, name))));
@@ -2279,7 +2016,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc)
      * happens by making such functions heavyweight.
      */
     if (sc->inFunction() && pn->pn_atom == sc->fun()->atom)
-        sc->setFunIsHeavyweight();
+        sc->setBindingsAccessedDynamically();
 }
 
 static bool
@@ -2288,7 +2025,7 @@ NoteNameUse(ParseNode *pn, Parser *parser)
     RootedPropertyName name(parser->context, pn->pn_atom->asPropertyName());
     StmtInfoTC *stmt = LexicalLookup(parser->tc, name, NULL, (StmtInfoTC *)NULL);
 
-    DefinitionList::Range defs = parser->tc->decls.lookupMulti(name);
+    DefinitionList::Range defs = parser->tc->decls().lookupMulti(name);
 
     Definition *dn;
     if (!defs.empty()) {
@@ -2680,17 +2417,17 @@ PushLexicalScope(JSContext *cx, Parser *parser, StmtInfoTC *stmt)
 
 #if JS_HAS_BLOCK_SCOPE
 
-struct AddDecl
+struct AddLetDecl
 {
     uint32_t blockid;
 
-    AddDecl(uint32_t blockid) : blockid(blockid) {}
+    AddLetDecl(uint32_t blockid) : blockid(blockid) {}
 
-    bool operator()(TreeContext *tc, StaticBlockObject &blockObj, const Shape &shape, JSAtom *atom)
+    bool operator()(JSContext *cx, TreeContext *tc, StaticBlockObject &blockObj, const Shape &shape, JSAtom *)
     {
         ParseNode *def = (ParseNode *) blockObj.getSlot(shape.slot()).toPrivate();
         def->pn_blockid = blockid;
-        return Define(def, atom, tc, true);
+        return tc->define(cx, def->name(), def, Definition::LET);
     }
 };
 
@@ -2705,7 +2442,7 @@ PushLetScope(JSContext *cx, Parser *parser, StaticBlockObject &blockObj, StmtInf
     pn->pn_dflags |= PND_LET;
 
     /* Populate the new scope with decls found in the head with updated blockid. */
-    if (!ForEachLetDef(parser->tc, blockObj, AddDecl(stmt->blockid)))
+    if (!ForEachLetDef(cx, parser->tc, blockObj, AddLetDecl(stmt->blockid)))
         return NULL;
 
     return pn;
@@ -2789,7 +2526,7 @@ Parser::letBlock(LetContext letContext)
             return NULL;
     }
 
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
     return ret;
 }
 
@@ -2939,7 +2676,7 @@ Parser::switchStatement()
     if (tc->blockNode != pn2)
         pn2 = tc->blockNode;
     tc->blockNode = saveBlock;
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
 
     pn->pn_pos.end = pn2->pn_pos.end = tokenStream.currentToken().pos.end;
     pn->pn_left = pn1;
@@ -3214,9 +2951,7 @@ Parser::forStatement()
         if (forDecl) {
             /*
              * pn2 is part of a declaration. Make a copy that can be passed to
-             * EmitAssignment. Take care to do this after PushLetScope has
-             * Define's the new binding since this pn2->isDefn() which tells
-             * CloneLeftHandSide to make the new pn2 a use.
+             * EmitAssignment. Take care to do this after PushLetScope.
              */
             pn2 = CloneLeftHandSide(pn2, this);
             if (!pn2)
@@ -3330,9 +3065,9 @@ Parser::forStatement()
 
 #if JS_HAS_BLOCK_SCOPE
     if (blockObj)
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
 #endif
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
     return forParent ? forParent : pn;
 }
 
@@ -3371,7 +3106,7 @@ Parser::tryStatement()
     if (!pn->pn_kid1)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_TRY);
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
 
     ParseNode *lastCatch;
     ParseNode *catchList = NULL;
@@ -3472,7 +3207,7 @@ Parser::tryStatement()
             if (!pn2->pn_kid3)
                 return NULL;
             MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
-            PopStatementTC(tc);
+            PopStatementTC(context, tc);
 
             catchList->append(pnblock);
             lastCatch = pn2;
@@ -3489,7 +3224,7 @@ Parser::tryStatement()
         if (!pn->pn_kid3)
             return NULL;
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_FINALLY);
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
     } else {
         tokenStream.ungetToken();
     }
@@ -3534,13 +3269,12 @@ Parser::withStatement()
     pn2 = statement();
     if (!pn2)
         return NULL;
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
 
     pn->pn_pos.end = pn2->pn_pos.end;
     pn->pn_right = pn2;
 
     tc->sc->setBindingsAccessedDynamically();
-    tc->sc->setFunIsHeavyweight();
     tc->innermostWith = oldWith;
 
     /*
@@ -3714,7 +3448,7 @@ Parser::expressionStatement()
         }
 
         /* Pop the label, set pn_expr, and return early. */
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
         pn2->setKind(PNK_COLON);
         pn2->pn_pos.end = pn->pn_pos.end;
         pn2->pn_expr = pn;
@@ -3785,7 +3519,7 @@ Parser::statement()
             pn3 = NULL;
             pn->pn_pos.end = pn2->pn_pos.end;
         }
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
         pn->pn_kid1 = pn1;
         pn->pn_kid2 = pn2;
         pn->pn_kid3 = pn3;
@@ -3809,7 +3543,7 @@ Parser::statement()
         ParseNode *pn3 = statement();
         if (!pn3)
             return NULL;
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
         pn->pn_pos.end = pn3->pn_pos.end;
         pn->pn_right = pn3;
         return pn;
@@ -3830,7 +3564,7 @@ Parser::statement()
         ParseNode *pn3 = condition();
         if (!pn3)
             return NULL;
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
         pn->pn_pos.end = pn3->pn_pos.end;
         pn->pn_right = pn3;
         if (versionNumber() != JSVERSION_ECMA_3) {
@@ -4002,7 +3736,7 @@ Parser::statement()
             return NULL;
 
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_COMPOUND);
-        PopStatementTC(tc);
+        PopStatementTC(context, tc);
 
         /*
          * If we contain a function statement and our container is top-level
@@ -4024,7 +3758,6 @@ Parser::statement()
         pn = new_<DebuggerStatement>(tokenStream.currentToken().pos);
         if (!pn)
             return NULL;
-        tc->sc->setFunIsHeavyweight();
         tc->sc->setBindingsAccessedDynamically();
         break;
 
@@ -4050,7 +3783,7 @@ Parser::statement()
         JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
 
         /* Is this an E4X dagger I see before me? */
-        tc->sc->setFunIsHeavyweight();
+        tc->sc->setBindingsAccessedDynamically();
         ParseNode *pn2 = expr();
         if (!pn2)
             return NULL;
@@ -4692,7 +4425,6 @@ Parser::unaryExpr()
             if (!reportStrictModeError(pn, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return NULL;
             tc->sc->setBindingsAccessedDynamically();
-            tc->sc->setFunIsHeavyweight();
             pn2->pn_dflags |= PND_DEOPTIMIZED;
             pn2->setOp(JSOP_DELNAME);
             break;
@@ -5008,7 +4740,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
             JS_ASSERT(!stmt || stmt != tc->topStmt);
 #endif
             if (genexp && !dn->isOp(JSOP_CALLEE)) {
-                JS_ASSERT(!tc->decls.lookupFirst(atom));
+                JS_ASSERT(!tc->decls().lookupFirst(atom));
 
                 if (dn->pn_pos < root->pn_pos) {
                     /*
@@ -5075,11 +4807,6 @@ CompExprTransplanter::transplant(ParseNode *pn)
             if (!AdjustBlockId(pn, adjust, tc))
                 return false;
         }
-        break;
-
-      case PN_NAMESET:
-        if (!transplant(pn->pn_tree))
-            return false;
         break;
 
       case PN_NULLARY:
@@ -5321,7 +5048,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
     pn2->pn_kid = kid;
     *pnp = pn2;
 
-    PopStatementTC(tc);
+    PopStatementTC(context, tc);
     return pn;
 }
 
@@ -5579,7 +5306,6 @@ Parser::memberExpr(bool allowCallSyntax)
                 TokenPtr begin = lhs->pn_pos.begin;
                 if (tt == TOK_LP) {
                     /* Filters are effectively 'with', so deoptimize names. */
-                    tc->sc->setFunIsHeavyweight();
                     tc->sc->setBindingsAccessedDynamically();
 
                     StmtInfoTC stmtInfo(context);
@@ -5594,7 +5320,7 @@ Parser::memberExpr(bool allowCallSyntax)
                     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
 
                     tc->innermostWith = oldWith;
-                    PopStatementTC(tc);
+                    PopStatementTC(context, tc);
 
                     nextMember =
                         new_<XMLFilterExpression>(lhs, filter,
@@ -5709,7 +5435,7 @@ Parser::memberExpr(bool allowCallSyntax)
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
                     nextMember->setOp(JSOP_EVAL);
                     tc->sc->setBindingsAccessedDynamically();
-                    tc->sc->setFunIsHeavyweight();
+
                     /*
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
@@ -5864,7 +5590,6 @@ Parser::qualifiedSuffix(ParseNode *pn)
     if (!pn2)
         return NULL;
 
-    tc->sc->setFunIsHeavyweight();
     tc->sc->setBindingsAccessedDynamically();
 
     /* Left operand of :: must be evaluated if it is an identifier. */
@@ -5911,7 +5636,6 @@ Parser::qualifiedIdentifier()
         return NULL;
     if (tokenStream.matchToken(TOK_DBLCOLON)) {
         /* Hack for bug 496316. Slowing down E4X won't make it go away, alas. */
-        tc->sc->setFunIsHeavyweight();
         tc->sc->setBindingsAccessedDynamically();
         pn = qualifiedSuffix(pn);
     }
@@ -6413,7 +6137,6 @@ Parser::propertyQualifiedIdentifier()
     JS_ASSERT(tokenStream.peekToken() == TOK_DBLCOLON);
 
     /* Deoptimize QualifiedIdentifier properties to avoid tricky analysis. */
-    tc->sc->setFunIsHeavyweight();
     tc->sc->setBindingsAccessedDynamically();
 
     PropertyName *name = tokenStream.currentToken().name();

@@ -18,66 +18,6 @@
 using namespace js;
 using namespace js::frontend;
 
-static void
-FlagHeavyweights(Definition *dn, FunctionBox *funbox, bool *isHeavyweight, bool topInFunction)
-{
-    unsigned dnLevel = dn->frameLevel();
-
-    while ((funbox = funbox->parent) != NULL) {
-        /*
-         * Notice that funbox->level is the static level of the definition or
-         * expression of the function parsed into funbox, not the static level
-         * of its body. Therefore we must add 1 to match dn's level to find the
-         * funbox whose body contains the dn definition.
-         */
-        if (funbox->level + 1U == dnLevel || (dnLevel == 0 && dn->isLet())) {
-            funbox->setFunIsHeavyweight();
-            break;
-        }
-    }
-
-    if (!funbox && topInFunction)
-        *isHeavyweight = true;
-}
-
-static void
-SetFunctionKinds(FunctionBox *funbox, bool *isHeavyweight, bool topInFunction, bool isDirectEval)
-{
-    for (; funbox; funbox = funbox->siblings) {
-        ParseNode *fn = funbox->node;
-        if (!fn)
-            continue;
-
-        ParseNode *pn = fn->pn_body;
-        if (!pn)
-            continue;
-
-        if (funbox->kids)
-            SetFunctionKinds(funbox->kids, isHeavyweight, topInFunction, isDirectEval);
-
-        JS_ASSERT(funbox->function()->isInterpreted());
-        if (pn->isKind(PNK_UPVARS)) {
-            /*
-             * We loop again over all upvars, and for each non-free upvar,
-             * ensure that its containing function has been flagged as
-             * heavyweight.
-             *
-             * The emitter must see funIsHeavyweight() accurately before
-             * generating any code for a tree of nested functions.
-             */
-            AtomDefnMapPtr upvars = pn->pn_names;
-            JS_ASSERT(!upvars->empty());
-
-            for (AtomDefnRange r = upvars->all(); !r.empty(); r.popFront()) {
-                Definition *defn = r.front().value();
-                Definition *lexdep = defn->resolve();
-                if (!lexdep->isFreeVar())
-                    FlagHeavyweights(lexdep, funbox, isHeavyweight, topInFunction);
-            }
-        }
-    }
-}
-
 /*
  * Walk the FunctionBox tree looking for functions whose call objects may
  * acquire new bindings as they execute: non-strict functions that call eval,
@@ -119,18 +59,12 @@ MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool has
 }
 
 bool
-frontend::AnalyzeFunctions(Parser *parser, StackFrame *callerFrame)
+frontend::AnalyzeFunctions(Parser *parser)
 {
     TreeContext *tc = parser->tc;
-    SharedContext *sc = tc->sc;
     if (!tc->functionList)
         return true;
-    if (!MarkExtensibleScopeDescendants(sc->context, tc->functionList, false))
+    if (!MarkExtensibleScopeDescendants(tc->sc->context, tc->functionList, false))
         return false;
-    bool isDirectEval = !!callerFrame;
-    bool isHeavyweight = false;
-    SetFunctionKinds(tc->functionList, &isHeavyweight, sc->inFunction(), isDirectEval);
-    if (isHeavyweight)
-        sc->setFunIsHeavyweight();
     return true;
 }

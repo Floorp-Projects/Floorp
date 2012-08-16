@@ -44,7 +44,7 @@ var AccessFu = {
     this.prefsBranch.addObserver('activate', this, false);
     this.prefsBranch.addObserver('explorebytouch', this, false);
 
-    if (Utils.OS == 'Android')
+    if (Utils.MozBuildApp == 'mobile/android')
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
 
     this._processPreferences();
@@ -116,7 +116,7 @@ var AccessFu = {
     } catch (x) {
     }
 
-    if (Utils.OS == 'Android') {
+    if (Utils.MozBuildApp == 'mobile/android') {
       if (accessPref == ACCESSFU_AUTO) {
         Cc['@mozilla.org/android/bridge;1'].
           getService(Ci.nsIAndroidBridge).handleGeckoMessage(

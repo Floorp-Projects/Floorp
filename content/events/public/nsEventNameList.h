@@ -317,6 +317,10 @@ EVENT(waiting,
       NS_WAITING,
       EventNameType_HTML,
       NS_EVENT_NULL)
+EVENT(wheel,
+      NS_WHEEL_WHEEL,
+      EventNameType_All,
+      NS_WHEEL_EVENT)
 // Gecko-specific extensions that apply to elements
 EVENT(copy,
       NS_COPY,
@@ -600,10 +604,6 @@ NON_IDL_EVENT(underflow,
               NS_SCROLLPORT_UNDERFLOW,
               EventNameType_XUL,
               NS_EVENT_NULL)
-NON_IDL_EVENT(wheel,
-              NS_WHEEL_WHEEL,
-              EventNameType_XUL,
-              NS_WHEEL_EVENT)
 
 // Various SVG events
 NON_IDL_EVENT(SVGLoad,

@@ -41,7 +41,8 @@ nsSimpleURI::~nsSimpleURI()
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
-NS_INTERFACE_TABLE5(nsSimpleURI, nsIURI, nsISerializable, nsIIPCSerializable, nsIClassInfo, nsIMutable)
+NS_INTERFACE_TABLE5(nsSimpleURI, nsIURI, nsISerializable,
+                    nsIIPCSerializableObsolete, nsIClassInfo, nsIMutable)
 NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -117,7 +118,7 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIIPCSerializable methods:
+// nsIIPCSerializableObsolete methods:
 
 bool
 nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)

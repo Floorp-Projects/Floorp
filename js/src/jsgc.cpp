@@ -2341,6 +2341,12 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case NAMEVECTOR: {
+        AutoNameVector::VectorImpl &vector = static_cast<AutoNameVector *>(this)->vector;
+        MarkStringRootRange(trc, vector.length(), vector.begin(), "js::AutoNameVector.vector");
+        return;
+      }
+
       case VALARRAY: {
         AutoValueArray *array = static_cast<AutoValueArray *>(this);
         MarkValueRootRange(trc, array->length(), array->start(), "js::AutoValueArray");
@@ -2446,9 +2452,7 @@ Shape::Range::AutoRooter::trace(JSTracer *trc)
 void
 Bindings::AutoRooter::trace(JSTracer *trc)
 {
-    if (bindings->lastBinding)
-        MarkShapeRoot(trc, reinterpret_cast<Shape**>(&bindings->lastBinding),
-                      "Bindings::AutoRooter lastBinding");
+    bindings->trace(trc);
 }
 
 void

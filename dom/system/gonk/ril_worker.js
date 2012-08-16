@@ -624,11 +624,6 @@ let RIL = {
   dataRegistrationState: {},
 
   /**
-   * The cell location on a phone, such as LAC, CID.
-   */
-  cellLocation: {},
-
-  /**
    * List of strings identifying the network operator.
    */
   operator: null,
@@ -698,11 +693,13 @@ let RIL = {
    *
    * @param string
    *        String to be parsed.
-   * @param defaultValue
+   * @param defaultValue [optional]
    *        Default value to be used.
+   * @param radix [optional]
+   *        A number that represents the numeral system to be used. Default 10.
    */
-  parseInt: function RIL_parseInt(string, defaultValue) {
-    let number = parseInt(string, 10);
+  parseInt: function RIL_parseInt(string, defaultValue, radix) {
+    let number = parseInt(string, radix || 10);
     if (!isNaN(number)) {
       return number;
     }
@@ -1984,7 +1981,9 @@ let RIL = {
       return;
     }
 
-    let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
+    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
+    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
+    let app = iccStatus.apps[index];
     if (!app) {
       if (DEBUG) {
         debug("Subscription application is not present in iccStatus.");
@@ -1998,6 +1997,8 @@ let RIL = {
                            cardState: this.cardState});
       return;
     }
+    // fetchICCRecords will need to read aid, so read aid here.
+    this.aid = app.aid;
 
     let newCardState;
     switch (app.app_state) {
@@ -2023,15 +2024,12 @@ let RIL = {
       return;
     }
 
-    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
-    // fetchICCRecords will need to read aid, so read aid here.
-    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
-    this.aid = iccStatus.apps[index].aid;
-
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     this.getSignalStrength();
-    this.fetchICCRecords();
+    if (newCardState == GECKO_CARDSTATE_READY) {
+      this.fetchICCRecords();
+    }
 
     this.cardState = newCardState;
     this.sendDOMMessage({rilMessageType: "cardstatechange",
@@ -2265,6 +2263,24 @@ let RIL = {
       }
     }
 
+    if (!curState.cell) {
+      curState.cell = {};
+    }
+
+    // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
+    // in MS. So we still need to report the '0000' as well.
+    let lac = RIL.parseInt(newState[1], -1, 16);
+    if (curState.cell.gsmLocationAreaCode !== lac) {
+      curState.cell.gsmLocationAreaCode = lac;
+      changed = true;
+    }
+
+    let cid = RIL.parseInt(newState[2], -1, 16);
+    if (curState.cell.gsmCellId !== cid) {
+      curState.cell.gsmCellId = cid;
+      changed = true;
+    }
+
     let radioTech = RIL.parseInt(newState[3], NETWORK_CREG_TECH_UNKNOWN);
     if (curState.radioTech != radioTech) {
       changed = true;
@@ -2279,28 +2295,6 @@ let RIL = {
     let stateChanged = this._processCREG(rs, state);
     if (stateChanged && rs.connected) {
       RIL.getSMSCAddress();
-    }
-
-    let cell = this.cellLocation;
-    let cellChanged = false;
-
-    // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
-    // in MS. So we still need to report the '0000' as well.
-    let lac = parseInt(state[1], 16);
-    if (cell.lac !== lac) {
-      cell.lac = lac;
-      cellChanged = true;
-    }
-
-    let cid = parseInt(state[2], 16);
-    if (cell.cid !== cid) {
-      cell.cid = cid;
-      cellChanged = true;
-    }
-
-    if (cellChanged) {
-      cell.rilMessageType = "celllocationchanged";
-      this.sendDOMMessage(cell);
     }
 
     // TODO: This zombie code branch that will be raised from the dead once

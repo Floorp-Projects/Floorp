@@ -14,6 +14,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const NS_APP_CACHE_PARENT_DIR = "cachePDir";
 const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
 const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
+const WEBAPPS_DIR             = "webappsDir";
 
 function DirectoryProvider() {}
 
@@ -27,6 +28,13 @@ DirectoryProvider.prototype = {
       let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       let profile = dirsvc.get("ProfD", Ci.nsIFile);
       return profile;
+    } else if (prop == WEBAPPS_DIR) {
+      // returns the folder that should hold the webapps database file
+      // For fennec we will store that in the root profile folder so that all
+      // webapps can easily access it
+      let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      let profile = dirsvc.get("ProfD", Ci.nsIFile);
+      return profile.parent;
     } else if (prop == XRE_UPDATE_ROOT_DIR) {
       let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
       if (env.exists(ENVVAR_UPDATE_DIR)) {

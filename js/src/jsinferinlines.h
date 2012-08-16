@@ -573,14 +573,8 @@ UseNewTypeForClone(JSFunction *fun)
     if (script->length >= 50)
         return false;
 
-    if (script->hasConsts() ||
-        script->hasObjects() ||
-        script->hasRegexps() ||
-        script->hasClosedArgs() ||
-        script->hasClosedVars())
-    {
+    if (script->hasConsts() || script->hasObjects() || script->hasRegexps() || fun->isHeavyweight())
         return false;
-    }
 
     bool hasArguments = false;
     bool hasApply = false;
