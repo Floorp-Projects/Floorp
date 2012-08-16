@@ -1664,7 +1664,7 @@ void nsWebBrowser::WindowRaised(nsIWidget* aWidget)
   nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(mDocShell);
   nsAutoString documentURI;
   domDocument->GetDocumentURI(documentURI);
-  printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)browser,
+  printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
   Activate();
@@ -1676,7 +1676,7 @@ void nsWebBrowser::WindowLowered(nsIWidget* aWidget)
   nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(mDocShell);
   nsAutoString documentURI;
   domDocument->GetDocumentURI(documentURI);
-  printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)browser,
+  printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
   Deactivate();
