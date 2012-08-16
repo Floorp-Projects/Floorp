@@ -296,13 +296,13 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     return true;
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 IsRegExp(const Value &v)
 {
     return v.isObject() && v.toObject().hasClass(&RegExpClass);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 regexp_compile_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
@@ -310,11 +310,11 @@ regexp_compile_impl(JSContext *cx, CallArgs args)
     return CompileRegExpObject(cx, builder, args);
 }
 
-static JSBool
+JSBool
 regexp_compile(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsRegExp, regexp_compile_impl, args);
+    return CallNonGenericMethod<IsRegExp, regexp_compile_impl>(cx, args);
 }
 
 static JSBool
@@ -341,7 +341,7 @@ regexp_construct(JSContext *cx, unsigned argc, Value *vp)
     return CompileRegExpObject(cx, builder, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 regexp_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
@@ -354,11 +354,11 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 regexp_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsRegExp, regexp_toString_impl, args);
+    return CallNonGenericMethod<IsRegExp, regexp_toString_impl>(cx, args);
 }
 
 static JSFunctionSpec regexp_methods[] = {
