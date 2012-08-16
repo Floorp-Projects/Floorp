@@ -2551,7 +2551,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         mjit::ExpandInlineFrames(c);
 #endif
 
-    rt->stackSpace.mark(trc);
+    rt->stackSpace.markAndClobber(trc);
     rt->debugScopes->mark(trc);
 
     /* The embedding can register additional roots here. */
@@ -3543,6 +3543,13 @@ BeginSweepPhase(JSRuntime *rt)
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+
+        /*
+         * Eliminate any garbage values from the VM stack that may have been
+         * left by the JIT in between incremental GC slices. We need to do this
+         * before discarding analysis data during JSCompartment::sweep.
+         */
+        rt->stackSpace.markAndClobber(NULL);
 
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
