@@ -285,6 +285,7 @@ nsWindow::DispatchInputEvent(nsGUIEvent &aEvent)
     gFocusedWindow->UserActivity();
 
     nsEventStatus status;
+    aEvent.widget = gFocusedWindow;
     gFocusedWindow->DispatchEvent(&aEvent, status);
     return status;
 }
