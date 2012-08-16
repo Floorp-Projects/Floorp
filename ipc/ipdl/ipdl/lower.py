@@ -233,7 +233,6 @@ def _shmemRevokeRights(shmemexpr):
 def _lookupShmem(idexpr):
     return ExprCall(ExprVar('LookupSharedMemory'), args=[ idexpr ])
 
-
 def _makeForwardDeclForQClass(clsname, quals):
     fd = ForwardDecl(clsname, cls=1)
     if 0 == len(quals):
@@ -492,6 +491,9 @@ class _ConvertToCxxType(TypeVisitor):
     def visitShmemType(self, s):
         return Type(self.typename(s))
 
+    def visitFDType(self, s):
+        return Type(self.typename(s))
+
     def visitProtocolType(self, p): assert 0
     def visitMessageType(self, m): assert 0
     def visitVoidType(self, v): assert 0
@@ -668,6 +670,8 @@ class _StructField(_CompoundTypeComponent):
         refexpr = self.refExpr(thisexpr)
         if 'Shmem' == self.ipdltype.name():
             refexpr = ExprCast(refexpr, Type('Shmem', ref=1), const=1)
+        if 'FileDescriptor' == self.ipdltype.name():
+            refexpr = ExprCast(refexpr, Type('FileDescriptor', ref=1), const=1)
         return refexpr
 
     def argVar(self):
@@ -826,6 +830,8 @@ IPDL union type."""
         # sigh
         if 'Shmem' == self.ipdltype.name():
             v = ExprCast(v, Type('Shmem', ref=1), const=1)
+        if 'FileDescriptor' == self.ipdltype.name():
+            v = ExprCast(v, Type('FileDescriptor', ref=1), const=1)
         return v
 
 ##--------------------------------------------------
@@ -989,7 +995,6 @@ def _subtreeUsesShmem(p):
             if _subtreeUsesShmem(mgd._ast):
                 return True
     return False
-
 
 class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
@@ -1866,6 +1871,11 @@ stmt.  Some types generate both kinds.'''
         if s in self.visited: return
         self.visited.add(s)
         self.maybeTypedef('mozilla::ipc::Shmem', 'Shmem')
+
+    def visitFDType(self, s):
+        if s in self.visited: return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::FileDescriptor', 'FileDescriptor')
 
     def visitVoidType(self, v): assert 0
     def visitMessageType(self, v): assert 0
@@ -3379,11 +3389,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         p = self.protocol
         routedvar = ExprVar('aRouted')
         idvar = ExprVar('aId')
-        shmemvar = ExprVar('aShmem')
+        shmemvar = ExprVar('shmem')
         rawvar = ExprVar('segment')
         sizevar = ExprVar('aSize')
-        typevar = ExprVar('type')
-        unsafevar = ExprVar('unsafe')
+        typevar = ExprVar('aType')
+        unsafevar = ExprVar('aUnsafe')
         listenertype = Type('ChannelListener', ptr=1)
 
         register = MethodDefn(MethodDecl(
@@ -3978,8 +3988,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # pickling for IPDL types
         specialtypes = set()
         class findSpecialTypes(TypeVisitor):
-            def visitActorType(self, a):  specialtypes.add(a)
-            def visitShmemType(self, s):  specialtypes.add(s)
+            def visitActorType(self, a): specialtypes.add(a)
+            def visitShmemType(self, s): specialtypes.add(s)
+            def visitFDType(self, s): specialtypes.add(s)
             def visitStructType(self, s):
                 specialtypes.add(s)
                 return TypeVisitor.visitStructType(self, s)
@@ -4006,6 +4017,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if t.isActor():    self.implementActorPickling(t)
             elif t.isArray():  self.implementSpecialArrayPickling(t)
             elif t.isShmem():  self.implementShmemPickling(t)
+            elif t.isFD():     self.implementFDPickling(t)
             elif t.isStruct(): self.implementStructPickling(t)
             elif t.isUnion():  self.implementUnionPickling(t)
             else:
@@ -4225,6 +4237,57 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
 
+    def implementFDPickling(self, fdtype):
+        msgvar = self.msgvar
+        itervar = self.itervar
+        var = self.var
+        tmpvar = ExprVar('fd')
+        picklevar = ExprVar('pfd')
+        intype = _cxxConstRefType(fdtype, self.side)
+        outtype = _cxxPtrToType(fdtype, self.side)
+
+        def _fdType():
+            return Type('FileDescriptor')
+
+        def _fdPickleType():
+            return Type('FileDescriptor::PickleType')
+
+        def _fdBackstagePass():
+            return ExprCall(ExprVar('FileDescriptor::IPDLPrivate'))
+
+        write = MethodDefn(self.writeMethodDecl(intype, var))
+        write.addstmts([
+            StmtDecl(Decl(_fdPickleType(), picklevar.name),
+                     init=ExprCall(ExprSelect(var, '.', 'ShareTo'),
+                                   args=[ _fdBackstagePass(),
+                                          self.protocol.callOtherProcess() ])),
+            StmtExpr(ExprCall(ExprVar('IPC::WriteParam'),
+                              args=[ msgvar, picklevar ])),
+        ])
+
+        read = MethodDefn(self.readMethodDecl(outtype, var))
+        ifread = StmtIf(ExprNot(ExprCall(ExprVar('IPC::ReadParam'),
+                                         args=[ msgvar, itervar,
+                                                ExprAddrOf(picklevar) ])))
+        ifread.addifstmt(StmtReturn.FALSE)
+
+        ifnvalid = StmtIf(ExprNot(ExprCall(ExprSelect(tmpvar, '.', 'IsValid'))))
+        ifnvalid.addifstmt(StmtReturn.FALSE)
+
+        read.addstmts([
+            StmtDecl(Decl(_fdPickleType(), picklevar.name)),
+            ifread,
+            Whitespace.NL,
+            StmtDecl(Decl(_fdType(), tmpvar.name),
+                     init=ExprCall(ExprVar('FileDescriptor'),
+                                   args=[ _fdBackstagePass(), picklevar ])),
+            ifnvalid,
+            Whitespace.NL,
+            StmtExpr(ExprAssn(ExprDeref(var), tmpvar)),
+            StmtReturn.TRUE
+        ])
+
+        self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
 
     def implementStructPickling(self, structtype):
         msgvar = self.msgvar

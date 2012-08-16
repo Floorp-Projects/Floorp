@@ -89,6 +89,9 @@ class TypeVisitor:
     def visitShmemChmodType(self, c, *args):
         c.shmem.accept(self)
 
+    def visitFDType(self, s, *args):
+        pass
+
 
 class Type:
     def __cmp__(self, o):
@@ -196,6 +199,7 @@ class IPDLType(Type):
     def isCompound(self): return False
     def isShmem(self): return False
     def isChmod(self): return False
+    def isFD(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -417,6 +421,16 @@ class ShmemType(IPDLType):
     def fullname(self):
         return str(self.qname)
 
+class FDType(IPDLType):
+    def __init__(self, qname):
+        self.qname = qname
+    def isFD(self): return True
+
+    def name(self):
+        return self.qname.baseid
+    def fullname(self):
+        return str(self.qname)
+
 def iteractortypes(t, visited=None):
     """Iterate over any actor(s) buried in |type|."""
     if visited is None:
@@ -448,6 +462,17 @@ def hasshmem(type):
         def visitShmemType(self, s):  raise found()
     try:
         type.accept(findShmem())
+    except found:
+        return True
+    return False
+
+def hasfd(type):
+    """Return true iff |type| is fd or has it buried within."""
+    class found: pass
+    class findFD(TypeVisitor):
+        def visitFDType(self, s):  raise found()
+    try:
+        type.accept(findFD())
     except found:
         return True
     return False
@@ -775,6 +800,8 @@ class GatherDecls(TcheckVisitor):
             fullname = None
         if fullname == 'mozilla::ipc::Shmem':
             ipdltype = ShmemType(using.type.spec)
+        elif fullname == 'mozilla::ipc::FileDescriptor':
+            ipdltype = FDType(using.type.spec)
         else:
             ipdltype = ImportedCxxType(using.type.spec)
         using.decl = self.declare(

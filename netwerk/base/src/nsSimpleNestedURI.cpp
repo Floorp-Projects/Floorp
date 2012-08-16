@@ -55,7 +55,7 @@ nsSimpleNestedURI::Write(nsIObjectOutputStream* aStream)
     return rv;
 }
 
-// nsIIPCSerializable
+// nsIIPCSerializableObsolete
 
 bool
 nsSimpleNestedURI::Read(const IPC::Message *aMsg, void **aIter)

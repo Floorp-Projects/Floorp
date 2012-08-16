@@ -9,7 +9,6 @@
 
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#include "nsIIPCSerializable.h"
 #include "nsILoadContext.h"
 
 /*
