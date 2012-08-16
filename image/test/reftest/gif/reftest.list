@@ -17,7 +17,7 @@ random-if(bug685516) == small-background-size-2.gif small-background-size-2-ref.
 random == delaytest.html?transparent-animation.gif transparent-animation-finalframe.gif # incorrect timing dependence (bug 558678)
 
 # test for bug 641198
-random-if(bug685516) == test_bug641198.html animation2a-finalframe.gif
+random-if(Android) == test_bug641198.html animation2a-finalframe.gif
 
 # webcam-simulacrum.mgif is a hand-edited file containing red.gif and blue.gif,
 # concatenated together with the relevant headers for
