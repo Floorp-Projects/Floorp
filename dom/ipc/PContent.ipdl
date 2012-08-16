@@ -279,7 +279,7 @@ parent:
 
     // These clipboard methods are only really used on Android since
     // the clipboard is not available in the content process.
-    SetClipboardText(nsString text, PRInt32 whichClipboard);
+    SetClipboardText(nsString text, bool isPrivateData, PRInt32 whichClipboard);
     sync GetClipboardText(PRInt32 whichClipboard)
         returns (nsString text);
     EmptyClipboard();

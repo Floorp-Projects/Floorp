@@ -96,7 +96,7 @@ class GeckoInputConnection
     private boolean mCommittingText;
     private KeyCharacterMap mKeyCharacterMap;
     private final Editable mEditable;
-    private boolean mBatchMode;
+    protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
 
@@ -118,13 +118,17 @@ class GeckoInputConnection
 
     @Override
     public boolean beginBatchEdit() {
-        mBatchMode = true;
+        mBatchEditCount++;
         return true;
     }
 
     @Override
     public boolean endBatchEdit() {
-        mBatchMode = false;
+        if (mBatchEditCount > 0) {
+            mBatchEditCount--;
+        } else {
+            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
+        }
         return true;
     }
 
@@ -158,12 +162,9 @@ class GeckoInputConnection
             endComposition();
         }
 
-        final Editable content = getEditable();
-        if (content != null) {
-            beginBatchEdit();
-            removeComposingSpans(content);
-            endBatchEdit();
-        }
+        beginBatchEdit();
+        removeComposingSpans(mEditable);
+        endBatchEdit();
         return true;
     }
 
@@ -174,11 +175,7 @@ class GeckoInputConnection
 
     @Override
     public boolean performContextMenuAction(int id) {
-        final Editable content = getEditable();
-        if (content == null)
-            return false;
-
-        String text = content.toString();
+        String text = mEditable.toString();
         Span selection = getSelection();
 
         switch (id) {
@@ -214,10 +211,6 @@ class GeckoInputConnection
         if (req == null)
             return null;
 
-        final Editable content = getEditable();
-        if (content == null)
-            return null;
-
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0)
             mUpdateRequest = req;
 
@@ -230,7 +223,7 @@ class GeckoInputConnection
         extract.selectionStart = selection.start;
         extract.selectionEnd = selection.end;
         extract.startOffset = 0;
-        extract.text = content.toString();
+        extract.text = mEditable.toString();
 
         return extract;
     }
@@ -238,7 +231,7 @@ class GeckoInputConnection
     @Override
     public boolean setSelection(int start, int end) {
         // Some IMEs call setSelection() with negative or stale indexes, so clamp them.
-        Span newSelection = Span.clamp(start, end, getEditable());
+        Span newSelection = Span.clamp(start, end, mEditable);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION,
                                                                  newSelection.start,
                                                                  newSelection.length));
@@ -264,7 +257,7 @@ class GeckoInputConnection
     public CharSequence getTextAfterCursor(int length, int flags) {
         // Avoid overrunning text buffer.
         Span selection = getSelection();
-        int contentLength = getEditable().length();
+        int contentLength = mEditable.length();
         if (selection.end + length > contentLength) {
             length = contentLength - selection.end;
         }
@@ -290,10 +283,9 @@ class GeckoInputConnection
     }
 
     private Span getSelection() {
-        Editable content = getEditable();
-        int start = Selection.getSelectionStart(content);
-        int end = Selection.getSelectionEnd(content);
-        return Span.clamp(start, end, content);
+        int start = Selection.getSelectionStart(mEditable);
+        int end = Selection.getSelectionEnd(mEditable);
+        return Span.clamp(start, end, mEditable);
     }
 
     private void replaceText(CharSequence text, int newCursorPosition, boolean composing) {
@@ -306,11 +298,6 @@ class GeckoInputConnection
         if (text == null)
             text = "";
 
-        final Editable content = getEditable();
-        if (content == null) {
-            return;
-        }
-
         beginBatchEdit();
 
         // delete composing text set previously.
@@ -319,7 +306,7 @@ class GeckoInputConnection
 
         Span composingSpan = getComposingSpan();
         if (composingSpan != null) {
-            removeComposingSpans(content);
+            removeComposingSpans(mEditable);
             a = composingSpan.start;
             b = composingSpan.end;
             composingSpan = null;
@@ -350,7 +337,7 @@ class GeckoInputConnection
         if (DEBUG) {
             LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
             lp.println("Current text:");
-            TextUtils.dumpSpans(content, lp, "  ");
+            TextUtils.dumpSpans(mEditable, lp, "  ");
             lp.println("Composing text:");
             TextUtils.dumpSpans(text, lp, "  ");
         }
@@ -365,16 +352,16 @@ class GeckoInputConnection
             newCursorPosition += a;
         }
         if (newCursorPosition < 0) newCursorPosition = 0;
-        if (newCursorPosition > content.length())
-            newCursorPosition = content.length();
-        Selection.setSelection(content, newCursorPosition);
+        if (newCursorPosition > mEditable.length())
+            newCursorPosition = mEditable.length();
+        Selection.setSelection(mEditable, newCursorPosition);
 
-        content.replace(a, b, text);
+        mEditable.replace(a, b, text);
 
         if (DEBUG) {
             LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
             lp.println("Final text:");
-            TextUtils.dumpSpans(content, lp, "  ");
+            TextUtils.dumpSpans(mEditable, lp, "  ");
         }
 
         endBatchEdit();
@@ -387,22 +374,17 @@ class GeckoInputConnection
             endComposition();
         }
 
-        Span newComposingRegion = Span.clamp(start, end, getEditable());
+        Span newComposingRegion = Span.clamp(start, end, mEditable);
         return super.setComposingRegion(newComposingRegion.start, newComposingRegion.end);
     }
 
     public String getComposingText() {
-        final Editable content = getEditable();
-        if (content == null) {
-            return null;
-        }
-
         Span composingSpan = getComposingSpan();
         if (composingSpan == null || composingSpan.length == 0) {
             return "";
         }
 
-        return TextUtils.substring(content, composingSpan.start, composingSpan.end);
+        return TextUtils.substring(mEditable, composingSpan.start, composingSpan.end);
     }
 
     public boolean onKeyDel() {
@@ -436,7 +418,7 @@ class GeckoInputConnection
 
     protected void notifyTextChange(InputMethodManager imm, String text,
                                     int start, int oldEnd, int newEnd) {
-        if (!mBatchMode) {
+        if (mBatchEditCount == 0) {
             if (!text.contentEquals(mEditable)) {
                 if (DEBUG) Log.d(LOGTAG, ". . . notifyTextChange: current mEditable="
                                          + prettyPrintString(mEditable));
@@ -479,10 +461,8 @@ class GeckoInputConnection
     }
 
     protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
-        if (!mBatchMode) {
-            final Editable content = getEditable();
-
-            Span newSelection = Span.clamp(start, end, content);
+        if (mBatchEditCount == 0) {
+            Span newSelection = Span.clamp(start, end, mEditable);
             start = newSelection.start;
             end = newSelection.end;
 
@@ -506,7 +486,7 @@ class GeckoInputConnection
                     int cb = composingSpan.end;
                     if (start < ca || start > cb || end < ca || end > cb) {
                         if (DEBUG) Log.d(LOGTAG, ". . . notifySelectionChange: removeComposingSpans");
-                        removeComposingSpans(content);
+                        removeComposingSpans(mEditable);
                     }
                 }
             }
@@ -525,9 +505,14 @@ class GeckoInputConnection
     }
 
     protected void resetCompositionState() {
+        if (mBatchEditCount > 0) {
+            Log.d(LOGTAG, "resetCompositionState: resetting mBatchEditCount "
+                          + mBatchEditCount + " -> 0");
+            mBatchEditCount = 0;
+        }
+
         removeComposingSpans(mEditable);
         mCompositionStart = NO_COMPOSITION_STRING;
-        mBatchMode = false;
         mUpdateRequest = null;
     }
 
@@ -1158,20 +1143,19 @@ class GeckoInputConnection
     }
 
     private Span getComposingSpan() {
-        Editable content = getEditable();
-        int start = getComposingSpanStart(content);
-        int end = getComposingSpanEnd(content);
+        int start = getComposingSpanStart(mEditable);
+        int end = getComposingSpanEnd(mEditable);
 
         // Does the editable have a composing span?
         if (start < 0 || end < 0) {
             if (start != -1 || end != -1) {
                 throw new IndexOutOfBoundsException("Bad composing span [" + start + "," + end
-                                                     + "), contentLength=" + content.length());
+                                                     + "), contentLength=" + mEditable.length());
             }
             return null;
         }
 
-        return new Span(start, end, content);
+        return new Span(start, end, mEditable);
     }
 
     private static String prettyPrintString(CharSequence s) {
@@ -1229,15 +1213,21 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
 
     @Override
     public boolean beginBatchEdit() {
-        Log.d(LOGTAG, "IME: beginBatchEdit");
+        Log.d(LOGTAG, "IME: beginBatchEdit: mBatchEditCount " + mBatchEditCount
+                                                     + " -> " + (mBatchEditCount+1));
         GeckoApp.assertOnUiThread();
         return super.beginBatchEdit();
     }
 
     @Override
     public boolean endBatchEdit() {
-        Log.d(LOGTAG, "IME: endBatchEdit");
+        Log.d(LOGTAG, "IME: endBatchEdit: mBatchEditCount " + mBatchEditCount
+                                                   + " -> " + (mBatchEditCount-1));
         GeckoApp.assertOnUiThread();
+        if (mBatchEditCount <= 0) {
+            throw new IllegalStateException("Expected positive mBatchEditCount, but got "
+                                            + mBatchEditCount);
+        }
         return super.endBatchEdit();
     }
 

@@ -39,6 +39,7 @@ function hitEventLoop(aFunc, aTimes)
 function runTests()
 {
   SpecialPowers.setIntPref("mousewheel.min_line_scroll_amount", 1);
+  SpecialPowers.setIntPref("mousewheel.transaction.timeout", 100000);
 
   var target = document.getElementById("target");
 
@@ -79,6 +80,7 @@ function runTests()
           ok(target.scrollTop > scrollTop,
              "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
           SpecialPowers.clearUserPref("mousewheel.min_line_scroll_amount");
+          SpecialPowers.clearUserPref("mousewheel.transaction.timeout");
           SimpleTest.finish();
         }, 20);
       }, 20);

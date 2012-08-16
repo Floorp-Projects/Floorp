@@ -114,6 +114,10 @@ let DOMApplicationRegistry = {
     let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
     for (let activity in aManifest.activities) {
       let description = aManifest.activities[activity];
+      if (!description.href) {
+        description.href = manifest.launch_path;
+      }
+      description.href = manifest.resolveFromOrigin(description.href);
       let json = {
         "manifest": aApp.manifestURL,
         "name": activity,
