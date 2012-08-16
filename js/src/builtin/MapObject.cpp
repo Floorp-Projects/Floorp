@@ -1037,7 +1037,7 @@ JSBool
 MapObject::size(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, size_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::size_impl>(cx, args);
 }
 
 bool
@@ -1059,7 +1059,7 @@ JSBool
 MapObject::get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, get_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::get_impl>(cx, args);
 }
 
 bool
@@ -1077,7 +1077,7 @@ JSBool
 MapObject::has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, has_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::has_impl>(cx, args);
 }
 
 bool
@@ -1100,7 +1100,7 @@ JSBool
 MapObject::set(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, set_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::set_impl>(cx, args);
 }
 
 bool
@@ -1130,7 +1130,7 @@ JSBool
 MapObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, delete_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::delete_impl>(cx, args);
 }
 
 bool
@@ -1409,7 +1409,7 @@ JSBool
 SetObject::size(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, size_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::size_impl>(cx, args);
 }
 
 bool
@@ -1427,7 +1427,7 @@ JSBool
 SetObject::has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, has_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::has_impl>(cx, args);
 }
 
 bool
@@ -1449,7 +1449,7 @@ JSBool
 SetObject::add(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, add_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::add_impl>(cx, args);
 }
 
 bool
@@ -1470,7 +1470,7 @@ JSBool
 SetObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, delete_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::delete_impl>(cx, args);
 }
 
 bool
