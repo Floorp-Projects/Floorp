@@ -1002,7 +1002,7 @@ nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
 void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
 {
   if (mRunning == RUNNING && mOwner)
-    RedrawPlugin();
+    AndroidBridge::Bridge()->ScheduleComposite();
 }
 
 void* nsNPAPIPluginInstance::AcquireContentWindow()
