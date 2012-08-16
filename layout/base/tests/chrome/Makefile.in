@@ -43,6 +43,8 @@ MOCHITEST_CHROME_FILES = \
 	test_scrolling_repaints.html \
 	test_transformed_scrolling_repaints.html \
 	test_transformed_scrolling_repaints_2.html \
+	test_transformed_scrolling_repaints_3.html \
+	transformed_scrolling_repaints_3_window.html \
 	test_fixed_bg_scrolling_repaints.html \
 	blue-32x32.png \
 	$(NULL)
