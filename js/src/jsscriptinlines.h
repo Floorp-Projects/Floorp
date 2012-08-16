@@ -24,7 +24,7 @@ namespace js {
 
 inline
 Bindings::Bindings()
-    : callObjShape_(NULL), bindingArray_(NULL), numArgs_(0), numVars_(0)
+    : callObjShape_(NULL), bindingArrayAndFlag_(TEMPORARY_STORAGE_BIT), numArgs_(0), numVars_(0)
 {}
 
 bool
@@ -35,7 +35,7 @@ Bindings::extensibleParents()
 
 inline
 AliasedFormalIter::AliasedFormalIter(JSScript *script)
-  : begin_(script->bindings.bindingArray_),
+  : begin_(script->bindings.bindingArray()),
     p_(begin_),
     end_(begin_ + (script->funHasAnyAliasedFormal ? script->bindings.numArgs() : 0)),
     slot_(CallObject::RESERVED_SLOTS)
