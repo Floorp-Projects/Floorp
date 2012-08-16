@@ -17,7 +17,7 @@ var iframeScript = function() {
 function runTest() {
 
   browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addToWhitelist();
+  browserElementTestHelpers.addPermission();
 
   var mm;
   var numEvents = 0;

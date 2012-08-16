@@ -2059,6 +2059,11 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
         PushArena(this, aheader);
     }
     aheader->allocatedDuringIncremental = 0;
+    /*
+     * Note that during an incremental GC we may still be allocating into
+     * aheader. However, prepareForIncrementalGC sets the
+     * allocatedDuringIncremental flag if we continue marking.
+     */
 }
 
 bool
@@ -4897,7 +4902,7 @@ StartVerifyPreBarriers(JSRuntime *rt)
     rt->gcMarker.start(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->setNeedsBarrier(true);
-        c->arenas.prepareForIncrementalGC(rt);
+        c->arenas.purge();
     }
 
     return;

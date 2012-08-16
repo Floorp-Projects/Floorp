@@ -645,287 +645,124 @@ void nsViewManager::InvalidateViews(nsView *aView)
   }
 }
 
-static bool
-IsViewForPopup(nsIView* aView)
+void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 {
-  nsIWidget* widget = aView->GetWidget();
-  if (widget) {
-    nsWindowType type;
-    widget->GetWindowType(type);
-    return (type == eWindowType_popup);
+  if (IsRefreshDriverPaintingEnabled())
+    return;
+
+  if (!aWidget || !mContext)
+    return;
+
+  // If an ancestor widget was hidden and then shown, we could
+  // have a delayed resize to handle.
+  for (nsViewManager *vm = this; vm;
+       vm = vm->mRootView->GetParent()
+              ? vm->mRootView->GetParent()->GetViewManager()
+              : nullptr) {
+    if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+        vm->mRootView->IsEffectivelyVisible() &&
+        mPresShell && mPresShell->IsVisible()) {
+      vm->FlushDelayedResize(true);
+      vm->InvalidateView(vm->mRootView);
+    }
   }
 
-  return false;
+  // Flush things like reflows and plugin widget geometry updates by
+  // calling WillPaint on observer presShells.
+  nsRefPtr<nsViewManager> rootVM = RootViewManager();
+  if (mPresShell) {
+    rootVM->CallWillPaintOnObservers(aWillSendDidPaint);
+  }
+
+  // Flush view widget geometry updates and invalidations.
+  rootVM->ProcessPendingUpdates();
 }
 
-NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
-                                           nsIView* aView, nsEventStatus *aStatus)
-{
-  NS_ASSERTION(!aView || static_cast<nsView*>(aView)->GetViewManager() == this,
-               "wrong view manager");
+bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
+                                bool aSentWillPaint, bool aWillSendDidPaint)
+ {
+  if (!aWidget || !mContext)
+    return false;
 
+  NS_ASSERTION(IsPaintingAllowed(),
+               "shouldn't be receiving paint events while painting is disallowed!");
+
+  if (!aSentWillPaint && !IsRefreshDriverPaintingEnabled()) {
+    WillPaintWindow(aWidget, aWillSendDidPaint);
+  }
+
+  // Get the view pointer here since NS_WILL_PAINT might have
+  // destroyed it during CallWillPaintOnObservers (bug 378273).
+  nsView* view = nsView::GetViewFor(aWidget);
+  if (view && !aRegion.IsEmpty()) {
+    Refresh(view, aRegion, aWillSendDidPaint);
+  }
+
+  return true;
+}
+
+void nsViewManager::DidPaintWindow()
+{
+  if (!IsRefreshDriverPaintingEnabled()) {
+    mRootViewManager->CallDidPaintOnObserver();
+  }
+}
+
+nsresult nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsIView* aView, nsEventStatus* aStatus)
+{
   SAMPLE_LABEL("event", "nsViewManager::DispatchEvent");
 
+  if ((NS_IS_MOUSE_EVENT(aEvent) &&
+       // Ignore mouse events that we synthesize.
+       static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal &&
+       // Ignore mouse exit and enter (we'll get moves if the user
+       // is really moving the mouse) since we get them when we
+       // create and destroy widgets.
+       aEvent->message != NS_MOUSE_EXIT &&
+       aEvent->message != NS_MOUSE_ENTER) ||
+      NS_IS_KEY_EVENT(aEvent) ||
+      NS_IS_IME_EVENT(aEvent) ||
+      aEvent->message == NS_PLUGIN_INPUT_EVENT) {
+    gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  }
+
+  // Find the view whose coordinates system we're in.
+  nsIView* view = aView;
+  bool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
+  if (dispatchUsingCoordinates) {
+    // Will dispatch using coordinates. Pretty bogus but it's consistent
+    // with what presshell does.
+    view = GetDisplayRootFor(view);
+  }
+
+  // If the view has no frame, look for a view that does.
+  nsIFrame* frame = view->GetFrame();
+  if (!frame &&
+      (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
+       NS_IS_IME_RELATED_EVENT(aEvent) ||
+       NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
+       aEvent->message == NS_PLUGIN_ACTIVATE ||
+       aEvent->message == NS_PLUGIN_FOCUS)) {
+    while (view && !view->GetFrame()) {
+      view = view->GetParent();
+    }
+
+    if (view) {
+      frame = view->GetFrame();
+    }
+  }
+
+  if (nullptr != frame) {
+    // Hold a refcount to the presshell. The continued existence of the
+    // presshell will delay deletion of this view hierarchy should the event
+    // want to cause its destruction in, say, some JavaScript event handler.
+    nsCOMPtr<nsIPresShell> shell = view->GetViewManager()->GetPresShell();
+    if (shell) {
+      return shell->HandleEvent(frame, aEvent, false, aStatus);
+    }
+  }
+
   *aStatus = nsEventStatus_eIgnore;
-
-  switch(aEvent->message)
-    {
-    case NS_SIZE:
-      {
-        if (aView)
-          {
-            // client area dimensions are set on the view
-            nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
-            nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
-
-            // The root view may not be set if this is the resize associated with
-            // window creation
-
-            if (aView == mRootView)
-              {
-                PRInt32 p2a = AppUnitsPerDevPixel();
-                SetWindowDimensions(NSIntPixelsToAppUnits(width, p2a),
-                                    NSIntPixelsToAppUnits(height, p2a));
-                *aStatus = nsEventStatus_eConsumeNoDefault;
-              }
-            else if (IsViewForPopup(aView))
-              {
-                nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-                if (pm)
-                  {
-                    pm->PopupResized(aView->GetFrame(), nsIntSize(width, height));
-                    *aStatus = nsEventStatus_eConsumeNoDefault;
-                  }
-              }
-          }
-        }
-
-        break;
-
-    case NS_MOVE:
-      {
-        // A popup's parent view is the root view for the parent window, so when
-        // a popup moves, the popup's frame and view position must be updated
-        // to match.
-        if (aView && IsViewForPopup(aView))
-          {
-            nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-            if (pm)
-              {
-                pm->PopupMoved(aView->GetFrame(), aEvent->refPoint);
-                *aStatus = nsEventStatus_eConsumeNoDefault;
-              }
-          }
-        break;
-      }
-
-    case NS_DONESIZEMOVE:
-      {
-        if (mPresShell) {
-          nsPresContext* presContext = mPresShell->GetPresContext();
-          if (presContext) {
-            nsEventStateManager::ClearGlobalActiveContent(nullptr);
-          }
-
-        }
-
-        nsIPresShell::ClearMouseCapture(nullptr);
-      }
-      break;
-  
-    case NS_XUL_CLOSE:
-      {
-        // if this is a popup, make a request to hide it. Note that a popuphidden
-        // event listener may cancel the event and the popup will not be hidden.
-        nsIWidget* widget = aView->GetWidget();
-        if (widget) {
-          nsWindowType type;
-          widget->GetWindowType(type);
-          if (type == eWindowType_popup) {
-            nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-            if (pm) {
-              pm->HidePopup(aView->GetFrame());
-              *aStatus = nsEventStatus_eConsumeNoDefault;
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_WILL_PAINT:
-      {
-        if (!aView || !mContext)
-          break;
-
-        *aStatus = nsEventStatus_eConsumeNoDefault;
-    
-        if (!IsRefreshDriverPaintingEnabled()) {
-
-          nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
-
-          NS_ASSERTION(static_cast<nsView*>(aView) ==
-                         nsView::GetViewFor(event->widget),
-                       "view/widget mismatch");
-
-          // If an ancestor widget was hidden and then shown, we could
-          // have a delayed resize to handle.
-          for (nsViewManager *vm = this; vm;
-               vm = vm->mRootView->GetParent()
-                      ? vm->mRootView->GetParent()->GetViewManager()
-                      : nullptr) {
-            if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-                vm->mRootView->IsEffectivelyVisible() &&
-                mPresShell && mPresShell->IsVisible()) {
-              vm->FlushDelayedResize(true);
-              vm->InvalidateView(vm->mRootView);
-            }
-          }
-
-          // Flush things like reflows and plugin widget geometry updates by
-          // calling WillPaint on observer presShells.
-          nsRefPtr<nsViewManager> rootVM = RootViewManager();
-          if (mPresShell) {
-            rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
-          }
-          // Flush view widget geometry updates and invalidations.
-          rootVM->ProcessPendingUpdates();
-        }
-      }
-      break;
-
-    case NS_PAINT:
-      {
-        if (!aView || !mContext)
-          break;
-
-        *aStatus = nsEventStatus_eConsumeNoDefault;
-        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
-        nsView* view = static_cast<nsView*>(aView);
-        NS_ASSERTION(view == nsView::GetViewFor(event->widget),
-                     "view/widget mismatch");
-        NS_ASSERTION(IsPaintingAllowed(),
-                     "shouldn't be receiving paint events while painting is "
-                     "disallowed!");
-
-        if (!event->didSendWillPaint && !IsRefreshDriverPaintingEnabled()) {
-          // Send NS_WILL_PAINT event ourselves.
-          nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, event->widget);
-          willPaintEvent.willSendDidPaint = event->willSendDidPaint;
-          DispatchEvent(&willPaintEvent, view, aStatus);
-
-          // Get the view pointer again since NS_WILL_PAINT might have
-          // destroyed it during CallWillPaintOnObservers (bug 378273).
-          view = nsView::GetViewFor(event->widget);
-        }
-
-        if (!view || event->region.IsEmpty())
-          break;
-
-        // Paint.
-        Refresh(view, event->region, event->willSendDidPaint);
-
-        break;
-      }
-
-    case NS_DID_PAINT: {
-      if (!IsRefreshDriverPaintingEnabled()) {
-        nsRefPtr<nsViewManager> rootVM = RootViewManager();
-        rootVM->CallDidPaintOnObserver();
-      }
-      break;
-    }
-
-    case NS_CREATE:
-    case NS_DESTROY:
-    case NS_SETZLEVEL:
-      /* Don't pass these events through. Passing them through
-         causes performance problems on pages with lots of views/frames 
-         @see bug 112861 */
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-      break;
-
-    case NS_DISPLAYCHANGED:
-
-      //Destroy the cached backbuffer to force a new backbuffer
-      //be constructed with the appropriate display depth.
-      //@see bugzilla bug 6061
-      *aStatus = nsEventStatus_eConsumeDoDefault;
-      break;
-
-    case NS_SYSCOLORCHANGED:
-      {
-        if (mPresShell) {
-          // Hold a refcount to the presshell. The continued existence of the observer will
-          // delay deletion of this view hierarchy should the event want to cause its
-          // destruction in, say, some JavaScript event handler.
-          nsCOMPtr<nsIPresShell> presShell = mPresShell;
-          presShell->HandleEvent(aView->GetFrame(), aEvent, false, aStatus);
-        }
-      }
-      break; 
-
-    default:
-      {
-        if ((NS_IS_MOUSE_EVENT(aEvent) &&
-             // Ignore mouse events that we synthesize.
-             static_cast<nsMouseEvent*>(aEvent)->reason ==
-               nsMouseEvent::eReal &&
-             // Ignore mouse exit and enter (we'll get moves if the user
-             // is really moving the mouse) since we get them when we
-             // create and destroy widgets.
-             aEvent->message != NS_MOUSE_EXIT &&
-             aEvent->message != NS_MOUSE_ENTER) ||
-            NS_IS_KEY_EVENT(aEvent) ||
-            NS_IS_IME_EVENT(aEvent) ||
-            aEvent->message == NS_PLUGIN_INPUT_EVENT) {
-          gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-        }
-
-        if (aEvent->message == NS_DEACTIVATE) {
-          // if a window is deactivated, clear the mouse capture regardless
-          // of what is capturing
-          nsIPresShell::ClearMouseCapture(nullptr);
-        }
-
-        // Find the view whose coordinates system we're in.
-        nsIView* view = aView;
-        bool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
-        if (dispatchUsingCoordinates) {
-          // Will dispatch using coordinates. Pretty bogus but it's consistent
-          // with what presshell does.
-          view = GetDisplayRootFor(view);
-        }
-  
-        // If the view has no frame, look for a view that does.
-        nsIFrame* frame = view->GetFrame();
-        if (!frame &&
-            (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
-             NS_IS_IME_RELATED_EVENT(aEvent) ||
-             NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
-             aEvent->message == NS_PLUGIN_ACTIVATE ||
-             aEvent->message == NS_PLUGIN_FOCUS)) {
-          while (view && !view->GetFrame()) {
-            view = view->GetParent();
-          }
-
-          if (view) {
-            frame = view->GetFrame();
-          }
-        }
-
-        if (nullptr != frame) {
-          // Hold a refcount to the presshell. The continued existence of the
-          // presshell will delay deletion of this view hierarchy should the event
-          // want to cause its destruction in, say, some JavaScript event handler.
-          nsCOMPtr<nsIPresShell> shell = view->GetViewManager()->GetPresShell();
-          if (shell) {
-            shell->HandleEvent(frame, aEvent, false, aStatus);
-          }
-        }
-    
-        break;
-      }
-    }
 
   return NS_OK;
 }
