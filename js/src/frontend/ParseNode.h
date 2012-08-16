@@ -14,10 +14,11 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
-#include "frontend/TreeContext.h"
 
 namespace js {
 namespace frontend {
+
+struct TreeContext;
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -161,7 +162,6 @@ enum ParseNodeKind {
     PNK_FORIN,
     PNK_FORHEAD,
     PNK_ARGSBODY,
-    PNK_UPVARS,
     PNK_SPREAD,
 
     /*
@@ -219,14 +219,13 @@ enum ParseNodeKind {
  *                            object containing arg and var properties.  We
  *                            create the function object at parse (not emit)
  *                            time to specialize arg and var bytecodes early.
- *                          pn_body: PNK_UPVARS if the function's source body
- *                                     depends on outer names,
- *                                   PNK_ARGSBODY if formal parameters,
+ *                          pn_body: PNK_ARGSBODY if formal parameters,
  *                                   PNK_STATEMENTLIST node for function body
  *                                     statements,
  *                                   PNK_RETURN for expression closure, or
  *                                   PNK_SEQ for expression closure with
  *                                     destructured formal parameters
+ *                                   PNK_LP see isGeneratorExpr def below
  *                          pn_cookie: static level and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
@@ -234,10 +233,6 @@ enum ParseNodeKind {
  *                            PNK_STATEMENTLIST node for function body
  *                            statements as final element
  *                          pn_count: 1 + number of formal parameters
- * PNK_UPVARS   nameset     pn_names: lexical dependencies (js::Definitions)
- *                            defined in enclosing scopes, or ultimately not
- *                            defined (free variables, either global property
- *                            references or reference errors).
  *                          pn_tree: PNK_ARGSBODY or PNK_STATEMENTLIST node
  * PNK_SPREAD   unary       pn_kid: expression being spread
  *
@@ -486,8 +481,7 @@ enum ParseNodeArity {
     PN_TERNARY,                         /* three kids */
     PN_FUNC,                            /* function definition node */
     PN_LIST,                            /* generic singly linked list */
-    PN_NAME,                            /* name use or definition node */
-    PN_NAMESET                          /* AtomDefnMapPtr + ParseNode ptr */
+    PN_NAME                             /* name use or definition node */
 };
 
 struct Definition;
@@ -626,10 +620,6 @@ struct ParseNode {
                         blockid:20;     /* block number, for subset dominance
                                            computation */
         } name;
-        struct {                        /* lexical dependencies + sub-tree */
-            AtomDefnMapPtr   defnMap;
-            ParseNode        *tree;     /* sub-tree containing name uses */
-        } nameset;
         double        dval;             /* aligned numeric literal value */
         class {
             friend class LoopControlStatement;
@@ -666,8 +656,6 @@ struct ParseNode {
 #define pn_objbox       pn_u.name.objbox
 #define pn_expr         pn_u.name.expr
 #define pn_lexdef       pn_u.name.lexdef
-#define pn_names        pn_u.nameset.defnMap
-#define pn_tree         pn_u.nameset.tree
 #define pn_dval         pn_u.dval
 
   protected:
@@ -678,7 +666,6 @@ struct ParseNode {
         pn_parens = false;
         JS_ASSERT(!pn_used);
         JS_ASSERT(!pn_defn);
-        pn_names.init();
         pn_next = pn_link = NULL;
     }
 
@@ -701,7 +688,7 @@ struct ParseNode {
     newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
                       Parser *parser);
 
-    inline PropertyName *atom() const;
+    inline PropertyName *name() const;
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
@@ -827,13 +814,8 @@ struct ParseNode {
     bool isGeneratorExpr() const {
         if (getKind() == PNK_LP) {
             ParseNode *callee = this->pn_head;
-            if (callee->getKind() == PNK_FUNCTION) {
-                ParseNode *body = (callee->pn_body->getKind() == PNK_UPVARS)
-                                  ? callee->pn_body->pn_tree
-                                  : callee->pn_body;
-                if (body->getKind() == PNK_LEXICALSCOPE)
-                    return true;
-            }
+            if (callee->getKind() == PNK_FUNCTION && callee->pn_body->getKind() == PNK_LEXICALSCOPE)
+                return true;
         }
         return false;
     }
@@ -841,9 +823,7 @@ struct ParseNode {
     ParseNode *generatorExpr() const {
         JS_ASSERT(isGeneratorExpr());
         ParseNode *callee = this->pn_head;
-        ParseNode *body = callee->pn_body->getKind() == PNK_UPVARS
-                          ? callee->pn_body->pn_tree
-                          : callee->pn_body;
+        ParseNode *body = callee->pn_body;
         JS_ASSERT(body->getKind() == PNK_LEXICALSCOPE);
         return body->pn_expr;
     }
@@ -1005,12 +985,6 @@ struct NameNode : public ParseNode {
 #ifdef DEBUG
     inline void dump(int indent);
 #endif
-};
-
-struct NameSetNode : public ParseNode {
-    static inline NameSetNode *create(ParseNodeKind kind, Parser *parser) {
-        return (NameSetNode *)ParseNode::create(kind, PN_NAMESET, parser);
-    }
 };
 
 struct LexicalScopeNode : public ParseNode {
@@ -1454,45 +1428,6 @@ struct ObjectBox {
     bool                isFunctionBox;
 
     ObjectBox(ObjectBox *traceLink, JSObject *obj);
-};
-
-struct FunctionBox : public ObjectBox
-{
-    ParseNode       *node;
-    FunctionBox     *siblings;
-    FunctionBox     *kids;
-    FunctionBox     *parent;
-    Bindings        bindings;               /* bindings for this function */
-    size_t          bufStart;
-    size_t          bufEnd;
-    uint16_t        level;
-    uint16_t        ndefaults;
-    StrictMode::StrictModeState strictModeState;
-    bool            inLoop:1;               /* in a loop in parent function */
-    bool            inWith:1;               /* some enclosing scope is a with-statement
-                                               or E4X filter-expression */
-    bool            inGenexpLambda:1;       /* lambda from generator expression */
-
-    ContextFlags    cxFlags;
-
-    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc,
-                StrictMode::StrictModeState sms);
-
-    bool funIsHeavyweight()      const { return cxFlags.funIsHeavyweight; }
-    bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
-    bool funHasExtensibleScope() const { return cxFlags.funHasExtensibleScope; }
-
-    void setFunIsHeavyweight()         { cxFlags.funIsHeavyweight = true; }
-
-    JSFunction *function() const { return (JSFunction *) object; }
-
-    /*
-     * True if this function is inside the scope of a with-statement, an E4X
-     * filter-expression, or a function that uses direct eval.
-     */
-    bool inAnyDynamicScope() const;
-
-    void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };
 
 } /* namespace frontend */

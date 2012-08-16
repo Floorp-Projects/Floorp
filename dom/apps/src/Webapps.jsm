@@ -39,6 +39,8 @@ XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
 
 #ifdef MOZ_WIDGET_GONK
   const DIRECTORY_NAME = "webappsDir";
+#elifdef ANDROID
+  const DIRECTORY_NAME = "webappsDir";
 #else
   // If we're executing in the context of the webapp runtime, the data files
   // are in a different directory (currently the Firefox profile that installed
@@ -58,7 +60,7 @@ let DOMApplicationRegistry = {
                     "Webapps:Launch", "Webapps:GetAll",
                     "Webapps:InstallPackage", "Webapps:GetBasePath",
                     "WebApps:GetAppByManifestURL", "WebApps:GetAppLocalIdByManifestURL",
-                    "WebApps:GetAppByLocalId", "Webapps:GetManifestURLByLocalId"];
+                    "WebApps:GetAppByLocalId", "WebApps:GetManifestURLByLocalId"];
 
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);

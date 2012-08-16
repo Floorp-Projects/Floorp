@@ -12,12 +12,16 @@
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
-#include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/PContent.h"
+
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 class nsIDOMBlob;
+class nsIIPCSerializableInputStream;
+class nsIInputStream;
 
 namespace mozilla {
 namespace dom {
@@ -36,17 +40,92 @@ struct BlobTraits
 template <>
 struct BlobTraits<Parent>
 {
-  typedef mozilla::dom::PBlobParent BaseType;
+  typedef mozilla::dom::PBlobParent ProtocolType;
   typedef mozilla::dom::PBlobStreamParent StreamType;
-  typedef mozilla::dom::PContentParent ManagerType;
+
+  // BaseType on the parent side is a bit more complicated than for the child
+  // side. In the case of nsIInputStreams backed by files we need to ensure that
+  // the files are actually opened and closed on a background thread before we
+  // can send their file handles across to the child. The child process could
+  // crash during this process so we need to make sure we cancel the intended
+  // response in such a case. We do that by holding an array of
+  // nsRevocableEventPtr. If the child crashes then this actor will be destroyed
+  // and the nsRevocableEventPtr destructor will cancel any stream events that
+  // are currently in flight.
+  class BaseType : public ProtocolType
+  {
+  protected:
+    BaseType()
+    { }
+
+    virtual ~BaseType()
+    { }
+
+    // Each instance of this class will be dispatched to the network stream
+    // thread pool to run the first time where it will open the file input
+    // stream. It will then dispatch itself back to the main thread to send the
+    // child process its response (assuming that the child has not crashed). The
+    // runnable will then dispatch itself to the thread pool again in order to
+    // close the file input stream.
+    class OpenStreamRunnable : public nsRunnable
+    {
+      friend class nsRevocableEventPtr<OpenStreamRunnable>;
+    public:
+      NS_DECL_NSIRUNNABLE
+
+      OpenStreamRunnable(BaseType* aOwner, StreamType* aActor,
+                         nsIInputStream* aStream,
+                         nsIIPCSerializableInputStream* aSerializable,
+                         nsIEventTarget* aTarget);
+
+    private:
+#ifdef DEBUG
+      void
+      Revoke();
+#else
+      void
+      Revoke()
+      {
+        mRevoked = true;
+      }
+#endif
+
+      // Only safe to access these two pointers if mRevoked is false!
+      BaseType* mOwner;
+      StreamType* mActor;
+
+      nsCOMPtr<nsIInputStream> mStream;
+      nsCOMPtr<nsIIPCSerializableInputStream> mSerializable;
+      nsCOMPtr<nsIEventTarget> mTarget;
+
+      bool mRevoked;
+      bool mClosing;
+    };
+
+    friend class OpenStreamRunnable;
+
+    void
+    NoteRunnableCompleted(OpenStreamRunnable* aRunnable);
+
+    nsTArray<nsRevocableEventPtr<OpenStreamRunnable> > mOpenStreamRunnables;
+  };
 };
 
 template <>
 struct BlobTraits<Child>
 {
-  typedef mozilla::dom::PBlobChild BaseType;
+  typedef mozilla::dom::PBlobChild ProtocolType;
   typedef mozilla::dom::PBlobStreamChild StreamType;
-  typedef mozilla::dom::PContentChild ManagerType;
+
+  class BaseType : public ProtocolType
+  {
+  protected:
+    BaseType()
+    { }
+
+    virtual ~BaseType()
+    { }
+  };
 };
 
 template <ActorFlavorEnum>
@@ -58,9 +137,9 @@ class Blob : public BlobTraits<ActorFlavor>::BaseType
   friend class RemoteBlob<ActorFlavor>;
 
 public:
-  typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
+  typedef typename BlobTraits<ActorFlavor>::ProtocolType ProtocolType;
   typedef typename BlobTraits<ActorFlavor>::StreamType StreamType;
-  typedef typename BlobTraits<ActorFlavor>::ManagerType ManagerType;
+  typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
   typedef RemoteBlob<ActorFlavor> RemoteBlobType;
   typedef mozilla::ipc::IProtocolManager<
                       mozilla::ipc::RPCChannel::RPCListener>::ActorDestroyReason

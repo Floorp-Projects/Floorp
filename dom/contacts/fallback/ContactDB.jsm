@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "contacts";
 
 function ContactDB(aGlobal) {
@@ -126,6 +126,37 @@ ContactDB.prototype = {
 
         // Create new searchable indexes.
         objectStore.createIndex("email", "search.email", { unique: false, multiEntry: true });
+      } else if (currVersion == 3) {
+        debug("upgrade 3");
+
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        // Upgrade existing impp field in the DB.
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            debug("upgrade impp1: " + JSON.stringify(cursor.value));
+            cursor.value.properties.impp =
+              cursor.value.properties.impp.map(function(value) { return { value: value }; });
+            cursor.update(cursor.value);
+            debug("upgrade impp2: " + JSON.stringify(cursor.value));
+            cursor.continue();
+          }
+        };
+        // Upgrade existing url field in the DB.
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            debug("upgrade url1: " + JSON.stringify(cursor.value));
+            cursor.value.properties.url =
+              cursor.value.properties.url.map(function(value) { return { value: value }; });
+            cursor.update(cursor.value);
+            debug("upgrade impp2: " + JSON.stringify(cursor.value));
+            cursor.continue();
+          }
+        };
       }
     }
   },
@@ -184,23 +215,30 @@ ContactDB.prototype = {
               // "+1-234-567" should also be found with 1234, 234-56, 23456
 
               // Chop off the first characters
-              let number = aContact.properties[field][i].number;
-              for(let i = 0; i < number.length; i++) {
-                contact.search[field].push(number.substring(i, number.length));
-              }
-              // Store +1-234-567 as ["1234567", "234567"...]
-              let digits = number.match(/\d/g);
-              if (digits && number.length != digits.length) {
-                digits = digits.join('');
-                for(let i = 0; i < digits.length; i++) {
-                  contact.search[field].push(digits.substring(i, digits.length));
+              let number = aContact.properties[field][i].value;
+              if (number) {
+                for (let i = 0; i < number.length; i++) {
+                  contact.search[field].push(number.substring(i, number.length));
                 }
-              }
+                // Store +1-234-567 as ["1234567", "234567"...]
+                let digits = number.match(/\d/g);
+                if (digits && number.length != digits.length) {
+                  digits = digits.join('');
+                  for(let i = 0; i < digits.length; i++) {
+                    contact.search[field].push(digits.substring(i, digits.length));
+                  }
+                }
               debug("lookup: " + JSON.stringify(contact.search[field]));
+              }
             } else if (field == "email") {
-              let address = aContact.properties[field][i].address;
+              let address = aContact.properties[field][i].value;
               if (address && typeof address == "string") {
                 contact.search[field].push(address.toLowerCase());
+              }
+            } else if (field == "impp") {
+              let value = aContact.properties[field][i].value;
+              if (value && typeof value == "string") {
+                contact.search[field].push(value.toLowerCase());
               }
             } else {
               let val = aContact.properties[field][i];

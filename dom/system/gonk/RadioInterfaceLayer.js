@@ -151,14 +151,16 @@ function RadioInterfaceLayer() {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
-    cell:           null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
-    // although the actual implementation lives in the content process.
+    // although the actual implementation lives in the content process. So are
+    // the child attributes `network` and `cell`, which implement
+    // nsIDOMMozMobileNetworkInfo and nsIDOMMozMobileCellInfo respectively.
     voice:          {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
@@ -166,6 +168,7 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
@@ -416,9 +419,6 @@ RadioInterfaceLayer.prototype = {
       case "iccmbdn":
         ppmm.sendAsyncMessage("RIL:VoicemailNumberChanged", message);
         break;
-      case "celllocationchanged":
-        this.rilContext.cell = message;
-        break;
       case "ussdreceived":
         debug("ussdreceived " + JSON.stringify(message));
         this.handleUSSDReceived(message);
@@ -502,6 +502,13 @@ RadioInterfaceLayer.prototype = {
       voiceInfo.relSignalStrength = null;
     }
 
+    let newCell = newInfo.cell;
+    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
+      voiceInfo.cell = null;
+    } else {
+      voiceInfo.cell = newCell;
+    }
+
     if (!newInfo.batch) {
       ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
     }
@@ -523,6 +530,13 @@ RadioInterfaceLayer.prototype = {
       dataInfo.network = null;
       dataInfo.signalStrength = null;
       dataInfo.relSignalStrength = null;
+    }
+
+    let newCell = newInfo.cell;
+    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
+      dataInfo.cell = null;
+    } else {
+      dataInfo.cell = newCell;
     }
 
     if (!newInfo.batch) {
