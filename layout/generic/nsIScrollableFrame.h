@@ -204,6 +204,11 @@ public:
    * expectation that scrolling is going to happen.
    */
   virtual bool IsScrollingActive() = 0;
+  /**
+   * Call this when the layer(s) induced by active scrolling are being
+   * completely redrawn.
+   */
+  virtual void ResetScrollPositionForLayerPixelAlignment() = 0;
 };
 
 #endif
