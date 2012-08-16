@@ -2681,7 +2681,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   // On touchables devices, touch the screen is usually a pan action,
   // so let reposition the caret if needed but do not select text
-  if (Preferences::GetBool("browser.ignoreNativeFrameTextSelection", false)) {
+  if (!offsets.content->IsEditable() &&
+      Preferences::GetBool("browser.ignoreNativeFrameTextSelection", false)) {
     return fc->HandleClick(offsets.content, offsets.StartOffset(),
                            offsets.EndOffset(), false, false,
                            offsets.associateWithNext);
