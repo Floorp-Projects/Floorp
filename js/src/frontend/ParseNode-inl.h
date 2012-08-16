@@ -33,7 +33,7 @@ UpvarCookie::set(JSContext *cx, unsigned newLevel, uint16_t newSlot)
 }
 
 inline PropertyName *
-ParseNode::atom() const
+ParseNode::name() const
 {
     JS_ASSERT(isKind(PNK_FUNCTION) || isKind(PNK_NAME) || isKind(PNK_INTRINSICNAME));
     JSAtom *atom = isKind(PNK_FUNCTION) ? pn_funbox->function()->atom : pn_atom;

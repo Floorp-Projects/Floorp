@@ -50,7 +50,7 @@ if __name__ == '__main__':
     assert(m.find_element(HTMLElement.ID, 'id3').clear())
     assert(m.find_element(HTMLElement.ID, 'id3').is_selected())
     assert(m.find_element(HTMLElement.ID, 'id1').equals(m.find_element(HTMLElement.TAG, 'p')))
-    assert(m.find_element(HTMLElement.ID, 'id3').enabled())
+    assert(m.find_element(HTMLElement.ID, 'id3').is_enabled())
     assert(m.find_element(HTMLElement.ID, 'id3').displayed())
     assert(m.find_element(HTMLElement.ID, 'id3').get_attribute('value') == server.TEST_GET_VALUE)
     assert(m.delete_session())

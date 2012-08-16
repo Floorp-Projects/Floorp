@@ -37,7 +37,6 @@ ifndef LIBXUL_SDK
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 tier_base_dirs += \
   other-licenses/android \
-  other-licenses/skia-npapi \
   $(NULL)
 endif
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

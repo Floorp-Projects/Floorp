@@ -652,6 +652,42 @@ function testEventOrder()
   SpecialPowers.removeSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
 }
 
+var gOnWheelAttrHandled = new Array;
+
+function testOnWheelAttr()
+{
+  document.documentElement.setAttribute("onwheel", "gOnWheelAttrHandled['html'] = true;");
+  document.body.setAttribute("onwheel", "gOnWheelAttrHandled['body'] = true;");
+  gScrollableElement.setAttribute("onwheel", "gOnWheelAttrHandled['div'] = true;");
+  var target = document.getElementById("onwheel");
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, deltaY: 2.0 });
+  ok(gOnWheelAttrHandled['html'], "html element's onwheel attribute isn't performed");
+  ok(gOnWheelAttrHandled['body'], "body element's onwheel attribute isn't performed");
+  ok(gOnWheelAttrHandled['div'], "div element's onwheel attribute isn't performed");
+}
+
+var gOnWheelPropHandled = new Array;
+
+function testOnWheelProperty()
+{
+  window.onwheel = function (e) { gOnWheelPropHandled["window"] = true; }
+  document.onwheel = function (e) { gOnWheelPropHandled["document"] = true; }
+  document.documentElement.onwheel = function (e) { gOnWheelPropHandled["html"] = true; };
+  document.body.onwheel = function (e) { gOnWheelPropHandled["body"] = true; };
+  gScrollableElement.onwheel = function (e) { gOnWheelPropHandled["div"] = true; };
+  var target = document.getElementById("onwheel");
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, deltaY: 2.0 });
+  ok(gOnWheelPropHandled['window'], "window's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['document'], "document's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['html'], "html element's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['body'], "body element's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['div'], "div element's onwheel property isn't performed");
+}
+
 function runTests()
 {
   SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
@@ -678,6 +714,8 @@ function runTests()
   testDeltaMultiplierPrefs();
   testDispatchingUntrustEvent();
   testEventOrder();
+  testOnWheelAttr();
+  testOnWheelProperty();
 
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");

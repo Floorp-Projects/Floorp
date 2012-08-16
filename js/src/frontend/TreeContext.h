@@ -16,7 +16,7 @@
 #include "jspubtd.h"
 
 #include "frontend/ParseMaps.h"
-
+#include "frontend/ParseNode.h"
 #include "vm/ScopeObject.h"
 
 namespace js {
@@ -53,9 +53,6 @@ class ContextFlags {
     // should be tested (see JSScript::argIsAlised).
     //
     bool            bindingsAccessedDynamically:1;
-
-    // The function needs Call object per call.
-    bool            funIsHeavyweight:1;
 
     // We parsed a yield statement in the function.
     bool            funIsGenerator:1;
@@ -111,7 +108,6 @@ class ContextFlags {
     ContextFlags(JSContext *cx)
      :  hasExplicitUseStrict(false),
         bindingsAccessedDynamically(false),
-        funIsHeavyweight(false),
         funIsGenerator(false),
         funMightAliasLocals(false),
         funHasExtensibleScope(false),
@@ -139,10 +135,6 @@ struct SharedContext {
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    Bindings        bindings;       /* bindings in this code, including
-                                       arguments if we're compiling a function */
-    Bindings::AutoRooter bindingsRoot; /* root for stack allocated bindings. */
-
     ContextFlags    cxFlags;
 
 
@@ -179,22 +171,20 @@ struct SharedContext {
 
     bool hasExplicitUseStrict()        const {         return cxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const {         return cxFlags.bindingsAccessedDynamically; }
-    bool funIsHeavyweight()            const { INFUNC; return cxFlags.funIsHeavyweight; }
     bool funIsGenerator()              const { INFUNC; return cxFlags.funIsGenerator; }
     bool funMightAliasLocals()         const {         return cxFlags.funMightAliasLocals; }
     bool funHasExtensibleScope()       const {         return cxFlags.funHasExtensibleScope; }
     bool funArgumentsHasLocalBinding() const { INFUNC; return cxFlags.funArgumentsHasLocalBinding; }
     bool funDefinitelyNeedsArgsObj()   const { INFUNC; return cxFlags.funDefinitelyNeedsArgsObj; }
 
-    void setExplicitUseStrict()             {         cxFlags.hasExplicitUseStrict        = true; }
-    void setBindingsAccessedDynamically()   {         cxFlags.bindingsAccessedDynamically = true; }
-    void setFunIsHeavyweight()              {         cxFlags.funIsHeavyweight            = true; }
-    void setFunIsGenerator()                { INFUNC; cxFlags.funIsGenerator              = true; }
-    void setFunMightAliasLocals()           {         cxFlags.funMightAliasLocals         = true; }
-    void setFunHasExtensibleScope()         {         cxFlags.funHasExtensibleScope       = true; }
-    void setFunArgumentsHasLocalBinding()   { INFUNC; cxFlags.funArgumentsHasLocalBinding = true; }
-    void setFunDefinitelyNeedsArgsObj()     { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
-                                              INFUNC; cxFlags.funDefinitelyNeedsArgsObj   = true; }
+    void setExplicitUseStrict()               {         cxFlags.hasExplicitUseStrict        = true; }
+    void setBindingsAccessedDynamically()     {         cxFlags.bindingsAccessedDynamically = true; }
+    void setFunIsGenerator()                  { INFUNC; cxFlags.funIsGenerator              = true; }
+    void setFunMightAliasLocals()             {         cxFlags.funMightAliasLocals         = true; }
+    void setFunHasExtensibleScope()           {         cxFlags.funHasExtensibleScope       = true; }
+    void setFunArgumentsHasLocalBinding()     { INFUNC; cxFlags.funArgumentsHasLocalBinding = true; }
+    void setFunDefinitelyNeedsArgsObj()       { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
+                                                INFUNC; cxFlags.funDefinitelyNeedsArgsObj   = true; }
 
 #undef INFUNC
 
@@ -212,6 +202,8 @@ struct SharedContext {
 typedef HashSet<JSAtom *> FuncStmtSet;
 struct Parser;
 struct StmtInfoTC;
+
+typedef Vector<Definition *, 16> DeclVector;
 
 /*
  * The struct TreeContext stores information about the current parsing context,
@@ -243,7 +235,87 @@ struct TreeContext {                /* tree context for semantic checks */
                                        non-zero depth in current paren tree */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
                                        (block with its own lexical scope)  */
-    AtomDecls       decls;          /* function, const, and var declarations */
+  private:
+    AtomDecls       decls_;         /* function, const, and var declarations */
+    DeclVector      args_;          /* argument definitions */
+    DeclVector      vars_;          /* var/const definitions */
+
+  public:
+    const AtomDecls &decls() const {
+        return decls_;
+    }
+
+    uint32_t numArgs() const {
+        JS_ASSERT(sc->inFunction());
+        return args_.length();
+    }
+
+    uint32_t numVars() const {
+        JS_ASSERT(sc->inFunction());
+        return vars_.length();
+    }
+
+    /*
+     * This function adds a definition to the lexical scope represented by this
+     * TreeContext.
+     *
+     * Pre-conditions:
+     *  + The caller must have already taken care of name collisions:
+     *    - For non-let definitions, this means 'name' isn't in 'decls'.
+     *    - For let definitions, this means 'name' isn't already a name in the
+     *      current block.
+     *  + The given 'pn' is either a placeholder (created by a previous unbound
+     *    use) or an un-bound un-linked name node.
+     *  + The given 'kind' is one of ARG, CONST, VAR, or LET. In particular,
+     *    NAMED_LAMBDA is handled in an ad hoc special case manner (see
+     *    LeaveFunction) that we should consider rewriting.
+     *
+     * Post-conditions:
+     *  + tc->decls().lookupFirst(name) == pn
+     *  + The given name 'pn' has been converted in-place into a
+     *    non-placeholder definition.
+     *  + If this is a function scope (sc->inFunction), 'pn' is bound to a
+     *    particular local/argument slot.
+     *  + PND_CONST is set for Definition::COSNT
+     *  + Pre-existing uses of pre-existing placeholders have been linked to
+     *    'pn' if they are in the scope of 'pn'.
+     *  + Pre-existing placeholders in the scope of 'pn' have been removed.
+     */
+    bool define(JSContext *cx, PropertyName *name, ParseNode *pn, Definition::Kind);
+
+    /*
+     * Let definitions may shadow same-named definitions in enclosing scopes.
+     * To represesent this, 'decls' is not a plain map, but actually:
+     *   decls :: name -> stack of definitions
+     * New bindings are pushed onto the stack, name lookup always refers to the
+     * top of the stack, and leaving a block scope calls popLetDecl for each
+     * name in the block's scope.
+     */
+    void popLetDecl(JSAtom *atom);
+
+    /* See the sad story in DefineArg. */
+    void prepareToAddDuplicateArg(Definition *prevDecl);
+
+    /* See the sad story in MakeDefIntoUse. */
+    void updateDecl(JSAtom *atom, ParseNode *newDecl);
+
+    /*
+     * After a function body has been parsed, the parser generates the
+     * function's "bindings". Bindings are a data-structure, ultimately stored
+     * in the compiled JSScript, that serve three purposes:
+     *  - After parsing, the TreeContext is destroyed and 'decls' along with
+     *    it. Mostly, the emitter just uses the binding information stored in
+     *    the use/def nodes, but the emitter occasionally needs 'bindings' for
+     *    various scope-related queries.
+     *  - Bindings provide the initial js::Shape to use when creating a dynamic
+     *    scope object (js::CallObject) for the function. This shape is used
+     *    during dynamic name lookup.
+     *  - Sometimes a script's bindings are accessed at runtime to retrieve the
+     *    contents of the lexical scope (e.g., from the debugger).
+     */
+    bool generateFunctionBindings(JSContext *cx, Bindings *bindings) const;
+
+  public:
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
                                        be an error if we turn out to be inside a
                                        generator expression */
@@ -289,8 +361,6 @@ struct TreeContext {                /* tree context for semantic checks */
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
-
-    void trace(JSTracer *trc);
 
     inline TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
     inline ~TreeContext();
@@ -411,6 +481,42 @@ struct StmtInfoTC : public StmtInfoBase {
     bool            isFunctionBodyBlock;
 
     StmtInfoTC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
+};
+
+struct FunctionBox : public ObjectBox
+{
+    ParseNode       *node;
+    FunctionBox     *siblings;
+    FunctionBox     *kids;
+    FunctionBox     *parent;
+    Bindings        bindings;               /* bindings for this function */
+    size_t          bufStart;
+    size_t          bufEnd;
+    uint16_t        level;
+    uint16_t        ndefaults;
+    StrictMode::StrictModeState strictModeState;
+    bool            inLoop:1;               /* in a loop in parent function */
+    bool            inWith:1;               /* some enclosing scope is a with-statement
+                                               or E4X filter-expression */
+    bool            inGenexpLambda:1;       /* lambda from generator expression */
+
+    ContextFlags    cxFlags;
+
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc,
+                StrictMode::StrictModeState sms);
+
+    bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
+    bool funHasExtensibleScope() const { return cxFlags.funHasExtensibleScope; }
+
+    JSFunction *function() const { return (JSFunction *) object; }
+
+    /*
+     * True if this function is inside the scope of a with-statement, an E4X
+     * filter-expression, or a function that uses direct eval.
+     */
+    bool inAnyDynamicScope() const;
+
+    void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };
 
 bool
