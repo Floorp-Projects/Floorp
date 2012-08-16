@@ -370,7 +370,7 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
 
 DeviceStorageRequestParent::EnumerateFileEvent::EnumerateFileEvent(DeviceStorageRequestParent* aParent,
                                                                    DeviceStorageFile* aFile,
-                                                                   PRUint32 aSince)
+                                                                   PRUint64 aSince)
   : CancelableRunnable(aParent)
   , mFile(aFile)
   , mSince(aSince)
