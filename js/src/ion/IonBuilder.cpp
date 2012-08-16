@@ -3345,28 +3345,14 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
     return true;
 }
 
-void
-IonBuilder::copyFormalIntoCallObj(MDefinition *callObj, MDefinition *slots, unsigned formal)
-{
-    // Note that in the case of using dynamic slots, RESERVED_SLOTS == numFixedSlots.
-    MDefinition *param = current->getSlot(info().argSlot(formal));
-    if (slots->type() == MIRType_Slots)
-        current->add(MStoreSlot::New(slots, formal, param));
-    else
-        current->add(MStoreFixedSlot::New(callObj, CallObject::RESERVED_SLOTS + formal, param));
-}
-
 MInstruction *
 IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
     // Create a template CallObject that we'll use to generate inline object
     // creation.
     RootedObject templateObj(cx);
+    RootedShape shape(cx, script->bindings.callObjShape());
     {
-        RootedShape shape(cx, script->bindings.callObjectShape(cx));
-        if (!shape)
-            return NULL;
-
         RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
         if (!type)
             return NULL;
@@ -3405,12 +3391,14 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     current->add(MStoreFixedSlot::New(callObj, CallObject::enclosingScopeSlot(), scope));
 
     // Initialize argument slots.
-    if (script->bindingsAccessedDynamically) {
-        for (unsigned slot = 0; slot < info().fun()->nargs; slot++)
-            copyFormalIntoCallObj(callObj, slots, slot);
-    } else if (unsigned n = script->numClosedArgs()) {
-        for (unsigned i = 0; i < n; i++)
-            copyFormalIntoCallObj(callObj, slots, script->getClosedArg(i));
+    for (AliasedFormalIter i(script); i; i++) {
+        unsigned slot = i.scopeSlot();
+        unsigned formal = i.frameIndex();
+        MDefinition *param = current->getSlot(info().argSlot(formal));
+        if (slots->type() == MIRType_Slots)
+            current->add(MStoreSlot::New(slots, slot - shape->numFixedSlots(), param));
+        else
+            current->add(MStoreFixedSlot::New(callObj, slot, param));
     }
 
     return callObj;

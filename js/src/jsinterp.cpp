@@ -1357,12 +1357,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_ASSERT(js_CodeSpec[op].length == 1);
         len = 1;
       advance_pc:
+        js::gc::MaybeVerifyBarriers(cx);
         regs.pc += len;
         op = (JSOp) *regs.pc;
 
       do_op:
         CHECK_PCCOUNT_INTERRUPTS();
-        js::gc::MaybeVerifyBarriers(cx);
         switchOp = int(op) | switchMask;
       do_switch:
         switch (switchOp) {

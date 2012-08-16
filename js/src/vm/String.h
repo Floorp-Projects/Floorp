@@ -770,6 +770,24 @@ NameToId(PropertyName *name)
 
 typedef HeapPtr<JSAtom> HeapPtrAtom;
 
+class AutoNameVector : public AutoVectorRooter<PropertyName *>
+{
+    typedef AutoVectorRooter<PropertyName *> BaseType;
+  public:
+    explicit AutoNameVector(JSContext *cx
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<PropertyName *>(cx, NAMEVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    HandlePropertyName operator[](size_t i) const {
+        return HandlePropertyName::fromMarkedLocation(&BaseType::operator[](i));
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } /* namespace js */
 
 /* Avoid requiring vm/String-inl.h just to call getChars. */

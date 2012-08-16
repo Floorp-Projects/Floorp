@@ -130,7 +130,7 @@ body {
 }
 
 .content pre {
-  overflow: scroll !important;
+  white-space: pre-wrap !important;
 }
 
 .content blockquote {

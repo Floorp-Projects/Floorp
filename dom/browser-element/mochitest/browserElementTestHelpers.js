@@ -49,14 +49,6 @@ const browserElementTestHelpers = {
     this._setBoolPref('dom.mozBrowserFramesEnabled', value);
   },
 
-  getWhitelistPref: function() {
-    return this._getCharPref('dom.mozBrowserFramesWhitelist');
-  },
-
-  setWhitelistPref: function(whitelist) {
-    this._setCharPref('dom.mozBrowserFramesWhitelist', whitelist);
-  },
-
   getOOPDisabledPref: function() {
     return this._getBoolPref('dom.ipc.tabs.disabled');
   },
@@ -81,25 +73,35 @@ const browserElementTestHelpers = {
     this._setBoolPref('browser.pageThumbs.enabled', value);
   },
 
-  addToWhitelist: function() {
-    var whitelist = this.getWhitelistPref();
-    whitelist += ',  http://' + window.location.host + ',  ';
-    this.setWhitelistPref(whitelist);
+  addPermission: function() {
+    SpecialPowers.addPermission("browser", true, document);
+    this.tempPermissions.push(location.href)
+  },
+
+  removeAllTempPermissions: function() {
+    for(var i = 0; i < this.tempPermissions.length; i++) {
+      SpecialPowers.removePermission("browser", this.tempPermissions[i]);
+    }
+  },
+
+  addPermissionForUrl: function(url) {
+    SpecialPowers.addPermission("browser", true, url);
+    this.tempPermissions.push(url);
   },
 
   restoreOriginalPrefs: function() {
     this.setEnabledPref(this.origEnabledPref);
-    this.setWhitelistPref(this.origWhitelistPref);
     this.setOOPDisabledPref(this.origOOPDisabledPref);
     this.setOOPByDefaultPref(this.origOOPByDefaultPref);
     this.setPageThumbsEnabledPref(this.origPageThumbsEnabledPref);
+    this.removeAllTempPermissions();
   },
 
   'origEnabledPref': null,
-  'origWhitelistPref': null,
   'origOOPDisabledPref': null,
   'origOOPByDefaultPref': null,
   'origPageThumbsEnabledPref': null,
+  'tempPermissions': [],
 
   // Some basically-empty pages from different domains you can load.
   'emptyPage1': 'http://example.com' +
@@ -117,7 +119,6 @@ const browserElementTestHelpers = {
 };
 
 browserElementTestHelpers.origEnabledPref = browserElementTestHelpers.getEnabledPref();
-browserElementTestHelpers.origWhitelistPref = browserElementTestHelpers.getWhitelistPref();
 browserElementTestHelpers.origOOPDisabledPref = browserElementTestHelpers.getOOPDisabledPref();
 browserElementTestHelpers.origOOPByDefaultPref = browserElementTestHelpers.getOOPByDefaultPref();
 browserElementTestHelpers.origPageThumbsEnabledPref = browserElementTestHelpers.getPageThumbsEnabledPref();

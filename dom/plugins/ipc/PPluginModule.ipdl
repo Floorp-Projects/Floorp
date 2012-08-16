@@ -14,7 +14,6 @@ include "mozilla/dom/TabMessageUtils.h";
 
 using NPError;
 using NPNVariable;
-using base::FileDescriptor;
 using mozilla::dom::NativeThreadId;
 using mac_plugin_interposing::NSCursorInfo;
 using nsID;

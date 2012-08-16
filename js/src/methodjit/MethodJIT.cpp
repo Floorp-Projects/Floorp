@@ -1103,7 +1103,7 @@ mjit::JaegerShot(JSContext *cx, bool partial)
 {
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
-    JITScript *jit = script->getJIT(fp->isConstructing(), cx->compartment->needsBarrier());
+    JITScript *jit = script->getJIT(fp->isConstructing(), cx->compartment->compileBarriers());
 
     JS_ASSERT(cx->regs().pc == script->code);
 

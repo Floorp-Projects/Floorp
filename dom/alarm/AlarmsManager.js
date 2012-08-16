@@ -68,7 +68,12 @@ AlarmsManager.prototype = {
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage(
       "AlarmsManager:Add", 
-      { requestId: this.getRequestId(request), date: aDate, ignoreTimezone: isIgnoreTimezone, data: aData, manifestURL: this._manifestURL }
+      { requestId: this.getRequestId(request),
+        date: aDate,
+        ignoreTimezone: isIgnoreTimezone,
+        data: aData,
+        pageURL: this._pageURL,
+        manifestURL: this._manifestURL }
     );
     return request;
   },
@@ -156,6 +161,7 @@ AlarmsManager.prototype = {
     // Get the manifest URL if this is an installed app
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
+    this._pageURL = principal.URI.spec;
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
   },
 

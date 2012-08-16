@@ -52,8 +52,6 @@
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
@@ -65,7 +63,6 @@
 #include "nsINode.h"
 #include "nsIParserUtils.h"
 #include "nsIPlaintextEditor.h"
-#include "nsIPrincipal.h"
 #include "nsISelection.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"
@@ -1169,35 +1166,6 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
 
   // we're done!
   return NS_OK;
-}
-
-bool nsHTMLEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
-{
-  // Try to determine whether we should use a sanitizing fragment sink
-  bool isSafe = false;
-
-  nsCOMPtr<nsIDocument> destdoc = GetDocument();
-  NS_ASSERTION(destdoc, "Where is our destination doc?");
-  nsCOMPtr<nsISupports> container = destdoc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  if (dsti)
-    dsti->GetRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(root);
-  PRUint32 appType;
-  if (docShell && NS_SUCCEEDED(docShell->GetAppType(&appType)))
-    isSafe = appType == nsIDocShell::APP_TYPE_EDITOR;
-  if (!isSafe && aSourceDoc) {
-    nsCOMPtr<nsIDocument> srcdoc = do_QueryInterface(aSourceDoc);
-    NS_ASSERTION(srcdoc, "Where is our source doc?");
-
-    nsIPrincipal* srcPrincipal = srcdoc->NodePrincipal();
-    nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
-    NS_ASSERTION(srcPrincipal && destPrincipal, "How come we don't have a principal?");
-    srcPrincipal->Subsumes(destPrincipal, &isSafe);
-  }
-
-  return isSafe;
 }
 
 nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,

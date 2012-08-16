@@ -23,8 +23,6 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    bindings(),
-    bindingsRoot(cx, &bindings),
     cxFlags(cx),
     strictModeState(sms)
 {
@@ -69,7 +67,9 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, u
     parenDepth(0),
     yieldCount(0),
     blockNode(NULL),
-    decls(prs->context),
+    decls_(prs->context),
+    args_(prs->context),
+    vars_(prs->context),
     yieldNode(NULL),
     functionList(NULL),
     queuedStrictModeError(NULL),
@@ -92,7 +92,7 @@ TreeContext::init()
     if (!frontend::GenerateBlockId(this, this->bodyid))
         return false;
 
-    return decls.init() && lexdeps.ensureMap(sc->context);
+    return decls_.init() && lexdeps.ensureMap(sc->context);
 }
 
 inline void

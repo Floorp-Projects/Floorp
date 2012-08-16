@@ -44,8 +44,8 @@ createMyObject(JSContext* context, unsigned argc, jsval *vp)
 
 static JSFunctionSpec s_functions[] =
 {
-    { "createMyObject", createMyObject, 0 },
-    { 0,0,0,0 }
+    JS_FN("createMyObject", createMyObject, 0, 0),
+    JS_FS_END
 };
 
 BEGIN_TEST(testOps_bug559006)

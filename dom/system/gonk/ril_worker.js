@@ -624,11 +624,6 @@ let RIL = {
   dataRegistrationState: {},
 
   /**
-   * The cell location on a phone, such as LAC, CID.
-   */
-  cellLocation: {},
-
-  /**
    * List of strings identifying the network operator.
    */
   operator: null,
@@ -698,11 +693,13 @@ let RIL = {
    *
    * @param string
    *        String to be parsed.
-   * @param defaultValue
+   * @param defaultValue [optional]
    *        Default value to be used.
+   * @param radix [optional]
+   *        A number that represents the numeral system to be used. Default 10.
    */
-  parseInt: function RIL_parseInt(string, defaultValue) {
-    let number = parseInt(string, 10);
+  parseInt: function RIL_parseInt(string, defaultValue, radix) {
+    let number = parseInt(string, radix || 10);
     if (!isNaN(number)) {
       return number;
     }
@@ -731,6 +728,30 @@ let RIL = {
    */
   getICCStatus: function getICCStatus() {
     Buf.simpleRequest(REQUEST_GET_SIM_STATUS);
+  },
+
+   /**
+   * Helper function for unlocking ICC locks.
+   */
+  iccUnlockCardLock: function iccUnlockCardLock(options) {
+    switch (options.lockType) {
+      case "pin":
+        this.enterICCPIN(options);
+        break;
+      case "pin2":
+        this.enterICCPIN2(options);
+        break;
+      case "puk":
+        this.enterICCPUK(options);
+        break;
+      case "puk2":
+        this.enterICCPUK2(options);
+        break;
+      default:
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+    }
   },
 
   /**
@@ -767,6 +788,34 @@ let RIL = {
       Buf.writeString(options.aid ? options.aid : this.aid);
     }
     Buf.sendParcel();
+  },
+
+   /**
+   * Helper function for changing ICC locks.
+   */
+  iccSetCardLock: function iccSetCardLock(options) {
+    if (options.newPin !== undefined) {
+      switch (options.lockType) {
+        case "pin":
+          this.changeICCPIN(options);
+          break;
+        case "pin2":
+          this.changeICCPIN2(options);
+          break;
+        default:
+          options.errorMsg = "Unsupported Card Lock.";
+          options.success = false;
+          this.sendDOMMessage(options);
+      }
+    } else { // Enable/Disable pin lock.
+      if (options.lockType != "pin") {
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+        return;
+      }
+      this.setICCPinLock(options);
+    }
   },
 
   /**
@@ -853,6 +902,21 @@ let RIL = {
    },
 
   /**
+   * Helper function for fetching the state of ICC locks.
+   */
+  iccGetCardLock: function iccGetCardLock(options) {
+    switch (options.lockType) {
+      case "pin":
+        this.getICCPinLock(options);
+        break;
+      default:
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+    }
+  },
+
+  /**
    * Get ICC Pin lock. A wrapper call to queryICCFacilityLock.
    *
    * @param requestId
@@ -863,7 +927,7 @@ let RIL = {
     options.password = ""; // For query no need to provide pin.
     options.serviceClass = ICC_SERVICE_CLASS_VOICE |
                            ICC_SERVICE_CLASS_DATA  |
-                           ICC_SERVICE_CLASS_FAX,
+                           ICC_SERVICE_CLASS_FAX;
     this.queryICCFacilityLock(options);
   },
 
@@ -907,7 +971,7 @@ let RIL = {
     options.password = options.pin;
     options.serviceClass = ICC_SERVICE_CLASS_VOICE |
                            ICC_SERVICE_CLASS_DATA  |
-                           ICC_SERVICE_CLASS_FAX,
+                           ICC_SERVICE_CLASS_FAX;
     this.setICCFacilityLock(options);
   },
 
@@ -1917,7 +1981,9 @@ let RIL = {
       return;
     }
 
-    let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
+    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
+    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
+    let app = iccStatus.apps[index];
     if (!app) {
       if (DEBUG) {
         debug("Subscription application is not present in iccStatus.");
@@ -1931,6 +1997,8 @@ let RIL = {
                            cardState: this.cardState});
       return;
     }
+    // fetchICCRecords will need to read aid, so read aid here.
+    this.aid = app.aid;
 
     let newCardState;
     switch (app.app_state) {
@@ -1956,19 +2024,28 @@ let RIL = {
       return;
     }
 
-    // TODO: Bug 726098, change to use cdmaSubscriptionAppIndex when in CDMA.
-    // fetchICCRecords will need to read aid, so read aid here.
-    let index = iccStatus.gsmUmtsSubscriptionAppIndex;
-    this.aid = iccStatus.apps[index].aid;
-
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     this.getSignalStrength();
-    this.fetchICCRecords();
+    if (newCardState == GECKO_CARDSTATE_READY) {
+      this.fetchICCRecords();
+    }
 
     this.cardState = newCardState;
     this.sendDOMMessage({rilMessageType: "cardstatechange",
                          cardState: this.cardState});
+  },
+
+   /**
+   * Helper for processing responses of functions such as enterICC* and changeICC*.
+   */
+  _processEnterAndChangeICCResponses: function _processEnterAndChangeICCResponses(length, options) {
+    options.success = options.rilRequestError == 0;
+    if (!options.success) {
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    }
+    options.retryCount = length ? Buf.readUint32List()[0] : -1;
+    this.sendDOMMessage(options);
   },
 
   /**
@@ -2186,6 +2263,24 @@ let RIL = {
       }
     }
 
+    if (!curState.cell) {
+      curState.cell = {};
+    }
+
+    // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
+    // in MS. So we still need to report the '0000' as well.
+    let lac = RIL.parseInt(newState[1], -1, 16);
+    if (curState.cell.gsmLocationAreaCode !== lac) {
+      curState.cell.gsmLocationAreaCode = lac;
+      changed = true;
+    }
+
+    let cid = RIL.parseInt(newState[2], -1, 16);
+    if (curState.cell.gsmCellId !== cid) {
+      curState.cell.gsmCellId = cid;
+      changed = true;
+    }
+
     let radioTech = RIL.parseInt(newState[3], NETWORK_CREG_TECH_UNKNOWN);
     if (curState.radioTech != radioTech) {
       changed = true;
@@ -2200,28 +2295,6 @@ let RIL = {
     let stateChanged = this._processCREG(rs, state);
     if (stateChanged && rs.connected) {
       RIL.getSMSCAddress();
-    }
-
-    let cell = this.cellLocation;
-    let cellChanged = false;
-
-    // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
-    // in MS. So we still need to report the '0000' as well.
-    let lac = parseInt(state[1], 16);
-    if (cell.lac !== lac) {
-      cell.lac = lac;
-      cellChanged = true;
-    }
-
-    let cid = parseInt(state[2], 16);
-    if (cell.cid !== cid) {
-      cell.cid = cid;
-      cellChanged = true;
-    }
-
-    if (cellChanged) {
-      cell.rilMessageType = "celllocationchanged";
-      this.sendDOMMessage(cell);
     }
 
     // TODO: This zombie code branch that will be raised from the dead once
@@ -2837,46 +2910,22 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   this._processICCStatus(iccStatus);
 };
 RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "puk",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PIN2] = function REQUEST_ENTER_SIM_PIN2(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "pin2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PUK2] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "puk2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
@@ -3273,22 +3322,23 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
   this.sendDOMMessage(datacall);
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, options) {
-  if (options.rilRequestError) {
-    return;
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   }
 
-  let response = Buf.readUint32List()[0];
-  this.sendDOMMessage({rilMessageType: "iccgetcardlock",
-                       lockType: "pin",
-                       enabled: response == 0 ? false : true,
-                       requestId: options.requestId});
+  if (length) {
+    options.enabled = Buf.readUint32List()[0] == 0 ? false : true;
+  }
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
+  options.retryCount = length ? Buf.readUint32List()[0] : -1;
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
 RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {

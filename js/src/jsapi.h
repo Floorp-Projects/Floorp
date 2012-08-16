@@ -1062,8 +1062,9 @@ class JS_PUBLIC_API(AutoGCRooter) {
         BINDINGS =    -23, /* js::Bindings::AutoRooter */
         GETTERSETTER =-24, /* js::AutoRooterGetterSetter */
         REGEXPSTATICS=-25, /* js::RegExpStatics::AutoRooter */
-        HASHABLEVALUE=-26,
-        IONMASM =     -27  /* js::ion::MacroAssembler */
+        NAMEVECTOR =  -26, /* js::AutoNameVector */
+        HASHABLEVALUE=-27,
+        IONMASM =     -28  /* js::ion::MacroAssembler */
     };
 
   private:
@@ -1255,6 +1256,8 @@ class AutoVectorRooter : protected AutoGCRooter
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
+
+    typedef T ElementType;
 
     size_t length() const { return vector.length(); }
     bool empty() const { return vector.empty(); }

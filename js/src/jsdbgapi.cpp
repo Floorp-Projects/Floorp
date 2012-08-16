@@ -417,7 +417,7 @@ extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
     BindingVector bindings(cx);
-    if (!GetOrderedBindings(cx, fun->script()->bindings, &bindings))
+    if (!FillBindingVector(fun->script()->bindings, &bindings))
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */
@@ -430,7 +430,7 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
     }
 
     for (size_t i = 0; i < bindings.length(); i++)
-        names[i] = reinterpret_cast<uintptr_t>(bindings[i].maybeName);
+        names[i] = reinterpret_cast<uintptr_t>(bindings[i].name());
 
     return names;
 }

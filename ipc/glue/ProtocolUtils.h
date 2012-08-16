@@ -15,6 +15,7 @@
 #include "prenv.h"
 
 #include "IPCMessageStart.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/Transport.h"
 

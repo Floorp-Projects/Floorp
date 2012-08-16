@@ -502,3 +502,9 @@ pref("hal.processPriorityManager.gonk.backgroundOomAdjust", 2);
 pref("hal.processPriorityManager.gonk.masterNice", -1);
 pref("hal.processPriorityManager.gonk.foregroundNice", 0);
 pref("hal.processPriorityManager.gonk.backgroundNice", 10);
+
+// Enable pre-launching content processes for improved startup time
+// (hiding latency).
+pref("dom.ipc.processPrelauch.enabled", true);
+// Wait this long before pre-launching a new subprocess.
+pref("dom.ipc.processPrelauch.delayMs", 1000);

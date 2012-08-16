@@ -416,9 +416,11 @@ nsJPEGEncoder::emptyOutputBuffer(jpeg_compress_struct* cinfo)
     that->mImageBufferSize = 0;
     that->mImageBufferUsed = 0;
 
-    // this seems to be the only way to do errors through the JPEG library
+    // This seems to be the only way to do errors through the JPEG library.  We
+    // pass an nsresult masquerading as an int, which works because the
+    // setjmp() caller casts it back.
     longjmp(((encoder_error_mgr*)(cinfo->err))->setjmp_buffer,
-            NS_ERROR_OUT_OF_MEMORY);
+            static_cast<int>(NS_ERROR_OUT_OF_MEMORY));
   }
   that->mImageBuffer = newBuf;
 
@@ -468,8 +470,9 @@ nsJPEGEncoder::errorExit(jpeg_common_struct* cinfo)
       error_code = NS_ERROR_FAILURE;
   }
 
-  // Return control to the setjmp point.
-  longjmp(err->setjmp_buffer, error_code);
+  // Return control to the setjmp point.  We pass an nsresult masquerading as
+  // an int, which works because the setjmp() caller casts it back.
+  longjmp(err->setjmp_buffer, static_cast<int>(error_code));
 }
 
 void

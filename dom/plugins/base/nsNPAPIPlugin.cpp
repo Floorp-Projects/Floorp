@@ -2530,7 +2530,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   if (NS_FAILED(rv))
     return NPERR_GENERIC_ERROR;
 
-  return NS_OK;
+  return NPERR_NO_ERROR;
 }
 
 // Deprecated, only stubbed out

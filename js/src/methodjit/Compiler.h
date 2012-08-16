@@ -487,7 +487,7 @@ private:
     }
 
     JITScript *outerJIT() {
-        return outerScript->getJIT(isConstructing, cx->compartment->needsBarrier());
+        return outerScript->getJIT(isConstructing, cx->compartment->compileBarriers());
     }
 
     ChunkDescriptor &outerChunkRef() {

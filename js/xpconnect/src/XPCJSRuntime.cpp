@@ -663,6 +663,24 @@ XPCJSRuntime::ReleaseIncrementally(nsTArray<nsISupports *> &array)
 }
 
 /* static */ void
+XPCJSRuntime::GCSliceCallback(JSRuntime *rt,
+                              js::GCProgress progress,
+                              const js::GCDescription &desc)
+{
+    XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
+    if (!self)
+        return;
+
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::SetGarbageCollecting(progress == js::GC_CYCLE_BEGIN ||
+                                        progress == js::GC_SLICE_BEGIN);
+#endif
+
+    if (self->mPrevGCSliceCallback)
+        (*self->mPrevGCSliceCallback)(rt, progress, desc);
+}
+
+/* static */ void
 XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
@@ -1069,6 +1087,8 @@ XPCJSRuntime::GetJSCycleCollectionContext()
 XPCJSRuntime::~XPCJSRuntime()
 {
     MOZ_ASSERT(!mReleaseRunnable);
+
+    js::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
 
     if (mWatchdogWakeup) {
         // If the watchdog thread is running, tell it to terminate waking it
@@ -2157,6 +2177,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetDestroyCompartmentCallback(mJSRuntime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(mJSRuntime, CompartmentNameCallback);
     JS_SetGCCallback(mJSRuntime, GCCallback);
+    mPrevGCSliceCallback = js::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
     JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
     JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
     JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);

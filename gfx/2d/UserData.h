@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_USERDATA_H_
 
 #include <stdlib.h>
+#include "Types.h"
 #include "mozilla/Assertions.h"
 
 namespace mozilla {
@@ -21,7 +22,7 @@ class UserData
 {
   typedef void (*destroyFunc)(void *data);
 public:
-  UserData() : count(0), entries(NULL) {}
+  UserData() : count(0), entries(nullptr) {}
 
   /* Attaches untyped userData associated with key. destroy is called on destruction */
   void Add(UserDataKey *key, void *userData, destroyFunc destroy)
@@ -68,7 +69,7 @@ public:
         return userData;
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   /* Retrives the userData for the associated key */
@@ -79,7 +80,7 @@ public:
         return entries[i].userData;
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   bool Has(UserDataKey *key)
@@ -100,7 +101,7 @@ public:
       }
     }
     free(entries);
-    entries = NULL;
+    entries = nullptr;
     count = 0;
   }
 

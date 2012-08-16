@@ -9,7 +9,7 @@
 #include "nsIURL.h"
 #include "nsAgg.h"
 #include "nsISerializable.h"
-#include "nsIIPCSerializable.h"
+#include "nsIIPCSerializableObsolete.h"
 #include "nsString.h"
 #include "nsIClassInfo.h"
 #include "nsIMutable.h"
@@ -25,7 +25,7 @@
 
 class nsSimpleURI : public nsIURI,
                     public nsISerializable,
-                    public nsIIPCSerializable,
+                    public nsIIPCSerializableObsolete,
                     public nsIClassInfo,
                     public nsIMutable,
                     public nsISizeOf
@@ -34,7 +34,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSIIPCSERIALIZABLE
+    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
 

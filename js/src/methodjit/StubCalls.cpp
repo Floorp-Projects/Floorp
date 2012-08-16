@@ -1733,12 +1733,21 @@ stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
 void JS_FASTCALL
 stubs::WriteBarrier(VMFrame &f, Value *addr)
 {
+#ifdef JS_GC_ZEAL
+    if (!f.cx->compartment->needsBarrier())
+        return;
+#endif
     gc::MarkValueUnbarriered(f.cx->compartment->barrierTracer(), addr, "write barrier");
 }
 
 void JS_FASTCALL
 stubs::GCThingWriteBarrier(VMFrame &f, Value *addr)
 {
+#ifdef JS_GC_ZEAL
+    if (!f.cx->compartment->needsBarrier())
+        return;
+#endif
+
     gc::Cell *cell = (gc::Cell *)addr->toGCThing();
     if (cell && !cell->isMarked())
         gc::MarkValueUnbarriered(f.cx->compartment->barrierTracer(), addr, "write barrier");

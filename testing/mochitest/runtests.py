@@ -636,7 +636,7 @@ class Mochitest(object):
         else:
           self.urlOpts.append("runOnly=false")
       if options.failureFile:
-        self.urlOpts.append("failureFile=%s" % options.failureFile)
+        self.urlOpts.append("failureFile=%s" % self.getFullPath(options.failureFile))
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """
