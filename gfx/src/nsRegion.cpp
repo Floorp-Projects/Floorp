@@ -6,6 +6,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "mozilla/ThreadLocal.h"
+#include "nsPrintfCString.h"
 
 /*
  * The SENTINEL values below guaranties that a < or >
@@ -1855,6 +1856,25 @@ void nsRegion::SimpleSubtract (const nsRegion& aRegion)
   }
 
   Optimize();
+}
+
+nsCString
+nsRegion::ToString()
+{
+  nsCString result;
+  result.AppendLiteral("[");
+  const RgnRect* r = mRectListHead.next;
+  while (r != &mRectListHead)
+  {
+    if (r != mRectListHead.next) {
+      result.AppendLiteral("; ");
+    }
+    result.Append(nsPrintfCString("%d,%d,%d,%d", r->x, r->y, r->XMost(), r->YMost()));
+    r = r->next;
+  }
+  result.AppendLiteral("]");
+
+  return result;
 }
 
 nsRegion nsIntRegion::ToAppUnits (nscoord aAppUnitsPerPixel) const
