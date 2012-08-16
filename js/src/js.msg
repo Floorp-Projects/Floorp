@@ -117,7 +117,7 @@ MSG_DEF(JSMSG_TOO_BIG_TO_ENCODE,       63, 0, JSEXN_INTERNALERR, "data are to bi
 MSG_DEF(JSMSG_ARG_INDEX_OUT_OF_RANGE,  64, 1, JSEXN_RANGEERR, "argument {0} accesses an index that is out of range")
 MSG_DEF(JSMSG_SPREAD_TOO_LARGE,        65, 0, JSEXN_RANGEERR, "array too large due to spread operand(s)")
 MSG_DEF(JSMSG_SOURCE_TOO_LONG,         66, 0, JSEXN_RANGEERR, "source is too long")
-MSG_DEF(JSMSG_BAD_WEAKMAP_KEY,         67, 0, JSEXN_TYPEERR, "cannot use the given object as a weak map key")
+MSG_DEF(JSMSG_UNUSED67,                67, 0, JSEXN_NONE,    "")
 MSG_DEF(JSMSG_BAD_SCRIPT_MAGIC,        68, 0, JSEXN_INTERNALERR, "bad script XDR magic number")
 MSG_DEF(JSMSG_PAREN_BEFORE_FORMAL,     69, 0, JSEXN_SYNTAXERR, "missing ( before formal parameters")
 MSG_DEF(JSMSG_MISSING_FORMAL,          70, 0, JSEXN_SYNTAXERR, "missing formal parameter")

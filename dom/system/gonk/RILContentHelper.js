@@ -33,6 +33,8 @@ const MOBILECONNECTIONINFO_CID =
   Components.ID("{a35cfd39-2d93-4489-ac7d-396475dacb27}");
 const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
+const MOBILECELLINFO_CID =
+  Components.ID("{5e809018-68c0-4c54-af0b-2a9b8f748c45}");
 const VOICEMAILSTATUS_CID=
   Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 
@@ -49,12 +51,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:VoicemailNotification",
   "RIL:VoicemailNumberChanged",
   "RIL:CallError",
-  "RIL:GetCardLock:Return:OK",
-  "RIL:GetCardLock:Return:KO",
-  "RIL:SetCardLock:Return:OK",
-  "RIL:SetCardLock:Return:KO",
-  "RIL:UnlockCardLock:Return:OK",
-  "RIL:UnlockCardLock:Return:KO",
+  "RIL:CardLockResult",
   "RIL:UssdReceived",
   "RIL:SendUssd:Return:OK",
   "RIL:SendUssd:Return:KO",
@@ -89,6 +86,7 @@ MobileConnectionInfo.prototype = {
   emergencyCallsOnly: false,
   roaming: false,
   network: null,
+  cell: null,
   type: null,
   signalStrength: null,
   relSignalStrength: null
@@ -112,6 +110,23 @@ MobileNetworkInfo.prototype = {
   mcc: 0,
   mnc: 0,
   state: null
+};
+
+function MobileCellInfo() {}
+MobileCellInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileCellInfo]),
+  classID:        MOBILECELLINFO_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          MOBILECELLINFO_CID,
+    classDescription: "MobileCellInfo",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozMobileCellInfo]
+  }),
+
+  // nsIDOMMozMobileCellInfo
+
+  gsmLocationAreaCode: null,
+  gsmCellId: null
 };
 
 function VoicemailStatus() {}
@@ -168,9 +183,22 @@ RILContentHelper.prototype = {
 
   updateConnectionInfo: function updateConnectionInfo(srcInfo, destInfo) {
     for (let key in srcInfo) {
-      if (key != "network") {
+      if ((key != "network") && (key != "cell")) {
         destInfo[key] = srcInfo[key];
       }
+    }
+
+    let srcCell = srcInfo.cell;
+    if (!srcCell) {
+      destInfo.cell = null;
+    } else {
+      let cell = destInfo.cell;
+      if (!cell) {
+        cell = destInfo.cell = new MobileCellInfo();
+      }
+
+      cell.gsmLocationAreaCode = srcCell.gsmLocationAreaCode;
+      cell.gsmCellId = srcCell.gsmCellId;
     }
 
     let srcNetwork = srcInfo.network;
@@ -570,15 +598,12 @@ RILContentHelper.prototype = {
         this.voicemailNumber = msg.json.number;
         this.voicemailDisplayName = msg.json.alphaId;
         break;
-      case "RIL:GetCardLock:Return:OK":
-      case "RIL:SetCardLock:Return:OK":
-      case "RIL:UnlockCardLock:Return:OK":
-        this.fireRequestSuccess(msg.json.requestId, msg.json);
-        break;
-      case "RIL:GetCardLock:Return:KO":
-      case "RIL:SetCardLock:Return:KO":
-      case "RIL:UnlockCardLock:Return:KO":
-        this.fireRequestError(msg.json.requestId, msg.json.errorMsg);
+      case "RIL:CardLockResult":
+        if (msg.json.success) {
+          this.fireRequestSuccess(msg.json.requestId, msg.json);
+        } else {
+          this.fireRequestError(msg.json.requestId, msg.json);
+        }
         break;
       case "RIL:UssdReceived":
         Services.obs.notifyObservers(null, kUssdReceivedTopic,

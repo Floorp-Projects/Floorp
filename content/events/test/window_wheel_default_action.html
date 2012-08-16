@@ -782,7 +782,7 @@ function doTestZoom(aSettings, aCallback)
         }
       }
 
-      SpecialPowers.setFullZoom(window, 1.0);
+      synthesizeKey("0", { accelKey: true });
       hitEventLoop(doNextTest, 20);
     }, 20);
   }
@@ -794,7 +794,7 @@ function doTestZoomedScroll()
   function testZoomedPixelScroll()
   {
     // Reset zoom and store the scroll amount into the data.
-    SpecialPowers.setFullZoom(window, 1.0);
+    synthesizeKey("0", { accelKey: true });
     gScrollableElement.scrollTop = 1000;
     gScrollableElement.scrollLeft = 1000;
     // Ensure not to be in reflow.
@@ -843,7 +843,7 @@ function doTestZoomedScroll()
                  gScrollableElement.scrollTop + ", scrolledY=" + scrolledY);
             window.removeEventListener("MozMousePixelScroll", handler, true);
 
-            SpecialPowers.setFullZoom(window, 1.0);
+            synthesizeKey("0", { accelKey: true });
             testZoomedLineScroll();
           }, 20);
         }, 20);
@@ -854,7 +854,7 @@ function doTestZoomedScroll()
   function testZoomedLineScroll()
   {
     // Reset zoom and store the scroll amount into the data.
-    SpecialPowers.setFullZoom(window, 1.0);
+    synthesizeKey("0", { accelKey: true });
     gScrollableElement.scrollTop = 1000;
     gScrollableElement.scrollLeft = 1000;
     // Ensure not to be in reflow.
@@ -915,7 +915,7 @@ function doTestZoomedScroll()
 
             window.removeEventListener("MozMousePixelScroll", handler, true);
 
-            SpecialPowers.setFullZoom(window, 1.0);
+            synthesizeKey("0", { accelKey: true });
           }, 20);
         }, 20);
       }, 20);

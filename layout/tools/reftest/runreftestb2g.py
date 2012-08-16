@@ -460,7 +460,8 @@ def main(args=sys.argv[1:]):
             return 1
 
     auto.setProduct("b2g")
-    auto.testScript = os.path.join(SCRIPT_DIRECTORY, 'b2g_start_script.js')
+    auto.test_script = os.path.join(SCRIPT_DIRECTORY, 'b2g_start_script.js')
+    auto.test_script_args = [options.remoteWebServer, options.httpPort]
     auto.logFinish = "REFTEST TEST-START | Shutdown"
 
     reftest = B2GReftest(auto, dm, options, SCRIPT_DIRECTORY)

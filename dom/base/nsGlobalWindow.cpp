@@ -70,6 +70,7 @@
 #include "nsIFrame.h"
 #include "nsCanvasFrame.h"
 #include "nsIWidget.h"
+#include "nsIWidgetListener.h"
 #include "nsIBaseWindow.h"
 #include "nsDeviceSensors.h"
 #include "nsIContent.h"
@@ -7708,10 +7709,11 @@ nsGlobalWindow::ActivateOrDeactivate(bool aActivate)
     // When a window with an open sheet loses focus, only the sheet window
     // receives the NS_DEACTIVATE event. However, it's not the sheet that
     // should lose the active styling, but the containing top level window.
-    void* clientData;
-    topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
-    nsISupports* data = static_cast<nsISupports*>(clientData);
-    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+
+    // widgetListener should be a nsXULWindow
+    nsIWidgetListener* listener = topLevelWidget->GetWidgetListener();
+    nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
     topLevelWindow = do_GetInterface(req);
   }
   if (topLevelWindow) {

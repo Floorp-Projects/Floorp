@@ -49,13 +49,11 @@ public:
   NS_IMETHOD Create(nsIWidget*        aParent,
                     nsNativeWidget    aNativeParent,
                     const nsIntRect&  aRect,
-                    EVENT_CALLBACK    aHandleEventFunction,
                     nsDeviceContext*  aContext,
                     nsWidgetInitData* aInitData = nullptr);
 
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
-              EVENT_CALLBACK   aHandleEventFunction,
               nsDeviceContext  *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false);
@@ -166,8 +164,7 @@ public:
   virtual float GetDPI();
 
 private:
-  nsresult DispatchPaintEvent();
-  nsresult DispatchResizeEvent();
+  nsresult Paint();
 
   void SetChild(PuppetWidget* aChild);
 

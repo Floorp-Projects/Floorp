@@ -3011,17 +3011,13 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
     NodeVector args(cx);
     NodeVector defaults(cx);
 
-    ParseNode *argsAndBody = pn->pn_body->isKind(PNK_UPVARS)
-                             ? pn->pn_body->pn_tree
-                             : pn->pn_body;
-
     Value body;
     Value rest;
     if (func->hasRest())
         rest.setUndefined();
     else
         rest.setNull();
-    return functionArgsAndBody(argsAndBody, args, defaults, &body, &rest) &&
+    return functionArgsAndBody(pn->pn_body, args, defaults, &body, &rest) &&
         builder.function(type, &pn->pn_pos, id, args, defaults, body,
                          rest, isGenerator, isExpression, dst);
 }

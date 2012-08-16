@@ -223,9 +223,12 @@ let Activities = {
         debug("Sending system message...");
         let result = aResults.options[aChoice];
         sysmm.sendMessage("activity", {
-          "id": aMsg.id,
-          "payload": aMsg.options
-        }, Services.io.newURI(result.manifest, null, null));
+            "id": aMsg.id,
+            "payload": aMsg.options,
+            "target": result.description
+          },
+          Services.io.newURI(result.description.href, null, null),
+          Services.io.newURI(result.manifest, null, null));
 
         if (!result.description.returnValue) {
           ppmm.sendAsyncMessage("Activity:FireSuccess", {
@@ -248,7 +251,11 @@ let Activities = {
     let matchFunc = function matchFunc(aResult) {
       // Bug 773383: arrays of strings / regexp.
       for (let prop in aResult.description.filters) {
-        if (aMsg.options.data[prop] !== aResult.description.filters[prop]) {
+        if (Array.isArray(aResult.description.filters[prop])) {
+          if (aResult.description.filters[prop].indexOf(aMsg.options.data[prop]) == -1) {
+            return false;
+          }
+        } else if (aResult.description.filters[prop] !== aMsg.options.data[prop] ) {
           return false;
         }
       }

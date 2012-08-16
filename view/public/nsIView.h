@@ -17,7 +17,6 @@
 class nsIViewManager;
 class nsViewManager;
 class nsView;
-class nsWeakView;
 class nsIWidget;
 class nsIFrame;
 
@@ -31,8 +30,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0x697948d2, 0x3f10, 0x407d, \
-    { 0xb8, 0x94, 0x9f, 0x36, 0xd2, 0x11, 0xdb, 0xf1 } }
+  { 0xa4577c1d, 0xbc80, 0x444c, \
+    { 0xb0, 0x9d, 0x5b, 0xef, 0x94, 0x7c, 0x43, 0x31 } }
 
 // Public view flags
 
@@ -313,7 +312,7 @@ public:
    * The caller must call DetachWidgetEventHandler before this view
    * is destroyed.
    */
-  EVENT_CALLBACK AttachWidgetEventHandler(nsIWidget* aWidget);
+  void AttachWidgetEventHandler(nsIWidget* aWidget);
   /**
    * Stop aWidget directing its events to this view.
    */
@@ -336,8 +335,6 @@ public:
 
   virtual bool ExternalIsRoot() const;
 
-  void SetDeletionObserver(nsWeakView* aDeletionObserver);
-
   nsIntRect CalcWidgetBounds(nsWindowType aType);
 
   bool IsEffectivelyVisible();
@@ -349,7 +346,6 @@ public:
   nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
 protected:
-  friend class nsWeakView;
   nsViewManager     *mViewManager;
   nsView            *mParent;
   nsIWidget         *mWindow;
@@ -366,7 +362,6 @@ protected:
   nsPoint           mViewToWidgetOffset;
   float             mOpacity;
   PRUint32          mVFlags;
-  nsWeakView*       mDeletionObserver;
   bool              mWidgetIsTopLevel;
 
   virtual ~nsIView() {}
@@ -377,48 +372,5 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIView, NS_IVIEW_IID)
-
-// nsWeakViews must *not* be used in heap!
-class nsWeakView
-{
-public:
-  nsWeakView(nsIView* aView) : mPrev(nullptr), mView(aView)
-  {
-    if (mView) {
-      mView->SetDeletionObserver(this);
-    }
-  }
-
-  ~nsWeakView()
-  {
-    if (mView) {
-      NS_ASSERTION(mView->mDeletionObserver == this,
-                   "nsWeakViews deleted in wrong order!");
-      // Clear deletion observer temporarily.
-      mView->SetDeletionObserver(nullptr);
-      // Put back the previous deletion observer.
-      mView->SetDeletionObserver(mPrev);
-    }
-  }
-
-  bool IsAlive() { return !!mView; }
-
-  nsIView* GetView() { return mView; }
-
-  void SetPrevious(nsWeakView* aWeakView) { mPrev = aWeakView; }
-
-  void Clear()
-  {
-    if (mPrev) {
-      mPrev->Clear();
-    }
-    mView = nullptr;
-  }
-private:
-  static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-  static void operator delete(void*, size_t) {}
-  nsWeakView* mPrev;
-  nsIView*    mView;
-};
 
 #endif

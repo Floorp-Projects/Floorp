@@ -419,8 +419,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
 
     nsRefPtr<nsDeviceContext> dx;
     viewMan->GetDeviceContext(*getter_AddRefs(dx));
-    EVENT_CALLBACK eventHandler = mInnerView->AttachWidgetEventHandler(mWidget);
-    mWidget->SetEventCallback(eventHandler, dx);
+    mInnerView->AttachWidgetEventHandler(mWidget);
 
 #ifdef XP_MACOSX
     // On Mac, we need to invalidate ourselves since even windowed
@@ -2113,12 +2112,15 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #endif
 
+/*
+  // XXXndeakin review note: I don't see how this would ever be called.
   if (anEvent->message == NS_DESTROY) {
 #ifdef MAC_CARBON_PLUGINS
     mInstanceOwner->CancelTimer();
 #endif
     return rv;
   }
+*/
 
   return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 }

@@ -104,7 +104,7 @@ function getManifestProperty(id, property) {
  * Returns a testcase xpi
  * @param   name
  *          The name of the testcase (without extension)
- * @returns an nsILocalFile pointing to the testcase xpi
+ * @returns an nsIFile pointing to the testcase xpi
  */
 function do_get_addon(name)
 {

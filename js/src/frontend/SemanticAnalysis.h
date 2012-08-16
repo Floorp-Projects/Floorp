@@ -17,12 +17,11 @@ namespace frontend {
 struct Parser;
 
 /*
- * For each function in the compilation unit given by sc and functionList,
- * decide whether the function is a full closure or a null closure and set
- * JSFunction flags accordingly.
+ * Called between parsing a top-level function/statement and emitting it.
+ * Currently, all this function does is set the "has extensible parents" bit.
  */
 bool
-AnalyzeFunctions(Parser *parser, StackFrame *callerFrame);
+AnalyzeFunctions(Parser *parser);
 
 } /* namespace frontend */
 } /* namespace js */

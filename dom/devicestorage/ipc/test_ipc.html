@@ -130,16 +130,8 @@
     }
 
     addEventListener("load", function() {
-      let whitelist;
-      try {
-        whitelist =
-          SpecialPowers.getCharPref("dom.mozBrowserFramesWhitelist") + ", ";
-      } catch (e) {
-        whitelist = "";
-      }
 
-      whitelist += window.location.protocol + "//" + window.location.host;
-
+      SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
         "set": [
 
@@ -149,8 +141,7 @@
 
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
-          ["browser.pageThumbs.enabled", false],
-          ["dom.mozBrowserFramesWhitelist", whitelist]
+          ["browser.pageThumbs.enabled", false]
         ]
       }, runTests);
     });

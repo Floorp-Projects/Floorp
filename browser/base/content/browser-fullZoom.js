@@ -88,23 +88,26 @@ var FullZoom = {
 
   _handleMouseScrolled: function FullZoom__handleMouseScrolled(event) {
     // Construct the "mousewheel action" pref key corresponding to this event.
-    // Based on nsEventStateManager::GetBasePrefKeyForMouseWheel.
-    var pref = "mousewheel";
-    if (event.axis == event.HORIZONTAL_AXIS)
-      pref += ".horizscroll";
+    // Based on nsEventStateManager::WheelPrefs::GetBasePrefName().
+    var pref = "mousewheel.";
 
-    if (event.shiftKey)
-      pref += ".withshiftkey";
-    else if (event.ctrlKey)
-      pref += ".withcontrolkey";
-    else if (event.altKey)
-      pref += ".withaltkey";
-    else if (event.metaKey)
-      pref += ".withmetakey";
-    else
-      pref += ".withnokey";
+    var pressedModifierCount = event.shiftKey + event.ctrlKey + event.altKey +
+                                 event.metaKey + event.getModifierState("OS");
+    if (pressedModifierCount != 1) {
+      pref += "default.";
+    } else if (event.shiftKey) {
+      pref += "with_shift.";
+    } else if (event.ctrlKey) {
+      pref += "with_control.";
+    } else if (event.altKey) {
+      pref += "with_alt.";
+    } else if (event.metaKey) {
+      pref += "with_meta.";
+    } else {
+      pref += "with_win.";
+    }
 
-    pref += ".action";
+    pref += "action";
 
     // Don't do anything if this isn't a "zoom" scroll event.
     var isZoomEvent = false;

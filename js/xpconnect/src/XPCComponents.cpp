@@ -272,7 +272,7 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
             e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
 
             while (1) {
-                if (NS_ENUMERATOR_FALSE == e->IsDone() &&
+                if (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == e->IsDone() &&
                     NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup) {
                     e->Next();
                     nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
@@ -573,7 +573,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
             e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
 
             while (1) {
-                if (NS_ENUMERATOR_FALSE == e->IsDone() &&
+                if (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == e->IsDone() &&
                     NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup) {
                     e->Next();
                     nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));

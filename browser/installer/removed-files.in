@@ -120,6 +120,7 @@ extensions/talkback@mozilla.org/components/qfaservices.xpt
 extensions/talkback@mozilla.org/install.rdf
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
+extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
 extensions/testpilot@labs.mozilla.com/chrome.manifest
 extensions/testpilot@labs.mozilla.com/components/TestPilot.js
 extensions/testpilot@labs.mozilla.com/content/all-studies-window.js

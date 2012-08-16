@@ -1310,7 +1310,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  PRInt32 ec;
+  nsresult ec;
   bool strict;
   bool isPercent = false;
   nsAutoString tmp(aString);
@@ -1343,7 +1343,7 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
 
   ResetIfSet();
 
-  PRInt32 ec;
+  nsresult ec;
   bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec)) {
@@ -1363,7 +1363,7 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  PRInt32 ec;
+  nsresult ec;
   bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec) || originalVal < 0) {
@@ -1380,7 +1380,7 @@ nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  PRInt32 ec;
+  nsresult ec;
   bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec) || originalVal <= 0) {
@@ -1661,7 +1661,7 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
 
 PRInt32
 nsAttrValue::StringToInteger(const nsAString& aValue, bool* aStrict,
-                             PRInt32* aErrorCode,
+                             nsresult* aErrorCode,
                              bool aCanBePercent,
                              bool* aIsPercent) const
 {

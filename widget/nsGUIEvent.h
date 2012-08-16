@@ -39,9 +39,6 @@ namespace plugins {
 }
 }
 
-#ifdef ACCESSIBILITY
-class Accessible;
-#endif
 class nsRenderingContext;
 class nsIMenuItem;
 class nsIContent;
@@ -67,7 +64,6 @@ class nsHashKey;
 #define NS_MOUSE_SCROLL_EVENT             16
 #define NS_SCROLLPORT_EVENT               18
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
-#define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
 #define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
@@ -89,7 +85,6 @@ class nsHashKey;
 #define NS_SELECTION_EVENT                38
 #define NS_CONTENT_COMMAND_EVENT          39
 #define NS_GESTURENOTIFY_EVENT            40
-#define NS_UISTATECHANGE_EVENT            41
 #define NS_MOZTOUCH_EVENT                 42
 #define NS_PLUGIN_EVENT                   43
 #define NS_TOUCH_EVENT                    44
@@ -150,61 +145,14 @@ class nsHashKey;
 
 #define NS_WINDOW_START                 100
 
-// Widget is being created
-#define NS_CREATE                       (NS_WINDOW_START)
 // Widget may be destroyed
 #define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
-// Widget is being destroyed
-#define NS_DESTROY                      (NS_WINDOW_START + 2)
-// Widget was resized
-#define NS_SIZE                         (NS_WINDOW_START + 3)
-// Widget size mode was changed
-#define NS_SIZEMODE                     (NS_WINDOW_START + 4)
-// Widget got activated
-#define NS_ACTIVATE                     (NS_WINDOW_START + 7)
-// Widget got deactivated
-#define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
-// top-level window z-level change request
-#define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
-// Widget was repainted (dispatched when it's safe to move widgets, but
-// only on some platforms (including GTK2 and Windows))
-#define NS_DID_PAINT                   (NS_WINDOW_START + 28)
-// Widget will need to be painted
-#define NS_WILL_PAINT                   (NS_WINDOW_START + 29)
-// Widget needs to be repainted
-#define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
 #define NS_KEY_PRESS                    (NS_WINDOW_START + 31)
 // Key is released within a window
 #define NS_KEY_UP                       (NS_WINDOW_START + 32)
 // Key is pressed within a window
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
-// Window has been moved to a new location.
-// The events point contains the x, y location in screen coordinates
-#define NS_MOVE                         (NS_WINDOW_START + 34) 
-
-// Tab control's selected tab has changed
-#define NS_TABCHANGE                    (NS_WINDOW_START + 35)
-
-#define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
-
-// Indicates the display has changed depth
-#define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
-
-// Indicates a theme change has occurred
-#define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
-
-// Indicates a System color has changed. It is the platform
-// toolkits responsibility to invalidate the window to 
-// ensure that it is drawn using the current system colors.
-#define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
-
-// Indicates that the ui state such as whether to show focus or
-// keyboard accelerator indicators has changed.
-#define NS_UISTATECHANGED               (NS_WINDOW_START + 43)
-
-// Done sizing or moving a window, so ensure that the mousedown state was cleared.
-#define NS_DONESIZEMOVE                 (NS_WINDOW_START + 44)
 
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
@@ -243,13 +191,6 @@ class nsHashKey;
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
-
-#define NS_SCROLLBAR_MESSAGE_START      1000
-#define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
-#define NS_SCROLLBAR_PAGE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 1)
-#define NS_SCROLLBAR_PAGE_PREV          (NS_SCROLLBAR_MESSAGE_START + 2)
-#define NS_SCROLLBAR_LINE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 3)
-#define NS_SCROLLBAR_LINE_PREV          (NS_SCROLLBAR_MESSAGE_START + 4)
 
 #define NS_STREAM_EVENT_START           1100
 #define NS_LOAD                         (NS_STREAM_EVENT_START)
@@ -311,10 +252,6 @@ class nsHashKey;
 #define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
 
 // Mutation events defined elsewhere starting at 1800
-
-// accessible events
-#define NS_ACCESSIBLE_START           1900
-#define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
 
 #define NS_USER_DEFINED_EVENT         2000
  
@@ -672,84 +609,6 @@ public:
 };
 
 /**
- * Window resize event
- */
-
-class nsSizeEvent : public nsGUIEvent
-{
-public:
-  nsSizeEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SIZE_EVENT),
-      windowSize(nullptr), mWinWidth(0), mWinHeight(0)
-  {
-  }
-
-  /// x,y width, height in pixels (client area)
-  nsIntRect       *windowSize;
-  /// width of entire window (in pixels)
-  PRInt32         mWinWidth;    
-  /// height of entire window (in pixels)
-  PRInt32         mWinHeight;    
-};
-
-/**
- * Window size mode event
- */
-
-class nsSizeModeEvent : public nsGUIEvent
-{
-public:
-  nsSizeModeEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SIZEMODE_EVENT),
-      mSizeMode(nsSizeMode_Normal)
-  {
-  }
-
-  nsSizeMode      mSizeMode;
-};
-
-/**
- * Window z-level event
- */
-
-class nsZLevelEvent : public nsGUIEvent
-{
-public:
-  nsZLevelEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_ZLEVEL_EVENT),
-      mPlacement(nsWindowZTop), mReqBelow(nullptr), mActualBelow(nullptr),
-      mImmediate(false), mAdjusted(false)
-  {
-  }
-
-  nsWindowZ  mPlacement;
-  nsIWidget *mReqBelow,    // widget we request being below, if any
-            *mActualBelow; // widget to be below, returned by handler
-  bool       mImmediate,   // handler should make changes immediately
-             mAdjusted;    // handler changed placement
-};
-
-/**
- * Window repaint event
- */
-
-class nsPaintEvent : public nsGUIEvent
-{
-public:
-  nsPaintEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
-      willSendDidPaint(false),
-      didSendWillPaint(false)
-  {
-  }
-
-  // area that needs repainting
-  nsIntRegion region;
-  bool willSendDidPaint;
-  bool didSendWillPaint;
-};
-
-/**
  * Scrollbar event
  */
 
@@ -1048,24 +907,6 @@ public:
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
   bool userCancelled;
 };
-
-#ifdef ACCESSIBILITY
-/**
- * Accessible event
- */
-
-class nsAccessibleEvent : public nsInputEvent
-{
-public:
-  nsAccessibleEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_ACCESSIBLE_EVENT),
-      mAccessible(nullptr)
-  {
-  }
-
-  Accessible *mAccessible;
-};
-#endif
 
 /**
  * Keyboard event
@@ -1767,20 +1608,6 @@ public:
   float elapsedTime;
 };
 
-class nsUIStateChangeEvent : public nsGUIEvent
-{
-public:
-  nsUIStateChangeEvent(bool isTrusted, PRUint32 msg, nsIWidget* w)
-    : nsGUIEvent(isTrusted, msg, w, NS_UISTATECHANGE_EVENT),
-      showAccelerators(UIStateChangeType_NoChange),
-      showFocusRings(UIStateChangeType_NoChange)
-  {
-  }
-
-  UIStateChangeType showAccelerators;
-  UIStateChangeType showFocusRings;
-};
-
 /**
  * Native event pluginEvent for plugins.
  */
@@ -1814,7 +1641,6 @@ enum nsDragDropEventStatus {
 
 #define NS_IS_INPUT_EVENT(evnt) \
        (((evnt)->eventStructType == NS_INPUT_EVENT) || \
-        ((evnt)->eventStructType == NS_ACCESSIBLE_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_EVENT) || \
         ((evnt)->eventStructType == NS_KEY_EVENT) || \
         ((evnt)->eventStructType == NS_TEXT_EVENT) || \
@@ -1875,9 +1701,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_UPDATE))
 
 #define NS_IS_ACTIVATION_EVENT(evnt) \
-       (((evnt)->message == NS_ACTIVATE) || \
-        ((evnt)->message == NS_DEACTIVATE) || \
-        ((evnt)->message == NS_PLUGIN_ACTIVATE) || \
+        (((evnt)->message == NS_PLUGIN_ACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_FOCUS))
 
 #define NS_IS_QUERY_CONTENT_EVENT(evnt) \
@@ -1956,8 +1780,7 @@ inline bool NS_IsEventUsingCoordinates(nsEvent* aEvent)
   return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_RELATED_EVENT(aEvent) &&
          !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
          !NS_IS_PLUGIN_EVENT(aEvent) &&
-         !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
-         aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
+         !NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 }
 
 /**

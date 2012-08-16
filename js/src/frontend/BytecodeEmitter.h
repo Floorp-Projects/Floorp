@@ -106,11 +106,6 @@ struct BytecodeEmitter
     CGObjectList    regexpList;     /* list of emitted regexp that will be
                                        cloned during execution */
 
-    /* Vectors of pn_cookie slot values. */
-    typedef Vector<uint32_t, 8> SlotVector;
-    SlotVector      closedArgs;
-    SlotVector      closedVars;
-
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */
@@ -134,9 +129,6 @@ struct BytecodeEmitter
     ~BytecodeEmitter();
 
     bool isAliasedName(ParseNode *pn);
-    bool shouldNoteClosedName(ParseNode *pn);
-    bool noteClosedVar(ParseNode *pn);
-    bool noteClosedArg(ParseNode *pn);
 
     JS_ALWAYS_INLINE
     bool makeAtomIndex(JSAtom *atom, jsatomid *indexp) {

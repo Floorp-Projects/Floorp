@@ -44,6 +44,11 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
   return DebuggerServer;
 });
 
+XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
+  return Cc["@mozilla.org/parentprocessmessagemanager;1"]
+         .getService(Ci.nsIFrameMessageManager);
+});
+
 function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
@@ -149,6 +154,8 @@ var shell = {
     });
 
     this.contentBrowser.src = homeURL;
+
+    ppmm.addMessageListener("content-handler", this);
   },
 
   stop: function shell_stop() {
@@ -159,6 +166,7 @@ var shell = {
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
+    ppmm.removeMessageListener("content-handler", this);
 
 #ifndef MOZ_WIDGET_GONK
     delete Services.audioManager;
@@ -298,13 +306,29 @@ var shell = {
         break;
     }
   },
+
   sendEvent: function shell_sendEvent(content, type, details) {
     let event = content.document.createEvent('CustomEvent');
     event.initCustomEvent(type, true, true, details ? details : {});
     content.dispatchEvent(event);
   },
+
   sendChromeEvent: function shell_sendChromeEvent(details) {
     this.sendEvent(getContentWindow(), "mozChromeEvent", details);
+  },
+
+  receiveMessage: function shell_receiveMessage(message) {
+    if (message.name != 'content-handler') {
+      return;
+    }
+    let handler = message.json;
+    new MozActivity({
+      name: 'view',
+      data: {
+        type: handler.type,
+        url: handler.url
+      }
+    });
   }
 };
 
@@ -347,7 +371,8 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
     type: 'open-app',
     url: msg.uri,
     origin: origin,
-    manifest: msg.manifest
+    manifest: msg.manifest,
+    target: msg.target
   });
 }, 'system-messages-open-app', false);
 
@@ -600,17 +625,6 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     }
   });
 });
-
-Services.obs.addObserver(function ContentHandler(subject, topic, data) {
-  let handler = JSON.parse(data);
-  new MozActivity({
-    name: 'view',
-    data: {
-      type: handler.type,
-      url: handler.url
-    }
-  });
-}, 'content-handler', false);
 
 (function geolocationStatusTracker() {
   let gGeolocationActiveCount = 0;

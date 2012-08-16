@@ -88,6 +88,7 @@ DeclMarker(String, JSAtom)
 DeclMarker(String, JSString)
 DeclMarker(String, JSFlatString)
 DeclMarker(String, JSLinearString)
+DeclMarker(String, PropertyName)
 DeclMarker(TypeObject, types::TypeObject)
 #if JS_HAS_XML_SUPPORT
 DeclMarker(XML, JSXML)

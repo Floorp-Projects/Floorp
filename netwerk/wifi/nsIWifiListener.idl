@@ -26,5 +26,5 @@ interface nsIWifiListener : nsISupports
    *              error values will be nsresult codes.
    */
 
-  void onError(in long error);
+  void onError(in nsresult error);
 };

@@ -221,7 +221,9 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   const char *if_name = nullptr;
   const nsIID *iid;
 
-  for ( ; domInterfaces->IsDone() == NS_ENUMERATOR_FALSE; domInterfaces->Next()) {
+  for ( ;
+       domInterfaces->IsDone() == static_cast<nsresult>(NS_ENUMERATOR_FALSE);
+       domInterfaces->Next()) {
     rv = domInterfaces->CurrentItem(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
 

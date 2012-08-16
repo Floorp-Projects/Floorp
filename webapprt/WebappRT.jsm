@@ -21,59 +21,40 @@ XPCOMUtils.defineLazyGetter(this, "DOMApplicationRegistry", function() {
   return DOMApplicationRegistry;
 });
 
-// In test mode, observe webapps-ask-install so tests can install apps.
-Services.obs.addObserver(function observeCmdLine(subj, topic, data) {
-  Services.obs.removeObserver(observeCmdLine, "webapprt-command-line");
-  let args = subj.QueryInterface(Ci.nsIPropertyBag2);
-  if (!args.hasKey("test-mode"))
-    return;
-  Services.obs.addObserver(function observeInstall(subj, topic, data) {
-    // observeInstall is present for the lifetime of the runtime.
-    let config = JSON.parse(data);
-    config.registryDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-    DOMApplicationRegistry.confirmInstall(config);
-    delete WebappRT.config;
-    WebappRT.config = deepFreeze(config);
-    Services.obs.notifyObservers(null, "webapprt-test-did-install",
-                                 JSON.stringify(config));
-  }, "webapps-ask-install", false);
-}, "webapprt-command-line", false);
-
 let WebappRT = {
+  _config: null,
+
   get config() {
+    if (this._config)
+      return this._config;
+
+    let config;
     let webappFile = FileUtils.getFile("AppRegD", ["webapp.json"]);
+
     let inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
                       createInstance(Ci.nsIFileInputStream);
     inputStream.init(webappFile, -1, 0, 0);
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    let config = json.decodeFromStream(inputStream, webappFile.fileSize);
+    config = json.decodeFromStream(inputStream, webappFile.fileSize);
 
-    // Memoize the getter, freezing the `config` object in the meantime so
-    // consumers don't inadvertently (or intentionally) change it, as the object
-    // is meant to be a read-only representation of the webapp's configuration.
-    config = deepFreeze(config);
-    delete this.config;
-    Object.defineProperty(this, "config", { get: function getConfig() config });
-    return this.config;
+    return this._config = config;
+  },
+
+  // This exists to support test mode, which installs webapps after startup.
+  // Ideally we wouldn't have to have a setter, as tests can just delete
+  // the getter and then set the property.  But the object to which they set it
+  // will have a reference to its global object, so our reference to it
+  // will leak that object (per bug 780674).  The setter enables us to clone
+  // the new value so we don't actually retain a reference to it.
+  set config(newVal) {
+    this._config = JSON.parse(JSON.stringify(newVal));
+  },
+
+  get launchURI() {
+    let url = Services.io.newURI(this.config.app.origin, null, null);
+    if (this.config.app.manifest.launch_path) {
+      url = Services.io.newURI(this.config.app.manifest.launch_path, null, url);
+    }
+    return url;
   }
 };
-
-function deepFreeze(o) {
-  // First, freeze the object.
-  Object.freeze(o);
-
-  // Then recursively call deepFreeze() to freeze its properties.
-  for (let p in o) {
-    // If the object is on the prototype, not an object, or is already frozen,
-    // skip it.  Note that this might leave an unfrozen reference somewhere in
-    // the object if there is an already frozen object containing an unfrozen
-    // object.
-    if (!o.hasOwnProperty(p) || !(typeof o[p] == "object") ||
-        Object.isFrozen(o[p]))
-      continue;
-
-    deepFreeze(o[p]);
-  }
-
-  return o;
-}

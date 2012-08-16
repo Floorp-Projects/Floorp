@@ -128,7 +128,7 @@ mjit::Compiler::compile()
     if (status != Compile_Okay && status != Compile_Retry) {
         if (!outerScript->ensureHasMJITInfo(cx))
             return Compile_Error;
-        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->needsBarrier());
+        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->compileBarriers());
         JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
         jith->setUnjittable();
 
@@ -987,7 +987,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Skipped;
 
     if (script->hasMJITInfo()) {
-        JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
+        JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->compileBarriers());
         if (jith->isUnjittable())
             return Compile_Abort;
     }
@@ -1012,7 +1012,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!script->ensureHasMJITInfo(cx))
         return Compile_Error;
 
-    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
+    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->compileBarriers());
 
     JITScript *jit;
     if (jith->isEmpty()) {
@@ -1020,7 +1020,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         if (!jit)
             return Compile_Error;
 
-        // Script analysis can trigger GC, watch in case needsBarrier() changed.
+        // Script analysis can trigger GC, watch in case compileBarriers() changed.
         if (gcNumber != cx->runtime->gcNumber) {
             FreeOp *fop = cx->runtime->defaultFreeOp();
             jit->destroy(fop);
@@ -5538,7 +5538,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
             if (!isObject)
                 notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
-            if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
+            if (cx->compartment->compileBarriers() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
                 Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
@@ -5571,7 +5571,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. We don't have type information for JSOP_SETNAME. */
-    if (cx->compartment->needsBarrier() &&
+    if (cx->compartment->compileBarriers() &&
         (!types || JSOp(*PC) == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
     {
         jsop_setprop_slow(name);
@@ -5939,7 +5939,7 @@ mjit::Compiler::jsop_aliasedArg(unsigned arg, bool get, bool poppedAfter)
         frame.push(Address(reg), type, true /* = reuseBase */);
     } else {
 #ifdef JSGC_INCREMENTAL_MJ
-        if (cx->compartment->needsBarrier()) {
+        if (cx->compartment->compileBarriers()) {
             /* Write barrier. */
             stubcc.linkExit(masm.testGCThing(Address(reg)), Uses(0));
             stubcc.leave();
@@ -5982,7 +5982,7 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
         finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
     } else {
 #ifdef JSGC_INCREMENTAL_MJ
-        if (cx->compartment->needsBarrier()) {
+        if (cx->compartment->compileBarriers()) {
             /* Write barrier. */
             stubcc.linkExit(masm.testGCThing(addr), Uses(0));
             stubcc.leave();
@@ -6129,7 +6129,7 @@ mjit::Compiler::iter(unsigned flags)
      * Write barrier for stores to the iterator. We only need to take a write
      * barrier if NativeIterator::obj is actually going to change.
      */
-    if (cx->compartment->needsBarrier()) {
+    if (cx->compartment->compileBarriers()) {
         Jump j = masm.branchPtr(Assembler::NotEqual,
                                 Address(nireg, offsetof(NativeIterator, obj)), reg);
         stubcc.linkExit(j, Uses(1));
@@ -6512,7 +6512,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
             RegisterID reg = frame.allocReg();
 #ifdef JSGC_INCREMENTAL_MJ
             /* Write barrier. */
-            if (cx->compartment->needsBarrier() && types->needsBarrier(cx)) {
+            if (cx->compartment->compileBarriers() && types->needsBarrier(cx)) {
                 stubcc.linkExit(masm.jump(), Uses(0));
                 stubcc.leave();
                 stubcc.masm.move(ImmPtr(value), Registers::ArgReg1);
@@ -6530,7 +6530,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. */
-    if (cx->compartment->needsBarrier()) {
+    if (cx->compartment->compileBarriers()) {
         jsop_setgname_slow(name);
         return true;
     }
