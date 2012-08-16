@@ -128,7 +128,7 @@ ContactDB.prototype = {
         objectStore.createIndex("email", "search.email", { unique: false, multiEntry: true });
       } else if (currVersion == 3) {
         debug("upgrade 3");
- 
+
         if (!objectStore) {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
@@ -217,7 +217,7 @@ ContactDB.prototype = {
               // Chop off the first characters
               let number = aContact.properties[field][i].value;
               if (number) {
-                for(let i = 0; i < number.length; i++) {
+                for (let i = 0; i < number.length; i++) {
                   contact.search[field].push(number.substring(i, number.length));
                 }
                 // Store +1-234-567 as ["1234567", "234567"...]
