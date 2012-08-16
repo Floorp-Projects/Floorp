@@ -10,7 +10,7 @@
 #include "nsDependentString.h"
 #include "nsDependentSubstring.h"
 #include "nsISerializable.h"
-#include "nsIIPCSerializable.h"
+#include "nsIIPCSerializableObsolete.h"
 #include "nsIFileURL.h"
 #include "nsIStandardURL.h"
 #include "nsIFile.h"
@@ -42,7 +42,7 @@ class nsIPrefBranch;
 class nsStandardURL : public nsIFileURL
                     , public nsIStandardURL
                     , public nsISerializable
-                    , public nsIIPCSerializable
+                    , public nsIIPCSerializableObsolete
                     , public nsIClassInfo
                     , public nsISizeOf
 {
@@ -53,7 +53,7 @@ public:
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
     NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSIIPCSERIALIZABLE
+    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
 
