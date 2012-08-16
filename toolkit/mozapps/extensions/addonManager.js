@@ -49,19 +49,8 @@ function amManager() {
 
 amManager.prototype = {
   observe: function AMC_observe(aSubject, aTopic, aData) {
-    let os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-
-    switch (aTopic) {
-    case "addons-startup":
-      os.addObserver(this, "xpcom-shutdown", false);
+    if (aTopic == "addons-startup")
       AddonManagerPrivate.startup();
-      break;
-    case "xpcom-shutdown":
-      os.removeObserver(this, "xpcom-shutdown");
-      AddonManagerPrivate.shutdown();
-      break;
-    }
   },
 
   /**

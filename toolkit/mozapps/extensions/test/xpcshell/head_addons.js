@@ -122,7 +122,7 @@ function do_check_not_in_crash_annotation(aId, aVersion) {
  *
  * @param  aName
  *         The name of the testcase (without extension)
- * @return an nsILocalFile pointing to the testcase xpi
+ * @return an nsIFile pointing to the testcase xpi
  */
 function do_get_addon(aName) {
   return do_get_file("addons/" + aName + ".xpi");
@@ -393,7 +393,8 @@ function shutdownManager() {
   }, "addon-repository-shutdown", false);
 
   obs.notifyObservers(null, "quit-application-granted", null);
-  gInternalManager.observe(null, "xpcom-shutdown", null);
+  let scope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
+  scope.AddonManagerInternal.shutdown();
   gInternalManager = null;
 
   AddonRepository.shutdown();
@@ -416,7 +417,7 @@ function shutdownManager() {
 
   // Force the XPIProvider provider to reload to better
   // simulate real-world usage.
-  let scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
+  scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
   AddonManagerPrivate.unregisterProvider(scope.XPIProvider);
   Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
 }
@@ -429,7 +430,7 @@ function loadAddonsList() {
       let descriptor = parser.getString(aSection, keys.getNext());
       try {
         let file = AM_Cc["@mozilla.org/file/local;1"].
-                   createInstance(AM_Ci.nsILocalFile);
+                   createInstance(AM_Ci.nsIFile);
         file.persistentDescriptor = descriptor;
         dirs.push(file);
       }
@@ -1183,7 +1184,7 @@ if ("nsIWindowsRegKey" in AM_Ci) {
 }
 
 // Get the profile directory for tests to use.
-const gProfD = do_get_profile().QueryInterface(AM_Ci.nsILocalFile);
+const gProfD = do_get_profile();
 
 // Enable more extensive EM logging
 Services.prefs.setBoolPref("extensions.logging.enabled", true);
