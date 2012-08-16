@@ -95,7 +95,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 #endif
   if ((err != noErr) || response < minimumOS) {
     NSLog(@"Minimum OS version requirement not met!");
-    return false;
+    return NS_OK;
   }
 
   *_retval = true;

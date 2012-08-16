@@ -456,7 +456,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     struct WalkStackData data;
 
     if (!EnsureImageHlpInitialized())
-        return false;
+        return NS_OK;
 
     HANDLE targetThread = ::GetCurrentThread();
     data.walkCallingThread = true;

@@ -1565,8 +1565,8 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
     ULONG readCount = 0;
     uint32_t writeCount = 0;
     while (1) {
-      rv = pStream->Read(buffer, sizeof(buffer), &readCount);
-      if (NS_FAILED(rv))
+      HRESULT hres = pStream->Read(buffer, sizeof(buffer), &readCount);
+      if (FAILED(hres))
         return E_FAIL;
       if (readCount == 0)
         break;
