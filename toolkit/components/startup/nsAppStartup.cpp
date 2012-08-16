@@ -140,9 +140,7 @@ nsAppStartup::nsAppStartup() :
   mRestart(false),
   mInterrupted(false),
   mIsSafeModeNecessary(false),
-  mStartupCrashTrackingEnded(false),
-  mCachedShutdownTime(false),
-  mLastShutdownTime(0)
+  mStartupCrashTrackingEnded(false)
 { }
 
 
@@ -291,7 +289,7 @@ GetShutdownTimeFileName()
 
   if (!gRecordedShutdownTimeFileName) {
     nsCOMPtr<nsIFile> mozFile;
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
+    NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR, getter_AddRefs(mozFile));
     if (!mozFile)
       return NULL;
 
@@ -588,12 +586,12 @@ nsAppStartup::GetLastShutdownDuration(PRUint32 *aResult)
 
     int shutdownTime;
     int r = fscanf(f, "%d\n", &shutdownTime);
-    fclose(f);
     if (r != 1) {
       *aResult = 0;
       return NS_OK;
     }
 
+    fclose(f);
     mLastShutdownTime = shutdownTime;
     mCachedShutdownTime = true;
   }
