@@ -15,6 +15,7 @@
 
 #include "chrome/common/process_watcher.h"
 
+#include "AppProcessPermissions.h"
 #include "CrashReporterParent.h"
 #include "History.h"
 #include "IDBFactory.h"
@@ -1358,6 +1359,9 @@ ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
 PSmsParent*
 ContentParent::AllocPSms()
 {
+    if (!AppProcessHasPermission(this, "sms")) {
+        return nullptr;
+    }
     return new SmsParent();
 }
 
