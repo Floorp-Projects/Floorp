@@ -5507,11 +5507,10 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
             return NULL;
     }
 
-    Bindings bindings;
+    AutoNameVector formals(cx);
     for (unsigned i = 0; i < nargs; i++) {
-        uint16_t dummy;
         RootedAtom argAtom(cx, Atomize(cx, argnames[i], strlen(argnames[i])));
-        if (!argAtom || !bindings.addArgument(cx, argAtom, &dummy))
+        if (!argAtom || !formals.append(argAtom->asPropertyName()))
             return NULL;
     }
 
@@ -5519,7 +5518,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     if (!fun)
         return NULL;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, &bindings, chars, length))
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, chars, length))
         return NULL;
 
     if (obj && funAtom) {
@@ -7127,17 +7126,25 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
         frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
 
+    JSRuntime *rt = cx->runtime;
+
     if (zeal == 0) {
-        if (cx->runtime->gcVerifyPreData)
-            VerifyBarriers(cx->runtime, PreBarrierVerifier);
-        if (cx->runtime->gcVerifyPostData)
-            VerifyBarriers(cx->runtime, PostBarrierVerifier);
+        if (rt->gcVerifyPreData)
+            VerifyBarriers(rt, PreBarrierVerifier);
+        if (rt->gcVerifyPostData)
+            VerifyBarriers(rt, PostBarrierVerifier);
     }
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
-    cx->runtime->gcZeal_ = zeal;
-    cx->runtime->gcZealFrequency = frequency;
-    cx->runtime->gcNextScheduled = schedule ? frequency : 0;
+    rt->gcZeal_ = zeal;
+    rt->gcZealFrequency = frequency;
+    rt->gcNextScheduled = schedule ? frequency : 0;
+
+#ifdef JS_METHODJIT
+    /* In case JSCompartment::compileBarriers() changed... */
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        mjit::ClearAllFrames(c);
+#endif
 }
 
 JS_PUBLIC_API(void)

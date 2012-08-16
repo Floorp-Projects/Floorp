@@ -1420,7 +1420,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // loop thru the ranges in the selection
   enumerator->First(); 
   nsCOMPtr<nsISupports> currentItem;
-  while ((NS_ENUMERATOR_FALSE == enumerator->IsDone()))
+  while (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == enumerator->IsDone())
   {
     rv = enumerator->CurrentItem(getter_AddRefs(currentItem));
     NS_ENSURE_SUCCESS(rv, rv);

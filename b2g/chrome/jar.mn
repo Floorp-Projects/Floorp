@@ -8,6 +8,7 @@ chrome.jar:
 % content branding %content/branding/
 % content browser %content/
 
+  content/arrow.svg                     (content/arrow.svg)
   content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
   content/forms.js                      (content/forms.js)
   content/settings.js                   (content/settings.js)

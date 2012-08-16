@@ -38,9 +38,12 @@ def abstractmethod(method):
 class DeviceManager:
 
   @abstractmethod
-  def shell(self, cmd, outputfile, env=None, cwd=None):
+  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None):
     """
     executes shell command on device
+
+    timeout is specified in seconds, and if no timeout is given, 
+    we will run until the script returns
     returns:
     success: Return code from command
     failure: None

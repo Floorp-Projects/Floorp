@@ -364,6 +364,7 @@ function checkIFrame(aFrame, data) {
 
   checkedCount++;
   if (checkedCount == checksTodo) {
+    SpecialPowers.removePermission("browser", "http://example.org");
     SimpleTest.finish();
   } else {
     gTestRunner.next();
@@ -428,8 +429,8 @@ function runTest() {
 
 var gTestRunner = runTest();
 
-SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
-                                   ["dom.mozBrowserFramesWhitelist", "http://example.org"]]},
+SpecialPowers.addPermission("browser", true, "http://example.org");
+SpecialPowers.pushPrefEnv({'set':[["dom.mozBrowserFramesEnabled", true]]},
                            function() { gTestRunner.next(); });
 
 </script>

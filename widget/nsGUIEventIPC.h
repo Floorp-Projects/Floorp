@@ -119,7 +119,7 @@ struct ParamTraits<mozilla::widget::WheelEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    PRInt32 scrollType;
+    PRInt32 scrollType = 0;
     bool rv =
       ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
       ReadParam(aMsg, aIter, &aResult->deltaX) &&

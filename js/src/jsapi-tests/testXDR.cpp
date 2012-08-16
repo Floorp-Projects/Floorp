@@ -192,6 +192,7 @@ BEGIN_TEST(testXDR_bug506491)
     const char *s =
         "function makeClosure(s, name, value) {\n"
         "    eval(s);\n"
+        "    Math.sin(value);\n"
         "    return let (n = name, v = value) function () { return String(v); };\n"
         "}\n"
         "var f = makeClosure('0;', 'status', 'ok');\n";

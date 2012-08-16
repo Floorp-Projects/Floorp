@@ -3357,7 +3357,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
     initData.clipChildren = true;
     initData.clipSiblings = true;
     rv = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                         nullptr, nullptr, &initData);
+                         nullptr, &initData);
     if (NS_FAILED(rv)) {
       mWidget->Destroy();
       mWidget = nullptr;

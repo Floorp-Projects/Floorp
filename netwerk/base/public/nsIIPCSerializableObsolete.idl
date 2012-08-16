@@ -17,7 +17,7 @@ class Message;
 [ptr] native Iterator(void*);
 
 [noscript, uuid(1f605ac7-666b-471f-9864-1a21a95f11c4)]
-interface nsIIPCSerializable : nsISupports
+interface nsIIPCSerializableObsolete : nsISupports
 {
   [notxpcom] boolean read(in ConstMessage msg, in Iterator iter);
   [notxpcom] void write(in Message msg);

@@ -40,9 +40,11 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!mEnabled || gInShutdown) {
-      nsCOMPtr<nsIThread> t;
-      gBluetoothService->mBluetoothCommandThread.swap(t);
-      t->Shutdown();
+      if (gBluetoothService->mBluetoothCommandThread) {
+        nsCOMPtr<nsIThread> t;
+        gBluetoothService->mBluetoothCommandThread.swap(t);
+        t->Shutdown();
+      }
     }
     
     if (gInShutdown) {

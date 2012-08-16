@@ -20,7 +20,7 @@ CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
 
 bool
 CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
-                    Bindings *bindings, const jschar *chars, size_t length);
+                    const AutoNameVector &formals, const jschar *chars, size_t length);
 
 } /* namespace frontend */
 } /* namespace js */

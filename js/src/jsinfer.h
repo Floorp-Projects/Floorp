@@ -942,8 +942,6 @@ class TypeScript
 
     static inline unsigned NumTypeSets(JSScript *script);
 
-    static bool SetScope(JSContext *cx, JSScript *script, JSObject *scope);
-
     static inline TypeSet *ReturnTypes(JSScript *script);
     static inline TypeSet *ThisTypes(JSScript *script);
     static inline TypeSet *ArgTypes(JSScript *script, unsigned i);

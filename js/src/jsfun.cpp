@@ -671,12 +671,12 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             // Fish out the argument names.
             BindingVector *localNames = cx->new_<BindingVector>(cx);
             js::ScopedDeletePtr<BindingVector> freeNames(localNames);
-            if (!GetOrderedBindings(cx, script->bindings, localNames))
+            if (!FillBindingVector(script->bindings, localNames))
                 return NULL;
             for (unsigned i = 0; i < fun->nargs; i++) {
                 if ((i && !out.append(", ")) ||
                     (i == unsigned(fun->nargs - 1) && fun->hasRest() && !out.append("...")) ||
-                    !out.append((*localNames)[i].maybeName)) {
+                    !out.append((*localNames)[i].name())) {
                     return NULL;
                 }
             }
@@ -1215,8 +1215,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Bindings bindings;
-    Bindings::AutoRooter bindingsRoot(cx, &bindings);
+    AutoKeepAtoms keepAtoms(cx->runtime);
+    AutoNameVector formals(cx);
 
     bool hasRest = false;
 
@@ -1337,18 +1337,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                     }
                 }
 
-                /* Check for a duplicate parameter name. */
-                Rooted<PropertyName*> name(cx, ts.currentToken().name());
-                if (bindings.hasBinding(cx, name)) {
-                    JSAutoByteString bytes;
-                    if (!js_AtomToPrintableString(cx, name, &bytes))
-                        return false;
-                    if (!ts.reportStrictWarning(JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
-                        return false;
-                }
-
-                uint16_t dummy;
-                if (!bindings.addArgument(cx, name, &dummy))
+                if (!formals.append(ts.currentToken().name()))
                     return false;
 
                 /*
@@ -1363,6 +1352,11 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                 tt = ts.getToken();
             }
         }
+    }
+
+    for (unsigned i = 0; i < formals.length(); ++i) {
+        JSString *str = formals[i];
+        JS_ASSERT(str->asAtom().asPropertyName() == formals[i]);
     }
 
     JS::Anchor<JSString *> strAnchor(NULL);
@@ -1390,14 +1384,14 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     RootedFunction fun(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                             global, cx->runtime->atomState.anonymousAtom));
+                                          global, cx->runtime->atomState.anonymousAtom));
     if (!fun)
         return false;
 
     if (hasRest)
         fun->setHasRest();
 
-    bool ok = frontend::CompileFunctionBody(cx, fun, options, &bindings, chars, length);
+    bool ok = frontend::CompileFunctionBody(cx, fun, options, formals, chars, length);
     args.rval().setObject(*fun);
     return ok;
 }

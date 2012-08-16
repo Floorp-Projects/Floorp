@@ -31,6 +31,7 @@
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsThemeConstants.h"
+#include "nsIWidgetListener.h"
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
@@ -263,7 +264,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
 nsresult nsChildView::Create(nsIWidget *aParent,
                              nsNativeWidget aNativeParent,
                              const nsIntRect &aRect,
-                             EVENT_CALLBACK aHandleEventFunction,
                              nsDeviceContext *aContext,
                              nsWidgetInitData *aInitData)
 {
@@ -298,7 +298,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
 
-  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aInitData);
+  BaseCreate(aParent, aRect, aContext, aInitData);
 
   // inherit things from the parent view and create our parallel 
   // NSView in the Cocoa display system
@@ -427,7 +427,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   nsBaseWidget::Destroy();
 
-  ReportDestroyEvent(); 
+  NotifyWindowDestroyed();
   mParentWidget = nil;
 
   TearDownView();
@@ -1461,27 +1461,28 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 
   aStatus = nsEventStatus_eIgnore;
 
+  nsIWidgetListener* listener = mWidgetListener;
+
+  // If the listener is NULL, check if the parent is a popup. If it is, then
+  // this child is the popup content view attached to a popup. Get the
+  // listener from the parent popup instead.
   nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
-  if (mParentWidget) {
+  if (!listener && mParentWidget) {
     nsWindowType type;
     mParentWidget->GetWindowType(type);
     if (type == eWindowType_popup) {
-      // use the parent popup's widget if there is no view
-      void* clientData = nullptr;
+      // Check just in case event->widget isn't this widget
       if (event->widget)
-        event->widget->GetClientData(clientData);
-      if (!clientData)
+        listener = event->widget->GetWidgetListener();
+      if (!listener) {
         event->widget = mParentWidget;
+        listener = mParentWidget->GetWidgetListener();
+      }
     }
   }
 
-  bool restoreIsDispatchPaint = mIsDispatchPaint;
-  mIsDispatchPaint = mIsDispatchPaint || event->eventStructType == NS_PAINT_EVENT;
-
-  if (mEventCallback)
-    aStatus = (*mEventCallback)(event);
-
-  mIsDispatchPaint = restoreIsDispatchPaint;
+  if (listener)
+    aStatus = listener->HandleEvent(event, mUseAttachedEvents);
 
   return NS_OK;
 }
@@ -1493,32 +1494,44 @@ bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
   return ConvertStatus(status);
 }
 
+bool nsChildView::PaintWindow(nsIntRegion aRegion)
+{
+  nsIWidget* widget = this;
+  nsIWidgetListener* listener = mWidgetListener;
+
+  // If there is no listener, use the parent popup's listener if that exists.
+  if (!listener && mParentWidget) {
+    nsWindowType type;
+    mParentWidget->GetWindowType(type);
+    if (type == eWindowType_popup) {
+      widget = mParentWidget;
+      listener = mParentWidget->GetWidgetListener();
+    }
+  }
+
+  if (!listener)
+    return false;
+
+  bool returnValue = false;
+  bool oldDispatchPaint = mIsDispatchPaint;
+  mIsDispatchPaint = true;
+  returnValue = listener->PaintWindow(widget, aRegion, true, false);
+  mIsDispatchPaint = oldDispatchPaint;
+  return returnValue;
+}
+
 #pragma mark -
 
-bool nsChildView::ReportDestroyEvent()
+void nsChildView::ReportMoveEvent()
 {
-  nsGUIEvent event(true, NS_DESTROY, this);
-  event.time = PR_IntervalNow();
-  return DispatchWindowEvent(event);
+  if (mWidgetListener)
+    mWidgetListener->WindowMoved(this, mBounds.x, mBounds.y);
 }
 
-bool nsChildView::ReportMoveEvent()
+void nsChildView::ReportSizeEvent()
 {
-  nsGUIEvent moveEvent(true, NS_MOVE, this);
-  moveEvent.refPoint.x = mBounds.x;
-  moveEvent.refPoint.y = mBounds.y;
-  moveEvent.time       = PR_IntervalNow();
-  return DispatchWindowEvent(moveEvent);
-}
-
-bool nsChildView::ReportSizeEvent()
-{
-  nsSizeEvent sizeEvent(true, NS_SIZE, this);
-  sizeEvent.time        = PR_IntervalNow();
-  sizeEvent.windowSize  = &mBounds;
-  sizeEvent.mWinWidth   = mBounds.width;
-  sizeEvent.mWinHeight  = mBounds.height;
-  return DispatchWindowEvent(sizeEvent);
+  if (mWidgetListener)
+    mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
 }
 
 #pragma mark -
@@ -1925,16 +1938,12 @@ nsChildView::GetDocumentAccessible()
   }
 
   // need to fetch the accessible anew, because it has gone away.
-  nsEventStatus status;
-  nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
-  DispatchEvent(&event, status);
-
   // cache the accessible in our weak ptr
-  mAccessible =
-    do_GetWeakReference(static_cast<nsIAccessible*>(event.mAccessible));
+  Accessible* acc = GetAccessible();
+  mAccessible = do_GetWeakReference(static_cast<nsIAccessible *>(acc));
 
-  NS_IF_ADDREF(event.mAccessible);
-  return event.mAccessible;
+  NS_IF_ADDREF(acc);
+  return acc;
 }
 #endif
 
@@ -2185,11 +2194,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)systemMetricsChanged
 {
-  if (!mGeckoChild)
-    return;
-
-  nsGUIEvent guiEvent(true, NS_THEMECHANGED, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(guiEvent);
+  if (mGeckoChild)
+    mGeckoChild->NotifyThemeChanged();
 }
 
 - (void)setNeedsPendingDisplay
@@ -2507,9 +2513,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGAffineTransform xform = CGContextGetCTM(aContext);
   fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
 #endif
-  // Create the event so we can fill in its region
-  nsPaintEvent paintEvent(true, NS_PAINT, mGeckoChild);
-  paintEvent.didSendWillPaint = true;
+  nsIntRegion region;
 
   nsIntRect boundingRect =
     nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
@@ -2520,12 +2524,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
     for (i = 0; i < count; ++i) {
       // Add the rect to the region.
       const NSRect& r = [self convertRect:rects[i] fromView:[NSView focusView]];
-      paintEvent.region.Or(paintEvent.region,
-        nsIntRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
+      region.Or(region, nsIntRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
     }
-    paintEvent.region.And(paintEvent.region, boundingRect);
+    region.And(region, boundingRect);
   } else {
-    paintEvent.region = boundingRect;
+    region = boundingRect;
   }
 
 #ifndef NP_NO_QUICKDRAW
@@ -2538,8 +2541,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     ChildView* cview = (ChildView*) view;
     if ([cview isPluginView] && [cview pluginDrawingModel] == NPDrawingModelQuickDraw) {
       NSRect frame = [view frame];
-      paintEvent.region.Sub(paintEvent.region,
-        nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
+      region.Sub(region, nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
     }
   }
 #endif
@@ -2549,7 +2551,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     NSOpenGLContext *glContext;
 
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
-    manager->SetClippingRegion(paintEvent.region);
+    manager->SetClippingRegion(region);
     glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
 
     if (!mGLContext) {
@@ -2559,7 +2561,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [glContext setView:self];
     [glContext update];
 
-    mGeckoChild->DispatchWindowEvent(paintEvent);
+    mGeckoChild->PaintWindow(region);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
     // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
@@ -2580,7 +2582,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
   // Set up the clip region.
-  nsIntRegionRectIterator iter(paintEvent.region);
+  nsIntRegionRectIterator iter(region);
   targetContext->NewPath();
   for (;;) {
     const nsIntRect* r = iter.Next();
@@ -2595,7 +2597,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
-    painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+    painted = mGeckoChild->PaintWindow(region);
   }
 
   // Force OpenGL to refresh the very first time we draw. This works around a
@@ -2655,7 +2657,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mGeckoChild) {
     // The OS normally *will* draw our NSWindow, no matter what we do here.
     // But Gecko can delete our parent widget(s) (along with mGeckoChild)
-    // while processing an NS_WILL_PAINT event, which closes our NSWindow and
+    // while processing a paint request, which closes our NSWindow and
     // makes the OS throw an NSInternalInconsistencyException assertion when
     // it tries to draw it.  Sometimes the OS also aborts the browser process.
     // So we need to retain our parent(s) here and not release it/them until
@@ -2677,8 +2679,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
                  withObject:widgetArray
                  afterDelay:0];
     }
-    nsPaintEvent paintEvent(true, NS_WILL_PAINT, mGeckoChild);
-    mGeckoChild->DispatchWindowEvent(paintEvent);
+
+    nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
+    if (listener) {
+      listener->WillPaintWindow(mGeckoChild, false);
+    }
   }
   [super viewWillDraw];
 }
@@ -4302,7 +4307,9 @@ static PRInt32 RoundUp(double aDouble)
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:YES];
 
-  [self sendFocusEvent:NS_ACTIVATE];
+  nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
+  if (listener)
+    listener->WindowActivated();
 
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:NO];
@@ -4317,7 +4324,9 @@ static PRInt32 RoundUp(double aDouble)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  [self sendFocusEvent:NS_DEACTIVATE];
+  nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
+  if (listener)
+    listener->WindowDeactivated();
 }
 
 // If the call to removeFromSuperview isn't delayed from nsChildView::

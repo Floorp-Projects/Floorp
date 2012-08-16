@@ -73,6 +73,7 @@
              messages[receivedMessageIndex++],
              "Got correct round-tripped response");
           if (receivedMessageIndex == messages.length) {
+            SpecialPowers.removePermission("browser", document);
             SimpleTest.finish();
           }
         });
@@ -90,21 +91,11 @@
     addEventListener("load", function() {
       info("Got load event.");
 
-      let whitelist;
-      try {
-        whitelist =
-          SpecialPowers.getCharPref("dom.mozBrowserFramesWhitelist") + ", ";
-      } catch (e) {
-        whitelist = "";
-      }
-
-      whitelist += window.location.protocol + "//" + window.location.host;
-
+      SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
         "set": [
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
-          ["dom.mozBrowserFramesWhitelist", whitelist],
           ["browser.pageThumbs.enabled", false]
         ]
       }, runTests);

@@ -1023,7 +1023,7 @@ VMFrame::pc()
 inline void *
 JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
-    js::mjit::JITScript *jit = getJIT(constructing, compartment()->needsBarrier());
+    js::mjit::JITScript *jit = getJIT(constructing, compartment()->compileBarriers());
     if (!jit)
         return NULL;
     js::mjit::JITChunk *chunk = jit->chunk(pc);

@@ -280,7 +280,9 @@ nsDirectoryService::RealInit()
     if (!defaultProvider)
         return NS_ERROR_OUT_OF_MEMORY;
     // AppendElement returns true for success.
-    rv = ((nsDirectoryService*) self)->mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
+    rv = static_cast<bool>(((nsDirectoryService*) self)
+                           ->mProviders->AppendElement(defaultProvider))
+        ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv))
         return rv;
 
@@ -488,7 +490,8 @@ nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
     if (NS_FAILED(rv)) return rv;
 
     // AppendElement returns true for success.
-    return mProviders->AppendElement(supports) ? NS_OK : NS_ERROR_FAILURE;
+    return static_cast<bool>(mProviders->AppendElement(supports))
+        ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
@@ -536,7 +539,8 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
     if (NS_FAILED(rv)) return rv;
 
     // RemoveElement returns true for success.
-    return mProviders->RemoveElement(supports) ? NS_OK : NS_ERROR_FAILURE;
+    return static_cast<bool>(mProviders->RemoveElement(supports))
+        ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // DO NOT ADD ANY LOCATIONS TO THIS FUNCTION UNTIL YOU TALK TO: dougt@netscape.com.

@@ -1850,10 +1850,10 @@ PluginModuleChild::AnswerNP_Initialize(const uint32_t& aFlags, NPError* _retval)
 #endif
 
 #ifdef MOZ_X11
-    // Send the parent a dup of our X socket, to act as a proxy
-    // reference for our X resources
+    // Send the parent our X socket to act as a proxy reference for our X
+    // resources.
     int xSocketFd = ConnectionNumber(DefaultXDisplay());
-    SendBackUpXResources(FileDescriptor(xSocketFd, false/*don't close*/));
+    SendBackUpXResources(FileDescriptor(xSocketFd));
 #endif
 
 #if defined(OS_LINUX)

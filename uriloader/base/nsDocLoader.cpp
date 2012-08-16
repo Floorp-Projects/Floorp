@@ -1143,8 +1143,8 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
     nsRequestInfo *info;
     info = GetRequestInfo(aRequest);
     if (info) {
-      bool uploading = (aStatus == nsITransport::STATUS_WRITING ||
-                          aStatus == nsISocketTransport::STATUS_SENDING_TO);
+      bool uploading = (aStatus == NS_NET_STATUS_WRITING ||
+                        aStatus == NS_NET_STATUS_SENDING_TO);
       // If switching from uploading to downloading (or vice versa), then we
       // need to reset our progress counts.  This is designed with HTTP form
       // submission in mind, where an upload is performed followed by download

@@ -137,7 +137,7 @@ CGLTexImageIOSurface2DFunc    MacIOSurfaceLib::sTexImage;
 IOSurfaceContextCreateFunc    MacIOSurfaceLib::sIOSurfaceContextCreate;
 IOSurfaceContextCreateImageFunc   MacIOSurfaceLib::sIOSurfaceContextCreateImage;
 IOSurfaceContextGetSurfaceFunc    MacIOSurfaceLib::sIOSurfaceContextGetSurface;
-unsigned int                  (*MacIOSurfaceLib::sCGContextGetTypePtr) (CGContextRef) = NULL;
+unsigned int                  (*MacIOSurfaceLib::sCGContextGetTypePtr) (CGContextRef) = nullptr;
 
 CFStringRef                   MacIOSurfaceLib::kPropWidth;
 CFStringRef                   MacIOSurfaceLib::kPropHeight;
@@ -208,19 +208,19 @@ CGContextRef MacIOSurfaceLib::IOSurfaceContextCreate(IOSurfacePtr aIOSurfacePtr,
                              unsigned aBitsPerComponent, unsigned aBytes,
                              CGColorSpaceRef aColorSpace, CGBitmapInfo bitmapInfo) {
   if (!sIOSurfaceContextCreate)
-    return NULL;
+    return nullptr;
   return sIOSurfaceContextCreate(aIOSurfacePtr, aWidth, aHeight, aBitsPerComponent, aBytes, aColorSpace, bitmapInfo);
 }
 
 CGImageRef MacIOSurfaceLib::IOSurfaceContextCreateImage(CGContextRef aContext) {
   if (!sIOSurfaceContextCreateImage)
-    return NULL;
+    return nullptr;
   return sIOSurfaceContextCreateImage(aContext);
 }
 
 IOSurfacePtr MacIOSurfaceLib::IOSurfaceContextGetSurface(CGContextRef aContext) {
   if (!sIOSurfaceContextGetSurface)
-    return NULL;
+    return nullptr;
   return sIOSurfaceContextGetSurface(aContext);
 }
 
@@ -314,9 +314,9 @@ TemporaryRef<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHeight
     return nullptr;
 
   int32_t bytesPerElem = 4;
-  CFNumberRef cfWidth = ::CFNumberCreate(NULL, kCFNumberSInt32Type, &aWidth);
-  CFNumberRef cfHeight = ::CFNumberCreate(NULL, kCFNumberSInt32Type, &aHeight);
-  CFNumberRef cfBytesPerElem = ::CFNumberCreate(NULL, kCFNumberSInt32Type, &bytesPerElem);
+  CFNumberRef cfWidth = ::CFNumberCreate(nullptr, kCFNumberSInt32Type, &aWidth);
+  CFNumberRef cfHeight = ::CFNumberCreate(nullptr, kCFNumberSInt32Type, &aHeight);
+  CFNumberRef cfBytesPerElem = ::CFNumberCreate(nullptr, kCFNumberSInt32Type, &bytesPerElem);
   ::CFDictionaryAddValue(props, MacIOSurfaceLib::kPropWidth,
                                 cfWidth);
   ::CFRelease(cfWidth);
@@ -382,11 +382,11 @@ size_t MacIOSurface::GetBytesPerRow() {
 
 #define READ_ONLY 0x1
 void MacIOSurface::Lock() {
-  MacIOSurfaceLib::IOSurfaceLock(mIOSurfacePtr, READ_ONLY, NULL);
+  MacIOSurfaceLib::IOSurfaceLock(mIOSurfacePtr, READ_ONLY, nullptr);
 }
 
 void MacIOSurface::Unlock() {
-  MacIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, NULL);
+  MacIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, nullptr);
 }
 
 #include "SourceSurfaceRawData.h"
@@ -590,7 +590,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
 
     mCGImage = ::CGImageCreate(aWidth, aHeight, 8, 32, aWidth * 4, colorSpace,
                 kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-                dataProvider, NULL, true, kCGRenderingIntentDefault);
+                dataProvider, nullptr, true, kCGRenderingIntentDefault);
 
     ::CGDataProviderRelease(dataProvider);
     if (colorSpace) {
@@ -763,8 +763,8 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
     NS_ERROR("No target destination for rendering");
   } else if (aOutCGImage) {
     // We are expected to return a CGImageRef, we will set
-    // it to NULL in case we fail before the image is ready.
-    *aOutCGImage = NULL;
+    // it to nullptr in case we fail before the image is ready.
+    *aOutCGImage = nullptr;
   }
 
   if (aWidth == 0 || aHeight == 0)
@@ -813,7 +813,7 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
 
   [CATransaction commit];
   double caTime = ::CACurrentMediaTime();
-  [caRenderer beginFrameAtTime:caTime timeStamp:NULL];
+  [caRenderer beginFrameAtTime:caTime timeStamp:nullptr];
   [caRenderer addUpdateRect:CGRectMake(0,0, aWidth, aHeight)];
   [caRenderer render];
   [caRenderer endFrame];
@@ -867,7 +867,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   void* ioData = surf->GetBaseAddress();
   CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(ioData,
                                       ioData, ioHeight*(bytesPerRow)*4, 
-                                      NULL); //No release callback 
+                                      nullptr); //No release callback 
   if (!dataProvider) {
     surf->Unlock();
     return NS_ERROR_FAILURE;
@@ -875,7 +875,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
 
   CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
               aColorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-              dataProvider, NULL, true, kCGRenderingIntentDefault);
+              dataProvider, nullptr, true, kCGRenderingIntentDefault);
   ::CGDataProviderRelease(dataProvider);
   if (!cgImage) {
     surf->Unlock();
@@ -925,7 +925,7 @@ void nsCARenderer::SaveToDisk(MacIOSurface *surf) {
   void* ioData = surf->GetBaseAddress();
   CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(ioData,
                                       ioData, ioHeight*(bytesPerRow)*4, 
-                                      NULL); //No release callback 
+                                      nullptr); //No release callback 
   if (!dataProvider) {
     surf->Unlock();
     return;
@@ -934,7 +934,7 @@ void nsCARenderer::SaveToDisk(MacIOSurface *surf) {
   CGColorSpaceRef colorSpace = CreateSystemColorSpace();
   CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
               colorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-              dataProvider, NULL, true, kCGRenderingIntentDefault);
+              dataProvider, nullptr, true, kCGRenderingIntentDefault);
   ::CGDataProviderRelease(dataProvider);
   ::CGColorSpaceRelease(colorSpace);
   if (!cgImage) {
@@ -949,16 +949,16 @@ void nsCARenderer::SaveToDisk(MacIOSurface *surf) {
   CFStringRef cfStr = ::CFStringCreateWithCString(kCFAllocatorDefault, cstr, kCFStringEncodingMacRoman);
 
   printf("Exporting: %s\n", cstr);
-  CFURLRef url = ::CFURLCreateWithString( NULL, cfStr, NULL);
+  CFURLRef url = ::CFURLCreateWithString( nullptr, cfStr, nullptr);
   ::CFRelease(cfStr);
 
   CFStringRef type = kUTTypePNG;
   size_t count = 1;
-  CFDictionaryRef options = NULL;
+  CFDictionaryRef options = nullptr;
   CGImageDestinationRef dest = ::CGImageDestinationCreateWithURL(url, type, count, options);
   ::CFRelease(url);
 
-  ::CGImageDestinationAddImage(dest, cgImage, NULL);
+  ::CGImageDestinationAddImage(dest, cgImage, nullptr);
 
   ::CGImageDestinationFinalize(dest);
   ::CFRelease(dest);

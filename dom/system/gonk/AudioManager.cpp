@@ -196,18 +196,20 @@ AudioManager::GetForceForUse(PRInt32 aUsage, PRInt32* aForce) {
 
 void
 AudioManager::SetAudioRoute(int aRoutes) {
-  audio_io_handle_t handle = 0;
   if (static_cast<
       audio_io_handle_t (*)(AudioSystem::stream_type, uint32_t, uint32_t, uint32_t, AudioSystem::output_flags)
       >(AudioSystem::getOutput)) {
+    audio_io_handle_t handle = 0;
     handle = AudioSystem::getOutput((AudioSystem::stream_type)AudioSystem::SYSTEM);
+    String8 cmd;
+    cmd.appendFormat("routing=%d", GetRoutingMode(aRoutes));
+    AudioSystem::setParameters(handle, cmd);
   } else if (static_cast<
-             audio_io_handle_t (*)(audio_stream_type_t, uint32_t, uint32_t, uint32_t, audio_policy_output_flags_t)
-             >(AudioSystem::getOutput)) {
-    handle = AudioSystem::getOutput((audio_stream_type_t)AudioSystem::SYSTEM);
+             status_t (*)(audio_devices_t, audio_policy_dev_state_t, const char*)
+             >(AudioSystem::setDeviceConnectionState)) {
+    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET, 
+        GetRoutingMode(aRoutes) == AudioSystem::DEVICE_OUT_WIRED_HEADSET ? 
+        AUDIO_POLICY_DEVICE_STATE_AVAILABLE : AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE,
+        "");
   }
-  
-  String8 cmd;
-  cmd.appendFormat("routing=%d", GetRoutingMode(aRoutes));
-  AudioSystem::setParameters(handle, cmd);
 }

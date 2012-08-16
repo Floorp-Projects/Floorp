@@ -151,7 +151,6 @@ typedef struct _nsCocoaWindowList {
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
-- (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
 - (bool)toplevelActiveState;
 - (void)sendToplevelActivateEvents;
@@ -206,7 +205,6 @@ public:
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
-                                   EVENT_CALLBACK aHandleEventFunction,
                                    nsDeviceContext *aContext,
                                    nsWidgetInitData *aInitData = nullptr);
 
@@ -306,7 +304,6 @@ protected:
                                           nsBorderStyle aBorderStyle,
                                           bool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const nsIntRect &aRect,
-                                              EVENT_CALLBACK aHandleEventFunction,
                                               nsDeviceContext *aContext);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();

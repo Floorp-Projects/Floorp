@@ -75,7 +75,7 @@ inline mjit::JITScript *
 StackFrame::jit()
 {
     JSScript *script_ = script();
-    return script_->getJIT(isConstructing(), script_->compartment()->needsBarrier());
+    return script_->getJIT(isConstructing(), script_->compartment()->compileBarriers());
 }
 #endif
 
@@ -239,6 +239,10 @@ inline Value &
 StackFrame::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT(i < numFormalArgs());
+    JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+    if (checkAliasing && script()->formalIsAliased(i)) {
+        while (true) {}
+    }
     JS_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
     return formals()[i];
 }
@@ -247,6 +251,7 @@ inline Value &
 StackFrame::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT(i < numActualArgs());
+    JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
     JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
     return i < numFormalArgs() ? formals()[i] : actuals()[i];
 }
@@ -255,7 +260,7 @@ template <class Op>
 inline void
 StackFrame::forEachUnaliasedActual(Op op)
 {
-    JS_ASSERT(script()->numClosedArgs() == 0);
+    JS_ASSERT(!script()->funHasAnyAliasedFormal);
     JS_ASSERT(!script()->needsArgsObj());
 
     unsigned nformal = numFormalArgs();

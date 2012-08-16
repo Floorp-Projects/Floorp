@@ -17,7 +17,8 @@
 #include "nsIDocument.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
-#include "nsIIPCSerializable.h"
+#include "nsIIPCSerializableInputStream.h"
+#include "nsIIPCSerializableObsolete.h"
 #include "nsIMIMEService.h"
 #include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
@@ -47,8 +48,9 @@ using namespace mozilla::dom;
 // stream is.  We do that by passing back this class instead.
 class DataOwnerAdapter MOZ_FINAL : public nsIInputStream,
                                    public nsISeekableStream,
-                                   public nsIIPCSerializable,
-                                   public nsIClassInfo
+                                   public nsIIPCSerializableObsolete,
+                                   public nsIClassInfo,
+                                   public nsIIPCSerializableInputStream
 {
   typedef nsDOMMemoryFile::DataOwner DataOwner;
 public:
@@ -65,16 +67,18 @@ public:
 
   // These are optional. We use a conditional QI to keep them from being called
   // if the underlying stream doesn't QI to either interface.
-  NS_FORWARD_NSIIPCSERIALIZABLE(mSerializable->)
+  NS_FORWARD_NSIIPCSERIALIZABLEOBSOLETE(mSerializableObsolete->)
   NS_FORWARD_NSICLASSINFO(mClassInfo->)
+  NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(mSerializableInputStream->)
 
 private:
   DataOwnerAdapter(DataOwner* aDataOwner,
                    nsIInputStream* aStream)
     : mDataOwner(aDataOwner), mStream(aStream),
       mSeekableStream(do_QueryInterface(aStream)),
-      mSerializable(do_QueryInterface(aStream)),
-      mClassInfo(do_QueryInterface(aStream))
+      mSerializableObsolete(do_QueryInterface(aStream)),
+      mClassInfo(do_QueryInterface(aStream)),
+      mSerializableInputStream(do_QueryInterface(aStream))
   {
     NS_ASSERTION(mSeekableStream, "Somebody gave us the wrong stream!");
   }
@@ -82,8 +86,9 @@ private:
   nsRefPtr<DataOwner> mDataOwner;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsISeekableStream> mSeekableStream;
-  nsCOMPtr<nsIIPCSerializable> mSerializable;
+  nsCOMPtr<nsIIPCSerializableObsolete> mSerializableObsolete;
   nsCOMPtr<nsIClassInfo> mClassInfo;
+  nsCOMPtr<nsIIPCSerializableInputStream> mSerializableInputStream;
 };
 
 NS_IMPL_THREADSAFE_ADDREF(DataOwnerAdapter)
@@ -92,8 +97,11 @@ NS_IMPL_THREADSAFE_RELEASE(DataOwnerAdapter)
 NS_INTERFACE_MAP_BEGIN(DataOwnerAdapter)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializable, mSerializable)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableObsolete,
+                                     mSerializableObsolete)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIClassInfo, mClassInfo)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
+                                     mSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 

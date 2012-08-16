@@ -52,7 +52,7 @@ XPIDLSRCS	= \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
                 nsIIOService2.idl \
-                nsIIPCSerializable.idl \
+                nsIIPCSerializableObsolete.idl \
 		nsIMIMEInputStream.idl \
 		nsINetAddr.idl \
                 nsINetworkLinkService.idl \

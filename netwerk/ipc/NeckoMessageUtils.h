@@ -9,7 +9,7 @@
 #include "IPC/IPCMessageUtils.h"
 #include "nsStringGlue.h"
 #include "nsIURI.h"
-#include "nsIIPCSerializable.h"
+#include "nsIIPCSerializableObsolete.h"
 #include "nsIClassInfo.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
@@ -51,7 +51,8 @@ struct ParamTraits<URI>
     if (isNull)
       return;
     
-    nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(aParam.mURI);
+    nsCOMPtr<nsIIPCSerializableObsolete> serializable =
+      do_QueryInterface(aParam.mURI);
     if (!serializable) {
       nsCString scheme;
       aParam.mURI->GetScheme(scheme);
@@ -120,7 +121,7 @@ struct ParamTraits<URI>
     nsCOMPtr<nsIURI> uri = do_CreateInstance(cid);
     if (!uri)
       return false;
-    nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(uri);
+    nsCOMPtr<nsIIPCSerializableObsolete> serializable = do_QueryInterface(uri);
     if (!serializable || !serializable->Read(aMsg, aIter))
       return false;
 
@@ -170,12 +171,14 @@ struct ParamTraits<InputStream>
     if (isNull)
       return;
 
-    nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(aParam.mStream);
+    nsCOMPtr<nsIIPCSerializableObsolete> serializable =
+      do_QueryInterface(aParam.mStream);
     bool isSerializable = !!serializable;
     WriteParam(aMsg, isSerializable);
 
     if (!serializable) {
-      NS_WARNING("nsIInputStream implementation doesn't support nsIIPCSerializable; falling back to copying data");
+      NS_WARNING("nsIInputStream implementation doesn't support "
+                 "nsIIPCSerializableObsolete; falling back to copying data");
 
       nsCString streamString;
       PRUint64 bytes;
@@ -241,7 +244,8 @@ struct ParamTraits<InputStream>
       stream = do_CreateInstance(cid);
       if (!stream)
         return false;
-      nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(stream);
+      nsCOMPtr<nsIIPCSerializableObsolete> serializable =
+        do_QueryInterface(stream);
       if (!serializable || !serializable->Read(aMsg, aIter))
         return false;
     }
