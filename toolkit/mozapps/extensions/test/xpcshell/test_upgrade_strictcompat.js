@@ -13,7 +13,7 @@ Services.prefs.setIntPref("extensions.enabledScopes",
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-const globalDir = Services.dirsvc.get("XCurProcD", AM_Ci.nsILocalFile);
+const globalDir = Services.dirsvc.get("XCurProcD", AM_Ci.nsIFile);
 globalDir.append("extensions");
 
 var gGlobalExisted = globalDir.exists();
