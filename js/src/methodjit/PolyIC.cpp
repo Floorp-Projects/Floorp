@@ -1460,8 +1460,13 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.hit);
 
         GetPropHelper<GetPropCompiler> getprop(cx, obj, name, *this, f);
+        RecompilationMonitor monitor(cx);
         LookupStatus status = getprop.lookupAndTest();
+
         if (status != Lookup_Cacheable && status != Lookup_NoProperty) {
+            /* Don't touch the IC if it may have been destroyed. */
+            if (!monitor.recompiled())
+                pic.hadUncacheable = true;
             MarkNotIdempotent(f.script(), f.pc());
             return status;
         }
@@ -2061,6 +2066,8 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
         LookupStatus status = cc.update();
         if (status == Lookup_Error)
             THROW();
+        if (status != Lookup_Cacheable && !monitor.recompiled())
+            pic->hadUncacheable = true;
     }
 
     nstub(f, name);

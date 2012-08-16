@@ -395,8 +395,8 @@ struct PICInfo : public BasePolyIC {
     // last stub.
     bool shapeRegHasBaseShape : 1;
 
-    // True if can use the property cache.
-    bool usePropCache : 1;
+    // If set, at least one lookup was uncacheable (no stub was generated).
+    bool hadUncacheable : 1;
 
     // State flags.
     bool inlinePathPatched : 1;     // inline path has been patched
@@ -498,7 +498,7 @@ struct PICInfo : public BasePolyIC {
     }
 
     Shape *getSingleShape() {
-        if (disabled || stubsGenerated > 0)
+        if (disabled || hadUncacheable || stubsGenerated > 0)
             return NULL;
         return inlinePathShape_;
     }
@@ -510,6 +510,7 @@ struct PICInfo : public BasePolyIC {
         BasePolyIC::reset();
         inlinePathPatched = false;
         shapeRegHasBaseShape = true;
+        hadUncacheable = false;
         inlinePathShape_ = NULL;
     }
 };
