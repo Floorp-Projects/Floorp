@@ -3345,7 +3345,7 @@ EndMarkPhase(JSRuntime *rt)
     JS_ASSERT(rt->gcMarker.isDrained());
 
 #ifdef DEBUG
-    if (rt->gcIsIncremental)
+    if (rt->gcIsIncremental && rt->gcValidate)
         ValidateIncrementalMarking(rt);
 #endif
 
@@ -4546,6 +4546,13 @@ SetDeterministicGC(JSContext *cx, bool enabled)
     JSRuntime *rt = cx->runtime;
     rt->gcDeterministicOnly = enabled;
 #endif
+}
+
+void
+SetValidateGC(JSContext *cx, bool enabled)
+{
+    JSRuntime *rt = cx->runtime;
+    rt->gcValidate = enabled;
 }
 
 } /* namespace gc */

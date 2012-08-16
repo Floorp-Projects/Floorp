@@ -801,6 +801,7 @@ JSRuntime::JSRuntime()
     gcDeterministicOnly(false),
     gcIncrementalLimit(0),
 #endif
+    gcValidate(true),
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
