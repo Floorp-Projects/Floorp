@@ -2480,7 +2480,6 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   rv = topWindow->GetDocument(getter_AddRefs(topDocument));
   NS_ENSURE_SUCCESS(rv, false);
   nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
-  nsIURI* topUri = topDoc->GetDocumentURI();
 
   nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, false);
