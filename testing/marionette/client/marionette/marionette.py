@@ -62,9 +62,6 @@ class HTMLElement(object):
                     typing.append(val[i])
         return self.marionette._send_message('sendKeysToElement', 'ok', element=self.id, value=typing)
 
-    def value(self):
-        return self.marionette._send_message('getElementValue', 'value', element=self.id)
-
     def clear(self):
         return self.marionette._send_message('clearElement', 'ok', element=self.id)
 
