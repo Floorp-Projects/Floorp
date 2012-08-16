@@ -486,6 +486,22 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif /* JS_GC_ZEAL */
 
+static JSBool
+ValidateGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    gc::SetValidateGC(cx, ToBoolean(vp[2]));
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
 struct JSCountHeapNode {
     void                *thing;
     JSGCTraceKind       kind;
@@ -821,6 +837,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "deterministicgc(true|false)",
 "  If true, only allow determinstic GCs to run."),
 #endif
+
+    JS_FN_HELP("validategc", ValidateGC, 1, 0,
+"validategc(true|false)",
+"  If true, a separate validation step is performed after an incremental GC."),
 
     JS_FN_HELP("internalConst", InternalConst, 1, 0,
 "internalConst(name)",
