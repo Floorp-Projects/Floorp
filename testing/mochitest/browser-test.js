@@ -112,10 +112,7 @@ Tester.prototype = {
                            : this.currentTest ? "Found an unexpected {elt} at the end of test run"
                                               : "Found an unexpected {elt}";
 
-    if (gConfig.testRoot == "browser" &&
-        this.currentTest &&
-        window.gBrowser &&
-        gBrowser.tabs.length > 1) {
+    if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
       while (gBrowser.tabs.length > 1) {
         let lastTab = gBrowser.tabContainer.lastChild;
         let msg = baseMsg.replace("{elt}", "tab") +

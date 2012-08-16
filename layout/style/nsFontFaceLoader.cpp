@@ -745,7 +745,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
       break;
     default:
       msg.Append("status=");
-      msg.AppendInt(aStatus);
+      msg.AppendInt(static_cast<PRUint32>(aStatus));
       break;
     }
   }

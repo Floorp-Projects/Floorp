@@ -123,6 +123,8 @@ class DeviceManagerSUT(DeviceManager):
     one fails.  this is necessary in particular for pushFile(), where we don't want
     to accidentally send extra data if a failure occurs during data transmission.
     '''
+    if timeout:
+      raise NotImplementedError("'timeout' parameter is not yet supported")
     while self.retries < self.retrylimit:
       try:
         self._doCmds(cmdlist, outputfile, timeout)
@@ -261,16 +263,16 @@ class DeviceManagerSUT(DeviceManager):
   # returns:
   # success: <return code>
   # failure: None
-  def shell(self, cmd, outputfile, env=None, cwd=None):
+  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None):
     cmdline = self._escapedCommandLine(cmd)
     if env:
       cmdline = '%s %s' % (self.formatEnvString(env), cmdline)
 
     try:
       if cwd:
-        self.sendCmds([{ 'cmd': 'execcwd %s %s' % (cwd, cmdline) }], outputfile)
+        self.sendCmds([{ 'cmd': 'execcwd %s %s' % (cwd, cmdline) }], outputfile, timeout)
       else:
-        self.sendCmds([{ 'cmd': 'exec su -c "%s"' % cmdline }], outputfile)
+        self.sendCmds([{ 'cmd': 'exec su -c "%s"' % cmdline }], outputfile, timeout)
     except AgentError:
       return None
 

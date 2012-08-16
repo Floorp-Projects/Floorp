@@ -1519,7 +1519,9 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
 
-  if (!stateChange && !aForceLoad) {
+  // If nothing changed and we are not force-loading, or we're in state loading
+  // but continuing to wait on a channel, we're done
+  if ((!stateChange && !aForceLoad) || (mType == eType_Loading && mChannel)) {
     return NS_OK;
   }
 
@@ -1717,21 +1719,15 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         mType = eType_Null;
         break;
       }
+      
+      mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
+                                           mNetworkCreated);
       if (!mFrameLoader) {
-        // Force a sync state change, we need the frame created
-        NotifyStateChanged(oldType, oldState, true, aNotify);
-        oldType = mType;
-        oldState = ObjectState();
-
-        mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
-                                             mNetworkCreated);
-        if (!mFrameLoader) {
-          NS_NOTREACHED("nsFrameLoader::Create failed");
-          mType = eType_Null;
-          break;
-        }
+        NS_NOTREACHED("nsFrameLoader::Create failed");
+        mType = eType_Null;
+        break;
       }
-
+      
       rv = mFrameLoader->CheckForRecursiveLoad(mURI);
       if (NS_FAILED(rv)) {
         mType = eType_Null;
@@ -1812,10 +1808,11 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   // Notify of our final state if we haven't already
   NotifyStateChanged(oldType, oldState, false, aNotify);
 
-  if (mType == eType_Null && mFallbackType != eFallbackAlternate) {
-    // if we're not showing alternate content, fire a pluginerror to trigger
-    // (we stopped LoadFallback from doing so above, it doesn't know of our old
-    //  state)
+  if (mType == eType_Null && !mContentType.IsEmpty() &&
+      mFallbackType != eFallbackAlternate) {
+    // if we have a content type and are not showing alternate
+    // content, fire a pluginerror to trigger (we stopped LoadFallback
+    // from doing so above, it doesn't know of our old state)
     FirePluginError(mFallbackType);
   }
 

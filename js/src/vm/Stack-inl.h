@@ -74,7 +74,7 @@ inline mjit::JITScript *
 StackFrame::jit()
 {
     JSScript *script_ = script();
-    return script_->getJIT(isConstructing(), script_->compartment()->needsBarrier());
+    return script_->getJIT(isConstructing(), script_->compartment()->compileBarriers());
 }
 #endif
 

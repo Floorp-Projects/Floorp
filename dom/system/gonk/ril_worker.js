@@ -733,6 +733,30 @@ let RIL = {
     Buf.simpleRequest(REQUEST_GET_SIM_STATUS);
   },
 
+   /**
+   * Helper function for unlocking ICC locks.
+   */
+  iccUnlockCardLock: function iccUnlockCardLock(options) {
+    switch (options.lockType) {
+      case "pin":
+        this.enterICCPIN(options);
+        break;
+      case "pin2":
+        this.enterICCPIN2(options);
+        break;
+      case "puk":
+        this.enterICCPUK(options);
+        break;
+      case "puk2":
+        this.enterICCPUK2(options);
+        break;
+      default:
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+    }
+  },
+
   /**
    * Enter a PIN to unlock the ICC.
    *
@@ -767,6 +791,34 @@ let RIL = {
       Buf.writeString(options.aid ? options.aid : this.aid);
     }
     Buf.sendParcel();
+  },
+
+   /**
+   * Helper function for changing ICC locks.
+   */
+  iccSetCardLock: function iccSetCardLock(options) {
+    if (options.newPin !== undefined) {
+      switch (options.lockType) {
+        case "pin":
+          this.changeICCPIN(options);
+          break;
+        case "pin2":
+          this.changeICCPIN2(options);
+          break;
+        default:
+          options.errorMsg = "Unsupported Card Lock.";
+          options.success = false;
+          this.sendDOMMessage(options);
+      }
+    } else { // Enable/Disable pin lock.
+      if (options.lockType != "pin") {
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+        return;
+      }
+      this.setICCPinLock(options);
+    }
   },
 
   /**
@@ -853,6 +905,21 @@ let RIL = {
    },
 
   /**
+   * Helper function for fetching the state of ICC locks.
+   */
+  iccGetCardLock: function iccGetCardLock(options) {
+    switch (options.lockType) {
+      case "pin":
+        this.getICCPinLock(options);
+        break;
+      default:
+        options.errorMsg = "Unsupported Card Lock.";
+        options.success = false;
+        this.sendDOMMessage(options);
+    }
+  },
+
+  /**
    * Get ICC Pin lock. A wrapper call to queryICCFacilityLock.
    *
    * @param requestId
@@ -863,7 +930,7 @@ let RIL = {
     options.password = ""; // For query no need to provide pin.
     options.serviceClass = ICC_SERVICE_CLASS_VOICE |
                            ICC_SERVICE_CLASS_DATA  |
-                           ICC_SERVICE_CLASS_FAX,
+                           ICC_SERVICE_CLASS_FAX;
     this.queryICCFacilityLock(options);
   },
 
@@ -907,7 +974,7 @@ let RIL = {
     options.password = options.pin;
     options.serviceClass = ICC_SERVICE_CLASS_VOICE |
                            ICC_SERVICE_CLASS_DATA  |
-                           ICC_SERVICE_CLASS_FAX,
+                           ICC_SERVICE_CLASS_FAX;
     this.setICCFacilityLock(options);
   },
 
@@ -1971,6 +2038,18 @@ let RIL = {
                          cardState: this.cardState});
   },
 
+   /**
+   * Helper for processing responses of functions such as enterICC* and changeICC*.
+   */
+  _processEnterAndChangeICCResponses: function _processEnterAndChangeICCResponses(length, options) {
+    options.success = options.rilRequestError == 0;
+    if (!options.success) {
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    }
+    options.retryCount = length ? Buf.readUint32List()[0] : -1;
+    this.sendDOMMessage(options);
+  },
+
   /**
    * Process a ICC_COMMAND_GET_RESPONSE type command for REQUEST_SIM_IO.
    */
@@ -2837,46 +2916,22 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   this._processICCStatus(iccStatus);
 };
 RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "puk",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PIN2] = function REQUEST_ENTER_SIM_PIN2(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "pin2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_SIM_PUK2] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccunlockcardlock",
-                       lockType: "puk2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin2",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  this._processEnterAndChangeICCResponses(length, options);
 };
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
@@ -3273,22 +3328,23 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
   this.sendDOMMessage(datacall);
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, options) {
-  if (options.rilRequestError) {
-    return;
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   }
 
-  let response = Buf.readUint32List()[0];
-  this.sendDOMMessage({rilMessageType: "iccgetcardlock",
-                       lockType: "pin",
-                       enabled: response == 0 ? false : true,
-                       requestId: options.requestId});
+  if (length) {
+    options.enabled = Buf.readUint32List()[0] == 0 ? false : true;
+  }
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
-  this.sendDOMMessage({rilMessageType: "iccsetcardlock",
-                       lockType: "pin",
-                       result: options.rilRequestError == 0 ? true : false,
-                       retryCount: length ? Buf.readUint32List()[0] : -1,
-                       requestId: options.requestId});
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
+  options.retryCount = length ? Buf.readUint32List()[0] : -1;
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
 RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {

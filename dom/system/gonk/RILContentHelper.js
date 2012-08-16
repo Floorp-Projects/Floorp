@@ -49,12 +49,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:VoicemailNotification",
   "RIL:VoicemailNumberChanged",
   "RIL:CallError",
-  "RIL:GetCardLock:Return:OK",
-  "RIL:GetCardLock:Return:KO",
-  "RIL:SetCardLock:Return:OK",
-  "RIL:SetCardLock:Return:KO",
-  "RIL:UnlockCardLock:Return:OK",
-  "RIL:UnlockCardLock:Return:KO",
+  "RIL:CardLockResult",
   "RIL:UssdReceived",
   "RIL:SendUssd:Return:OK",
   "RIL:SendUssd:Return:KO",
@@ -570,15 +565,12 @@ RILContentHelper.prototype = {
         this.voicemailNumber = msg.json.number;
         this.voicemailDisplayName = msg.json.alphaId;
         break;
-      case "RIL:GetCardLock:Return:OK":
-      case "RIL:SetCardLock:Return:OK":
-      case "RIL:UnlockCardLock:Return:OK":
-        this.fireRequestSuccess(msg.json.requestId, msg.json);
-        break;
-      case "RIL:GetCardLock:Return:KO":
-      case "RIL:SetCardLock:Return:KO":
-      case "RIL:UnlockCardLock:Return:KO":
-        this.fireRequestError(msg.json.requestId, msg.json.errorMsg);
+      case "RIL:CardLockResult":
+        if (msg.json.success) {
+          this.fireRequestSuccess(msg.json.requestId, msg.json);
+        } else {
+          this.fireRequestError(msg.json.requestId, msg.json);
+        }
         break;
       case "RIL:UssdReceived":
         Services.obs.notifyObservers(null, kUssdReceivedTopic,

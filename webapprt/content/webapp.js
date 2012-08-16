@@ -6,6 +6,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://webapprt/modules/Startup.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -48,51 +49,13 @@ let progressListener = {
 function onLoad() {
   window.removeEventListener("load", onLoad, false);
 
-  let cmdLineArgs = window.arguments && window.arguments[0] ?
-                    window.arguments[0].QueryInterface(Ci.nsIPropertyBag2) :
-                    null;
+  let args = window.arguments && window.arguments[0] ?
+             window.arguments[0].QueryInterface(Ci.nsIPropertyBag2) :
+             null;
 
-  // In test mode, listen for test app installations and load the -test-mode URL
-  // if present.
-  if (cmdLineArgs && cmdLineArgs.hasKey("test-mode")) {
-    // This observer is only present until the first app gets installed.
-    // It adds the progress listener, which can't happen until then because
-    // the progress listener needs to access the app manifest, which isn't
-    // available beforehand.
-    Services.obs.addObserver(function observeOnce(subj, topic, data) {
-      Services.obs.removeObserver(observeOnce, "webapprt-test-did-install");
-      gAppBrowser.addProgressListener(progressListener,
-                                      Ci.nsIWebProgress.NOTIFY_LOCATION);
-    }, "webapprt-test-did-install", false);
-
-    // This observer is present for the lifetime of the runtime.
-    Services.obs.addObserver(function observe(subj, topic, data) {
-      initWindow(false);
-    }, "webapprt-test-did-install", false);
-
-    let testURL = cmdLineArgs.get("test-mode");
-    if (testURL) {
-      gAppBrowser.loadURI(testURL);
-    }
-
-    return;
-  }
-
-  gAppBrowser.webProgress.
-    addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_LOCATION |
-                                          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-
-  initWindow(!!cmdLineArgs);
-}
-window.addEventListener("load", onLoad, false);
-
-function onUnload() {
-  gAppBrowser.removeProgressListener(progressListener);
-}
-window.addEventListener("unload", onUnload, false);
-
-function initWindow(isMainWindow) {
-  let manifest = WebappRT.config.app.manifest;
+  gAppBrowser.addProgressListener(progressListener,
+                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
+                                  Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
   updateMenuItems();
 
@@ -101,16 +64,20 @@ function initWindow(isMainWindow) {
   // something different if it doesn't want the default behavior.
   gAppBrowser.addEventListener("click", onContentClick, false, true);
 
-  // Only load the webapp on the initially launched main window
-  if (isMainWindow) {
-    // Load the webapp's launch URL
-    let installRecord = WebappRT.config.app;
-    let url = Services.io.newURI(installRecord.origin, null, null);
-    if (manifest.launch_path)
-      url = Services.io.newURI(manifest.launch_path, null, url);
-    gAppBrowser.setAttribute("src", url.spec);
+  // This is not the only way that a URL gets loaded in the app browser.
+  // When content calls openWindow(), there are no window.arguments,
+  // but something in the platform loads the URL specified by the content.
+  if (args && args.hasKey("url")) {
+    gAppBrowser.setAttribute("src", args.get("url"));
   }
+
 }
+window.addEventListener("load", onLoad, false);
+
+function onUnload() {
+  gAppBrowser.removeProgressListener(progressListener);
+}
+window.addEventListener("unload", onUnload, false);
 
 /**
  * Direct a click on <a target="_blank"> to the user's default browser.
@@ -199,11 +166,13 @@ function updateCrashReportURL(aURI) {
     return;
 
   let uri = aURI.clone();
-  if (uri.userPass != "") {
-    try {
+  // uri.userPass throws on protocols without the concept of authentication,
+  // like about:, which tests can load, so we catch and ignore an exception.
+  try {
+    if (uri.userPass != "") {
       uri.userPass = "";
-    } catch (e) {}
-  }
+    }
+  } catch (e) {}
 
   gCrashReporter.annotateCrashReport("URL", uri.spec);
 #endif

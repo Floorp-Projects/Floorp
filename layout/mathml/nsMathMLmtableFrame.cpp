@@ -323,7 +323,7 @@ ParseAlignAttribute(nsString& aValue, eAlign& aAlign, PRInt32& aRowIndex)
     nsresult error;
     aValue.Cut(0, len); // aValue is not a const here
     aRowIndex = aValue.ToInteger(&error);
-    if (error)
+    if (NS_FAILED(error))
       aRowIndex = 0;
   }
 }
@@ -777,7 +777,7 @@ nsMathMLmtdFrame::GetRowSpan()
     if (!value.IsEmpty()) {
       nsresult error;
       rowspan = value.ToInteger(&error);
-      if (error || rowspan < 0)
+      if (NS_FAILED(error) || rowspan < 0)
         rowspan = 1;
       rowspan = NS_MIN(rowspan, MAX_ROWSPAN);
     }
@@ -797,7 +797,7 @@ nsMathMLmtdFrame::GetColSpan()
     if (!value.IsEmpty()) {
       nsresult error;
       colspan = value.ToInteger(&error);
-      if (error || colspan < 0 || colspan > MAX_COLSPAN)
+      if (NS_FAILED(error) || colspan < 0 || colspan > MAX_COLSPAN)
         colspan = 1;
     }
   }
