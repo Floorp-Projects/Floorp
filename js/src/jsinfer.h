@@ -1160,8 +1160,8 @@ struct TypeCompartment
                               JSProtoKey kind, JSObject *proto,
                               bool unknown = false, bool isDOM = false);
 
-    /* Make an object for an allocation site. */
-    TypeObject *newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
+    /* Get or make an object for an allocation site, and add to the allocation site table. */
+    TypeObject *addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
 
     void nukeTypes(FreeOp *fop);
     void processPendingRecompiles(FreeOp *fop);
