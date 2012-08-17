@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include LayersSurfaces;
+include protocol PGrallocBuffer;
 include protocol PImageContainer;
 
 using ImageHandle;
@@ -18,8 +20,17 @@ namespace layers {
 /*FIXME: sync*/rpc protocol PImageBridge
 {
   manages PImageContainer;
+  manages PGrallocBuffer;
 
 parent:
+
+  // Allocates a gralloc buffer that may not suitable to use with
+  // gfxImageSurface but allows hardware decoder to write to the
+  // buffer directly. The format is a enum defined in
+  // system/graphics.h and the usage is the GraphicBuffer usage
+  // flag. See GraphicBuffer.h and gralloc.h.
+  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
+    returns (MaybeMagicGrallocBufferHandle handle);
   
   // First step of the destruction sequence. This puts all the ImageContainerParents
   // in a state in which they can't send asynchronous messages to their child 
