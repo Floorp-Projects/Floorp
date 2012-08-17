@@ -236,6 +236,7 @@ typedef MutableHandle<Value>        MutableHandleValue;
  * rooted.
  */
 typedef JSObject *                  RawObject;
+typedef JSString *                  RawString;
 
 /*
  * By default, pointers should use the inheritance hierarchy to find their
