@@ -1007,7 +1007,7 @@ struct ScriptSource
     bool performXDR(XDRState<mode> *xdr);
 
     // Source maps
-    void setSourceMap(jschar *sm);
+    bool setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename);
     const jschar *sourceMap();
     bool hasSourceMap() const { return sourceMap_ != NULL; }
 
