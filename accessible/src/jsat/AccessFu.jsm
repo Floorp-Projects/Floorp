@@ -47,6 +47,14 @@ var AccessFu = {
     if (Utils.MozBuildApp == 'mobile/android')
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
 
+    if (Utils.MozBuildApp == 'b2g')
+      aWindow.addEventListener(
+        'ContentStart',
+        (function(event) {
+           let content = aWindow.shell.contentBrowser.contentWindow;
+           content.addEventListener('mozContentEvent', this, false, true);
+         }).bind(this), false);
+
     this._processPreferences();
   },
 
@@ -190,6 +198,14 @@ var AccessFu = {
       case 'resize':
       {
         this.presenters.forEach(function(p) { p.viewportChanged(); });
+        break;
+      }
+      case 'mozContentEvent':
+      {
+        if (aEvent.detail.type == 'accessibility-screenreader') {
+          let pref = aEvent.detail.enabled + 0;
+          this._processPreferences(pref, pref);
+        }
         break;
       }
     }
