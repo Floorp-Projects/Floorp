@@ -186,7 +186,12 @@ private:
   gl::TextureImage::TextureShareType mShareType;
   bool mInverted;
   GLuint mTexture;
-  
+
+  // For direct texturing with OES_EGL_image_external extension. This
+  // texture is allocated when the image supports binding with
+  // BindExternalBuffer.
+  GLTexture mExternalBufferTexture;
+
   GLTexture mYUVTexture[3];
   gfxIntSize mSize;
   gfxIntSize mCbCrSize;
