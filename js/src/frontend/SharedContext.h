@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TreeContext_h__
-#define TreeContext_h__
+#ifndef SharedContext_h__
+#define SharedContext_h__
 
 #include "jstypes.h"
 #include "jsatom.h"
@@ -363,4 +363,4 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
 
 } // namespace js
 
-#endif // TreeContext_h__
+#endif // SharedContext_h__

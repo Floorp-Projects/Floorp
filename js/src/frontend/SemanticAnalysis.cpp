@@ -10,7 +10,7 @@
 #include "jsfun.h"
 
 #include "frontend/Parser.h"
-#include "frontend/TreeContext.h"
+#include "frontend/SharedContext.h"
 
 #include "jsobjinlines.h"
 #include "jsfuninlines.h"
