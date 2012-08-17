@@ -127,7 +127,6 @@ CPPSRCS		= \
 		SemanticAnalysis.cpp \
 		SPSProfiler.cpp \
 		TokenStream.cpp \
-		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
 		Eval.cpp \
