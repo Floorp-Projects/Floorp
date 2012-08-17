@@ -142,7 +142,7 @@ public:
     static void NotifyIME(int aType, int aState);
 
     static void NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
-                                 const nsAString& aModeHint, const nsAString& aActionHint);
+                                 const nsAString& aActionHint);
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 

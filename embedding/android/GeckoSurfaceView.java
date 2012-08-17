@@ -63,7 +63,6 @@ class GeckoSurfaceView
         initEditable("");
         mIMEState = IME_STATE_DISABLED;
         mIMETypeHint = "";
-        mIMEModeHint = "";
         mIMEActionHint = "";
     }
 
@@ -503,20 +502,6 @@ class GeckoSurfaceView
         else if (mIMETypeHint.equalsIgnoreCase("time"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_TIME;
-        else if (mIMEModeHint.equalsIgnoreCase("numeric"))
-            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
-                                 InputType.TYPE_NUMBER_FLAG_SIGNED |
-                                 InputType.TYPE_NUMBER_FLAG_DECIMAL;
-        else if (mIMEModeHint.equalsIgnoreCase("digit"))
-            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
-        else if (mIMEModeHint.equalsIgnoreCase("uppercase"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
-        else if (mIMEModeHint.equalsIgnoreCase("lowercase"))
-            outAttrs.inputType = InputType.TYPE_CLASS_TEXT; 
-        else if (mIMEModeHint.equalsIgnoreCase("titlecase"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
-        else if (mIMEModeHint.equalsIgnoreCase("autocapitalized"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 
         if (mIMEActionHint.equalsIgnoreCase("go"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
@@ -763,7 +748,6 @@ class GeckoSurfaceView
     Editable.Factory mEditableFactory;
     int mIMEState;
     String mIMETypeHint;
-    String mIMEModeHint;
     String mIMEActionHint;
     boolean mIMELandscapeFS;
 
