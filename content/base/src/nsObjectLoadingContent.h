@@ -275,10 +275,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     /**
      * Opens the channel pointed to by mURI into mChannel.
-     *
-     * @param aPolicyType The value to be passed to channelPolicy->SetLoadType
      */
-    nsresult OpenChannel(PRInt32 aPolicyType);
+    nsresult OpenChannel();
 
     /**
      * Closes and releases references to mChannel and, if opened, mFinalListener
@@ -293,35 +291,23 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool ShouldPlay(FallbackType &aReason);
 
     /**
-     * Checks if a URI passes security checks and content policy, relative to
-     * the current document's principal
+     * Helper to check if our current URI passes policy
      *
-     * @param aURI                The URI to consider
-     * @param aContentPolicy      [in/out] A pointer to the initial content
-     *                            policy, that will be updated to contain the
-     *                            final determined policy
-     * @param aContentPolicyType  The 'contentType' parameter passed to
-     *                            NS_CheckContentLoadPolicy
+     * @param aContentPolicy [out] The result of the content policy decision
      *
-     * @return true if this URI is acceptable for loading
+     * @return true if call succeeded and NS_CP_ACCEPTED(*aContentPolicy)
      */
-    bool CheckURILoad(nsIURI *aURI,
-                      PRInt16 *aContentPolicy,
-                      PRInt32 aContentPolicyType);
+    bool CheckLoadPolicy(PRInt16 *aContentPolicy);
 
     /**
-     * Checks if the current mURI and mBaseURI pass content policy and security
-     * checks for loading
+     * Helper to check if the object passes process policy. Assumes we have a
+     * final determined type.
      *
-     * @param aContentPolicy     [in/out] A pointer to the initial content
-     *                           policy, that will be updated to contain the
-     *                           final determined policy if a URL is rejected
-     * @param aContentPolicyType The 'contentType' parameter passed to
-     *                           NS_CheckContentLoadPolicy
+     * @param aContentPolicy [out] The result of the content policy decision
      *
-     * @return true if the URIs are acceptable for loading
+     * @return true if call succeeded and NS_CP_ACCEPTED(*aContentPolicy)
      */
-    bool CheckObjectURIs(PRInt16 *aContentPolicy, PRInt32 aContentPolicyType);
+    bool CheckProcessPolicy(PRInt16 *aContentPolicy);
 
     /**
      * Checks whether the given type is a supported document type
