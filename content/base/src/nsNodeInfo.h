@@ -17,6 +17,8 @@
 #include "plhash.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMNode.h"
+#include "nsGkAtoms.h"
 
 class nsFixedSizeAllocator;
 
@@ -63,45 +65,49 @@ private:
    * this object, instead of always deleting the object we'll put the
    * object in the cache unless the cache is already full.
    */
-   void LastRelease();
+  void LastRelease();
 };
 
-#define CHECK_VALID_NODEINFO(_nodeType, _name, _namespaceID, _extraName)    \
-NS_ABORT_IF_FALSE(_nodeType == nsIDOMNode::ELEMENT_NODE ||                  \
-                  _nodeType == nsIDOMNode::ATTRIBUTE_NODE ||                \
-                  _nodeType == nsIDOMNode::TEXT_NODE ||                     \
-                  _nodeType == nsIDOMNode::CDATA_SECTION_NODE ||            \
-                  _nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||   \
-                  _nodeType == nsIDOMNode::COMMENT_NODE ||                  \
-                  _nodeType == nsIDOMNode::DOCUMENT_NODE ||                 \
-                  _nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||            \
-                  _nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||        \
-                  _nodeType == PR_UINT16_MAX,                               \
-                  "Invalid nodeType");                                      \
-NS_ABORT_IF_FALSE((_nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||  \
-                   _nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==          \
-                  (_extraName != nullptr),                                   \
-                  "Supply aExtraName for and only for PIs and doctypes");   \
-NS_ABORT_IF_FALSE(_nodeType == nsIDOMNode::ELEMENT_NODE ||                  \
-                  _nodeType == nsIDOMNode::ATTRIBUTE_NODE ||                \
-                  _nodeType == PR_UINT16_MAX ||                             \
-                  aNamespaceID == kNameSpaceID_None,                        \
-                  "Only attributes and elements can be in a namespace");    \
-NS_ABORT_IF_FALSE(_name && _name != nsGkAtoms::_empty, "Invalid localName");\
-NS_ABORT_IF_FALSE(((_nodeType == nsIDOMNode::TEXT_NODE) ==                  \
-                   (_name == nsGkAtoms::textTagName)) &&                    \
-                  ((_nodeType == nsIDOMNode::CDATA_SECTION_NODE) ==         \
-                   (_name == nsGkAtoms::cdataTagName)) &&                   \
-                  ((_nodeType == nsIDOMNode::COMMENT_NODE) ==               \
-                   (_name == nsGkAtoms::commentTagName)) &&                 \
-                  ((_nodeType == nsIDOMNode::DOCUMENT_NODE) ==              \
-                   (_name == nsGkAtoms::documentNodeName)) &&               \
-                  ((_nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) ==     \
-                   (_name == nsGkAtoms::documentFragmentNodeName)) &&       \
-                  ((_nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==         \
-                   (_name == nsGkAtoms::documentTypeNodeName)) &&           \
-                  ((_nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) ==\
-                   (_name == nsGkAtoms::processingInstructionTagName)),     \
-                  "Wrong localName for nodeType");
+inline void
+CheckValidNodeInfo(PRUint16 aNodeType, nsIAtom *aName, PRInt32 aNamespaceID,
+                   nsIAtom* aExtraName)
+{
+  NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||
+                    aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
+                    aNodeType == nsIDOMNode::TEXT_NODE ||
+                    aNodeType == nsIDOMNode::CDATA_SECTION_NODE ||
+                    aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+                    aNodeType == nsIDOMNode::COMMENT_NODE ||
+                    aNodeType == nsIDOMNode::DOCUMENT_NODE ||
+                    aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
+                    aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
+                    aNodeType == PR_UINT16_MAX,
+                    "Invalid nodeType");
+  NS_ABORT_IF_FALSE((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+                     aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+                    !!aExtraName,
+                    "Supply aExtraName for and only for PIs and doctypes");
+  NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||
+                    aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
+                    aNodeType == PR_UINT16_MAX ||
+                    aNamespaceID == kNameSpaceID_None,
+                    "Only attributes and elements can be in a namespace");
+  NS_ABORT_IF_FALSE(aName && aName != nsGkAtoms::_empty, "Invalid localName");
+  NS_ABORT_IF_FALSE(((aNodeType == nsIDOMNode::TEXT_NODE) ==
+                     (aName == nsGkAtoms::textTagName)) &&
+                    ((aNodeType == nsIDOMNode::CDATA_SECTION_NODE) ==
+                     (aName == nsGkAtoms::cdataTagName)) &&
+                    ((aNodeType == nsIDOMNode::COMMENT_NODE) ==
+                     (aName == nsGkAtoms::commentTagName)) &&
+                    ((aNodeType == nsIDOMNode::DOCUMENT_NODE) ==
+                     (aName == nsGkAtoms::documentNodeName)) &&
+                    ((aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) ==
+                     (aName == nsGkAtoms::documentFragmentNodeName)) &&
+                    ((aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+                     (aName == nsGkAtoms::documentTypeNodeName)) &&
+                    ((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) ==
+                     (aName == nsGkAtoms::processingInstructionTagName)),
+                    "Wrong localName for nodeType");
+}
 
 #endif /* nsNodeInfo_h___ */

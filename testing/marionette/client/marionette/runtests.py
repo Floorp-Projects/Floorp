@@ -14,7 +14,6 @@ import socket
 import sys
 import time
 import platform
-import datazilla
 import xml.dom.minidom as dom
 
 try:
@@ -107,7 +106,8 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         timeTaken = stopTime - startTime
         result.printErrors()
         result.printLogs(test)
-        result.getPerfData(test)
+        if options.perf:
+            result.getPerfData(test)
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
         run = result.testsRun
@@ -359,6 +359,7 @@ class MarionetteTestRunner(object):
 
             manifest = TestManifest()
             manifest.read(filepath)
+
             if options.perf:
                 if options.perfserv is None:
                     options.perfserv = manifest.get("perfserv")[0]
@@ -603,6 +604,9 @@ if __name__ == "__main__":
     # default to storing logcat output for emulator runs
     if options.emulator and not options.logcat_dir:
         options.logcat_dir = 'logcat'
+
+    if options.perf:
+        import datazilla
 
     # check for valid resolution string, strip whitespaces
     try:

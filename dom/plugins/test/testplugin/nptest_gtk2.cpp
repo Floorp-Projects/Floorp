@@ -254,6 +254,9 @@ ButtonEvent(GtkWidget* widget, GdkEventButton* event,
   InstanceData* instanceData = static_cast<InstanceData*>(user_data);
   instanceData->lastMouseX = event->x;
   instanceData->lastMouseY = event->y;
+  if (event->type == GDK_BUTTON_RELEASE) {
+    instanceData->mouseUpEventCount++;
+  }
   return TRUE;
 }
 
@@ -418,6 +421,9 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     XButtonEvent* button = &nsEvent->xbutton;
     instanceData->lastMouseX = button->x;
     instanceData->lastMouseY = button->y;
+    if (nsEvent->type == ButtonRelease) {
+      instanceData->mouseUpEventCount++;
+    }
     break;
   }
   default:

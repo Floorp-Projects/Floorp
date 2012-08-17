@@ -606,7 +606,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
                 return NULL;
         }
     }
-    bool haveSource = fun->isInterpreted();
+    bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
     if (haveSource && !fun->script()->scriptSource()->hasSourceData() &&
         !fun->script()->loadSource(cx, &haveSource))
     {
@@ -709,7 +709,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             if (!out.append(")"))
                 return NULL;
         }
-    } else if (fun->isInterpreted()) {
+    } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
         if ((!bodyOnly && !out.append("() {\n    ")) ||
             !out.append("[sourceless code]") ||
             (!bodyOnly && !out.append("\n}")))
@@ -1451,7 +1451,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT_IF(script->compartment() != cx->compartment,
-                         !script->enclosingStaticScope() && !script->compileAndGo);
+                         !script->enclosingStaticScope());
 
             RootedObject scope(cx, script->enclosingStaticScope());
 
@@ -1475,7 +1475,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned attrs, AllocKind kind)
+                  unsigned nargs, unsigned attrs, const char *selfHostedName, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
@@ -1497,11 +1497,24 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         sop = NULL;
     }
 
-    fun = js_NewFunction(cx, NULL, native, nargs,
-                         attrs & (JSFUN_FLAGS_MASK),
-                         obj,
-                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
-                         kind);
+    /*
+     * To support specifying both native and self-hosted functions using
+     * JSFunctionSpec, js_DefineFunction can be invoked with either native
+     * or selfHostedName set. It is assumed that selfHostedName is set if
+     * native isn't.
+     */
+    if (native) {
+        JS_ASSERT(!selfHostedName);
+        fun = js_NewFunction(cx, NULL, native, nargs,
+                             attrs & (JSFUN_FLAGS_MASK),
+                             obj,
+                             JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
+                             kind);
+    } else {
+        JS_ASSERT(attrs & JSFUN_INTERPRETED);
+        fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
+        fun->atom = JSID_TO_ATOM(id);
+    }
     if (!fun)
         return NULL;
 

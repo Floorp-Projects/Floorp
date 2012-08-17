@@ -118,7 +118,7 @@ Parser::Parser(JSContext *cx, const CompileOptions &options,
     keepAtoms(cx->runtime),
     foldConstants(foldConstants),
     compileAndGo(options.compileAndGo),
-    allowIntrinsicsCalls(options.allowIntrinsicsCalls)
+    selfHostingMode(options.selfHostingMode)
 {
     cx->activeCompilations++;
 }
@@ -837,9 +837,10 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
     parent = tc->sc->inFunction() ? NULL : tc->sc->scopeChain();
 
     RootedFunction fun(context);
-    fun = js_NewFunction(context, NULL, NULL, 0,
-                         JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
-                         parent, atom);
+    uint32_t flags = JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0);
+    if (selfHostingMode)
+        flags |= JSFUN_SELF_HOSTED;
+    fun = js_NewFunction(context, NULL, NULL, 0, flags, parent, atom);
     if (fun && !compileAndGo) {
         if (!JSObject::clearParent(context, fun))
             return NULL;
@@ -6773,7 +6774,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         return new_<NullLiteral>(tokenStream.currentToken().pos);
 
       case TOK_MOD:
-        if (allowIntrinsicsCalls)
+        if (selfHostingMode)
             return intrinsicName();
         else
             goto syntaxerror;

@@ -1821,4 +1821,32 @@ inline bool NS_IsEventTargetedAtFocusedContent(nsEvent* aEvent)
          NS_IS_RETARGETED_PLUGIN_EVENT(aEvent);
 }
 
+/**
+ * Whether the event should cause a DOM event.
+ */
+inline bool NS_IsAllowedToDispatchDOMEvent(nsEvent* aEvent)
+{
+  switch (aEvent->eventStructType) {
+    case NS_MOUSE_EVENT:
+      // We want synthesized mouse moves to cause mouseover and mouseout
+      // DOM events (nsEventStateManager::PreHandleEvent), but not mousemove
+      // DOM events.
+      // Synthesized button up events also do not cause DOM events because they
+      // do not have a reliable refPoint.
+      return static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal;
+
+    case NS_WHEEL_EVENT: {
+      // wheel event whose all delta values are zero by user pref applied, it
+      // shouldn't cause a DOM event.
+      mozilla::widget::WheelEvent* wheelEvent =
+        static_cast<mozilla::widget::WheelEvent*>(aEvent);
+      return wheelEvent->deltaX != 0.0 || wheelEvent->deltaY != 0.0 ||
+             wheelEvent->deltaZ != 0.0;
+    }
+
+    default:
+      return true;
+  }
+}
+
 #endif // nsGUIEvent_h__

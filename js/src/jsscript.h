@@ -87,20 +87,20 @@ class Binding
      * One JSScript stores one Binding per formal/variable so we use a
      * packed-word representation.
      */
-    size_t bits_;
+    uintptr_t bits_;
 
-    static const size_t KIND_MASK = 0x3;
-    static const size_t ALIASED_BIT = 0x4;
-    static const size_t NAME_MASK = ~(KIND_MASK | ALIASED_BIT);
+    static const uintptr_t KIND_MASK = 0x3;
+    static const uintptr_t ALIASED_BIT = 0x4;
+    static const uintptr_t NAME_MASK = ~(KIND_MASK | ALIASED_BIT);
 
   public:
     explicit Binding() : bits_(0) {}
 
     Binding(PropertyName *name, BindingKind kind, bool aliased) {
         JS_STATIC_ASSERT(CONSTANT <= KIND_MASK);
-        JS_ASSERT((size_t(name) & ~NAME_MASK) == 0);
-        JS_ASSERT((size_t(kind) & ~KIND_MASK) == 0);
-        bits_ = size_t(name) | size_t(kind) | (aliased ? ALIASED_BIT : 0);
+        JS_ASSERT((uintptr_t(name) & ~NAME_MASK) == 0);
+        JS_ASSERT((uintptr_t(kind) & ~KIND_MASK) == 0);
+        bits_ = uintptr_t(name) | uintptr_t(kind) | (aliased ? ALIASED_BIT : 0);
     }
 
     PropertyName *name() const {
@@ -116,7 +116,7 @@ class Binding
     }
 };
 
-JS_STATIC_ASSERT(sizeof(Binding) == sizeof(size_t));
+JS_STATIC_ASSERT(sizeof(Binding) == sizeof(uintptr_t));
 
 /*
  * Formal parameters and local variables are stored in a shape tree
@@ -130,20 +130,38 @@ class Bindings
     friend class AliasedFormalIter;
 
     HeapPtr<Shape> callObjShape_;
-    Binding *bindingArray_;
+    uintptr_t bindingArrayAndFlag_;
     uint16_t numArgs_;
     uint16_t numVars_;
+
+    /*
+     * During parsing, bindings are allocated out of a temporary LifoAlloc.
+     * After parsing, a JSScript object is created and the bindings are
+     * permanently transferred to it. On error paths, the JSScript object may
+     * end up with bindings that still point to the (new released) LifoAlloc
+     * memory. To avoid tracing these bindings during GC, we keep track of
+     * whether the bindings are temporary or permanent in the low bit of
+     * bindingArrayAndFlag_.
+     */
+    static const uintptr_t TEMPORARY_STORAGE_BIT = 0x1;
+    bool bindingArrayUsingTemporaryStorage() const {
+        return bindingArrayAndFlag_ & TEMPORARY_STORAGE_BIT;
+    }
+    Binding *bindingArray() const {
+        return reinterpret_cast<Binding *>(bindingArrayAndFlag_ & ~TEMPORARY_STORAGE_BIT);
+    }
 
   public:
     inline Bindings();
 
     /*
-     * Initialize a Bindings. bindingArray must have length numArgs+numVars and
-     * must outlive Bindings. To use a temporary bindingArray, the caller may
-     * call switchStorageTo, providing new storage for Bindings to use.
+     * Initialize a Bindings with a pointer into temporary storage.
+     * bindingArray must have length numArgs+numVars. Before the temporary
+     * storage is release, switchToScriptStorage must be called, providing a
+     * pointer into the Binding array stored in script->data.
      */
-    bool init(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray);
-    uint8_t *switchStorageTo(Binding *newStorage);
+    bool initWithTemporaryStorage(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray);
+    uint8_t *switchToScriptStorage(Binding *newStorage);
 
     /*
      * Clone srcScript's bindings (as part of js::CloneScript). dstScriptData
@@ -858,8 +876,8 @@ class BindingIter
         return i_ < bindings_->numArgs() ? i_ : i_ - bindings_->numArgs();
     }
 
-    const Binding &operator*() const { JS_ASSERT(!done()); return bindings_->bindingArray_[i_]; }
-    const Binding *operator->() const { JS_ASSERT(!done()); return &bindings_->bindingArray_[i_]; }
+    const Binding &operator*() const { JS_ASSERT(!done()); return bindings_->bindingArray()[i_]; }
+    const Binding *operator->() const { JS_ASSERT(!done()); return &bindings_->bindingArray()[i_]; }
 };
 
 /*
@@ -989,7 +1007,7 @@ struct ScriptSource
     bool performXDR(XDRState<mode> *xdr);
 
     // Source maps
-    void setSourceMap(jschar *sm);
+    bool setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename);
     const jschar *sourceMap();
     bool hasSourceMap() const { return sourceMap_ != NULL; }
 

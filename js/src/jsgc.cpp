@@ -2496,6 +2496,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
 #else
         MarkConservativeStackRoots(trc, useSavedRoots);
 #endif
+        rt->markSelfHostedGlobal(trc);
     }
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
@@ -2551,7 +2552,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         mjit::ExpandInlineFrames(c);
 #endif
 
-    rt->stackSpace.mark(trc);
+    rt->stackSpace.markAndClobber(trc);
     rt->debugScopes->mark(trc);
 
     /* The embedding can register additional roots here. */
@@ -3345,7 +3346,7 @@ EndMarkPhase(JSRuntime *rt)
     JS_ASSERT(rt->gcMarker.isDrained());
 
 #ifdef DEBUG
-    if (rt->gcIsIncremental)
+    if (rt->gcIsIncremental && rt->gcValidate)
         ValidateIncrementalMarking(rt);
 #endif
 
@@ -3543,6 +3544,13 @@ BeginSweepPhase(JSRuntime *rt)
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+
+        /*
+         * Eliminate any garbage values from the VM stack that may have been
+         * left by the JIT in between incremental GC slices. We need to do this
+         * before discarding analysis data during JSCompartment::sweep.
+         */
+        rt->stackSpace.markAndClobber(NULL);
 
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
@@ -4546,6 +4554,13 @@ SetDeterministicGC(JSContext *cx, bool enabled)
     JSRuntime *rt = cx->runtime;
     rt->gcDeterministicOnly = enabled;
 #endif
+}
+
+void
+SetValidateGC(JSContext *cx, bool enabled)
+{
+    JSRuntime *rt = cx->runtime;
+    rt->gcValidate = enabled;
 }
 
 } /* namespace gc */
