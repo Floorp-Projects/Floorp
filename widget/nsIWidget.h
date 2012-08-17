@@ -281,9 +281,6 @@ struct InputContext {
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
 
-  /* The type of the inputmode */
-  nsString mHTMLInputInputmode;
-
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
 };

@@ -148,28 +148,6 @@ static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
 // Default autocomplete value is "".
 static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
 
-static const PRUint8 NS_INPUT_INPUTMODE_AUTO              = 0;
-static const PRUint8 NS_INPUT_INPUTMODE_NUMERIC           = 1;
-static const PRUint8 NS_INPUT_INPUTMODE_DIGIT             = 2;
-static const PRUint8 NS_INPUT_INPUTMODE_UPPERCASE         = 3;
-static const PRUint8 NS_INPUT_INPUTMODE_LOWERCASE         = 4;
-static const PRUint8 NS_INPUT_INPUTMODE_TITLECASE         = 5;
-static const PRUint8 NS_INPUT_INPUTMODE_AUTOCAPITALIZED   = 6;
-
-static const nsAttrValue::EnumTable kInputInputmodeTable[] = {
-  { "auto", NS_INPUT_INPUTMODE_AUTO },
-  { "numeric", NS_INPUT_INPUTMODE_NUMERIC },
-  { "digit", NS_INPUT_INPUTMODE_DIGIT },
-  { "uppercase", NS_INPUT_INPUTMODE_UPPERCASE },
-  { "lowercase", NS_INPUT_INPUTMODE_LOWERCASE },
-  { "titlecase", NS_INPUT_INPUTMODE_TITLECASE },
-  { "autocapitalized", NS_INPUT_INPUTMODE_AUTOCAPITALIZED },
-  { 0 }
-};
-
-// Default inputmode value is "auto".
-static const nsAttrValue::EnumTable* kInputDefaultInputmode = &kInputInputmodeTable[0];
-
 const double nsHTMLInputElement::kDefaultStepBase = 0;
 const double nsHTMLInputElement::kStepAny = 0;
 
@@ -884,8 +862,6 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, FormTarget, formtarget)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Inputmode, inputmode,
-                                kInputDefaultInputmode->tag)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
@@ -2760,9 +2736,6 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::autocomplete) {
       return aResult.ParseEnumValue(aValue, kInputAutocompleteTable, false);
-    }
-    if (aAttribute == nsGkAtoms::inputmode) {
-      return aResult.ParseEnumValue(aValue, kInputInputmodeTable, false);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       // We have to call |ParseImageAttribute| unconditionally since we
