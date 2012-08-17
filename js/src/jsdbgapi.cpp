@@ -34,6 +34,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "vm/Debugger.h"
+#include "ion/Ion.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -534,9 +535,27 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 }
 
 JS_PUBLIC_API(void)
-JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
+JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
 {
-    Valueify(fp)->setAnnotation(annotation);
+    StackFrame *fp = cx->fp();
+    JS_ASSERT_IF(fp->beginsIonActivation(), !fp->annotation());
+
+    // Note that if this frame is running in Ion, the actual calling frame
+    // could be inlined or a callee and thus we won't have a correct |fp|.
+    // To account for this, ion::InvalidationBailout will transfer an
+    // annotation from the old cx->fp() to the new top frame. This works
+    // because we will never EnterIon on a frame with an annotation.
+    fp->setAnnotation(annotation);
+
+    JSScript *script = fp->maybeScript();
+    if (!script)
+        return;
+
+    ReleaseAllJITCode(cx->runtime->defaultFreeOp());
+
+    // Ensure that we'll never try to compile this again.
+    JS_ASSERT(!script->hasIonScript());
+    script->ion = ION_DISABLED_SCRIPT;
 }
 
 JS_PUBLIC_API(JSBool)
