@@ -2660,7 +2660,7 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     }
     if (NS_FAILED(principal->EnableCapability(capability, &annotation)))
         return NS_ERROR_FAILURE;
-    JS_SetFrameAnnotation(cx, fp, annotation);
+    JS_SetTopFrameAnnotation(cx, annotation);
     return NS_OK;
 }
 

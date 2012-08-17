@@ -373,6 +373,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     sp->checkInvariants();
 
     JSContext *cx = GetIonContext()->cx;
+
     // We don't have an exit frame.
     cx->runtime->ionTop = NULL;
     IonActivationIterator ionActivations(cx);
@@ -407,6 +408,14 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
 
     if (retval != BAILOUT_RETURN_FATAL_ERROR) {
+        if (void *annotation = activation->entryfp()->annotation()) {
+            // If the entry frame has an annotation, then we invalidated and have
+            // immediately returned into this bailout. Transfer the annotation to
+            // the new topmost frame.
+            activation->entryfp()->setAnnotation(NULL);
+            cx->fp()->setAnnotation(annotation);
+        }
+
         // If invalidation was triggered inside a stub call, we may still have to
         // monitor the result, since the bailout happens before the MMonitorTypes
         // instruction is executed.
