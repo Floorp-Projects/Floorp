@@ -4144,6 +4144,8 @@ MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
+MOZ_SAMPLE_TYPE_FLOAT32=
+MOZ_SAMPLE_TYPE_S16LE=
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
@@ -5192,6 +5194,19 @@ fi
 
 AC_SUBST(MOZ_WEBRTC)
 
+case "$target_cpu" in
+arm*)
+    MOZ_SAMPLE_TYPE_S16LE=1
+    AC_DEFINE(MOZ_SAMPLE_TYPE_S16LE)
+    AC_SUBST(MOZ_SAMPLE_TYPE_S16LE)
+;;
+*)
+    MOZ_SAMPLE_TYPE_FLOAT32=1
+    AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
+    AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
+;;
+esac
+
 dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
@@ -5220,14 +5235,6 @@ if test -n "$MOZ_OGG"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
-        MOZ_VORBIS=1
-    ;;
-    esac
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5367,14 +5374,11 @@ if test "$MOZ_WEBM"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
+    if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
         MOZ_VORBIS=1
-    ;;
-    esac
+    else
+        MOZ_TREMOR=1
+    fi
 fi
 
 if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
