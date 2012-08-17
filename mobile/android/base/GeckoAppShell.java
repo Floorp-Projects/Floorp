@@ -576,12 +576,12 @@ public class GeckoAppShell
             mInputConnection.notifyIME(type, state);
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint,
+    public static void notifyIMEEnabled(int state, String typeHint, String modeHint,
                                         String actionHint, boolean landscapeFS) {
         // notifyIMEEnabled() still needs the landscapeFS parameter because it is called from JNI
         // code that assumes it has the same signature as XUL Fennec's (which does use landscapeFS).
         if (mInputConnection != null)
-            mInputConnection.notifyIMEEnabled(state, typeHint, actionHint);
+            mInputConnection.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
