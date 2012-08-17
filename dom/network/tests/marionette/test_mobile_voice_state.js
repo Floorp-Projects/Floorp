@@ -3,9 +3,7 @@
 
 MARIONETTE_TIMEOUT = 30000;
 
-const WHITELIST_PREF = "dom.mobileconnection.whitelist";
-let uriPrePath = window.location.protocol + "//" + window.location.host;
-SpecialPowers.setCharPref(WHITELIST_PREF, uriPrePath);
+SpecialPowers.addPermission("mobileconnection", true, document);
 
 let connection = navigator.mozMobileConnection;
 ok(connection instanceof MozMobileConnection,
@@ -138,7 +136,7 @@ function testHome() {
 }
 
 function cleanUp() {
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  SpecialPowers.removePermission("mobileconnection", document);
   finish();
 }
 
