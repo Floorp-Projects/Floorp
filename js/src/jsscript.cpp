@@ -1762,25 +1762,19 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
 JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
-    JS_ASSERT(!script->callDestroyHook);
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
         hook(cx, script->filename, script->lineno, script, fun,
              cx->runtime->debugHooks.newScriptHookData);
     }
-    script->callDestroyHook = true;
 }
 
 void
 js::CallDestroyScriptHook(FreeOp *fop, JSScript *script)
 {
-    if (!script->callDestroyHook)
-        return;
-
     if (JSDestroyScriptHook hook = fop->runtime()->debugHooks.destroyScriptHook)
         hook(fop, script, fop->runtime()->debugHooks.destroyScriptHookData);
-    script->callDestroyHook = false;
     script->clearTraps(fop);
 }
 
