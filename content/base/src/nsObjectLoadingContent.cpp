@@ -2335,6 +2335,7 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
   }
 
   aInstanceOwner->Destroy();
+  mIsStopping = false;
 }
 
 NS_IMETHODIMP
