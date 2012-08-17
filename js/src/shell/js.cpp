@@ -3363,8 +3363,11 @@ static JSBool
 DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSScript *script = js_GetCurrentScript(cx);
-    JS_ASSERT(script);
+    JSScript *script = NULL;
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL)) {
+        args.rval().setString(cx->runtime->emptyString);
+        return true;
+    }
     JSString *result = JS_DecompileScript(cx, script, "test", 0);
     if (!result)
         return false;
@@ -3376,8 +3379,8 @@ static JSBool
 ThisFilename(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSScript *script = js_GetCurrentScript(cx);
-    if (!script || !script->filename) {
+    JSScript *script = NULL;
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL) || !script->filename) {
         args.rval().setString(cx->runtime->emptyString);
         return true;
     }

@@ -676,21 +676,6 @@ ArrayBufferObject::obj_typeOf(JSContext *cx, HandleObject obj)
 }
 
 /*
- * ArrayBufferViews of various sorts
- */
-
-static JSObject *
-GetProtoForClass(JSContext *cx, Class *clasp)
-{
-    // Pass in the proto from this compartment
-    Rooted<GlobalObject*> parent(cx, GetCurrentGlobal(cx));
-    RootedObject proto(cx);
-    if (!FindProto(cx, clasp, parent, &proto))
-        return NULL;
-    return proto;
-}
-
-/*
  * TypedArray
  *
  * The non-templated base class for the specific typed implementations.
@@ -1678,8 +1663,9 @@ class TypedArrayTemplate
                  * reuses all the existing cross-compartment crazy so we don't
                  * have to do anything *uniquely* crazy here.
                  */
-                Rooted<JSObject*> proto(cx, GetProtoForClass(cx, fastClass()));
-                if (!proto)
+
+                Rooted<JSObject*> proto(cx);
+                if (!FindProto(cx, fastClass(), &proto))
                     return NULL;
 
                 InvokeArgsGuard ag;

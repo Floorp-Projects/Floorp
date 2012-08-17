@@ -1166,6 +1166,18 @@ struct JSContext : js::ContextFriendFields
 
     inline void setCompartment(JSCompartment *compartment);
 
+    /*
+     * When no compartments have been explicitly entered, the context's
+     * compartment will be set to the compartment of the "default compartment
+     * object".
+     */
+  private:
+    JSObject *defaultCompartmentObject_;
+  public:
+    inline void setDefaultCompartmentObject(JSObject *obj);
+    inline void setDefaultCompartmentObjectIfUnset(JSObject *obj);
+    JSObject *maybeDefaultCompartmentObject() const { return defaultCompartmentObject_; }
+
     /* Current execution stack. */
     js::ContextStack    stack;
 
@@ -1190,9 +1202,6 @@ struct JSContext : js::ContextFriendFields
     js::frontend::ParseMapPool *parseMapPool_;
 
   public:
-    /* Top-level object and pointer to top stack frame's scope chain. */
-    JSObject            *globalObject;
-
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
     js::BusyArraysSet   busyArrays;
@@ -1789,9 +1798,6 @@ js_HandleExecutionInterrupt(JSContext *cx);
 
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
-
-extern JSScript *
-js_GetCurrentScript(JSContext* cx);
 
 /*
  * If the operation callback flag was set, call the operation callback.

@@ -1788,7 +1788,7 @@ JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *objArg)
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx)
 {
-    return cx->globalObject;
+    return cx->maybeDefaultCompartmentObject();
 }
 
 JS_PUBLIC_API(void)
@@ -1797,9 +1797,7 @@ JS_SetGlobalObject(JSContext *cx, JSRawObject obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    cx->globalObject = obj;
-    if (!cx->hasfp())
-        cx->resetCompartment();
+    cx->setDefaultCompartmentObject(obj);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1810,14 +1808,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    /*
-     * JS_SetGlobalObject might or might not change cx's compartment, so call
-     * it before assertSameCompartment. (The API contract is that *after* this,
-     * cx and obj must be in the same compartment.)
-     */
-    if (!cx->globalObject)
-        JS_SetGlobalObject(cx, obj);
-
+    cx->setDefaultCompartmentObjectIfUnset(obj);
     assertSameCompartment(cx, obj);
 
     Rooted<GlobalObject*> global(cx, &obj->global());
@@ -2254,11 +2245,9 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp_)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    RootedObject global(cx, cx->compartment->maybeGlobal());
-    if (!global)
-        return false;
+
     RootedObject objp(cx);
-    bool result = js_GetClassPrototype(cx, global, key, &objp);
+    bool result = js_GetClassPrototype(cx, key, &objp);
     *objp_ = objp;
     return result;
 }
@@ -2310,7 +2299,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
-    return GetGlobalForScopeChain(cx);
+    return cx->global();
 }
 
 JS_PUBLIC_API(jsval)
@@ -4879,13 +4868,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
 
-    if (!parent) {
-        if (cx->hasfp())
-            parent = cx->fp()->scopeChain();
-        if (!parent)
-            parent = cx->globalObject;
-        JS_ASSERT(parent);
-    }
+    if (!parent)
+        parent = cx->global();
 
     if (!funobj->isFunction()) {
         ReportIsNotFunction(cx, ObjectValue(*funobj));
@@ -7301,8 +7285,7 @@ JS_GetScriptedGlobal(JSContext *cx)
 {
     ScriptFrameIter i(cx);
     if (i.done())
-        return JS_GetGlobalForScopeChain(cx);
-
-    return JS_GetGlobalForFrame(Jsvalify(i.fp()));
+        return cx->global();
+    return &i.fp()->global();
 }
 
