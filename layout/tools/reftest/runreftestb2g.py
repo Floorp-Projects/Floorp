@@ -365,15 +365,21 @@ class B2GReftest(RefTest):
         # Turn off the locale picker screen
         fhandle = open(os.path.join(profileDir, "user.js"), 'a')
         fhandle.write("""
-user_pref("browser.homescreenURL", "data:text/html,<h1>reftests should start soon</h1>");
-user_pref("browser.manifestURL", "dummy (bug 772307)");
 user_pref("browser.firstrun.show.localepicker", false);
-user_pref("browser.dom.window.dump.enabled", true);
+user_pref("browser.homescreenURL","app://system.gaiamobile.org");\n
+user_pref("browser.manifestURL","app://system.gaiamobile.org/manifest.webapp");\n
+user_pref("browser.tabs.remote", true);\n
+user_pref("dom.ipc.browser_frames.oop_by_default", true);\n
+user_pref("dom.ipc.tabs.disabled", false);\n
+user_pref("dom.mozBrowserFramesEnabled", true);\n
+user_pref("dom.mozBrowserFramesWhitelist","app://system.gaiamobile.org");\n
+user_pref("network.dns.localDomains","app://system.gaiamobile.org");\n
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
+user_pref("reftest.browser.iframe.enabled", true);
 user_pref("reftest.remote", true);
-user_pref("toolkit.telemetry.prompted", true);
 user_pref("reftest.uri", "%s");
+user_pref("toolkit.telemetry.prompted", true);
 """ % reftestlist)
 
         #workaround for jsreftests.
