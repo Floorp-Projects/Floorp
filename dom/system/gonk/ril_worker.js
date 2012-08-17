@@ -2805,13 +2805,14 @@ let RIL = {
   /**
    * Get a list of current voice calls.
    */
-  enumerateCalls: function enumerateCalls() {
+  enumerateCalls: function enumerateCalls(options) {
     if (DEBUG) debug("Sending all current calls");
     let calls = [];
     for each (let call in this.currentCalls) {
       calls.push(call);
     }
-    this.sendDOMMessage({rilMessageType: "enumerateCalls", calls: calls});
+    options.calls = calls;
+    this.sendDOMMessage(options);
   },
 
   /**
@@ -3258,6 +3259,7 @@ RIL[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, options) {
   }
   options.rilMessageType = "sendussd";
   options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
@@ -3266,6 +3268,7 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   }
   options.rilMessageType = "cancelussd";
   options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_GET_CLIR] = null;
