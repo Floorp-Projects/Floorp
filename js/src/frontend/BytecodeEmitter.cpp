@@ -887,15 +887,20 @@ ClonedBlockDepth(BytecodeEmitter *bce)
 static uint16_t
 AliasedNameToSlot(JSScript *script, PropertyName *name)
 {
+    /*
+     * Beware: BindingIter may contain more than one Binding for a given name
+     * (in the case of |function f(x,x) {}|) but only one will be aliased.
+     */
     unsigned slot = CallObject::RESERVED_SLOTS;
-    BindingIter bi(script->bindings);
-    for (; bi->name() != name; bi++) {
-        if (bi->aliased())
+    for (BindingIter bi(script->bindings); ; bi++) {
+        if (bi->aliased()) {
+            if (bi->name() == name)
+                return slot;
             slot++;
+        }
     }
 
-    JS_ASSERT(bi->aliased());
-    return slot;
+    return 0;
 }
 
 static bool
