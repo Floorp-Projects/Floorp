@@ -85,11 +85,7 @@ if test "$CLANG_CXX"; then
     ## returned by C functions. This is possible because we use knowledge about the ABI
     ## to typedef it to a C type with the same layout when the headers are included
     ## from C.
-    ##
-    ## mismatched-tags is disabled (bug 780474) mostly because it's useless.
-    ## Worse, it's not supported by gcc, so it will cause tryserver bustage
-    ## without any easy way for non-Clang users to check for it.
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage -Wno-mismatched-tags"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage"
 fi
 
 if test "$GNU_CC"; then

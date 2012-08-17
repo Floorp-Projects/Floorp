@@ -56,8 +56,7 @@ nsresult nsCollationMacUC::ConvertLocale(nsILocale* aNSLocale, LocaleRef* aMacLo
 
   nsAutoString localeString;
   nsresult res = aNSLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), localeString);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(res) && !localeString.IsEmpty(),
-                 NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(res == noErr && !localeString.IsEmpty(), NS_ERROR_FAILURE);
   NS_LossyConvertUTF16toASCII tmp(localeString);
   tmp.ReplaceChar('-', '_');
   OSStatus err;
