@@ -197,12 +197,12 @@ var VirtualCursorController = {
   attach: function attach(aWindow) {
     this.chromeWin = aWindow;
     this.chromeWin.document.addEventListener('keypress', this, true);
-    this.chromeWin.document.addEventListener('mousemove', this, true);
+    this.chromeWin.addEventListener('mozAccessFuGesture', this, true);
   },
 
   detach: function detach() {
     this.chromeWin.document.removeEventListener('keypress', this, true);
-    this.chromeWin.document.removeEventListener('mousemove', this, true);
+    this.chromeWin.removeEventListener('mozAccessFuGesture', this, true);
   },
 
   handleEvent: function VirtualCursorController_handleEvent(aEvent) {
@@ -210,32 +210,35 @@ var VirtualCursorController = {
       case 'keypress':
         this._handleKeypress(aEvent);
         break;
-      case 'mousemove':
-        this._handleMousemove(aEvent);
+      case 'mozAccessFuGesture':
+        this._handleGesture(aEvent);
         break;
     }
   },
 
-  _handleMousemove: function _handleMousemove(aEvent) {
-    // Explore by touch is disabled.
-    if (!this.exploreByTouch)
-      return;
+  _handleGesture: function _handleGesture(aEvent) {
+    let document = Utils.getCurrentContentDoc(this.chromeWin);
+    let detail = aEvent.detail;
+    Logger.info('Gesture', detail.type,
+                '(fingers: ' + detail.touches.length + ')');
 
-    // On non-Android we use the shift key to simulate touch.
-    if (Utils.OS != 'Android' && !aEvent.shiftKey)
-      return;
-
-    // We should not be calling moveToPoint more than 10 times a second.
-    // It is granular enough to feel natural, and it does not hammer the CPU.
-    if (!this._handleMousemove._lastEventTime ||
-        aEvent.timeStamp - this._handleMousemove._lastEventTime >= 100) {
-      this.moveToPoint(Utils.getCurrentContentDoc(this.chromeWin),
-                       aEvent.screenX, aEvent.screenY);
-      this._handleMousemove._lastEventTime = aEvent.timeStamp;
+    if (detail.touches.length == 1) {
+      switch (detail.type) {
+        case 'swiperight':
+          this.moveForward(document, aEvent.shiftKey);
+          break;
+        case 'swipeleft':
+          this.moveBackward(document, aEvent.shiftKey);
+          break;
+        case 'doubletap':
+          this.activateCurrent(document);
+          break;
+        case 'explore':
+          this.moveToPoint(document, detail.x, detail.y);
+          break;
+      }
     }
 
-    aEvent.preventDefault();
-    aEvent.stopImmediatePropagation();
   },
 
   _handleKeypress: function _handleKeypress(aEvent) {
