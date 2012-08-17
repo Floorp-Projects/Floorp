@@ -21,8 +21,7 @@ simple_events = [
     'DeviceOrientationEvent',
     'DeviceLightEvent',
     'MozApplicationEvent',
-    'DeviceStorageChangeEvent',
-    'BluetoothDeviceAddressEvent'
+    'DeviceStorageChangeEvent'
   ]
 
 """ include file names """
