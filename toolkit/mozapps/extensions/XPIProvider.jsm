@@ -130,6 +130,11 @@ const TYPES = {
   dictionary: 64
 };
 
+const COMPATIBLE_BY_DEFAULT_TYPES = {
+  extension: true,
+  dictionary: true
+};
+
 const MSG_JAR_FLUSH = "AddonJarFlush";
 
 var gGlobalScope = this;
@@ -721,10 +726,12 @@ function loadManifestFromRDF(aUri, aStream) {
       throw new Error("No version in install manifest");
   }
 
-  // Only read the bootstrap and strictCompatibility properties for extensions.
+  addon.strictCompatibility = !(addon.type in COMPATIBLE_BY_DEFAULT_TYPES) ||
+                              getRDFProperty(ds, root, "strictCompatibility") == "true";
+
+  // Only read the bootstrap property for extensions.
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
-    addon.strictCompatibility = getRDFProperty(ds, root, "strictCompatibility") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
@@ -742,7 +749,6 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.optionsURL = null;
     addon.optionsType = null;
     addon.aboutURL = null;
-    addon.strictCompatibility = true;
 
     if (addon.type == "theme") {
       if (!addon.internalName)
@@ -5340,7 +5346,7 @@ UpdateChecker.prototype = {
     if (!AddonManager.checkCompatibility) {
       ignoreMaxVersion = true;
       ignoreStrictCompat = true;
-    } else if (this.addon.type == "extension" &&
+    } else if (this.addon.type in COMPATIBLE_BY_DEFAULT_TYPES &&
                !AddonManager.strictCompatibility &&
                !this.addon.strictCompatibility &&
                !this.addon.hasBinaryComponents) {
@@ -5531,10 +5537,11 @@ AddonInternal.prototype = {
     else if (app.id == TOOLKIT_ID)
       version = aPlatformVersion
 
-    // Only extensions can be compatible by default; themes and language packs
-    // always use strict compatibility checking.
-    if (this.type == "extension" && !AddonManager.strictCompatibility &&
-        !this.strictCompatibility && !this.hasBinaryComponents) {
+    // Only extensions and dictionaries can be compatible by default; themes
+    // and language packs always use strict compatibility checking.
+    if (this.type in COMPATIBLE_BY_DEFAULT_TYPES &&
+        !AddonManager.strictCompatibility && !this.strictCompatibility &&
+        !this.hasBinaryComponents) {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.

@@ -62,10 +62,10 @@ Bindings::argumentsVarIndex(JSContext *cx) const
 }
 
 bool
-Bindings::init(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray)
+Bindings::initWithTemporaryStorage(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindingArray)
 {
     JS_ASSERT(!callObjShape_);
-    JS_ASSERT(!bindingArray_);
+    JS_ASSERT(bindingArrayAndFlag_ == TEMPORARY_STORAGE_BIT);
 
     if (numArgs > UINT16_MAX || numVars > UINT16_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -75,10 +75,10 @@ Bindings::init(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindi
         return false;
     }
 
-    bindingArray_ = bindingArray;
+    JS_ASSERT(!(uintptr_t(bindingArray) & TEMPORARY_STORAGE_BIT));
+    bindingArrayAndFlag_ = uintptr_t(bindingArray) | TEMPORARY_STORAGE_BIT;
     numArgs_ = numArgs;
     numVars_ = numVars;
-
 
     /*
      * Get the initial shape to use when creating CallObjects for this script.
@@ -135,10 +135,13 @@ Bindings::init(JSContext *cx, unsigned numArgs, unsigned numVars, Binding *bindi
 }
 
 uint8_t *
-Bindings::switchStorageTo(Binding *newBindingArray)
+Bindings::switchToScriptStorage(Binding *newBindingArray)
 {
-    PodCopy(newBindingArray, bindingArray_, count());
-    bindingArray_ = newBindingArray;
+    JS_ASSERT(bindingArrayUsingTemporaryStorage());
+    JS_ASSERT(!(uintptr_t(newBindingArray) & TEMPORARY_STORAGE_BIT));
+
+    PodCopy(newBindingArray, bindingArray(), count());
+    bindingArrayAndFlag_ = uintptr_t(newBindingArray);
     return reinterpret_cast<uint8_t *>(newBindingArray + count());
 }
 
@@ -147,7 +150,7 @@ Bindings::clone(JSContext *cx, uint8_t *dstScriptData, HandleScript srcScript)
 {
     /* The clone has the same bindingArray_ offset as 'src'. */
     Bindings &src = srcScript->bindings;
-    ptrdiff_t off = (uint8_t *)src.bindingArray_ - srcScript->data;
+    ptrdiff_t off = (uint8_t *)src.bindingArray() - srcScript->data;
     JS_ASSERT(off >= 0);
     JS_ASSERT(off <= (srcScript->code - srcScript->data));
     Binding *dstPackedBindings = (Binding *)(dstScriptData + off);
@@ -156,8 +159,10 @@ Bindings::clone(JSContext *cx, uint8_t *dstScriptData, HandleScript srcScript)
      * Since atoms are shareable throughout the runtime, we can simply copy
      * the source's bindingArray directly.
      */
-    PodCopy(dstPackedBindings, src.bindingArray_, src.count());
-    return init(cx, src.numArgs(), src.numVars(), dstPackedBindings);
+    if (!initWithTemporaryStorage(cx, src.numArgs(), src.numVars(), src.bindingArray()))
+        return false;
+    switchToScriptStorage(dstPackedBindings);
+    return true;
 }
 
 template<XDRMode mode>
@@ -207,7 +212,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
             bindingArray[i] = Binding(name, kind, aliased);
         }
 
-        if (!script->bindings.init(cx, numArgs, numVars, bindingArray))
+        if (!script->bindings.initWithTemporaryStorage(cx, numArgs, numVars, bindingArray))
             return false;
     }
 
@@ -218,7 +223,7 @@ bool
 Bindings::bindingIsAliased(unsigned bindingIndex)
 {
     JS_ASSERT(bindingIndex < count());
-    return bindingArray_[bindingIndex].aliased();
+    return bindingArray()[bindingIndex].aliased();
 }
 
 void
@@ -227,7 +232,15 @@ Bindings::trace(JSTracer *trc)
     if (callObjShape_)
         MarkShape(trc, &callObjShape_, "callObjShape");
 
-    for (Binding *b = bindingArray_, *end = b + count(); b != end; b++) {
+    /*
+     * As the comment in Bindings explains, bindingsArray may point into freed
+     * storage when bindingArrayUsingTemporaryStorage so we don't mark it.
+     * Note: during compilation, atoms are already kept alive by gcKeepAtoms.
+     */
+    if (bindingArrayUsingTemporaryStorage())
+        return;
+
+    for (Binding *b = bindingArray(), *end = b + count(); b != end; b++) {
         PropertyName *name = b->name();
         MarkStringUnbarriered(trc, &name, "bindingArray");
     }
@@ -1259,12 +1272,19 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
     return true;
 }
 
-void
-ScriptSource::setSourceMap(jschar *sm)
+bool
+ScriptSource::setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename)
 {
-    JS_ASSERT(!hasSourceMap());
-    JS_ASSERT(sm);
-    sourceMap_ = sm;
+    JS_ASSERT(sourceMapURL);
+    if (hasSourceMap()) {
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
+                                          JSMSG_ALREADY_HAS_SOURCEMAP, filename)) {
+            cx->free_(sourceMapURL);
+            return false;
+        }
+    }
+    sourceMap_ = sourceMapURL;
+    return true;
 }
 
 const jschar *
@@ -1573,7 +1593,7 @@ JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
         cursor += vectorSize;
     }
 
-    cursor = script->bindings.switchStorageTo(reinterpret_cast<Binding *>(cursor));
+    cursor = script->bindings.switchToScriptStorage(reinterpret_cast<Binding *>(cursor));
 
     script->code = (jsbytecode *)cursor;
     JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == script->data + size);
@@ -1986,7 +2006,7 @@ void
 CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                 JSPrincipals **origin)
 {
-    ScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
 
     if (iter.done()) {
         *file = NULL;

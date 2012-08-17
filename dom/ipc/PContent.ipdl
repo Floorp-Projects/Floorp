@@ -97,7 +97,7 @@ struct DeviceStorageDeleteParams
 struct DeviceStorageEnumerationParams
 {
   nsString fullpath;
-  PRUint32 since;
+  PRUint64 since;
 };
 
 union DeviceStorageParams

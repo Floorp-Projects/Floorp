@@ -1527,15 +1527,19 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
  * value which is considered acceptable.
  *
  * Now to implement the actual method, write a JSNative that calls the method
- * declared below, passing the appropriate arguments.
+ * declared below, passing the appropriate template and runtime arguments.
  *
  *   static JSBool
  *   answer_getAnswer(JSContext *cx, unsigned argc, JS::Value *vp)
  *   {
  *       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
- *       return JS::CallNonGenericMethod(cx, IsAnswerObject,
-                                         answer_getAnswer_impl, args);
+ *       return JS::CallNonGenericMethod<IsAnswerObject, answer_getAnswer_impl>(cx, args);
  *   }
+ *
+ * Note that, because they are used as template arguments, the predicate
+ * and implementation functions must have external linkage. (This is
+ * unfortunate, but GCC wasn't inlining things as one would hope when we
+ * passed them as function arguments.)
  *
  * JS::CallNonGenericMethod will test whether |args.thisv()| is acceptable.  If
  * it is, it will call the provided implementation function, which will return
@@ -1547,14 +1551,25 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
  * Note: JS::CallNonGenericMethod will only work correctly if it's called in
  *       tail position in a JSNative.  Do not call it from any other place.
  */
+template<IsAcceptableThis Test, NativeImpl Impl>
 JS_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
+CallNonGenericMethod(JSContext *cx, CallArgs args)
 {
     const Value &thisv = args.thisv();
-    if (test(thisv))
-        return impl(cx, args);
+    if (Test(thisv))
+        return Impl(cx, args);
 
-    return detail::CallMethodIfWrapped(cx, test, impl, args);
+    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
+}
+
+JS_ALWAYS_INLINE bool
+CallNonGenericMethod(JSContext *cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
+{
+    const Value &thisv = args.thisv();
+    if (Test(thisv))
+        return Impl(cx, args);
+
+    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
 
 }  /* namespace JS */
@@ -2525,6 +2540,11 @@ class AutoIdRooter : private AutoGCRooter
 
 /* Function flags, internal use only, returned by JS_GetFunctionFlags. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
+
+#define JSFUN_SELF_HOSTED       0x40    /* function is self-hosted native and
+                                           must not be decompilable nor
+                                           constructible. */
+
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
@@ -4399,11 +4419,17 @@ struct JSPropertySpec {
     JSStrictPropertyOpWrapper   setter;
 };
 
+/*
+ * To define a native function, set call to a JSNativeWrapper. To define a
+ * self-hosted function, set selfHostedName to the name of a function
+ * compiled during JSRuntime::initSelfHosting.
+ */
 struct JSFunctionSpec {
     const char      *name;
     JSNativeWrapper call;
     uint16_t        nargs;
     uint16_t        flags;
+    const char      *selfHostedName;
 };
 
 /*
@@ -5132,7 +5158,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     unsigned lineno;
     bool compileAndGo;
     bool noScriptRval;
-    bool allowIntrinsicsCalls;
+    bool selfHostingMode;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -5149,7 +5175,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
-    CompileOptions &setAllowIntrinsicsCalls(bool aic) { allowIntrinsicsCalls = aic; return *this; }
+    CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 

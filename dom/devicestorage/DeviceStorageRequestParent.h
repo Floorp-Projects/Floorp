@@ -151,12 +151,12 @@ private:
   class EnumerateFileEvent : public CancelableRunnable
   {
     public:
-      EnumerateFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, PRUint32 aSince);
+      EnumerateFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, PRUint64 aSince);
       virtual ~EnumerateFileEvent();
       virtual nsresult CancelableRun();
     private:
       nsRefPtr<DeviceStorageFile> mFile;
-      PRUint32 mSince;
+      PRUint64 mSince;
   };
 
   class PostPathResultEvent : public CancelableRunnable
@@ -175,13 +175,11 @@ private:
     public:
       PostStatResultEvent(DeviceStorageRequestParent* aParent,
                           PRInt64 aFreeBytes,
-                          PRInt64 aTotalBytes,
-                          nsAString& aState);
+                          PRInt64 aTotalBytes);
       virtual ~PostStatResultEvent();
       virtual nsresult CancelableRun();
     private:
       PRInt64 mFreeBytes, mTotalBytes;
-      nsString mState;
    };
 
 protected:
