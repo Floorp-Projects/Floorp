@@ -10,6 +10,7 @@
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/SharedImageUtils.h"
 #include "ImageLayers.h"
+#include "GonkIOSurfaceImage.h"
 
 namespace mozilla {
 namespace layers {
@@ -98,6 +99,10 @@ void ImageContainerChild::StopChild()
 bool ImageContainerChild::RecvReturnImage(const SharedImage& aImage)
 {
   SharedImage* img = new SharedImage(aImage);
+  // Remove oldest image from the queue.
+  if (mImageQueue.Length() > 0) {
+    mImageQueue.RemoveElementAt(0);
+  }
   if (!AddSharedImageToPool(img) || mStop) {
     DestroySharedImage(*img);
     delete img;
@@ -196,6 +201,12 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
     NS_ABORT_IF_FALSE(result->type() == SharedImage::TYUVImage,
                       "SharedImage type not set correctly");
     return result;
+#ifdef MOZ_WIDGET_GONK
+  } else if (image->GetFormat() == Image::GONK_IO_SURFACE) {
+    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(image);
+    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
+    return result;
+#endif
   } else {
     NS_RUNTIMEABORT("TODO: Only YUVImage is supported here right now.");
   }
@@ -319,6 +330,9 @@ SharedImage* ImageContainerChild::ImageToSharedImage(Image* aImage)
   } else {
     img = CreateSharedImageFromData(aImage);
   }
+  // Keep a reference to the image we sent to compositor to maintain a
+  // correct reference count.
+  mImageQueue.AppendElement(aImage);
   return img;
 }
 

@@ -8,6 +8,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 
+#include "mozilla/layers/LayersSurfaces.h"
 #include "ImageLayers.h"
 
 #include <ui/GraphicBuffer.h>
@@ -28,21 +29,21 @@ class GraphicBufferLocked {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphicBufferLocked)
 
 public:
-  GraphicBufferLocked(android::GraphicBuffer* aGraphicBuffer)
-    : mGraphicBuffer(aGraphicBuffer)
+  GraphicBufferLocked(SurfaceDescriptor aGraphicBuffer)
+    : mSurfaceDescriptor(aGraphicBuffer)
   {}
 
   virtual ~GraphicBufferLocked() {}
 
   virtual void Unlock() {}
 
-  virtual void* GetNativeBuffer()
+  SurfaceDescriptor GetSurfaceDescriptor()
   {
-    return mGraphicBuffer->getNativeBuffer();
+    return mSurfaceDescriptor;
   }
 
 protected:
-  android::GraphicBuffer* mGraphicBuffer;
+  SurfaceDescriptor mSurfaceDescriptor;
 };
 
 class THEBES_API GonkIOSurfaceImage : public Image {
@@ -51,7 +52,6 @@ public:
     nsRefPtr<GraphicBufferLocked> mGraphicBuffer;
     gfxIntSize mPicSize;
   };
-
   GonkIOSurfaceImage()
     : Image(NULL, GONK_IO_SURFACE)
     , mSize(0, 0)
@@ -81,7 +81,12 @@ public:
 
   void* GetNativeBuffer()
   {
-    return mGraphicBuffer->GetNativeBuffer();
+    return GrallocBufferActor::GetFrom(GetSurfaceDescriptor())->getNativeBuffer();
+  }
+
+  SurfaceDescriptor GetSurfaceDescriptor()
+  {
+    return mGraphicBuffer->GetSurfaceDescriptor();
   }
 
 private:
