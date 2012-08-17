@@ -1069,88 +1069,92 @@ nsObjectLoadingContent::ObjectState() const
   return NS_EVENT_STATE_LOADING;
 }
 
-// Helper to call CheckURILoad on URI -> BaseURI and BaseURI -> Origin
-bool nsObjectLoadingContent::CheckObjectURIs(PRInt16 *aContentPolicy,
-                                             PRInt32 aContentPolicyType)
+bool
+nsObjectLoadingContent::CheckLoadPolicy(PRInt16 *aContentPolicy)
 {
+  if (!aContentPolicy || !mURI) {
+    NS_NOTREACHED("Doing it wrong");
+    return false;
+  }
+
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "Must be an instance of content");
 
-  nsCOMPtr<nsIURI> docBaseURI = thisContent->GetBaseURI();
+  nsIDocument* doc = thisContent->OwnerDoc();
 
-  // Must have these to load
-  if (!aContentPolicy || !mBaseURI) {
+  *aContentPolicy = nsIContentPolicy::ACCEPT;
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
+                                          mURI,
+                                          doc->NodePrincipal(),
+                                          thisContent,
+                                          mContentType,
+                                          nullptr, //extra
+                                          aContentPolicy,
+                                          nsContentUtils::GetContentPolicy(),
+                                          nsContentUtils::GetSecurityManager());
+  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_CP_REJECTED(*aContentPolicy)) {
+    nsCAutoString uri;
+    nsCAutoString baseUri;
+    mURI->GetSpec(uri);
+    mURI->GetSpec(baseUri);
+    LOG(("OBJLC [%p]: Content policy denied load of %s (base %s)",
+         this, uri.get(), baseUri.get()));
     return false;
-  }
-
-  bool ret;
-  if (!URIEquals(mBaseURI, docBaseURI)) {
-    // If our object sets a new baseURI, make sure that base URI could be
-    // loaded by the document
-    ret = CheckURILoad(mBaseURI, aContentPolicy, aContentPolicyType);
-    if (!ret) {
-      return false;
-    }
-  }
-
-  if (mURI) {
-    return CheckURILoad(mURI, aContentPolicy, aContentPolicyType);
   }
 
   return true;
 }
 
-bool nsObjectLoadingContent::CheckURILoad(nsIURI *aURI,
-                                          PRInt16 *aContentPolicy,
-                                          PRInt32 aContentPolicyType)
+bool
+nsObjectLoadingContent::CheckProcessPolicy(PRInt16 *aContentPolicy)
 {
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  NS_ASSERTION(secMan, "No security manager!?");
+  if (!aContentPolicy) {
+    NS_NOTREACHED("Null out variable");
+    return false;
+  }
 
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "Must be an instance of content");
 
-  nsCOMPtr<nsIURI> docBaseURI = thisContent->GetBaseURI();
-
   nsIDocument* doc = thisContent->OwnerDoc();
-  nsresult rv =
-    secMan->CheckLoadURIWithPrincipal(thisContent->NodePrincipal(), aURI, 0);
   
-  if (NS_FAILED(rv)) {
-    nsCAutoString uri;
-    nsCAutoString baseUri;
-    aURI->GetSpec(uri);
-    aURI->GetSpec(baseUri);
-    LOG(("OBJLC [%p]: CheckLoadURIWithPrincipal denied load of %s (base %s)",
-         this, uri.get(), baseUri.get()));
-    return false;
+  PRInt32 objectType;
+  switch (mType) {
+    case eType_Image:
+      objectType = nsIContentPolicy::TYPE_IMAGE;
+      break;
+    case eType_Document:
+      objectType = nsIContentPolicy::TYPE_DOCUMENT;
+      break;
+    case eType_Plugin:
+      objectType = nsIContentPolicy::TYPE_OBJECT;
+      break;
+    default:
+      NS_NOTREACHED("Calling checkProcessPolicy with a unloadable type");
+      return false;
   }
 
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
-  rv = NS_CheckContentLoadPolicy(aContentPolicyType,
-                                 aURI,
+  *aContentPolicy = nsIContentPolicy::ACCEPT;
+  nsresult rv =
+    NS_CheckContentProcessPolicy(objectType,
+                                 mURI,
                                  doc->NodePrincipal(),
                                  static_cast<nsIImageLoadingContent*>(this),
                                  mContentType,
                                  nullptr, //extra
-                                 &shouldLoad,
+                                 aContentPolicy,
                                  nsContentUtils::GetContentPolicy(),
-                                 secMan);
+                                 nsContentUtils::GetSecurityManager());
   NS_ENSURE_SUCCESS(rv, false);
-  if (aContentPolicy) {
-    *aContentPolicy = shouldLoad;
-  }
-  if (NS_CP_REJECTED(shouldLoad)) {
-    nsCAutoString uri;
-    nsCAutoString baseUri;
-    aURI->GetSpec(uri);
-    aURI->GetSpec(baseUri);
-    LOG(("OBJLC [%p]: Content policy denied load of %s (base %s)",
-         this, uri.get(), baseUri.get()));
+
+  if (NS_CP_REJECTED(*aContentPolicy)) {
+    LOG(("OBJLC [%p]: CheckContentProcessPolicy rejected load", this));
     return false;
   }
+
   return true;
 }
 
@@ -1596,40 +1600,33 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   // Security checks
   //
 
-  // NOTE For eType_Loading we'll try all three types, as we want to go ahead
-  //      with the channel if it could be any acceptable type. This type is
-  //      passed to OpenChannel() as the LoadType. We pass through LoadObject
-  //      again once the channel is opened and we're actually loading, so if
-  //      the final URI doesn't pass the now-known type, we'll abort.
-  PRInt32 policyType;
   if (mType != eType_Null) {
-    bool allowLoad = false;
     PRInt16 contentPolicy = nsIContentPolicy::ACCEPT;
-    PRUint32 caps = GetCapabilities();
-    bool supportImage = caps & eSupportImages;
-    bool supportDoc = (caps & eSupportDocuments) || (caps & eSupportSVG);
-    bool supportPlugin = caps & eSupportPlugins;
-    if (mType == eType_Image || (mType == eType_Loading && supportImage)) {
-      policyType = nsIContentPolicy::TYPE_IMAGE;
-      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
+    bool allowLoad = false;
+    // We check load policy before opening a channel, and process policy before
+    // going ahead with any final-type load
+    if (mType == eType_Loading) {
+      nsCOMPtr<nsIScriptSecurityManager> secMan =
+        nsContentUtils::GetSecurityManager();
+      if (!secMan) {
+        NS_NOTREACHED("No security manager?");
+      } else {
+        rv = secMan->CheckLoadURIWithPrincipal(thisContent->NodePrincipal(),
+                                               mURI, 0);
+        allowLoad = NS_SUCCEEDED(rv) && CheckLoadPolicy(&contentPolicy);
+      }
+    } else {
+      allowLoad = CheckProcessPolicy(&contentPolicy);
     }
-    if (!allowLoad &&
-        (mType == eType_Document || (mType == eType_Loading && supportDoc))) {
-      contentPolicy = nsIContentPolicy::ACCEPT;
-      policyType = nsIContentPolicy::TYPE_SUBDOCUMENT;
-      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
-    }
-    if (!allowLoad &&
-        (mType == eType_Plugin || (mType == eType_Loading && supportPlugin))) {
-      contentPolicy = nsIContentPolicy::ACCEPT;
-      policyType = nsIContentPolicy::TYPE_OBJECT;
-      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
-    }
-
+    
     // Load denied, switch to fallback and set disabled/suppressed if applicable
     if (!allowLoad) {
+      LOG(("OBJLC [%p]: Load denied by policy", this));
       mType = eType_Null;
       if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
+        // XXX(johns) This is assuming that we were rejected by
+        //            nsContentBlocker, which rejects by type if permissions
+        //            reject plugins
         fallbackType = eFallbackUserDisabled;
       } else {
         fallbackType = eFallbackSuppressed;
@@ -1781,7 +1778,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     break;
     case eType_Loading:
       // If our type remains Loading, we need a channel to proceed
-      rv = OpenChannel(policyType);
+      rv = OpenChannel();
       if (NS_FAILED(rv)) {
         LOG(("OBJLC [%p]: OpenChannel returned failure (%u)", this, rv));
       }
@@ -1850,7 +1847,7 @@ nsObjectLoadingContent::CloseChannel()
 }
 
 nsresult
-nsObjectLoadingContent::OpenChannel(PRInt32 aPolicyType)
+nsObjectLoadingContent::OpenChannel()
 {
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -1877,7 +1874,7 @@ nsObjectLoadingContent::OpenChannel(PRInt32 aPolicyType)
   if (csp) {
     channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
     channelPolicy->SetContentSecurityPolicy(csp);
-    channelPolicy->SetLoadType(aPolicyType);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
   }
   rv = NS_NewChannel(getter_AddRefs(chan), mURI, nullptr, group, this,
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
