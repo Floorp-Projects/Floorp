@@ -3576,6 +3576,18 @@ js_strchr(const jschar *s, jschar c)
 }
 
 jschar *
+js_strdup(JSContext *cx, const jschar *s)
+{
+    size_t n = js_strlen(s);
+    jschar *ret = static_cast<jschar *>(cx->malloc_((n + 1) * sizeof(jschar)));
+    if (!ret)
+        return NULL;
+    js_strncpy(ret, s, n);
+    ret[n] = '\0';
+    return ret;
+}
+
+jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 {
     while (s < limit) {

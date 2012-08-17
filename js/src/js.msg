@@ -353,3 +353,4 @@ MSG_DEF(JSMSG_REST_WITH_DEFAULT,      299, 0, JSEXN_SYNTAXERR, "rest parameter m
 MSG_DEF(JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT, 300, 0, JSEXN_SYNTAXERR, "parameter(s) with default followed by parameter without default")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default expression")
 MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic function {0}")
+MSG_DEF(JSMSG_ALREADY_HAS_SOURCEMAP,  303, 1, JSEXN_ERR,      "{0} is being assigned a source map, yet already has one")
