@@ -55,6 +55,7 @@
 #include "builtin/Eval.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
+#include "builtin/ParallelArray.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TreeContext.h"
@@ -1867,6 +1868,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
+    {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayObject::class_},
     {NULL,                              0, NULL}
 };
 
