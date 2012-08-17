@@ -125,6 +125,7 @@
  "docshell/test/test_bug637644.html": "",
  "docshell/test/test_bug668513.html": "RANDOM",
  "dom/browser-element/mochitest/test_browserElement_oop_SecurityChange.html": "TIMED_OUT, bug 766586",
+ "dom/browser-element/mochitest/test_browserElement_inproc_AppWindowNamespace.html": "TIMED_OUT, bug 783509",
  "dom/browser-element/mochitest/test_browserElement_inproc_SecurityChange.html": "TIMED_OUT, bug 766586",
  "dom/devicestorage": "bug 781789 & bug 782275",
  "dom/imptests/editing/conformancetest/test_event.html": "",
