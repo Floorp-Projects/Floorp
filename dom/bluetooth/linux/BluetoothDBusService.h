@@ -59,6 +59,29 @@ public:
   RemoveReservedServicesInternal(const nsAString& aAdapterPath,
                                  const nsTArray<PRUint32>& aServiceHandles);
 
+  virtual nsresult
+  CreatePairedDeviceInternal(const nsAString& aAdapterPath,
+                             const nsAString& aDeviceAddress,
+                             int aTimeout,
+                             BluetoothReplyRunnable* aRunnable);
+
+  virtual nsresult
+  RemoveDeviceInternal(const nsAString& aAdapterPath,
+                       const nsAString& aDeviceObjectPath,
+                       BluetoothReplyRunnable* aRunnable);
+
+  virtual bool
+  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode);
+
+  virtual bool
+  SetPasskeyInternal(const nsAString& aDeviceAddress, PRUint32 aPasskey);
+
+  virtual bool 
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm);
+
+  virtual bool 
+  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow);
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,
