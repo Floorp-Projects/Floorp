@@ -101,6 +101,8 @@ nsDOMNotifyAudioAvailableEvent::GetTime(float *aRetVal)
 
 NS_IMETHODIMP
 nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
+                                                        bool aCanBubble,
+                                                        bool aCancelable,
                                                         float* aFrameBuffer,
                                                         PRUint32 aFrameBufferLength,
                                                         float aTime,
@@ -110,7 +112,7 @@ nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
   // that if we exit due to some error, the memory will be freed. Otherwise,
   // the framebuffer's memory will be freed when this event is destroyed.
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
-  nsresult rv = nsDOMEvent::InitEvent(aType, false, false);
+  nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mFrameBuffer = frameBuffer.forget();
