@@ -1527,15 +1527,19 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
  * value which is considered acceptable.
  *
  * Now to implement the actual method, write a JSNative that calls the method
- * declared below, passing the appropriate arguments.
+ * declared below, passing the appropriate template and runtime arguments.
  *
  *   static JSBool
  *   answer_getAnswer(JSContext *cx, unsigned argc, JS::Value *vp)
  *   {
  *       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
- *       return JS::CallNonGenericMethod(cx, IsAnswerObject,
-                                         answer_getAnswer_impl, args);
+ *       return JS::CallNonGenericMethod<IsAnswerObject, answer_getAnswer_impl>(cx, args);
  *   }
+ *
+ * Note that, because they are used as template arguments, the predicate
+ * and implementation functions must have external linkage. (This is
+ * unfortunate, but GCC wasn't inlining things as one would hope when we
+ * passed them as function arguments.)
  *
  * JS::CallNonGenericMethod will test whether |args.thisv()| is acceptable.  If
  * it is, it will call the provided implementation function, which will return
@@ -1547,14 +1551,25 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
  * Note: JS::CallNonGenericMethod will only work correctly if it's called in
  *       tail position in a JSNative.  Do not call it from any other place.
  */
+template<IsAcceptableThis Test, NativeImpl Impl>
 JS_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
+CallNonGenericMethod(JSContext *cx, CallArgs args)
 {
     const Value &thisv = args.thisv();
-    if (test(thisv))
-        return impl(cx, args);
+    if (Test(thisv))
+        return Impl(cx, args);
 
-    return detail::CallMethodIfWrapped(cx, test, impl, args);
+    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
+}
+
+JS_ALWAYS_INLINE bool
+CallNonGenericMethod(JSContext *cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
+{
+    const Value &thisv = args.thisv();
+    if (Test(thisv))
+        return Impl(cx, args);
+
+    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
 
 }  /* namespace JS */
