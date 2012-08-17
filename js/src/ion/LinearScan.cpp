@@ -868,16 +868,6 @@ LinearScanAllocator::allocateRegisters()
             continue;
         }
 
-        IonSpew(IonSpew_RegAlloc, "  Unable to allocate free register");
-
-        // Phis can't spill other intervals at their definition
-        if (!current->index() && current->reg() && current->reg()->ins()->isPhi()) {
-            IonSpew(IonSpew_RegAlloc, " Can't split at phi, spilling this interval");
-            if (!spill())
-                return false;
-            continue;
-        }
-
         IonSpew(IonSpew_RegAlloc, " Attempting blocked register allocation");
 
         // If we absolutely need a register or our next use is closer than the
