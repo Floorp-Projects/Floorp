@@ -13,6 +13,7 @@
 #include "gfxUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageContainerChild.h"
+#include "GonkIOSurfaceImage.h"
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/QuartzSupport.h"

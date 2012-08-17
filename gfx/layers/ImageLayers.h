@@ -27,9 +27,6 @@ struct ID3D10ShaderResourceView;
 
 typedef void* HANDLE;
 #endif
-#ifdef MOZ_WIDGET_GONK
-# include <ui/GraphicBuffer.h>
-#endif
 
 namespace mozilla {
 
@@ -953,82 +950,6 @@ private:
   void* mPluginInstanceOwner;
   UpdateSurfaceCallback mUpdateCallback;
   DestroyCallback mDestroyCallback;
-};
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-/**
- * The gralloc buffer maintained by android GraphicBuffer can be
- * shared between the compositor thread and the producer thread. The
- * mGraphicBuffer is owned by the producer thread, but when it is
- * wrapped by GraphicBufferLocked and passed to the compositor, the
- * buffer content is guaranteed to not change until Unlock() is
- * called. Each producer must maintain their own buffer queue and
- * implement the GraphicBufferLocked::Unlock() interface.
- */
-class GraphicBufferLocked {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphicBufferLocked)
-
-public:
-  GraphicBufferLocked(android::GraphicBuffer* aGraphicBuffer)
-    : mGraphicBuffer(aGraphicBuffer)
-  {}
-
-  virtual ~GraphicBufferLocked() {}
-
-  virtual void Unlock() {}
-
-  virtual void* GetNativeBuffer()
-  {
-    return mGraphicBuffer->getNativeBuffer();
-  }   
-
-protected:
-  android::GraphicBuffer* mGraphicBuffer;
-};
-
-class THEBES_API GonkIOSurfaceImage : public Image {
-public:
-  struct Data {
-    nsRefPtr<GraphicBufferLocked> mGraphicBuffer;
-    gfxIntSize mPicSize;
-  };
-
-  GonkIOSurfaceImage()
-    : Image(NULL, GONK_IO_SURFACE)
-    , mSize(0, 0)
-    {}
-
-  virtual ~GonkIOSurfaceImage()
-  {
-    mGraphicBuffer->Unlock();
-  }
-
-  virtual void SetData(const Data& aData)
-  {
-    mGraphicBuffer = aData.mGraphicBuffer;
-    mSize = aData.mPicSize;
-  }
-
-  virtual gfxIntSize GetSize()
-  {
-    return mSize;
-  }
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface()
-  {
-    // We need to fix this and return a ASurface at some point.
-    return nullptr;
-  }
-
-  void* GetNativeBuffer()
-  {
-    return mGraphicBuffer->GetNativeBuffer();
-  }
-
-private:
-  nsRefPtr<GraphicBufferLocked> mGraphicBuffer;
-  gfxIntSize mSize;
 };
 #endif
 
