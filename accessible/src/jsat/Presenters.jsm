@@ -117,12 +117,6 @@ VisualPresenter.prototype = {
   attach: function VisualPresenter_attach(aWindow) {
     this.chromeWin = aWindow;
 
-    // Add stylesheet
-    let stylesheetURL = 'chrome://global/content/accessibility/AccessFu.css';
-    this.stylesheet = aWindow.document.createProcessingInstruction(
-      'xml-stylesheet', 'href="' + stylesheetURL + '" type="text/css"');
-    aWindow.document.insertBefore(this.stylesheet, aWindow.document.firstChild);
-
     // Add highlight box
     this.highlightBox = this.chromeWin.document.
       createElementNS('http://www.w3.org/1999/xhtml', 'div');
@@ -138,7 +132,6 @@ VisualPresenter.prototype = {
   },
 
   detach: function VisualPresenter_detach() {
-    this.chromeWin.document.removeChild(this.stylesheet);
     this.highlightBox.parentNode.removeChild(this.highlightBox);
     this.highlightBox = this.stylesheet = null;
   },
