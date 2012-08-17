@@ -42,7 +42,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "frontend/TreeContext-inl.h"
+#include "frontend/SharedContext-inl.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;

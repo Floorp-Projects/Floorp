@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TreeContext_inl_h__
-#define TreeContext_inl_h__
+#ifndef SharedContext_inl_h__
+#define SharedContext_inl_h__
 
 #include "frontend/Parser.h"
-#include "frontend/TreeContext.h"
+#include "frontend/SharedContext.h"
 
 namespace js {
 namespace frontend {
@@ -132,4 +132,4 @@ frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename Cont
 
 } // namespace js
 
-#endif // TreeContext_inl_h__
+#endif // SharedContext_inl_h__

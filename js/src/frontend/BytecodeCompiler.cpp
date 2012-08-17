@@ -18,7 +18,7 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/Parser-inl.h"
-#include "frontend/TreeContext-inl.h"
+#include "frontend/SharedContext-inl.h"
 
 using namespace js;
 using namespace js::frontend;
