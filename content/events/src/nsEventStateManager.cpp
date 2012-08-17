@@ -5091,10 +5091,10 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
       // If the delta direction is changed, we should reset only the
       // accumulated values.
       if (mX && aEvent->deltaX && ((aEvent->deltaX > 0.0) != (mX > 0.0))) {
-        mX = 0.0;
+        mX = mPendingScrollAmountX = 0.0;
       }
       if (mY && aEvent->deltaY && ((aEvent->deltaY > 0.0) != (mY > 0.0))) {
-        mY = 0.0;
+        mY = mPendingScrollAmountY = 0.0;
       }
     }
   }
@@ -5109,6 +5109,17 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
         mHandlingPixelOnlyDevice) &&
       !nsEventStateManager::WheelPrefs::GetInstance()->
         NeedToComputeLineOrPageDelta(aEvent)) {
+    // Set the delta values to mX and mY.  They would be used when above block
+    // resets mX/mY/mPendingScrollAmountX/mPendingScrollAmountY if the direction
+    // is changed.
+    // NOTE: We shouldn't accumulate the delta values, it might could cause
+    //       overflow even though it's not a realistic situation.
+    if (aEvent->deltaX) {
+      mX = aEvent->deltaX;
+    }
+    if (aEvent->deltaY) {
+      mY = aEvent->deltaY;
+    }
     mLastTime = TimeStamp::Now();
     return;
   }
