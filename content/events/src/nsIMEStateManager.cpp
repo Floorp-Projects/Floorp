@@ -322,8 +322,6 @@ nsIMEStateManager::SetIMEState(const IMEState &aState,
        aContent->Tag() == nsGkAtoms::textarea)) {
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
                       context.mHTMLInputType);
-    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
-                      context.mHTMLInputInputmode);
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
                       context.mActionHint);
 

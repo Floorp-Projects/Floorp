@@ -2115,7 +2115,6 @@ nsWindow::SetInputContext(const InputContext& aContext,
 
     AndroidBridge::NotifyIMEEnabled(enabled,
                                     aContext.mHTMLInputType,
-                                    aContext.mHTMLInputInputmode,
                                     aContext.mActionHint);
 }
 
