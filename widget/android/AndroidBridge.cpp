@@ -99,7 +99,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(II)V");
-    jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;Z)V");
+    jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V");
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
     jNotifyScreenShot = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;IIIIIIII)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
@@ -263,7 +263,7 @@ jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, PRUint3
 
 void
 AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
-                                const nsAString& aActionHint)
+                                const nsAString& aModeHint, const nsAString& aActionHint)
 {
     ALOG_BRIDGE("AndroidBridge::NotifyIMEEnabled");
     if (!sBridge)
@@ -275,18 +275,20 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
 
     AutoLocalJNIFrame jniFrame(env);
     nsPromiseFlatString typeHint(aTypeHint);
+    nsPromiseFlatString modeHint(aModeHint);
     nsPromiseFlatString actionHint(aActionHint);
 
-    jvalue args[4];
+    jvalue args[5];
     args[0].i = aState;
     args[1].l = NewJavaString(&jniFrame, typeHint.get(), typeHint.Length());
-    args[2].l = NewJavaString(&jniFrame, actionHint.get(), actionHint.Length());
-    args[3].z = false;
+    args[2].l = env->NewString(modeHint.get(), modeHint.Length());
+    args[3].l = env->NewString(actionHint.get(), actionHint.Length());
+    args[4].z = false;
 
     PRInt32 landscapeFS;
     if (NS_SUCCEEDED(Preferences::GetInt(IME_FULLSCREEN_PREF, &landscapeFS))) {
         if (landscapeFS == 1) {
-            args[3].z = true;
+            args[4].z = true;
         } else if (landscapeFS == -1){
             if (NS_SUCCEEDED(
                     Preferences::GetInt(IME_FULLSCREEN_THRESHOLD_PREF,
@@ -295,7 +297,7 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
                 // threshold to pixels and multiply the height by 100
                 if (nsWindow::GetAndroidScreenBounds().height  * 100 <
                     landscapeFS * Bridge()->GetDPI()) {
-                    args[3].z = true;
+                    args[4].z = true;
                 }
             }
 

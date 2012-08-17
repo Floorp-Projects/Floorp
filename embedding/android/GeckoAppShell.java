@@ -539,7 +539,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint,
+    public static void notifyIMEEnabled(int state, String typeHint, String modeHint,
                                         String actionHint, boolean landscapeFS)
     {
         if (GeckoApp.surfaceView == null)
@@ -549,6 +549,7 @@ public class GeckoAppShell
            In addition, the IME UI is hidden */
         GeckoApp.surfaceView.mIMEState = state;
         GeckoApp.surfaceView.mIMETypeHint = typeHint;
+        GeckoApp.surfaceView.mIMEModeHint = modeHint;
         GeckoApp.surfaceView.mIMEActionHint = actionHint;
         GeckoApp.surfaceView.mIMELandscapeFS = landscapeFS;
         IMEStateUpdater.enableIME();

@@ -682,6 +682,7 @@ bool
 TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
                                const PRInt32& aIMEOpen,
                                const nsString& aType,
+                               const nsString& aInputmode,
                                const nsString& aActionHint,
                                const PRInt32& aCause,
                                const PRInt32& aFocusChange)
@@ -699,6 +700,7 @@ TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
   context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(aIMEEnabled);
   context.mIMEState.mOpen = static_cast<IMEState::Open>(aIMEOpen);
   context.mHTMLInputType.Assign(aType);
+  context.mHTMLInputInputmode.Assign(aInputmode);
   context.mActionHint.Assign(aActionHint);
   InputContextAction action(
     static_cast<InputContextAction::Cause>(aCause),
