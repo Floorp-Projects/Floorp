@@ -286,6 +286,7 @@ class Emulator(object):
     def _save_logcat_proc(self, filename, cmd):
         self.logcat_proc = LogcatProc(filename, cmd)
         self.logcat_proc.run()
+        self.logcat_proc.processOutput()
         self.logcat_proc.waitForFinish()
         self.logcat_proc = None
 

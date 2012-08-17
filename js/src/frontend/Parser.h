@@ -55,10 +55,20 @@ struct Parser : private AutoGCRooter
     const bool          compileAndGo:1;
 
     /*
-     * Self-hosted scripts can use the special syntax %funName(..args) to call
-     * internal functions.
+     * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of
+     * JSOP_NAME or JSOP_GNAME to access unbound variables. JSOP_CALLINTRINSIC
+     * does a name lookup in a special object that contains properties
+     * installed during global initialization and that properties from
+     * self-hosted scripts get copied into lazily upon first access in a
+     * global.
+     * As that object is inaccessible to client code, the lookups are
+     * guaranteed to return the original objects, ensuring safe implementation
+     * of self-hosted builtins.
+     * Additionally, the special syntax %_CallName(receiver, ...args, fun) is
+     * supported, for which bytecode is emitted that invokes |fun| with
+     * |receiver| as the this-object and ...args as the arguments..
      */
-    const bool          allowIntrinsicsCalls:1;
+    const bool          selfHostingMode:1;
 
   public:
     Parser(JSContext *cx, const CompileOptions &options,

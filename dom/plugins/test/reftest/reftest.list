@@ -24,4 +24,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) =
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == plugin-background-5-step.html plugin-background-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == plugin-background-10-step.html plugin-background-ref.html
 random-if(!haveTestPlugin) == plugin-transform-1.html plugin-transform-1-ref.html
-fails-if(!haveTestPlugin) fails-if(http.platform=="X11"&&!layersGPUAccelerated) == plugin-transform-2.html plugin-transform-2-ref.html # bug 468496
+fails-if(!haveTestPlugin) == plugin-transform-2.html plugin-transform-2-ref.html

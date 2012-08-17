@@ -80,7 +80,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
     if (thisv.isObject())
         return true;
     if (fp->isFunctionFrame()) {
-        if (fp->fun()->inStrictMode())
+        if (fp->fun()->inStrictMode() || fp->fun()->isSelfHostedBuiltin())
             return true;
         /*
          * Eval function frames have their own |this| slot, which is a copy of the function's
@@ -364,8 +364,7 @@ IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *v
     JSOp op = JSOp(*pc);
     RootedPropertyName name(cx);
     name = GetNameFromBytecode(cx, script, pc, op);
-    JSFunction *fun = cx->global()->getIntrinsicFunction(cx, name);
-    vp->setObject(*fun);
+    cx->global()->getIntrinsicValue(cx, name, vp);
     return true;
 }
 

@@ -223,7 +223,7 @@ TreeContext::generateFunctionBindings(JSContext *cx, Bindings *bindings) const
     AppendPackedBindings(this, args_, packedBindings);
     AppendPackedBindings(this, vars_, packedBindings + args_.length());
 
-    if (!bindings->init(cx, args_.length(), vars_.length(), packedBindings))
+    if (!bindings->initWithTemporaryStorage(cx, args_.length(), vars_.length(), packedBindings))
         return false;
 
     if (bindings->hasAnyAliasedBindings() || sc->funHasExtensibleScope())

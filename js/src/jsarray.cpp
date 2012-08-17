@@ -1397,13 +1397,13 @@ class ArraySharpDetector
     }
 };
 
-static bool
+JS_ALWAYS_INLINE bool
 IsArray(const Value &v)
 {
     return v.isObject() && v.toObject().isArray();
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 array_toSource_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsArray(args.thisv()));
@@ -1472,12 +1472,12 @@ array_toSource_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 array_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsArray, array_toSource_impl, args);
+    return CallNonGenericMethod<IsArray, array_toSource_impl>(cx, args);
 }
 #endif
 

@@ -194,6 +194,8 @@ function RadioInterfaceLayer() {
                                   "ril.data.httpProxyHost",
                                   "ril.data.httpProxyPort"];
 
+  this._messageManagerByRequest = {};
+
   for each (let msgname in RIL_IPC_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
@@ -228,7 +230,8 @@ RadioInterfaceLayer.prototype = {
         // This message is sync.
         return this.rilContext;
       case "RIL:EnumerateCalls":
-        this.enumerateCalls();
+        this.saveRequestTarget(msg);
+        this.enumerateCalls(msg.json);
         break;
       case "RIL:GetMicrophoneMuted":
         // This message is sync.
@@ -270,26 +273,34 @@ RadioInterfaceLayer.prototype = {
         this.resumeCall(msg.json);
         break;
       case "RIL:GetAvailableNetworks":
-        this.getAvailableNetworks(msg.json);
+        this.saveRequestTarget(msg);
+        this.getAvailableNetworks(msg.json.requestId);
         break;
       case "RIL:SelectNetwork":
+        this.saveRequestTarget(msg);
         this.selectNetwork(msg.json);
         break;
       case "RIL:SelectNetworkAuto":
-        this.selectNetworkAuto(msg.json);
+        this.saveRequestTarget(msg);
+        this.selectNetworkAuto(msg.json.requestId);
       case "RIL:GetCardLock":
+        this.saveRequestTarget(msg);
         this.getCardLock(msg.json);
         break;
       case "RIL:UnlockCardLock":
+        this.saveRequestTarget(msg);
         this.unlockCardLock(msg.json);
         break;
       case "RIL:SetCardLock":
+        this.saveRequestTarget(msg);
         this.setCardLock(msg.json);
         break;
       case "RIL:SendUSSD":
+        this.saveRequestTarget(msg);
         this.sendUSSD(msg.json);
         break;
       case "RIL:CancelUSSD":
+        this.saveRequestTarget(msg);
         this.cancelUSSD(msg.json);
         break;
     }
@@ -322,7 +333,7 @@ RadioInterfaceLayer.prototype = {
         break;
       case "enumerateCalls":
         // This one will handle its own notifications.
-        this.handleEnumerateCalls(message.calls);
+        this.handleEnumerateCalls(message);
         break;
       case "callError":
         this.handleCallError(message);
@@ -433,6 +444,29 @@ RadioInterfaceLayer.prototype = {
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
     }
+  },
+
+  _messageManagerByRequest: null,
+  saveRequestTarget: function saveRequestTarget(msg) {
+    let requestId = msg.json.requestId;
+    if (!requestId) {
+      // The content is not interested in a response;
+      return;
+    }
+
+    let mm = msg.target.QueryInterface(Ci.nsIFrameMessageManager);
+    this._messageManagerByRequest[requestId] = mm;
+  },
+
+  _sendRequestResults: function _sendRequestResults(requestType, options) {
+    let target = this._messageManagerByRequest[options.requestId];
+    delete this._messageManagerByRequest[options.requestId];
+
+    if (!target) {
+      return;
+    }
+
+    target.sendAsyncMessage(requestType, options);
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {
@@ -733,12 +767,12 @@ RadioInterfaceLayer.prototype = {
   /**
    * Handle calls delivered in response to a 'enumerateCalls' request.
    */
-  handleEnumerateCalls: function handleEnumerateCalls(calls) {
-    debug("handleEnumerateCalls: " + JSON.stringify(calls));
-    for (let i in calls) {
-      calls[i].state = convertRILCallState(calls[i].state);
+  handleEnumerateCalls: function handleEnumerateCalls(options) {
+    debug("handleEnumerateCalls: " + JSON.stringify(options));
+    for (let i in options.calls) {
+      options.calls[i].state = convertRILCallState(options.calls[i].state);
     }
-    ppmm.sendAsyncMessage("RIL:EnumerateCalls", calls);
+    this._sendRequestResults("RIL:EnumerateCalls", options);
   },
 
   /**
@@ -747,7 +781,7 @@ RadioInterfaceLayer.prototype = {
   handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
     debug("handleGetAvailableNetworks: " + JSON.stringify(message));
 
-    ppmm.sendAsyncMessage("RIL:GetAvailableNetworks", message);
+    this._sendRequestResults("RIL:GetAvailableNetworks", message);
   },
 
   /**
@@ -763,7 +797,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleSelectNetwork: function handleSelectNetwork(message) {
     debug("handleSelectNetwork: " + JSON.stringify(message));
-    ppmm.sendAsyncMessage("RIL:SelectNetwork", message);
+    this._sendRequestResults("RIL:SelectNetwork", message);
   },
 
   /**
@@ -771,7 +805,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleSelectNetworkAuto: function handleSelectNetworkAuto(message) {
     debug("handleSelectNetworkAuto: " + JSON.stringify(message));
-    ppmm.sendAsyncMessage("RIL:SelectNetworkAuto", message);
+    this._sendRequestResults("RIL:SelectNetworkAuto", message);
   },
 
   /**
@@ -957,7 +991,7 @@ RadioInterfaceLayer.prototype = {
   },
 
   handleICCCardLockResult: function handleICCCardLockResult(message) {
-    ppmm.sendAsyncMessage("RIL:CardLockResult", message);
+    this._sendRequestResults("RIL:CardLockResult", message);
   },
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
@@ -969,14 +1003,14 @@ RadioInterfaceLayer.prototype = {
     debug("handleSendUSSD " + JSON.stringify(message));
     let messageType = message.success ? "RIL:SendUssd:Return:OK" :
                                         "RIL:SendUssd:Return:KO";
-    ppmm.sendAsyncMessage(messageType, message);
+    this._sendRequestResults(messageType, message);
   },
 
   handleCancelUSSD: function handleCancelUSSD(message) {
     debug("handleCancelUSSD " + JSON.stringify(message));
     let messageType = message.success ? "RIL:CancelUssd:Return:OK" :
                                         "RIL:CancelUssd:Return:KO";
-    ppmm.sendAsyncMessage(messageType, message);
+    this._sendRequestResults(messageType, message);
   },
 
   // nsIObserver
@@ -1065,9 +1099,10 @@ RadioInterfaceLayer.prototype = {
 
   // Handle phone functions of nsIRILContentHelper
 
-  enumerateCalls: function enumerateCalls() {
+  enumerateCalls: function enumerateCalls(message) {
     debug("Requesting enumeration of calls for callback");
-    this.worker.postMessage({rilMessageType: "enumerateCalls"});
+    message.rilMessageType = "enumerateCalls";
+    this.worker.postMessage(message);
   },
 
   dial: function dial(number) {

@@ -73,15 +73,7 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
             // Cairo, and hence Gecko, can use RepeatPad on Xorg 1.7. We
             // enable EXTEND_PAD provided that we're running on a recent
             // enough X server.
-
-            gfxXlibSurface *xlibSurface =
-                static_cast<gfxXlibSurface *>(currentTarget);
-            Display *dpy = xlibSurface->XDisplay();
-            // This is the exact condition for cairo to avoid XRender for
-            // EXTEND_PAD
-            if (VendorRelease(dpy) >= 60700000 ||
-                VendorRelease(dpy) < 10699000) {
-
+            if (static_cast<gfxXlibSurface*>(currentTarget)->IsPadSlow()) {
                 bool isDownscale =
                     aDeviceToImage.xx >= 1.0 && aDeviceToImage.yy >= 1.0 &&
                     aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;

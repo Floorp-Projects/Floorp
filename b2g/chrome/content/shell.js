@@ -372,6 +372,7 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
     url: msg.uri,
     origin: origin,
     manifest: msg.manifest,
+    isActivity: (msg.type == 'activity'),
     target: msg.target
   });
 }, 'system-messages-open-app', false);

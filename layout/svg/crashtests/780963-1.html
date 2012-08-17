@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+
+function tweak() {
+  document.body.offsetTop;
+
+  var feImage = document.getElementsByTagName("feImage")[0];
+  feImage.setAttribute('filter', 'url(#f1)')
+  document.body.offsetTop;
+
+  var child = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  feImage.appendChild(child);
+}
+
+    </script>
+  </head>
+  <body onload="tweak()">
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <filter filterUnits="userSpaceOnUse" id="f1">
+        <feImage/>
+      </filter>
+      <rect height="100" width="100"/>
+    </svg>
+  </body>
+</html>
