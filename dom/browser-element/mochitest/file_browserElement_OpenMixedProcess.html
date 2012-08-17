@@ -1,0 +1,22 @@
+<html>
+<body>
+
+<!-- The test relies on the fact that this file is completely empty. -->
+
+<script>
+
+function ok(b, msg)
+{
+  alert((b ? 'pass:' : 'fail:') + msg);
+}
+
+var w = window.open("file_empty.html");
+w.addEventListener('load', function() {
+  ok(true, 'Got load.');
+  ok(w.document.getElementById('url'), 'Found element with id "url"');
+  alert('finish');
+});
+</script>
+
+</body>
+</html>
