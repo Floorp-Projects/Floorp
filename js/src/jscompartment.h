@@ -300,9 +300,6 @@ struct JSCompartment
     size_t                       gcMallocAndFreeBytes;
     size_t                       gcTriggerMallocAndFreeBytes;
 
-    /* During GC, stores the index of this compartment in rt->compartments. */
-    unsigned                     index;
-
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from

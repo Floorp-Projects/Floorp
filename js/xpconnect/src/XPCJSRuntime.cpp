@@ -2073,12 +2073,6 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
       case JS_TELEMETRY_GC_NON_INCREMENTAL:
         Telemetry::Accumulate(Telemetry::GC_NON_INCREMENTAL, sample);
         break;
-      case JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS:
-        Telemetry::Accumulate(Telemetry::GC_SCC_SWEEP_TOTAL_MS, sample);
-        break;
-      case JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS:
-        Telemetry::Accumulate(Telemetry::GC_SCC_SWEEP_MAX_PAUSE_MS, sample);
-        break;
     }
 }
 

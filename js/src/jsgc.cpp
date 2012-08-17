@@ -3482,141 +3482,6 @@ ValidateIncrementalMarking(JSRuntime *rt)
 }
 #endif
 
-/*
- * If compartment A has an edge to an unmarked object in compartment B, then we
- * must not sweep A in a later slice than we sweep B. That's because a write
- * barrier in A that could lead to the unmarked object in B becoming
- * marked. However, if we had already swept that object, we would be in trouble.
- *
- * If we consider these dependencies as a graph, then all the compartments in
- * any strongly-connected component of this graph must be swept in the same
- * slice. This class is used to compute these strongly connected components via
- * Tarjan's algorithm.
- */
-class PartitionCompartments
-{
-    typedef unsigned Node;
-    typedef Vector<Node, 0, SystemAllocPolicy> NodeVector;
-    typedef Vector<bool, 0, SystemAllocPolicy> BoolVector;
-
-    static const Node Undefined = Node(-1);
-
-    JSRuntime *runtime;
-
-    /*
-     * The value of clock ticks monotonically upward as each new compartment is
-     * discovered by the algorithm. When a new SCC is found, it is assigned a
-     * number from nextSCC.
-     */
-    Node clock, nextSCC;
-
-    /*
-     * Compartments have an index based on their order in rt->compartments. The
-     * index is used as a subscript into the arrays below.
-     *
-     * discoveryTime[comp]: The |clock| value when comp was first explored.
-     * lowLink[comp]: The minimal discovery time of any compartment reachable
-     *                from |comp|.
-     * stack: List of explored compartments that haven't been assigned to an SCC.
-     * scc[comp]: SCC number that |comp| is in.
-     * onStack[comp]: Whether |comp| in in |stack|.
-     */
-    NodeVector discoveryTime, lowLink, stack, scc;
-    BoolVector onStack;
-
-    bool fail_;
-
-    void processNode(Node v);
-    void fail() { fail_ = true; }
-    bool failed() { return fail_; }
-
-  public:
-    PartitionCompartments(JSRuntime *rt);
-    void partition();
-    unsigned getSCC(JSCompartment *comp) { return failed() ? 0 : scc[comp->index]; }
-};
-
-const PartitionCompartments::Node PartitionCompartments::Undefined;
-
-PartitionCompartments::PartitionCompartments(JSRuntime *rt)
-  : runtime(rt), clock(0), nextSCC(0), fail_(false)
-{
-    size_t n = runtime->compartments.length();
-    if (!discoveryTime.reserve(n) ||
-        !lowLink.reserve(n) ||
-        !scc.reserve(n) ||
-        !onStack.reserve(n) ||
-        !stack.reserve(n))
-    {
-        fail();
-        return;
-    }
-
-    for (Node v = 0; v < runtime->compartments.length(); v++) {
-        runtime->compartments[v]->index = v;
-        discoveryTime.infallibleAppend(Undefined);
-        lowLink.infallibleAppend(Undefined);
-        scc.infallibleAppend(Undefined);
-        onStack.infallibleAppend(false);
-    }
-}
-
-/* See the Wikipedia article "Tarjan's strongly connected components algorithm". */
-void
-PartitionCompartments::processNode(Node v)
-{
-    int stackDummy;
-    if (failed() || !JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(runtime), &stackDummy)) {
-        fail();
-        return;
-    }
-
-    discoveryTime[v] = clock;
-    lowLink[v] = clock;
-    clock++;
-    stack.infallibleAppend(v);
-    onStack[v] = true;
-
-    JSCompartment *comp = runtime->compartments[v];
-
-    for (WrapperMap::Enum e(comp->crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        if (e.front().key.kind == CrossCompartmentKey::StringWrapper)
-            continue;
-
-        Cell *other = e.front().key.wrapped;
-        if (other->isMarked(BLACK) && !other->isMarked(GRAY))
-            continue;
-
-        Node w = other->compartment()->index;
-
-        if (discoveryTime[w] == Undefined) {
-            processNode(w);
-            lowLink[v] = Min(lowLink[v], lowLink[w]);
-        } else if (onStack[w]) {
-            lowLink[v] = Min(lowLink[v], discoveryTime[w]);
-        }
-    }
-
-    if (lowLink[v] == discoveryTime[v]) {
-        Node w;
-        do {
-            w = stack.popCopy();
-            onStack[w] = false;
-            scc[w] = nextSCC;
-        } while (w != v);
-        nextSCC++;
-    }
-}
-
-void
-PartitionCompartments::partition()
-{
-    for (Node n = 0; n < runtime->compartments.length(); n++) {
-        if (discoveryTime[n] == Undefined)
-            processNode(n);
-    }
-}
-
 static void
 BeginSweepPhase(JSRuntime *rt)
 {
@@ -3677,9 +3542,6 @@ BeginSweepPhase(JSRuntime *rt)
     /* Detach unreachable debuggers and global objects from each other. */
     Debugger::sweepAll(&fop);
 
-    PartitionCompartments partition(rt);
-    partition.partition();
-
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_COMPARTMENTS);
 
@@ -3692,7 +3554,6 @@ BeginSweepPhase(JSRuntime *rt)
 
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
             if (c->isCollecting())
                 c->sweep(&fop, releaseTypes);
             else
@@ -3708,22 +3569,14 @@ BeginSweepPhase(JSRuntime *rt)
      *
      * Objects are finalized immediately but this may change in the future.
      */
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueObjectsForSweep(&fop);
-    }
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueStringsForSweep(&fop);
-    }
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueScriptsForSweep(&fop);
-    }
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.queueShapesForSweep(&fop);
-    }
 
     rt->gcSweepPhase = 0;
     rt->gcSweepCompartmentIndex = 0;
