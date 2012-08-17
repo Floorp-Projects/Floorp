@@ -1046,11 +1046,47 @@ class AssemblerX86Shared
     void subsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.subsd_rr(src.code(), dest.code());
     }
+    void subsd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.subsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.subsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void mulsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.mulsd_rr(src.code(), dest.code());
     }
+    void mulsd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.mulsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.mulsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void divsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.divsd_rr(src.code(), dest.code());
+    }
+    void divsd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.divsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.divsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
     }
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());

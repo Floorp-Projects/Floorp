@@ -946,21 +946,23 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 bool
 CodeGeneratorX86Shared::visitMathD(LMathD *math)
 {
-    const LAllocation *input = math->getOperand(1);
-    const LDefinition *output = math->getDef(0);
+    FloatRegister lhs = ToFloatRegister(math->lhs());
+    Operand rhs = ToOperand(math->rhs());
+
+    JS_ASSERT(ToFloatRegister(math->output()) == lhs);
 
     switch (math->jsop()) {
       case JSOP_ADD:
-        masm.addsd(ToFloatRegister(input), ToFloatRegister(output));
+        masm.addsd(rhs, lhs);
         break;
       case JSOP_SUB:
-        masm.subsd(ToFloatRegister(input), ToFloatRegister(output));
+        masm.subsd(rhs, lhs);
         break;
       case JSOP_MUL:
-        masm.mulsd(ToFloatRegister(input), ToFloatRegister(output));
+        masm.mulsd(rhs, lhs);
         break;
       case JSOP_DIV:
-        masm.divsd(ToFloatRegister(input), ToFloatRegister(output));
+        masm.divsd(rhs, lhs);
         break;
       default:
         JS_NOT_REACHED("unexpected opcode");
