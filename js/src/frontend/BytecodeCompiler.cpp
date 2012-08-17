@@ -16,6 +16,8 @@
 
 #include "jsinferinlines.h"
 
+#include "frontend/ParseMaps-inl.h"
+#include "frontend/Parser-inl.h"
 #include "frontend/TreeContext-inl.h"
 
 using namespace js;

@@ -12,6 +12,7 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
+#include "frontend/Parser-inl.h"
 
 using namespace js;
 using namespace js::frontend;

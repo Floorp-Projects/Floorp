@@ -8,10 +8,6 @@
 #define ParseNode_inl_h__
 
 #include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
-#include "frontend/TreeContext.h"
-
-#include "frontend/TreeContext-inl.h"
 
 namespace js {
 namespace frontend {
@@ -182,6 +178,8 @@ NameNode::dump(int indent)
     }
 }
 #endif
+
+struct TreeContext;
 
 inline void
 NameNode::initCommon(TreeContext *tc)
