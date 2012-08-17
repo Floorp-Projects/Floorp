@@ -9124,6 +9124,7 @@ nsDocument::RequestFullScreen(Element* aElement,
   // trusted and so are automatically approved.
   if (!mIsApprovedForFullscreen) {
     mIsApprovedForFullscreen =
+      !Preferences::GetBool("full-screen-api.approval-required") ||
       NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
   }
