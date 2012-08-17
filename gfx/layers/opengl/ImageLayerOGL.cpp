@@ -21,6 +21,12 @@
 #include "nsSurfaceTexture.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+# include "GonkIOSurfaceImage.h"
+# include <ui/GraphicBuffer.h>
+using namespace android;
+#endif
+
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
