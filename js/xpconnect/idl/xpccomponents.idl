@@ -118,7 +118,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(25442383-a1f5-440c-9e18-a2a1cdb8a638)]
+[scriptable, uuid(cc7ef3b0-339d-4317-927b-fdc8f0664927)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -328,14 +328,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void recomputeWrappers([optional] in jsval vobj);
-
-    /*
-     * Dispatches a runnable to the current/main thread. If |scope| is passed,
-     * the runnable will be dispatch in the compartment of |scope|, which
-     * affects which error reporter gets called.
-     */
-    [implicit_jscontext]
-    void dispatch(in jsval runnable, [optional] in jsval scope);
 
     /*
      * To be called from JS only.
