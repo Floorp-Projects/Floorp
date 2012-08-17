@@ -136,6 +136,7 @@
  "dom/imptests/webapps/DOMCore/tests/approved": "bug 782328", 
  "dom/imptests/webapps/DOMCore/tests/submissions": "bug 782254",
  "dom/imptests/webapps/WebStorage/tests/submissions": "bug 781837 & bug 775227",
+ "dom/indexedDB/ipc/test_ipc.html": "bug 783513",
  "dom/indexedDB/test/test_third_party.html": "TIMED_OUT",
  "dom/indexedDB/test/test_event_propagation.html": "TIMED_OUT, bug 780855",
  "dom/network/tests/test_network_basics.html": "",
