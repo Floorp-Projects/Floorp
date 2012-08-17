@@ -2373,6 +2373,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 {
   MOZ_ASSERT(!mRemoteBrowser);
   MOZ_ASSERT(!mCurrentRemoteFrame);
+  mRemoteFrame = true;
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
 
   ShowRemoteFrame(nsIntSize(0, 0));
