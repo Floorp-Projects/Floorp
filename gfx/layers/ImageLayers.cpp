@@ -10,6 +10,7 @@
 #include "gfxImageSurface.h"
 #include "gfxSharedImageSurface.h"
 #include "yuv_convert.h"
+#include "gfxUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageContainerChild.h"
 
@@ -464,28 +465,22 @@ PlanarYCbCrImage::GetAsSurface()
     return result.forget();
   }
 
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(mSize, gfxASurface::ImageFormatRGB24);
-  
-  gfx::YUVType type = 
-    gfx::TypeFromSize(mData.mYSize.width,
-                      mData.mYSize.height,
-                      mData.mCbCrSize.width,
-                      mData.mCbCrSize.height);
+  gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
-  // Convert from YCbCr to RGB now
-  gfx::ConvertYCbCrToRGB32(mData.mYChannel,
-                           mData.mCbChannel,
-                           mData.mCrChannel,
-                           imageSurface->Data(),
-                           mData.mPicX,
-                           mData.mPicY,
-                           mData.mPicSize.width,
-                           mData.mPicSize.height,
-                           mData.mYStride,
-                           mData.mCbCrStride,
-                           imageSurface->Stride(),
-                           type);
+  gfxIntSize size(mSize);
+  gfxUtils::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
+  if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
+      size.height > PlanarYCbCrImage::MAX_DIMENSION) {
+    NS_ERROR("Illegal image dest width or height");
+    return nullptr;
+  }
+
+  nsRefPtr<gfxImageSurface> imageSurface =
+    new gfxImageSurface(mSize, format);
+
+  gfxUtils::ConvertYCbCrToRGB(mData, format, mSize,
+                              imageSurface->Data(),
+                              imageSurface->Stride());
 
   mSurface = imageSurface;
 

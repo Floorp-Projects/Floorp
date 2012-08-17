@@ -26,6 +26,16 @@ var gAddonsList;
 
 var TEST_UNPACKED = false;
 
+function isNightlyChannel() {
+  var channel = "default";
+  try {
+    channel = Services.prefs.getCharPref("app.update.channel");
+  }
+  catch (e) { }
+
+  return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
+}
+
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {
     // nsIXULAppInfo

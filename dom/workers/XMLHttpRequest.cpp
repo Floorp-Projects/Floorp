@@ -1499,7 +1499,7 @@ XMLHttpRequest::ReleaseProxy(ReleaseType aType)
         new AsyncTeardownRunnable(mProxy);
       mProxy = nullptr;
 
-      if (NS_DispatchToMainThread(runnable)) {
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         NS_ERROR("Failed to dispatch teardown runnable!");
       }
     } else {

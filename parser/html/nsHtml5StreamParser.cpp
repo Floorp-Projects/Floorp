@@ -1412,7 +1412,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!(mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML),
       "ContinueAfterScripts called in view source mode!");
-  if (mExecutor->IsBroken()) {
+  if (NS_FAILED(mExecutor->IsBroken())) {
     return;
   }
   #ifdef DEBUG
