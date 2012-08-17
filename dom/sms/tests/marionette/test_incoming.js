@@ -30,7 +30,8 @@ sms.onreceived = function onreceived(event) {
   is(message.receiver, null);
   is(message.body, body);
   ok(message.timestamp instanceof Date);
-  ok(message.timestamp.getTime() > now);
+  // SMSC timestamp is in seconds.
+  ok(Math.floor(message.timestamp.getTime() / 1000) >= Math.floor(now / 1000));
 
   cleanUp();
 };
