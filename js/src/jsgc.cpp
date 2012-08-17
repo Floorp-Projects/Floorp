@@ -3692,6 +3692,7 @@ BeginSweepPhase(JSRuntime *rt)
 
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
             if (c->isCollecting())
                 c->sweep(&fop, releaseTypes);
             else
@@ -3707,14 +3708,22 @@ BeginSweepPhase(JSRuntime *rt)
      *
      * Objects are finalized immediately but this may change in the future.
      */
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
         c->arenas.queueObjectsForSweep(&fop);
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+    }
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
         c->arenas.queueStringsForSweep(&fop);
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+    }
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
         c->arenas.queueScriptsForSweep(&fop);
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+    }
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
         c->arenas.queueShapesForSweep(&fop);
+    }
 
     rt->gcSweepPhase = 0;
     rt->gcSweepCompartmentIndex = 0;
