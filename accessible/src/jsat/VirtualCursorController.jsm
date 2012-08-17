@@ -239,19 +239,39 @@ var VirtualCursorController = {
       }
     }
 
+    if (detail.touches.length == 3) {
+      switch (detail.type) {
+        case 'swiperight':
+          if (!Utils.scroll(this.chromeWin, -1, true))
+            Utils.changePage(this.chromeWin, -1);
+          break;
+        case 'swipedown':
+          Utils.scroll(this.chromeWin, -1);
+          break;
+        case 'swipeleft':
+          if (!Utils.scroll(this.chromeWin, 1, true))
+            Utils.changePage(this.chromeWin, 1);
+        case 'swipeup':
+          Utils.scroll(this.chromeWin, 1);
+          break;
+      }
+    }
   },
 
   _handleKeypress: function _handleKeypress(aEvent) {
     let document = Utils.getCurrentContentDoc(this.chromeWin);
     let target = aEvent.target;
 
+    // Ignore keys with modifiers so the content could take advantage of them.
+    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
+      return;
+
     switch (aEvent.keyCode) {
       case 0:
         // an alphanumeric key was pressed, handle it separately.
         // If it was pressed with either alt or ctrl, just pass through.
         // If it was pressed with meta, pass the key on without the meta.
-        if (this.editableState ||
-            aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
+        if (this.editableState)
           return;
 
         let key = String.fromCharCode(aEvent.charCode);
