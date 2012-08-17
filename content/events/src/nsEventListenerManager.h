@@ -184,6 +184,12 @@ public:
   bool HasListenersFor(const nsAString& aEventName);
 
   /**
+   * Returns true if there is at least one event listener for aEventNameWithOn.
+   * Note that aEventNameWithOn must start with "on"!
+   */
+  bool HasListenersFor(nsIAtom* aEventNameWithOn);
+
+  /**
    * Returns true if there is at least one event listener.
    */
   bool HasListeners();
