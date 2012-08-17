@@ -2421,7 +2421,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
         kind = GetBackgroundAllocKind(kind);
 
     if (!parent)
-        parent = GetCurrentGlobal(cx);
+        parent = cx->global();
 
     /*
      * Use the object cache, except for classes without a cached proto key.
@@ -2445,7 +2445,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
         }
     }
 
-    if (!FindProto(cx, clasp, parent, &proto))
+    if (!FindProto(cx, clasp, &proto))
         return NULL;
 
     types::TypeObject *type = proto->getNewType(cx);
@@ -3377,7 +3377,7 @@ bad:
  * Lazy standard classes need a way to indicate if they have been initialized.
  * Otherwise, when we delete them, we might accidentally recreate them via a
  * lazy initialization. We use the presence of a ctor or proto in the
- * globalObject's slot to indicate that they've been constructed, but this only
+ * global object's slot to indicate that they've been constructed, but this only
  * works for classes which have a proto and ctor. Classes which don't have one
  * can call MarkStandardClassInitializedNoProto(), and we can always check
  * whether a class is initialized by calling IsStandardClassResolved().
@@ -3434,7 +3434,7 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null &&
         !protoProto &&
-        !js_GetClassPrototype(cx, obj, JSProto_Object, &protoProto)) {
+        !js_GetClassPrototype(cx, JSProto_Object, &protoProto)) {
         return NULL;
     }
 
@@ -3893,26 +3893,15 @@ js_IdentifyClassPrototype(JSObject *obj)
 }
 
 bool
-js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
-                   MutableHandleValue vp, Class *clasp)
+js_FindClassObject(JSContext *cx, JSProtoKey protoKey, MutableHandleValue vp, Class *clasp)
 {
     RootedId id(cx);
-    RootedObject obj(cx);
-
-    if (start) {
-        obj = &start->global();
-        obj = GetInnerObject(cx, obj);
-    } else {
-        obj = GetGlobalForScopeChain(cx);
-    }
-    if (!obj)
-        return false;
 
     if (protoKey != JSProto_Null) {
         JS_ASSERT(JSProto_Null < protoKey);
         JS_ASSERT(protoKey < JSProto_LIMIT);
         RootedObject cobj(cx);
-        if (!js_GetClassObject(cx, obj, protoKey, &cobj))
+        if (!js_GetClassObject(cx, cx->global(), protoKey, &cobj))
             return false;
         if (cobj) {
             vp.set(ObjectValue(*cobj));
@@ -3926,10 +3915,9 @@ js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
         id = AtomToId(atom);
     }
 
-    JS_ASSERT(obj->isNative());
     RootedObject pobj(cx);
     RootedShape shape(cx);
-    if (!LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &shape))
+    if (!LookupPropertyWithFlags(cx, cx->global(), id, 0, &pobj, &shape))
         return false;
     RootedValue v(cx, UndefinedValue());
     if (shape && pobj->isNative()) {
@@ -5304,12 +5292,26 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const Value &v)
     return false;
 }
 
+/*
+ * The first part of this function has been hand-expanded and optimized into
+ * NewBuiltinClassInstance in jsobjinlines.h.
+ */
 bool
-js::FindClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey,
-                       MutableHandleObject protop, Class *clasp)
+js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, MutableHandleObject protop, Class *clasp)
 {
+    JS_ASSERT(JSProto_Null <= protoKey);
+    JS_ASSERT(protoKey < JSProto_LIMIT);
+
+    if (protoKey != JSProto_Null) {
+        const Value &v = cx->global()->getReservedSlot(JSProto_LIMIT + protoKey);
+        if (v.isObject()) {
+            protop.set(&v.toObject());
+            return true;
+        }
+    }
+
     RootedValue v(cx);
-    if (!js_FindClassObject(cx, scopeobj, protoKey, &v, clasp))
+    if (!js_FindClassObject(cx, protoKey, &v, clasp))
         return false;
 
     if (IsFunctionObject(v)) {
@@ -5320,38 +5322,6 @@ js::FindClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey
 
     protop.set(v.get().isObject() ? &v.get().toObject() : NULL);
     return true;
-}
-
-/*
- * The first part of this function has been hand-expanded and optimized into
- * NewBuiltinClassInstance in jsobjinlines.h.
- */
-bool
-js_GetClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey,
-                     MutableHandleObject protop, Class *clasp)
-{
-    JS_ASSERT(JSProto_Null <= protoKey);
-    JS_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        GlobalObject *global;
-        if (scopeobj) {
-            global = &scopeobj->global();
-        } else {
-            global = GetCurrentGlobal(cx);
-            if (!global) {
-                protop.set(NULL);
-                return true;
-            }
-        }
-        const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
-        if (v.isObject()) {
-            protop.set(&v.toObject());
-            return true;
-        }
-    }
-
-    return FindClassPrototype(cx, scopeobj, protoKey, protop, clasp);
 }
 
 JSObject *

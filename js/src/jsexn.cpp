@@ -985,7 +985,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      * top stack frame, or in the global object if no frame is active.
      */
     RootedObject errProto(cx);
-    if (!js_GetClassPrototype(cx, NullPtr(), GetExceptionProtoKey(exn), &errProto))
+    if (!js_GetClassPrototype(cx, GetExceptionProtoKey(exn), &errProto))
         return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 

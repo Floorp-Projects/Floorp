@@ -196,7 +196,7 @@ Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 static void
 current_location(JSContext *cx, int* lineno, char const **filename)
 {
-    JSScript *script = js_GetCurrentScript(cx);
+    JSScript *script = cx->stack.currentScript()
     if (! script) {
         *lineno = -1;
         *filename = "(uninitialized)";
