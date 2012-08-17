@@ -62,8 +62,6 @@ HISTOGRAM(GC_MMU_50, 1, 100, 20, LINEAR, "Minimum percentage of time spent outsi
 HISTOGRAM_BOOLEAN(GC_RESET, "Was an incremental GC canceled?")
 HISTOGRAM_BOOLEAN(GC_INCREMENTAL_DISABLED, "Is incremental GC permanently disabled?")
 HISTOGRAM_BOOLEAN(GC_NON_INCREMENTAL, "Was the GC non-incremental?")
-HISTOGRAM(GC_SCC_SWEEP_TOTAL_MS, 1, 500, 50, LINEAR, "Time spent sweeping compartment SCCs (ms)")
-HISTOGRAM(GC_SCC_SWEEP_MAX_PAUSE_MS, 1, 500, 50, LINEAR, "Time spent sweeping slowest compartment SCC (ms)")
 
 HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit telemetry info (ms)")
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
