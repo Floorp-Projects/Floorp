@@ -63,6 +63,9 @@ private:
 
   void Root();
   nsresult StartStopDiscovery(bool aStart, nsIDOMDOMRequest** aRequest);
+  nsresult PairUnpair(bool aPair,
+                      nsIDOMBluetoothDevice* aDevice,
+                      nsIDOMDOMRequest** aRequest);
   
   nsString mAddress;
   nsString mName;
@@ -83,6 +86,11 @@ private:
   NS_DECL_EVENT_HANDLER(propertychanged)
   NS_DECL_EVENT_HANDLER(devicefound)
   NS_DECL_EVENT_HANDLER(devicedisappeared)
+  NS_DECL_EVENT_HANDLER(requestconfirmation)
+  NS_DECL_EVENT_HANDLER(requestpincode)
+  NS_DECL_EVENT_HANDLER(requestpasskey)
+  NS_DECL_EVENT_HANDLER(authorize)
+  NS_DECL_EVENT_HANDLER(cancel)
 };
 
 END_BLUETOOTH_NAMESPACE

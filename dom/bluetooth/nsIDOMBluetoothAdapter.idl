@@ -9,7 +9,7 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(86e9fe78-ce64-476e-a357-333f7d3c8980)]
+[scriptable, builtinclass, uuid(db6b4dd6-64f1-415d-ac51-ae0fa0fe05ed)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -33,11 +33,24 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   nsIDOMDOMRequest setDiscoverableTimeout(in unsigned long timeout);
   nsIDOMDOMRequest startDiscovery();
   nsIDOMDOMRequest stopDiscovery();
+  nsIDOMDOMRequest pair(in nsIDOMBluetoothDevice aDevice);
+  nsIDOMDOMRequest unpair(in nsIDOMBluetoothDevice aDevice);
   nsIDOMDOMRequest getPairedDevices();
+  void setPinCode(in DOMString aDeviceAddress, in DOMString aPinCode);
+  void setPasskey(in DOMString aDeviceAddress, in unsigned long aPasskey);
+  void setPairingConfirmation(in DOMString aDeviceAddress, in bool aConfirmation);
+  void setAuthorization(in DOMString aDeviceAddress, in bool aAllow);
+
   // Fired when discoverying and any device is discovered.
   attribute nsIDOMEventListener ondevicefound;
   // Fired when any device is out of discoverable range.
   attribute nsIDOMEventListener ondevicedisappeared;
   // Fired when a property of the adapter is changed
   attribute nsIDOMEventListener onpropertychanged;
+  // Pairing related events
+  attribute nsIDOMEventListener onrequestconfirmation;
+  attribute nsIDOMEventListener onrequestpincode;
+  attribute nsIDOMEventListener onrequestpasskey;
+  attribute nsIDOMEventListener onauthorize;
+  attribute nsIDOMEventListener oncancel;
 };
