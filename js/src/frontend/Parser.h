@@ -20,7 +20,7 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
-#include "frontend/TreeContext.h"
+#include "frontend/SharedContext.h"
 
 namespace js {
 namespace frontend {
