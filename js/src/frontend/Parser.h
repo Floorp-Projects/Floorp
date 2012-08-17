@@ -25,16 +25,16 @@
 namespace js {
 namespace frontend {
 
-struct StmtInfoTC : public StmtInfoBase {
-    StmtInfoTC      *down;          /* info for enclosing statement */
-    StmtInfoTC      *downScope;     /* next enclosing lexical scope */
+struct StmtInfoPC : public StmtInfoBase {
+    StmtInfoPC      *down;          /* info for enclosing statement */
+    StmtInfoPC      *downScope;     /* next enclosing lexical scope */
 
     uint32_t        blockid;        /* for simplified dominance computation */
 
     /* True if type == STMT_BLOCK and this block is a function body. */
     bool            isFunctionBodyBlock;
 
-    StmtInfoTC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
+    StmtInfoPC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
 };
 
 typedef HashSet<JSAtom *> FuncStmtSet;
@@ -44,24 +44,24 @@ struct SharedContext;
 typedef Vector<Definition *, 16> DeclVector;
 
 /*
- * The struct TreeContext stores information about the current parsing context,
- * which is part of the parser state (see the field Parser::tc). The current
+ * The struct ParseContext stores information about the current parsing context,
+ * which is part of the parser state (see the field Parser::pc). The current
  * parsing context is either the global context, or the function currently being
  * parsed. When the parser encounters a function definition, it creates a new
- * TreeContext, makes it the new current context, and sets its parent to the
+ * ParseContext, makes it the new current context, and sets its parent to the
  * context in which it encountered the definition.
  */
-struct TreeContext                  /* tree context for semantic checks */
+struct ParseContext                 /* tree context for semantic checks */
 {
-    typedef StmtInfoTC StmtInfo;
+    typedef StmtInfoPC StmtInfo;
 
     SharedContext   *sc;            /* context shared between parsing and bytecode generation */
 
     uint32_t        bodyid;         /* block number of program/function body */
     uint32_t        blockidGen;     /* preincremented block number generator */
 
-    StmtInfoTC      *topStmt;       /* top of statement info stack */
-    StmtInfoTC      *topScopeStmt;  /* top lexical scope statement */
+    StmtInfoPC      *topStmt;       /* top of statement info stack */
+    StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
                                     /* compile time block scope chain */
 
@@ -95,7 +95,7 @@ struct TreeContext                  /* tree context for semantic checks */
 
     /*
      * This function adds a definition to the lexical scope represented by this
-     * TreeContext.
+     * ParseContext.
      *
      * Pre-conditions:
      *  + The caller must have already taken care of name collisions:
@@ -109,7 +109,7 @@ struct TreeContext                  /* tree context for semantic checks */
      *    LeaveFunction) that we should consider rewriting.
      *
      * Post-conditions:
-     *  + tc->decls().lookupFirst(name) == pn
+     *  + pc->decls().lookupFirst(name) == pn
      *  + The given name 'pn' has been converted in-place into a
      *    non-placeholder definition.
      *  + If this is a function scope (sc->inFunction), 'pn' is bound to a
@@ -141,7 +141,7 @@ struct TreeContext                  /* tree context for semantic checks */
      * After a function body has been parsed, the parser generates the
      * function's "bindings". Bindings are a data-structure, ultimately stored
      * in the compiled JSScript, that serve three purposes:
-     *  - After parsing, the TreeContext is destroyed and 'decls' along with
+     *  - After parsing, the ParseContext is destroyed and 'decls' along with
      *    it. Mostly, the emitter just uses the binding information stored in
      *    the use/def nodes, but the emitter occasionally needs 'bindings' for
      *    various scope-related queries.
@@ -165,14 +165,14 @@ struct TreeContext                  /* tree context for semantic checks */
     CompileError    *queuedStrictModeError;
 
   private:
-    TreeContext     **parserTC;     /* this points to the Parser's active tc
+    ParseContext    **parserPC;     /* this points to the Parser's active pc
                                        and holds either |this| or one of
                                        |this|'s descendents */
 
   public:
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
-    TreeContext     *parent;        /* Enclosing function or global context.  */
+    ParseContext     *parent;       /* Enclosing function or global context.  */
 
     ParseNode       *innermostWith; /* innermost WITH parse node */
 
@@ -200,8 +200,8 @@ struct TreeContext                  /* tree context for semantic checks */
     // they need to be treated differently.
     bool            inDeclDestructuring:1;
 
-    inline TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
-    inline ~TreeContext();
+    inline ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
+    inline ~ParseContext();
 
     inline bool init();
 
@@ -220,7 +220,7 @@ struct TreeContext                  /* tree context for semantic checks */
 };
 
 bool
-GenerateBlockId(TreeContext *tc, uint32_t &blockid);
+GenerateBlockId(ParseContext *pc, uint32_t &blockid);
 
 struct BindData;
 
@@ -237,7 +237,7 @@ struct Parser : private AutoGCRooter
     ParseNodeAllocator  allocator;
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
 
-    TreeContext         *tc;            /* innermost tree context (stack-allocated) */
+    ParseContext        *pc;            /* innermost parse context (stack-allocated) */
 
     SourceCompressionToken *sct;        /* compression token for aborting */
 
@@ -300,14 +300,14 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc,
+    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
                                 StrictMode::StrictModeState sms);
 
     /*
-     * Create a new function object given tree context (tc) and a name (which
+     * Create a new function object given parse context (pc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind);
 
     void trace(JSTracer *trc);
 
@@ -365,8 +365,8 @@ struct Parser : private AutoGCRooter
     /*
      * JS parsers, from lowest to highest precedence.
      *
-     * Each parser must be called during the dynamic scope of a TreeContext
-     * object, pointed to by this->tc.
+     * Each parser must be called during the dynamic scope of a ParseContext
+     * object, pointed to by this->pc.
      *
      * Each returns a parse node tree or null on error.
      *
@@ -456,7 +456,7 @@ struct Parser : private AutoGCRooter
     // strict. This also effectively bans XML in function defaults. See bug
     // 772691.
     bool allowsXML() const {
-        return tc->sc->strictModeState == StrictMode::NOTSTRICT && tokenStream.allowsXML();
+        return pc->sc->strictModeState == StrictMode::NOTSTRICT && tokenStream.allowsXML();
     }
 
     ParseNode *endBracketedExpr();

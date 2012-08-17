@@ -179,17 +179,17 @@ NameNode::dump(int indent)
 }
 #endif
 
-struct TreeContext;
+struct ParseContext;
 
 inline void
-NameNode::initCommon(TreeContext *tc)
+NameNode::initCommon(ParseContext *pc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
-    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
+    pn_dflags = (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
                 ? PND_BLOCKCHILD
                 : 0;
-    pn_blockid = tc->blockid();
+    pn_blockid = pc->blockid();
 }
 
 } /* namespace frontend */

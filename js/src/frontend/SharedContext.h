@@ -118,7 +118,7 @@ class ContextFlags {
 
 /*
  * The struct SharedContext is part of the current parser context (see
- * TreeContext). It stores information that is reused between the parser and
+ * ParseContext). It stores information that is reused between the parser and
  * the bytecode emitter. Note however, that this information is not shared
  * between the two; they simply reuse the same data structure.
  */
@@ -237,7 +237,7 @@ enum StmtType {
  * pending the "reformed with" in ES4/JS2). It includes all try-catch-finally
  * types, which are high-numbered maybe-scope types.
  *
- * StmtInfoBase::linksScope() tells whether a js::StmtInfo{TC,BCE} of the given
+ * StmtInfoBase::linksScope() tells whether a js::StmtInfo{PC,BCE} of the given
  * type eagerly links to other scoping statement info records. It excludes the
  * two early "maybe" types, block and switch, as well as the try and both
  * finally types, since try and the other trailing maybe-scope types don't need
@@ -248,7 +248,7 @@ enum StmtType {
  * proposal for ES4, we would be able to model it statically, too.
  */
 
-// StmtInfoTC is used by the Parser.  StmtInfoBCE is used by the
+// StmtInfoPC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
 // StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
 // work with both types.
@@ -308,7 +308,7 @@ struct FunctionBox : public ObjectBox
 
     ContextFlags    cxFlags;
 
-    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc,
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, ParseContext *pc,
                 StrictMode::StrictModeState sms);
 
     bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
@@ -325,7 +325,7 @@ struct FunctionBox : public ObjectBox
     void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };
 
-// Push the C-stack-allocated struct at stmt onto the StmtInfoTC stack.
+// Push the C-stack-allocated struct at stmt onto the StmtInfoPC stack.
 template <class ContextT>
 void
 PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtType type);
@@ -334,7 +334,7 @@ template <class ContextT>
 void
 FinishPushBlockScope(ContextT *ct, typename ContextT::StmtInfo *stmt, StaticBlockObject &blockObj);
 
-// Pop tc->topStmt. If the top StmtInfoTC struct is not stack-allocated, it
+// Pop pc->topStmt. If the top StmtInfoPC struct is not stack-allocated, it
 // is up to the caller to free it.  The dummy argument is just to make the
 // template matching work.
 template <class ContextT>

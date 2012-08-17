@@ -3929,7 +3929,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
      * for later fixup.
      *
-     * When a finally block is active (STMT_FINALLY in our tree context),
+     * When a finally block is active (STMT_FINALLY in our parse context),
      * non-local jumps (including jumps-over-catches) result in a GOSUB
      * being written into the bytecode stream and fixed-up later (c.f.
      * EmitBackPatchOp and BackPatch).
@@ -5211,7 +5211,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         /*
          * Don't eliminate apparently useless expressions if they are
-         * labeled expression statements.  The tc->topStmt->update test
+         * labeled expression statements.  The pc->topStmt->update test
          * catches the case where we are nesting in EmitTree for a labeled
          * compound statement.
          */
