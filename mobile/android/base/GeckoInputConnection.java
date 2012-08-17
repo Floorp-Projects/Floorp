@@ -86,8 +86,8 @@ class GeckoInputConnection
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
     private static int mIMEState;
-    private static String mIMETypeHint;
-    private static String mIMEActionHint;
+    private static String mIMETypeHint = "";
+    private static String mIMEActionHint = "";
 
     private String mCurrentInputMethod;
 
@@ -112,8 +112,6 @@ class GeckoInputConnection
         mEditable = Editable.Factory.getInstance().newEditable("");
         spanAndSelectEditable();
         mIMEState = IME_STATE_DISABLED;
-        mIMETypeHint = "";
-        mIMEActionHint = "";
     }
 
     @Override
@@ -819,8 +817,11 @@ class GeckoInputConnection
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMEActionHint.equalsIgnoreCase("send"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
-        else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
+        else if (mIMEActionHint.length() > 0) {
+            if (DEBUG)
+                Log.w(LOGTAG, "Unexpected mIMEActionHint=\"" + mIMEActionHint + "\"");
             outAttrs.actionLabel = mIMEActionHint;
+        }
 
         GeckoApp app = GeckoApp.mAppContext;
         DisplayMetrics metrics = app.getResources().getDisplayMetrics();
@@ -1032,6 +1033,12 @@ class GeckoInputConnection
                         if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
                         IMEStateUpdater.resetIME();
                         break;
+
+                    case NOTIFY_IME_SETOPENSTATE:
+                    default:
+                        if (DEBUG)
+                            throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
+                        break;
                 }
             }
         });
@@ -1047,8 +1054,8 @@ class GeckoInputConnection
                 /* When IME is 'disabled', IME processing is disabled.
                    In addition, the IME UI is hidden */
                 mIMEState = state;
-                mIMETypeHint = typeHint;
-                mIMEActionHint = actionHint;
+                mIMETypeHint = (typeHint == null) ? "" : typeHint;
+                mIMEActionHint = (actionHint == null) ? "" : actionHint;
                 IMEStateUpdater.enableIME();
             }
         });
@@ -1442,9 +1449,19 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
 
     @Override
     public void notifyIME(int type, int state) {
-        Log.d(LOGTAG, String.format("IME: >notifyIME(type=%d, state=%d)", type, state));
+        Log.d(LOGTAG, "IME: >notifyIME(type=" + type + ", state=" + state + ")");
         GeckoApp.assertOnGeckoThread();
         super.notifyIME(type, state);
+    }
+
+    @Override
+    public void notifyIMEEnabled(int state, String typeHint, String actionHint) {
+        Log.d(LOGTAG, "IME: >notifyIMEEnabled(state=" + state + ", typeHint=\"" + typeHint
+                      + "\", actionHint=\"" + actionHint + "\"");
+        GeckoApp.assertOnGeckoThread();
+        if (state < IME_STATE_DISABLED || state > IME_STATE_PLUGIN)
+            throw new IllegalArgumentException("Unexpected IMEState=" + state);
+        super.notifyIMEEnabled(state, typeHint, actionHint);
     }
 }
 

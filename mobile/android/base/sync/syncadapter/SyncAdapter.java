@@ -88,6 +88,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
   /**
    * Handle an exception: update stats, invalidate auth token, log errors, etc.
+   * Wakes up sleeping threads by calling notifyMonitor().
    *
    * @param globalSession
    *          current global session, or null.
@@ -164,10 +165,18 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
         return;
       }
 
+      // Bug 755638 - Uncaught SecurityException when attempting to sync multiple Fennecs
+      // to the same Sync account.
+      // Uncheck Sync checkbox because we cannot sync this instance.
+      if (e instanceof SecurityException) {
+        Logger.error(LOG_TAG, "SecurityException, multiple Fennecs. Disabling this instance.", e);
+        SyncAccounts.backgroundSetSyncAutomatically(localAccount, false);
+        return;
+      }
       // Generic exception.
       Logger.error(LOG_TAG, "Unknown exception. Aborting sync.", e);
-    } catch (Exception ex) {
-      Logger.error(LOG_TAG, "Unknown exception. Aborting sync.", e);
+    } finally {
+      notifyMonitor();
     }
   }
 
@@ -345,7 +354,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
               username, password, prefsPath, serverURL, syncKey);
         } catch (Exception e) {
           self.processException(null, e);
-          notifyMonitor();
           return;
         }
       }
@@ -479,7 +487,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   public void handleError(GlobalSession globalSession, Exception ex) {
     Logger.info(LOG_TAG, "GlobalSession indicated error.");
     this.processException(globalSession, ex);
-    notifyMonitor();
   }
 
   @Override

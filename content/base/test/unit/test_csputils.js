@@ -159,29 +159,35 @@ test(
     function test_CSPSource_fromString() {
     // can't do these tests because "self" is not defined.
       //"basic source should not be null.");
-      do_check_neq(null, CSPSource.fromString("a.com"));
+      do_check_neq(null, CSPSource.fromString("a.com", "http://abc.com"));
 
       //"ldh characters should all work for host.");
-      do_check_neq(null, CSPSource.fromString("a2-c.com"));
+      do_check_neq(null, CSPSource.fromString("a2-c.com", "https://a.com"));
 
       //"wildcard should work in first token for host.");
-      do_check_neq(null, CSPSource.fromString("*.a.com"));
+      do_check_neq(null, CSPSource.fromString("*.a.com", "http://abc.com"));
 
       //print(" --- Ignore the following two errors if they print ---");
       //"wildcard should not work in non-first token for host.");
-      do_check_eq(null, CSPSource.fromString("x.*.a.com"));
+      do_check_eq(null, CSPSource.fromString("x.*.a.com", "http://a.com"));
 
       //"funny characters (#) should not work for host.");
-      do_check_eq(null, CSPSource.fromString("a#2-c.com"));
+      do_check_eq(null, CSPSource.fromString("a#2-c.com", "http://a.com"));
 
       //print(" --- Stop ignoring errors that print ---\n");
 
       //"failed to parse host with port.");
-      do_check_neq(null, CSPSource.create("a.com:23"));
+      do_check_neq(null, CSPSource.create("a.com:23", "http://a.com"));
       //"failed to parse host with scheme.");
-      do_check_neq(null, CSPSource.create("https://a.com"));
+      do_check_neq(null, CSPSource.create("https://a.com", "http://a.com"));
       //"failed to parse host with scheme and port.");
-      do_check_neq(null, CSPSource.create("https://a.com:200"));
+      do_check_neq(null, CSPSource.create("https://a.com:200", "http://a.com"));
+
+      //Check to make sure we don't match multiple instances with regex
+      do_check_eq(null, CSPSource.create("http://foo.com:bar.com:23"));
+      //Port parsing should work for all schemes
+      do_check_neq(null, CSPSource.create("data:"));
+      do_check_neq(null, CSPSource.create("javascript:"));
     });
 
 test(
@@ -270,6 +276,7 @@ test(
       var doubleSourceList = CSPSourceList.fromString("https://foo.com http://bar.com:88",
                                                       URI("http://self.com:88"));
       var allSourceList = CSPSourceList.fromString("*");
+      var allAndMoreSourceList = CSPSourceList.fromString("* https://bar.com 'none'");
 
       //'none' should permit none."
       do_check_false( nullSourceList.permits("http://a.com"));
@@ -293,6 +300,8 @@ test(
       //"* does not permit a long host with no port"
       do_check_true( allSourceList.permits("http://a.b.c.d.e.f.g.h.i.j.k.l.x.com"));
 
+      //* short circuts parsing
+      do_check_true(allAndMoreSourceList.permits("http://a.com"));
     });
 
 test(
@@ -301,7 +310,7 @@ test(
       // policy a /\ policy b intersects policies, not context (where 'self'
       // values come into play)
       var nullSourceList = CSPSourceList.fromString("'none'");
-      var simpleSourceList = CSPSourceList.fromString("a.com");
+      var simpleSourceList = CSPSourceList.fromString("http://a.com");
       var doubleSourceList = CSPSourceList.fromString("https://foo.com http://bar.com:88");
       var singleFooSourceList = CSPSourceList.fromString("https://foo.com");
       var allSourceList = CSPSourceList.fromString("*");

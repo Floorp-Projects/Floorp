@@ -177,6 +177,8 @@ private:
     PRInt32                         mPipelinePosition;
     PRInt64                         mMaxPipelineObjectSize;
 
+    nsHttpVersion                   mHttpVersion;
+
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.
     bool                            mClosed;
