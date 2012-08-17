@@ -758,13 +758,8 @@ Readability.prototype = {
    * @return string
   **/
   _getInnerText: function(e, normalizeSpaces) {
-    let textContent = "";
-
-    if (typeof(e.textContent) === "undefined" && typeof(e.innerText) === "undefined")
-      return "";
-
+    let textContent = e.textContent.replace(this.REGEXPS.trim, "");
     normalizeSpaces = (typeof normalizeSpaces === 'undefined') ? true : normalizeSpaces;
-    textContent = e.textContent.replace(this.REGEXPS.trim, "");
 
     if (normalizeSpaces) {
       return textContent.replace(this.REGEXPS.normalize, " ");
