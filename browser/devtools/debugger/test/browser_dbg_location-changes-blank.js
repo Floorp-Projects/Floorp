@@ -57,25 +57,24 @@ function testLocationChange()
   gDebugger.DebuggerController.activeThread.resume(function() {
     gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
       ok(true, "tabNavigated event was fired.");
-      gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
-        ok(true, "Successfully reattached to the tab again.");
+      info("Still attached to the tab.");
 
-        // Wait for the initial resume...
-        gDebugger.gClient.addOneTimeListener("resumed", function() {
-          is(gDebugger.DebuggerView.Scripts.selected, null,
-            "There should be no selected script.");
-          is(gDebugger.editor.getText().length, 0,
-            "The source editor not have any text displayed.");
+      gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
+        gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-          let menulist = gDebugger.DebuggerView.Scripts._scripts;
-          let noScripts = gDebugger.L10N.getStr("noScriptsText");
-          is(menulist.getAttribute("label"), noScripts,
-            "The menulist should display a notice that there are no scripts availalble.");
-          is(menulist.getAttribute("tooltiptext"), "",
-            "The menulist shouldn't have any tooltip text attributed when there are no scripts available.");
+        is(gDebugger.DebuggerView.Scripts.selected, null,
+          "There should be no selected script.");
+        is(gDebugger.editor.getText().length, 0,
+          "The source editor not have any text displayed.");
 
-          closeDebuggerAndFinish();
-        });
+        let menulist = gDebugger.DebuggerView.Scripts._scripts;
+        let noScripts = gDebugger.L10N.getStr("noScriptsText");
+        is(menulist.getAttribute("label"), noScripts,
+          "The menulist should display a notice that there are no scripts availalble.");
+        is(menulist.getAttribute("tooltiptext"), "",
+          "The menulist shouldn't have any tooltip text attributed when there are no scripts available.");
+
+        closeDebuggerAndFinish();
       });
     });
     content.location = "about:blank";
