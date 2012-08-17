@@ -1272,12 +1272,19 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
     return true;
 }
 
-void
-ScriptSource::setSourceMap(jschar *sm)
+bool
+ScriptSource::setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename)
 {
-    JS_ASSERT(!hasSourceMap());
-    JS_ASSERT(sm);
-    sourceMap_ = sm;
+    JS_ASSERT(sourceMapURL);
+    if (hasSourceMap()) {
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
+                                          JSMSG_ALREADY_HAS_SOURCEMAP, filename)) {
+            cx->free_(sourceMapURL);
+            return false;
+        }
+    }
+    sourceMap_ = sourceMapURL;
+    return true;
 }
 
 const jschar *
