@@ -2442,6 +2442,14 @@ nsObjectLoadingContent::GetActivated(bool *aActivated)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsObjectLoadingContent::GetPluginFallbackType(PRUint32* aPluginFallbackType)
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  *aPluginFallbackType = mFallbackType;
+  return NS_OK;
+}
+
 bool
 nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
 {
