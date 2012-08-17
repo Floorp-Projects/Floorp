@@ -635,6 +635,57 @@ test(
       do_check_false(p_none.permits("http://bar.com"));
     });
 
+test(
+    function test_bug783497_refinePolicyIssues() {
+
+      const firstPolicy = "allow 'self'; img-src 'self'; script-src 'self'; options 'bogus-option'";
+      const secondPolicy = "default-src 'none'; script-src 'self'";
+      var cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
+                     .createInstance(Ci.nsIContentSecurityPolicy);
+      var selfURI = URI("http://self.com/");
+
+      function testPermits(aUri, aContext) {
+        return cspObj.shouldLoad(aContext, aUri, null, null, null, null)
+               == Ci.nsIContentPolicy.ACCEPT;
+      };
+
+      // everything is allowed by the default policy
+      do_check_true(testPermits(URI("http://self.com/foo.js"),
+                    Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_true(testPermits(URI("http://other.com/foo.js"),
+                    Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_true(testPermits(URI("http://self.com/foo.png"),
+                    Ci.nsIContentPolicy.TYPE_IMAGE));
+      do_check_true(testPermits(URI("http://other.com/foo.png"),
+                    Ci.nsIContentPolicy.TYPE_IMAGE));
+
+      // fold in the first policy
+      cspObj.refinePolicy(firstPolicy, selfURI);
+
+      // script-src and img-src are limited to self after the first policy
+      do_check_true(testPermits(URI("http://self.com/foo.js"),
+                    Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_false(testPermits(URI("http://other.com/foo.js"),
+                     Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_true(testPermits(URI("http://self.com/foo.png"),
+                    Ci.nsIContentPolicy.TYPE_IMAGE));
+      do_check_false(testPermits(URI("http://other.com/foo.png"),
+                     Ci.nsIContentPolicy.TYPE_IMAGE));
+
+      // fold in the second policy
+      cspObj.refinePolicy(secondPolicy, selfURI);
+
+      // script-src is self and img-src is none after the merge
+      do_check_true(testPermits(URI("http://self.com/foo.js"),
+                    Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_false(testPermits(URI("http://other.com/foo.js"),
+                     Ci.nsIContentPolicy.TYPE_SCRIPT));
+      do_check_false(testPermits(URI("http://self.com/foo.png"),
+                     Ci.nsIContentPolicy.TYPE_IMAGE));
+      do_check_false(testPermits(URI("http://other.com/foo.png"),
+                     Ci.nsIContentPolicy.TYPE_IMAGE));
+    });
+
 
 /*
 
