@@ -98,6 +98,7 @@ public:
     virtual bool RecvSetInputContext(const PRInt32& aIMEEnabled,
                                      const PRInt32& aIMEOpen,
                                      const nsString& aType,
+                                     const nsString& aInputmode,
                                      const nsString& aActionHint,
                                      const PRInt32& aCause,
                                      const PRInt32& aFocusChange);

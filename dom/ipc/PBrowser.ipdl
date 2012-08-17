@@ -163,6 +163,7 @@ parent:
     SetInputContext(PRInt32 IMEEnabled,
                     PRInt32 IMEOpen,
                     nsString type,
+                    nsString inputmode,
                     nsString actionHint,
                     PRInt32 cause,
                     PRInt32 focusChange);
