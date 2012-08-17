@@ -16,6 +16,7 @@ Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
+Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
