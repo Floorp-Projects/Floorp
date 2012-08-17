@@ -281,12 +281,6 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, jsid id, HandleObject holder,
     return true;
 }
 
-JSScript *
-js_GetCurrentScript(JSContext *cx)
-{
-    return cx->hasfp() ? cx->fp()->maybeScript() : NULL;
-}
-
 JSContext *
 js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
@@ -1066,9 +1060,9 @@ JSContext::JSContext(JSRuntime *rt)
     rootingUnnecessary(false),
 #endif
     compartment(NULL),
-    stack(thisDuringConstruction()),  /* depends on cx->thread_ */
+    defaultCompartmentObject_(NULL),
+    stack(thisDuringConstruction()),
     parseMapPool_(NULL),
-    globalObject(NULL),
     sharpObjectMap(thisDuringConstruction()),
     argumentFormatMap(NULL),
     lastMessage(NULL),
@@ -1152,24 +1146,14 @@ RelaxRootChecksForContext(JSContext *cx)
 void
 JSContext::resetCompartment()
 {
-    RootedObject scopeobj(this);
     if (stack.hasfp()) {
-        scopeobj = fp()->scopeChain();
+        compartment = fp()->scopeChain()->compartment();
     } else {
-        scopeobj = globalObject;
-        if (!scopeobj)
+        if (!defaultCompartmentObject_)
             goto error;
-
-        /*
-         * Innerize. Assert, but check anyway, that this succeeds. (It
-         * can only fail due to bugs in the engine or embedding.)
-         */
-        scopeobj = GetInnerObject(this, scopeobj);
-        if (!scopeobj)
-            goto error;
+        compartment = defaultCompartmentObject_->compartment();
     }
 
-    compartment = scopeobj->compartment();
     inferenceEnabled = compartment->types.inferenceEnabled;
 
     if (isExceptionPending())
@@ -1388,8 +1372,8 @@ JSContext::mark(JSTracer *trc)
     /* Stack frames and slots are traced by StackSpace::mark. */
 
     /* Mark other roots-by-definition in the JSContext. */
-    if (globalObject && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-        MarkObjectRoot(trc, &globalObject, "global object");
+    if (defaultCompartmentObject_ && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+        MarkObjectRoot(trc, &defaultCompartmentObject_, "default compartment object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
 
