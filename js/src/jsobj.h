@@ -1080,20 +1080,6 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
-/* For manipulating JSContext::sharpObjectMap. */
-extern bool
-js_EnterSharpObject(JSContext *cx, js::HandleObject obj, JSIdArray **idap, bool *alreadySeen, bool *isSharp);
-
-extern void
-js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
-
-/*
- * Mark objects stored in map if GC happens between js_EnterSharpObject
- * and js_LeaveSharpObject. GC calls this when map->depth > 0.
- */
-extern void
-js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
-
 extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject obj,
                         js::HandleId id, js::MutableHandleValue rval);
