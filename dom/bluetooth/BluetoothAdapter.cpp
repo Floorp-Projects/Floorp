@@ -1,5 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
-/* vim: set ts=2 et sw=2 tw=40: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,6 +61,71 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
+
+class GetPairedDevicesTask : public BluetoothReplyRunnable
+{
+public:
+  GetPairedDevicesTask(BluetoothAdapter* aAdapterPtr,
+                       nsIDOMDOMRequest* aReq) :
+    mAdapterPtr(aAdapterPtr),
+    BluetoothReplyRunnable(aReq)
+  {
+    MOZ_ASSERT(aReq && aAdapterPtr);
+  }
+
+  virtual bool ParseSuccessfulReply(jsval* aValue)
+  {
+    *aValue = JSVAL_VOID;
+    BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
+    if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
+      NS_WARNING("Not a BluetoothNamedValue array!");
+      return false;
+    }
+
+    const InfallibleTArray<BluetoothNamedValue>& reply =
+      mReply->get_BluetoothReplySuccess().value().get_ArrayOfBluetoothNamedValue();
+    nsTArray<nsRefPtr<BluetoothDevice> > devices;
+    JSObject* JsDevices;
+    for (uint32_t i = 0; i < reply.Length(); i++) {
+      if (reply[i].value().type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
+        NS_WARNING("Not a BluetoothNamedValue array!");
+        return false;
+      }
+      nsRefPtr<BluetoothDevice> d = BluetoothDevice::Create(mAdapterPtr->GetOwner(),
+                                                            mAdapterPtr->GetPath(),
+                                                            reply[i].value());
+      devices.AppendElement(d);
+    }
+
+    nsresult rv;
+    nsIScriptContext* sc = mAdapterPtr->GetContextForEventHandlers(&rv);
+    if (!sc) {
+      NS_WARNING("Cannot create script context!");
+      return false;
+    }
+
+    rv = BluetoothDeviceArrayToJSArray(sc->GetNativeContext(),
+                                       sc->GetNativeGlobal(), devices, &JsDevices);
+
+    if (JsDevices) {
+      aValue->setObject(*JsDevices);
+    }
+    else {
+      NS_WARNING("Paird not yet set!");
+      return false;
+    }
+    return true;
+  }
+
+  void
+  ReleaseMembers()
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mAdapterPtr = nullptr;
+  }
+private:
+  nsRefPtr<BluetoothAdapter> mAdapterPtr;
+};
 
 BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
     : BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
@@ -393,6 +458,36 @@ BluetoothAdapter::SetDiscoverableTimeout(const PRUint32 aDiscoverableTimeout,
   BluetoothValue value(aDiscoverableTimeout);
   BluetoothNamedValue property(NS_LITERAL_STRING("DiscoverableTimeout"), value);
   return SetProperty(GetOwner(), property, aRequest);
+}
+
+NS_IMETHODIMP
+BluetoothAdapter::GetPairedDevices(nsIDOMDOMRequest** aRequest)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
+  if (!rs) {
+    NS_WARNING("No DOMRequest Service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> request;
+  nsresult rv = rs->CreateRequest(GetOwner(), getter_AddRefs(request));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't create DOMRequest!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<BluetoothReplyRunnable> results = new GetPairedDevicesTask(this, request);
+  if (NS_FAILED(bs->GetPairedDevicePropertiesInternal(mDeviceAddresses, results))) {
+    return NS_ERROR_FAILURE;
+  }
+  request.forget(aRequest);
+  return NS_OK;
 }
 
 NS_IMPL_EVENT_HANDLER(BluetoothAdapter, propertychanged)
