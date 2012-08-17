@@ -1370,6 +1370,9 @@ void
 nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
                                    UIStateChangeType aShowFocusRings)
 {
+  if (!mWidgetListener)
+    return;
+
   nsIPresShell* presShell = mWidgetListener->GetPresShell();
   nsIDocument* doc = presShell->GetDocument();
   if (doc) {
@@ -1385,6 +1388,8 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
 Accessible*
 nsBaseWidget::GetAccessible()
 {
+  NS_ENSURE_TRUE(mWidgetListener, nullptr);
+
   nsIPresShell* presShell = mWidgetListener->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
 
