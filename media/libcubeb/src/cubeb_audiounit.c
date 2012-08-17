@@ -7,6 +7,7 @@
 #undef NDEBUG
 #include <assert.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
@@ -181,6 +182,9 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->frames_queued = 0;
 
   r = OpenAComponent(comp, &stm->unit);
+  if (r != 0) {
+    fprintf(stderr, "cubeb_audiounit: FATAL: OpenAComponent returned %ld\n", (long) r);
+  }
   assert(r == 0);
 
   input.inputProc = audio_unit_output_callback;
