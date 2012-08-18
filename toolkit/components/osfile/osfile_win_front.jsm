@@ -658,14 +658,8 @@
         * @type {number}
         */
        get size() {
-         try {
-           return OS.Shared.projectValue(
-             ctypes.uint64_t("" +
-             this._nFileSizeHigh +
-             this._nFileSizeLow));
-         } catch (x) {
-           return NaN;
-         }
+         let value = ctypes.UInt64.join(this._nFileSizeHigh, this._nFileSizeLow);
+         return exports.OS.Shared.Type.uint64_t.importFromC(value);
        },
        /**
         * The date of creation of this file
@@ -707,6 +701,23 @@
          return date;
        }
      };
+
+     /**
+      * Return a version of an instance of File.Info that can be sent
+      * from a worker thread to the main thread. Note that deserialization
+      * is asymmetric and returns an object with a different implementation.
+      */
+     File.Info.toMsg = function toMsg(stat) {
+       if (!stat instanceof File.Info) {
+         throw new TypeError("parameter of File.Info.toMsg must be a File.Info");
+       }
+       let serialized = {};
+       for (let key in File.Info.prototype) {
+         serialized[key] = stat[key];
+       }
+       return serialized;
+     };
+
 
      /**
       * Fetch the information on a file.
