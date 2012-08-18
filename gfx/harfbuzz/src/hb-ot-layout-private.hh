@@ -39,9 +39,9 @@
 
 
 /* buffer var allocations, used during the GSUB/GPOS processing */
-#define glyph_props()		var1.u16[1] /* GDEF glyph properties */
-#define syllable()		var2.u8[0] /* GSUB/GPOS shaping boundaries */
-#define lig_props()		var2.u8[1] /* GSUB/GPOS ligature tracking */
+#define glyph_props()		var1.u16[0] /* GDEF glyph properties */
+#define syllable()		var1.u8[2] /* GSUB/GPOS shaping boundaries */
+#define lig_props()		var1.u8[3] /* GSUB/GPOS ligature tracking */
 
 #define hb_ot_layout_from_face(face) ((hb_ot_layout_t *) face->shaper_data.ot)
 

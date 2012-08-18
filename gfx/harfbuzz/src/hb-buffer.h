@@ -201,8 +201,8 @@ hb_buffer_normalize_glyphs (hb_buffer_t *buffer);
 
 /*
  * NOT IMPLEMENTED
-void
-hb_buffer_normalize_characters (hb_buffer_t *buffer);
+ void
+ hb_buffer_normalize_characters (hb_buffer_t *buffer);
 */
 
 

@@ -35,9 +35,8 @@
 
 
 /* buffer var allocations, used by complex shapers */
-#define complex_var_persistent_u8_0()	var2.u8[2]
-#define complex_var_persistent_u8_1()	var2.u8[3]
-#define complex_var_temporary_u8()	var2.u8[0]
+#define complex_var_u8_0()	var2.u8[2]
+#define complex_var_u8_1()	var2.u8[3]
 
 
 
@@ -57,7 +56,6 @@ struct hb_ot_complex_shaper_t
   /* collect_features()
    * Called during shape_plan().
    * Shapers should use plan->map to add their features and callbacks.
-   * May be NULL.
    */
   void (*collect_features) (hb_ot_shape_planner_t *plan);
 
@@ -65,7 +63,6 @@ struct hb_ot_complex_shaper_t
    * Called during shape_plan().
    * Shapers should use plan->map to override features and add callbacks after
    * common features are added.
-   * May be NULL.
    */
   void (*override_features) (hb_ot_shape_planner_t *plan);
 
@@ -74,7 +71,7 @@ struct hb_ot_complex_shaper_t
    * Called at the end of shape_plan().
    * Whatever shapers return will be accessible through plan->data later.
    * If NULL is returned, means a plan failure.
-   * May be NULL. */
+   */
   void *(*data_create) (const hb_ot_shape_plan_t *plan);
 
   /* data_destroy()
@@ -83,6 +80,16 @@ struct hb_ot_complex_shaper_t
    * If NULL is returned, means a plan failure.
    * May be NULL. */
   void (*data_destroy) (void *data);
+
+
+  /* preprocess_text()
+   * Called during shape().
+   * Shapers can use to modify text before shaping starts.
+   */
+  void (*preprocess_text) (const hb_ot_shape_plan_t *plan,
+			   hb_buffer_t              *buffer,
+			   hb_font_t                *font);
+
 
   /* normalization_preference()
    * Called during shape().
@@ -93,6 +100,7 @@ struct hb_ot_complex_shaper_t
   /* setup_masks()
    * Called during shape().
    * Shapers should use map to get feature masks and set on buffer.
+   * Shapers may NOT modify characters.
    */
   void (*setup_masks) (const hb_ot_shape_plan_t *plan,
 		       hb_buffer_t              *buffer,

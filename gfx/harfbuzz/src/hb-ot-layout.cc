@@ -49,13 +49,13 @@ _hb_ot_layout_create (hb_face_t *face)
   if (unlikely (!layout))
     return NULL;
 
-  layout->gdef_blob = Sanitizer<GDEF>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GDEF));
+  layout->gdef_blob = Sanitizer<GDEF>::sanitize (face->reference_table (HB_OT_TAG_GDEF));
   layout->gdef = Sanitizer<GDEF>::lock_instance (layout->gdef_blob);
 
-  layout->gsub_blob = Sanitizer<GSUB>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GSUB));
+  layout->gsub_blob = Sanitizer<GSUB>::sanitize (face->reference_table (HB_OT_TAG_GSUB));
   layout->gsub = Sanitizer<GSUB>::lock_instance (layout->gsub_blob);
 
-  layout->gpos_blob = Sanitizer<GPOS>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GPOS));
+  layout->gpos_blob = Sanitizer<GPOS>::sanitize (face->reference_table (HB_OT_TAG_GPOS));
   layout->gpos = Sanitizer<GPOS>::lock_instance (layout->gpos_blob);
 
   layout->gsub_lookup_count = layout->gsub->get_lookup_count ();
@@ -415,9 +415,8 @@ hb_ot_layout_would_substitute_lookup_fast (hb_face_t            *face,
 					   unsigned int          glyphs_length,
 					   unsigned int          lookup_index)
 {
-  if (unlikely (glyphs_length < 1 || glyphs_length > 2)) return false;
   if (unlikely (lookup_index >= hb_ot_layout_from_face (face)->gsub_lookup_count)) return false;
-  hb_would_apply_context_t c (face, glyphs[0], glyphs_length == 2 ? glyphs[1] : -1, &hb_ot_layout_from_face (face)->gsub_digests[lookup_index]);
+  hb_would_apply_context_t c (face, glyphs, glyphs_length, &hb_ot_layout_from_face (face)->gsub_digests[lookup_index]);
   return hb_ot_layout_from_face (face)->gsub->would_substitute_lookup (&c, lookup_index);
 }
 
