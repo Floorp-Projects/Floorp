@@ -370,6 +370,7 @@ ContentParent::Init()
         obs->AddObserver(this, "child-gc-request", false);
         obs->AddObserver(this, "child-cc-request", false);
         obs->AddObserver(this, "last-pb-context-exited", false);
+        obs->AddObserver(this, "file-watcher-update", false);
 #ifdef MOZ_WIDGET_GONK
         obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
 #endif
@@ -543,6 +544,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "last-pb-context-exited");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "file-watcher-update");
 #ifdef MOZ_WIDGET_GONK
         obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_VOLUME_STATE_CHANGED);
 #endif
@@ -697,8 +699,6 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
         //Sending all information to content process
         unused << SendAppInfo(version, buildID);
     }
-
-    mFileWatchers.Init();
 }
 
 ContentParent::~ContentParent()
@@ -938,9 +938,6 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-
-        mFileWatchers.Clear();
-
         Close();
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
@@ -994,6 +991,18 @@ ContentParent::Observe(nsISupports* aSubject,
     }
     else if (!strcmp(aTopic, "last-pb-context-exited")) {
         unused << SendLastPrivateDocShellDestroyed();
+    }
+    else if (!strcmp(aTopic, "file-watcher-update")) {
+        nsCString creason;
+        CopyUTF16toUTF8(aData, creason);
+        nsCOMPtr<nsIFile> file = do_QueryInterface(aSubject);
+        if (!file) {
+            return NS_OK;
+        }
+
+        nsString path;
+        file->GetPath(path);
+        unused << SendFilePathUpdate(path, creason);
     }
 #ifdef MOZ_WIDGET_GONK
     else if(!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
@@ -1737,65 +1746,6 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
     }
   }
   return true;
-}
-
-bool
-ContentParent::RecvAddFileWatch(const nsString& root)
-{
-  nsRefPtr<WatchedFile> f;
-  if (mFileWatchers.Get(root, getter_AddRefs(f))) {
-    f->mUsageCount++;
-    return true;
-  }
-  
-  f = new WatchedFile(this, root);
-  mFileWatchers.Put(root, f);
-
-  f->Watch();
-  return true;
-}
-
-bool
-ContentParent::RecvRemoveFileWatch(const nsString& root)
-{
-  nsRefPtr<WatchedFile> f;
-  bool result = mFileWatchers.Get(root, getter_AddRefs(f));
-  if (!result) {
-    return true;
-  }
-
-  if (!f)
-    return true;
-
-  f->mUsageCount--;
-
-  if (f->mUsageCount > 0) {
-    return true;
-  }
-
-  f->Unwatch();
-  mFileWatchers.Remove(root);
-  return true;
-}
-
-NS_IMPL_ISUPPORTS1(ContentParent::WatchedFile, nsIFileUpdateListener)
-
-nsresult
-ContentParent::WatchedFile::Update(const char* aReason, nsIFile* aFile)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsString path;
-  aFile->GetPath(path);
-
-  unused << mParent->SendFilePathUpdate(path, nsDependentCString(aReason));
-
-#ifdef DEBUG
-  nsCString cpath;
-  aFile->GetNativePath(cpath);
-  printf("ContentParent::WatchedFile::Update: %s  -- %s\n", cpath.get(), aReason);
-#endif
-  return NS_OK;
 }
 
 } // namespace dom
