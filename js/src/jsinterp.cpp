@@ -1170,19 +1170,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
-#if defined(JS_METHODJIT)
-    bool useMethodJIT = false;
-#endif
-
 #ifdef JS_METHODJIT
-
-#define RESET_USE_METHODJIT()                                                 \
-    JS_BEGIN_MACRO                                                            \
-        useMethodJIT = cx->methodJitEnabled &&                                \
-           (interpMode == JSINTERP_NORMAL ||                                  \
-            interpMode == JSINTERP_REJOIN ||                                  \
-            interpMode == JSINTERP_SKIP_TRAP);                                \
-    JS_END_MACRO
 
 #define CHECK_PARTIAL_METHODJIT(status)                                       \
     JS_BEGIN_MACRO                                                            \
@@ -1199,11 +1187,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
           default:;                                                           \
         }                                                                     \
     JS_END_MACRO
-
-#else
-
-#define RESET_USE_METHODJIT() ((void) 0)
-
 #endif
 
     /*
@@ -1323,8 +1306,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
     if (interpMode == JSINTERP_REJOIN)
         interpMode = JSINTERP_NORMAL;
-
-    RESET_USE_METHODJIT();
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
@@ -1490,8 +1471,6 @@ check_backedge:
         DO_OP();
 
 #ifdef JS_METHODJIT
-    if (!useMethodJIT)
-        DO_OP();
     // Attempt on-stack replacement with JaegerMonkey code, which is keyed to
     // the interpreter state at the JSOP_LOOPHEAD at the start of the loop.
     // Unlike IonMonkey, this requires two different code fragments to perform
@@ -1515,8 +1494,6 @@ check_backedge:
         regs.fp()->setFinishedInInterpreter();
         goto leave_on_safe_point;
     }
-    if (status == mjit::Compile_Abort)
-        useMethodJIT = false;
 #endif /* JS_METHODJIT */
 
     DO_OP();
@@ -1648,7 +1625,6 @@ BEGIN_CASE(JSOP_STOP)
                   *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
 
         /* Resume execution in the calling frame. */
-        RESET_USE_METHODJIT();
         if (JS_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
@@ -2510,7 +2486,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     SET_SCRIPT(regs.fp()->script());
-    RESET_USE_METHODJIT();
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
