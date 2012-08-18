@@ -244,14 +244,14 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
     }
 
     JSScript *script = nullptr;
-    if (!fp) {
+    if (fp) {
+      script = JS_GetFrameScript(cx, fp);
+    } else {
         if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
             // No code at all is running. So we must be arriving here as the result
             // of C++ code asking us to do something. Allow access.
             return true;
         }
-    } else if (JS_IsScriptFrame(cx, fp)) {
-        script = JS_GetFrameScript(cx, fp);
     }
 
     bool privileged;

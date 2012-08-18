@@ -173,6 +173,7 @@ CallObject *
 CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp->isNonEvalFunctionFrame());
+    assertSameCompartment(cx, fp);
 
     RootedObject scopeChain(cx, fp->scopeChain());
 
@@ -239,6 +240,8 @@ Class js::DeclEnvClass = {
 DeclEnvObject *
 DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 {
+    assertSameCompartment(cx, fp);
+
     RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
     if (!type)
         return NULL;
@@ -556,6 +559,8 @@ Class js::WithClass = {
 ClonedBlockObject *
 ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, StackFrame *fp)
 {
+    assertSameCompartment(cx, fp);
+
     RootedTypeObject type(cx, block->getNewType(cx));
     if (!type)
         return NULL;
@@ -850,6 +855,7 @@ ScopeIter::ScopeIter(StackFrame *fp, JSContext *cx
     cur_(cx, fp->scopeChain()),
     block_(cx, fp->maybeBlockChain())
 {
+    assertSameCompartment(cx, fp);
     settle();
     JS_GUARD_OBJECT_NOTIFIER_INIT;
 }
@@ -1629,6 +1635,7 @@ void
 DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
 {
     JS_ASSERT(!fp->isYielding());
+    assertSameCompartment(cx, fp);
 
     DebugScopeObject *debugScope = NULL;
 
@@ -1702,6 +1709,8 @@ DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
 void
 DebugScopes::onPopBlock(JSContext *cx, StackFrame *fp)
 {
+    assertSameCompartment(cx, fp);
+
     StaticBlockObject &staticBlock = *fp->maybeBlockChain();
     if (staticBlock.needsClone()) {
         ClonedBlockObject &clone = fp->scopeChain()->asClonedBlock();
@@ -1795,7 +1804,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      */
     for (AllFramesIter i(cx->runtime->stackSpace); !i.done(); ++i) {
         StackFrame *fp = i.fp();
-        if (fp->isDummyFrame() || fp->scopeChain()->compartment() != cx->compartment)
+        if (fp->scopeChain()->compartment() != cx->compartment)
             continue;
 
         for (ScopeIter si(fp, cx); !si.done(); ++si) {

@@ -645,8 +645,7 @@ bool
 JSCompartment::hasScriptsOnStack()
 {
     for (AllFramesIter i(rt->stackSpace); !i.done(); ++i) {
-        JSScript *script = i.fp()->maybeScript();
-        if (script && script->compartment() == this)
+        if (i.fp()->script()->compartment() == this)
             return true;
     }
     return false;

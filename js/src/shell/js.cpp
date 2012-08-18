@@ -2654,12 +2654,6 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
             break;
     }
 
-    StackFrame *const fp = fi.fp();
-    if (!fp->isScriptFrame()) {
-        JS_ReportError(cx, "cannot eval in non-script frame");
-        return false;
-    }
-
     bool saved = false;
     if (saveCurrent)
         saved = JS_SaveFrameChain(cx);
@@ -2669,6 +2663,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
+    StackFrame *fp = fi.fp();
     bool ok = !!JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
                                           fp->script()->filename,
                                           JS_PCToLineNumber(cx, fp->script(),
@@ -3487,8 +3482,11 @@ NewGlobalObject(JSContext *cx);
 static JSBool
 NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *global = NewGlobalObject(cx);
+    RootedObject global(cx, NewGlobalObject(cx));
     if (!global)
+        return false;
+
+    if (!JS_WrapObject(cx, global.address()))
         return false;
 
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(global));
@@ -4724,9 +4722,6 @@ NewGlobalObject(JSContext *cx)
             return NULL;
     }
 
-    if (!JS_WrapObject(cx, glob.address()))
-        return NULL;
-
     return glob;
 }
 
@@ -4850,10 +4845,6 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     RootedObject glob(cx);
     glob = NewGlobalObject(cx);
     if (!glob)
-        return 1;
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, glob))
         return 1;
 
     JS_SetGlobalObject(cx, glob);
