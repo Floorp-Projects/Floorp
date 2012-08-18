@@ -1683,7 +1683,7 @@ GetXMLSettingFlags(JSContext *cx, unsigned *flagsp)
 static JSObject *
 GetCurrentScopeChain(JSContext *cx)
 {
-    if (cx->hasfp())
+    if (cx->hasfp() && cx->fp()->scopeChain()->compartment() == cx->compartment)
         return cx->fp()->scopeChain();
     return cx->global();
 }

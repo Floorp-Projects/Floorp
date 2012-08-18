@@ -2223,8 +2223,7 @@ namespace js {
 void
 MarkCompartmentActive(StackFrame *fp)
 {
-    if (fp->isScriptFrame())
-        fp->script()->compartment()->active = true;
+    fp->script()->compartment()->active = true;
 }
 
 } /* namespace js */

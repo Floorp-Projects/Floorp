@@ -4688,10 +4688,8 @@ js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
 
     /* If neither cx nor the code is strict, then no check is needed. */
-    if (!(fp->isScriptFrame() && fp->script()->strictModeCode) &&
-        !cx->hasStrictOption()) {
+    if (!fp->script()->strictModeCode && !cx->hasStrictOption())
         return true;
-    }
 
     JSAutoByteString bytes(cx, propname);
     return !!bytes &&
@@ -5741,27 +5739,17 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         }
         fputc('\n', stderr);
 
-        if (fp->isScriptFrame()) {
-            fprintf(stderr, "file %s line %u\n",
-                    fp->script()->filename, (unsigned) fp->script()->lineno);
-        }
+        fprintf(stderr, "file %s line %u\n",
+                fp->script()->filename, (unsigned) fp->script()->lineno);
 
         if (jsbytecode *pc = i.pc()) {
-            if (!fp->isScriptFrame()) {
-                fprintf(stderr, "*** pc && !script, skipping frame\n\n");
-                continue;
-            }
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
         MaybeDumpObject("blockChain", fp->maybeBlockChain());
-        if (!fp->isDummyFrame()) {
-            MaybeDumpValue("this", fp->thisValue());
-            fprintf(stderr, "  rval: ");
-            dumpValue(fp->returnValue());
-        } else {
-            fprintf(stderr, "dummy frame");
-        }
+        MaybeDumpValue("this", fp->thisValue());
+        fprintf(stderr, "  rval: ");
+        dumpValue(fp->returnValue());
         fputc('\n', stderr);
 
         fprintf(stderr, "  flags:");

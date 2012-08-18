@@ -1906,8 +1906,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     JSObject *funobj = aHandler;
     jsval funval = OBJECT_TO_JSVAL(funobj);
     JSAutoEnterCompartment ac;
-    js::ForceFrame ff(mContext, funobj);
-    if (!ac.enter(mContext, funobj) || !ff.enter() ||
+    if (!ac.enter(mContext, funobj) ||
         !JS_WrapObject(mContext, &target)) {
       ReportPendingException();
       return NS_ERROR_FAILURE;

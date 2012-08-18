@@ -534,8 +534,7 @@ inline bool
 UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 {
     return fp->isConstructing() && cx->typeInferenceEnabled() &&
-           fp->prev() && fp->prev()->isScriptFrame() &&
-           UseNewType(cx, fp->prev()->script(), fp->prevpc());
+           fp->prev() && UseNewType(cx, fp->prev()->script(), fp->prevpc());
 }
 
 inline bool

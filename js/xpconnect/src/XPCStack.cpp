@@ -103,42 +103,38 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
     nsRefPtr<XPCJSStackFrame> first = new XPCJSStackFrame();
     nsRefPtr<XPCJSStackFrame> self = first;
     while (fp && self) {
-        if (!JS_IsScriptFrame(cx, fp)) {
-            self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-        } else {
-            self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
-            JSScript* script = JS_GetFrameScript(cx, fp);
-            jsbytecode* pc = JS_GetFramePC(cx, fp);
-            if (script && pc) {
-                JS::AutoEnterFrameCompartment ac;
-                if (ac.enter(cx, fp)) {
-                    const char* filename = JS_GetScriptFilename(cx, script);
-                    if (filename) {
-                        self->mFilename = (char*)
-                            nsMemory::Clone(filename,
-                                            sizeof(char)*(strlen(filename)+1));
-                    }
+        self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
+        JSScript* script = JS_GetFrameScript(cx, fp);
+        jsbytecode* pc = JS_GetFramePC(cx, fp);
+        if (script && pc) {
+            JS::AutoEnterFrameCompartment ac;
+            if (ac.enter(cx, fp)) {
+                const char* filename = JS_GetScriptFilename(cx, script);
+                if (filename) {
+                    self->mFilename = (char*)
+                        nsMemory::Clone(filename,
+                                        sizeof(char)*(strlen(filename)+1));
+                }
 
-                    self->mLineno = (int32_t) JS_PCToLineNumber(cx, script, pc);
+                self->mLineno = (int32_t) JS_PCToLineNumber(cx, script, pc);
 
-                    JSFunction* fun = JS_GetFrameFunction(cx, fp);
-                    if (fun) {
-                        JSString *funid = JS_GetFunctionId(fun);
-                        if (funid) {
-                            size_t length = JS_GetStringEncodingLength(cx, funid);
-                            if (length != size_t(-1)) {
-                                self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
-                                if (self->mFunname) {
-                                    JS_EncodeStringToBuffer(funid, self->mFunname, length);
-                                    self->mFunname[length] = '\0';
-                                }
+                JSFunction* fun = JS_GetFrameFunction(cx, fp);
+                if (fun) {
+                    JSString *funid = JS_GetFunctionId(fun);
+                    if (funid) {
+                        size_t length = JS_GetStringEncodingLength(cx, funid);
+                        if (length != size_t(-1)) {
+                            self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
+                            if (self->mFunname) {
+                                JS_EncodeStringToBuffer(funid, self->mFunname, length);
+                                self->mFunname[length] = '\0';
                             }
                         }
                     }
                 }
-            } else {
-                self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
             }
+        } else {
+            self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
         }
 
         if (++numFrames > MAX_FRAMES) {

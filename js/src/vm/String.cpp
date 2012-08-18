@@ -431,7 +431,7 @@ const StaticStrings::SmallChar StaticStrings::toSmallChar[] = { R7(0) };
 bool
 StaticStrings::init(JSContext *cx)
 {
-    SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
+    AutoEnterAtomsCompartment ac(cx);
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };
