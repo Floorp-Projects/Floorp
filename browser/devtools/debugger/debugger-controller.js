@@ -52,6 +52,7 @@ let DebuggerController = {
 
     DebuggerView.initializePanes();
     DebuggerView.initializeEditor(function() {
+      DebuggerView.GlobalSearch.initialize();
       DebuggerView.Scripts.initialize();
       DebuggerView.StackFrames.initialize();
       DebuggerView.Breakpoints.initialize();
@@ -74,6 +75,7 @@ let DebuggerController = {
     this._isDestroyed = true;
     window.removeEventListener("unload", this._shutdownDebugger, true);
 
+    DebuggerView.GlobalSearch.destroy();
     DebuggerView.Scripts.destroy();
     DebuggerView.StackFrames.destroy();
     DebuggerView.Breakpoints.destroy();
@@ -972,6 +974,9 @@ SourceScripts.prototype = {
    * Called during navigation to clear the currently-loaded scripts.
    */
   _onScriptsCleared: function SS__onScriptsCleared() {
+    DebuggerView.GlobalSearch.hideAndEmpty();
+    DebuggerView.GlobalSearch.clearCache();
+    DebuggerView.Scripts.clearSearch();
     DebuggerView.Scripts.empty();
     DebuggerView.Breakpoints.emptyText();
     DebuggerView.editor.setText("");
@@ -1025,7 +1030,26 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Trims as much as possible from a URL, while keeping the result unique
+   * Trims the url by shortening it if it exceeds a certain length, adding an
+   * ellipsis at the end.
+   *
+   * @param string aUrl
+   *        The script URL.
+   * @param number aMaxLength [optional]
+   *        The max string length.
+   * @return string
+   *         The shortened url.
+   */
+  trimUrlLength: function SS_trimUrlLength(aUrl, aMaxLength = SCRIPTS_URL_MAX_LENGTH) {
+    if (aUrl.length > aMaxLength) {
+      let ellipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString);
+      return aUrl.substring(0, aMaxLength) + ellipsis.data;
+    }
+    return aUrl;
+  },
+
+  /**
+   * Trims as much as possible from a url, while keeping the result unique
    * in the Debugger View scripts container.
    *
    * @param string | nsIURL aUrl
@@ -1130,12 +1154,10 @@ SourceScripts.prototype = {
    *         The simplified label.
    */
   getScriptLabel: function SS_getScriptLabel(aUrl, aHref) {
-    let label = this._trimUrl(aUrl);
-    if (label.length > SCRIPTS_URL_MAX_LENGTH) {
-      let ellipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString);
-      label = label.substring(0, SCRIPTS_URL_MAX_LENGTH) + ellipsis.data;
+    if (!this._labelsCache[aUrl]) {
+      this._labelsCache[aUrl] = this.trimUrlLength(this._trimUrl(aUrl));
     }
-    return this._labelsCache[aUrl] || (this._labelsCache[aUrl] = label);
+    return this._labelsCache[aUrl];
   },
 
   /**
@@ -1165,11 +1187,11 @@ SourceScripts.prototype = {
    *
    * @param object aScript
    *        The script object coming from the active thread.
-   * @param object [aOptions]
+   * @param object aOptions [optional]
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
-  showScript: function SS_showScript(aScript, aOptions) {
+  showScript: function SS_showScript(aScript, aOptions = {}) {
     if (aScript.loaded) {
       this._onShowScript(aScript, aOptions);
       return;
@@ -1197,9 +1219,7 @@ SourceScripts.prototype = {
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
-  _onShowScript: function SS__onShowScript(aScript, aOptions) {
-    aOptions = aOptions || {};
-
+  _onShowScript: function SS__onShowScript(aScript, aOptions = {}) {
     if (aScript.text.length < SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
       this._setEditorMode(aScript.url, aScript.contentType);
     }
@@ -1281,10 +1301,10 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Called when source has been loaded.
+   * Called when a script's source has been loaded.
    *
    * @private
-   * @param string aSourceUrl
+   * @param string aScriptUrl
    *        The URL of the source script.
    * @param string aSourceText
    *        The text of the source script.
@@ -1295,15 +1315,19 @@ SourceScripts.prototype = {
    *        - targetLine: place the editor at the given line number.
    */
   _onLoadSourceFinished:
-  function SS__onLoadSourceFinished(aSourceUrl, aSourceText, aContentType, aOptions) {
-    let scripts = document.getElementById("scripts");
-    let element = scripts.getElementsByAttribute("value", aSourceUrl)[0];
+  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aContentType, aOptions) {
+    let element = DebuggerView.Scripts.getScriptByLocation(aScriptUrl);
     let script = element.getUserData("sourceScript");
 
     script.loaded = true;
     script.text = aSourceText;
     script.contentType = aContentType;
     element.setUserData("sourceScript", script, null);
+
+    if (aOptions.silent) {
+      aOptions.callback && aOptions.callback(aScriptUrl, aSourceText);
+      return;
+    }
 
     this.showScript(script, aOptions);
   },
