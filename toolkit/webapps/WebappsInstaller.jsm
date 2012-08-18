@@ -801,10 +801,13 @@ LinuxNativeApp.prototype = {
     let factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"]
                     .getService(Ci.nsIINIParserFactory);
 
+    let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
     // ${InstallDir}/webapp.ini
     let writer = factory.createINIParser(this.webappINI).QueryInterface(Ci.nsIINIParserWriter);
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.uniqueName);
+    writer.setString("Webapp", "UninstallMsg", browserBundle.formatStringFromName("webapps.uninstall.notification", [this.appName], 1));
     writer.setString("WebappRT", "InstallDir", this.runtimeFolder.path);
     writer.writeFile();
 
