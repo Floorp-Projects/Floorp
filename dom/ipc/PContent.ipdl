@@ -298,9 +298,6 @@ parent:
     // Notify the parent of the presence or absence of private docshells
     PrivateDocShellsExist(bool aExist);
 
-    AddFileWatch(nsString filepath);
-    RemoveFileWatch(nsString filepath);
-
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };
