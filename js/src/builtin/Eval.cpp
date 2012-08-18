@@ -324,7 +324,6 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
 {
     // Direct eval can assume it was called from an interpreted frame.
     StackFrame *caller = cx->fp();
-    JS_ASSERT(caller->isScriptFrame());
     JS_ASSERT(IsBuiltinEvalForScope(caller->scopeChain(), args.calleev()));
     JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
 

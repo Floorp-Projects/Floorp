@@ -1060,6 +1060,8 @@ JSContext::JSContext(JSRuntime *rt)
     rootingUnnecessary(false),
 #endif
     compartment(NULL),
+    enterCompartmentDepth_(0),
+    savedFrameChains_(),
     defaultCompartmentObject_(NULL),
     stack(thisDuringConstruction()),
     parseMapPool_(NULL),
@@ -1079,7 +1081,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
 #endif
-    inferenceEnabled(false),
 #ifdef MOZ_TRACE_JSCALLS
     functionCallback(NULL),
 #endif
@@ -1143,33 +1144,6 @@ RelaxRootChecksForContext(JSContext *cx)
 } /* namespace JS */
 #endif
 
-void
-JSContext::resetCompartment()
-{
-    if (stack.hasfp()) {
-        compartment = fp()->scopeChain()->compartment();
-    } else {
-        if (!defaultCompartmentObject_)
-            goto error;
-        compartment = defaultCompartmentObject_->compartment();
-    }
-
-    inferenceEnabled = compartment->types.inferenceEnabled;
-
-    if (isExceptionPending())
-        wrapPendingException();
-    updateJITEnabled();
-    return;
-
-error:
-
-    /*
-     * If we try to use the context without a selected compartment,
-     * we will crash.
-     */
-    compartment = NULL;
-}
-
 /*
  * Since this function is only called in the context of a pending exception,
  * the caller must subsequently take an error path. If wrapping fails, it will
@@ -1206,6 +1180,38 @@ bool
 JSContext::runningWithTrustedPrincipals() const
 {
     return !compartment || compartment->principals == runtime->trustedPrincipals();
+}
+
+bool
+JSContext::saveFrameChain()
+{
+    if (!stack.saveFrameChain())
+        return false;
+
+    if (!savedFrameChains_.append(SavedFrameChain(compartment, enterCompartmentDepth_))) {
+        stack.restoreFrameChain();
+        return false;
+    }
+
+    compartment = defaultCompartmentObject_->compartment();
+    enterCompartmentDepth_ = 0;
+
+    if (isExceptionPending())
+        wrapPendingException();
+    return true;
+}
+
+void
+JSContext::restoreFrameChain()
+{
+    SavedFrameChain sfc = savedFrameChains_.popCopy();
+    compartment = sfc.compartment;
+    enterCompartmentDepth_ = sfc.enterCompartmentCount;
+
+    stack.restoreFrameChain();
+
+    if (isExceptionPending())
+        wrapPendingException();
 }
 
 void

@@ -1436,21 +1436,27 @@ JS_SetWrapObjectCallbacks(JSRuntime *rt,
     return old;
 }
 
+struct JSCrossCompartmentCall
+{
+    JSContext *context;
+    JSCompartment *oldCompartment;
+};
+
 JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSRawObject target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    JS_ASSERT(target);
-    AutoCompartment *call = cx->new_<AutoCompartment>(cx, target);
+    JSCrossCompartmentCall *call = OffTheBooks::new_<JSCrossCompartmentCall>();
     if (!call)
         return NULL;
-    if (!call->enter()) {
-        Foreground::delete_(call);
-        return NULL;
-    }
-    return reinterpret_cast<JSCrossCompartmentCall *>(call);
+
+    call->context = cx;
+    call->oldCompartment = cx->compartment;
+
+    cx->enterCompartment(target->compartment());
+    return call;
 }
 
 JS_PUBLIC_API(JSCrossCompartmentCall *)
@@ -1458,8 +1464,8 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    GlobalObject *global = target->compartment()->maybeGlobal();
-    return global ? JS_EnterCrossCompartmentCall(cx, global) : NULL;
+    GlobalObject &global = target->global();
+    return JS_EnterCrossCompartmentCall(cx, &global);
 }
 
 JS_PUBLIC_API(JSCrossCompartmentCall *)
@@ -1467,7 +1473,6 @@ JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-
     HandleObject global(HandleObject::fromMarkedLocation((JSObject**) &Valueify(target)->global()));
     return JS_EnterCrossCompartmentCall(cx, global);
 }
@@ -1475,58 +1480,37 @@ JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
 JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 {
-    AutoCompartment *realcall = reinterpret_cast<AutoCompartment *>(call);
-    AssertHeapIsIdle(realcall->context);
-    CHECK_REQUEST(realcall->context);
-    realcall->leave();
-    Foreground::delete_(realcall);
+    AssertHeapIsIdle(call->context);
+    CHECK_REQUEST(call->context);
+    call->context->leaveCompartment(call->oldCompartment);
+    Foreground::delete_(call);
 }
 
 bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSRawObject target)
 {
-    AssertHeapIsIdleOrIterating(cx);
-    JS_ASSERT(state == STATE_UNENTERED);
-    if (cx->compartment == target->compartment()) {
-        state = STATE_SAME_COMPARTMENT;
-        return true;
-    }
-
-    JS_STATIC_ASSERT(sizeof(bytes) == sizeof(AutoCompartment));
-    CHECK_REQUEST(cx);
-    AutoCompartment *call = new (bytes) AutoCompartment(cx, target);
-    if (call->enter()) {
-        state = STATE_OTHER_COMPARTMENT;
-        return true;
-    }
-    return false;
+    enterAndIgnoreErrors(cx, target);
+    return true;
 }
 
 void
 JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSRawObject target)
 {
-    (void) enter(cx, target);
+    AssertHeapIsIdleOrIterating(cx);
+    JS_ASSERT(!entered_);
+    cx_ = cx;
+    oldCompartment_ = cx->compartment;
+    cx->enterCompartment(target->compartment());
+    entered_ = true;
 }
 
 void
 JSAutoEnterCompartment::leave()
 {
-    JS_ASSERT(entered());
-    if (state == STATE_OTHER_COMPARTMENT) {
-        AutoCompartment* ac = getAutoCompartment();
-        CHECK_REQUEST(ac->context);
-        ac->~AutoCompartment();
-    }
-    state = STATE_UNENTERED;
+    JS_ASSERT(entered_);
+    cx_->leaveCompartment(oldCompartment_);
+    entered_ = false;
 }
-
-JSAutoEnterCompartment::~JSAutoEnterCompartment()
-{
-    if (entered())
-        leave();
-}
-
-namespace JS {
 
 bool
 AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
@@ -1551,8 +1535,6 @@ AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
     call = JS_EnterCrossCompartmentCallStackFrame(cx, target);
     return call != NULL;
 }
-
-} /* namespace JS */
 
 JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment *compartment, void *data)
@@ -5966,10 +5948,7 @@ JS_TriggerOperationCallback(JSRuntime *rt)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    StackFrame *fp = cx->maybefp();
-    while (fp && fp->isDummyFrame())
-        fp = fp->prev();
-    return fp != NULL;
+    return cx->hasfp();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5977,7 +5956,7 @@ JS_SaveFrameChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
-    return cx->stack.saveFrameChain();
+    return cx->saveFrameChain();
 }
 
 JS_PUBLIC_API(void)
@@ -5985,7 +5964,7 @@ JS_RestoreFrameChain(JSContext *cx)
 {
     AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
-    cx->stack.restoreFrameChain();
+    cx->restoreFrameChain();
 }
 
 #ifdef MOZ_TRACE_JSCALLS

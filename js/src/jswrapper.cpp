@@ -380,11 +380,9 @@ DirectWrapper DirectWrapper::singletonWithPrototype((unsigned)0, true);
 
 /* Compartments. */
 
-namespace js {
-
 extern JSObject *
-TransparentObjectWrapper(JSContext *cx, JSObject *objArg, JSObject *wrappedProtoArg, JSObject *parentArg,
-                         unsigned flags)
+js::TransparentObjectWrapper(JSContext *cx, JSObject *objArg, JSObject *wrappedProtoArg, JSObject *parentArg,
+                             unsigned flags)
 {
     RootedObject obj(cx, objArg);
     RootedObject wrappedProto(cx, wrappedProtoArg);
@@ -393,80 +391,6 @@ TransparentObjectWrapper(JSContext *cx, JSObject *objArg, JSObject *wrappedProto
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
     return Wrapper::New(cx, obj, wrappedProto, parent, &CrossCompartmentWrapper::singleton);
-}
-
-}
-
-ForceFrame::ForceFrame(JSContext *cx, JSObject *target)
-    : context(cx),
-      target(target),
-      frame(NULL)
-{
-}
-
-ForceFrame::~ForceFrame()
-{
-    context->delete_(frame);
-}
-
-bool
-ForceFrame::enter()
-{
-    frame = context->new_<DummyFrameGuard>();
-    if (!frame)
-       return false;
-
-    JS_ASSERT(context->compartment == target->compartment());
-    JSCompartment *destination = context->compartment;
-
-    JSObject &scopeChain = target->global();
-    JS_ASSERT(scopeChain.isNative());
-
-    return context->stack.pushDummyFrame(context, destination, scopeChain, frame);
-}
-
-AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
-    : context(cx),
-      origin(cx->compartment),
-      destination(target->compartment()),
-      entered(false)
-{
-}
-
-AutoCompartment::~AutoCompartment()
-{
-    if (entered)
-        leave();
-}
-
-bool
-AutoCompartment::enter()
-{
-    JS_ASSERT(!entered);
-    if (origin != destination) {
-        GlobalObject& scopeChain = *destination->maybeGlobal();
-        JS_ASSERT(scopeChain.isNative());
-
-        frame.construct();
-        if (!context->stack.pushDummyFrame(context, destination, scopeChain, &frame.ref()))
-            return false;
-
-        if (context->isExceptionPending())
-            context->wrapPendingException();
-    }
-    entered = true;
-    return true;
-}
-
-void
-AutoCompartment::leave()
-{
-    JS_ASSERT(entered);
-    if (origin != destination) {
-        frame.destroy();
-        context->resetCompartment();
-    }
-    entered = false;
 }
 
 ErrorCopier::~ErrorCopier()
