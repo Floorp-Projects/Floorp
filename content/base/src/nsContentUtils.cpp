@@ -6555,6 +6555,18 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     }
   }
 #endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+  if (nsHTMLMediaElement::IsMediaPluginsEnabled() &&
+      nsHTMLMediaElement::IsMediaPluginsType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
+    }
+    return docFactory.forget();
+  }
+#endif // MOZ_MEDIA_PLUGINS
+
 #endif // MOZ_MEDIA
 
   return NULL;

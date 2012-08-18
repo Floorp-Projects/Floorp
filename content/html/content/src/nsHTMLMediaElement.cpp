@@ -2164,6 +2164,24 @@ nsHTMLMediaElement::IsMediaPluginsEnabled()
 {
   return Preferences::GetBool("media.plugins.enabled");
 }
+
+bool
+nsHTMLMediaElement::IsMediaPluginsType(const nsACString& aType)
+{
+  if (!IsMediaPluginsEnabled()) {
+    return false;
+  }
+
+  static const char* supportedTypes[] = {
+    "audio/mpeg", "audio/mp4", "video/mp4"
+  };
+  for (PRUint32 i = 0; i < ArrayLength(supportedTypes); ++i) {
+    if (aType.EqualsASCII(supportedTypes[i])) {
+      return true;
+    }
+  }
+  return false;
+}
 #endif
 
 /* static */
