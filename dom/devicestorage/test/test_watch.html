@@ -1,0 +1,72 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+var gFileName = randomFilename(20);
+
+function addSuccess(e) {
+}
+
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function onChange(e) {
+
+  dump("we saw: " + e.path);
+
+  if (e.path == gFileName) {
+    ok(true, "we saw the file get created");
+    storage.removeEventListener("change", onChange);
+    devicestorage_cleanup();
+  }
+  else {
+    // we may see other file changes during the test, and
+    // that is completely ok
+  }
+}
+
+function makeFile() {
+  request = storage.addNamed(createRandomBlob(), gFileName);
+  ok(request, "Should have a non-null request");
+
+  request.onsuccess = addSuccess;
+  request.onerror = addError;
+}
+
+var storage = navigator.getDeviceStorage("testing");
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+storage.addEventListener("change", onChange);
+
+// since addEventListener is async, we have to wait until
+// it's definitely done before we make the file.
+setTimeout(makeFile,100);
+
+</script>
+</pre>
+</body>
+</html>
+
