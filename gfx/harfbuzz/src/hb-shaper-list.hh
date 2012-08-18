@@ -29,7 +29,7 @@
 #endif /* HB_SHAPER_LIST_HH */ /* Dummy header guards */
 
 /* v--- Add new shapers in the right place here. */
-#ifdef HAVE_GRAPHITE
+#ifdef HAVE_GRAPHITE2
 HB_SHAPER_IMPLEMENT (graphite2)
 #endif
 #ifdef HAVE_UNISCRIBE

@@ -49,6 +49,7 @@ CPPSRCS	=                        \
   hb-ot-shape-complex-arabic.cc  \
   hb-ot-shape-complex-indic.cc   \
   hb-ot-shape-complex-misc.cc    \
+  hb-ot-shape-fallback.cc        \
   hb-ot-shape-normalize.cc       \
   hb-ot-shape.cc                 \
   hb-ot-tag.cc                   \
@@ -71,7 +72,6 @@ EXPORTS_harfbuzz = \
   hb-ot.h          \
   hb-ot-layout.h   \
   hb-ot-tag.h      \
-  hb-ot-shape.h    \
   hb-set.h         \
   hb-shape.h       \
   hb-shape-plan.h  \
