@@ -5,11 +5,7 @@
 {
   if (typeof Components != "undefined") {
     var EXPORTED_SYMBOLS = ["OS"];
-    Components.utils.import("resource://gre/modules/ctypes.jsm");
-    Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
-      getService(Components.interfaces.nsIOSFileConstantsService).init();
   }
-
   (function(exports) {
      "use strict";
      /*
@@ -26,6 +22,15 @@
      if (exports.OS.Shared.Type) {
        return; // Avoid double-initialization
      }
+
+     // Import components after having initialized |exports.OS|, to ensure
+     // that everybody uses the same definition of |OS|.
+     if (typeof Components != "undefined") {
+       Components.utils.import("resource://gre/modules/ctypes.jsm");
+       Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
+         getService(Components.interfaces.nsIOSFileConstantsService).init();
+     }
+
 
      let LOG;
      if (typeof console != "undefined" && console.log) {
@@ -423,8 +428,15 @@
      function IntType(name, implementation, signed) {
        Type.call(this, name, implementation);
        this.importFromC = projector(implementation, signed);
+       this.project = this.importFromC;
      };
      IntType.prototype = Object.create(Type.prototype);
+     IntType.prototype.toMsg = function toMsg(value) {
+       if (typeof value == "number") {
+         return value;
+       }
+       return this.project(value);
+     };
 
      /**
       * A C char (one byte)
