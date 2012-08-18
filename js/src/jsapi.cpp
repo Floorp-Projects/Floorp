@@ -7117,16 +7117,16 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
             VerifyBarriers(rt, PostBarrierVerifier);
     }
 
-    bool schedule = zeal >= js::gc::ZealAllocValue;
-    rt->gcZeal_ = zeal;
-    rt->gcZealFrequency = frequency;
-    rt->gcNextScheduled = schedule ? frequency : 0;
-
 #ifdef JS_METHODJIT
     /* In case JSCompartment::compileBarriers() changed... */
     for (CompartmentsIter c(rt); !c.done(); c.next())
         mjit::ClearAllFrames(c);
 #endif
+
+    bool schedule = zeal >= js::gc::ZealAllocValue;
+    rt->gcZeal_ = zeal;
+    rt->gcZealFrequency = frequency;
+    rt->gcNextScheduled = schedule ? frequency : 0;
 }
 
 JS_PUBLIC_API(void)
