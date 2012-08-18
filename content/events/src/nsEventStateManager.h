@@ -529,8 +529,6 @@ protected:
       sInstance = nullptr;
     }
 
-    bool IsInTransaction() { return mHandlingDeltaMode != PR_UINT32_MAX; }
-
     /**
      * InitLineOrPageDelta() stores pixel delta values of WheelEvents which are
      * caused if it's needed.  And if the accumulated delta becomes a
@@ -541,34 +539,19 @@ protected:
                              mozilla::widget::WheelEvent* aEvent);
 
     /**
-     * Reset() resets all members.
+     * Reset() resets both delta values.
      */
     void Reset();
 
-    /**
-     * ComputeScrollAmountForDefaultAction() computes the default action's
-     * scroll amount in device pixels with mPendingScrollAmount*.
-     */
-    nsIntPoint ComputeScrollAmountForDefaultAction(
-                 mozilla::widget::WheelEvent* aEvent,
-                 const nsIntSize& aScrollAmountInDevPixels);
-
   private:
     DeltaAccumulator() :
-      mX(0.0), mY(0.0), mPendingScrollAmountX(0.0), mPendingScrollAmountY(0.0),
-      mHandlingDeltaMode(PR_UINT32_MAX), mHandlingPixelOnlyDevice(false)
+      mX(0.0), mY(0.0), mHandlingDeltaMode(PR_UINT32_MAX),
+      mHandlingPixelOnlyDevice(false)
     {
     }
 
     double mX;
     double mY;
-
-    // When default action of a wheel event is scroll but some delta values
-    // are ignored because the computed amount values are not integer, the
-    // fractional values are saved by these members.
-    double mPendingScrollAmountX;
-    double mPendingScrollAmountY;
-
     TimeStamp mLastTime;
 
     PRUint32 mHandlingDeltaMode;
