@@ -163,7 +163,6 @@ static bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t ar
 static bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastKeyText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getNPNVdocumentOrigin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -223,8 +222,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "setSitesWithData",
   "setSitesWithDataCapabilities",
   "getLastKeyText",
-  "getNPNVdocumentOrigin",
-  "getMouseUpEventCount"
+  "getNPNVdocumentOrigin"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -285,8 +283,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   setSitesWithData,
   setSitesWithDataCapabilities,
   getLastKeyText,
-  getNPNVdocumentOrigin,
-  getMouseUpEventCount
+  getNPNVdocumentOrigin
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -780,7 +777,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->asyncDrawing = AD_NONE;
   instanceData->frontBuffer = NULL;
   instanceData->backBuffer = NULL;
-  instanceData->mouseUpEventCount = 0;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -3651,17 +3647,5 @@ bool getNPNVdocumentOrigin(NPObject* npobj, const NPVariant* args, uint32_t argC
   }
 
   STRINGZ_TO_NPVARIANT(origin, *result);
-  return true;
-}
-
-bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  if (argCount != 0) {
-    return false;
-  }
-  
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  INT32_TO_NPVARIANT(id->mouseUpEventCount, *result);
   return true;
 }
