@@ -94,21 +94,17 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     stubs::Name(f);
 }
 
-template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    stubs::SetGlobalName<strict>(f, f.script()->getName(GET_UINT32_INDEX(f.pc())));
+    stubs::SetName(f, f.script()->getName(GET_UINT32_INDEX(f.pc())));
 }
-
-template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
-template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 static void
 PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     Repatcher repatch(f.chunk());
-    VoidStubSetGlobal stub = STRICT_VARIANT(f.script(), DisabledSetGlobal);
+    VoidStubSetGlobal stub = DisabledSetGlobal;
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stub));
     repatch.relink(ic->slowPathCall, fptr);
 }
@@ -165,7 +161,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
             THROW();
     }
 
-    STRICT_VARIANT(f.script(), stubs::SetGlobalName)(f, name);
+    stubs::SetName(f, name);
 }
 
 class EqualityICLinker : public LinkerHelper

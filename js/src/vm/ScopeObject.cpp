@@ -166,15 +166,6 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
 
     obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
-    /*
-     * If |bindings| is for a function that has extensible parents, that means
-     * its Call should have its own shape; see BaseShape::extensibleParents.
-     */
-    if (obj->lastProperty()->extensibleParents()) {
-        if (!obj->generateOwnShape(cx))
-            return NULL;
-    }
-
     return &obj->asCall();
 }
 
@@ -578,9 +569,6 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
 
     obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*fp->scopeChain()));
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(block->stackDepth()));
-
-    if (obj->lastProperty()->extensibleParents() && !obj->generateOwnShape(cx))
-        return NULL;
 
     /*
      * Copy in the closed-over locals. Closed-over locals don't need

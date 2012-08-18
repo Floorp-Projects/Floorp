@@ -496,6 +496,12 @@ IsLocalOp(JSOp op)
     return JOF_OPTYPE(op) == JOF_LOCAL;
 }
 
+inline bool
+IsGlobalOp(JSOp op)
+{
+    return js_CodeSpec[op].format & JOF_GNAME;
+}
+
 /*
  * Counts accumulated for a single opcode in a script. The counts tracked vary
  * between opcodes, and this structure ensures that counts are accessed in a

@@ -1137,18 +1137,6 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
         blockObj->setAliased(i, bce->isAliasedName(dn));
     }
 
-    /*
-     * If clones of this block will have any extensible parents, then the
-     * clones must get unique shapes; see the comments for
-     * js::Bindings::extensibleParents.
-     */
-    if (bce->sc->funHasExtensibleScope() || bce->script->bindings.extensibleParents()) {
-        Shape *newShape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
-        if (!newShape)
-            return false;
-        blockObj->setLastPropertyInfallible(newShape);
-    }
-
     return true;
 }
 

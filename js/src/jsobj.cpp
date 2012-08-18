@@ -4411,170 +4411,45 @@ js::LookupPropertyWithFlags(JSContext *cx, HandleObject obj, HandleId id, unsign
 }
 
 bool
-js::FindPropertyHelper(JSContext *cx,
-                       HandlePropertyName name, bool cacheResult, HandleObject scopeChain,
-                       MutableHandleObject objp, MutableHandleObject pobjp,
-                       MutableHandleShape propp)
+js::LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
+               MutableHandleObject objp, MutableHandleObject pobjp, MutableHandleShape propp)
+{
+    RootedId id(cx, NameToId(name));
+
+    for (RootedObject scope(cx, scopeChain); scope; scope = scope->enclosingScope()) {
+        if (!scope->lookupGeneric(cx, id, pobjp, propp))
+            return false;
+        if (propp) {
+            objp.set(scope);
+            return true;
+        }
+    }
+
+    objp.set(NULL);
+    pobjp.set(NULL);
+    propp.set(NULL);
+    return true;
+}
+
+bool
+js::LookupNameForSet(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
+                     MutableHandleObject objp)
 {
     RootedId id(cx, NameToId(name));
 
     RootedObject pobj(cx);
-    int scopeIndex;
     RootedShape prop(cx);
 
-    /* Scan entries on the scope chain that we can cache across. */
-    RootedObject obj(cx, scopeChain);
-    RootedObject parent(cx, obj->enclosingScope());
-    for (scopeIndex = 0;
-         parent
-         ? IsCacheableNonGlobalScope(obj)
-         : !obj->getOps()->lookupProperty;
-         ++scopeIndex) {
-        if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
-            return false;
-
-        if (prop) {
-#ifdef DEBUG
-            if (parent) {
-                JS_ASSERT(pobj->isNative());
-                JS_ASSERT(pobj->getClass() == obj->getClass());
-                if (obj->isBlock()) {
-                    /*
-                     * A block instance on the scope chain is immutable and
-                     * shares its shape with the compile-time prototype. Thus
-                     * we cannot find any property on the prototype.
-                     */
-                    JS_ASSERT(pobj->isClonedBlock());
-                } else {
-                    /* Call and DeclEnvClass objects have no prototypes. */
-                    JS_ASSERT(!obj->getProto());
-                }
-                JS_ASSERT(pobj == obj);
-            } else {
-                JS_ASSERT(obj->isNative());
-            }
-#endif
-
-            /*
-             * We must check if pobj is native as a global object can have
-             * non-native prototype.
-             */
-            if (cacheResult && pobj->isNative()) {
-                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, prop);
-            }
-
-            goto out;
-        }
-
-        if (!parent) {
-            pobj = NULL;
-            goto out;
-        }
-        obj = parent;
-        parent = obj->enclosingScope();
-    }
-
-    for (;;) {
-        if (!obj->lookupGeneric(cx, id, &pobj, &prop))
+    RootedObject scope(cx, scopeChain);
+    for (; !scope->isGlobal(); scope = scope->enclosingScope()) {
+        if (!scope->lookupGeneric(cx, id, &pobj, &prop))
             return false;
         if (prop)
-            goto out;
-
-        /*
-         * We conservatively assume that a resolve hook could mutate the scope
-         * chain during JSObject::lookupGeneric. So we read parent here again.
-         */
-        parent = obj->enclosingScope();
-        if (!parent) {
-            pobj = NULL;
             break;
-        }
-        obj = parent;
     }
 
-  out:
-    JS_ASSERT(!!pobj == !!prop);
-    objp.set(obj);
-    pobjp.set(pobj);
-    propp.set(prop);
+    objp.set(scope);
     return true;
-}
-
-/*
- * On return, if |*pobjp| is a native object, then |*propp| is a |Shape *|.
- * Otherwise, its type and meaning depends on the host object's implementation.
- */
-bool
-js::FindProperty(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
-                 MutableHandleObject objp, MutableHandleObject pobjp, MutableHandleShape propp)
-{
-    return !!FindPropertyHelper(cx, name, false, scopeChain, objp, pobjp, propp);
-}
-
-JSObject *
-js::FindIdentifierBase(JSContext *cx, HandleObject scopeChain, HandlePropertyName name)
-{
-    /*
-     * This function should not be called for a global object or from the
-     * trace and should have a valid cache entry for native scopeChain.
-     */
-    JS_ASSERT(scopeChain->enclosingScope() != NULL);
-
-    RootedObject obj(cx, scopeChain);
-
-    /*
-     * Loop over cacheable objects on the scope chain until we find a
-     * property. We also stop when we reach the global object skipping any
-     * farther checks or lookups. For details see the JSOP_BINDNAME case of
-     * js_Interpret.
-     *
-     * The test order here matters because IsCacheableNonGlobalScope
-     * must not be passed a global object (i.e. one with null parent).
-     */
-    for (int scopeIndex = 0;
-         obj->isGlobal() || IsCacheableNonGlobalScope(obj);
-         scopeIndex++)
-    {
-        RootedObject pobj(cx);
-        RootedShape shape(cx);
-        if (!LookupPropertyWithFlags(cx, obj, name, cx->resolveFlags, &pobj, &shape))
-            return NULL;
-        if (shape) {
-            if (!pobj->isNative()) {
-                JS_ASSERT(obj->isGlobal());
-                return obj;
-            }
-            JS_ASSERT_IF(obj->isScope(), pobj->getClass() == obj->getClass());
-            JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, shape);
-            return obj;
-        }
-
-        JSObject *parent = obj->enclosingScope();
-        if (!parent)
-            return obj;
-        obj = parent;
-    }
-
-    /* Loop until we find a property or reach the global object. */
-    do {
-        RootedObject pobj(cx);
-        RootedShape shape(cx);
-        if (!obj->lookupProperty(cx, name, &pobj, &shape))
-            return NULL;
-        if (shape)
-            break;
-
-        /*
-         * We conservatively assume that a resolve hook could mutate the scope
-         * chain during JSObject::lookupGeneric. So we must check if parent is
-         * not null here even if it wasn't before the lookup.
-         */
-        JSObject *parent = obj->enclosingScope();
-        if (!parent)
-            break;
-        obj = parent;
-    } while (!obj->isGlobal());
-    return obj;
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -4754,7 +4629,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
     }
 
     if (getHow & JSGET_CACHE_RESULT)
-        JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj2, shape);
+        JS_PROPERTY_CACHE(cx).fill(cx, obj, obj2, shape);
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
     if (!js_NativeGetInline(cx, receiver, obj, obj2, shape, getHow, vp.address()))
@@ -4977,7 +4852,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
              */
             if (!shape->shadowable()) {
                 if (defineHow & DNP_CACHE_RESULT)
-                    JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, pobj, shape);
+                    JS_PROPERTY_CACHE(cx).fill(cx, obj, pobj, shape);
 
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
@@ -5061,7 +4936,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     }
 
     if ((defineHow & DNP_CACHE_RESULT) && !added)
-        JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape);
+        JS_PROPERTY_CACHE(cx).fill(cx, obj, obj, shape);
 
     return js_NativeSet(cx, obj, receiver, shape, added, strict, vp.address());
 }
