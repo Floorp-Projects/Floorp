@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Google, Inc.
+ * Copyright © 2010,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -90,6 +90,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_default =
   NULL, /* override_features */
   NULL, /* data_create */
   NULL, /* data_destroy */
+  NULL, /* preprocess_text */
   normalization_preference_default,
   NULL, /* setup_masks */
   true, /* zero_width_attached_marks */
@@ -99,9 +100,9 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_default =
 /* Thai / Lao shaper */
 
 static void
-setup_masks_thai (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		  hb_buffer_t              *buffer,
-		  hb_font_t                *font HB_UNUSED)
+preprocess_text_thai (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		      hb_buffer_t              *buffer,
+		      hb_font_t                *font HB_UNUSED)
 {
   /* The following is NOT specified in the MS OT Thai spec, however, it seems
    * to be what Uniscribe and other engines implement.  According to Eric Muller:
@@ -200,7 +201,8 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_thai =
   NULL, /* override_features */
   NULL, /* data_create */
   NULL, /* data_destroy */
+  preprocess_text_thai,
   NULL, /* normalization_preference */
-  setup_masks_thai,
+  NULL, /* setup_masks */
   true, /* zero_width_attached_marks */
 };

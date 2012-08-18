@@ -31,7 +31,7 @@
 HB_BEGIN_DECLS
 
 
-#define HB_GRAPHITE_TAG_Silf HB_TAG('S','i','l','f')
+#define HB_GRAPHITE2_TAG_SILF HB_TAG('S','i','l','f')
 
 /* TODO add gr_font/face etc getters and other glue API */
 
