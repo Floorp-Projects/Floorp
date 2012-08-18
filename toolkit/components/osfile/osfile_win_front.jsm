@@ -581,30 +581,30 @@
         * The creation time of this file.
         * @type {Date}
         */
-       get winCreationTime() {
+       get winCreationDate() {
          let date = FILETIME_to_Date(this._ftCreationTime);
-         delete this.winCreationTime;
-         Object.defineProperty(this, "winCreationTime", {value: date});
+         delete this.winCreationDate;
+         Object.defineProperty(this, "winCreationDate", {value: date});
          return date;
        },
        /**
         * The last modification time of this file.
         * @type {Date}
         */
-       get winLastWriteTime() {
+       get winLastWriteDate() {
          let date = FILETIME_to_Date(this._ftLastWriteTime);
-         delete this.winLastWriteTime;
-         Object.defineProperty(this, "winLastWriteTime", {value: date});
+         delete this.winLastWriteDate;
+         Object.defineProperty(this, "winLastWriteDate", {value: date});
          return date;
        },
        /**
         * The last access time of this file.
         * @type {Date}
         */
-       get winLastAccessTime() {
+       get winLastAccessDate() {
          let date = FILETIME_to_Date(this._ftLastAccessTime);
-         delete this.winLastAccessTime;
-         Object.defineProperty(this, "winLastAccessTime", {value: date});
+         delete this.winLastAccessDate;
+         Object.defineProperty(this, "winLastAccessDate", {value: date});
          return date;
        },
        /**
