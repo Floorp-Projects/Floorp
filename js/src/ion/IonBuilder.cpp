@@ -5263,7 +5263,9 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             // Otherwise try using the prototype.
             curObj = typeObj->proto;
         } else {
-            // Can't optimize setters on watched singleton objects.
+            // We can't optimize setters on watched singleton objects. A getter
+            // on an own property can be protected with the prototype
+            // shapeguard, though.
             if (!isGetter && curObj->watched())
                 return true;
 
@@ -5329,7 +5331,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             // property, which means if they were to actually overwrite the
             // property accessors, we would never know, since we are freezing on
             // setting that flag.
-            if (!isGetter && curObj->watched())
+            if (curObj->watched())
                 return true;
 
             curObj = curObj->getProto();
