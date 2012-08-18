@@ -28,12 +28,11 @@ function runTests() {
     authMgr.setAuthIdentity("http", "example.com", 80, "basic", "testrealm",
                             "", "example.com", "user1", "password1");
 
-    SpecialPowers.setCharPref("dom.systemXHR.whitelist",
-                              "http://mochi.test:8888");
+    SpecialPowers.addPermission("systemXHR", true, document);
 
     return function tearDown() {
       authMgr.clearAll();
-      SpecialPowers.clearUserPref("dom.systemXHR.whitelist");
+      SpecialPowers.removePermission("systemXHR", document);
       SimpleTest.finish();
     }
   }());
