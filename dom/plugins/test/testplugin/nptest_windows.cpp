@@ -602,9 +602,6 @@ handleEventInternal(InstanceData* instanceData, NPEvent* pe, LRESULT* result)
       int y = instanceData->hasWidget ? 0 : instanceData->winY;
       instanceData->lastMouseX = GET_X_LPARAM(pe->lParam) - x;
       instanceData->lastMouseY = GET_Y_LPARAM(pe->lParam) - y;
-      if ((UINT)pe->event == WM_LBUTTONUP) {
-        instanceData->mouseUpEventCount++;
-      }
       return true;
     }
 

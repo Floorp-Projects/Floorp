@@ -250,9 +250,6 @@ hb_glib_unicode_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   /* We don't ifdef-out the fallback code such that compiler always
    * sees it and makes sure it's compilable. */
 
-  if (!a || !b)
-    return false;
-
   gchar utf8[12];
   gchar *normalized;
   int len;
@@ -367,22 +364,21 @@ hb_glib_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs,
   return utf8_decomposed_len;
 }
 
-extern HB_INTERNAL const hb_unicode_funcs_t _hb_glib_unicode_funcs;
-const hb_unicode_funcs_t _hb_glib_unicode_funcs = {
-  HB_OBJECT_HEADER_STATIC,
-
-  NULL, /* parent */
-  true, /* immutable */
-  {
-#define HB_UNICODE_FUNC_IMPLEMENT(name) hb_glib_unicode_##name,
-    HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS
-#undef HB_UNICODE_FUNC_IMPLEMENT
-  }
-};
-
 hb_unicode_funcs_t *
 hb_glib_get_unicode_funcs (void)
 {
+  static const hb_unicode_funcs_t _hb_glib_unicode_funcs = {
+    HB_OBJECT_HEADER_STATIC,
+
+    NULL, /* parent */
+    true, /* immutable */
+    {
+#define HB_UNICODE_FUNC_IMPLEMENT(name) hb_glib_unicode_##name,
+      HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS
+#undef HB_UNICODE_FUNC_IMPLEMENT
+    }
+  };
+
   return const_cast<hb_unicode_funcs_t *> (&_hb_glib_unicode_funcs);
 }
 

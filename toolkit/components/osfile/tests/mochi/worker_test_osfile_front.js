@@ -327,15 +327,15 @@ function test_iter_dir()
 
     if (OS.Win) {
       let year = new Date().getFullYear();
-      let creation = entry.winCreationTime;
+      let creation = entry.winCreationDate;
       ok(creation, "test_iter_dir: Windows creation date exists: " + creation);
       ok(creation.getFullYear() >= year -  1 && creation.getFullYear() <= year, "test_iter_dir: consistent creation date");
 
-      let lastWrite = entry.winLastWriteTime;
+      let lastWrite = entry.winLastWriteDate;
       ok(lastWrite, "test_iter_dir: Windows lastWrite date exists: " + lastWrite);
       ok(lastWrite.getFullYear() >= year - 1 && lastWrite.getFullYear() <= year, "test_iter_dir: consistent lastWrite date");
 
-      let lastAccess = entry.winLastAccessTime;
+      let lastAccess = entry.winLastAccessDate;
       ok(lastAccess, "test_iter_dir: Windows lastAccess date exists: " + lastAccess);
       ok(lastAccess.getFullYear() >= year - 1 && lastAccess.getFullYear() <= year, "test_iter_dir: consistent lastAccess date");
     }
