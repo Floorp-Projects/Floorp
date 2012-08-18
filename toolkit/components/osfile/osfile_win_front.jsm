@@ -620,6 +620,27 @@
      };
 
      /**
+      * Return a version of an instance of
+      * File.DirectoryIterator.Entry that can be sent from a worker
+      * thread to the main thread. Note that deserialization is
+      * asymmetric and returns an object with a different
+      * implementation.
+      */
+     File.DirectoryIterator.Entry.toMsg = function toMsg(value) {
+       if (!value instanceof File.DirectoryIterator.Entry) {
+         throw new TypeError("parameter of " +
+           "File.DirectoryIterator.Entry.toMsg must be a " +
+           "File.DirectoryIterator.Entry");
+       }
+       let serialized = {};
+       for (let key in File.DirectoryIterator.Entry.prototype) {
+         serialized[key] = value[key];
+       }
+       return serialized;
+     };
+
+
+     /**
       * Information on a file.
       *
       * To obtain the latest information on a file, use |File.stat|
