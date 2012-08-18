@@ -86,7 +86,7 @@ ArchiveReaderZipEvent::Exec()
 
   nsCOMPtr<nsIInputStream> inputStream;
   rv = mArchiveReader->GetInputStream(getter_AddRefs(inputStream));
-  if (rv != NS_OK || !inputStream) {
+  if (NS_FAILED(rv) || !inputStream) {
     return RunShare(NS_ERROR_UNEXPECTED);
   }
 
@@ -99,7 +99,7 @@ ArchiveReaderZipEvent::Exec()
 
   PRUint64 size;
   rv = mArchiveReader->GetSize(&size);
-  if (rv != NS_OK) {
+  if (NS_FAILED(rv)) {
     return RunShare(NS_ERROR_UNEXPECTED);
   }
 
@@ -112,7 +112,7 @@ ArchiveReaderZipEvent::Exec()
     PRUint32 ret;
 
     rv = inputStream->Read((char*)buffer, sizeof(buffer), &ret);
-    if (rv != NS_OK || ret != sizeof(buffer)) {
+    if (NS_FAILED(rv) || ret != sizeof(buffer)) {
       return RunShare(NS_ERROR_UNEXPECTED);
     }
 
@@ -137,7 +137,7 @@ ArchiveReaderZipEvent::Exec()
     PRUint32 ret;
     
     rv = inputStream->Read((char*)&centralStruct, ZIPCENTRAL_SIZE, &ret);
-    if (rv != NS_OK || ret != ZIPCENTRAL_SIZE) {
+    if (NS_FAILED(rv) || ret != ZIPCENTRAL_SIZE) {
       return RunShare(NS_ERROR_UNEXPECTED);
     }
 
@@ -154,7 +154,7 @@ ArchiveReaderZipEvent::Exec()
     // Read the name:
     char* filename = (char*)PR_Malloc(filenameLen + 1);
     rv = inputStream->Read(filename, filenameLen, &ret);
-    if (rv != NS_OK || ret != filenameLen) {
+    if (NS_FAILED(rv) || ret != filenameLen) {
       return RunShare(NS_ERROR_UNEXPECTED);
     }
 

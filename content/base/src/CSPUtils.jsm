@@ -515,8 +515,10 @@ CSPRep.prototype = {
 
     for (var dir in CSPRep.SRC_DIRECTIVES) {
       var dirv = CSPRep.SRC_DIRECTIVES[dir];
-      newRep._directives[dirv] = this._directives[dirv]
-               .intersectWith(aCSPRep._directives[dirv]);
+      if (this._directives.hasOwnProperty(dirv))
+        newRep._directives[dirv] = this._directives[dirv].intersectWith(aCSPRep._directives[dirv]);
+      else
+        newRep._directives[dirv] = aCSPRep._directives[dirv];
     }
 
     // REPORT_URI
@@ -532,12 +534,6 @@ CSPRep.prototype = {
     else if (aCSPRep._directives[reportURIDir]) {
       // blank concat makes a copy of the string.
       newRep._directives[reportURIDir] = aCSPRep._directives[reportURIDir].concat();
-    }
-
-    for (var dir in CSPRep.SRC_DIRECTIVES) {
-      var dirv = CSPRep.SRC_DIRECTIVES[dir];
-      newRep._directives[dirv] = this._directives[dirv]
-               .intersectWith(aCSPRep._directives[dirv]);
     }
 
     newRep._allowEval =          this.allowsEvalInScripts
@@ -778,6 +774,8 @@ CSPSourceList.prototype = {
   function cspsd_intersectWith(that) {
 
     var newCSPSrcList = null;
+
+    if (!that) return this.clone();
 
     if (this.isNone() || that.isNone())
       newCSPSrcList = CSPSourceList.fromString("'none'");
@@ -1187,32 +1185,32 @@ CSPSource.prototype = {
     // when a scheme, host or port is undefined.)
 
     // port
-    if (!this._port)
-      newSource._port = that._port;
-    else if (!that._port)
-      newSource._port = this._port;
-    else if (this._port === "*") 
-      newSource._port = that._port;
-    else if (that._port === "*")
-      newSource._port = this._port;
-    else if (that._port === this._port)
-      newSource._port = this._port;
+    if (!this.port)
+      newSource._port = that.port;
+    else if (!that.port)
+      newSource._port = this.port;
+    else if (this.port === "*")
+      newSource._port = that.port;
+    else if (that.port === "*")
+      newSource._port = this.port;
+    else if (that.port === this.port)
+      newSource._port = this.port;
     else {
       CSPError(CSPLocalizer.getFormatStr("notIntersectPort", [this.toString(), that.toString()]));
       return null;
     }
 
     // scheme
-    if (!this._scheme)
-      newSource._scheme = that._scheme;
-    else if (!that._scheme)
-      newSource._scheme = this._scheme;
-    if (this._scheme === "*")
-      newSource._scheme = that._scheme;
-    else if (that._scheme === "*")
-      newSource._scheme = this._scheme;
-    else if (that._scheme === this._scheme)
-      newSource._scheme = this._scheme;
+    if (!this.scheme)
+      newSource._scheme = that.scheme;
+    else if (!that.scheme)
+      newSource._scheme = this.scheme;
+    if (this.scheme === "*")
+      newSource._scheme = that.scheme;
+    else if (that.scheme === "*")
+      newSource._scheme = this.scheme;
+    else if (that.scheme === this.scheme)
+      newSource._scheme = this.scheme;
     else {
       CSPError(CSPLocalizer.getFormatStr("notIntersectScheme", [this.toString(), that.toString()]));
       return null;
@@ -1227,14 +1225,14 @@ CSPSource.prototype = {
     // error should still be reported.
 
     // host
-    if (this._host && that._host) {
-      newSource._host = this._host.intersectWith(that._host);
-    } else if (this._host) {
+    if (this.host && that.host) {
+      newSource._host = this.host.intersectWith(that.host);
+    } else if (this.host) {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourceWithUndefinedHost", [that.toString()]));
-      newSource._host = this._host.clone();
-    } else if (that._host) {
+      newSource._host = this.host.clone();
+    } else if (that.host) {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourceWithUndefinedHost", [this.toString()]));
-      newSource._host = that._host.clone();
+      newSource._host = that.host.clone();
     } else {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourcesWithUndefinedHosts", [this.toString(), that.toString()]));
       newSource._host = CSPHost.fromString("*");
