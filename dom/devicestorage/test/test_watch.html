@@ -36,7 +36,7 @@ function addError(e) {
 
 function onChange(e) {
 
-  dump("we saw: " + e.path);
+  dump("we saw: " + e.path + " " + e.reason + "\n");
 
   if (e.path == gFileName) {
     ok(true, "we saw the file get created");

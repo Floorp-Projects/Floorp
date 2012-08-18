@@ -274,7 +274,7 @@ DeviceStorageRequestParent::DeleteFileEvent::CancelableRun()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  mFile->mFile->Remove(true);
+  mFile->Remove();
 
   nsRefPtr<nsRunnable> r;
 
