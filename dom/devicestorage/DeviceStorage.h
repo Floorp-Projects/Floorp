@@ -57,6 +57,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   bool mIsWatchingFile;
+  bool mAllowedToWatchFile;
 
   nsresult Notify(const char* aReason, nsIFile* aFile);
 
