@@ -949,16 +949,9 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
 
     RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
-
-    RootedObject obj(cx);
     RootedObject pobj(cx);
     RootedShape prop(cx);
-    JSBool ok;
-
-    if (JOF_OPMODE(*pc) == JOF_NAME)
-        ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
-    else
-        ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
+    bool ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -1827,39 +1820,17 @@ END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
 {
-    JSObject *obj;
-    do {
-        /*
-         * We can skip the property lookup for the global object. If the
-         * property does not exist anywhere on the scope chain, JSOP_SETNAME
-         * adds the property to the global.
-         *
-         * As a consequence of this optimization for the global object we run
-         * its JSRESOLVE_ASSIGNING-tolerant resolve hooks only in JSOP_SETNAME,
-         * after the interpreter evaluates the right- hand-side of the
-         * assignment, and not here.
-         *
-         * This should be transparent to the hooks because the script, instead
-         * of name = rhs, could have used global.name = rhs given a global
-         * object reference, which also calls the hooks only after evaluating
-         * the rhs. We desire such resolve hook equivalence between the two
-         * forms.
-         */
-        obj = regs.fp()->scopeChain();
-        if (obj->isGlobal())
-            break;
+    RootedObject &scopeChain = rootObject0;
+    scopeChain = regs.fp()->scopeChain();
 
-        RootedPropertyName &name = rootName0;
-        name = script->getName(regs.pc);
+    RootedPropertyName &name = rootName0;
+    name = script->getName(regs.pc);
 
-        RootedObject &scopeChain = rootObject0;
-        scopeChain = regs.fp()->scopeChain();
+    RootedObject &scope = rootObject1;
+    if (!LookupNameForSet(cx, name, scopeChain, &scope))
+        goto error;
 
-        obj = FindIdentifierBase(cx, scopeChain, name);
-        if (!obj)
-            goto error;
-    } while (0);
-    PUSH_OBJECT(*obj);
+    PUSH_OBJECT(*scope);
 }
 END_CASE(JSOP_BINDNAME)
 
@@ -2154,10 +2125,10 @@ BEGIN_CASE(JSOP_DELNAME)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    RootedObject &obj = rootObject1;
-    RootedObject &obj2 = rootObject2;
+    RootedObject &scope = rootObject1;
+    RootedObject &pobj = rootObject2;
     RootedShape &prop = rootShape0;
-    if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -2167,7 +2138,7 @@ BEGIN_CASE(JSOP_DELNAME)
     PUSH_BOOLEAN(true);
     if (prop) {
         MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-        if (!obj->deleteProperty(cx, name, res, false))
+        if (!scope->deleteProperty(cx, name, res, false))
             goto error;
     }
 }
@@ -2325,6 +2296,20 @@ END_CASE(JSOP_GETPROP)
 
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
+{
+    RootedObject &scope = rootObject0;
+    scope = &regs.sp[-2].toObject();
+
+    HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    if (!SetNameOperation(cx, regs.pc, scope, value))
+        goto error;
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
+}
+END_CASE(JSOP_SETNAME)
+
 BEGIN_CASE(JSOP_SETPROP)
 {
     HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
@@ -2505,14 +2490,14 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    RootedObject &obj = rootObject1;
-    RootedObject &obj2 = rootObject2;
+    RootedObject &scope = rootObject1;
+    RootedObject &pobj = rootObject2;
     RootedShape &prop = rootShape0;
-    if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &prop))
         goto error;
 
     Value v;
-    if (!ComputeImplicitThis(cx, obj, &v))
+    if (!ComputeImplicitThis(cx, scope, &v))
         goto error;
     PUSH_COPY(v);
 }

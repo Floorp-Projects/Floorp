@@ -1161,28 +1161,6 @@ BaseShape::finalize(FreeOp *fop)
     }
 }
 
-/* static */ Shape *
-Shape::setExtensibleParents(JSContext *cx, Shape *shape)
-{
-    JS_ASSERT(!shape->inDictionary());
-
-    StackBaseShape base(shape);
-    base.flags |= BaseShape::EXTENSIBLE_PARENTS;
-
-    /* This is only used for Block and Call objects, which have a NULL proto. */
-    return replaceLastProperty(cx, base, NULL, shape);
-}
-
-bool
-Bindings::setExtensibleParents(JSContext *cx)
-{
-    Shape *newShape = Shape::setExtensibleParents(cx, callObjShape_);
-    if (!newShape)
-        return false;
-    callObjShape_ = newShape;
-    return true;
-}
-
 inline
 InitialShapeEntry::InitialShapeEntry() : shape(NULL), proto(NULL)
 {
