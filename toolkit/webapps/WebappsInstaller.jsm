@@ -826,6 +826,10 @@ LinuxNativeApp.prototype = {
     if (categories)
       writer.setString("Desktop Entry", "Categories", categories);
 
+    writer.setString("Desktop Entry", "Actions", "Uninstall;");
+    writer.setString("Desktop Action Uninstall", "Name", browserBundle.GetStringFromName("webapps.uninstall.label"));
+    writer.setString("Desktop Action Uninstall", "Exec", this.webapprt.path + " -remove");
+
     writer.writeFile();
   },
 
