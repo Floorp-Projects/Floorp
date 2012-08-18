@@ -54,11 +54,11 @@ using namespace JSC;
 void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name_)
 {
-    Rooted<PropertyName*> name(f.cx, name_);
-    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(), name);
-    if (!obj)
+    RootedPropertyName name(f.cx, name_);
+    RootedObject scope(f.cx);
+    if (!LookupNameForSet(f.cx, name, f.fp()->scopeChain(), &scope))
         THROW();
-    f.regs.sp[0].setObject(*obj);
+    f.regs.sp[0].setObject(*scope);
 }
 
 JSObject * JS_FASTCALL
@@ -67,32 +67,18 @@ stubs::BindGlobalName(VMFrame &f)
     return &f.fp()->global();
 }
 
-template<JSBool strict>
 void JS_FASTCALL
 stubs::SetName(VMFrame &f, PropertyName *name)
 {
     JSContext *cx = f.cx;
-    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
-    HandleValue lval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+    RootedObject scope(cx, &f.regs.sp[-2].toObject());
+    HandleValue value = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    if (!SetPropertyOperation(cx, f.pc(), lval, rval))
+    if (!SetNameOperation(cx, f.pc(), scope, value))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
 }
-
-template void JS_FASTCALL stubs::SetName<true>(VMFrame &f, PropertyName *origName);
-template void JS_FASTCALL stubs::SetName<false>(VMFrame &f, PropertyName *origName);
-
-template<JSBool strict>
-void JS_FASTCALL
-stubs::SetGlobalName(VMFrame &f, PropertyName *name)
-{
-    SetName<strict>(f, name);
-}
-
-template void JS_FASTCALL stubs::SetGlobalName<true>(VMFrame &f, PropertyName *name);
-template void JS_FASTCALL stubs::SetGlobalName<false>(VMFrame &f, PropertyName *name);
 
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
@@ -197,7 +183,7 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
 
     RootedObject obj(f.cx), obj2(f.cx);
     RootedShape prop(f.cx);
-    if (!FindPropertyHelper(f.cx, name, false, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -1014,6 +1000,19 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 }
 
 void JS_FASTCALL
+stubs::SetProp(VMFrame &f, PropertyName *name)
+{
+    JSContext *cx = f.cx;
+    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+    HandleValue lval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+
+    if (!SetPropertyOperation(cx, f.pc(), lval, rval))
+        THROW();
+
+    f.regs.sp[-2] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32_t flags)
 {
     if (!ValueToIterator(f.cx, flags, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))
@@ -1346,7 +1345,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
 
     RootedObject obj(f.cx), obj2(f.cx);
     RootedShape prop(f.cx);
-    if (!FindProperty(f.cx, name, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */

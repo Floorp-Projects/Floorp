@@ -15,8 +15,7 @@
 using namespace js;
 
 PropertyCacheEntry *
-PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject *pobj,
-                    Shape *shape)
+PropertyCache::fill(JSContext *cx, JSObject *obj, JSObject *pobj, Shape *shape)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->isHeapBusy());
@@ -26,18 +25,9 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after LookupPropertyWithFlags has returned, we calculate the protoIndex
      * here and not in LookupPropertyWithFlags.
-     *
-     * The scopeIndex can't be wrong. We require JS_SetParent calls to happen
-     * before any running script might consult a parent-linked scope chain. If
-     * this requirement is not satisfied, the fill in progress will never hit,
-     * but scope shape tests ensure nothing malfunctions.
      */
-    JS_ASSERT_IF(obj == pobj, scopeIndex == 0);
 
     JSObject *tmp = obj;
-    for (unsigned i = 0; i < scopeIndex; i++)
-        tmp = &tmp->asScope().enclosingScope();
-
     unsigned protoIndex = 0;
     while (tmp != pobj) {
         /*
@@ -64,7 +54,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
     }
 
     typedef PropertyCacheEntry Entry;
-    if (scopeIndex > Entry::MaxScopeIndex || protoIndex > Entry::MaxProtoIndex) {
+    if (protoIndex > Entry::MaxProtoIndex) {
         PCMETER(longchains++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -82,16 +72,12 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
         return JS_NO_PROP_CACHE_FILL;
 
     if (obj == pobj) {
-        JS_ASSERT(scopeIndex == 0 && protoIndex == 0);
+        JS_ASSERT(protoIndex == 0);
     } else {
-#ifdef DEBUG
-        if (scopeIndex == 0) {
-            JS_ASSERT(protoIndex != 0);
-            JS_ASSERT((protoIndex == 1) == (obj->getProto() == pobj));
-        }
-#endif
+        JS_ASSERT(protoIndex != 0);
+        JS_ASSERT((protoIndex == 1) == (obj->getProto() == pobj));
 
-        if (scopeIndex != 0 || protoIndex != 1) {
+        if (protoIndex != 1) {
             /*
              * Make sure that a later shadowing assignment will enter
              * PurgeProtoChain and invalidate this entry, bug 479198.
@@ -103,7 +89,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
 
     PropertyCacheEntry *entry = &table[hash(pc, obj->lastProperty())];
     PCMETER(entry->vword.isNull() || recycles++);
-    entry->assign(pc, obj->lastProperty(), pobj->lastProperty(), shape, scopeIndex, protoIndex);
+    entry->assign(pc, obj->lastProperty(), pobj->lastProperty(), shape, protoIndex);
 
     empty = false;
     PCMETER(fills++);
@@ -121,14 +107,13 @@ PropertyName *
 PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
                         PropertyCacheEntry *entry)
 {
-    JSObject *obj, *pobj, *tmp;
+    JSObject *obj, *pobj;
     JSScript *script = cx->stack.currentScript();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(uint32_t(pc - script->code) < script->length);
 
     JSOp op = JSOp(*pc);
-    const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
 
@@ -167,22 +152,9 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
      */
     pobj = obj;
 
-    if (JOF_MODE(cs.format) == JOF_NAME) {
-        uint8_t scopeIndex = entry->scopeIndex;
-        while (scopeIndex > 0) {
-            tmp = pobj->enclosingScope();
-            if (!tmp || !tmp->isNative())
-                break;
-            pobj = tmp;
-            scopeIndex--;
-        }
-
-        *objp = pobj;
-    }
-
     uint8_t protoIndex = entry->protoIndex;
     while (protoIndex > 0) {
-        tmp = pobj->getProto();
+        JSObject *tmp = pobj->getProto();
         if (!tmp || !tmp->isNative())
             break;
         pobj = tmp;
@@ -212,7 +184,6 @@ PropertyCache::assertEmpty()
         JS_ASSERT(!table[i].kshape);
         JS_ASSERT(!table[i].pshape);
         JS_ASSERT(!table[i].prop);
-        JS_ASSERT(!table[i].scopeIndex);
         JS_ASSERT(!table[i].protoIndex);
     }
 }
