@@ -1332,7 +1332,8 @@ public:
 
       case DEVICE_STORAGE_REQUEST_WATCH:
       {
-	// do something?
+	mDeviceStorage->mAllowedToWatchFile = true;
+	return NS_OK;
       }
     }
 
@@ -1421,6 +1422,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
 nsDOMDeviceStorage::nsDOMDeviceStorage()
   : mIsWatchingFile(false)
+  , mAllowedToWatchFile(false)
 { }
 
 nsresult
@@ -1862,6 +1864,10 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
 nsresult
 nsDOMDeviceStorage::Notify(const char* aReason, nsIFile* aFile)
 {
+  if (!mAllowedToWatchFile) {
+    return NS_OK;
+  }
+
   if (!mFile) {
     return NS_ERROR_FAILURE;
   }
