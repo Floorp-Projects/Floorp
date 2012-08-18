@@ -665,7 +665,7 @@ class CallCompiler : public BaseCompiler
     bool patchInlinePath(JSScript *script, JSObject *obj)
     {
         JS_ASSERT(ic.frameSize.isStatic());
-        JITScript *jit = script->getJIT(callingNew, f.cx->compartment->needsBarrier());
+        JITScript *jit = script->getJIT(callingNew, f.cx->compartment->compileBarriers());
 
         /* Very fast path. */
         Repatcher repatch(f.chunk());
