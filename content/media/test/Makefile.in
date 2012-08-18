@@ -80,7 +80,6 @@ MOCHITEST_FILES = \
 		test_defaultMuted.html \
 		test_delay_load.html \
 		test_error_on_404.html \
-		test_error_in_video_document.html \
 		test_info_leak.html \
 		test_load.html \
 		test_load_candidates.html \
@@ -128,6 +127,8 @@ MOCHITEST_FILES = \
 		test_playback.html \
 		test_seekLies.html \
 		$(NULL)
+
+$(warning test_error_in_video_document.html is disabled for intermittent failures. Bug 608634)
 
 # Tests disabled on Linux for frequent intermittent failures
 ifneq (Linux,$(OS_ARCH))
