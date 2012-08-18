@@ -64,7 +64,6 @@ MOCHITEST_FILES = \
   test_bug771202.html \
   file_bug771202.html \
   test_bug777098.html \
-  test_bug751809.html \
   test_enumerate.html \
   test_npruntime_construct.html \
   307-xo-redirect.sjs \

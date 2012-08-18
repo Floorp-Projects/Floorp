@@ -314,7 +314,6 @@ struct Lookup
     TRACE_SANITIZE ();
     /* Real sanitize of the subtables is done by GSUB/GPOS/... */
     if (!(c->check_struct (this) && subTable.sanitize (c))) return TRACE_RETURN (false);
-    if (!subTable.len) TRACE_RETURN (false);
     if (unlikely (lookupFlag & LookupFlag::UseMarkFilteringSet))
     {
       USHORT &markFilteringSet = StructAfter<USHORT> (subTable);

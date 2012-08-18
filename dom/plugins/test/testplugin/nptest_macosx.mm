@@ -276,9 +276,6 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
           ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
         instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
         instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
-        if (carbonEvent->what == mouseUp) {
-          instanceData->mouseUpEventCount++;
-        }
         break;
       }
       default:
@@ -302,9 +299,6 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     case NPCocoaEventMouseMoved:
       instanceData->lastMouseX = (int32_t)cocoaEvent->data.mouse.pluginX;
       instanceData->lastMouseY = (int32_t)cocoaEvent->data.mouse.pluginY;
-      if (cocoaEvent->type == NPCocoaEventMouseUp) {
-        instanceData->mouseUpEventCount++;
-      }
       break;
     case NPCocoaEventWindowFocusChanged:
       instanceData->topLevelWindowActivationState = cocoaEvent->data.focus.hasFocus ?

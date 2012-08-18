@@ -5834,13 +5834,24 @@ function AddonWrapper(aAddon) {
     if (!this.isActive)
       return null;
 
-    if (aAddon.optionsType)
-      return aAddon.optionsType;
+    let hasOptionsXUL = this.hasResource("options.xul");
+    let hasOptionsURL = !!this.optionsURL;
 
-    if (this.hasResource("options.xul"))
+    if (aAddon.optionsType) {
+      switch (parseInt(aAddon.optionsType, 10)) {
+      case AddonManager.OPTIONS_TYPE_DIALOG:
+      case AddonManager.OPTIONS_TYPE_TAB:
+        return hasOptionsURL ? aAddon.optionsType : null;
+      case AddonManager.OPTIONS_TYPE_INLINE:
+        return (hasOptionsXUL || hasOptionsURL) ? aAddon.optionsType : null;
+      }
+      return null;
+    }
+
+    if (hasOptionsXUL)
       return AddonManager.OPTIONS_TYPE_INLINE;
 
-    if (this.optionsURL)
+    if (hasOptionsURL)
       return AddonManager.OPTIONS_TYPE_DIALOG;
 
     return null;
