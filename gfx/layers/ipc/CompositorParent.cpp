@@ -153,7 +153,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor, 
                                                           this, &mCompositorID));
 
-  sCurrentCompositor = this;
+  if (!sCurrentCompositor) {
+    sCurrentCompositor = this;
+  }
 }
 
 PlatformThreadId

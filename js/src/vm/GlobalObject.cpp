@@ -214,7 +214,7 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     uint32_t errorNumber = args[0].toInt32();
 
     char *errorArgs[3] = {NULL, NULL, NULL};
-    for (int i = 1; i < 3 && i < args.length(); i++) {
+    for (unsigned i = 1; i < 3 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
         if (val.isInt32() || val.isString()) {
             errorArgs[i - 1] = JS_EncodeString(cx, ToString(cx, val));
@@ -226,7 +226,7 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
 
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
                          errorArgs[0], errorArgs[1], errorArgs[2]);
-    for (uint32_t i = 0; i < 3; i++)
+    for (unsigned i = 0; i < 3; i++)
         cx->free_(errorArgs[i]);
     return false;
 }

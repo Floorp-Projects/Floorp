@@ -1,0 +1,128 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Archive Reader Zip-In-Zip Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function createZipInZipData() {
+    var Cc = SpecialPowers.wrap(Components).classes;
+    var Ci = SpecialPowers.wrap(Components).interfaces;
+
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+    testFile.append("fileArchiveReader_42.zip");
+    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+
+    var binaryData = "";
+    for (var i = 0, len = binaryString.length / 2; i < len; ++i) {
+      var hex = binaryString[i * 2] + binaryString[i * 2 + 1];
+      binaryData += String.fromCharCode(parseInt(hex,16));
+    }
+    outStream.write(binaryData, binaryData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  function testSteps()
+  {
+    var binaryFile = createZipInZipData();
+
+    // The input is 4 nested zip archives:
+    doLoop(binaryFile, 4);
+
+    yield;
+  }
+
+  function doLoop(blob, loop)
+  {
+    var r = new ArchiveReader(blob);
+    isnot(r, null, "ArchiveReader cannot be null");
+
+    // GetFilename
+    var handle = r.getFilenames();
+    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
+    handle.onsuccess = function() {
+      ok(true, "ArchiveReader.getFilenames() should return a 'success'");
+      is(this.result instanceof Array, true, "ArchiveReader.getFilenames() should return an array");
+      is(this.result.length, 1, "ArchiveReader.getFilenames(): the array contains 1 item");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+
+      dump('Content:\n');
+      for (var i = 0; i < this.result.length; ++i)
+        dump(' * ' + this.result[i] + '\n');
+
+      var handle = r.getFile(this.result[0]);
+      handle.onerror = function() {
+        ok(false, "ArchiveReader.getFile() should not return any 'error'");
+      }
+      handle.onsuccess = function() {
+        ok(true, "ArchiveReader.getFilenames() should return a 'success'");
+        ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+
+        if (loop > 0)
+          doLoop(this.result, loop - 1);
+        else
+          doLastLoop(this.result);
+      }
+    }
+    handle.onerror = function() {
+      ok(false, "ArchiveReader.getFilenames() should not return any 'error'");
+    }
+  }
+
+  function doLastLoop(blob)
+  {
+    ok(blob.size == 262144, "The last file size is wrong");
+    ok(blob.name == 'empty.dat', "The last filename is wrong");
+    finishTest();
+  }
+
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();">
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+<script type="text/javascript;version=1.7">
+var binaryString = '' +
+'504B03040A0000000000B0620E415F715F15970300009703000005001C00642E7A69705554090003AC262A50AC262A507578' +
+'0B000104E803000004E8030000504B03040A0000000000B0620E41CFE25F1EF7020000F702000005001C00632E7A69705554' +
+'090003AC262A50AC262A5075780B000104E803000004E8030000504B03040A0000000000B0620E4107D702A4570200005702' +
+'000005001C00622E7A69705554090003AC262A50AC262A5075780B000104E803000004E8030000504B03040A0000000000B0' +
+'620E417E45286DB7010000B701000005001C00612E7A69705554090003AC262A50AC262A5075780B000104E803000004E803' +
+'0000504B0304140000000800F7610E41784909B70F0100000000040009001C00656D7074792E646174555409000351252A50' +
+'57252A5075780B000104E803000004E8030000EDC13101000000C2A0FEA9E76D07A000000000000000000000000000000000' +
+'0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' +
+'0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' +
+'0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' +
+'0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' +
+'0000000000000000000000000000000000000000000000000000000000000000000000000000DE00504B01021E0314000000' +
+'0800F7610E41784909B70F01000000000400090018000000000001000000B48100000000656D7074792E6461745554050003' +
+'51252A5075780B000104E803000004E8030000504B050600000000010001004F000000520100000000504B01021E030A0000' +
+'000000B0620E417E45286DB7010000B7010000050018000000000000000000B48100000000612E7A69705554050003AC262A' +
+'5075780B000104E803000004E8030000504B050600000000010001004B000000F60100000000504B01021E030A0000000000' +
+'B0620E4107D702A45702000057020000050018000000000000000000B48100000000622E7A69705554050003AC262A507578' +
+'0B000104E803000004E8030000504B050600000000010001004B000000960200000000504B01021E030A0000000000B0620E' +
+'41CFE25F1EF7020000F7020000050018000000000000000000B48100000000632E7A69705554050003AC262A5075780B0001' +
+'04E803000004E8030000504B050600000000010001004B000000360300000000504B01021E030A0000000000B0620E415F71' +
+'5F159703000097030000050018000000000000000000B48100000000642E7A69705554050003AC262A5075780B000104E803' +
+'000004E8030000504B050600000000010001004B000000D60300000000';
+</script>
+</body>
+
+</html>

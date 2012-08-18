@@ -162,8 +162,7 @@ nsUnknownContentTypeDialog.prototype = {
     } catch (ex) {
       // The containing window may have gone away.  Break reference
       // cycles and stop doing the download.
-      const NS_BINDING_ABORTED = 0x804b0002;
-      this.mLauncher.cancel(NS_BINDING_ABORTED);
+      this.mLauncher.cancel(Components.results.NS_BINDING_ABORTED);
       return;
     }
 
@@ -916,8 +915,7 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Cancel app launcher.
     try {
-      const NS_BINDING_ABORTED = 0x804b0002;
-      this.mLauncher.cancel(NS_BINDING_ABORTED);
+      this.mLauncher.cancel(Components.results.NS_BINDING_ABORTED);
     } catch(exception) {
     }
 
