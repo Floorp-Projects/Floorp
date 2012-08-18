@@ -2548,16 +2548,9 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
   nsLayoutUtils::GetFontMetricsForFrame(mOuter, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(mOuter));
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
-  static nscoord sMinLineScrollAmountInPixels = -1;
-  if (sMinLineScrollAmountInPixels < 0) {
-    Preferences::AddIntVarCache(&sMinLineScrollAmountInPixels,
-                                "mousewheel.min_line_scroll_amount", 1);
-  }
-  PRUint32 appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
-  nscoord fontHeight =
-    NS_MAX(1, sMinLineScrollAmountInPixels) * appUnitsPerDevPixel;
+  nscoord fontHeight = 1;
   if (fm) {
-    fontHeight = NS_MAX(fm->MaxHeight(), fontHeight);
+    fontHeight = fm->MaxHeight();
   }
 
   return nsSize(fontHeight, fontHeight);
