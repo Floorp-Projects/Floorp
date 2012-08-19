@@ -1396,7 +1396,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return true;
 
         JS_ASSERT(bce->sc->fun()->flags & JSFUN_LAMBDA);
-        JS_ASSERT(pn->pn_atom == bce->sc->fun()->atom);
+        JS_ASSERT(pn->pn_atom == bce->sc->fun()->atom());
 
         /*
          * Leave pn->isOp(JSOP_NAME) if bce->fun is heavyweight to
@@ -4941,7 +4941,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     } else {
 #ifdef DEBUG
         BindingIter bi(bce->script->bindings);
-        while (bi->name() != fun->atom)
+        while (bi->name() != fun->atom())
             bi++;
         JS_ASSERT(bi->kind() == VARIABLE || bi->kind() == CONSTANT || bi->kind() == ARGUMENT);
         JS_ASSERT(bi.frameIndex() < JS_BIT(20));

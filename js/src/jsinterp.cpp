@@ -2871,7 +2871,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     /* ES5 10.5 (NB: with subsequent errata). */
     RootedPropertyName &name = rootName0;
-    name = fun->atom->asPropertyName();
+    name = fun->atom()->asPropertyName();
     RootedShape &shape = rootShape0;
     RootedObject &pobj = rootObject1;
     if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))

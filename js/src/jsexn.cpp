@@ -282,7 +282,9 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
                 return false;
             JSStackTraceStackElem &frame = frames.back();
             if (i.isNonEvalFunctionFrame()) {
-                JSAtom *atom = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
+                JSAtom *atom = fp->fun()->atom();
+                if (atom == NULL)
+                    atom = cx->runtime->emptyString;
                 frame.funName = atom;
             } else {
                 frame.funName = NULL;
