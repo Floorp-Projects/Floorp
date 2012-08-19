@@ -300,7 +300,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
 {
   NS_ASSERTION(aImage, "Null image.");
 
-  if (aImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
+  if (aImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
     RemoteBitmapImage *remoteImage =
       static_cast<RemoteBitmapImage*>(aImage);
       
@@ -313,7 +313,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
     }
 
     aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-  } else if (aImage->GetFormat() == Image::CAIRO_SURFACE) {
+  } else if (aImage->GetFormat() == ImageFormat::CAIRO_SURFACE) {
     CairoImage *cairoImage =
       static_cast<CairoImage*>(aImage);
 
@@ -370,10 +370,10 @@ ImageLayerD3D9::RenderLayer()
 
   gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
 
-  if (image->GetFormat() == Image::CAIRO_SURFACE ||
-      image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
+  if (image->GetFormat() == ImageFormat::CAIRO_SURFACE ||
+      image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP)
   {
-    NS_ASSERTION(image->GetFormat() != Image::CAIRO_SURFACE ||
+    NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
                  static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
                  "Image layer has alpha image");
@@ -522,8 +522,8 @@ ImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
     return nullptr;
   }
 
-  if (image->GetFormat() != Image::CAIRO_SURFACE &&
-      image->GetFormat() != Image::REMOTE_IMAGE_BITMAP) {
+  if (image->GetFormat() != ImageFormat::CAIRO_SURFACE &&
+      image->GetFormat() != ImageFormat::REMOTE_IMAGE_BITMAP) {
     return nullptr;
   }
   

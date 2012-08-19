@@ -33,7 +33,7 @@ GonkCameraPreview::ReceiveFrame(mozilla::layers::GraphicBufferLocked* aBuffer)
   if (!aBuffer)
     return;
 
-  Image::Format format = Image::GONK_IO_SURFACE;
+  ImageFormat format = ImageFormat::GONK_IO_SURFACE;
   nsRefPtr<Image> image = mImageContainer->CreateImage(&format, 1);
   GonkIOSurfaceImage* videoImage = static_cast<GonkIOSurfaceImage*>(image.get());
   GonkIOSurfaceImage::Data data;

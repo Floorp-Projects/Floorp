@@ -57,7 +57,7 @@ class BasicImageFactory : public ImageFactory
 public:
   BasicImageFactory() {}
 
-  virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
+  virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
                                               PRUint32 aNumFormats,
                                               const gfxIntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin)
@@ -67,7 +67,7 @@ public:
     }
 
     nsRefPtr<Image> image;
-    if (aFormats[0] == Image::PLANAR_YCBCR) {
+    if (aFormats[0] == ImageFormat::PLANAR_YCBCR) {
       image = new BasicPlanarYCbCrImage(aScaleHint, gfxPlatform::GetPlatform()->GetOffscreenFormat(), aRecycleBin);
       return image.forget();
     }
