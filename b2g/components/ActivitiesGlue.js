@@ -33,12 +33,13 @@ ActivitiesDialog.prototype = {
     // activity. The front-end should display a UI to pick one.
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     let content = browser.getContentWindow();
-    let detail = {
+    let event = content.document.createEvent("CustomEvent");
+    event.initCustomEvent("mozChromeEvent", true, true, {
       type: "activity-choice",
       id: id,
       name: activity.name,
       choices: choices
-    };
+    });
 
     // Listen the resulting choice from the front-end. If there is no choice,
     // let's return -1, which means the user has cancelled the dialog.
@@ -50,7 +51,7 @@ ActivitiesDialog.prototype = {
       activity.callback.handleEvent(evt.detail.value ? evt.detail.value : -1);
     });
 
-    browser.shell.sendChromeEvent(detail);
+    content.dispatchEvent(event);
   },
 
   chooseActivity: function ap_chooseActivity(aName, aActivities, aCallback) {
