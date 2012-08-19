@@ -31,7 +31,6 @@ EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
 EXTRA_JS_MODULES += \
   DOMRequestHelper.jsm \
   IndexedDBHelper.jsm \
-  ObjectWrapper.jsm \
   $(NULL)
 
 XPIDLSRCS = \

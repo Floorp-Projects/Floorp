@@ -10,11 +10,28 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
+
+// Makes sure that we expose correctly chrome JS objects to content.
+function wrapObjectIn(aObject, aCtxt) {
+  let res = Cu.createObjectIn(aCtxt);
+  let propList = { };
+  for (let prop in aObject) {
+    propList[prop] = {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: (typeof(aObject[prop]) == "object") ? wrapObjectIn(aObject[prop], aCtxt)
+                                                 : aObject[prop]
+    }
+  }
+  Object.defineProperties(res, propList);
+  Cu.makeObjectPropsNormal(res);
+  return res;
+};
 
 function convertAppsArray(aApps, aWindow) {
   let apps = Cu.createArrayIn(aWindow);
@@ -251,7 +268,7 @@ WebappsApplication.prototype = {
 
   init: function(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
     this.origin = aOrigin;
-    this.manifest = ObjectWrapper.wrap(aManifest, aWindow);
+    this.manifest = wrapObjectIn(aManifest, aWindow);
     this.manifestURL = aManifestURL;
     this.receipts = aReceipts;
     this.installOrigin = aInstallOrigin;
