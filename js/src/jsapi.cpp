@@ -4924,6 +4924,12 @@ JS_GetFunctionId(JSFunction *fun)
     return fun->atom();
 }
 
+JS_PUBLIC_API(JSString *)
+JS_GetFunctionDisplayId(JSFunction *fun)
+{
+    return fun->displayAtom();
+}
+
 JS_PUBLIC_API(unsigned)
 JS_GetFunctionFlags(JSFunction *fun)
 {
