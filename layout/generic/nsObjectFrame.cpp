@@ -88,6 +88,7 @@
 
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "ImageLayers.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsNativeDrawing.h"

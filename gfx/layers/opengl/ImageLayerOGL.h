@@ -11,11 +11,15 @@
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
+#include "ImageContainer.h"
 #include "yuv_convert.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace layers {
+
+class CairoImage;
+class PlanarYCbCrImage;
 
 /**
  * This class wraps a GL texture. It includes a GLContext reference

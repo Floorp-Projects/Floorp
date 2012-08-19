@@ -6,7 +6,7 @@
 #ifndef GFX_SHAREDTEXTUREIMAGE_H
 #define GFX_SHAREDTEXTUREIMAGE_H
 
-#include "ImageLayers.h"
+#include "ImageContainer.h"
 #include "GLContext.h"
 
 // Split into a separate header from ImageLayers.h due to GLContext.h dependence

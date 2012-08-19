@@ -6,6 +6,7 @@
 #include "gfxSharedImageSurface.h"
 #include "mozilla/layers/ImageContainerParent.h"
 
+#include "ImageContainer.h" // for PlanarYCBCRImage
 #include "ipc/AutoOpenSurface.h"
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
@@ -243,12 +244,12 @@ ImageLayerOGL::RenderLayer(int,
     return;
   }
 
-  NS_ASSERTION(image->GetFormat() != Image::REMOTE_IMAGE_BITMAP,
+  NS_ASSERTION(image->GetFormat() != ImageFormat::REMOTE_IMAGE_BITMAP,
     "Remote images aren't handled yet in OGL layers!");
   NS_ASSERTION(mScaleMode == SCALE_NONE,
     "Scale modes other than none not handled yet in OGL layers!");
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  if (image->GetFormat() == ImageFormat::PLANAR_YCBCR) {
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
@@ -308,7 +309,7 @@ ImageLayerOGL::RenderLayer(int,
     // We shouldn't need to do this, but do it anyway just in case
     // someone else forgets.
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
+  } else if (image->GetFormat() == ImageFormat::CAIRO_SURFACE) {
     CairoImage *cairoImage =
       static_cast<CairoImage*>(image);
 
@@ -384,7 +385,7 @@ ImageLayerOGL::RenderLayer(int,
     }
 #endif
 #ifdef XP_MACOSX
-  } else if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+  } else if (image->GetFormat() == ImageFormat::MAC_IO_SURFACE) {
      MacIOSurfaceImage *ioImage =
        static_cast<MacIOSurfaceImage*>(image);
 
@@ -440,7 +441,7 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
 #ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == Image::GONK_IO_SURFACE) {
+  } else if (image->GetFormat() == ImageFormat::GONK_IO_SURFACE) {
 
     GonkIOSurfaceImage *ioImage = static_cast<GonkIOSurfaceImage*>(image);
     if (!ioImage) {
@@ -635,7 +636,7 @@ ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
     return false;
   }
 
-  if (image->GetFormat() != Image::CAIRO_SURFACE) {
+  if (image->GetFormat() != ImageFormat::CAIRO_SURFACE) {
     return false;
   }
 

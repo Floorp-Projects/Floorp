@@ -12,6 +12,7 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 
+#include "Layers.h"
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"

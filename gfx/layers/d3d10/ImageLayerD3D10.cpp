@@ -96,7 +96,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
 {
   NS_ASSERTION(aImage, "Null image.");
 
-  if (aImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
+  if (aImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
     RemoteBitmapImage *remoteImage =
       static_cast<RemoteBitmapImage*>(aImage);
 
@@ -111,14 +111,14 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
     }
 
     aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-  } else if (aImage->GetFormat() == Image::REMOTE_IMAGE_DXGI_TEXTURE) {
+  } else if (aImage->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE) {
     RemoteDXGITextureImage *remoteImage =
       static_cast<RemoteDXGITextureImage*>(aImage);
 
     remoteImage->GetD3D10TextureBackendData(device());
 
     aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-  } else if (aImage->GetFormat() == Image::CAIRO_SURFACE) {
+  } else if (aImage->GetFormat() == ImageFormat::CAIRO_SURFACE) {
     CairoImage *cairoImage =
       static_cast<CairoImage*>(aImage);
 
@@ -188,10 +188,10 @@ ImageLayerD3D10::RenderLayer()
   ID3D10EffectTechnique *technique;
   nsRefPtr<IDXGIKeyedMutex> keyedMutex;
 
-  if (image->GetFormat() == Image::CAIRO_SURFACE || image->GetFormat() == Image::REMOTE_IMAGE_BITMAP ||
-      image->GetFormat() == Image::REMOTE_IMAGE_DXGI_TEXTURE)
+  if (image->GetFormat() == ImageFormat::CAIRO_SURFACE || image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
+      image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE)
   {
-    NS_ASSERTION(image->GetFormat() != Image::CAIRO_SURFACE ||
+    NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
                  static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
                  "Image layer has alpha image");
@@ -220,7 +220,7 @@ ImageLayerD3D10::RenderLayer()
         (float)size.width,
         (float)size.height)
       );
-  } else if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  } else if (image->GetFormat() == ImageFormat::PLANAR_YCBCR) {
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
@@ -306,7 +306,7 @@ ImageLayerD3D10::RenderLayer()
        );
   }
   
-  bool resetTexCoords = image->GetFormat() == Image::PLANAR_YCBCR;
+  bool resetTexCoords = image->GetFormat() == ImageFormat::PLANAR_YCBCR;
   image = nullptr;
   autoLock.Unlock();
 
@@ -384,7 +384,7 @@ ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
     return nullptr;
   }
 
-  if (image->GetFormat() != Image::CAIRO_SURFACE) {
+  if (image->GetFormat() != ImageFormat::CAIRO_SURFACE) {
     return nullptr;
   }
   

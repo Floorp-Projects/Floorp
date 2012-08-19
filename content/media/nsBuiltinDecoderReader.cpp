@@ -148,12 +148,12 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                                        aInfo.mDisplay));
   // Currently our decoder only knows how to output to PLANAR_YCBCR
   // format.
-  Image::Format format = Image::PLANAR_YCBCR;
+  ImageFormat format = ImageFormat::PLANAR_YCBCR;
   v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == Image::PLANAR_YCBCR,
+  NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
