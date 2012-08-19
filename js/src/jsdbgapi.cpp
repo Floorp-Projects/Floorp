@@ -1004,8 +1004,8 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
         nbytes += JS_GetScriptTotalSize(cx, fun->script());
-    if (fun->atom)
-        nbytes += GetAtomTotalSize(cx, fun->atom);
+    if (fun->displayAtom())
+        nbytes += GetAtomTotalSize(cx, fun->displayAtom());
     return nbytes;
 }
 
