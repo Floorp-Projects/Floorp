@@ -635,8 +635,8 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
                 unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    if (parser->pc->sc->fun()->atom) {
-        if (!js_AtomToPrintableString(cx, parser->pc->sc->fun()->atom, &name))
+    if (parser->pc->sc->fun()->atom()) {
+        if (!js_AtomToPrintableString(cx, parser->pc->sc->fun()->atom(), &name))
             return false;
     } else {
         errnum = anonerrnum;

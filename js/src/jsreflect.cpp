@@ -3105,7 +3105,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 #endif
 
     Value id;
-    if (!optIdentifier(func->atom, NULL, &id))
+    if (!optIdentifier(func->atom(), NULL, &id))
         return false;
 
     NodeVector args(cx);

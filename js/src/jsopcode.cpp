@@ -3619,7 +3619,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         js_printf(jp, "(");
                     SprintOpcodePermanent(jp, rval, rvalpc);
                     js_printf(jp, parens ? ")%s" : "%s",
-                              ((fun->flags & JSFUN_LAMBDA) || !fun->atom)
+                              ((fun->flags & JSFUN_LAMBDA) || !fun->atom())
                               ? ""
                               : ";");
                     todo = -2;
@@ -4850,8 +4850,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 
               case JSOP_CALLEE:
-                JS_ASSERT(jp->fun && jp->fun->atom);
-                todo = ss->sprinter.putString(jp->fun->atom);
+                JS_ASSERT(jp->fun && jp->fun->atom());
+                todo = ss->sprinter.putString(jp->fun->atom());
                 break;
 
               case JSOP_OBJECT:
@@ -5600,7 +5600,7 @@ js_DecompileFunction(JSPrinter *jp)
     }
 
     js_printf(jp, "%s ", js_function_str);
-    if (fun->atom && !QuoteString(&jp->sprinter, fun->atom, 0))
+    if (fun->atom() && !QuoteString(&jp->sprinter, fun->atom(), 0))
         return JS_FALSE;
     js_puts(jp, "(");
 
@@ -6570,7 +6570,7 @@ GetPCCountScriptSummary(JSContext *cx, size_t index)
     NumberValueToStringBuffer(cx, Int32Value(script->lineno), buf);
 
     if (script->function()) {
-        JSAtom *atom = script->function()->atom;
+        JSAtom *atom = script->function()->displayAtom();
         if (atom) {
             AppendJSONProperty(buf, "name");
             if (!(str = JS_ValueToSource(cx, StringValue(atom))))

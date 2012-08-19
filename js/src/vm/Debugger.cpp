@@ -3708,7 +3708,7 @@ DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSString *name = obj->toFunction()->atom;
+    JSString *name = obj->toFunction()->atom();
     if (!name) {
         args.rval().setUndefined();
         return true;
