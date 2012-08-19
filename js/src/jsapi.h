@@ -4975,6 +4975,16 @@ extern JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun);
 
 /*
+ * Return a function's display name. This is the defined name if one was given
+ * where the function was defined, or it could be an inferred name by the JS
+ * engine in the case that the function was defined to be anonymous. This can
+ * still return NULL if a useful display name could not be inferred. The same
+ * restrictions on rooting as those in JS_GetFunctionId apply.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_GetFunctionDisplayId(JSFunction *fun);
+
+/*
  * Return JSFUN_* flags for fun.
  */
 extern JS_PUBLIC_API(unsigned)
