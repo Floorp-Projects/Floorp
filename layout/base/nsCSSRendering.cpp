@@ -46,6 +46,7 @@
 #include "sampler.h"
 #include "nsCSSRenderingBorders.h"
 #include "mozilla/css/ImageLoader.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

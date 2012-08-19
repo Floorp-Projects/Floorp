@@ -19,7 +19,7 @@ public:
     : mAudioRate(44100),
       mAudioChannels(2),
       mDisplay(0,0),
-      mStereoMode(mozilla::layers::STEREO_MODE_MONO),
+      mStereoMode(mozilla::STEREO_MODE_MONO),
       mHasAudio(false),
       mHasVideo(false)
   {}
@@ -43,7 +43,7 @@ public:
   nsIntSize mDisplay;
 
   // Indicates the frame layout for single track stereo videos.
-  mozilla::layers::StereoMode mStereoMode;
+  mozilla::StereoMode mStereoMode;
 
   // True if we have an active audio bitstream.
   bool mHasAudio;
@@ -462,7 +462,7 @@ public:
       if (!v->mImage) {
         return nullptr;
       }
-      NS_ASSERTION(v->mImage->GetFormat() == mozilla::layers::Image::PLANAR_YCBCR,
+      NS_ASSERTION(v->mImage->GetFormat() == mozilla::ImageFormat::PLANAR_YCBCR,
                    "Wrong format?");
       mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
 

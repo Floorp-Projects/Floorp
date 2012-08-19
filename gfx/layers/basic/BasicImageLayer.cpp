@@ -281,7 +281,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
       ->Paint(aContext, nullptr);
   }
 
-  if (image->GetFormat() == Image::SHARED_TEXTURE &&
+  if (image->GetFormat() == ImageFormat::SHARED_TEXTURE &&
       BasicManager()->GetParentBackendType() == mozilla::layers::LAYERS_OPENGL) {
     SharedTextureImage *sharedImage = static_cast<SharedTextureImage*>(image);
     const SharedTextureImage::Data *data = sharedImage->GetData();
@@ -292,7 +292,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR && BasicManager()->IsCompositingCheap()) {
+  if (image->GetFormat() == ImageFormat::PLANAR_YCBCR && BasicManager()->IsCompositingCheap()) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(image);
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
     NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");

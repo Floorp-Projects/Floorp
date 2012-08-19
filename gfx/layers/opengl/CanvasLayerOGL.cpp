@@ -16,6 +16,10 @@
 #include "GLContextProvider.h"
 #include "gfxPlatform.h"
 
+#ifdef XP_MACOSX
+#include "mozilla/gfx/MacIOSurface.h"
+#endif
+
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
 #include "WGLLibrary.h"

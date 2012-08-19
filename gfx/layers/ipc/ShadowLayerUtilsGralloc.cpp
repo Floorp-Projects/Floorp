@@ -15,6 +15,7 @@
 #include "ShadowLayerUtilsGralloc.h"
 
 #include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 #include "sampler.h"
 

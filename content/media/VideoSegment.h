@@ -7,7 +7,7 @@
 #define MOZILLA_VIDEOSEGMENT_H_
 
 #include "MediaSegment.h"
-#include "ImageLayers.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 

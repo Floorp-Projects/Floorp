@@ -17,7 +17,8 @@
 #include "prmem.h"
 #include "prenv.h"
 #include "ImageLogging.h"
-#include "ImageLayers.h"
+#include "ImageContainer.h"
+#include "Layers.h"
 
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
@@ -882,7 +883,7 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
   mImageContainer = LayerManager::CreateImageContainer();
   
   // Now create a CairoImage to display the surface.
-  layers::Image::Format cairoFormat = layers::Image::CAIRO_SURFACE;
+  ImageFormat cairoFormat = ImageFormat::CAIRO_SURFACE;
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
   NS_ASSERTION(image, "Failed to create Image");
 

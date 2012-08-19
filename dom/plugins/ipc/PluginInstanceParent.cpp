@@ -25,6 +25,7 @@
 #include "gfxColor.h"
 #include "gfxUtils.h"
 #include "nsNPAPIPluginInstance.h"
+#include "Layers.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -730,10 +731,10 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 #endif
         return NS_ERROR_NOT_AVAILABLE;
 
-    Image::Format format = Image::CAIRO_SURFACE;
+    ImageFormat format = ImageFormat::CAIRO_SURFACE;
 #ifdef XP_MACOSX
     if (ioSurface) {
-        format = Image::MAC_IO_SURFACE;
+        format = ImageFormat::MAC_IO_SURFACE;
     }
 #endif
 
@@ -757,7 +758,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        NS_ASSERTION(image->GetFormat() == Image::MAC_IO_SURFACE, "Wrong format?");
+        NS_ASSERTION(image->GetFormat() == ImageFormat::MAC_IO_SURFACE, "Wrong format?");
         MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
         MacIOSurfaceImage::Data ioData;
         ioData.mIOSurface = ioSurface;
@@ -770,7 +771,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
     }
 #endif
 
-    NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
+    NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
     CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
     CairoImage::Data cairoData;
     cairoData.mSurface = mFrontSurface;
