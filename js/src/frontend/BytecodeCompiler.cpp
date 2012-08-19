@@ -11,6 +11,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
+#include "frontend/NameFunctions.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
@@ -191,6 +192,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
         if (!FoldConstants(cx, pn, &parser))
             return NULL;
+        if (!NameFunctions(cx, pn))
+            return NULL;
 
         pc.functionList = NULL;
 
@@ -330,6 +333,9 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
                            /* hasGlobalScope = */ false, options.lineno);
     if (!funbce.init())
         return false;
+
+    if (!NameFunctions(cx, pn))
+        return NULL;
 
     if (fn->pn_body) {
         JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
