@@ -216,6 +216,8 @@ class NameResolver
          */
         if (!buf.empty() && *(buf.end() - 1) == '/' && !buf.append("<"))
             return NULL;
+        if (buf.empty())
+            return NULL;
 
         fun->setGuessedAtom(buf.finishAtom());
         return fun->displayAtom();

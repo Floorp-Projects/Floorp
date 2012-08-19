@@ -3722,6 +3722,28 @@ DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
+DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get display name", args, dbg, obj);
+    if (!obj->isFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    JSString *name = obj->toFunction()->displayAtom();
+    if (!name) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    Value namev = StringValue(name);
+    if (!dbg->wrapDebuggeeValue(cx, &namev))
+        return false;
+    args.rval().set(namev);
+    return true;
+}
+
+static JSBool
 DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get parameterNames", args, obj);
@@ -4222,6 +4244,7 @@ static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("class", DebuggerObject_getClass, 0),
     JS_PSG("callable", DebuggerObject_getCallable, 0),
     JS_PSG("name", DebuggerObject_getName, 0),
+    JS_PSG("displayName", DebuggerObject_getDisplayName, 0),
     JS_PSG("parameterNames", DebuggerObject_getParameterNames, 0),
     JS_PSG("script", DebuggerObject_getScript, 0),
     JS_PSG("environment", DebuggerObject_getEnvironment, 0),
