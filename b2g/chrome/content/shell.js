@@ -16,7 +16,8 @@ Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
-Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
+Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
+Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -315,7 +316,8 @@ var shell = {
   },
 
   sendChromeEvent: function shell_sendChromeEvent(details) {
-    this.sendEvent(getContentWindow(), "mozChromeEvent", details);
+    this.sendEvent(getContentWindow(), "mozChromeEvent",
+                   ObjectWrapper.wrap(details, getContentWindow()));
   },
 
   receiveMessage: function shell_receiveMessage(message) {
@@ -379,9 +381,8 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
 }, 'system-messages-open-app', false);
 
 Services.obs.addObserver(function(aSubject, aTopic, aData) {
-  shell.sendEvent(shell.contentBrowser.contentWindow,
-                  "mozChromeEvent", { type: "fullscreenoriginchange",
-                                      fullscreenorigin: aData } );
+  shell.sendChromeEvent({ type: "fullscreenoriginchange",
+                          fullscreenorigin: aData });
 }, "fullscreen-origin-change", false);
 
 (function Repl() {
