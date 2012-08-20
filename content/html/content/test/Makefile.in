@@ -280,6 +280,18 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \
 		file_iframe_sandbox_b_if3.html \
+		test_iframe_sandbox_general.html \
+		file_iframe_sandbox_c_if1.html \
+		file_iframe_sandbox_c_if2.html \
+		file_iframe_sandbox_c_if3.html \
+		file_iframe_sandbox_c_if4.html \
+		file_iframe_sandbox_c_if5.html \
+		file_iframe_sandbox_c_if6.html \
+		file_iframe_sandbox_form_fail.html \
+		file_iframe_sandbox_form_pass.html \
+		file_iframe_sandbox_open_window_fail.html \
+		file_iframe_sandbox_pass.js \
+		file_iframe_sandbox_fail.js \
 		test_iframe_sandbox_navigation.html \
 		file_iframe_sandbox_d_if1.html \
 		file_iframe_sandbox_d_if2.html \
