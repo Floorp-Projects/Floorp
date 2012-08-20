@@ -1648,8 +1648,8 @@ abstract public class GeckoApp
         }
 
         if (mLayerClient == null) {
-            mLayerClient = new GeckoLayerClient(this, GeckoAppShell.getEventDispatcher());
-            mLayerClient.setView((LayerView)findViewById(R.id.layer_view));
+            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
+            mLayerClient = layerView.createLayerClient(GeckoAppShell.getEventDispatcher());
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);

@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.EventDispatcher;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -95,14 +96,17 @@ public class LayerView extends FrameLayout {
         mGLController = new GLController(this);
     }
 
-    void connect(GeckoLayerClient layerClient) {
-        mLayerClient = layerClient;
-        mTouchEventHandler = new TouchEventHandler(getContext(), this, layerClient);
+    public GeckoLayerClient createLayerClient(EventDispatcher eventDispatcher) {
+        mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
+
+        mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+
+        return mLayerClient;
     }
 
     @Override
