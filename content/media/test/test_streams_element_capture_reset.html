@@ -9,14 +9,16 @@
 <body>
 <video id="v"></video>
 <video id="vout"></video>
+<video id="vout_untilended"></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
 var v = document.getElementById('v');
 var vout = document.getElementById('vout');
-var stream = v.mozCaptureStream();
-vout.src = stream;
+var vout_untilended = document.getElementById('vout_untilended');
+vout.src = v.mozCaptureStream();
+vout_untilended.src = v.mozCaptureStreamUntilEnded();
 
 function dumpEvent(event) {
   dump("GOT EVENT " + event.type + " currentTime=" + event.target.currentTime +
@@ -27,41 +29,62 @@ var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
 for (var i = 0; i < events.length; ++i) {
   v.addEventListener(events[i], dumpEvent, false);
 }
+function isWithinEps(a, b, msg) {
+  ok(Math.abs(a - b) < 0.01,
+     "Got " + a + ", expected " + b + "; " + msg);
+}
 
 function startTest(test) {
   var seekTime = test.duration/2;
 
-  function ended() {
-    ok(true, "Final ended after changing src");
+  function endedAfterReplay() {
+    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at third 'ended' event");
+    isWithinEps(vout.currentTime, (v.currentTime - seekTime) + test.duration*2,
+	            "checking vout.currentTime after seeking, playing through and reloading");
     SimpleTest.finish();
   };
-  function timeupdateAfterSeek() {
-    if (v.currentTime < seekTime + 0.001)
-      return;
-    ok(true, "timeupdate after seek");
-    v.removeEventListener("timeupdate", timeupdateAfterSeek, false);
+  function endedAfterSeek() {
+    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
+    isWithinEps(vout.currentTime, (v.currentTime - seekTime) + test.duration,
+                "checking vout.currentTime after seeking and playing through again");
+    v.removeEventListener("ended", endedAfterSeek, false);
+    v.addEventListener("ended", endedAfterReplay, false);
     v.src = test.name + "?1";
     v.play();
-    v.addEventListener("ended", ended, false);
   };
   function seeked() {
-    ok(true, "Finished seeking");
+    isWithinEps(v.currentTime, seekTime, "Finished seeking");
+    isWithinEps(vout.currentTime, test.duration,
+                "checking vout.currentTime has not changed after seeking");
     v.removeEventListener("seeked", seeked, false);
-    v.addEventListener("timeupdate", timeupdateAfterSeek, false);
+    function dontPlayAgain() {
+      ok(false, "vout_untilended should not play again");
+    }
+    vout_untilended.addEventListener("playing", dontPlayAgain, false);
+    vout_untilended.addEventListener("ended", dontPlayAgain, false);
+    v.addEventListener("ended", endedAfterSeek, false);
+    v.play();
   };
-  function timeupdate() {
-    if (v.currentTime == 0)
-      return;
-    ok(true, "Initial timeupdate");
-    v.removeEventListener("timeupdate", timeupdate, false);
+  function ended() {
+    isWithinEps(vout.currentTime, test.duration, "checking vout.currentTime at first 'ended' event");
+    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at first 'ended' event");
+    is(vout.ended, false, "checking vout has not ended");
+    is(vout_untilended.ended, true, "checking vout_untilended has actually ended");
+    vout_untilended.removeEventListener("ended", ended, false);
+    v.pause();
     v.currentTime = seekTime;
     v.addEventListener("seeked", seeked, false);
   };
-  v.addEventListener("timeupdate", timeupdate, false);
+  vout_untilended.addEventListener("ended", ended, false);
 
   v.src = test.name;
   v.play();
+  function checkNoEnded() {
+    ok(false, "ended event received unexpectedly");
+  };
+  vout.addEventListener("ended", checkNoEnded, false);
   vout.play();
+  vout_untilended.play();
 }
 
 var testVideo = getPlayableVideo(gSmallTests);
