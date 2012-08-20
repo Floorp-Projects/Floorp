@@ -46,6 +46,7 @@ XPIDLSRCS = \
   nsIDOMBluetoothAdapter.idl \
   nsIDOMBluetoothDevice.idl \
   nsIDOMBluetoothDeviceEvent.idl \
+  nsIDOMBluetoothDeviceAddressEvent.idl \
   nsIDOMBluetoothPropertyEvent.idl \
   nsIDOMBluetoothPairingEvent.idl \
   $(NULL)
