@@ -5684,7 +5684,7 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
 
     if (constrainedOutputs) {
         bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
-        if (isCompiling && !compartment()->activeAnalysis)
+        if (!isCompiling && !compartment()->activeAnalysis)
         {
 #if DEBUG
             for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
