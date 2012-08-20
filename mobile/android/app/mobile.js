@@ -220,10 +220,6 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 // zoom key(F7) conflicts with caret browsing on maemo
 pref("accessibility.browsewithcaret_shortcut.enabled", false);
 
-// Whether or not we show a dialog box informing the user that the update was
-// successfully applied.
-pref("app.update.showInstalledUI", false);
-
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
@@ -477,12 +473,13 @@ pref("browser.search.param.yahoo-fr-cjkt", "moz35");
 pref("browser.search.param.yahoo-fr-ja", "mozff");
 #endif
 
-/* app update prefs */
-pref("app.update.timer", 60000); // milliseconds (1 min)
+/* prefs used by the update timer system (including blocklist pings) */
+pref("app.update.timerFirstInterval", 30000); // milliseconds
+pref("app.update.timerMinimumDelay", 30); // seconds
 
 #ifdef MOZ_UPDATER
+/* prefs used specifically for updating the app */
 pref("app.update.enabled", true);
-pref("app.update.timerFirstInterval", 20000); // milliseconds
 pref("app.update.auto", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 pref("app.update.mode", 1);
@@ -503,7 +500,7 @@ pref("app.update.interval", 86400);
 pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
 #else
-pref("app.update.interval", 28800);
+pref("app.update.interval", 3600);
 pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/mobile/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
 #endif
