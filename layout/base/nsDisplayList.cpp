@@ -280,11 +280,26 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
   float scale = presContext->AppUnitsPerDevPixel();
 
+  TimeStamp startTime = ea->mStartTime;
+  TimeDuration duration = ea->mIterationDuration;
   float iterations = ea->mIterationCount != NS_IEEEPositiveInfinity()
                      ? ea->mIterationCount : -1;
+  int direction = ea->mDirection;
+
+  // If this is a visibility animation, we should not actually add it.
+  // This will be fixed in bug 783893
+  Animation* animation = nullptr;
+  for (PRUint32 propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
+    if (aProperty == ea->mProperties[propIdx].mProperty) {
+      animation = aLayer->AddAnimation(startTime, duration,
+                                       iterations, direction,
+                                       aProperty, aData);
+      break;
+    }
+  }
+
   for (PRUint32 propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
     AnimationProperty* property = &ea->mProperties[propIdx];
-    InfallibleTArray<AnimationSegment> segments;
 
     if (aProperty != property->mProperty) {
       continue;
@@ -295,7 +310,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
       AnimationSegment* animSegment;
       if (aProperty == eCSSProperty_transform) {
-        animSegment = segments.AppendElement();
+        animSegment = animation->segments().AppendElement();
         animSegment->startState() = InfallibleTArray<TransformFunction>();
         animSegment->endState() = InfallibleTArray<TransformFunction>();
 
@@ -307,7 +322,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
         AddTransformFunctions(list, styleContext, presContext, bounds, scale,
                               animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
-        animSegment = segments.AppendElement();
+        animSegment = animation->segments().AppendElement();
         animSegment->startState() = segment->mFromValue.GetFloatValue();
         animSegment->endState() = segment->mToValue.GetFloatValue();
       }
@@ -316,14 +331,6 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       animSegment->endPortion() = segment->mToKey;
       animSegment->sampleFn() = ToTimingFunction(segment->mTimingFunction);
     }
-
-    aLayer->AddAnimation(Animation(ea->mStartTime,
-                                   ea->mIterationDuration,
-                                   segments,
-                                   iterations,
-                                   ea->mDirection,
-                                   aProperty,
-                                   aData));
   }
 }
 

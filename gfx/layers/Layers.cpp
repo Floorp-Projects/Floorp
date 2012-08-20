@@ -241,16 +241,20 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
 Layer::~Layer()
 {}
 
-void
-Layer::AddAnimation(const Animation& aAnimation)
+Animation*
+Layer::AddAnimation(TimeStamp aStart, TimeDuration aDuration, float aIterations,
+                    int aDirection, nsCSSProperty aProperty, const AnimationData& aData)
 {
-  if (!AsShadowableLayer() || !AsShadowableLayer()->HasShadow())
-    return;
+  Animation* anim = mAnimations.AppendElement();
+  anim->startTime() = aStart;
+  anim->duration() = aDuration;
+  anim->numIterations() = aIterations;
+  anim->direction() = aDirection;
+  anim->property() = aProperty;
+  anim->data() = aData;
 
-  MOZ_ASSERT(aAnimation.segments().Length() >= 1);
-
-  mAnimations.AppendElement(aAnimation);
   Mutated();
+  return anim;
 }
 
 void
