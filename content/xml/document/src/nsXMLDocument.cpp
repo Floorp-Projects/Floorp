@@ -333,7 +333,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   // chrome document.
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    rv = principal->CheckMayLoad(uri, false);
+    rv = principal->CheckMayLoad(uri, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;

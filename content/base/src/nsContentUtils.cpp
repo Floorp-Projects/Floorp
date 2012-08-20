@@ -4606,7 +4606,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
     return NS_OK;
   }
 
-  return aLoadingPrincipal->CheckMayLoad(aURIToLoad, true);
+  return aLoadingPrincipal->CheckMayLoad(aURIToLoad, true, false);
 }
 
 bool
@@ -5756,9 +5756,9 @@ nsContentUtils::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel
 
   NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
 
-  nsresult rv = oldPrincipal->CheckMayLoad(newURI, false);
+  nsresult rv = oldPrincipal->CheckMayLoad(newURI, false, false);
   if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-    rv = oldPrincipal->CheckMayLoad(newOriginalURI, false);
+    rv = oldPrincipal->CheckMayLoad(newOriginalURI, false, false);
   }
 
   return rv;
@@ -5929,13 +5929,13 @@ nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 
 /* static */
 bool
-nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
+nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal)
 {
   nsCOMPtr<nsIURI> channelURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, false);
 
-  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, false));
+  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, false, aAllowIfInheritsPrincipal));
 }
 
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
@@ -6722,7 +6722,7 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   // based on its own codebase later.
   //
   if (URIIsLocalFile(aURI) && aLoadingPrincipal &&
-      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false)) &&
+      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
       // One more check here.  CheckMayLoad will always return true for the
       // system principal, but we do NOT want to inherit in that case.
       !IsSystemPrincipal(aLoadingPrincipal)) {

@@ -1394,7 +1394,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (hasFlags) {
-        return aPrincipal->CheckMayLoad(targetBaseURI, true);
+        return aPrincipal->CheckMayLoad(targetBaseURI, true, false);
     }
 
     //-- get the source scheme
