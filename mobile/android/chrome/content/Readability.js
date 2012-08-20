@@ -208,6 +208,12 @@ Readability.prototype = {
       }
     }
 
+    // Remove all style tags in head
+    let styleTags = doc.getElementsByTagName("style");
+    for (let st = 0; st < styleTags.length; st += 1) {
+      styleTags[st].textContent = "";
+    }
+
     this._replaceBrs(doc.body);
 
     doc.body.innerHTML = doc.body.innerHTML.replace(this.REGEXPS.replaceFonts, '<$1span>');
