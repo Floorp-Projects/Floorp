@@ -266,6 +266,16 @@ MOCHITEST_FILES = \
 		test_input_file_picker.html \
 		test_bug763626.html \
 		test_bug780993.html \
+		test_iframe_sandbox_inheritance.html \
+		file_iframe_sandbox_a_if1.html \
+		file_iframe_sandbox_a_if2.html \
+		file_iframe_sandbox_a_if3.html \
+		file_iframe_sandbox_a_if4.html \
+		file_iframe_sandbox_a_if5.html \
+		file_iframe_sandbox_a_if6.html \
+		file_iframe_sandbox_a_if7.html \
+		file_iframe_sandbox_a_if8.html \
+		file_iframe_sandbox_a_if9.html \
 		test_iframe_sandbox_same_origin.html \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \
