@@ -24,6 +24,12 @@ XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
 // The preference that tells whether this feature is enabled.
 const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 
+// The preference that tells the number of rows of the newtab grid.
+const PREF_NEWTAB_ROWS = "browser.newtabpage.rows";
+
+// The preference that tells the number of columns of the newtab grid.
+const PREF_NEWTAB_COLUMNS = "browser.newtabpage.columns";
+
 // The maximum number of results we want to retrieve from history.
 const HISTORY_RESULTS_LIMIT = 100;
 
@@ -182,6 +188,60 @@ let AllPages = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference])
 };
+
+/**
+ * Singleton that keeps Grid preferences
+ */
+let GridPrefs = {
+  /**
+   * Cached value that tells the number of rows of newtab grid.
+   */
+  _gridRows: null,
+  get gridRows() {
+    if (!this._gridRows) {
+      this._gridRows = Math.max(1, Services.prefs.getIntPref(PREF_NEWTAB_ROWS));
+    }
+
+    return this._gridRows;
+  },
+
+  /**
+   * Cached value that tells the number of columns of newtab grid.
+   */
+  _gridColumns: null,
+  get gridColumns() {
+    if (!this._gridColumns) {
+      this._gridColumns = Math.max(1, Services.prefs.getIntPref(PREF_NEWTAB_COLUMNS));
+    }
+
+    return this._gridColumns;
+  },
+
+
+  /**
+   * Initializes object. Adds a preference observer
+   */
+  init: function GridPrefs_init() {
+    Services.prefs.addObserver(PREF_NEWTAB_ROWS, this, false);
+    Services.prefs.addObserver(PREF_NEWTAB_COLUMNS, this, false);
+  },
+
+  /**
+   * Implements the nsIObserver interface to get notified when the preference
+   * value changes.
+   */
+  observe: function GridPrefs_observe(aSubject, aTopic, aData) {
+    if (aData == PREF_NEWTAB_ROWS) {
+      this._gridRows = null;
+    } else {
+      this._gridColumns = null;
+    }
+
+    AllPages.update();
+  }
+};
+
+GridPrefs.init();
 
 /**
  * Singleton that keeps track of all pinned links and their positions in the
@@ -606,5 +666,6 @@ let NewTabUtils = {
   allPages: AllPages,
   linkChecker: LinkChecker,
   pinnedLinks: PinnedLinks,
-  blockedLinks: BlockedLinks
+  blockedLinks: BlockedLinks,
+  gridPrefs: GridPrefs
 };
