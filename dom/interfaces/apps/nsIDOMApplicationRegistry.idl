@@ -52,6 +52,12 @@ interface mozIDOMApplicationMgmt : nsISupports
   nsIDOMDOMRequest getAll();
 
   /**
+   * the request will return the applications acquired from all origins but
+   * which are not launchable (e.g. by not being natively installed), or null.
+   */
+  nsIDOMDOMRequest getNotInstalled();
+
+  /**
    * event listener to get notified of application installs. Only settable by
    * privileged callers.
    * the event will be a mozIDOMApplicationEvent
@@ -91,12 +97,6 @@ interface mozIDOMApplicationRegistry : nsISupports
    * the request will return the applications installed from this origin, or null.
    */
   nsIDOMDOMRequest getInstalled();
-
-  /**
-   * the request will return the applications acquired from this origin but which
-   * are not launchable (e.g. by not being natively installed), or null.
-   */
-  nsIDOMDOMRequest getNotInstalled();
 
   /**
    * Install a packaged web app.
