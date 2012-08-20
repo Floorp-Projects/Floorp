@@ -357,6 +357,7 @@ RES_LAYOUT_LARGE_V11 = \
 RES_LAYOUT_XLARGE_V11 = \
   res/layout-xlarge-v11/awesomebar_search.xml \
   res/layout-xlarge-v11/browser_toolbar_menu.xml \
+  res/layout-xlarge-v11/font_size_preference.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
   res/layout-xlarge-v11/tabs_panel_toolbar_menu.xml \
