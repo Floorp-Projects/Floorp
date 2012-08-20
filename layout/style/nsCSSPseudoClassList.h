@@ -76,8 +76,6 @@ CSS_PSEUDO_CLASS(nthLastChild, ":nth-last-child")
 CSS_PSEUDO_CLASS(nthOfType, ":nth-of-type")
 CSS_PSEUDO_CLASS(nthLastOfType, ":nth-last-of-type")
 
-CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
-
 // Match nodes that are HTML but not XHTML
 CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html")
 
