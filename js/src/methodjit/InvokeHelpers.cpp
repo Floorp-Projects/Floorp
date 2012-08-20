@@ -259,7 +259,10 @@ ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee, JIT
 
     // Use JM if the callee has no loops. In this case calling into Ion
     // is likely not worth the overhead.
-    if (!callee->hasAnalysis() || !callee->analysis()->hasLoops())
+    if (!callee->hasAnalysis())
+        return true;
+
+    if (callee->isShortRunning())
         return true;
 
     return false;

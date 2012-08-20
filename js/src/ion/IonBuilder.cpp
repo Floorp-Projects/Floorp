@@ -262,8 +262,8 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p)",
-            script->filename, script->lineno, (void *) script);
+    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d) (maxloopcount=%d)",
+            script->filename, script->lineno, (void *) script, (int) script->getUseCount(), (int) script->getMaxLoopCount());
 
     if (!initParameters())
         return false;
