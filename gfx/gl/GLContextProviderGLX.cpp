@@ -270,14 +270,16 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
     if (!format || format->type != PictTypeDirect) {
         return None;
     }
-
-    bool withAlpha =
-        aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+    const XRenderDirectFormat& direct = format->direct;
+    int alphaSize;
+    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
+    NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
+                 "Unexpected render format with non-adjacent alpha bits");
 
     int attribs[] = { GLX_DOUBLEBUFFER, False,
                       GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-                      GLX_ALPHA_SIZE, (withAlpha ? 1 : 0),
-                      (withAlpha ? GLX_BIND_TO_TEXTURE_RGBA_EXT
+                      GLX_ALPHA_SIZE, alphaSize,
+                      (alphaSize ? GLX_BIND_TO_TEXTURE_RGBA_EXT
                        : GLX_BIND_TO_TEXTURE_RGB_EXT), True,
                       GLX_RENDER_TYPE, GLX_RGBA_BIT,
                       None };
@@ -293,17 +295,12 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 
     // Find an fbconfig that matches the pixel format used on the Pixmap. 
     int matchIndex = -1;
-    const XRenderDirectFormat& direct = format->direct;
     unsigned long redMask =
         static_cast<unsigned long>(direct.redMask) << direct.red;
     unsigned long greenMask =
         static_cast<unsigned long>(direct.greenMask) << direct.green;
     unsigned long blueMask =
         static_cast<unsigned long>(direct.blueMask) << direct.blue;
-    int alphaSize;
-    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
-    NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
-                 "Unexpected render format with non-adjacent alpha bits");
     // This is true if the Pixmap has bits for alpha or unused bits.
     bool haveNonColorBits =
         ~(redMask | greenMask | blueMask) != -1UL << format->depth;
@@ -381,7 +378,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 
     int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
                             GLX_TEXTURE_FORMAT_EXT,
-                            (withAlpha ? GLX_TEXTURE_FORMAT_RGBA_EXT
+                            (alphaSize ? GLX_TEXTURE_FORMAT_RGBA_EXT
                              : GLX_TEXTURE_FORMAT_RGB_EXT),
                             None};
 
