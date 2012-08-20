@@ -3188,7 +3188,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
-    static const ImageFormat format = ImageFormat::CAIRO_SURFACE;
+    static const ImageFormat format = CAIRO_SURFACE;
     nsRefPtr<Image> image = container->CreateImage(&format, 1);
     NS_ASSERTION(image, "Could not create image container for mask layer.");
     CairoImage::Data data;

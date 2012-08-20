@@ -211,7 +211,7 @@ nsPluginInstanceOwner::GetImageContainer()
 #ifdef XP_MACOSX
       AutoLockImage autoLock(container);
       Image* image = autoLock.GetImage();
-      if (image && image->GetFormat() == ImageFormat::MAC_IO_SURFACE && mObjectFrame) {
+      if (image && image->GetFormat() == MAC_IO_SURFACE && mObjectFrame) {
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
         NS_ADDREF_THIS();
         oglImage->SetUpdateCallback(&DrawPlugin, this);
@@ -3717,7 +3717,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 #ifdef XP_MACOSX
       AutoLockImage autoLock(container);
       Image *image = autoLock.GetImage();
-      if (image && (image->GetFormat() == ImageFormat::MAC_IO_SURFACE) && mObjectFrame) {
+      if (image && (image->GetFormat() == MAC_IO_SURFACE) && mObjectFrame) {
         // Undo what we did to the current image in SetCurrentImageInTransaction().
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
         oglImage->SetUpdateCallback(nullptr, nullptr);
