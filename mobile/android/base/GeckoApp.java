@@ -171,7 +171,7 @@ abstract public class GeckoApp
     private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     protected int mRestoreMode = GeckoAppShell.RESTORE_NONE;
-    private boolean mInitialized = false;
+    protected boolean mInitialized = false;
 
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
@@ -1921,7 +1921,7 @@ abstract public class GeckoApp
      * Handles getting a uri from and intent in a way that is backwards
      * compatable with our previous implementations
      */
-    private String getURIFromIntent(Intent intent) {
+    protected String getURIFromIntent(Intent intent) {
         String uri = intent.getDataString();
         if (uri != null)
             return uri;
