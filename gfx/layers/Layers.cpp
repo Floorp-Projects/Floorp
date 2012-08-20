@@ -443,14 +443,14 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
         endValue.SetAndAdoptCSSValueListValue(endList, nsStyleAnimation::eUnit_Transform);
         endValues->AppendElement(endValue);
       } else {
-        NS_ASSERTION(segment.endState().type() == Animatable::TOpacity,
+        NS_ASSERTION(segment.endState().type() == Animatable::Tfloat,
                      "Unknown Animatable type");
         nsStyleAnimation::Value startValue;
-        startValue.SetFloatValue(segment.startState().get_Opacity().value());
+        startValue.SetFloatValue(segment.startState().get_float());
         startValues->AppendElement(startValue);
 
         nsStyleAnimation::Value endValue;
-        endValue.SetFloatValue(segment.endState().get_Opacity().value());
+        endValue.SetFloatValue(segment.endState().get_float());
         endValues->AppendElement(endValue);
       }
     }

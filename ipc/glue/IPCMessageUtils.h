@@ -30,6 +30,7 @@
 #include "jsapi.h"
 #include "LayersTypes.h"
 #include "FrameMetrics.h"
+#include "nsCSSProperty.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -601,6 +602,14 @@ struct ParamTraits<mozilla::PixelFormat>
                           gfxASurface::ImageFormatARGB32,
                           gfxASurface::ImageFormatUnknown>
 {};
+
+template <>
+struct ParamTraits<nsCSSProperty>
+  : public EnumSerializer<nsCSSProperty,
+                          eCSSProperty_UNKNOWN,
+                          eCSSProperty_COUNT>
+{};
+
 
 template<>
 struct ParamTraits<gfxRGBA>
