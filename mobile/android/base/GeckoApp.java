@@ -2724,6 +2724,10 @@ abstract public class GeckoApp
                 }
                 return true;
             }
+            case R.id.site_settings: {
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+                return true;
+            }
             case R.id.paste: {
                 String text = GeckoAppShell.getClipboardText();
                 if (text != null && !TextUtils.isEmpty(text)) {
