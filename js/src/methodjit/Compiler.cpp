@@ -502,8 +502,8 @@ CompileStatus
 mjit::Compiler::performCompilation()
 {
     JaegerSpew(JSpew_Scripts,
-               "compiling script (file \"%s\") (line \"%d\") (length \"%d\") (chunk \"%d\")\n",
-               outerScript->filename, outerScript->lineno, outerScript->length, chunkIndex);
+               "compiling script (file \"%s\") (line \"%d\") (length \"%d\") (chunk \"%d\") (usecount \"%d\")\n",
+               outerScript->filename, outerScript->lineno, outerScript->length, chunkIndex, (int) outerScript->getUseCount());
 
     if (inlining()) {
         JaegerSpew(JSpew_Inlining,
@@ -3950,13 +3950,22 @@ mjit::Compiler::interruptCheckHelper()
 }
 
 static bool
-MaybeIonCompileable(JSContext *cx, JSScript *script)
+MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 {
 #ifdef JS_ION
+    *recompileCheckForIon = true;
+
     if (!ion::IsEnabled(cx))
         return false;
     if (!script->canIonCompile())
         return false;
+
+    // If this script is small, doesn't have any function calls, and doesn't have
+    // any big loops, then throwing in a recompile check and causing an invalidation
+    // when we otherwise wouldn't have would be wasteful.
+    if (script->isShortRunning())
+        *recompileCheckForIon = false;
+
     return true;
 #endif
     return false;
@@ -3968,23 +3977,33 @@ mjit::Compiler::recompileCheckHelper()
     if (inlining() || debugMode() || !globalObj || !cx->typeInferenceEnabled())
         return;
 
-    bool maybeIonCompileable = MaybeIonCompileable(cx, outerScript);
+    bool recompileCheckForIon = true;
+    bool maybeIonCompileable = MaybeIonCompileable(cx, outerScript, &recompileCheckForIon);
+    bool hasFunctionCalls = analysis->hasFunctionCalls();
 
     // Insert a recompile check if either:
     // 1) IonMonkey is enabled, to optimize the function when it becomes hot.
     // 2) The script contains function calls JM can inline.
-    if (!maybeIonCompileable && !analysis->hasFunctionCalls())
+    if (!maybeIonCompileable && !hasFunctionCalls)
         return;
 
     uint32_t minUses = USES_BEFORE_INLINING;
 
 #ifdef JS_ION
-    if (maybeIonCompileable)
+    if (recompileCheckForIon)
         minUses = ion::UsesBeforeIonRecompile(outerScript, PC);
 #endif
 
     uint32_t *addr = script->addressOfUseCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
+
+    // If there are no function calls, and we don't want to do a recompileCheck for
+    // Ion, then this just needs to increment the useCount so that we know when to
+    // recompile this function from an Ion call.  No need to call out to recompiler
+    // stub.
+    if (!hasFunctionCalls && !recompileCheckForIon)
+        return;
+
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
     Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
                               Imm32(minUses));

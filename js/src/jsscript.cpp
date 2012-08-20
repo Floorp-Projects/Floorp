@@ -1717,6 +1717,15 @@ JSScript::numNotes()
 }
 
 bool
+JSScript::isShortRunning()
+{
+    return length < 100 &&
+           hasAnalysis() &&
+           !analysis()->hasFunctionCalls() &&
+           getMaxLoopCount() < 40;
+}
+
+bool
 JSScript::enclosingScriptsCompiledSuccessfully() const
 {
     /*
