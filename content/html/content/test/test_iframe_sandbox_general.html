@@ -39,8 +39,8 @@ function ok_wrapper(result, desc) {
     passedTests++;
   }
 
-  if (completedTests == 21) {
-    is(passedTests, 21, "There are 21 general tests that should pass");
+  if (completedTests == 23) {
+    is(passedTests, 23, "There are 23 general tests that should pass");
     SimpleTest.finish();
   }
 }
@@ -163,6 +163,14 @@ function doTest() {
   // 25) test that an iframe with sandbox="allow-scripts", starting out with a document already loaded, DOES have script
   // in a newly set src attribute created by a javascript: URL executed
   // done by this page, see if_10
+
+  // passes if good or fails if bad
+  // 26) test that an sandboxed document without 'allow-same-origin' can NOT access indexedDB
+  // done via file_iframe_sandbox_c_if7.html, which has sandbox='allow-scripts'
+
+  // passes if good or fails if bad
+  // 26) test that an sandboxed document without 'allow-same-origin' can access indexedDB
+  // done via file_iframe_sandbox_c_if8.html, which has sandbox='allow-scripts allow-same-origin'
 }
 
 addLoadEvent(doTest);
@@ -214,6 +222,8 @@ function do_if_10() {
 <iframe sandbox="allow-same-origin allow-scripts" id='if_8' src="javascript:'<html><script>window.parent.ok_wrapper(true, \'an iframe sandboxed without allow-scripts should execute script in a javascript URL in its src attribute\');<\/script><\/html>';" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin" onload='start_if_9()' id='if_9' src="about:blank" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin allow-scripts" onload='start_if_10()' id='if_10' src="about:blank" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id='if_11' src="file_iframe_sandbox_c_if7.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-same-origin allow-scripts" id='if_12' src="file_iframe_sandbox_c_if8.html" height="10" width="10"></iframe>
 <input type='button' id="a_button" onclick='do_if_9()'>
 <input type='button' id="a_button2" onclick='do_if_10()'>
 </div>
