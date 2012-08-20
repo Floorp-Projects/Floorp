@@ -254,16 +254,16 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
                               const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     if (!CheckLength(cx, length))
-        return NULL;
+        return false;
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
-        return NULL;
+        return false;
     ScriptSourceHolder ssh(cx->runtime, ss);
     SourceCompressionToken sct(cx);
     JS_ASSERT(options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     if (options.sourcePolicy == CompileOptions::SAVE_SOURCE) {
         if (!ss->setSourceCopy(cx, chars, length, true, &sct))
-            return NULL;
+            return false;
     }
 
     options.setCompileAndGo(false);
