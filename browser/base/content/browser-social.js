@@ -33,10 +33,17 @@ let SocialUI = {
   observe: function SocialUI_observe(subject, topic, data) {
     switch (topic) {
       case "social:pref-changed":
-        this.updateToggleCommand();
-        SocialShareButton.updateButtonHiddenState();
-        SocialToolbar.updateButtonHiddenState();
-        SocialSidebar.updateSidebar();
+        // Exceptions here sometimes don't get reported properly, report them
+        // manually :(
+        try {
+          this.updateToggleCommand();
+          SocialShareButton.updateButtonHiddenState();
+          SocialToolbar.updateButtonHiddenState();
+          SocialSidebar.updateSidebar();
+        } catch (e) {
+          Components.utils.reportError(e);
+          throw e;
+        }
         break;
       case "social:ambient-notification-changed":
         SocialToolbar.updateButton();
@@ -279,7 +286,7 @@ var SocialToolbar = {
 
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
     this.button.hidden = !Social.uiVisible;
-    if (!Social.provider.profile || !Social.provider.profile.userName) {
+    if (!Social.provider || !Social.provider.profile || !Social.provider.profile.userName) {
       ["social-notification-box",
        "social-status-iconbox"].forEach(function removeChildren(parentId) {
         let parent = document.getElementById(parentId);
@@ -468,6 +475,7 @@ var SocialSidebar = {
     command.setAttribute("checked", !hideSidebar);
 
     let sbrowser = document.getElementById("social-sidebar-browser");
+    sbrowser.docShell.isActive = !hideSidebar;
     if (hideSidebar) {
       this.dispatchEvent("sidebarhide");
       // If we're disabled, unload the sidebar content

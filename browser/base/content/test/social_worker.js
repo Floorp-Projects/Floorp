@@ -49,10 +49,16 @@ onconnect = function(e) {
         let icon = {
           name: "testIcon",
           iconURL: "chrome://branding/content/icon48.png",
-          contentPanel: "http://example.com/browser/browser/base/content/test/social_panel.html",
+          contentPanel: "https://example.com/browser/browser/base/content/test/social_panel.html",
           counter: 1
         };
         port.postMessage({topic: "social.ambient-notification", data: icon});
+        break;
+      case "test-isVisible":
+        sidebarPort.postMessage({topic: "test-isVisible"});
+        break;
+      case "test-isVisible-response":
+        testPort.postMessage({topic: "got-isVisible-response", result: event.data.result});
         break;
     }
   }
