@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.GeckoAccessibility;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -72,6 +73,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.AbsoluteLayout;
@@ -1034,48 +1036,9 @@ abstract public class GeckoApp
                     }
                 });
             } else if (event.equals("Accessibility:Event")) {
-                final AccessibilityEvent accEvent = AccessibilityEvent.obtain(message.getInt("eventType"));
-                accEvent.setClassName(LayerView.class.getName());
-                accEvent.setPackageName(mAppContext.getPackageName());
-
-                final JSONArray text = message.getJSONArray("text");
-                for (int i = 0; i < text.length(); i++)
-                    accEvent.getText().add(text.getString(i));
-
-                accEvent.setContentDescription(message.optString("description"));
-                accEvent.setEnabled(message.optBoolean("enabled", true));
-                accEvent.setChecked(message.optBoolean("checked"));
-                accEvent.setPassword(message.optBoolean("password"));
-                accEvent.setAddedCount(message.optInt("addedCount", -1));
-                accEvent.setRemovedCount(message.optInt("removedCount", -1));
-                accEvent.setFromIndex(message.optInt("fromIndex", -1));
-                accEvent.setItemCount(message.optInt("itemCount", -1));
-                accEvent.setCurrentItemIndex(message.optInt("currentItemIndex", -1));
-                accEvent.setBeforeText(message.optString("beforeText"));
-                if (Build.VERSION.SDK_INT >= 14) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH
-                    accEvent.setToIndex(message.optInt("toIndex", -1));
-                    accEvent.setScrollable(message.optBoolean("scrollable"));
-                    accEvent.setScrollX(message.optInt("scrollX", -1));
-                    accEvent.setScrollY(message.optInt("scrollY", -1));
-                }
-                if (Build.VERSION.SDK_INT >= 15) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1
-                    AccessibilityCompat.setMaxScrollX(accEvent, message.optInt("maxScrollX", -1));
-                    AccessibilityCompat.setMaxScrollY(accEvent, message.optInt("maxScrollY", -1));
-                }
-
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        AccessibilityManager accessibilityManager =
-                            (AccessibilityManager) mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                        try {
-                            accessibilityManager.sendAccessibilityEvent(accEvent);
-                        } catch (IllegalStateException e) {
-                            // Accessibility is off.
-                        }
-                    }
-                });
+                GeckoAccessibility.sendAccessibilityEvent(message);
             } else if (event.equals("Accessibility:Ready")) {
-                updateAccessibilitySettings();
+                GeckoAccessibility.updateAccessibilitySettings();
             } else if (event.equals("Shortcut:Remove")) {
                 final String url = message.getString("url");
                 final String origin = message.getString("origin");
@@ -1411,28 +1374,6 @@ abstract public class GeckoApp
                 }
             }
         });
-    }
-
-    public void updateAccessibilitySettings () {
-        mMainHandler.post(new Runnable() {
-                public void run() {
-                    JSONObject ret = new JSONObject();
-                    AccessibilityManager accessibilityManager =
-                        (AccessibilityManager) mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                    try {
-                        ret.put("enabled", accessibilityManager.isEnabled());
-                        if (Build.VERSION.SDK_INT >= 14) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH
-                            ret.put("exploreByTouch", accessibilityManager.isTouchExplorationEnabled());
-                        } else {
-                            ret.put("exploreByTouch", false);
-                        }
-                    } catch (Exception ex) {
-                        Log.e(LOGTAG, "Error building JSON arguments for Accessibility:Settings:", ex);
-                    }
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Settings",
-                                                                                   ret.toString()));
-                }
-            });
     }
     
     private void hidePluginLayer(Layer layer) {
@@ -2014,7 +1955,7 @@ abstract public class GeckoApp
         }
 
         // User may have enabled/disabled accessibility.
-        updateAccessibilitySettings();
+        GeckoAccessibility.updateAccessibilitySettings();
 
         GeckoBackgroundThread.getHandler().post(new Runnable() {
             public void run() {
@@ -2874,47 +2815,6 @@ abstract public class GeckoApp
                                                   + expectedThread.getName()
                                                   + "\"), but running on thread " + currentThreadId
                                                   + " (\"" + currentThread.getName() + ")");
-        }
-    }
-
-    // SDK version 15 accessibility methods retrieved through reflection.
-    private static class AccessibilityCompat {
-        private static boolean mInitialized = false;
-        private static Method mAccessibilityEvent_setMaxScrollX = null;
-        private static Method mAccessibilityEvent_setMaxScrollY = null;
-
-        private static void initialize () {
-            try {
-                mAccessibilityEvent_setMaxScrollX =
-                    AccessibilityEvent.class.getMethod("setMaxScrollX", int.class);
-                mAccessibilityEvent_setMaxScrollY =
-                    AccessibilityEvent.class.getMethod("setMaxScrollY", int.class);
-            } catch (NoSuchMethodException e) {
-                Log.e(LOGTAG, "Error initializing AccessibilityCompat", e);
-            }
-            mInitialized = true;
-        }
-
-        public static void setMaxScrollX (AccessibilityEvent event, int maxScrollX) {
-            if (!mInitialized)
-                initialize();
-            try {
-                if (mAccessibilityEvent_setMaxScrollX != null)
-                    mAccessibilityEvent_setMaxScrollX.invoke(event, maxScrollX);
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollX", e);
-            }
-        }
-
-        public static void setMaxScrollY (AccessibilityEvent event, int maxScrollY) {
-            if (!mInitialized)
-                initialize();
-            try {
-                if (mAccessibilityEvent_setMaxScrollY != null)
-                    mAccessibilityEvent_setMaxScrollY.invoke(event, maxScrollY);
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollY", e);
-            }
         }
     }
 }
