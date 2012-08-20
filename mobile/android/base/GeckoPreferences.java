@@ -48,7 +48,6 @@ public class GeckoPreferences
     private PreferenceScreen mPreferenceScreen;
     private static boolean sIsCharEncodingEnabled = false;
     private static final String NON_PREF_PREFIX = "android.not_a_preference.";
-    private static final String FONT_SIZE_PREF_KEY = "font.size.inflation.minTwips";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,15 +66,6 @@ public class GeckoPreferences
         mPreferenceScreen = getPreferenceScreen();
         initGroups(mPreferenceScreen);
         initValues();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        final FontSizePreference fontSizePref =
-                (FontSizePreference) mPreferenceScreen.findPreference(FONT_SIZE_PREF_KEY);
-        fontSizePref.onConfigurationChanged(newConfig);
     }
 
     @Override
