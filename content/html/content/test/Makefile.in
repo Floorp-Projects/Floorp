@@ -270,6 +270,9 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \
 		file_iframe_sandbox_b_if3.html \
+		test_iframe_sandbox_workers.html \
+		file_iframe_sandbox_g_if1.html \
+		file_iframe_sandbox_worker.js \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \
