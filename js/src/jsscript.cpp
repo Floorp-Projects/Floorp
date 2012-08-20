@@ -520,7 +520,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (scriptBits & (1 << OwnSource)) {
             ss = cx->new_<ScriptSource>();
             if (!ss)
-                return NULL;
+                return false;
         } else {
             JS_ASSERT(enclosingScript);
             ss = enclosingScript->scriptSource();

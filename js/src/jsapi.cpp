@@ -5720,7 +5720,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
-        return NULL;
+        return false;
 
     bool ok = Evaluate(cx, obj, options, chars, length, rval);
     cx->free_(chars);
@@ -5735,7 +5735,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     {
         AutoFile file;
         if (!file.open(cx, filename) || !file.readAll(cx, buffer))
-            return NULL;
+            return false;
     }
 
     options = options.setFileAndLine(filename, 1);

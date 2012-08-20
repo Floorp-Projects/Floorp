@@ -1305,10 +1305,12 @@ Function(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
+#ifdef DEBUG
     for (unsigned i = 0; i < formals.length(); ++i) {
         JSString *str = formals[i];
         JS_ASSERT(str->asAtom().asPropertyName() == formals[i]);
     }
+#endif
 
     JS::Anchor<JSString *> strAnchor(NULL);
     const jschar *chars;
