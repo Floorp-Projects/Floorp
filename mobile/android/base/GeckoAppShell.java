@@ -2339,11 +2339,11 @@ class ScreenshotHandler implements Runnable {
     }
 
     private void screenshotWholePage(int tabId) {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             return;
         }
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         RectF pageRect = viewport.getCssPageRect();
 
         if (FloatUtils.fuzzyEquals(pageRect.width(), 0) || FloatUtils.fuzzyEquals(pageRect.height(), 0)) {
@@ -2443,14 +2443,14 @@ class ScreenshotHandler implements Runnable {
             return;
         }
 
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             // we could be in the midst of an activity tear-down and re-start, so guard
-            // against a null layer controller.
+            // against a null layer view
             return;
         }
 
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         if (RectUtils.fuzzyEquals(mPageRect, viewport.getCssPageRect())) {
             // the page size hasn't changed, so our dirty rect is still valid and we can just
             // repaint that area
