@@ -1713,18 +1713,9 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
     return NS_OK;
   }
 
-  // ...or if this is a same-origin request.
-  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel)) {
-    return NS_OK;
-  }
-
-  // exempt data URIs from the same origin check.
-  nsCOMPtr<nsIURI> channelURI;
-  bool dataScheme = false;
-  if (NS_SUCCEEDED(NS_GetFinalChannelURI(aChannel,
-                                         getter_AddRefs(channelURI))) &&
-      NS_SUCCEEDED(channelURI->SchemeIs("data", &dataScheme)) &&
-      dataScheme) {
+  // If this is a same-origin request or the channel's URI inherits
+  // its principal, it's allowed.
+  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel, true)) {
     return NS_OK;
   }
 

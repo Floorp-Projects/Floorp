@@ -115,7 +115,7 @@ nsSystemPrincipal::SubsumesIgnoringDomain(nsIPrincipal *other, bool *result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
+nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
 {
     return NS_OK;
 }

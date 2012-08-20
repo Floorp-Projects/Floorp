@@ -10072,7 +10072,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             nsCOMPtr<nsIPrincipal> principal = docScriptObj->GetPrincipal();
 
             if (!principal ||
-                NS_FAILED(principal->CheckMayLoad(newURI, true))) {
+                NS_FAILED(principal->CheckMayLoad(newURI, true, false))) {
 
                 return NS_ERROR_DOM_SECURITY_ERR;
             }

@@ -846,8 +846,16 @@ URIIsLocalFile(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
+nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
 {
+   if (aAllowIfInheritsPrincipal) {
+    // If the caller specified to allow loads of URIs that inherit
+    // our principal, allow the load if this URI inherits its principal
+    if (nsPrincipal::IsPrincipalInherited(aURI)) {
+      return NS_OK;
+    }
+  }
+
   if (!nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
     if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
         URIIsLocalFile(aURI)) {
@@ -1432,11 +1440,11 @@ nsExpandedPrincipal::SubsumesIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
+nsExpandedPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
 {
   nsresult rv;
   for (uint32_t i = 0; i < mPrincipals.Length(); ++i){
-    rv = mPrincipals[i]->CheckMayLoad(uri, aReport);
+    rv = mPrincipals[i]->CheckMayLoad(uri, aReport, aAllowIfInheritsPrincipal);
     if (NS_SUCCEEDED(rv))
       return rv;
   }

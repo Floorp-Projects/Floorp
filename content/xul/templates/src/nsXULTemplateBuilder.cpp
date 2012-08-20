@@ -1328,7 +1328,7 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
 
         // don't add the uri to the list if the document is not allowed to
         // load it
-        if (!isTrusted && NS_FAILED(docPrincipal->CheckMayLoad(uri, true)))
+        if (!isTrusted && NS_FAILED(docPrincipal->CheckMayLoad(uri, true, false)))
           continue;
 
         uriList->AppendElement(uri, false);
