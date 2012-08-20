@@ -1,0 +1,31 @@
+# HG changeset patch
+# User Siarhei Siamashka <siarhei.siamashka@gmail.com>
+# Date 1314529402 -3600
+# Node ID 0be4a94258c28b97a7e6e87b099359c759941b22
+# Parent  f1cf848b1ff22bad8980b673cc4410a21c8bdf28
+Bug 644136 - Add missing fpu directive to fix libffi build on ARM hardfloat systems; r=bsmedberg
+
+diff --git a/js/src/ctypes/libffi/src/arm/sysv.S b/js/src/ctypes/libffi/src/arm/sysv.S
+--- a/js/src/ctypes/libffi/src/arm/sysv.S
++++ b/js/src/ctypes/libffi/src/arm/sysv.S
+@@ -224,16 +224,20 @@ ARM_FUNC_START ffi_call_SYSV
+ LSYM(Lepilogue):
+ 	RETLDM	"r0-r3,fp"
+ 
+ .ffi_call_SYSV_end:
+ 	UNWIND .fnend
+         .size    CNAME(ffi_call_SYSV),.ffi_call_SYSV_end-CNAME(ffi_call_SYSV)
+ 
+ 
++/* Below are VFP hard-float ABI call and closure implementations.
++   Add VFP FPU directive here. */
++	.fpu	vfp
++
+ 	@ r0:   fn
+ 	@ r1:   &ecif
+ 	@ r2:   cif->bytes
+ 	@ r3:   fig->flags
+ 	@ sp+0: ecif.rvalue
+ 
+ ARM_FUNC_START ffi_call_VFP
+ 	@ Save registers
