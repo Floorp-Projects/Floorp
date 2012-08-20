@@ -104,7 +104,7 @@ public class LayerView extends FrameLayout {
         mCheckerboardShouldShowChecks = true;
     }
 
-    public GeckoLayerClient createLayerClient(EventDispatcher eventDispatcher) {
+    public void createLayerClient(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
 
         mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);
@@ -113,8 +113,12 @@ public class LayerView extends FrameLayout {
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+    }
 
-        return mLayerClient;
+    public void destroy() {
+        if (mLayerClient != null) {
+            mLayerClient.destroy();
+        }
     }
 
     @Override
