@@ -14,6 +14,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIFile.h"
+#include "nsITimer.h"
 
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
@@ -77,6 +78,12 @@ struct nsDiskCacheEntry;
 
 // preallocate up to 1MB of separate cache file
 #define kPreallocateLimit  1 * 1024 * 1024
+
+// The minimum amount of milliseconds to wait before re-attempting to
+// revalidate the cache.
+#define kRevalidateCacheTimeout 5000
+#define kRevalidateCacheTimeoutTolerance 10
+#define kRevalidateCacheErrorTimeout 1000
 
 class nsDiskCacheRecord {
 
@@ -378,13 +385,17 @@ public:
      nsDiskCacheMap() : 
         mCacheDirectory(nullptr),
         mMapFD(nullptr),
+        mCleanFD(nullptr),
         mRecordArray(nullptr),
         mBufferSize(0),
         mBuffer(nullptr),
-        mMaxRecordCount(16384) // this default value won't matter
+        mMaxRecordCount(16384), // this default value won't matter
+        mIsDirtyCacheFlushed(false),
+        mLastInvalidateTime(0)
     { }
 
-    ~nsDiskCacheMap() {
+    ~nsDiskCacheMap()
+    {
         (void) Close(true);
     }
 
@@ -526,18 +537,39 @@ private:
     nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
                                              PRUint32 * size);
 
-/**
+    // Initializes the _CACHE_CLEAN_ related functionality
+    nsresult InitCacheClean(nsIFile *  cacheDirectory,
+                            nsDiskCache::CorruptCacheInfo *  corruptInfo);
+    // Writes out a value of '0' or '1' in the _CACHE_CLEAN_ file
+    nsresult WriteCacheClean(bool clean);
+    // Resets the timout for revalidating the cache
+    nsresult ResetCacheTimer(PRInt32 timeout = kRevalidateCacheTimeout);
+    // Invalidates the cache, calls WriteCacheClean and ResetCacheTimer
+    nsresult InvalidateCache();
+    // Determines if the cache is in a safe state
+    bool IsCacheInSafeState();
+    // Revalidates the cache by writting out the header, records, and finally
+    // by calling WriteCacheClean(true).
+    nsresult RevalidateCache();
+    // Timer which revalidates the cache
+    static void RevalidateTimerCallback(nsITimer *aTimer, void *arg);
+
+/** 
  *  data members
  */
 private:
+    nsCOMPtr<nsITimer>      mCleanCacheTimer;
     nsCOMPtr<nsIFile>       mCacheDirectory;
     PRFileDesc *            mMapFD;
+    PRFileDesc *            mCleanFD;
     nsDiskCacheRecord *     mRecordArray;
     nsDiskCacheBlockFile    mBlockFile[kNumBlockFiles];
     PRUint32                mBufferSize;
     char *                  mBuffer;
     nsDiskCacheHeader       mHeader;
     PRInt32                 mMaxRecordCount;
+    bool                    mIsDirtyCacheFlushed;
+    PRIntervalTime          mLastInvalidateTime;
 };
 
 #endif // _nsDiskCacheMap_h_
