@@ -13,6 +13,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
+import android.graphics.PointF;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -128,6 +129,18 @@ public class LayerView extends FrameLayout {
 
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public TouchEventHandler getTouchEventHandler() { return mTouchEventHandler; }
+
+    public ImmutableViewportMetrics getViewportMetrics() {
+        return mLayerClient.getViewportMetrics();
+    }
+
+    public void abortPanning() {
+        mLayerClient.getPanZoomController().abortPanning();
+    }
+
+    public PointF convertViewPointToLayerPoint(PointF viewPoint) {
+        return mLayerClient.convertViewPointToLayerPoint(viewPoint);
+    }
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
     public void setViewportSize(IntSize size) {

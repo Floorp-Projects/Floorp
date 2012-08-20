@@ -222,7 +222,7 @@ public class GeckoLayerClient
         }
     }
 
-    public PanZoomController getPanZoomController() {
+    PanZoomController getPanZoomController() {
         return mPanZoomController;
     }
 
