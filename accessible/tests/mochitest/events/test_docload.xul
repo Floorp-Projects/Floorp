@@ -110,10 +110,7 @@
 
       function getNestedDoc()
       {
-      var curTabDoc = currentTabDocument();
-      var frames = curTabDoc.getElementsByTagName("iframe");
-      var firstframe = frames[0];
-      var frameDoc = firstFrame.firstChild;
+        return currentTabDocument().getElementsByTagName("iframe")[0].firstChild;
       }
     }
 
@@ -190,7 +187,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    gA11yEventDumpToConsole = true; // debug
+    //gA11yEventDumpToConsole = true; // debug
     //gA11yEventDumpFeature = "parentchain:reorder";
 
     var gQueue = null;
