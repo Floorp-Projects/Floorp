@@ -699,3 +699,7 @@ pref("media.plugins.enabled", true);
 
 // Coalesce touch events to prevent them from flooding the event queue
 pref("dom.event.touch.coalescing.enabled", true);
+
+// default orientation for the app, default to undefined
+// the java GeckoScreenOrientationListener needs this to be defined
+pref("app.orientation.default", "");
