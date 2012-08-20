@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(51f2b7f0-6435-40ec-b315-588f52be7eea)]
+[scriptable, builtinclass, uuid(9b283337-097d-4fa8-a2da-916318eaf828)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -663,4 +663,26 @@ interface nsIDocShell : nsISupports
    * boundaries.
    */
   nsIDocShell getParentIgnoreBrowserFrame();
+
+  /**
+   * The sandbox flags on the docshell. These reflect the value of the sandbox
+   * attribute of the associated IFRAME or CSP-protectable content, if
+   * existent. See the HTML5 spec for more details.
+   * These flags on the docshell reflect the current state of the sandbox
+   * attribute, which is modifiable. They are only used when loading new
+   * content, sandbox flags are also immutably set on the document when it is
+   * loaded.
+   * The sandbox flags of a document depend on the sandbox flags on its
+   * docshell and of its parent document, if any.
+   * See nsSandboxFlags.h for the possible flags.
+   */
+  attribute unsigned long sandboxFlags;
+
+  /**
+   * Are plugins allowed in the current document loaded in this docshell ?
+   * (if there is one). This depends on whether plugins are allowed by this
+   * docshell itself or if the document is sandboxed and hence plugins should
+   * not be allowed.
+   */
+  [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
 };

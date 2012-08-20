@@ -58,6 +58,7 @@
 #include "nsContentUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsSandboxFlags.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -599,6 +600,18 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // nsIWindowProvider for one.  In either case, we'll want to set the right
     // name on it.
     windowNeedsName = true;
+
+    // If the parent trying to open a new window is sandboxed,
+    // this is not allowed and we fail here.
+    if (aParent) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      aParent->GetDocument(getter_AddRefs(domdoc));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+
+      if (doc && (doc->GetSandboxFlags() & SANDBOXED_NAVIGATION)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
 
     // Now check whether it's ok to ask a window provider for a window.  Don't
     // do it if we're opening a dialog or if our parent is a chrome window or
