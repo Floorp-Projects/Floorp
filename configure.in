@@ -5273,8 +5273,13 @@ if test -n "$MOZ_WEBM"; then
 fi;
 
 dnl ========================================================
-dnl = Disable media plugin support
+dnl = Enable media plugin support
 dnl ========================================================
+if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+  dnl Enable support on android by default
+  MOZ_MEDIA_PLUGINS=1
+fi
+
 MOZ_ARG_ENABLE_BOOL(media-plugins,
 [  --enable-media-plugins  Enable support for media plugins],
     MOZ_MEDIA_PLUGINS=1,
@@ -5299,6 +5304,11 @@ fi
 dnl ========================================================
 dnl = Enable building OMX media plugin (B2G or Android)
 dnl ========================================================
+if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+  dnl Enable support on android by default
+  MOZ_OMX_PLUGIN=1
+fi
+
 MOZ_ARG_ENABLE_BOOL(omx-plugin,
 [  --enable-omx-plugin      Enable building OMX plugin (B2G)],
     MOZ_OMX_PLUGIN=1,
