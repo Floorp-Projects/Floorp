@@ -8,5 +8,5 @@
 <!-- LOCALIZATION NOTE (aboutApps.noApps.middle): avoid leading/trailing spaces, this text is a link -->
 <!-- LOCALIZATION NOTE (aboutApps.noApps.post): include a starting space as needed -->
 <!ENTITY aboutApps.noApps.pre "No web apps installed. Get some from the ">
-<!ENTITY aboutApps.noApps.middle "app store">
+<!ENTITY aboutApps.noApps.middle2 "Mozilla Marketplace">
 <!ENTITY aboutApps.noApps.post ".">
