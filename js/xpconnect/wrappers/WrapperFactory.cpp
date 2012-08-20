@@ -229,6 +229,15 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
                 // Ok, must be case (1). Fall through and create a new wrapper.
             }
+
+            // Nasty hack for late-breaking bug 781476. This will confuse identity checks,
+            // but it's probably better than any of our alternatives.
+            if (!AccessCheck::isChrome(js::GetObjectCompartment(scope)) &&
+                 AccessCheck::subsumes(js::GetObjectCompartment(scope),
+                                       js::GetObjectCompartment(obj)))
+            {
+                return DoubleWrap(cx, obj, flags);
+            }
         }
     }
 

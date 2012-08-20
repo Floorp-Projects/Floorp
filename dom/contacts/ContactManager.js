@@ -18,7 +18,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 
 XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
@@ -79,50 +78,51 @@ ContactAddress.prototype = {
   QueryInterface : XPCOMUtils.generateQI([nsIDOMContactAddress])
 }
 
-//ContactEmail
+//ContactField
 
-const CONTACTEMAIL_CONTRACTID = "@mozilla.org/contactEmail;1";
-const CONTACTEMAIL_CID        = Components.ID("{94811520-c11f-11e1-afa7-0800200c9a66}");
-const nsIDOMContactEmail      = Components.interfaces.nsIDOMContactEmail;
+const CONTACTFIELD_CONTRACTID = "@mozilla.org/contactField;1";
+const CONTACTFIELD_CID        = Components.ID("{e2cb19c0-e4aa-11e1-9b23-0800200c9a66}");
+const nsIDOMContactField      = Components.interfaces.nsIDOMContactField;
 
-function ContactEmail(aType, aAddress) {
+function ContactField(aType, aValue) {
   this.type = aType || null;
-  this.address = aAddress || null;
+  this.value = aValue || null;
 };
 
-ContactEmail.prototype = {
+ContactField.prototype = {
 
-  classID : CONTACTEMAIL_CID,
-  classInfo : XPCOMUtils.generateCI({classID: CONTACTEMAIL_CID,
-                                     contractID: CONTACTEMAIL_CONTRACTID,
-                                     classDescription: "ContactEmail",
-                                     interfaces: [nsIDOMContactEmail],
+  classID : CONTACTFIELD_CID,
+  classInfo : XPCOMUtils.generateCI({classID: CONTACTFIELD_CID,
+                                     contractID: CONTACTFIELD_CONTRACTID,
+                                     classDescription: "ContactField",
+                                     interfaces: [nsIDOMContactField],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactEmail])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactField])
 }
 
-//ContactTelephone
+//ContactTelField
 
-const CONTACTTELEPHONE_CONTRACTID = "@mozilla.org/contactTelephone;1";
-const CONTACTTELEPHONE_CID        = Components.ID("{82601b20-89e8-11e1-b0c4-0800200c9a66}");
-const nsIDOMContactTelephone      = Components.interfaces.nsIDOMContactTelephone;
+const CONTACTTELFIELD_CONTRACTID = "@mozilla.org/contactTelField;1";
+const CONTACTTELFIELD_CID        = Components.ID("{ed0ab260-e4aa-11e1-9b23-0800200c9a66}");
+const nsIDOMContactTelField      = Components.interfaces.nsIDOMContactTelField;
 
-function ContactTelephone(aType, aNumber) {
+function ContactTelField(aType, aValue, aCarrier) {
   this.type = aType || null;
-  this.number = aNumber || null;
+  this.value = aValue || null;
+  this.carrier = aCarrier || null;
 };
 
-ContactTelephone.prototype = {
+ContactTelField.prototype = {
 
-  classID : CONTACTTELEPHONE_CID,
-  classInfo : XPCOMUtils.generateCI({classID: CONTACTTELEPHONE_CID,
-                                     contractID: CONTACTTELEPHONE_CONTRACTID,
-                                     classDescription: "ContactTelephone",
-                                     interfaces: [nsIDOMContactTelephone],
+  classID : CONTACTTELFIELD_CID,
+  classInfo : XPCOMUtils.generateCI({classID: CONTACTTELFIELD_CID,
+                                     contractID: CONTACTTELFIELD_CONTRACTID,
+                                     classDescription: "ContactTelField",
+                                     interfaces: [nsIDOMContactTelField],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactTelephone])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactTelField])
 }
 
 //ContactFindOptions
@@ -151,7 +151,10 @@ const CONTACT_CONTRACTID = "@mozilla.org/contact;1";
 const CONTACT_CID        = Components.ID("{da0f7040-388b-11e1-b86c-0800200c9a66}");
 const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 
-function Contact() { debug("Contact constr: "); };
+// The wrappedJSObject magic here allows callers to get at the underlying JS object
+// of the XPCOM component. We use this below to modify properties that are read-only
+// per-idl. See https://developer.mozilla.org/en-US/docs/wrappedJSObject.
+function Contact() { debug("Contact constr: "); this.wrappedJSObject = this; };
 
 Contact.prototype = {
   
@@ -196,13 +199,12 @@ Contact.prototype = {
       aProp.email = Array.isArray(aProp.email) ? aProp.email : [aProp.email];
       this.email = new Array();
       for (let i = 0; i < aProp.email.length; i++)
-        this.email.push(new ContactEmail(aProp.email[i].type, aProp.email[i].address));
+        this.email.push(new ContactField(aProp.email[i].type, aProp.email[i].value));
     } else {
       this.email = null;
     }
 
     this.photo =           _checkBlobArray(aProp.photo) || null;
-    this.url =             _create(aProp.url) || null;
     this.category =        _create(aProp.category) || null;
 
     if (aProp.adr) {
@@ -221,7 +223,7 @@ Contact.prototype = {
       aProp.tel = Array.isArray(aProp.tel) ? aProp.tel : [aProp.tel];
       this.tel = new Array();
       for (let i = 0; i < aProp.tel.length; i++)
-        this.tel.push(new ContactTelephone(aProp.tel[i].type, aProp.tel[i].number));
+        this.tel.push(new ContactTelField(aProp.tel[i].type, aProp.tel[i].value, aProp.tel[i].carrier));
     } else {
       this.tel = null;
     }
@@ -230,7 +232,25 @@ Contact.prototype = {
     this.jobTitle =        _create(aProp.jobTitle) || null;
     this.bday =            (aProp.bday == "undefined" || aProp.bday == null) ? null : new Date(aProp.bday);
     this.note =            _create(aProp.note) || null;
-    this.impp =            _create(aProp.impp) || null;
+
+    if (aProp.impp) {
+      aProp.impp = Array.isArray(aProp.impp) ? aProp.impp : [aProp.impp];
+      this.impp = new Array();
+      for (let i = 0; i < aProp.impp.length; i++)
+        this.impp.push(new ContactField(aProp.impp[i].type, aProp.impp[i].value));
+    } else {
+      this.impp = null;
+    }
+
+    if (aProp.url) {
+      aProp.url = Array.isArray(aProp.url) ? aProp.url : [aProp.url];
+      this.url = new Array();
+      for (let i = 0; i < aProp.url.length; i++)
+        this.url.push(new ContactField(aProp.url[i].type, aProp.url[i].value));
+    } else {
+      this.url = null;
+    }
+
     this.anniversary =     (aProp.anniversary == "undefined" || aProp.anniversary == null) ? null : new Date(aProp.anniversary);
     this.sex =             (aProp.sex != "undefined") ? aProp.sex : null;
     this.genderIdentity =  (aProp.genderIdentity != "undefined") ? aProp.genderIdentity : null;
@@ -301,9 +321,9 @@ ContactManager.prototype = {
   _convertContactsArray: function(aContacts) {
     let contacts = new Array();
     for (let i in aContacts) {
-      let newContact = new Contact();
+      let newContact = Components.classes['@mozilla.org/contact;1'].createInstance();
       newContact.init(aContacts[i].properties);
-      this._setMetaData(newContact, aContacts[i]);
+      this._setMetaData(newContact.wrappedJSObject, aContacts[i]);
       contacts.push(newContact);
     }
     return contacts;
@@ -539,4 +559,4 @@ ContactManager.prototype = {
 }
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(
-                       [Contact, ContactManager, ContactProperties, ContactAddress, ContactTelephone, ContactFindOptions, ContactEmail])
+                       [Contact, ContactManager, ContactProperties, ContactAddress, ContactField, ContactTelField, ContactFindOptions])

@@ -299,7 +299,7 @@ struct AutoEnterCompilation
         CompilerOutput co;
         co.script = script;
         co.constructing = constructing;
-        co.barriers = cx->compartment->needsBarrier();
+        co.barriers = cx->compartment->compileBarriers();
         co.chunkIndex = chunkIndex;
 
         // This flag is used to prevent adding the current compiled script in
@@ -573,14 +573,8 @@ UseNewTypeForClone(JSFunction *fun)
     if (script->length >= 50)
         return false;
 
-    if (script->hasConsts() ||
-        script->hasObjects() ||
-        script->hasRegexps() ||
-        script->hasClosedArgs() ||
-        script->hasClosedVars())
-    {
+    if (script->hasConsts() || script->hasObjects() || script->hasRegexps() || fun->isHeavyweight())
         return false;
-    }
 
     bool hasArguments = false;
     bool hasApply = false;

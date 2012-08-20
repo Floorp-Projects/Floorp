@@ -85,7 +85,6 @@ public:
     // event handling code
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
-    void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
     virtual nsresult DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
     
@@ -99,7 +98,6 @@ public:
     NS_IMETHOD         Create(nsIWidget        *aParent,
                               nsNativeWidget   aNativeParent,
                               const nsIntRect  &aRect,
-                              EVENT_CALLBACK   aHandleEventFunction,
                               nsDeviceContext *aContext,
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);
@@ -363,7 +361,7 @@ private:
                         mIsFullyObscured : 1,
                         mRetryPointerGrab : 1;
     GtkWindow          *mTransientParent;
-    PRInt32             mSizeState;
+    nsSizeMode          mSizeState;
     PluginType          mPluginType;
 
     PRInt32             mTransparencyBitmapWidth;
@@ -382,12 +380,6 @@ private:
      * Request to create the accessible for this window if it is top level.
      */
     void                CreateRootAccessible();
-
-    /**
-     * Generate the NS_GETACCESSIBLE event to get accessible for this window
-     * and return it.
-     */
-    Accessible       *DispatchAccessibleEvent();
 
     /**
      * Dispatch accessible event for the top level window accessible.

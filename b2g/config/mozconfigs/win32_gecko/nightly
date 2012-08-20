@@ -22,12 +22,6 @@ else
   . $topsrcdir/build/win32/mozconfig.vs2010
 fi
 
-# For known full-clobber builds on Windows (like nightlies/try), 
-# this speeds things up. IS_NIGHTLY is set by the build automation.
-if test "$IS_NIGHTLY" != ""; then 
-  ac_add_options --disable-auto-deps
-fi
-
 # B2G Options
 ac_add_options --enable-application=b2g
 ac_add_options --enable-marionette

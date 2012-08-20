@@ -57,7 +57,7 @@ indic_options_init (void)
   return u;
 }
 
-inline indic_options_t
+static inline indic_options_t
 indic_options (void)
 {
   static indic_options_union_t options;
@@ -148,8 +148,8 @@ indic_features[] =
   {HB_TAG('r','p','h','f'), false},
   {HB_TAG('r','k','r','f'), true},
   {HB_TAG('p','r','e','f'), false},
-  {HB_TAG('b','l','w','f'), false},
   {HB_TAG('h','a','l','f'), false},
+  {HB_TAG('b','l','w','f'), false},
   {HB_TAG('a','b','v','f'), false},
   {HB_TAG('p','s','t','f'), false},
   {HB_TAG('c','f','a','r'), false},
@@ -180,8 +180,8 @@ enum {
   RPHF,
   _RKRF,
   PREF,
-  BLWF,
   HALF,
+  BLWF,
   ABVF,
   PSTF,
   CFAR,
@@ -1134,6 +1134,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
   override_features_indic,
   data_create_indic,
   data_destroy_indic,
+  NULL, /* preprocess_text */
   NULL, /* normalization_preference */
   setup_masks_indic,
   false, /* zero_width_attached_marks */

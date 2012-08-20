@@ -16,6 +16,7 @@ self.onmessage = function onmessage_start(msg) {
   try {
     test_init();
     test_unicode();
+    test_offsetby();
     test_open_existing_file();
     test_open_non_existing_file();
     test_copy_existing_file();
@@ -75,6 +76,58 @@ function test_unicode() {
   }
   ok(true, "test_unicode: complete");
 }
+
+function test_offsetby() {
+  ok(true, "Starting test_offsetby");
+
+  // Initialize one array
+  let LENGTH = 1024;
+  let buf = new ArrayBuffer(LENGTH);
+  let view = new Uint8Array(buf);
+  let i;
+  for (i = 0; i < LENGTH; ++i) {
+    view[i] = i;
+  }
+
+  // Walk through the array with offsetBy by 8 bits
+  let uint8 = OS.Shared.Type.uint8_t.in_ptr.implementation(buf);
+  for (i = 0; i < LENGTH; ++i) {
+    let value = OS.Shared.offsetBy(uint8, i).contents;
+    if (value != i%256) {
+      is(value, i % 256, "test_offsetby: Walking through array with offsetBy (8 bits)");
+      break;
+    }
+  }
+
+  // Walk again by 16 bits
+  let uint16 = OS.Shared.Type.uint16_t.in_ptr.implementation(buf);
+  let view2 = new Uint16Array(buf);
+  for (i = 0; i < LENGTH/2; ++i) {
+    let value = OS.Shared.offsetBy(uint16, i).contents;
+    if (value != view2[i]) {
+      is(value, view2[i], "test_offsetby: Walking through array with offsetBy (16 bits)");
+      break;
+    }
+  }
+
+  // Ensure that offsetBy(..., 0) is idempotent
+  let startptr = OS.Shared.offsetBy(uint8, 0);
+  let startptr2 = OS.Shared.offsetBy(startptr, 0);
+  is(startptr.toString(), startptr2.toString(), "test_offsetby: offsetBy(..., 0) is idmpotent");
+
+  // Ensure that offsetBy(ptr, ...) does not work if ptr is a void*
+  let ptr = ctypes.voidptr_t(0);
+  let exn;
+  try {
+    OS.Shared.Utils.offsetBy(ptr, 1);
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn, "test_offsetby: rejected offsetBy with void*");
+
+  ok(true, "test_offsetby: complete");
+}
+
 
 /**
  * Test that we can open an existing file.
@@ -274,15 +327,15 @@ function test_iter_dir()
 
     if (OS.Win) {
       let year = new Date().getFullYear();
-      let creation = entry.winCreationTime;
+      let creation = entry.winCreationDate;
       ok(creation, "test_iter_dir: Windows creation date exists: " + creation);
       ok(creation.getFullYear() >= year -  1 && creation.getFullYear() <= year, "test_iter_dir: consistent creation date");
 
-      let lastWrite = entry.winLastWriteTime;
+      let lastWrite = entry.winLastWriteDate;
       ok(lastWrite, "test_iter_dir: Windows lastWrite date exists: " + lastWrite);
       ok(lastWrite.getFullYear() >= year - 1 && lastWrite.getFullYear() <= year, "test_iter_dir: consistent lastWrite date");
 
-      let lastAccess = entry.winLastAccessTime;
+      let lastAccess = entry.winLastAccessDate;
       ok(lastAccess, "test_iter_dir: Windows lastAccess date exists: " + lastAccess);
       ok(lastAccess.getFullYear() >= year - 1 && lastAccess.getFullYear() <= year, "test_iter_dir: consistent lastAccess date");
     }

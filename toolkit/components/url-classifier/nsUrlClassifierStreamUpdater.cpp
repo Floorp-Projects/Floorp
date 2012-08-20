@@ -347,7 +347,7 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
   DownloadDone();
 
   nsCAutoString strResult;
-  strResult.AppendInt(result);
+  strResult.AppendInt(static_cast<PRUint32>(result));
   if (errorCallback) {
     errorCallback->HandleEvent(strResult);
   }

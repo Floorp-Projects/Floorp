@@ -43,7 +43,7 @@ SourceSurfaceD2D::IsValid() const
 TemporaryRef<DataSourceSurface>
 SourceSurfaceD2D::GetDataSurface()
 {
-  return NULL;
+  return nullptr;
 }
 
 bool

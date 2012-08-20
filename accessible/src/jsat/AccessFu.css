@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#virtual-cursor-box { 
+#virtual-cursor-box {
   position: fixed;
   border: 1px solid orange;
   pointer-events: none;
@@ -11,7 +11,7 @@
   box-shadow: 1px 1px 1px #444;
 }
 
-#virtual-cursor-inset { 
+#virtual-cursor-inset {
   border-radius: 1px;
   box-shadow: inset 1px 1px 1px #444;
   display: block;
@@ -19,4 +19,12 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+#accessfu-glass {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0px;
+  left: 0px;
 }

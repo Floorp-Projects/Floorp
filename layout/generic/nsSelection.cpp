@@ -3050,8 +3050,7 @@ nsFrameSelection::DeleteFromDocument()
   if (NS_FAILED(res))
     return res;
 
-  while (iter.IsDone())
-  {
+  while (iter.IsDone() == static_cast<nsresult>(NS_ENUMERATOR_FALSE)) {
     nsRefPtr<nsRange> range = iter.CurrentItem();
     res = range->DeleteContents();
     if (NS_FAILED(res))

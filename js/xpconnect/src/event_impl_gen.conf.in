@@ -21,6 +21,9 @@ simple_events = [
     'DeviceOrientationEvent',
     'DeviceLightEvent',
     'MozApplicationEvent',
+#ifdef MOZ_B2G_BT
+    'BluetoothDeviceAddressEvent',
+#endif
     'DeviceStorageChangeEvent'
   ]
 

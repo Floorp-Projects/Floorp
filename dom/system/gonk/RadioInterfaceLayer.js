@@ -151,14 +151,16 @@ function RadioInterfaceLayer() {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
-    cell:           null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
-    // although the actual implementation lives in the content process.
+    // although the actual implementation lives in the content process. So are
+    // the child attributes `network` and `cell`, which implement
+    // nsIDOMMozMobileNetworkInfo and nsIDOMMozMobileCellInfo respectively.
     voice:          {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
@@ -166,6 +168,7 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
@@ -190,6 +193,8 @@ function RadioInterfaceLayer() {
                                   "ril.data.passwd",
                                   "ril.data.httpProxyHost",
                                   "ril.data.httpProxyPort"];
+
+  this._messageManagerByRequest = {};
 
   for each (let msgname in RIL_IPC_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
@@ -225,7 +230,8 @@ RadioInterfaceLayer.prototype = {
         // This message is sync.
         return this.rilContext;
       case "RIL:EnumerateCalls":
-        this.enumerateCalls();
+        this.saveRequestTarget(msg);
+        this.enumerateCalls(msg.json);
         break;
       case "RIL:GetMicrophoneMuted":
         // This message is sync.
@@ -267,26 +273,34 @@ RadioInterfaceLayer.prototype = {
         this.resumeCall(msg.json);
         break;
       case "RIL:GetAvailableNetworks":
-        this.getAvailableNetworks(msg.json);
+        this.saveRequestTarget(msg);
+        this.getAvailableNetworks(msg.json.requestId);
         break;
       case "RIL:SelectNetwork":
+        this.saveRequestTarget(msg);
         this.selectNetwork(msg.json);
         break;
       case "RIL:SelectNetworkAuto":
-        this.selectNetworkAuto(msg.json);
+        this.saveRequestTarget(msg);
+        this.selectNetworkAuto(msg.json.requestId);
       case "RIL:GetCardLock":
+        this.saveRequestTarget(msg);
         this.getCardLock(msg.json);
         break;
       case "RIL:UnlockCardLock":
+        this.saveRequestTarget(msg);
         this.unlockCardLock(msg.json);
         break;
       case "RIL:SetCardLock":
+        this.saveRequestTarget(msg);
         this.setCardLock(msg.json);
         break;
       case "RIL:SendUSSD":
+        this.saveRequestTarget(msg);
         this.sendUSSD(msg.json);
         break;
       case "RIL:CancelUSSD":
+        this.saveRequestTarget(msg);
         this.cancelUSSD(msg.json);
         break;
     }
@@ -319,7 +333,7 @@ RadioInterfaceLayer.prototype = {
         break;
       case "enumerateCalls":
         // This one will handle its own notifications.
-        this.handleEnumerateCalls(message.calls);
+        this.handleEnumerateCalls(message);
         break;
       case "callError":
         this.handleCallError(message);
@@ -398,14 +412,10 @@ RadioInterfaceLayer.prototype = {
       case "iccinfochange":
         this.rilContext.icc = message;
         break;
-      case "iccgetcardlock":
-        this.handleICCGetCardLock(message);
-        break;
-      case "iccsetcardlock":
-        this.handleICCSetCardLock(message);
-        break;
-      case "iccunlockcardlock":
-        this.handleICCUnlockCardLock(message);
+      case "iccGetCardLock":
+      case "iccSetCardLock":
+      case "iccUnlockCardLock":
+        this.handleICCCardLockResult(message);
         break;
       case "icccontacts":
         if (!this._contactsCallbacks) {
@@ -419,9 +429,6 @@ RadioInterfaceLayer.prototype = {
         break;
       case "iccmbdn":
         ppmm.sendAsyncMessage("RIL:VoicemailNumberChanged", message);
-        break;
-      case "celllocationchanged":
-        this.rilContext.cell = message;
         break;
       case "ussdreceived":
         debug("ussdreceived " + JSON.stringify(message));
@@ -437,6 +444,29 @@ RadioInterfaceLayer.prototype = {
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
     }
+  },
+
+  _messageManagerByRequest: null,
+  saveRequestTarget: function saveRequestTarget(msg) {
+    let requestId = msg.json.requestId;
+    if (!requestId) {
+      // The content is not interested in a response;
+      return;
+    }
+
+    let mm = msg.target.QueryInterface(Ci.nsIFrameMessageManager);
+    this._messageManagerByRequest[requestId] = mm;
+  },
+
+  _sendRequestResults: function _sendRequestResults(requestType, options) {
+    let target = this._messageManagerByRequest[options.requestId];
+    delete this._messageManagerByRequest[options.requestId];
+
+    if (!target) {
+      return;
+    }
+
+    target.sendAsyncMessage(requestType, options);
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {
@@ -506,6 +536,13 @@ RadioInterfaceLayer.prototype = {
       voiceInfo.relSignalStrength = null;
     }
 
+    let newCell = newInfo.cell;
+    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
+      voiceInfo.cell = null;
+    } else {
+      voiceInfo.cell = newCell;
+    }
+
     if (!newInfo.batch) {
       ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
     }
@@ -527,6 +564,13 @@ RadioInterfaceLayer.prototype = {
       dataInfo.network = null;
       dataInfo.signalStrength = null;
       dataInfo.relSignalStrength = null;
+    }
+
+    let newCell = newInfo.cell;
+    if ((newCell.gsmLocationAreaCode < 0) || (newCell.gsmCellId < 0)) {
+      dataInfo.cell = null;
+    } else {
+      dataInfo.cell = newCell;
     }
 
     if (!newInfo.batch) {
@@ -723,12 +767,12 @@ RadioInterfaceLayer.prototype = {
   /**
    * Handle calls delivered in response to a 'enumerateCalls' request.
    */
-  handleEnumerateCalls: function handleEnumerateCalls(calls) {
-    debug("handleEnumerateCalls: " + JSON.stringify(calls));
-    for (let i in calls) {
-      calls[i].state = convertRILCallState(calls[i].state);
+  handleEnumerateCalls: function handleEnumerateCalls(options) {
+    debug("handleEnumerateCalls: " + JSON.stringify(options));
+    for (let i in options.calls) {
+      options.calls[i].state = convertRILCallState(options.calls[i].state);
     }
-    ppmm.sendAsyncMessage("RIL:EnumerateCalls", calls);
+    this._sendRequestResults("RIL:EnumerateCalls", options);
   },
 
   /**
@@ -737,7 +781,7 @@ RadioInterfaceLayer.prototype = {
   handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
     debug("handleGetAvailableNetworks: " + JSON.stringify(message));
 
-    ppmm.sendAsyncMessage("RIL:GetAvailableNetworks", message);
+    this._sendRequestResults("RIL:GetAvailableNetworks", message);
   },
 
   /**
@@ -753,7 +797,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleSelectNetwork: function handleSelectNetwork(message) {
     debug("handleSelectNetwork: " + JSON.stringify(message));
-    ppmm.sendAsyncMessage("RIL:SelectNetwork", message);
+    this._sendRequestResults("RIL:SelectNetwork", message);
   },
 
   /**
@@ -761,7 +805,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleSelectNetworkAuto: function handleSelectNetworkAuto(message) {
     debug("handleSelectNetworkAuto: " + JSON.stringify(message));
-    ppmm.sendAsyncMessage("RIL:SelectNetworkAuto", message);
+    this._sendRequestResults("RIL:SelectNetworkAuto", message);
   },
 
   /**
@@ -946,16 +990,8 @@ RadioInterfaceLayer.prototype = {
                                   [message.datacalls, message.datacalls.length]);
   },
 
-  handleICCGetCardLock: function handleICCGetCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:GetCardLock:Return:OK", message);
-  },
-
-  handleICCSetCardLock: function handleICCSetCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:SetCardLock:Return:OK", message);
-  },
-
-  handleICCUnlockCardLock: function handleICCUnlockCardLock(message) {
-    ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:OK", message);
+  handleICCCardLockResult: function handleICCCardLockResult(message) {
+    this._sendRequestResults("RIL:CardLockResult", message);
   },
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
@@ -967,14 +1003,14 @@ RadioInterfaceLayer.prototype = {
     debug("handleSendUSSD " + JSON.stringify(message));
     let messageType = message.success ? "RIL:SendUssd:Return:OK" :
                                         "RIL:SendUssd:Return:KO";
-    ppmm.sendAsyncMessage(messageType, message);
+    this._sendRequestResults(messageType, message);
   },
 
   handleCancelUSSD: function handleCancelUSSD(message) {
     debug("handleCancelUSSD " + JSON.stringify(message));
     let messageType = message.success ? "RIL:CancelUssd:Return:OK" :
                                         "RIL:CancelUssd:Return:KO";
-    ppmm.sendAsyncMessage(messageType, message);
+    this._sendRequestResults(messageType, message);
   },
 
   // nsIObserver
@@ -1063,9 +1099,10 @@ RadioInterfaceLayer.prototype = {
 
   // Handle phone functions of nsIRILContentHelper
 
-  enumerateCalls: function enumerateCalls() {
+  enumerateCalls: function enumerateCalls(message) {
     debug("Requesting enumeration of calls for callback");
-    this.worker.postMessage({rilMessageType: "enumerateCalls"});
+    message.rilMessageType = "enumerateCalls";
+    this.worker.postMessage(message);
   },
 
   dial: function dial(number) {
@@ -1640,67 +1677,17 @@ RadioInterfaceLayer.prototype = {
   },
 
   getCardLock: function getCardLock(message) {
-    // Currently only support pin.
-    switch (message.lockType) {
-      case "pin" :
-        message.rilMessageType = "getICCPinLock";
-        break;
-      default:
-        ppmm.sendAsyncMessage("RIL:GetCardLock:Return:KO",
-                              {errorMsg: "Unsupported Card Lock.",
-                               requestId: message.requestId});
-        return;
-    }
+    message.rilMessageType = "iccGetCardLock";
     this.worker.postMessage(message);
   },
 
   unlockCardLock: function unlockCardLock(message) {
-    switch (message.lockType) {
-      case "pin":
-        message.rilMessageType = "enterICCPIN";
-        break;
-      case "pin2":
-        message.rilMessageType = "enterICCPIN2";
-        break;
-      case "puk":
-        message.rilMessageType = "enterICCPUK";
-        break;
-      case "puk2":
-        message.rilMessageType = "enterICCPUK2";
-        break;
-      default:
-        ppmm.sendAsyncMessage("RIL:UnlockCardLock:Return:KO",
-                              {errorMsg: "Unsupported Card Lock.",
-                               requestId: message.requestId});
-        return;
-    }
+    message.rilMessageType = "iccUnlockCardLock";
     this.worker.postMessage(message);
   },
 
   setCardLock: function setCardLock(message) {
-    // Change pin.
-    if (message.newPin !== undefined) {
-      switch (message.lockType) {
-        case "pin":
-          message.rilMessageType = "changeICCPIN";
-          break;
-        case "pin2":
-          message.rilMessageType = "changeICCPIN2";
-          break;
-        default:
-          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
-                                {errorMsg: "Unsupported Card Lock.",
-                                 requestId: message.requestId});
-          return;
-      }
-    } else { // Enable/Disable pin lock.
-      if (message.lockType != "pin") {
-          ppmm.sendAsyncMessage("RIL:SetCardLock:Return:KO",
-                                {errorMsg: "Unsupported Card Lock.",
-                                 requestId: message.requestId});
-      }
-      message.rilMessageType = "setICCPinLock";
-    }
+    message.rilMessageType = "iccSetCardLock";
     this.worker.postMessage(message);
   },
 

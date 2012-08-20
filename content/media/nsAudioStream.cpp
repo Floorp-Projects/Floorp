@@ -37,9 +37,9 @@ using namespace mozilla;
 #define SA_PER_STREAM_VOLUME 1
 #endif
 
-// Android's audio backend is not available in content processes, so audio must
-// be remoted to the parent chrome process.
-#if defined(ANDROID)
+// Android's audio backend is not available in content processes, so
+// audio must be remoted to the parent chrome process.
+#if defined(MOZ_WIDGET_ANDROID)
 #define REMOTE_AUDIO 1
 #endif
 

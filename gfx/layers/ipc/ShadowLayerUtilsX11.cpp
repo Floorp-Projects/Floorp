@@ -77,9 +77,9 @@ SurfaceDescriptorX11::OpenForeign() const
   if (pictFormat) {
     surf = new gfxXlibSurface(screen, mId, pictFormat, mSize);
   } else {
-    Visual* visual = NULL;
-    unsigned int depth;
-    XVisualIDToInfo(display, mFormat, &visual, &depth);
+    Visual* visual;
+    int depth;
+    FindVisualAndDepth(display, mFormat, &visual, &depth);
     if (!visual)
       return nullptr;
 

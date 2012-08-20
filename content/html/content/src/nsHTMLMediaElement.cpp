@@ -213,7 +213,7 @@ public:
                                                 mSource,
                                                 NS_LITERAL_STRING("error"),
                                                 false,
-                                                true);
+                                                false);
   }
 };
 
@@ -2164,6 +2164,24 @@ nsHTMLMediaElement::IsMediaPluginsEnabled()
 {
   return Preferences::GetBool("media.plugins.enabled");
 }
+
+bool
+nsHTMLMediaElement::IsMediaPluginsType(const nsACString& aType)
+{
+  if (!IsMediaPluginsEnabled()) {
+    return false;
+  }
+
+  static const char* supportedTypes[] = {
+    "audio/mpeg", "audio/mp4", "video/mp4"
+  };
+  for (PRUint32 i = 0; i < ArrayLength(supportedTypes); ++i) {
+    if (aType.EqualsASCII(supportedTypes[i])) {
+      return true;
+    }
+  }
+  return false;
+}
 #endif
 
 /* static */
@@ -3069,7 +3087,7 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = audioavailableEvent->InitAudioAvailableEvent(NS_LITERAL_STRING("MozAudioAvailable"),
-                                                    true, true, frameBuffer.forget(), aFrameBufferLength,
+                                                    false, false, frameBuffer.forget(), aFrameBufferLength,
                                                     aTime, mAllowAudioData);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3093,7 +3111,7 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
                                               static_cast<nsIContent*>(this),
                                               aName,
                                               false,
-                                              true);
+                                              false);
 }
 
 nsresult nsHTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)

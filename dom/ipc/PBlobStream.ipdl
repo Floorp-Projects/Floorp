@@ -3,10 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
-
-include "mozilla/net/NeckoMessageUtils.h";
-
-using IPC::InputStream;
+include IPCSerializableParams;
 
 namespace mozilla {
 namespace dom {
@@ -16,7 +13,7 @@ protocol PBlobStream
   manager PBlob;
 
 both:
-  __delete__(InputStream stream);
+  __delete__(InputStreamParams params);
 };
 
 } // namespace dom

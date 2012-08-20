@@ -127,9 +127,17 @@ MOCHITEST_FILES = \
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec (bug
 # 774939).
+#
+# Both the "inproc" and "oop" versions of OpenMixedProcess open remote frames,
+# so we don't run that test on platforms which don't support OOP tests.
+
 ifneq ($(OS_ARCH),WINNT) #{
 ifndef MOZ_JAVA_COMPOSITOR #{
 MOCHITEST_FILES += \
+		browserElement_OpenMixedProcess.js \
+		file_browserElement_OpenMixedProcess.html \
+		test_browserElement_inproc_OpenMixedProcess.html \
+		test_browserElement_oop_OpenMixedProcess.html \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
 		test_browserElement_oop_ErrorSecurity.html \

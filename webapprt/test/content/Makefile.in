@@ -11,10 +11,8 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-  helpers.js \
+  test.webapp \
   webapprt_sample.html \
-    sample.webapp \
-    sample.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

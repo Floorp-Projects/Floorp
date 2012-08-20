@@ -184,6 +184,8 @@ win32-ExtCreatePen-zero-size.patch: Don't pass zero width or dash lengths to Ext
 
 d2d-repeating-gradients.patch: Minimize number of gradient stops added to handle repeating with path fills (bug 768775)
 
+xlib-glyph-clip-region.patch: bug 709477, addressed upstream by be1ff2f45fdbc69537e513834fcffa0435e63073
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

@@ -20,29 +20,26 @@ var manager = new MediaTestManager;
 function loaded(event) {
   var v = event.target;
   if (v._finished)
-    return false;
+    return;
   v.play();
-  return false;
 }
 
 function started(event) {
   var v = event.target;
   if (v._finished)
-    return false;
+    return;
   ok(!v.paused, "Video should not be paused while playing");
   v.parentNode.removeChild(v);
   v._played = true;
-  return false;
 }
 
 function stopped(event) {
   var v = event.target;
   if (v._finished)
-    return false;
+    return;
   v._finished = true;
   ok(v.paused, "Video should be paused after removing from the Document");
   manager.finished(v.token);
-  return false;
 }
 
 

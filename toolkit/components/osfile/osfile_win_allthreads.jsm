@@ -157,4 +157,16 @@ if (typeof Components != "undefined") {
   Object.defineProperty(exports.OS.Shared, "POS_START", { value: exports.OS.Constants.Win.FILE_BEGIN });
   Object.defineProperty(exports.OS.Shared, "POS_CURRENT", { value: exports.OS.Constants.Win.FILE_CURRENT });
   Object.defineProperty(exports.OS.Shared, "POS_END", { value: exports.OS.Constants.Win.FILE_END });
+
+  // Special types that need to be defined for communication
+  // between threads
+  let Types = exports.OS.Shared.Type;
+
+  /**
+   * Native paths
+   *
+   * Under Windows, expressed as wide strings
+   */
+  Types.path = Types.wstring.withName("[in] path");
+  Types.out_path = Types.out_wstring.withName("[out] path");
 })(this);

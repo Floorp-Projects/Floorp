@@ -35,35 +35,25 @@ function statError(e) {
   devicestorage_cleanup();
 }
 
-var isMac = /Mac/.test(navigator.platform);
-var isWin = /Win/.test(navigator.platform);
+var storage = navigator.getDeviceStorage("testing");
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-if (isMac || isWin) {
-  todo(false, "stat is not available on mac or windows yet. see bug xxxx");
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
   devicestorage_cleanup();
-} else {
-  var storage = navigator.getDeviceStorage("testing");
-  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
-
-
-  function addError(e) {
-    ok(false, "addError was called : " + e.target.error.name);
-    devicestorage_cleanup();
-  }
-
-  function addSuccess(e) {
-    request = storage.stat();
-    ok(request, "Should have a non-null request");
-
-    request.onsuccess = statSuccess;
-    request.onerror = statError;
-  }
-
-  request = storage.addNamed(createRandomBlob(), "a/b");
-  request.onsuccess = addSuccess;
-  request.onerror = addError;
-
 }
+
+function addSuccess(e) {
+  request = storage.stat();
+  ok(request, "Should have a non-null request");
+
+  request.onsuccess = statSuccess;
+  request.onerror = statError;
+}
+
+request = storage.addNamed(createRandomBlob(), "a/b");
+request.onsuccess = addSuccess;
+request.onerror = addError;
 
 </script>
 </pre>

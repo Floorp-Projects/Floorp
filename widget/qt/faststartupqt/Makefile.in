@@ -21,10 +21,20 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_QT_LIBS) \
 	$(NULL)
 
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/xpcom/build \
+	-I$(topsrcdir)/widget/qt \
+	$(NULL)
 
-GARBAGE += moziqwidget.h nsQAppInstance.h nsQAppInstance.cpp
-export:: $(topsrcdir)/widget/qt/moziqwidget.h $(topsrcdir)/toolkit/xre/nsQAppInstance.h $(topsrcdir)/toolkit/xre/nsQAppInstance.cpp
+EXPORT_SOURCES = \
+	$(topsrcdir)/widget/qt/moziqwidget.h \
+	$(topsrcdir)/toolkit/xre/nsQAppInstance.h \
+	$(topsrcdir)/toolkit/xre/nsQAppInstance.cpp \
+	$(topsrcdir)/widget/qt/mozqglwidgetwrapper.h \
+	$(topsrcdir)/widget/qt/mozqglwidgetwrapper.cpp
+
+GARBAGE += $(EXPORT_SOURCES)
+export:: $(EXPORT_SOURCES)
 	$(INSTALL) $^ .
 
 MOCSRCS = \

@@ -496,6 +496,9 @@ class StackFrame
     inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
     template <class Op> inline void forEachUnaliasedActual(Op op);
 
+    typedef Vector<Value, 16, SystemAllocPolicy> CopyVector;
+    bool copyRawFrameSlots(CopyVector *v);
+
     inline unsigned numFormalArgs() const;
     inline unsigned numActualArgs() const;
 
@@ -1360,6 +1363,8 @@ class StackSpace
         return (Value *)fp >= base_ && (Value *)fp <= trustedEnd_;
     }
 
+    void markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+
   public:
     StackSpace();
     bool init();
@@ -1411,8 +1416,7 @@ class StackSpace
     bool tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
-    void mark(JSTracer *trc);
-    void markFrameValues(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+    void markAndClobber(JSTracer *trc);
 
     /* Called during GC: sets active flag on compartments with active frames. */
     void markActiveCompartments();
@@ -1593,19 +1597,6 @@ class ContextStack
      * FrameRegs instance repoint the ContextStack to this local instance.
      */
     inline void repointRegs(FrameRegs *regs) { JS_ASSERT(hasfp()); seg_->repointRegs(regs); }
-
-    /*** For JSContext: ***/
-
-    /*
-     * To avoid indirection, ContextSpace caches a pointer to the StackSpace.
-     * This must be kept coherent with cx->thread->data.space by calling
-     * 'threadReset' whenver cx->thread changes.
-     */
-    void threadReset();
-
-    /*** For jit compiler: ***/
-
-    static size_t offsetOfSeg() { return offsetof(ContextStack, seg_); }
 };
 
 /*****************************************************************************/
@@ -1750,6 +1741,21 @@ class ScriptFrameIter : public StackIter
         : StackIter(cx, opt) { settle(); }
 
     ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
+};
+
+/* A filtering of the StackIter to only stop at non-self-hosted scripts. */
+class NonBuiltinScriptFrameIter : public StackIter
+{
+    void settle() {
+        while (!done() && (!isScript() || (isFunctionFrame() && fp()->fun()->isSelfHostedBuiltin())))
+            StackIter::operator++();
+    }
+
+  public:
+    NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : StackIter(cx, opt) { settle(); }
+
+    NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

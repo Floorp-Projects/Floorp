@@ -225,7 +225,7 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     }
 
     let size = 0;
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     aTags.forEach(function(aTag) {
       file.initWithPath(aTag.fullpath);
       if (file.isDirectory())
@@ -238,7 +238,7 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
   this.__defineGetter__("installDate", function() {
     let date = 0;
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     aTags.forEach(function(aTag) {
       file.initWithPath(aTag.fullpath);
       date = Math.max(date, file.lastModifiedTime);
@@ -249,17 +249,17 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
   this.__defineGetter__("scope", function() {
     let path = aTags[0].fullpath;
     // Plugins inside the application directory are in the application scope
-    let dir = Services.dirsvc.get("APlugns", Ci.nsILocalFile);
+    let dir = Services.dirsvc.get("APlugns", Ci.nsIFile);
     if (path.substring(0, dir.path.length) == dir.path)
       return AddonManager.SCOPE_APPLICATION;
 
     // Plugins inside the profile directory are in the profile scope
-    dir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
     if (path.substring(0, dir.path.length) == dir.path)
       return AddonManager.SCOPE_PROFILE;
 
     // Plugins anywhere else in the user's home are in the user scope
-    dir = Services.dirsvc.get("Home", Ci.nsILocalFile);
+    dir = Services.dirsvc.get("Home", Ci.nsIFile);
     if (path.substring(0, dir.path.length) == dir.path)
       return AddonManager.SCOPE_USER;
 

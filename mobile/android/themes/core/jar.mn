@@ -22,6 +22,7 @@ chrome.jar:
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
   skin/fonts/opensans-regular.ttf           (fonts/opensans-regular.ttf)
+  skin/fonts/opensans-light.ttf             (fonts/opensans-light.ttf)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)
   skin/images/arrowright-16.png             (images/arrowright-16.png)
@@ -53,9 +54,6 @@ chrome.jar:
   skin/images/row-bg-light.png              (images/row-bg-light.png)
   skin/images/row-bg-normal.png             (images/row-bg-normal.png)
   skin/images/addons-amo-hdpi.png           (images/addons-amo-hdpi.png)
-  skin/images/reader-light-bg.png           (images/reader-light-bg.png)
-  skin/images/reader-dark-bg.png            (images/reader-dark-bg.png)
-  skin/images/reader-sepia-bg.png           (images/reader-sepia-bg.png)
   skin/images/reader-plus-icon-mdpi.png     (images/reader-plus-icon-mdpi.png)
   skin/images/reader-plus-icon-hdpi.png     (images/reader-plus-icon-hdpi.png)
   skin/images/reader-plus-icon-xhdpi.png    (images/reader-plus-icon-xhdpi.png)

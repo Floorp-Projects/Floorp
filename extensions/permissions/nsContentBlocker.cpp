@@ -142,6 +142,11 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
   if (!aContentLocation)
     return NS_OK;
 
+  // The final type of an object tag may mutate before it reaches
+  // shouldProcess, so we cannot make any sane blocking decisions here
+  if (aContentType == nsIContentPolicy::TYPE_OBJECT)
+    return NS_OK;
+  
   // we only want to check http, https, ftp
   // for chrome:// and resources and others, no need to check.
   nsCAutoString scheme;
@@ -162,40 +167,8 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
       *aDecision = nsIContentPolicy::REJECT_SERVER;
     }
   }
-  if (aContentType != nsIContentPolicy::TYPE_OBJECT || aMimeGuess.IsEmpty())
-    return NS_OK;
 
-  // For TYPE_OBJECT we should check what aMimeGuess might tell us
-  // about what sort of object it is.
-  nsCOMPtr<nsIObjectLoadingContent> objectLoader =
-    do_QueryInterface(aRequestingContext);
-  if (!objectLoader)
-    return NS_OK;
-
-  PRUint32 contentType;
-  rv = objectLoader->GetContentTypeForMIMEType(aMimeGuess, &contentType);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  switch (contentType) {
-  case nsIObjectLoadingContent::TYPE_IMAGE:
-    aContentType = nsIContentPolicy::TYPE_IMAGE;
-    break;
-  case nsIObjectLoadingContent::TYPE_DOCUMENT:
-    aContentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
-    break;
-  default:
-    return NS_OK;
-  }
-
-  NS_ASSERTION(aContentType != nsIContentPolicy::TYPE_OBJECT,
-               "Shouldn't happen.  Infinite loops are bad!");
-
-  // Found a type that tells us more about what we're loading.  Try
-  // the permissions check again!
-  return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
-                    aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
-                    aDecision);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -223,8 +196,31 @@ nsContentBlocker::ShouldProcess(PRUint32          aContentType,
     }
   }
 
-  // This isn't a load from chrome.  Just do a ShouldLoad() check --
-  // we want the same answer here
+  // For objects, we only check policy in shouldProcess, as the final type isn't
+  // determined until the channel is open -- We don't want to block images in
+  // object tags because plugins are disallowed.
+  // NOTE that this bypasses the aContentLocation checks in ShouldLoad - this is
+  // intentional, as aContentLocation may be null for plugins that load by type
+  // (e.g. java)
+  if (aContentType == nsIContentPolicy::TYPE_OBJECT) {
+    *aDecision = nsIContentPolicy::ACCEPT;
+
+    bool shouldLoad, fromPrefs;
+    nsresult rv = TestPermission(aContentLocation, aRequestingLocation,
+				 aContentType, &shouldLoad, &fromPrefs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!shouldLoad) {
+      if (fromPrefs) {
+	*aDecision = nsIContentPolicy::REJECT_TYPE;
+      } else {
+	*aDecision = nsIContentPolicy::REJECT_SERVER;
+      }
+    }
+    return NS_OK;
+  }
+  
+  // This isn't a load from chrome or an object tag - Just do a ShouldLoad()
+  // check -- we want the same answer here
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
                     aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
                     aDecision);

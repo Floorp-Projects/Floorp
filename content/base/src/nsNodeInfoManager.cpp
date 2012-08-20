@@ -210,7 +210,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, PRUint16 aNodeType,
                                nsIAtom* aExtraName /* = nullptr */)
 {
-  CHECK_VALID_NODEINFO(aNodeType, aName, aNamespaceID, aExtraName);
+  CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
 
   nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
                                       aExtraName);
@@ -256,7 +256,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 #ifdef DEBUG
   {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
-    CHECK_VALID_NODEINFO(aNodeType, nameAtom, aNamespaceID, nullptr);
+    CheckValidNodeInfo(aNodeType, nameAtom, aNamespaceID, nullptr);
   }
 #endif
 

@@ -9,7 +9,7 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addToWhitelist();
+  browserElementTestHelpers.addPermission();
 
   // Load emptypage1 into the iframe, wait for that to finish loading, then
   // call runTest2.

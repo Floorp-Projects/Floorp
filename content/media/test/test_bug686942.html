@@ -20,7 +20,7 @@ var manager = new MediaTestManager;
 function onloaded(event) {
   var v = event.target;
   v.currentTime = v.duration;
-  return false;
+  return;
 }
 
 function checkNotPlaying(v) {
@@ -32,16 +32,14 @@ function checkNotPlaying(v) {
 function onseeked(event) {
   var v = event.target;
   setTimeout(function() { checkNotPlaying(v); }, 500);
-  return false;
 }
 
 function onended(event) {
   var v = event.target;
   if (v._finished)
-    return false;
+    return;
   v.addEventListener("seeked", onseeked, false);
   v.currentTime = 0;
-  return false;
 }
 
 function startTest(test, token) {

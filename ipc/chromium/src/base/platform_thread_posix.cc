@@ -86,7 +86,7 @@ void PlatformThread::SetName(const char* name) {
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
   pthread_set_name_np(pthread_self(), name);
 #elif defined(__NetBSD__)
-  pthread_setname_np(pthread_self(), "%s", name);
+  pthread_setname_np(pthread_self(), "%s", (void *)name);
 #else
   prctl(PR_SET_NAME, reinterpret_cast<uintptr_t>(name), 0, 0, 0); 
 #endif

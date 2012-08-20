@@ -79,6 +79,18 @@ public:
     GLXPixmap GetGLXPixmap();
 #endif
 
+    // Return true if cairo will take its slow path when this surface is used
+    // in a pattern with EXTEND_PAD.  As a workaround for XRender's RepeatPad
+    // not being implemented correctly on old X servers, cairo avoids XRender
+    // and instead reads back to perform EXTEND_PAD with pixman.  Cairo does
+    // this for servers older than xorg-server 1.7.
+    bool IsPadSlow() {
+        // The test here matches that for buggy_pad_reflect in
+        // _cairo_xlib_device_create.
+        return VendorRelease(mDisplay) >= 60700000 ||
+            VendorRelease(mDisplay) < 10699000;
+    }
+
 protected:
     // if TakePixmap() has been called on this
     bool mPixmapTaken;

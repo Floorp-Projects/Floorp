@@ -82,7 +82,7 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                        PRUint16 aNodeType, nsIAtom* aExtraName,
                        nsNodeInfoManager *aOwnerManager)
 {
-  CHECK_VALID_NODEINFO(aNodeType, aName, aNamespaceID, aExtraName);
+  CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
   NS_ABORT_IF_FALSE(aOwnerManager, "Invalid aOwnerManager");
 
   // Initialize mInner

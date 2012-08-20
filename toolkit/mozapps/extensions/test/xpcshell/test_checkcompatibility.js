@@ -69,15 +69,7 @@ function run_test() {
     writeInstallRDFForExtension(a, profileDir);
   });
 
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  }
-  catch (e) { }
-
-  gIsNightly = channel != "aurora" &&
-               channel != "beta" &&
-               channel != "release";
+  gIsNightly = isNightlyChannel();
 
   startupManager();
 

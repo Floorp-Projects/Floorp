@@ -118,13 +118,13 @@ GetKeyArg(JSContext *cx, CallArgs &args)
     return JS_UnwrapObject(&key);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 IsWeakMap(const Value &v)
 {
     return v.isObject() && v.toObject().hasClass(&WeakMapClass);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 WeakMap_has_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -149,14 +149,14 @@ WeakMap_has_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_has_impl, args);
+    return CallNonGenericMethod<IsWeakMap, WeakMap_has_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 WeakMap_get_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -181,14 +181,14 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_get_impl, args);
+    return CallNonGenericMethod<IsWeakMap, WeakMap_get_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 WeakMap_delete_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -214,14 +214,14 @@ WeakMap_delete_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_delete_impl, args);
+    return CallNonGenericMethod<IsWeakMap, WeakMap_delete_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsWeakMap(args.thisv()));
@@ -249,29 +249,28 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         thisObj->setPrivate(map);
     }
 
-    // Preserve wrapped native keys to prevent wrapper optimization.
-    if (key->getClass()->ext.isWrappedNative) {
-        MOZ_ASSERT(cx->runtime->preserveWrapperCallback, "wrapped native weak map key needs preserveWrapperCallback");
-        if (!cx->runtime->preserveWrapperCallback(cx, key)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);
-            return false;
-        }
-    }
-
     if (!map->put(key, value)) {
         JS_ReportOutOfMemory(cx);
         return false;
+    }
+
+    // Preserve wrapped native keys to prevent wrapper optimization.
+    if (key->getClass()->ext.isWrappedNative) {
+        if (!cx->runtime->preserveWrapperCallback ||
+            !cx->runtime->preserveWrapperCallback(cx, key)) {
+            JS_ReportWarning(cx, "Failed to preserve wrapper of wrapped native weak map key.");
+        }
     }
 
     args.rval().setUndefined();
     return true;
 }
 
-static JSBool
+JSBool
 WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_set_impl, args);
+    return CallNonGenericMethod<IsWeakMap, WeakMap_set_impl>(cx, args);
 }
 
 JS_FRIEND_API(JSBool)

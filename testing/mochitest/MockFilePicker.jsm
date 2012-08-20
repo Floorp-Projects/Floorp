@@ -66,6 +66,7 @@ var MockFilePicker = {
     this.returnValue = null;
     this.showCallback = null;
     this.shown = false;
+    this.showing = false;
   },
   
   cleanup: function() {
@@ -133,6 +134,22 @@ MockFilePickerInstance.prototype = {
         return returnValue;
     }
     return MockFilePicker.returnValue;
+  },
+  open: function(aFilePickerShownCallback) {
+    MockFilePicker.showing = true;
+    var self = this;
+    var tm = Components.classes["@mozilla.org/thread-manager;1"]
+                       .getService(Components.interfaces.nsIThreadManager);
+    tm.mainThread.dispatch({
+      run: function() {
+        try {
+          let result = self.show();
+          aFilePickerShownCallback.done(result);
+        } catch(ex) {
+          aFilePickerShownCallback.done(self.returnCancel);
+        }
+      }
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
   }
 };
 

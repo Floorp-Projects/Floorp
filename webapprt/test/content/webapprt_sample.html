@@ -1,25 +1,44 @@
 <!DOCTYPE HTML>
 
 <!--
-  Since its name is prefixed with webapprt_, this file is picked up by the
-  mochitest harness.  Once loaded, it installs the webapp, and when the
-  installation completes, it loads the webapp into an iframe.  The webapp is
-  the actual test; see sample.html.
+  This is a sample WebappRT content mochitest.  Since its name is prefixed with
+  webapprt_, this file is picked up by the Mochitest harness.  It's just a plain
+  mochitest that runs in the app browser within an app window.
 -->
 
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="helpers.js"></script>
-    <script>
-
-// If your installation page needs to do anything other than call
-// installOwnWebapp, you can do it here.
-
-    </script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   </head>
-  <body onload="installOwnWebapp();">
-    <p id="msg">Installation page waiting for page load...</p>
-    <iframe id="webapp-iframe" width="100%" height="93%"></iframe>
+  <body>
+    <p id="display">
+      This is the sample WebappRT content mochitest.
+    </p>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script>
+
+SimpleTest.waitForExplicitFinish();
+
+ok(true, "true is true!");
+
+var self = navigator.mozApps.getSelf();
+self.onsuccess = function () {
+  ok(true, "onsuccess should be called");
+  ok(self.result, "result should be nonnull");
+  ok(self.result.manifest, "manifest should be nonnull");
+  is(self.result.manifest.name, "WebappRT Mochitest Webapp",
+     "manifest.name");
+  SimpleTest.finish();
+};
+self.onerror = function () {
+  ok(false, "onerror should not be called");
+  SimpleTest.finish();
+};
+
+      </script>
+    </pre>
   </body>
 </html>

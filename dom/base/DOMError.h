@@ -27,9 +27,6 @@ public:
   CreateForNSResult(nsresult rv);
 
   static already_AddRefed<nsIDOMDOMError>
-  CreateForDOMExceptionCode(PRUint16 aDOMExceptionCode);
-
-  static already_AddRefed<nsIDOMDOMError>
   CreateWithName(const nsAString& aName)
   {
     nsCOMPtr<nsIDOMDOMError> error = new DOMError(aName);

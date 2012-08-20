@@ -1,5 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
-/* vim: set ts=2 et sw=2 tw=40: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,6 +27,8 @@ public:
   virtual nsresult StartInternal();
   virtual nsresult StopInternal();
   virtual nsresult GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable);
+  virtual nsresult GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
+                                                     BluetoothReplyRunnable* aRunnable);
   virtual nsresult StartDiscoveryInternal(const nsAString& aAdapterPath,
                                           BluetoothReplyRunnable* aRunnable);
   virtual nsresult StopDiscoveryInternal(const nsAString& aAdapterPath,
@@ -56,6 +58,29 @@ public:
   virtual bool
   RemoveReservedServicesInternal(const nsAString& aAdapterPath,
                                  const nsTArray<PRUint32>& aServiceHandles);
+
+  virtual nsresult
+  CreatePairedDeviceInternal(const nsAString& aAdapterPath,
+                             const nsAString& aDeviceAddress,
+                             int aTimeout,
+                             BluetoothReplyRunnable* aRunnable);
+
+  virtual nsresult
+  RemoveDeviceInternal(const nsAString& aAdapterPath,
+                       const nsAString& aDeviceObjectPath,
+                       BluetoothReplyRunnable* aRunnable);
+
+  virtual bool
+  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode);
+
+  virtual bool
+  SetPasskeyInternal(const nsAString& aDeviceAddress, PRUint32 aPasskey);
+
+  virtual bool 
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm);
+
+  virtual bool 
+  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow);
 
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,

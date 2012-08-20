@@ -30,25 +30,25 @@ XPInstallConfirm.init = function ()
   var itemList = document.getElementById("itemList");
   
   var numItemsToInstall = args.installs.length;
-  for (var i = 0; i < numItemsToInstall; ++i) {
+  for (let install of args.installs) {
     var installItem = document.createElement("installitem");
     itemList.appendChild(installItem);
 
-    installItem.name = args.installs[i].addon.name;
-    installItem.url = args.installs[i].sourceURI.spec;
-    var icon = args.installs[i].iconURL;
+    installItem.name = install.addon.name;
+    installItem.url = install.sourceURI.spec;
+    var icon = install.iconURL;
     if (icon)
       installItem.icon = icon;
-    var type = args.installs[i].type;
+    var type = install.type;
     if (type)
       installItem.type = type;
-    if (args.installs[i].certName) {
-      installItem.cert = bundle.getFormattedString("signed", [args.installs[i].certName]);
+    if (install.certName) {
+      installItem.cert = bundle.getFormattedString("signed", [install.certName]);
     }
     else {
       installItem.cert = bundle.getString("unverified");
     }
-    installItem.signed = args.installs[i].certName ? "true" : "false";
+    installItem.signed = install.certName ? "true" : "false";
   }
   
   var introString = bundle.getString("itemWarnIntroSingle");

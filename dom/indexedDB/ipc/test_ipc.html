@@ -24,7 +24,8 @@
       SpecialPowers.prototype.unregisterProcessCrashObservers = function() { };
 
       content.wrappedJSObject.RunSet.reloadAndRunAll({
-        preventDefault: function() { }
+        preventDefault: function() { },
+        __exposedProps__: { preventDefault: 'r' }
       });
     }
 
@@ -58,7 +59,7 @@
     let regex = new RegExp(regexString);
 
     function onTestMessage(data) {
-      let message = data.json.msg;
+      let message = SpecialPowers.wrap(data).json.msg;
       let match = regex.exec(message);
       if (match) {
         let state = match[1];

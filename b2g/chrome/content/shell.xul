@@ -20,6 +20,8 @@
 #ifndef ANDROID
   <!-- this script handles the screen argument for desktop builds -->
   <script type="application/javascript" src="chrome://browser/content/screen.js"/>
+  <!-- this script handles the "runapp" argument for desktop builds -->
+  <script type="application/javascript" src="chrome://browser/content/runapp.js"/>
 #endif
   <!-- The html:iframe containing the UI is created here. -->
 </window>

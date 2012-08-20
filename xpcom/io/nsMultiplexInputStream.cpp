@@ -17,12 +17,18 @@
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIIPCSerializable.h"
+#include "nsIIPCSerializableObsolete.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIIPCSerializableInputStream.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCSerializableParams.h"
+
+using namespace mozilla::ipc;
 
 class nsMultiplexInputStream MOZ_FINAL : public nsIMultiplexInputStream,
                                          public nsISeekableStream,
-                                         public nsIIPCSerializable
+                                         public nsIIPCSerializableObsolete,
+                                         public nsIIPCSerializableInputStream
 {
 public:
     nsMultiplexInputStream();
@@ -31,7 +37,8 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMULTIPLEXINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
-    NS_DECL_NSIIPCSERIALIZABLE
+    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
+    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
 private:
     ~nsMultiplexInputStream() {}
@@ -60,16 +67,16 @@ NS_IMPL_THREADSAFE_RELEASE(nsMultiplexInputStream)
 NS_IMPL_CLASSINFO(nsMultiplexInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_MULTIPLEXINPUTSTREAM_CID)
 
-NS_IMPL_QUERY_INTERFACE4_CI(nsMultiplexInputStream,
+NS_IMPL_QUERY_INTERFACE5_CI(nsMultiplexInputStream,
                             nsIMultiplexInputStream,
                             nsIInputStream,
                             nsISeekableStream,
-                            nsIIPCSerializable)
-NS_IMPL_CI_INTERFACE_GETTER4(nsMultiplexInputStream,
+                            nsIIPCSerializableObsolete,
+                            nsIIPCSerializableInputStream)
+NS_IMPL_CI_INTERFACE_GETTER3(nsMultiplexInputStream,
                              nsIMultiplexInputStream,
                              nsIInputStream,
-                             nsISeekableStream,
-                             nsIIPCSerializable)
+                             nsISeekableStream)
 
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),
@@ -446,4 +453,76 @@ nsMultiplexInputStream::Write(IPC::Message *aMsg)
     WriteParam(aMsg, mCurrentStream);
     WriteParam(aMsg, mStartedReadingCurrent);
     WriteParam(aMsg, mStatus);
+}
+
+void
+nsMultiplexInputStream::Serialize(InputStreamParams& aParams)
+{
+    MultiplexInputStreamParams params;
+
+    PRUint32 streamCount = mStreams.Count();
+
+    if (streamCount) {
+        InfallibleTArray<InputStreamParams>& streams = params.streams();
+
+        streams.SetCapacity(streamCount);
+        for (PRUint32 index = 0; index < streamCount; index++) {
+            nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+                do_QueryInterface(mStreams.ObjectAt(index));
+            NS_ASSERTION(serializable, "Child stream isn't serializable!");
+
+            if (serializable) {
+                InputStreamParams childStreamParams;
+                serializable->Serialize(childStreamParams);
+
+                NS_ASSERTION(childStreamParams.type() !=
+                                 InputStreamParams::T__None,
+                             "Serialize failed!");
+
+                streams.AppendElement(childStreamParams);
+            }
+        }
+    }
+
+    params.currentStream() = mCurrentStream;
+    params.status() = mStatus;
+    params.startedReadingCurrent() = mStartedReadingCurrent;
+
+    aParams = params;
+}
+
+bool
+nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams)
+{
+    if (aParams.type() !=
+            InputStreamParams::TMultiplexInputStreamParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
+        return false;
+    }
+
+    const MultiplexInputStreamParams& params =
+        aParams.get_MultiplexInputStreamParams();
+
+    const InfallibleTArray<InputStreamParams>& streams = params.streams();
+
+    PRUint32 streamCount = streams.Length();
+    for (PRUint32 index = 0; index < streamCount; index++) {
+        nsCOMPtr<nsIInputStream> stream =
+            DeserializeInputStream(streams[index]);
+        if (!stream) {
+            NS_WARNING("Deserialize failed!");
+            return false;
+        }
+
+        if (NS_FAILED(AppendStream(stream))) {
+            NS_WARNING("AppendStream failed!");
+            return false;
+        }
+    }
+
+    mCurrentStream = params.currentStream();
+    mStatus = params.status();
+    mStartedReadingCurrent = params.startedReadingCurrent();
+
+    return true;
 }

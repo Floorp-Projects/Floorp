@@ -1118,6 +1118,11 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       widget::WheelEvent* wheelEvent = static_cast<widget::WheelEvent*>(aEvent);
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
 
+      // If we won't dispatch a DOM event for this event, nothing to do anymore.
+      if (!NS_IsAllowedToDispatchDOMEvent(wheelEvent)) {
+        break;
+      }
+
       // Init lineOrPageDelta values for line scroll events for some devices
       // on some platforms which might dispatch wheel events which don't have
       // lineOrPageDelta values.  And also, if delta values are customized by
@@ -2515,9 +2520,9 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
   //     default action handler (DoScrollText()) deals with it.
   //     If we implemented such strict computation, we would need additional
   //     accumulated delta values. It would made the code more complicated.
-  //     And also it would compute different delta values from the older
-  //     version.  It doesn't make sense to implement such code for legacy
-  //     events and rare cases.
+  //     And also it would computes different delta values from older version.
+  //     It doesn't make sense to implement such code for legacy events and
+  //     rare cases.
   PRInt32 scrollDeltaX, scrollDeltaY, pixelDeltaX, pixelDeltaY;
   switch (aEvent->deltaMode) {
     case nsIDOMWheelEvent::DOM_DELTA_PAGE:
@@ -5086,10 +5091,10 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
       // If the delta direction is changed, we should reset only the
       // accumulated values.
       if (mX && aEvent->deltaX && ((aEvent->deltaX > 0.0) != (mX > 0.0))) {
-        mX = 0.0;
+        mX = mPendingScrollAmountX = 0.0;
       }
       if (mY && aEvent->deltaY && ((aEvent->deltaY > 0.0) != (mY > 0.0))) {
-        mY = 0.0;
+        mY = mPendingScrollAmountY = 0.0;
       }
     }
   }
@@ -5104,6 +5109,17 @@ nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
         mHandlingPixelOnlyDevice) &&
       !nsEventStateManager::WheelPrefs::GetInstance()->
         NeedToComputeLineOrPageDelta(aEvent)) {
+    // Set the delta values to mX and mY.  They would be used when above block
+    // resets mX/mY/mPendingScrollAmountX/mPendingScrollAmountY if the direction
+    // is changed.
+    // NOTE: We shouldn't accumulate the delta values, it might could cause
+    //       overflow even though it's not a realistic situation.
+    if (aEvent->deltaX) {
+      mX = aEvent->deltaX;
+    }
+    if (aEvent->deltaY) {
+      mY = aEvent->deltaY;
+    }
     mLastTime = TimeStamp::Now();
     return;
   }
@@ -5315,25 +5331,16 @@ nsEventStateManager::WheelPrefs::Init(
   prefNameX.AppendLiteral("delta_multiplier_x");
   mMultiplierX[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameX.get(), 100)) / 100;
-  if (mMultiplierX[aIndex] < 1.0 && mMultiplierX[aIndex] > -1.0) {
-    mMultiplierX[aIndex] = mMultiplierX[aIndex] < 0.0 ? -1.0 : 1.0;
-  }
 
   nsCAutoString prefNameY(basePrefName);
   prefNameY.AppendLiteral("delta_multiplier_y");
   mMultiplierY[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameY.get(), 100)) / 100;
-  if (mMultiplierY[aIndex] < 1.0 && mMultiplierY[aIndex] > -1.0) {
-    mMultiplierY[aIndex] = mMultiplierY[aIndex] < 0.0 ? -1.0 : 1.0;
-  }
 
   nsCAutoString prefNameZ(basePrefName);
   prefNameZ.AppendLiteral("delta_multiplier_z");
   mMultiplierZ[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameZ.get(), 100)) / 100;
-  if (mMultiplierZ[aIndex] < 1.0 && mMultiplierZ[aIndex] > -1.0) {
-    mMultiplierZ[aIndex] = mMultiplierZ[aIndex] < 0.0 ? -1.0 : 1.0;
-  }
 
   nsCAutoString prefNameAction(basePrefName);
   prefNameAction.AppendLiteral("action");
@@ -5380,10 +5387,12 @@ nsEventStateManager::WheelPrefs::CancelApplyingUserPrefsFromOverflowDelta(
   Index index = GetIndexFor(aEvent);
   Init(index);
 
-  NS_ASSERTION(mMultiplierX[index] && mMultiplierY[index],
-               "The absolute values of both multipliers must be 1 or larger");
-  aEvent->overflowDeltaX /= mMultiplierX[index];
-  aEvent->overflowDeltaY /= mMultiplierY[index];
+  if (mMultiplierX[index]) {
+    aEvent->overflowDeltaX /= mMultiplierX[index];
+  }
+  if (mMultiplierY[index]) {
+    aEvent->overflowDeltaY /= mMultiplierY[index];
+  }
 }
 
 nsEventStateManager::WheelPrefs::Action

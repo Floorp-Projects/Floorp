@@ -146,5 +146,5 @@ int main(int argc, char *argv[])
         testResult(rv);
        
     }
-    return NS_OK;
+    return 0;
 }

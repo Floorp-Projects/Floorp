@@ -26,21 +26,6 @@
         <div class="newtab-side-margin"/>
 
         <div id="newtab-grid">
-          <div class="newtab-row">
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-          </div>
-          <div class="newtab-row">
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-          </div>
-          <div class="newtab-row">
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-            <div class="newtab-cell"/>
-          </div>
         </div>
 
         <div class="newtab-side-margin"/>

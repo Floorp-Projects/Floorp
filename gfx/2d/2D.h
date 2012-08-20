@@ -6,6 +6,7 @@
 #ifndef _MOZILLA_GFX_2D_H
 #define _MOZILLA_GFX_2D_H
 
+#include "Types.h"
 #include "Point.h"
 #include "Rect.h"
 #include "Matrix.h"
@@ -18,23 +19,6 @@
 #ifdef MOZ_ENABLE_FREETYPE
 #include <string>
 #endif
-
-/**
- * Use C++11 nullptr if available; otherwise use a C++ typesafe template; and
- * for C, fall back to longs.  See bugs 547964 and 626472.
- * Copy and paste job from nscore.h, see bug 781943
- */
-#if defined(MOZ_GFX) && !defined(HAVE_NULLPTR)
-#ifndef __cplusplus
-# define nullptr ((void*)0)
-#elif defined(__GNUC__)
-# define nullptr __null
-#elif defined(_WIN64)
-# define nullptr 0LL
-#else
-# define nullptr 0L
-#endif
-#endif /* defined(MOZ_GFX) && !defined(HAVE_NULLPTR) */
 
 struct _cairo_surface;
 typedef _cairo_surface cairo_surface_t;

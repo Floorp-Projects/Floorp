@@ -1,3 +1,5 @@
+args = __marionetteParams;
+
 function setDefaultPrefs() {
     // This code sets the preferences for extension-based reftest; for
     // command-line based reftest they are set in function handler_handle in
@@ -21,10 +23,24 @@ function setDefaultPrefs() {
     branch.setBoolPref("app.update.enabled", false);
 }
 
+function setPermissions(webserver, port) {
+  var perms = Components.classes["@mozilla.org/permissionmanager;1"]
+              .getService(Components.interfaces.nsIPermissionManager);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+  var uri = ioService.newURI("http://" + webserver + ":" + port, null, null);
+  perms.add(uri, "allowXULXBL", Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+}
+
 // Load into any existing windows
 let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
 let win = wm.getMostRecentWindow('');
+
+// Set preferences and permissions
 setDefaultPrefs();
+setPermissions(args[0], args[1]);
+
+// Start the reftests
 Components.utils.import("chrome://reftest/content/reftest.jsm");
 OnRefTestLoad(win);

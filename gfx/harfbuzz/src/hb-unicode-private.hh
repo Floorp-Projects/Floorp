@@ -80,53 +80,13 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
 			    hb_codepoint_t *ab)
   {
     *ab = 0;
-    /* XXX, this belongs to indic normalizer. */
-    if ((FLAG (general_category (a)) &
-	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
-	  FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))))
-      return false;
-    /* XXX, add composition-exclusion exceptions to Indic shaper. */
-    if (a == 0x09AF && b == 0x09BC) { *ab = 0x09DF; return true; }
+    if (unlikely (!a || !b)) return false;
     return func.compose (this, a, b, ab, user_data.compose);
   }
 
   inline hb_bool_t decompose (hb_codepoint_t ab,
 			      hb_codepoint_t *a, hb_codepoint_t *b)
   {
-    /* XXX FIXME, move these to complex shapers and propagage to normalizer.*/
-    switch (ab) {
-      case 0x0AC9  : return false;
-
-      case 0x0931  : return false;
-      case 0x0B94  : return false;
-
-      /* These ones have Unicode decompositions, but we do it
-       * this way to be close to what Uniscribe does. */
-      case 0x0DDA  : *a = 0x0DD9; *b= 0x0DDA; return true;
-      case 0x0DDC  : *a = 0x0DD9; *b= 0x0DDC; return true;
-      case 0x0DDD  : *a = 0x0DD9; *b= 0x0DDD; return true;
-      case 0x0DDE  : *a = 0x0DD9; *b= 0x0DDE; return true;
-
-      case 0x0F77  : *a = 0x0FB2; *b= 0x0F81; return true;
-      case 0x0F79  : *a = 0x0FB3; *b= 0x0F81; return true;
-      case 0x17BE  : *a = 0x17C1; *b= 0x17BE; return true;
-      case 0x17BF  : *a = 0x17C1; *b= 0x17BF; return true;
-      case 0x17C0  : *a = 0x17C1; *b= 0x17C0; return true;
-      case 0x17C4  : *a = 0x17C1; *b= 0x17C4; return true;
-      case 0x17C5  : *a = 0x17C1; *b= 0x17C5; return true;
-      case 0x1925  : *a = 0x1920; *b= 0x1923; return true;
-      case 0x1926  : *a = 0x1920; *b= 0x1924; return true;
-      case 0x1B3C  : *a = 0x1B42; *b= 0x1B3C; return true;
-      case 0x1112E  : *a = 0x11127; *b= 0x11131; return true;
-      case 0x1112F  : *a = 0x11127; *b= 0x11132; return true;
-#if 0
-      case 0x0B57  : *a = 0xno decomp, -> RIGHT; return true;
-      case 0x1C29  : *a = 0xno decomp, -> LEFT; return true;
-      case 0xA9C0  : *a = 0xno decomp, -> RIGHT; return true;
-      case 0x111BF  : *a = 0xno decomp, -> ABOVE; return true;
-#endif
-    }
     *a = ab; *b = 0;
     return func.decompose (this, ab, a, b, user_data.decompose);
   }
@@ -223,17 +183,89 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
 };
 
 
-#ifdef HAVE_GLIB
-extern HB_INTERNAL const hb_unicode_funcs_t _hb_glib_unicode_funcs;
-#define _hb_unicode_funcs_default _hb_glib_unicode_funcs
-#elif defined(HAVE_ICU)
-extern HB_INTERNAL const hb_unicode_funcs_t _hb_icu_unicode_funcs;
-#define _hb_unicode_funcs_default _hb_icu_unicode_funcs
-#else
-#define HB_UNICODE_FUNCS_NIL 1
 extern HB_INTERNAL const hb_unicode_funcs_t _hb_unicode_funcs_nil;
-#define _hb_unicode_funcs_default _hb_unicode_funcs_nil
-#endif
+
+
+/* Modified combining marks */
+
+/* Hebrew
+ *
+ * We permute the "fixed-position" classes 10-26 into the order
+ * described in the SBL Hebrew manual:
+ *
+ * http://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
+ *
+ * (as recommended by:
+ *  http://forum.fontlab.com/archive-old-microsoft-volt-group/vista-and-diacritic-ordering-t6751.0.html)
+ *
+ * More details here:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=662055
+ */
+#define HB_MODIFIED_COMBINING_CLASS_CCC10 22 /* sheva */
+#define HB_MODIFIED_COMBINING_CLASS_CCC11 15 /* hataf segol */
+#define HB_MODIFIED_COMBINING_CLASS_CCC12 16 /* hataf patah */
+#define HB_MODIFIED_COMBINING_CLASS_CCC13 17 /* hataf qamats */
+#define HB_MODIFIED_COMBINING_CLASS_CCC14 23 /* hiriq */
+#define HB_MODIFIED_COMBINING_CLASS_CCC15 18 /* tsere */
+#define HB_MODIFIED_COMBINING_CLASS_CCC16 19 /* segol */
+#define HB_MODIFIED_COMBINING_CLASS_CCC17 20 /* patah */
+#define HB_MODIFIED_COMBINING_CLASS_CCC18 21 /* qamats */
+#define HB_MODIFIED_COMBINING_CLASS_CCC19 14 /* holam */
+#define HB_MODIFIED_COMBINING_CLASS_CCC20 24 /* qubuts */
+#define HB_MODIFIED_COMBINING_CLASS_CCC21 12 /* dagesh */
+#define HB_MODIFIED_COMBINING_CLASS_CCC22 25 /* meteg */
+#define HB_MODIFIED_COMBINING_CLASS_CCC23 13 /* rafe */
+#define HB_MODIFIED_COMBINING_CLASS_CCC24 10 /* shin dot */
+#define HB_MODIFIED_COMBINING_CLASS_CCC25 11 /* sin dot */
+#define HB_MODIFIED_COMBINING_CLASS_CCC26 26 /* point varika */
+
+/*
+ * Arabic
+ *
+ * Modify to move Shadda (ccc=33) before other marks.  See:
+ * http://unicode.org/faq/normalization.html#8
+ * http://unicode.org/faq/normalization.html#9
+ */
+#define HB_MODIFIED_COMBINING_CLASS_CCC27 28 /* fathatan */
+#define HB_MODIFIED_COMBINING_CLASS_CCC28 29 /* dammatan */
+#define HB_MODIFIED_COMBINING_CLASS_CCC29 30 /* kasratan */
+#define HB_MODIFIED_COMBINING_CLASS_CCC30 31 /* fatha */
+#define HB_MODIFIED_COMBINING_CLASS_CCC31 32 /* damma */
+#define HB_MODIFIED_COMBINING_CLASS_CCC32 33 /* kasra */
+#define HB_MODIFIED_COMBINING_CLASS_CCC33 27 /* shadda */
+#define HB_MODIFIED_COMBINING_CLASS_CCC34 34 /* sukun */
+#define HB_MODIFIED_COMBINING_CLASS_CCC35 35 /* superscript alef */
+
+/* Syriac */
+#define HB_MODIFIED_COMBINING_CLASS_CCC36 36 /* superscript alaph */
+
+/* Telugu
+ *
+ * Modify Telugu length marks (ccc=84, ccc=91).
+ * These are the only matras in the main Indic scripts range that have
+ * a non-zero ccc.  That makes them reorder with the Halant that is
+ * ccc=9.  Just zero them, we don't need them in our Indic shaper.
+ */
+#define HB_MODIFIED_COMBINING_CLASS_CCC84 0 /* length mark */
+#define HB_MODIFIED_COMBINING_CLASS_CCC91 0 /* ai length mark */
+
+/* Thai
+ *
+ * Modify U+0E38 and U+0E39 (ccc=103) to be reordered before U+0E3A (ccc=9).
+ * Assign 3, which is unassigned otherwise.
+ * Uniscribe does this reordering too.
+ */
+#define HB_MODIFIED_COMBINING_CLASS_CCC103 3 /* sara u / sara uu */
+#define HB_MODIFIED_COMBINING_CLASS_CCC107 107 /* mai * */
+
+/* Lao */
+#define HB_MODIFIED_COMBINING_CLASS_CCC118 118 /* sign u / sign uu */
+#define HB_MODIFIED_COMBINING_CLASS_CCC122 122 /* mai * */
+
+/* Tibetan */
+#define HB_MODIFIED_COMBINING_CLASS_CCC129 129 /* sign aa */
+#define HB_MODIFIED_COMBINING_CLASS_CCC130 130 /* sign i */
+#define HB_MODIFIED_COMBINING_CLASS_CCC132 132 /* sign u */
 
 
 #endif /* HB_UNICODE_PRIVATE_HH */

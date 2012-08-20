@@ -1,3 +1,4 @@
 # 468496-1 will also detect bugs in video drivers.
 fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 468496-1.html 468496-1-ref.html # bug 486761, 660740
-== 611498-1.html 611498-ref.html
+random-if(bug685516) == 611498-1.html 611498-ref.html
+== 709477-1.html 709477-1-ref.html

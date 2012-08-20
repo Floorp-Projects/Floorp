@@ -423,7 +423,7 @@ XRE_InitChildProcess(int aArgc,
 
   NS_LogInit();
 
-  int rv = XRE_InitCommandLine(aArgc, aArgv);
+  nsresult rv = XRE_InitCommandLine(aArgc, aArgv);
   if (NS_FAILED(rv)) {
     NS_LogTerm();
     return NS_ERROR_FAILURE;
@@ -547,7 +547,7 @@ XRE_InitParentProcess(int aArgc,
 
   gArgc = aArgc;
   gArgv = aArgv;
-  int rv = XRE_InitCommandLine(gArgc, gArgv);
+  nsresult rv = XRE_InitCommandLine(gArgc, gArgv);
   if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 

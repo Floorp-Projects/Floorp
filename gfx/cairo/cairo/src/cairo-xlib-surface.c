@@ -4811,7 +4811,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	cairo_region_num_rectangles (clip_region) == 1)
     {
 	cairo_rectangle_int_t glyph_extents;
-	const cairo_rectangle_int_t *clip_extents;
+	cairo_rectangle_int_t clip_extents;
 
 	/* Can we do without the clip?
 	 * Around 50% of the time the clip is redundant (firefox).
@@ -4820,11 +4820,11 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 						      glyphs, num_glyphs,
 						      &glyph_extents);
 
-	clip_extents = &clip->path->extents;
-	if (clip_extents->x <= glyph_extents.x &&
-	    clip_extents->y <= glyph_extents.y &&
-	    clip_extents->x + clip_extents->width  >= glyph_extents.x + glyph_extents.width &&
-	    clip_extents->y + clip_extents->height >= glyph_extents.y + glyph_extents.height)
+	cairo_region_get_extents(clip_region, &clip_extents);
+	if (clip_extents.x <= glyph_extents.x &&
+	    clip_extents.y <= glyph_extents.y &&
+	    clip_extents.x + clip_extents.width  >= glyph_extents.x + glyph_extents.width &&
+	    clip_extents.y + clip_extents.height >= glyph_extents.y + glyph_extents.height)
 	{
 	    clip_region = NULL;
 	}

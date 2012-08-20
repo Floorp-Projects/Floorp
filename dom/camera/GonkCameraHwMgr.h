@@ -26,6 +26,8 @@
 #define DOM_CAMERA_LOG_LEVEL  3
 #include "CameraCommon.h"
 
+#include "GonkNativeWindow.h"
+
 // config
 #define GIHM_TIMING_RECEIVEFRAME    0
 #define GIHM_TIMING_OVERALL         1
@@ -37,7 +39,7 @@ namespace mozilla {
 
 typedef class nsGonkCameraControl GonkCamera;
 
-class GonkCameraHardware
+class GonkCameraHardware : GonkNativeWindowNewFrameCallback
 {
 protected:
   GonkCameraHardware(GonkCamera* aTarget, PRUint32 aCamera);
@@ -48,6 +50,8 @@ protected:
   static void                   NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2, void* aUser);
 
 public:
+  virtual void OnNewFrame() MOZ_OVERRIDE;
+
   static void                   ReleaseHandle(PRUint32 aHwHandle);
   static PRUint32               GetHandle(GonkCamera* aTarget, PRUint32 aCamera);
   static PRUint32               GetFps(PRUint32 aHwHandle);

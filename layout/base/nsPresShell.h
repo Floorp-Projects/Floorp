@@ -689,7 +689,12 @@ protected:
   // The callback for the mReflowContinueTimer timer.
   static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
   bool ScheduleReflowOffTimer();
-  
+
+  // Widget notificiations
+  virtual void WindowSizeMoveDone();
+  virtual void SysColorChanged() { mPresContext->SysColorChanged(); }
+  virtual void ThemeChanged() { mPresContext->ThemeChanged(); }
+
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.

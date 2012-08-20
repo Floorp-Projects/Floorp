@@ -1170,7 +1170,7 @@ mjit::Compiler::jsop_setelem_dense()
      * undefined.
      */
     types::TypeSet *types = frame.extra(obj).types;
-    if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
+    if (cx->compartment->compileBarriers() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
         Label barrierStart = stubcc.masm.label();
         stubcc.linkExitDirect(masm.jump(), barrierStart);
 
@@ -1576,7 +1576,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     // Write barrier.
-    if (cx->compartment->needsBarrier()) {
+    if (cx->compartment->compileBarriers()) {
         jsop_setelem_slow();
         return true;
     }
@@ -2518,16 +2518,16 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         JS_ASSERT(reg2 != resultReg);
         JS_ASSERT(reg2 != tmpReg);
 
-        /* JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0) */
-        Imm32 atomMask(JSString::ATOM_MASK);
+        /* JSString::isAtom === (lengthAndFlags & ATOM_BIT) */
+        Imm32 atomBit(JSString::ATOM_BIT);
 
         masm.load32(Address(reg1, JSString::offsetOfLengthAndFlags()), tmpReg);
-        Jump op1NotAtomized = masm.branchTest32(Assembler::NonZero, tmpReg, atomMask);
+        Jump op1NotAtomized = masm.branchTest32(Assembler::Zero, tmpReg, atomBit);
         stubcc.linkExit(op1NotAtomized, Uses(2));
 
         if (!op2->isConstant()) {
             masm.load32(Address(reg2, JSString::offsetOfLengthAndFlags()), tmpReg);
-            Jump op2NotAtomized = masm.branchTest32(Assembler::NonZero, tmpReg, atomMask);
+            Jump op2NotAtomized = masm.branchTest32(Assembler::Zero, tmpReg, atomBit);
             stubcc.linkExit(op2NotAtomized, Uses(2));
         }
 
@@ -2685,7 +2685,7 @@ mjit::Compiler::jsop_initprop()
 
     RootedObject baseobj(cx, frame.extra(obj).initObject);
 
-    if (!baseobj || monitored(PC)) {
+    if (!baseobj || monitored(PC) || cx->compartment->compileBarriers()) {
         prepareStubCall(Uses(2));
         masm.move(ImmPtr(name), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::InitProp, REJOIN_FALLTHROUGH);

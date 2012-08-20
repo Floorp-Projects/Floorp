@@ -11,7 +11,19 @@ interface nsIURI;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(f2c0e216-5d07-4df4-bbcb-37683077ae7e)]
+[scriptable, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
+interface nsIFilePickerShownCallback : nsISupports
+{
+ /**
+  * Callback which is called when a filepicker is shown and a result
+  * is returned.
+  *
+  * @param aResult One of returnOK, returnCancel, or returnReplace
+  */
+  void done(in short aResult);
+};
+
+[scriptable, uuid(60e2dfb6-3fc7-4A2C-8137-16bef44536fc)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -143,5 +155,13 @@ interface nsIFilePicker : nsISupports
   * @return returnOK if the user selects OK, returnCancel if the user selects cancel
   *
   */
-  short show();
+  [deprecated] short show();
+
+
+ /**
+  * Opens the file dialog asynchrounously.
+  * The passed in object's done method will be called upon completion.
+  */
+  void open(in nsIFilePickerShownCallback aFilePickerShownCallback);
+
 };

@@ -197,13 +197,13 @@ function InstallTriggerManager() {
   this.callbacks = {};
 
   addMessageListener(MSG_INSTALL_CALLBACK, this);
-  
+
   try {
     // only if we live in a child process...
     if (Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType !== Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       // ... propagate JAR cache flush notifications across process boundaries
       addMessageListener(MSG_JAR_FLUSH, function(msg) {
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(msg.json);
         Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService)
           .notifyObservers(file, "flush-cache-entry", null);

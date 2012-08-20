@@ -7,6 +7,7 @@
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
+var Cu = Components.utils;
 
 Components.utils.import("resource://mochikit/MockFilePicker.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -882,13 +883,16 @@ SpecialPowersAPI.prototype = {
     return this._xpcomabi;
   },
 
-  executeSoon: function(aFunc) {
-    var tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-    tm.mainThread.dispatch({
-      run: function() {
-        aFunc();
-      }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+  // The optional aWin parameter allows the caller to specify a given window in
+  // whose scope the runnable should be dispatched. If aFun throws, the
+  // exception will be reported to aWin.
+  executeSoon: function(aFun, aWin) {
+    // Create the runnable in the scope of aWin to avoid running into COWs.
+    var runnable = {};
+    if (aWin)
+        runnable = Cu.createObjectIn(aWin);
+    runnable.run = aFun;
+    Cu.dispatch(runnable, aWin);
   },
 
   _os: null,

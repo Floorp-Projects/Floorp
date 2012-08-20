@@ -34,8 +34,8 @@
 
 
 /* buffer var allocations, used during the entire shaping process */
-#define unicode_props0()	var1.u8[0]
-#define unicode_props1()	var1.u8[1]
+#define unicode_props0()	var2.u8[0]
+#define unicode_props1()	var2.u8[1]
 
 
 

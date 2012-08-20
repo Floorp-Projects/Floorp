@@ -163,8 +163,8 @@ function wait_for_page(aWindow, aPageId, aCallback) {
 
 function get_list_names(aList) {
   var items = [];
-  for (let i = 0; i < aList.childNodes.length; i++)
-    items.push(aList.childNodes[i].label);
+  for (let listItem of aList.childNodes)
+    items.push(listItem.label);
   items.sort();
   return items;
 }
@@ -219,16 +219,16 @@ add_test(function() {
                "Next button should be enabled");
 
             // Uncheck all
-            for (let i = 0; i < list.childNodes.length; i++)
-              EventUtils.synthesizeMouse(list.childNodes[i], 2, 2, { }, aWindow);
+            for (let listItem of list.childNodes)
+              EventUtils.synthesizeMouse(listItem, 2, 2, { }, aWindow);
 
             ok(doc.documentElement.getButton("next").disabled,
                "Next button should not be enabled");
 
             // Check the ones we want to install
-            for (let i = 0; i < list.childNodes.length; i++) {
-              if (list.childNodes[i].label != "Addon7 2.0")
-                EventUtils.synthesizeMouse(list.childNodes[i], 2, 2, { }, aWindow);
+            for (let listItem of list.childNodes) {
+              if (listItem.label != "Addon7 2.0")
+                EventUtils.synthesizeMouse(listItem, 2, 2, { }, aWindow);
             }
 
             var button = doc.documentElement.getButton("next");
@@ -313,9 +313,9 @@ add_test(function() {
             is(items[2], "Addon9 2.0", "Should have seen update for addon9");
 
             // Unheck the ones we don't want to install
-            for (let i = 0; i < list.childNodes.length; i++) {
-              if (list.childNodes[i].label != "Addon7 2.0")
-                EventUtils.synthesizeMouse(list.childNodes[i], 2, 2, { }, aWindow);
+            for (let listItem of list.childNodes) {
+              if (listItem.label != "Addon7 2.0")
+                EventUtils.synthesizeMouse(listItem, 2, 2, { }, aWindow);
             }
 
             var button = doc.documentElement.getButton("next");

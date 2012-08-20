@@ -13,7 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 <p id="display"></p>
 <div id="content" style="display: none">
   <script src="chrome://global/content/strres.js"></script>
-  <script src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"></script>
+  <script type="application/javascript;version=1.8" src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"></script>
+  <script id="resjs" type="application/javascript;version=1.8"></script>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -36,13 +37,13 @@ function testScriptSrc(aCallback) {
     /** make sure the last one didn't pass because someone
      ** moved the resource
      **/
-    var resjs = document.createElement("script");
+    var resjs = document.getElementById("resjs");
+    resjs.onload = scriptOnload;
 #ifdef MOZ_CHROME_FILE_FORMAT_JAR
     resjs.src = "jar:resource://gre/chrome/toolkit.jar!/content/mozapps/xpinstall/xpinstallConfirm.js";
 #else
     resjs.src = "resource://gre/chrome/toolkit/content/mozapps/xpinstall/xpinstallConfirm.js";
 #endif
-    resjs.onload = scriptOnload;
     document.getElementById("content").appendChild(resjs);
 
     function scriptOnload() {
