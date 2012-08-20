@@ -65,6 +65,7 @@ EXTRA_JS_MODULES = \
   PageMenu.jsm \
   PropertyListUtils.jsm \
   PrivateBrowsingUtils.jsm \
+  Task.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
