@@ -4335,7 +4335,7 @@ if test -z "$gonkdir" ; then
         android_min_api_level=13
         ;;
     mobile/android)
-        android_min_api_level=14
+        android_min_api_level=16
         ;;
     esac
 
