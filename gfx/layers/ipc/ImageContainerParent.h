@@ -29,7 +29,7 @@ class ImageContainerParent : public PImageContainerParent
 {
 public:
 
-  ImageContainerParent(ImageBridgeParent* aBridge, PRUint32 aContainerID);
+  ImageContainerParent(PRUint32 aContainerID);
   ~ImageContainerParent();
 
   // Overriden from PImageContainerParent (see ImageContainer.ipdl)
@@ -126,7 +126,6 @@ protected:
 
 private:
   PRUint64 mID;
-  ImageBridgeParent* mBridge;
   bool  mStop;
 };
 

@@ -864,7 +864,6 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayList shadowTree;
   ContainerLayer* container = GetRootLayer();
   if (aBuilder->IsForEventDelivery() && container) {
-    nsRect bounds = aFrame->EnsureInnerView()->GetBounds();
     ViewTransform offset =
       ViewTransform(GetRootFrameOffset(aFrame, aBuilder), 1, 1);
     BuildListForLayer(container, mFrameLoader, offset,
