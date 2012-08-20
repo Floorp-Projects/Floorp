@@ -374,7 +374,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         size_t length = str->length();
         jschar *chars = (jschar *) cx->malloc_((length + 2) * sizeof(jschar));
         if (!chars)
-            return JS_FALSE;
+            return NULL;
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
