@@ -1023,11 +1023,11 @@ var AddonRepository = {
           break;
         case "authors":
           let authorNodes = node.getElementsByTagName("author");
-          Array.forEach(authorNodes, function(aAuthorNode) {
-            let name = self._getDescendantTextContent(aAuthorNode, "name");
-            let link = self._getDescendantTextContent(aAuthorNode, "link");
+          for (let authorNode of authorNodes) {
+            let name = self._getDescendantTextContent(authorNode, "name");
+            let link = self._getDescendantTextContent(authorNode, "link");
             if (name == null || link == null)
-              return;
+              continue;
 
             let author = new AddonManagerPrivate.AddonAuthor(name, link);
             if (addon.creator == null)
@@ -1038,27 +1038,27 @@ var AddonRepository = {
 
               addon.developers.push(author);
             }
-          });
+          }
           break;
         case "previews":
           let previewNodes = node.getElementsByTagName("preview");
-          Array.forEach(previewNodes, function(aPreviewNode) {
-            let full = self._getUniqueDescendant(aPreviewNode, "full");
+          for (let previewNode of previewNodes) {
+            let full = self._getUniqueDescendant(previewNode, "full");
             if (full == null)
-              return;
+              continue;
 
             let fullURL = self._getTextContent(full);
             let fullWidth = full.getAttribute("width");
             let fullHeight = full.getAttribute("height");
 
             let thumbnailURL, thumbnailWidth, thumbnailHeight;
-            let thumbnail = self._getUniqueDescendant(aPreviewNode, "thumbnail");
+            let thumbnail = self._getUniqueDescendant(previewNode, "thumbnail");
             if (thumbnail) {
               thumbnailURL = self._getTextContent(thumbnail);
               thumbnailWidth = thumbnail.getAttribute("width");
               thumbnailHeight = thumbnail.getAttribute("height");
             }
-            let caption = self._getDescendantTextContent(aPreviewNode, "caption");
+            let caption = self._getDescendantTextContent(previewNode, "caption");
             let screenshot = new AddonManagerPrivate.AddonScreenshot(fullURL, fullWidth, fullHeight,
                                                                      thumbnailURL, thumbnailWidth,
                                                                      thumbnailHeight, caption);
@@ -1066,11 +1066,11 @@ var AddonRepository = {
             if (addon.screenshots == null)
               addon.screenshots = [];
 
-            if (aPreviewNode.getAttribute("primary") == 1)
+            if (previewNode.getAttribute("primary") == 1)
               addon.screenshots.unshift(screenshot);
             else
               addon.screenshots.push(screenshot);
-          });
+          }
           break;
         case "learnmore":
           addon.homepageURL = addon.homepageURL || this._getTextContent(node);
