@@ -548,7 +548,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   // callee context onto the context stack so that
   // CalculateChromeFlags() sees the actual caller when doing its
   // security checks.
-  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
+  chromeFlags = CalculateChromeFlags(aParent, features.get(), featuresSpecified,
                                      aDialog, uriToLoadIsChrome,
                                      hasChromeParent);
 
@@ -1414,6 +1414,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
 
 /**
  * Calculate the chrome bitmask from a string list of features.
+ * @param aParent the opener window
  * @param aFeatures a string containing a list of named chrome features
  * @param aNullFeatures true if aFeatures was a null pointer (which fact
  *                      is lost by its conversion to a string in the caller)
@@ -1421,7 +1422,8 @@ nsWindowWatcher::URIfromURL(const char *aURL,
  * @return the chrome bitmask
  */
 // static
-PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
+PRUint32 nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
+                                               const char *aFeatures,
                                                bool aFeaturesSpecified,
                                                bool aDialog,
                                                bool aChromeURL,
@@ -1588,6 +1590,17 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   if (!(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
     // Remove the dependent flag if we're not opening as chrome
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_DEPENDENT;
+  }
+
+  // Disable CHROME_OPENAS_DIALOG if the window is inside <iframe mozbrowser>.
+  // It's up to the embedder to interpret what dialog=1 means.
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
+  if (docshell) {
+    bool belowContentBoundary = false;
+    docshell->GetIsBelowContentBoundary(&belowContentBoundary);
+    if (belowContentBoundary) {
+      chromeFlags &= ~nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
+    }
   }
 
   return chromeFlags;
