@@ -7,6 +7,7 @@
 #include "nsDiskCacheMap.h"
 #include "nsDiskCacheBinding.h"
 #include "nsDiskCacheEntry.h"
+#include "nsCacheService.h"
 
 #include "nsCache.h"
 
@@ -17,6 +18,8 @@
 #include "nsSerializationHelper.h"
 
 #include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 /******************************************************************************
  *  nsDiskCacheMap
@@ -56,9 +59,14 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory,
 
     bool cacheFilesExist = CacheFilesExist();
     rv = NS_ERROR_FILE_CORRUPTED;  // presume the worst
+    PRUint32 mapSize = PR_Available(mMapFD);    
+
+    if (NS_FAILED(InitCacheClean(cacheDirectory, corruptInfo))) {
+        // corruptInfo is set in the call to InitCacheClean
+        goto error_exit;
+    }
 
     // check size of map file
-    PRUint32 mapSize = PR_Available(mMapFD);    
     if (mapSize == 0) {  // creating a new _CACHE_MAP_
 
         // block files shouldn't exist if we're creating the _CACHE_MAP_
@@ -173,8 +181,7 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory,
         // extra scope so the compiler doesn't barf on the above gotos jumping
         // past this declaration down here
         PRUint32 overhead = moz_malloc_size_of(mRecordArray);
-        mozilla::Telemetry::Accumulate(mozilla::Telemetry::HTTP_DISK_CACHE_OVERHEAD,
-                overhead);
+        Telemetry::Accumulate(Telemetry::HTTP_DISK_CACHE_OVERHEAD, overhead);
     }
 
     *corruptInfo = nsDiskCache::kNotCorrupt;
@@ -191,6 +198,12 @@ nsresult
 nsDiskCacheMap::Close(bool flush)
 {
     nsresult  rv = NS_OK;
+
+    // Cancel any pending cache validation event, the FlushRecords call below
+    // will validate the cache.
+    if (mCleanCacheTimer) {
+        mCleanCacheTimer->Cancel();
+    }
 
     // If cache map file and its block files are still open, close them
     if (mMapFD) {
@@ -210,6 +223,12 @@ nsDiskCacheMap::Close(bool flush)
 
         mMapFD = nullptr;
     }
+
+    if (mCleanFD) {
+        PR_Close(mCleanFD);
+        mCleanFD = nullptr;
+    }
+
     PR_FREEIF(mRecordArray);
     PR_FREEIF(mBuffer);
     mBufferSize = 0;
@@ -235,6 +254,7 @@ nsDiskCacheMap::Trim()
 nsresult
 nsDiskCacheMap::FlushHeader()
 {
+    RevalidateCache();
     if (!mMapFD)  return NS_ERROR_NOT_AVAILABLE;
     
     // seek to beginning of cache map
@@ -347,6 +367,9 @@ nsDiskCacheMap::GrowRecords()
     // Set as the new record array
     mRecordArray = newArray;
     mHeader.mRecordCount = newCount;
+
+    InvalidateCache();
+
     return NS_OK;
 }
 
@@ -393,6 +416,9 @@ nsDiskCacheMap::ShrinkRecords()
     // Set as the new record array
     mRecordArray = newArray;
     mHeader.mRecordCount = newCount;
+
+    InvalidateCache();
+
     return NS_OK;
 }
 
@@ -421,6 +447,7 @@ nsDiskCacheMap::AddRecord( nsDiskCacheRecord *  mapRecord,
         mHeader.mBucketUsage[bucketIndex]++;           
         if (mHeader.mEvictionRank[bucketIndex] < mapRecord->EvictionRank())
             mHeader.mEvictionRank[bucketIndex] = mapRecord->EvictionRank();
+        InvalidateCache();
     } else {
         // Find the record with the highest eviction rank
         nsDiskCacheRecord * mostEvictable = &records[0];
@@ -436,6 +463,7 @@ nsDiskCacheMap::AddRecord( nsDiskCacheRecord *  mapRecord,
             mHeader.mEvictionRank[bucketIndex] = mapRecord->EvictionRank();
         if (oldRecord->EvictionRank() >= mHeader.mEvictionRank[bucketIndex]) 
             mHeader.mEvictionRank[bucketIndex] = GetBucketRank(bucketIndex, 0);
+        InvalidateCache();
     }
 
     NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == GetBucketRank(bucketIndex, 0),
@@ -465,6 +493,8 @@ nsDiskCacheMap::UpdateRecord( nsDiskCacheRecord *  mapRecord)
                 mHeader.mEvictionRank[bucketIndex] = mapRecord->EvictionRank();
             else if (mHeader.mEvictionRank[bucketIndex] == oldRank)
                 mHeader.mEvictionRank[bucketIndex] = GetBucketRank(bucketIndex, 0);
+
+            InvalidateCache();
 
 NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == GetBucketRank(bucketIndex, 0),
              "eviction rank out of sync");
@@ -521,6 +551,8 @@ nsDiskCacheMap::DeleteRecord( nsDiskCacheRecord *  mapRecord)
                 mHeader.mEvictionRank[bucketIndex] = GetBucketRank(bucketIndex, 0);
             }
 
+            InvalidateCache();
+
             NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] ==
                          GetBucketRank(bucketIndex, 0), "eviction rank out of sync");
             return NS_OK;
@@ -551,6 +583,7 @@ nsDiskCacheMap::VisitEachRecord(PRUint32                    bucketIndex,
             --count;
             records[i] = records[count];
             records[count].SetHashNumber(0);
+            InvalidateCache();
         }
     }
 
@@ -1173,4 +1206,187 @@ nsDiskCacheMap::NotifyCapacityChange(PRUint32 capacity)
     // We can only grow
     mMaxRecordCount = maxRecordCount;
   }
+}
+
+nsresult
+nsDiskCacheMap::InitCacheClean(nsIFile *  cacheDirectory,
+                               nsDiskCache::CorruptCacheInfo *  corruptInfo)
+{
+    // The _CACHE_CLEAN_ file will be used in the future to determine
+    // if the cache is clean or not. 
+    bool cacheCleanFileExists = false;
+    nsCOMPtr<nsIFile> cacheCleanFile;
+    nsresult rv = cacheDirectory->Clone(getter_AddRefs(cacheCleanFile));
+    if (NS_SUCCEEDED(rv)) {
+        rv = cacheCleanFile->AppendNative(
+                 NS_LITERAL_CSTRING("_CACHE_CLEAN_"));
+        if (NS_SUCCEEDED(rv)) {
+            // Check if the file already exists, if it does, we will later read the
+            // value and report it to telemetry.
+            cacheCleanFile->Exists(&cacheCleanFileExists);
+        }
+    }
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Could not build cache clean file path");
+        *corruptInfo = nsDiskCache::kCacheCleanFilePathError;
+        return rv;
+    }
+
+    // Make sure the _CACHE_CLEAN_ file exists
+    rv = cacheCleanFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE,
+                                          00600, &mCleanFD);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Could not open cache clean file");
+        *corruptInfo = nsDiskCache::kCacheCleanOpenFileError;
+        return rv;
+    }
+
+    if (cacheCleanFileExists) {
+        char clean = '0';
+        PRInt32 bytesRead = PR_Read(mCleanFD, &clean, 1);
+        if (bytesRead != 1) {
+            NS_WARNING("Could not read _CACHE_CLEAN_ file contents");
+        } else {
+            Telemetry::Accumulate(Telemetry::DISK_CACHE_REDUCTION_TRIAL,
+                                  clean == '1' ? 1 : 0);
+        }
+    }
+
+    // Create a timer that will be used to validate the cache
+    // as long as an activity threshold was met
+    mCleanCacheTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+        mCleanCacheTimer->SetTarget(nsCacheService::GlobalInstance()->mCacheIOThread);
+        rv = ResetCacheTimer();
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Could not create cache clean timer");
+        mCleanCacheTimer = nullptr;
+        *corruptInfo = nsDiskCache::kCacheCleanTimerError;
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsDiskCacheMap::WriteCacheClean(bool clean)
+{
+    nsCacheService::AssertOwnsLock();
+    CACHE_LOG_DEBUG(("CACHE: WriteCacheClean: %d\n", clean? 1 : 0));
+    // I'm using a simple '1' or '0' to denote cache clean
+    // since it can be edited easily by any text editor for testing.
+    char data = clean? '1' : '0';
+    PRInt32 filePos = PR_Seek(mCleanFD, 0, PR_SEEK_SET);
+    if (filePos != 0) {
+        NS_WARNING("Could not seek in cache map file!");
+        return NS_ERROR_FAILURE;
+    }
+    PRInt32 bytesWritten = PR_Write(mCleanFD, &data, 1);
+    if (bytesWritten != 1) {
+        NS_WARNING("Could not write cache map file!");
+        return NS_ERROR_FAILURE;
+    }
+    PRStatus err = PR_Sync(mCleanFD);
+    if (err != PR_SUCCESS) {
+        NS_WARNING("Could not flush mCleanFD!");
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsDiskCacheMap::InvalidateCache()
+{
+    nsCacheService::AssertOwnsLock();
+    CACHE_LOG_DEBUG(("CACHE: InvalidateCache\n"));
+    nsresult rv;
+  
+    if (!mIsDirtyCacheFlushed) {
+        rv = WriteCacheClean(false);
+        NS_ENSURE_SUCCESS(rv, rv);
+        mIsDirtyCacheFlushed = true;
+    }
+
+    rv = ResetCacheTimer();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+nsresult
+nsDiskCacheMap::ResetCacheTimer(PRInt32 timeout)
+{
+    mCleanCacheTimer->Cancel();
+    nsresult rv =
+      mCleanCacheTimer->InitWithFuncCallback(RevalidateTimerCallback,
+                                             this, timeout,
+                                             nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mLastInvalidateTime = PR_IntervalNow();
+
+    return rv;
+}
+
+void
+nsDiskCacheMap::RevalidateTimerCallback(nsITimer *aTimer, void *arg)
+{
+    nsDiskCacheMap *diskCacheMap = reinterpret_cast<nsDiskCacheMap *>(arg);
+    nsresult rv;
+
+    // Intentional braces to scope mutex to only what is needed
+    {
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEMAP_REVALIDATION));
+        // If we have less than kLastInvalidateTime since the last timer was
+        // issued then another thread called InvalidateCache.  This won't catch
+        // all cases where we wanted to cancel the timer, but under the lock it
+        // is always OK to revalidate as long as IsCacheInSafeState() returns
+        // true.  We just want to avoid revalidating when we can to reduce IO
+        // and this check will do that.
+        PRUint32 delta =
+            PR_IntervalToMilliseconds(PR_IntervalNow() -
+                                      diskCacheMap->mLastInvalidateTime) +
+            kRevalidateCacheTimeoutTolerance;
+        if (delta < kRevalidateCacheTimeout) {
+            diskCacheMap->ResetCacheTimer();
+            return;
+        }
+        rv = diskCacheMap->RevalidateCache();
+    }
+
+    if (NS_FAILED(rv)) {
+        diskCacheMap->ResetCacheTimer(kRevalidateCacheErrorTimeout);
+    }
+}
+
+bool
+nsDiskCacheMap::IsCacheInSafeState()
+{
+    return nsCacheService::GlobalInstance()->IsDoomListEmpty();
+}
+
+nsresult
+nsDiskCacheMap::RevalidateCache()
+{
+    CACHE_LOG_DEBUG(("CACHE: RevalidateCache\n"));
+    nsresult rv;
+
+    if (!IsCacheInSafeState()) {
+        CACHE_LOG_DEBUG(("CACHE: Revalidation not performed because "
+                         "cache not in a safe state\n"));
+        return NS_ERROR_FAILURE;
+    }
+
+    // We want this after the lock to prove that flushing a file isn't that expensive
+    Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_REVALIDATION> totalTimer;
+
+    // If telemetry data shows it is worth it, we'll be flushing headers and
+    // records before flushing the clean cache file.
+  
+    // Write out the _CACHE_CLEAN_ file with '1'
+    rv = WriteCacheClean(true);
+    mIsDirtyCacheFlushed = false;
+
+    return NS_OK;
 }

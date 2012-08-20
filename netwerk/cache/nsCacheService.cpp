@@ -2852,6 +2852,12 @@ nsCacheService::ClearPendingRequests(nsCacheEntry * entry)
     }
 }
 
+bool
+nsCacheService::IsDoomListEmpty()
+{
+    nsCacheEntry * entry = (nsCacheEntry *)PR_LIST_HEAD(&mDoomedEntries);
+    return &mDoomedEntries == entry;
+}
 
 void
 nsCacheService::ClearDoomList()
