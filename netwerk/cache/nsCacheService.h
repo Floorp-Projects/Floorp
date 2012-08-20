@@ -178,6 +178,7 @@ public:
     { gService->mLock.AssertCurrentThreadOwns(); }
 
     static void      LeavePrivateBrowsing();
+    bool             IsDoomListEmpty();
 
     typedef bool (*DoomCheckFn)(nsCacheEntry* entry);
 
@@ -190,6 +191,7 @@ private:
     friend class nsSetDiskSmartSizeCallback;
     friend class nsDoomEvent;
     friend class nsDisableOldMaxSmartSizePrefEvent;
+    friend class nsDiskCacheMap;
 
     /**
      * Internal Methods
