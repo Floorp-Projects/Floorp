@@ -25,6 +25,7 @@ var Readability = function(uri, doc) {
   this._uri = uri;
   this._doc = doc;
   this._biggestFrame = false;
+  this._articleByline = null;
 
   // Start with all flags set
   this._flags = this.FLAG_STRIP_UNLIKELYS |
@@ -69,6 +70,8 @@ Readability.prototype = {
     positive: /article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
     negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
+    byline: /byline|author|dateline|writtenby/i,
+    stripTags: /(<([^>]+)>)/ig,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
@@ -501,6 +504,9 @@ Readability.prototype = {
       for (let nodeIndex = 0; nodeIndex < allElements.length; nodeIndex++) {
         if (!(node = allElements[nodeIndex]))
           continue;
+
+        if (node.className.search(this.REGEXPS.byline) !== -1 && !this._articleByline)
+          this._articleByline = node.innerHTML.replace(this.REGEXPS.stripTags, "");
 
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
@@ -1422,6 +1428,7 @@ Readability.prototype = {
     // }
 
     return { title: this._getInnerText(articleTitle),
+             byline: this._articleByline,
              content: articleContent.innerHTML };
   }
 };
