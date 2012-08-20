@@ -9,14 +9,19 @@ let connection = navigator.mozMobileConnection;
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 
+let emulatorCmdPendingCount = 0;
 function setEmulatorVoiceState(state) {
+  emulatorCmdPendingCount++;
   runEmulatorCmd("gsm voice " + state, function (result) {
+    emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
 }
 
 function setEmulatorGsmLocation(lac, cid) {
+  emulatorCmdPendingCount++;
   runEmulatorCmd("gsm location " + lac + " " + cid, function (result) {
+    emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
 }
@@ -136,6 +141,11 @@ function testHome() {
 }
 
 function cleanUp() {
+  if (emulatorCmdPendingCount > 0) {
+    setTimeout(cleanUp, 100);
+    return;
+  }
+
   SpecialPowers.removePermission("mobileconnection", document);
   finish();
 }

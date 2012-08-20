@@ -883,7 +883,7 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
   mImageContainer = LayerManager::CreateImageContainer();
   
   // Now create a CairoImage to display the surface.
-  ImageFormat cairoFormat = ImageFormat::CAIRO_SURFACE;
+  ImageFormat cairoFormat = CAIRO_SURFACE;
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
   NS_ASSERTION(image, "Failed to create Image");
 

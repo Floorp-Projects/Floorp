@@ -731,10 +731,10 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 #endif
         return NS_ERROR_NOT_AVAILABLE;
 
-    ImageFormat format = ImageFormat::CAIRO_SURFACE;
+    ImageFormat format = CAIRO_SURFACE;
 #ifdef XP_MACOSX
     if (ioSurface) {
-        format = ImageFormat::MAC_IO_SURFACE;
+        format = MAC_IO_SURFACE;
     }
 #endif
 
@@ -758,7 +758,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        NS_ASSERTION(image->GetFormat() == ImageFormat::MAC_IO_SURFACE, "Wrong format?");
+        NS_ASSERTION(image->GetFormat() == MAC_IO_SURFACE, "Wrong format?");
         MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
         MacIOSurfaceImage::Data ioData;
         ioData.mIOSurface = ioSurface;
@@ -771,7 +771,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
     }
 #endif
 
-    NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
+    NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
     CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
     CairoImage::Data cairoData;
     cairoData.mSurface = mFrontSurface;
