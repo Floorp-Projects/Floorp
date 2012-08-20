@@ -1545,7 +1545,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     if ((NS_SUCCEEDED(rv) && inherit) ||
         (nsContentUtils::URIIsLocalFile(aLoadData->mURI) &&
          NS_SUCCEEDED(aLoadData->mLoaderPrincipal->
-                      CheckMayLoad(aLoadData->mURI, false)))) {
+                      CheckMayLoad(aLoadData->mURI, false, false)))) {
       channel->SetOwner(aLoadData->mLoaderPrincipal);
     }
   }
