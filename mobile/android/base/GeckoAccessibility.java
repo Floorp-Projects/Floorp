@@ -80,7 +80,7 @@ public class GeckoAccessibility {
 
     private static void sendDirectAccessibilityEvent(int eventType, JSONObject message) {
         final AccessibilityEvent accEvent = AccessibilityEvent.obtain(eventType);
-        accEvent.setClassName(LayerView.class.getName());
+        accEvent.setClassName(GeckoAccessibility.class.getName());
         accEvent.setPackageName(GeckoApp.mAppContext.getPackageName());
         populateEventFromJSON(accEvent, message);
         AccessibilityManager accessibilityManager =
