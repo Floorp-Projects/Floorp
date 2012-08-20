@@ -3410,6 +3410,7 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj.isObject() || !proto.isObjectOrNull()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
                              "wrapWithProto");
+        return false;
     }
 
     JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), proto.toObjectOrNull(),
