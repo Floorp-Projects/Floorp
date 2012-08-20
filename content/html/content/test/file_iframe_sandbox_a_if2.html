@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="text/javascript">
+function doStuff() {
+  // should NOT be able to execute scripts
+  window.parent.parent.postMessage({ok: false, desc: "a document within an iframe sandboxed with sandbox='' should NOT be able to execute scripts"}, "*");
+}
+</script>
+
+<body onLoad="doStuff()">
+  I am NOT sandboxed or am sandboxed with "allow-scripts" but am contained within an iframe sandboxed with sandbox = ""
+  or am sandboxed with sandbox='' inside an iframe sandboxed with "allow-scripts"
+</body>
+</html>
+
