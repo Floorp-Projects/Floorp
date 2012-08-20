@@ -118,7 +118,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttrib", NULL } },
         // WARNING: xGetFBConfigs not set in symbols13_ext
         { (PRFuncPtr*) &xGetFBConfigsInternal, { "glXGetFBConfigs", NULL } },
-        { (PRFuncPtr*) &xGetVisualFromFBConfigInternal, { "glXGetVisualFromFBConfig", NULL } },
         // WARNING: symbols13_ext sets xCreateGLXPixmapWithConfig instead
         { (PRFuncPtr*) &xCreatePixmapInternal, { "glXCreatePixmap", NULL } },
         { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyPixmap", NULL } },
@@ -132,7 +131,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfigSGIX", NULL } },
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttribSGIX", NULL } },
         // WARNING: no xGetFBConfigs equivalent in extensions
-        { (PRFuncPtr*) &xGetVisualFromFBConfigInternal, { "glXGetVisualFromFBConfig", NULL } },
         // WARNING: different from symbols13:
         { (PRFuncPtr*) &xCreateGLXPixmapWithConfigInternal, { "glXCreateGLXPixmapWithConfigSGIX", NULL } },
         { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyGLXPixmap", NULL } }, // not from ext
@@ -562,16 +560,6 @@ GLXLibrary::xCreateNewContext(Display* display,
     return result;
 }
 
-XVisualInfo*
-GLXLibrary::xGetVisualFromFBConfig(Display* display, 
-                                   GLXFBConfig config)
-{
-    BEFORE_GLX_CALL;
-    XVisualInfo* result = xGetVisualFromFBConfigInternal(display, config);
-    AFTER_GLX_CALL;
-    return result;
-}
-
 int
 GLXLibrary::xGetFBConfigAttrib(Display *display,
                                GLXFBConfig config,
@@ -655,18 +643,6 @@ GLXLibrary::xDestroyPixmap(Display *display, GLXPixmap pixmap)
     AFTER_GLX_CALL;
 }
 
-GLXContext
-GLXLibrary::xCreateContext(Display *display,
-                           XVisualInfo *vis,
-                           GLXContext shareList,
-                           Bool direct)
-{
-    BEFORE_GLX_CALL;
-    GLXContext result = xCreateContextInternal(display, vis, shareList, direct);
-    AFTER_GLX_CALL;
-    return result;
-}
-
 Bool
 GLXLibrary::xQueryVersion(Display *display,
                           int *major,
@@ -742,7 +718,6 @@ public:
                     Display *display,
                     GLXDrawable drawable,
                     GLXFBConfig cfg,
-                    XVisualInfo *vinfo,
                     GLContextGLX *shareContext,
                     bool deleteDrawable,
                     gfxXlibSurface *pixmap = nullptr)
@@ -1116,15 +1091,11 @@ GetGlobalContextGLX()
 }
 
 static bool
-AreCompatibleVisuals(XVisualInfo *one, XVisualInfo *two)
+AreCompatibleVisuals(Visual *one, Visual *two)
 {
     if (one->c_class != two->c_class) {
         return false;
     }
-
-    if (one->depth != two->depth) {
-        return false;
-    }	
 
     if (one->red_mask != two->red_mask ||
         one->green_mask != two->green_mask ||
@@ -1193,34 +1164,25 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     printf("[GLX] widget has VisualID 0x%lx\n", widgetVisualID);
 #endif
 
-    ScopedXFree<XVisualInfo> vi;
-    if (gIsATI) {
-        XVisualInfo vinfo_template;
-        int nvisuals;
-        vinfo_template.visual   = widgetAttrs.visual;
-        vinfo_template.visualid = XVisualIDFromVisual(vinfo_template.visual);
-        vinfo_template.depth    = widgetAttrs.depth;
-        vinfo_template.screen   = xscreen;
-        vi = XGetVisualInfo(display, VisualIDMask|VisualDepthMask|VisualScreenMask,
-                            &vinfo_template, &nvisuals);
-        NS_ASSERTION(vi && nvisuals == 1, "Could not locate unique matching XVisualInfo for Visual");
-    }
-
     int matchIndex = -1;
-    ScopedXFree<XVisualInfo> vinfo;
 
     for (int i = 0; i < numConfigs; i++) {
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-        if (!vinfo) {
+        int visid = None;
+        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &visid);
+        if (!visid) {
             continue;
         }
         if (gIsATI) {
-            if (AreCompatibleVisuals(vi, vinfo)) {
+            int depth;
+            Visual *visual;
+            FindVisualAndDepth(display, visid, &visual, &depth);
+            if (depth == widgetAttrs.depth &&
+                AreCompatibleVisuals(widgetAttrs.visual, visual)) {
                 matchIndex = i;
                 break;
             }
         } else {
-            if (widgetVisualID == vinfo->visualid) {
+            if (widgetVisualID == static_cast<VisualID>(visid)) {
                 matchIndex = i;
                 break;
             }
@@ -1238,7 +1200,6 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
                                                                      display,
                                                                      window,
                                                                      cfgs[matchIndex],
-                                                                     vinfo,
                                                                      shareContext,
                                                                      false);
 
@@ -1282,11 +1243,11 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
     NS_ASSERTION(numConfigs > 0,
                  "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
 
-    ScopedXFree<XVisualInfo> vinfo;
+    int visid = None;
     int chosenIndex = 0;
 
     for (int i = 0; i < numConfigs; ++i) {
-        int dtype, visid;
+        int dtype;
 
         if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_DRAWABLE_TYPE, &dtype) != Success
             || !(dtype & GLX_PIXMAP_BIT))
@@ -1299,25 +1260,24 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
             continue;
         }
 
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-
-        if (vinfo) {
-            chosenIndex = i;
-            break;
-        }
+        chosenIndex = i;
+        break;
     }
 
-    if (!vinfo) {
+    if (!visid) {
         NS_WARNING("glXChooseFBConfig() didn't give us any configs with visuals!");
         return nullptr;
     }
 
+    Visual *visual;
+    int depth;
+    FindVisualAndDepth(display, visid, &visual, &depth);
     ScopedXErrorHandler xErrorHandler;
     GLXPixmap glxpixmap = 0;
     bool error = false;
 
     nsRefPtr<gfxXlibSurface> xsurface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
-                                                               vinfo->visual,
+                                                               visual,
                                                                gfxIntSize(16, 16));
     if (xsurface->CairoStatus() != 0) {
         error = true;
@@ -1355,7 +1315,6 @@ DONE_CREATING_PIXMAP:
                         display,
                         glxpixmap,
                         cfgs[chosenIndex],
-                        vinfo,
                         aShare ? GetGlobalContextGLX() : nullptr,
                         true,
                         xsurface);
