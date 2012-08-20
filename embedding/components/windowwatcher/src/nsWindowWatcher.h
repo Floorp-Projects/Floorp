@@ -88,7 +88,8 @@ protected:
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);
   
-  static PRUint32   CalculateChromeFlags(const char *aFeatures,
+  static PRUint32   CalculateChromeFlags(nsIDOMWindow *aParent,
+                                         const char *aFeatures,
                                          bool aFeaturesSpecified,
                                          bool aDialog,
                                          bool aChromeURL,
