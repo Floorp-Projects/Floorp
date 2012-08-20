@@ -155,6 +155,7 @@ abstract public class GeckoApp
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
 
+    private LayerView mLayerView;
     private GeckoLayerClient mLayerClient;
     private AbsoluteLayout mPluginContainer;
 
@@ -1002,7 +1003,7 @@ abstract public class GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         if (Tabs.getInstance().isSelectedTab(tab))
-                            mLayerClient.getView().getTouchEventHandler().setWaitForTouchListeners(true);
+                            mLayerView.getTouchEventHandler().setWaitForTouchListeners(true);
                     }
                 });
             } else if (event.equals("Session:StatePurged")) {
@@ -1202,7 +1203,7 @@ abstract public class GeckoApp
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
         if (Tabs.getInstance().isSelectedTab(tab))
-            getLayerClient().getView().getRenderer().resetCheckerboard();
+            mLayerView.getRenderer().resetCheckerboard();
         mMainHandler.post(new Runnable() {
             public void run() {
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
@@ -1339,14 +1340,14 @@ abstract public class GeckoApp
 
                 PluginLayer layer = (PluginLayer) tab.getPluginLayer(view);
                 if (layer == null) {
-                    layer = new PluginLayer(view, rect, mLayerClient.getView().getRenderer().getMaxTextureSize());
+                    layer = new PluginLayer(view, rect, mLayerView.getRenderer().getMaxTextureSize());
                     tab.addPluginLayer(view, layer);
                 } else {
                     layer.reset(rect);
                     layer.setVisible(true);
                 }
 
-                mLayerClient.getView().addLayer(layer);
+                mLayerView.addLayer(layer);
             }
         });
     }
@@ -1368,7 +1369,7 @@ abstract public class GeckoApp
         // a deadlock, see comment below in FullScreenHolder
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mLayerClient.getView().setVisibility(View.VISIBLE);
+                mLayerView.setVisibility(View.VISIBLE);
             }
         });
 
@@ -1423,19 +1424,19 @@ abstract public class GeckoApp
     }
     
     private void hidePluginLayer(Layer layer) {
-        LayerView layerView = mLayerClient.getView();
+        LayerView layerView = mLayerView;
         layerView.removeLayer(layer);
         layerView.requestRender();
     }
 
     private void showPluginLayer(Layer layer) {
-        LayerView layerView = mLayerClient.getView();
+        LayerView layerView = mLayerView;
         layerView.addLayer(layer);
         layerView.requestRender();
     }
 
     public void requestRender() {
-        mLayerClient.getView().requestRender();
+        mLayerView.requestRender();
     }
     
     public void hidePlugins(Tab tab) {
@@ -1648,8 +1649,8 @@ abstract public class GeckoApp
         }
 
         if (mLayerClient == null) {
-            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
-            mLayerClient = layerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            mLayerView = (LayerView) findViewById(R.id.layer_view);
+            mLayerClient = mLayerView.createLayerClient(GeckoAppShell.getEventDispatcher());
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -2584,10 +2585,9 @@ abstract public class GeckoApp
     }
 
     private void connectGeckoLayerClient() {
-        GeckoLayerClient layerClient = getLayerClient();
-        layerClient.notifyGeckoReady();
+        mLayerClient.notifyGeckoReady();
 
-        layerClient.getView().getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
+        mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
             private PointF initialPoint = null;
 
             @Override
@@ -2672,7 +2672,7 @@ abstract public class GeckoApp
 
             mMainHandler.post(new Runnable() { 
                 public void run() {
-                    mLayerClient.getView().setVisibility(View.INVISIBLE);
+                    mLayerView.setVisibility(View.INVISIBLE);
                 }
             });
         }
