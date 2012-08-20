@@ -102,7 +102,7 @@ public class GeckoLayerClient
     private final PanZoomController mPanZoomController;
     private LayerView mView;
 
-    public GeckoLayerClient(Context context, EventDispatcher eventDispatcher) {
+    public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
         mEventDispatcher = eventDispatcher;
@@ -123,11 +123,7 @@ public class GeckoLayerClient
         mCheckerboardShouldShowChecks = true;
 
         mPanZoomController = new PanZoomController(this, mEventDispatcher);
-    }
-
-    public void setView(LayerView v) {
-        mView = v;
-        mView.connect(this);
+        mView = view;
     }
 
     /** Attaches to root layer so that Gecko appears. */
