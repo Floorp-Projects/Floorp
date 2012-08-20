@@ -73,42 +73,62 @@ function attachToWindow(provider, targetWindow) {
   let mozSocialObj = {
     // Use a method for backwards compat with existing providers, but we
     // should deprecate this in favor of a simple .port getter.
-    getWorker: function() {
-      return {
-        port: port,
-        __exposedProps__: {
-          port: "r"
-        }
-      };
+    getWorker: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function() {
+        return {
+          port: port,
+          __exposedProps__: {
+            port: "r"
+          }
+        };
+      }
     },
-    hasBeenIdleFor: function () {
-      return false;
+    hasBeenIdleFor: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function() {
+        return false;
+      }
     },
-    openServiceWindow: function(toURL, name, options) {
-      return openServiceWindow(provider, targetWindow, toURL, name, options);
+    openServiceWindow: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, name, options) {
+        return openServiceWindow(provider, targetWindow, toURL, name, options);
+      }
     },
-    getAttention: function() {
-      let mainWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation)
-                         .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                         .rootTreeItem
-                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIDOMWindow);
-      mainWindow.getAttention();
+    getAttention: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function() {
+        let mainWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIWebNavigation)
+                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                           .rootTreeItem
+                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindow);
+        mainWindow.getAttention();
+      }
+    },
+    isVisible: {
+      enumerable: true,
+      configurable: true,
+      get: function() {
+        return targetWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShell).isActive;
+      }
     }
   };
 
   let contentObj = Cu.createObjectIn(targetWindow);
-  let propList = {};
-  for (let prop in mozSocialObj) {
-    propList[prop] = {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: mozSocialObj[prop]
-    };
-  }
-  Object.defineProperties(contentObj, propList);
+  Object.defineProperties(contentObj, mozSocialObj);
   Cu.makeObjectPropsNormal(contentObj);
 
   targetWindow.navigator.wrappedJSObject.__defineGetter__("mozSocial", function() {

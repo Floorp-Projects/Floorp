@@ -28,6 +28,9 @@
               }, false)
               win.close();
               break;
+            case "test-isVisible":
+              port.postMessage({topic: "test-isVisible-response", result: navigator.mozSocial.isVisible});
+              break;
           }
         }
         port.postMessage({topic: "sidebar-message", result: "ok"});

@@ -263,6 +263,7 @@ _BROWSER_FILES = \
                  browser_social_toolbar.js \
                  browser_social_sidebar.js \
                  browser_social_mozSocial_API.js \
+                 browser_social_isVisible.js \
                  social_panel.html \
                  social_sidebar.html \
                  social_window.html \
