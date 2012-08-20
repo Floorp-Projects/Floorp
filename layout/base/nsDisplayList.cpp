@@ -310,8 +310,8 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                                                 segment->mFromKey, segment->mToKey,
                                                 ToTimingFunction(segment->mTimingFunction)));
       } else if (aProperty == eCSSProperty_opacity) {
-        segments.AppendElement(AnimationSegment(Opacity(segment->mFromValue.GetFloatValue()),
-                                                Opacity(segment->mToValue.GetFloatValue()),
+        segments.AppendElement(AnimationSegment(segment->mFromValue.GetFloatValue(),
+                                                segment->mToValue.GetFloatValue(),
                                                 segment->mFromKey,
                                                 segment->mToKey,
                                                 ToTimingFunction(segment->mTimingFunction)));
@@ -323,6 +323,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                                    segments,
                                    iterations,
                                    ea->mDirection,
+                                   aProperty,
                                    aData));
   }
 }
