@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<script type="application/javascript">
+function doTest() {
+  sendMouseEvent({type:'click'}, 'anchor');
+
+   SimpleTest.executeSoon(function() {
+     window.parent.postMessage("close", "*");
+   });
+}
+</script>
+<body onload="doTest()">
+  I am sandboxed with 'allow-scripts'
+
+  <a href="file_iframe_sandbox_top_navigation_fail.html" target='_top' id='anchor'>
+</body>
+</html>

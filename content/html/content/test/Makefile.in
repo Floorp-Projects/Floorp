@@ -270,6 +270,31 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \
 		file_iframe_sandbox_b_if3.html \
+		test_iframe_sandbox_navigation.html \
+		file_iframe_sandbox_d_if1.html \
+		file_iframe_sandbox_d_if2.html \
+		file_iframe_sandbox_d_if3.html \
+		file_iframe_sandbox_d_if4.html \
+		file_iframe_sandbox_d_if5.html \
+		file_iframe_sandbox_d_if6.html \
+		file_iframe_sandbox_d_if7.html \
+		file_iframe_sandbox_d_if8.html \
+		file_iframe_sandbox_d_if9.html \
+		file_iframe_sandbox_d_if10.html \
+		file_iframe_sandbox_d_if11.html \
+		file_iframe_sandbox_d_if12.html \
+		file_iframe_sandbox_d_if13.html \
+		file_iframe_sandbox_navigation_start.html \
+		file_iframe_sandbox_navigation_pass.html \
+		file_iframe_sandbox_navigation_fail.html \
+		file_iframe_sandbox_e_if1.html \
+		file_iframe_sandbox_e_if2.html \
+		file_iframe_sandbox_e_if3.html \
+		file_iframe_sandbox_e_if4.html \
+		file_iframe_sandbox_e_if5.html \
+		file_iframe_sandbox_e_if6.html \
+		file_iframe_sandbox_top_navigation_pass.html \
+		file_iframe_sandbox_top_navigation_fail.html \
 		test_iframe_sandbox_plugins.html \
 		file_iframe_sandbox_f_if1.html \
 		file_iframe_sandbox_f_if2.html \
