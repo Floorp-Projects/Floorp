@@ -88,6 +88,7 @@ CPPSRCS		= \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
 		PaintTracker.cpp \
+ 		PositionedEventTargeting.cpp \
 		StackArena.cpp \
 		$(NULL)
 
