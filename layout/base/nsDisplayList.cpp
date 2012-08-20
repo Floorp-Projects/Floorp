@@ -293,29 +293,28 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     for (PRUint32 segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
       AnimationPropertySegment* segment = &property->mSegments[segIdx];
 
+      AnimationSegment* animSegment;
       if (aProperty == eCSSProperty_transform) {
+        animSegment = segments.AppendElement();
+        animSegment->startState() = InfallibleTArray<TransformFunction>();
+        animSegment->endState() = InfallibleTArray<TransformFunction>();
+
         nsCSSValueList* list = segment->mFromValue.GetCSSValueListValue();
-        InfallibleTArray<TransformFunction> fromFunctions;
-        AddTransformFunctions(list, styleContext,
-                              presContext, bounds,
-                              scale, fromFunctions);
+        AddTransformFunctions(list, styleContext, presContext, bounds, scale,
+                              animSegment->startState().get_ArrayOfTransformFunction());
 
         list = segment->mToValue.GetCSSValueListValue();
-        InfallibleTArray<TransformFunction> toFunctions;
-        AddTransformFunctions(list, styleContext,
-                              presContext, bounds,
-                              scale, toFunctions);
-
-        segments.AppendElement(AnimationSegment(fromFunctions, toFunctions,
-                                                segment->mFromKey, segment->mToKey,
-                                                ToTimingFunction(segment->mTimingFunction)));
+        AddTransformFunctions(list, styleContext, presContext, bounds, scale,
+                              animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
-        segments.AppendElement(AnimationSegment(segment->mFromValue.GetFloatValue(),
-                                                segment->mToValue.GetFloatValue(),
-                                                segment->mFromKey,
-                                                segment->mToKey,
-                                                ToTimingFunction(segment->mTimingFunction)));
+        animSegment = segments.AppendElement();
+        animSegment->startState() = segment->mFromValue.GetFloatValue();
+        animSegment->endState() = segment->mToValue.GetFloatValue();
       }
+
+      animSegment->startPortion() = segment->mFromKey;
+      animSegment->endPortion() = segment->mToKey;
+      animSegment->sampleFn() = ToTimingFunction(segment->mTimingFunction);
     }
 
     aLayer->AddAnimation(Animation(ea->mStartTime,
