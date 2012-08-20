@@ -769,9 +769,6 @@ abstract public class BrowserApp extends GeckoApp
                 intent = new Intent(this, GeckoPreferences.class);
                 startActivity(intent);
                 return true;
-            case R.id.site_settings:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
-                return true;
             case R.id.addons:
                 loadUrlInTab("about:addons");
                 return true;
