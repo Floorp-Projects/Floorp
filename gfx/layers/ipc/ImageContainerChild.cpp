@@ -121,7 +121,7 @@ void ImageContainerChild::DestroySharedImage(const SharedImage& aImage)
 
 bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 {
-  if ((src->GetFormat() == ImageFormat::PLANAR_YCBCR) && 
+  if ((src->GetFormat() == PLANAR_YCBCR) && 
       (dest->type() == SharedImage::TYUVImage)) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(src);
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
@@ -161,7 +161,7 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
   
   ++mActiveImageCount;
 
-  if (image->GetFormat() == ImageFormat::PLANAR_YCBCR ) {
+  if (image->GetFormat() == PLANAR_YCBCR ) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(image);
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
     NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");
@@ -202,7 +202,7 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
                       "SharedImage type not set correctly");
     return result;
 #ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == ImageFormat::GONK_IO_SURFACE) {
+  } else if (image->GetFormat() == GONK_IO_SURFACE) {
     GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(image);
     SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
     return result;
@@ -236,7 +236,7 @@ SharedImageCompatibleWith(SharedImage* aSharedImage, Image* aImage)
 {
   // TODO accept more image formats
   switch (aImage->GetFormat()) {
-  case ImageFormat::PLANAR_YCBCR: {
+  case PLANAR_YCBCR: {
     if (aSharedImage->type() != SharedImage::TYUVImage) {
       return false;
     }

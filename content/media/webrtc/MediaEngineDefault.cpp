@@ -95,7 +95,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mSource = aStream;
 
   // Allocate a single blank Image
-  ImageFormat format = ImageFormat::PLANAR_YCBCR;
+  ImageFormat format = PLANAR_YCBCR;
   mImageContainer = layers::LayerManager::CreateImageContainer();
 
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);

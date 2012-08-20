@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=422132
+-->
+<head>
+  <title>Test for Bug 422132</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=422132">Mozilla Bug 422132</a>
+<p id="display"></p>
+<div id="target" style="font-size: 0; width: 200px; height: 200px; overflow: auto;">
+  <div style="width: 1000px; height: 1000px;"></div>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 422132 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+function hitEventLoop(aFunc, aTimes)
+{
+  if (--aTimes) {
+    setTimeout(hitEventLoop, 0, aFunc, aTimes);
+  } else {
+    setTimeout(aFunc, 20);
+  }
+}
+
+function runTests()
+{
+  SpecialPowers.setBoolPref("general.smoothScroll", false);
+  SpecialPowers.setIntPref("mousewheel.min_line_scroll_amount", 1);
+  SpecialPowers.setIntPref("mousewheel.transaction.timeout", 100000);
+
+  var target = document.getElementById("target");
+
+  var scrollLeft = target.scrollLeft;
+  var scrollTop = target.scrollTop;
+  synthesizeWheel(target, 10, 10,
+    { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+      deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
+  hitEventLoop(function () {
+    is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5px delta value");
+    is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5px delta value");
+    scrollLeft = target.scrollLeft;
+    scrollTop = target.scrollTop;
+    synthesizeWheel(target, 10, 10,
+      { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+        deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
+    hitEventLoop(function () {
+      ok(target.scrollLeft > scrollLeft,
+         "not scrolled to right by 0.5px delta value with pending 0.5px delta");
+      ok(target.scrollTop > scrollTop,
+         "not scrolled to bottom by 0.5px delta value with pending 0.5px delta");
+      scrollLeft = target.scrollLeft;
+      scrollTop = target.scrollTop;
+      synthesizeWheel(target, 10, 10,
+        { deltaMode: WheelEvent.DOM_DELTA_LINE,
+          deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
+      hitEventLoop(function () {
+        is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5 line delta value");
+        is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5 line delta value");
+        scrollLeft = target.scrollLeft;
+        scrollTop = target.scrollTop;
+        synthesizeWheel(target, 10, 10,
+          { deltaMode: WheelEvent.DOM_DELTA_LINE,
+            deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
+        hitEventLoop(function () {
+          ok(target.scrollLeft > scrollLeft,
+             "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
+          ok(target.scrollTop > scrollTop,
+             "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
+          SpecialPowers.clearUserPref("general.smoothScroll");
+          SpecialPowers.clearUserPref("mousewheel.min_line_scroll_amount");
+          SpecialPowers.clearUserPref("mousewheel.transaction.timeout");
+          SimpleTest.finish();
+        }, 20);
+      }, 20);
+    }, 20);
+  }, 20);
+}
+
+</script>
+</pre>
+</body>
+</html>
