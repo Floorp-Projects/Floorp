@@ -45,12 +45,11 @@ DefaultXDisplay()
  * Sets *aVisual to point to aDisplay's Visual struct corresponding to
  * aVisualID, and *aDepth to its depth.  When aVisualID is None, these are set
  * to NULL and 0 respectively.  Both out-parameter pointers are assumed
- * non-NULL.  Returns true in both of these situations, but false if aVisualID
- * is not None and not found on the Display.
+ * non-NULL.
  */
-bool
-XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
-                Visual** aVisual, unsigned int* aDepth);
+void
+FindVisualAndDepth(Display* aDisplay, VisualID aVisualID,
+                   Visual** aVisual, int* aDepth);
 
 
 /**
