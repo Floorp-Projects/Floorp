@@ -291,6 +291,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
                                                   attribs,
                                                   &numConfigs));
 
+    // Find an fbconfig that matches the pixel format used on the Pixmap. 
     int matchIndex = -1;
     const XRenderDirectFormat& direct = format->direct;
     unsigned long redMask =
@@ -299,34 +300,79 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         static_cast<unsigned long>(direct.greenMask) << direct.green;
     unsigned long blueMask =
         static_cast<unsigned long>(direct.blueMask) << direct.blue;
-    // XVisualInfo doesn't have information on the alpha channel, so just
-    // check the number of bits.
     int alphaSize;
     PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
     NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
                  "Unexpected render format with non-adjacent alpha bits");
-    ScopedXFree<XVisualInfo> vinfo;
+    // This is true if the Pixmap has bits for alpha or unused bits.
+    bool haveNonColorBits =
+        ~(redMask | greenMask | blueMask) != -1UL << format->depth;
 
     for (int i = 0; i < numConfigs; i++) {
-        int size;
-        if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
-                                           GLX_ALPHA_SIZE, &size) != Success ||
-            size != alphaSize) {
+        int id = None;
+        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &id);
+        Visual *visual;
+        int depth;
+        FindVisualAndDepth(display, id, &visual, &depth);
+        if (!visual ||
+            visual->c_class != TrueColor ||
+            visual->red_mask != redMask ||
+            visual->green_mask != greenMask ||
+            visual->blue_mask != blueMask ) {
             continue;
         }
 
-        // The visual depth won't necessarily match the render format depth as
-        // it may not include the alpha channel.
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-        if (!vinfo ||
-            vinfo->c_class != TrueColor ||
-            vinfo->red_mask != redMask ||
-            vinfo->green_mask != greenMask ||
-            vinfo->blue_mask != blueMask ) {
+        // Historically Xlib Visuals did not try to represent an alpha channel
+        // and there was no means to use an alpha channel on a Pixmap.  The
+        // Xlib Visual from the fbconfig was not intended to have any
+        // information about alpha bits.
+        //
+        // Since then, RENDER has added formats for 32 bit depth Pixmaps.
+        // Some of these formats have bits for alpha and some have unused
+        // bits.
+        //
+        // Then the Composite extension added a 32 bit depth Visual intended
+        // for Windows with an alpha channel, so bits not in the visual color
+        // masks were expected to be treated as alpha bits.
+        //
+        // Usually GLX counts only color bits in the Visual depth, but the
+        // depth of Composite's ARGB Visual includes alpha bits.  However,
+        // bits not in the color masks are not necessarily alpha bits because
+        // sometimes (NVIDIA) 32 bit Visuals are added for fbconfigs with 32
+        // bit BUFFER_SIZE but zero alpha bits and 24 color bits (NVIDIA
+        // again).
+        //
+        // This checks that the depth matches in one of the two ways.
+        if (depth != format->depth && depth != format->depth - alphaSize) {
             continue;
+        }
+
+        // If all bits of the Pixmap are color bits and the Pixmap depth
+        // matches the depth of the fbconfig visual, then we can assume that
+        // the driver will do whatever is necessary to ensure that any
+        // GLXPixmap alpha bits are treated as set.  We can skip the
+        // ALPHA_SIZE check in this situation.  We need to skip this check for
+        // situations (ATI) where there are no fbconfigs without alpha bits.
+        //
+        // glXChooseFBConfig should prefer configs with smaller
+        // GLX_BUFFER_SIZE, so we should still get zero alpha bits if
+        // available, except perhaps with NVIDIA drivers where buffer size is
+        // not the specified sum of the component sizes.
+        if (haveNonColorBits) {
+            // There are bits in the Pixmap format that haven't been matched
+            // against the fbconfig visual.  These bits could either represent
+            // alpha or be unused, so just check that the number of alpha bits
+            // matches.
+            int size = 0;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
+                                           GLX_ALPHA_SIZE, &size);
+            if (size != alphaSize) {
+                continue;
+            }
         }
 
         matchIndex = i;
+        break;
     }
     if (matchIndex == -1) {
         NS_WARNING("[GLX] Couldn't find a FBConfig matching Pixmap format");
