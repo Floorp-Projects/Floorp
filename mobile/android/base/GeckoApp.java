@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
@@ -156,7 +155,6 @@ abstract public class GeckoApp
     protected TabsPanel mTabsPanel;
 
     private LayerView mLayerView;
-    private GeckoLayerClient mLayerClient;
     private AbsoluteLayout mPluginContainer;
 
     private FullScreenHolder mFullScreenPluginContainer;
@@ -1649,9 +1647,9 @@ abstract public class GeckoApp
             cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         }
 
-        if (mLayerClient == null) {
+        if (mLayerView == null) {
             mLayerView = (LayerView) findViewById(R.id.layer_view);
-            mLayerClient = mLayerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            mLayerView.createLayerClient(GeckoAppShell.getEventDispatcher());
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -1753,7 +1751,7 @@ abstract public class GeckoApp
             if (selectedTab != null)
                 Tabs.getInstance().selectTab(selectedTab.getId());
             connectGeckoLayerClient();
-            GeckoAppShell.setLayerClient(getLayerClient());
+            GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
         }
     }
@@ -2069,8 +2067,8 @@ abstract public class GeckoApp
 
         deleteTempFiles();
 
-        if (mLayerClient != null)
-            mLayerClient.destroy();
+        if (mLayerView != null)
+            mLayerView.destroy();
         if (mDoorHangerPopup != null)
             mDoorHangerPopup.destroy();
         if (mFormAssistPopup != null)
@@ -2539,9 +2537,6 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
     }
 
-    /* This method is referenced by Robocop via reflection. */
-    public GeckoLayerClient getLayerClient() { return mLayerClient; }
-
     public LayerView getLayerView() {
         return mLayerView;
     }
@@ -2590,7 +2585,7 @@ abstract public class GeckoApp
     }
 
     private void connectGeckoLayerClient() {
-        mLayerClient.notifyGeckoReady();
+        mLayerView.getLayerClient().notifyGeckoReady();
 
         mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
             private PointF initialPoint = null;

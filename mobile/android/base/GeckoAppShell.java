@@ -505,7 +505,7 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerView().getLayerClient());
 
         Log.i(LOGTAG, "setLayerClient called");
 
