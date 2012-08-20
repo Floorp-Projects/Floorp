@@ -4820,16 +4820,15 @@ static PRInt32 RoundUp(double aDouble)
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
   nsRefPtr<Accessible> accessible = mGeckoChild->GetDocumentAccessible();
-  if (!mGeckoChild)
+  if (!accessible)
     return nil;
 
-  if (accessible)
-    accessible->GetNativeInterface((void**)&nativeAccessible);
+  accessible->GetNativeInterface((void**)&nativeAccessible);
 
 #ifdef DEBUG_hakan
   NSAssert(![nativeAccessible isExpired], @"native acc is expired!!!");
 #endif
-  
+
   return nativeAccessible;
 }
 
@@ -4864,16 +4863,25 @@ static PRInt32 RoundUp(double aDouble)
 
 - (BOOL)accessibilityIsIgnored
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityIsIgnored];
+
   return [[self accessible] accessibilityIsIgnored];
 }
 
 - (id)accessibilityHitTest:(NSPoint)point
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityHitTest:point];
+
   return [[self accessible] accessibilityHitTest:point];
 }
 
 - (id)accessibilityFocusedUIElement
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityFocusedUIElement];
+
   return [[self accessible] accessibilityFocusedUIElement];
 }
 
@@ -4881,16 +4889,25 @@ static PRInt32 RoundUp(double aDouble)
 
 - (NSArray*)accessibilityActionNames
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityActionNames];
+
   return [[self accessible] accessibilityActionNames];
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityActionDescription:action];
+
   return [[self accessible] accessibilityActionDescription:action];
 }
 
 - (void)accessibilityPerformAction:(NSString*)action
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityPerformAction:action];
+
   return [[self accessible] accessibilityPerformAction:action];
 }
 
@@ -4898,11 +4915,17 @@ static PRInt32 RoundUp(double aDouble)
 
 - (NSArray*)accessibilityAttributeNames
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityAttributeNames];
+
   return [[self accessible] accessibilityAttributeNames];
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityIsAttributeSettable:attribute];
+
   return [[self accessible] accessibilityIsAttributeSettable:attribute];
 }
 
@@ -4910,8 +4933,11 @@ static PRInt32 RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityAttributeValue:attribute];
+
   id<mozAccessible> accessible = [self accessible];
-  
+
   // if we're the root (topmost) accessible, we need to return our native AXParent as we
   // traverse outside to the hierarchy of whoever embeds us. thus, fall back on NSView's
   // default implementation for this attribute.
