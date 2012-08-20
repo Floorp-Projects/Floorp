@@ -462,7 +462,7 @@ public:
       if (!v->mImage) {
         return nullptr;
       }
-      NS_ASSERTION(v->mImage->GetFormat() == mozilla::ImageFormat::PLANAR_YCBCR,
+      NS_ASSERTION(v->mImage->GetFormat() == mozilla::PLANAR_YCBCR,
                    "Wrong format?");
       mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
 
