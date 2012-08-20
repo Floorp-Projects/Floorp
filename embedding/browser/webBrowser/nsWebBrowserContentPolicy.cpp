@@ -9,6 +9,7 @@
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIContentViewer.h"
 
 nsWebBrowserContentPolicy::nsWebBrowserContentPolicy()
 {
@@ -94,7 +95,7 @@ nsWebBrowserContentPolicy::ShouldProcess(PRUint32          contentType,
 
     nsIDocShell *shell = NS_CP_GetDocShellFromContext(requestingContext);
     bool allowed;
-    if (shell && (NS_FAILED(shell->GetAllowPlugins(&allowed)) || !allowed)) {
+    if (shell && (!shell->PluginsAllowedInCurrentDoc())) {
         *shouldProcess = nsIContentPolicy::REJECT_TYPE;
     }
 

@@ -6,6 +6,7 @@
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMGetSVGDocument.h"
+#include "nsContentUtils.h"
 
 class nsHTMLIFrameElement : public nsGenericHTMLFrameElement
                           , public nsIDOMHTMLIFrameElement
@@ -45,6 +46,30 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue,
+                                bool aNotify);
+
+  PRUint32 GetSandboxFlags()
+  {
+    nsAutoString sandboxAttr;
+
+    if (GetAttr(kNameSpaceID_None, nsGkAtoms::sandbox, sandboxAttr)) {
+      return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
+    }
+
+    // No sandbox attribute, no sandbox flags.
+    return 0;
+  }
+
+  static nsHTMLIFrameElement* FromContent(nsIContent *aContent)
+  {
+    if (aContent->IsHTML(nsGkAtoms::iframe)) {
+      return static_cast<nsHTMLIFrameElement*>(aContent);
+    }
+    return nullptr;
+  }
 
 protected:
   virtual void GetItemValueText(nsAString& text);

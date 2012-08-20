@@ -222,6 +222,7 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsIAppsService.h"
 #include "prrng.h"
+#include "nsSandboxFlags.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -8279,6 +8280,16 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
       mDocument->GetDocumentURI(documentURI);
     }
 
+    // If the document has the sandboxed origin flag set
+    // don't allow access to localStorage.
+    if (!mDoc) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
                                                           true,
@@ -8342,6 +8353,12 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     nsString documentURI;
     if (mDocument) {
       mDocument->GetDocumentURI(documentURI);
+    }
+
+    // If the document has the sandboxed origin flag set
+    // don't allow access to localStorage.
+    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
+      return NS_ERROR_DOM_SECURITY_ERR;
     }
 
     nsIDocShell* docShell = GetDocShell();

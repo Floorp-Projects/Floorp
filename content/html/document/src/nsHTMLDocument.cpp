@@ -103,6 +103,7 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
 #include "nsIDOMJSWindow.h"
+#include "nsSandboxFlags.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1222,6 +1223,12 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
     return NS_OK;
   }
 
+  // If the document's sandboxed origin flag is set, access to read cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
@@ -1250,6 +1257,12 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 {
   if (mDisableCookieAccess) {
     return NS_OK;
+  }
+
+  // If the document's sandboxed origin flag is set, access to write cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   // not having a cookie service isn't an error

@@ -79,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xdb888523, 0x541f, 0x49e3, \
-  { 0xa9, 0x71, 0xb5, 0xea, 0xd1, 0xf0, 0xc3, 0xcf } }
+{ 0x57fe44ae, 0x6656, 0x44b8, \
+  { 0x8d, 0xc0, 0xfc, 0xa7, 0x43, 0x28, 0xbe, 0x86 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -400,6 +400,25 @@ public:
     mBidiOptions = aBidiOptions;
   }
 
+
+  /**
+   * Get the sandbox flags for this document.
+   * @see nsSandboxFlags.h for the possible flags
+   */
+  PRUint32 GetSandboxFlags() const
+  {
+    return mSandboxFlags;
+  }
+
+  /**
+   * Set the sandbox flags for this document.
+   * @see nsSandboxFlags.h for the possible flags
+   */
+  void SetSandboxFlags(PRUint32 sandboxFlags)
+  {
+    mSandboxFlags = sandboxFlags;
+  }
+
   inline mozilla::directionality::Directionality GetDocumentDirectionality() {
     return mDirectionality;
   }
@@ -456,6 +475,11 @@ public:
   {
     mParentDocument = aParent;
   }
+  
+  /**
+   * Are plugins allowed in this document ?
+   */
+  virtual nsresult GetAllowPlugins (bool* aAllowPlugins) = 0;
 
   /**
    * Set the sub document for aContent to aSubDoc.
@@ -1866,6 +1890,11 @@ protected:
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
+
+  // The sandbox flags on the document. These reflect the value of the sandbox attribute of the
+  // associated IFRAME or CSP-protectable content, if existent. These are set at load time and
+  // are immutable - see nsSandboxFlags.h for the possible flags.
+  PRUint32 mSandboxFlags;
 
   // The root directionality of this document.
   mozilla::directionality::Directionality mDirectionality;
