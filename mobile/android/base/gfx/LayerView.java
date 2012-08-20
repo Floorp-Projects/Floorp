@@ -136,6 +136,7 @@ public class LayerView extends FrameLayout {
 
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
         mInputConnectionHandler = inputConnectionHandler;
+        mLayerClient.setForceRedraw();
     }
 
     @Override
@@ -281,7 +282,7 @@ public class LayerView extends FrameLayout {
     /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
     public static GLController registerCxxCompositor() {
         try {
-            LayerView layerView = GeckoApp.mAppContext.getLayerClient().getView();
+            LayerView layerView = GeckoApp.mAppContext.getLayerView();
             layerView.mListener.compositorCreated();
             return layerView.getGLController();
         } catch (Exception e) {

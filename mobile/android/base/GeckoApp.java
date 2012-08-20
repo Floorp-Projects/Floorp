@@ -2541,6 +2541,10 @@ abstract public class GeckoApp
     /* This method is referenced by Robocop via reflection. */
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
 
+    public LayerView getLayerView() {
+        return mLayerView;
+    }
+
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
     // accelerometer
