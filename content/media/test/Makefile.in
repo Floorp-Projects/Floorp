@@ -104,13 +104,16 @@ MOCHITEST_FILES = \
 		test_reactivate.html \
 		test_readyState.html \
 		test_replay_metadata.html \
+		test_seek.html \
 		test_seek2.html \
+		test_seek_out_of_range.html \
 		test_source.html \
 		test_source_write.html \
 	        test_source_null.html \
 		test_standalone.html \
 		test_streams_element_capture.html \
 		test_streams_element_capture_reset.html \
+		test_timeupdate_small_files.html \
 		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
@@ -129,19 +132,6 @@ MOCHITEST_FILES = \
 		$(NULL)
 
 $(warning test_error_in_video_document.html is disabled for intermittent failures. Bug 608634)
-
-# Tests disabled on Linux for frequent intermittent failures
-ifneq (Linux,$(OS_ARCH))
-MOCHITEST_FILES += \
-		test_seek.html \
-		test_seek_out_of_range.html \
-		test_timeupdate_small_files.html \
-		$(NULL)
-else
-$(warning test_seek.html is disabled on Linux for timeouts. Bug 620598)
-$(warning test_seek_out_of_range.html is disabled on Linux for timeouts. Bug 661076)
-$(warning test_timeupdate_small_files.html is disabled on Linux for timeouts. Bug 687972)
-endif
 
 # Don't run in suite
 ifndef MOZ_SUITE
