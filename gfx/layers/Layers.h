@@ -52,6 +52,7 @@ class ComputedTimingFunction;
 namespace layers {
 
 class Animation;
+class AnimationData;
 class CommonLayerAttributes;
 class Layer;
 class ThebesLayer;
@@ -706,8 +707,11 @@ public:
    */
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
-  // Call AddAnimation to add an animation to this layer from layout code.
-  void AddAnimation(const Animation& aAnimation);
+  // Call AddAnimation to add a new animation to this layer from layout code.
+  // Caller must add segments to the returned animation.
+  Animation* AddAnimation(mozilla::TimeStamp aStart, mozilla::TimeDuration aDuration,
+                          float aIterations, int aDirection,
+                          nsCSSProperty aProperty, const AnimationData& aData);
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
   // This is only called when the layer tree is updated. Do not call this from
