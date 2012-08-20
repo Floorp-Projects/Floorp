@@ -73,7 +73,7 @@ PImageContainerParent* ImageBridgeParent::AllocPImageContainer(PRUint64* aID)
 {
   PRUint64 id = GenImageContainerID();
   *aID = id;
-  return new ImageContainerParent(this, id);
+  return new ImageContainerParent(id);
 }
 
 bool ImageBridgeParent::DeallocPImageContainer(PImageContainerParent* toDealloc)
