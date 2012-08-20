@@ -47,18 +47,18 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
     return nullptr;
   }
   nsRefPtr<Image> img;
-  if (FormatInList(aFormats, aNumFormats, ImageFormat::PLANAR_YCBCR)) {
+  if (FormatInList(aFormats, aNumFormats, PLANAR_YCBCR)) {
     img = new PlanarYCbCrImage(aRecycleBin);
-  } else if (FormatInList(aFormats, aNumFormats, ImageFormat::CAIRO_SURFACE)) {
+  } else if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
     img = new CairoImage();
-  } else if (FormatInList(aFormats, aNumFormats, ImageFormat::SHARED_TEXTURE)) {
+  } else if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
     img = new SharedTextureImage();
 #ifdef XP_MACOSX
-  } else if (FormatInList(aFormats, aNumFormats, ImageFormat::MAC_IO_SURFACE)) {
+  } else if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
     img = new MacIOSurfaceImage();
 #endif
 #ifdef MOZ_WIDGET_GONK
-  } else if (FormatInList(aFormats, aNumFormats, ImageFormat::GONK_IO_SURFACE)) {
+  } else if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
     img = new GonkIOSurfaceImage();
 #endif
   }
@@ -239,7 +239,7 @@ ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
       return nullptr;
     } 
 
-    if (mActiveImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
+    if (mActiveImage->GetFormat() == REMOTE_IMAGE_BITMAP) {
       nsRefPtr<gfxImageSurface> newSurf =
         new gfxImageSurface(mRemoteData->mBitmap.mData, mRemoteData->mSize, mRemoteData->mBitmap.mStride,
                             mRemoteData->mFormat == RemoteImageData::BGRX32 ?
