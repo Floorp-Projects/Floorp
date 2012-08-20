@@ -39,7 +39,7 @@ CairoPathContext::CairoPathContext(cairo_t* aCtx, DrawTargetCairo* aDrawTarget,
 CairoPathContext::~CairoPathContext()
 {
   if (mDrawTarget) {
-    mDrawTarget->SetPathObserver(NULL);
+    mDrawTarget->SetPathObserver(nullptr);
   }
   cairo_destroy(mContext);
 }
@@ -52,7 +52,7 @@ CairoPathContext::ObserveTarget(DrawTargetCairo* aDrawTarget)
   }
 
   if (mDrawTarget) {
-    mDrawTarget->SetPathObserver(NULL);
+    mDrawTarget->SetPathObserver(nullptr);
   }
   mDrawTarget = aDrawTarget;
 
@@ -159,7 +159,7 @@ CairoPathContext::CopyPathTo(cairo_t* aToContext)
 void
 CairoPathContext::ForgetDrawTarget()
 {
-  mDrawTarget = NULL;
+  mDrawTarget = nullptr;
 }
 
 bool

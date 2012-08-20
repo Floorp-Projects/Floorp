@@ -2443,7 +2443,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nullptr);
-      return inst->SetCached(bCached);
+      inst->SetCached(bCached);
+      return NPERR_NO_ERROR;
     }
 
     case NPPVpluginUsesDOMForCursorBool: {
@@ -2530,7 +2531,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   if (NS_FAILED(rv))
     return NPERR_GENERIC_ERROR;
 
-  return NS_OK;
+  return NPERR_NO_ERROR;
 }
 
 // Deprecated, only stubbed out

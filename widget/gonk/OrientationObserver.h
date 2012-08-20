@@ -37,6 +37,10 @@ public:
   OrientationObserver();
   ~OrientationObserver();
 
+  // Call DisableAutoOrientation on the existing OrientatiOnobserver singleton,
+  // if it exists.  If no OrientationObserver exists, do nothing.
+  static void ShutDown();
+
   // Notification from sensor.
   void Notify(const SensorData& aSensorData);
 

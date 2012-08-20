@@ -18,12 +18,12 @@ class SourceSurfaceCairo : public SourceSurface
 public:
   // Create a SourceSurfaceCairo. The surface will not be copied, but simply
   // referenced.
-  // If aDrawTarget is non-NULL, it is assumed that this is a snapshot source
+  // If aDrawTarget is non-nullptr, it is assumed that this is a snapshot source
   // surface, and we'll call DrawTargetCairo::RemoveSnapshot(this) on it when
   // we're destroyed.
   SourceSurfaceCairo(cairo_surface_t* aSurface, const IntSize& aSize,
                      const SurfaceFormat& aFormat,
-                     DrawTargetCairo* aDrawTarget = NULL);
+                     DrawTargetCairo* aDrawTarget = nullptr);
   virtual ~SourceSurfaceCairo();
 
   virtual SurfaceType GetType() const { return SURFACE_CAIRO; }

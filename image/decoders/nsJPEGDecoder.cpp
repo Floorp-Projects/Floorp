@@ -189,9 +189,9 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
   /* Return here if there is a fatal error within libjpeg. */
   nsresult error_code;
-  // XXX: This cast to nsresult makes absolutely no sense and is thoroughly
-  // broken (bug 778103).  I hope this code path is never hit.
-  if ((error_code = (nsresult)setjmp(mErr.setjmp_buffer)) != 0) {
+  // This cast to nsresult makes sense because setjmp() returns whatever we
+  // passed to longjmp(), which was actually an nsresult.
+  if ((error_code = (nsresult)setjmp(mErr.setjmp_buffer)) != NS_OK) {
     if (error_code == NS_ERROR_FAILURE) {
       PostDataError();
       /* Error due to corrupt stream - return NS_OK and consume silently
@@ -657,8 +657,9 @@ my_error_exit (j_common_ptr cinfo)
   fprintf(stderr, "JPEG decoding error:\n%s\n", buffer);
 #endif
 
-  /* Return control to the setjmp point. */
-  longjmp(err->setjmp_buffer, error_code);
+  /* Return control to the setjmp point.  We pass an nsresult masquerading as
+   * an int, which works because the setjmp() caller casts it back. */
+  longjmp(err->setjmp_buffer, static_cast<int>(error_code));
 }
 
 /******************************************************************************/

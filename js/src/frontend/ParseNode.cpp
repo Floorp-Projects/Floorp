@@ -123,9 +123,6 @@ ParseNodeAllocator::freeNode(ParseNode *pn)
     JS_ASSERT(!pn->isUsed());
     JS_ASSERT(!pn->isDefn());
 
-    if (pn->isArity(PN_NAMESET) && pn->pn_names.hasMap())
-        pn->pn_names.releaseMap(cx);
-
 #ifdef DEBUG
     /* Poison the node, to catch attempts to use it without initializing it. */
     memset(pn, 0xab, sizeof(*pn));
@@ -541,11 +538,6 @@ CloneParseTree(ParseNode *opn, Parser *parser)
                 LinkUseToDef(opn, (Definition *) pn);
             }
         }
-        break;
-
-      case PN_NAMESET:
-        pn->pn_names = opn->pn_names;
-        NULLCHECK(pn->pn_tree = CloneParseTree(opn->pn_tree, parser));
         break;
 
       case PN_NULLARY:

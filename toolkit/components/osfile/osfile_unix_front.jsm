@@ -633,6 +633,26 @@
        }
      };
 
+     /**
+      * Return a version of an instance of
+      * File.DirectoryIterator.Entry that can be sent from a worker
+      * thread to the main thread. Note that deserialization is
+      * asymmetric and returns an object with a different
+      * implementation.
+      */
+     File.DirectoryIterator.Entry.toMsg = function toMsg(value) {
+       if (!value instanceof File.DirectoryIterator.Entry) {
+         throw new TypeError("parameter of " +
+           "File.DirectoryIterator.Entry.toMsg must be a " +
+           "File.DirectoryIterator.Entry");
+       }
+       let serialized = {};
+       for (let key in File.DirectoryIterator.Entry.prototype) {
+         serialized[key] = value[key];
+       }
+       return serialized;
+     };
+
      let gStatData = new OS.Shared.Type.stat.implementation();
      let gStatDataPtr = gStatData.address();
      let MODE_MASK = 4095 /*= 07777*/;
@@ -667,16 +687,7 @@
         * @type {number}
         */
        get size() {
-         delete this.size;
-         let size;
-         try {
-           size = OS.Shared.projectValue(this._st_size);
-         } catch(x) {
-           LOG("get size error", x);
-           size = NaN;
-         }
-         Object.defineProperty(this, "size", { value: size });
-         return size;
+         return exports.OS.Shared.Type.size_t.importFromC(this._st_size);
        },
        /**
         * The date of creation of this file
@@ -716,20 +727,36 @@
         * Return the Unix owner of this file.
         */
        get unixOwner() {
-         return this._st_uid;
+         return exports.OS.Shared.Type.uid_t.importFromC(this._st_uid);
        },
        /**
         * Return the Unix group of this file.
         */
        get unixGroup() {
-         return this._st_gid;
+         return exports.OS.Shared.Type.gid_t.importFromC(this._st_gid);
        },
        /**
         * Return the Unix mode of this file.
         */
        get unixMode() {
-         return this._st_mode & MODE_MASK;
+         return exports.OS.Shared.Type.mode_t.importFromC(this._st_mode & MODE_MASK);
        }
+     };
+
+     /**
+      * Return a version of an instance of File.Info that can be sent
+      * from a worker thread to the main thread. Note that deserialization
+      * is asymmetric and returns an object with a different implementation.
+      */
+     File.Info.toMsg = function toMsg(stat) {
+       if (!stat instanceof File.Info) {
+         throw new TypeError("parameter of File.Info.toMsg must be a File.Info");
+       }
+       let serialized = {};
+       for (let key in File.Info.prototype) {
+         serialized[key] = stat[key];
+       }
+       return serialized;
      };
 
      /**

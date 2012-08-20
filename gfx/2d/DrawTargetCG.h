@@ -124,7 +124,7 @@ public:
   virtual void PushClip(const Path *);
   virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const { return NULL;}
+  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const { return nullptr;}
   virtual TemporaryRef<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const;
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule) const;
   virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *, uint32_t,
@@ -155,7 +155,7 @@ private:
 
   /**
    * A pointer to the image buffer if the buffer is owned by this class (set to
-   * NULL otherwise).
+   * nullptr otherwise).
    * The data is not considered owned by DrawTargetCG if the DrawTarget was 
    * created for a pre-existing buffer or if the buffer's lifetime is managed
    * by CoreGraphics.

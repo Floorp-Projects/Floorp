@@ -292,7 +292,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
     return NS_OK;
 }
 
-// nsIIPCSerializable
+// nsIIPCSerializableObsolete
 bool
 nsNestedAboutURI::Read(const IPC::Message *aMsg, void **aIter)
 {

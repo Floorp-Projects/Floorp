@@ -27,6 +27,7 @@ class ShadowImageLayer;
 class ShadowCanvasLayer;
 class ShadowColorLayer;
 class ReadbackProcessor;
+class ImageFactory;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.

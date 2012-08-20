@@ -196,12 +196,12 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 #endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
-    return NULL;
+    return nullptr;
   }
 
   gfxDebug() << "Failed to create DrawTarget, Type: " << aBackend << " Size: " << aSize;
   // Failed
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<DrawTarget>
@@ -232,12 +232,12 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
 #endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
-    return NULL;
+    return nullptr;
   }
 
   gfxDebug() << "Failed to create DrawTarget, Type: " << aBackend << " Size: " << aSize;
   // Failed
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<ScaledFont>
@@ -278,7 +278,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #endif
   default:
     gfxWarning() << "Invalid native font type specified.";
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -294,7 +294,7 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
   static_cast<ScaledFontBase*>(font.get())->SetCairoScaledFont(aScaledFont);
   return font;
 #else
-  return NULL;
+  return nullptr;
 #endif
 }
 
@@ -312,7 +312,7 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
   gfxWarning() << "Failed to create draw target for D3D10 texture.";
 
   // Failed
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<DrawTarget>
@@ -326,13 +326,13 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
   newTargetA = new DrawTargetD2D();
   if (!newTargetA->Init(aTextureA, aFormat)) {
     gfxWarning() << "Failed to create draw target for D3D10 texture.";
-    return NULL;
+    return nullptr;
   }
 
   newTargetB = new DrawTargetD2D();
   if (!newTargetB->Init(aTextureB, aFormat)) {
     gfxWarning() << "Failed to create draw target for D3D10 texture.";
-    return NULL;
+    return nullptr;
   }
 
   RefPtr<DrawTarget> newTarget =
@@ -386,7 +386,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 
 #endif
-  return NULL;
+  return nullptr;
 }
 
 TemporaryRef<DataSourceSurface>
@@ -400,7 +400,7 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
     return newSurf;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 }

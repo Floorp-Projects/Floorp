@@ -82,7 +82,7 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
-    nsEventStatus DoPaint( QPainter* aPainter, const QStyleOptionGraphicsItem * aOption, QWidget* aWidget);
+    bool DoPaint( QPainter* aPainter, const QStyleOptionGraphicsItem * aOption, QWidget* aWidget);
 
     static void ReleaseGlobals();
 
@@ -97,13 +97,11 @@ public:
     NS_IMETHOD         Create(nsIWidget        *aParent,
                               nsNativeWidget   aNativeParent,
                               const nsIntRect  &aRect,
-                              EVENT_CALLBACK   aHandleEventFunction,
                               nsDeviceContext *aContext,
                               nsWidgetInitData *aInitData);
 
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect&  aRect,
-                EVENT_CALLBACK    aHandleEventFunction,
                 nsDeviceContext* aContext,
                 nsWidgetInitData* aInitData = nullptr,
                 bool              aForceUseIWidgetParent = true);

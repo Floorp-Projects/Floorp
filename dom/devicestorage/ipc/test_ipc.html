@@ -14,7 +14,8 @@
 
     function iframeScriptFirst() {
       content.wrappedJSObject.RunSet.reloadAndRunAll({
-        preventDefault: function() { }
+          preventDefault: function() { },
+          __exposedProps__: { preventDefault: 'r' }
       });
     }
 
@@ -44,7 +45,7 @@
     let regex = /^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO) \| ([^\|]+) \|(.*)/;
 
     function onTestMessage(data) {
-      let message = data.json.msg;
+      let message = SpecialPowers.wrap(data).json.msg;
       let match = regex.exec(message);
       if (match) {
         let state = match[1];
@@ -130,16 +131,8 @@
     }
 
     addEventListener("load", function() {
-      let whitelist;
-      try {
-        whitelist =
-          SpecialPowers.getCharPref("dom.mozBrowserFramesWhitelist") + ", ";
-      } catch (e) {
-        whitelist = "";
-      }
 
-      whitelist += window.location.protocol + "//" + window.location.host;
-
+      SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
         "set": [
 
@@ -149,8 +142,7 @@
 
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
-          ["browser.pageThumbs.enabled", false],
-          ["dom.mozBrowserFramesWhitelist", whitelist]
+          ["browser.pageThumbs.enabled", false]
         ]
       }, runTests);
     });

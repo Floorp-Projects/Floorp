@@ -534,10 +534,6 @@ protected:
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString & aQuotedText,
                                         bool aAddCites,
                                         nsIDOMNode **aNodeInserted);
-  // Return true if the data is safe to insert as the source and destination
-  // principals match, or we are in a editor context where this doesn't matter.
-  // Otherwise, the data must be sanitized first.
-  bool IsSafeToInsertData(nsIDOMDocument* aSourceDoc);
 
   nsresult InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
                         nsIDOMDocument *aSourceDoc,

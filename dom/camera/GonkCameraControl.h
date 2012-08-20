@@ -26,6 +26,10 @@
 
 namespace mozilla {
 
+namespace layers {
+class GraphicBufferLocked;
+}
+
 class nsGonkCameraControl : public nsCameraControl
 {
 public:
@@ -41,7 +45,7 @@ public:
   void SetParameter(PRUint32 aKey, const nsTArray<dom::CameraRegion>& aRegions);
   void PushParameters();
 
-  void ReceiveFrame(PRUint8 *aData, PRUint32 aLength);
+  void ReceiveFrame(layers::GraphicBufferLocked* aBuffer);
 
 protected:
   ~nsGonkCameraControl();
@@ -69,7 +73,7 @@ private:
 // camera driver callbacks
 void ReceiveImage(nsGonkCameraControl* gc, PRUint8* aData, PRUint32 aLength);
 void AutoFocusComplete(nsGonkCameraControl* gc, bool success);
-void ReceiveFrame(nsGonkCameraControl* gc, PRUint8* aData, PRUint32 aLength);
+void ReceiveFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked* aBuffer);
 
 } // namespace mozilla
 

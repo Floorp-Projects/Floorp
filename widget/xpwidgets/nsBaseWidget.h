@@ -19,6 +19,10 @@ class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
+#ifdef ACCESSIBILITY
+class Accessible;
+#endif
+
 namespace mozilla {
 namespace layers {
 class BasicLayerManager;
@@ -60,8 +64,8 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(bool aCapture);
-  NS_IMETHOD              GetClientData(void*& aClientData);
-  NS_IMETHOD              SetClientData(void* aClientData);
+  virtual nsIWidgetListener*  GetWidgetListener();
+  virtual void            SetWidgetListener(nsIWidgetListener* alistener);
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
@@ -149,16 +153,29 @@ public:
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, bool aIsHorizontal, PRInt32 &aOverriddenDelta);
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
-              EVENT_CALLBACK   aHandleEventFunction,
               nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false);
-  NS_IMETHOD              SetEventCallback(EVENT_CALLBACK aEventFunction, nsDeviceContext *aContext);
-  NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
-  virtual ViewWrapper*    GetAttachedViewPtr();
-  NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
+  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents, nsDeviceContext *aContext);
+  virtual nsIWidgetListener* GetAttachedWidgetListener();
+  virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener);
   NS_IMETHOD              RegisterTouchWindow();
   NS_IMETHOD              UnregisterTouchWindow();
+
+  void NotifyWindowDestroyed();
+  void NotifySizeMoveDone();
+
+  // Should be called by derived implementations to notify on system color and
+  // theme changes.
+  void NotifySysColorChanged();
+  void NotifyThemeChanged();
+  void NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
+                            UIStateChangeType aShowFocusRings);
+
+#ifdef ACCESSIBILITY
+  // Get the accessible for the window.
+  Accessible* GetAccessible();
+#endif
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 
@@ -230,7 +247,6 @@ protected:
   virtual void            OnDestroy();
   virtual void            BaseCreate(nsIWidget *aParent,
                                      const nsIntRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
                                      nsDeviceContext *aContext,
                                      nsWidgetInitData *aInitData);
 
@@ -312,10 +328,8 @@ protected:
    */
   void DestroyCompositor();
 
-  void*             mClientData;
-  ViewWrapper*      mViewWrapperPtr;
-  EVENT_CALLBACK    mEventCallback;
-  EVENT_CALLBACK    mViewCallback;
+  nsIWidgetListener* mWidgetListener;
+  nsIWidgetListener* mAttachedWidgetListener;
   nsDeviceContext* mContext;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;
@@ -330,6 +344,7 @@ protected:
   bool              mUseAcceleratedRendering;
   bool              mForceLayersAcceleration;
   bool              mTemporarilyUseBasicLayerManager;
+  bool              mUseAttachedEvents;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped
@@ -364,7 +379,7 @@ protected:
 
   static void debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
-                                   nsPaintEvent *        aPaintEvent,
+                                   const nsIntRegion &   aPaintEvent,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 

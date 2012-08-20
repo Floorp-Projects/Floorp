@@ -25,6 +25,7 @@
 #include "mozilla/FileUtils.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
 #include "LayerManagerOGL.h"
@@ -34,6 +35,7 @@
 #include "nsScreenManagerGonk.h"
 #include "nsTArray.h"
 #include "nsWindow.h"
+#include "nsIWidgetListener.h"
 #include "cutils/properties.h"
 #include "BasicLayers.h"
 
@@ -105,16 +107,12 @@ public:
     {}
 
     NS_IMETHOD Run() {
-        nsSizeModeEvent event(true, NS_SIZEMODE, NULL);
-        nsEventStatus status;
-
-        event.time = PR_Now() / 1000;
-        event.mSizeMode = mIsOn ? nsSizeMode_Fullscreen : nsSizeMode_Minimized;
-
         for (PRUint32 i = 0; i < sTopWindows.Length(); i++) {
             nsWindow *win = sTopWindows[i];
-            event.widget = win;
-            win->DispatchEvent(&event, status);
+
+            if (nsIWidgetListener* listener = win->GetWidgetListener()) {
+                listener->SizeModeChanged(mIsOn ? nsSizeMode_Fullscreen : nsSizeMode_Minimized);
+            }
         }
 
         return NS_OK;
@@ -236,16 +234,17 @@ nsWindow::DoDraw(void)
         return;
     }
 
-    nsPaintEvent event(true, NS_PAINT, gWindowToRedraw);
-    event.region = gWindowToRedraw->mDirtyRegion;
+    nsIntRegion region = gWindowToRedraw->mDirtyRegion;
     gWindowToRedraw->mDirtyRegion.SetEmpty();
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (mozilla::layers::LAYERS_OPENGL == lm->GetBackendType()) {
         LayerManagerOGL* oglm = static_cast<LayerManagerOGL*>(lm);
-        oglm->SetClippingRegion(event.region);
+        oglm->SetClippingRegion(region);
         oglm->SetWorldTransform(sRotationMatrix);
-        gWindowToRedraw->mEventCallback(&event);
+
+        if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
+          listener->PaintWindow(gWindowToRedraw, region, false, false);
     } else if (mozilla::layers::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
         nsRefPtr<gfxASurface> targetSurface;
@@ -257,19 +256,21 @@ nsWindow::DoDraw(void)
 
         {
             nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
-            gfxUtils::PathFromRegion(ctx, event.region);
+            gfxUtils::PathFromRegion(ctx, region);
             ctx->Clip();
 
             // No double-buffering needed.
             AutoLayerManagerSetup setupLayerManager(
                 gWindowToRedraw, ctx, mozilla::layers::BUFFER_NONE,
                 ScreenRotation(EffectiveScreenRotation()));
-            gWindowToRedraw->mEventCallback(&event);
+
+            if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
+              listener->PaintWindow(gWindowToRedraw, region, false, false);
         }
 
         if (!sUsingOMTC) {
             targetSurface->Flush();
-            Framebuffer::Present(event.region);
+            Framebuffer::Present(region);
         }
     } else {
         NS_RUNTIMEABORT("Unexpected layer manager type");
@@ -283,20 +284,22 @@ nsWindow::DispatchInputEvent(nsGUIEvent &aEvent)
         return nsEventStatus_eIgnore;
 
     gFocusedWindow->UserActivity();
+
+    nsEventStatus status;
     aEvent.widget = gFocusedWindow;
-    return gFocusedWindow->mEventCallback(&aEvent);
+    gFocusedWindow->DispatchEvent(&aEvent, status);
+    return status;
 }
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget *aParent,
                  void *aNativeParent,
                  const nsIntRect &aRect,
-                 EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
     BaseCreate(aParent, IS_TOPLEVEL() ? sVirtualBounds : aRect,
-               aHandleEventFunction, aContext, aInitData);
+               aContext, aInitData);
 
     mBounds = aRect;
 
@@ -393,16 +396,9 @@ nsWindow::Resize(PRInt32 aX,
                  PRInt32 aHeight,
                  bool    aRepaint)
 {
-    nsSizeEvent event(true, NS_SIZE, this);
-    event.time = PR_Now() / 1000;
-
-    nsIntRect rect(aX, aY, aWidth, aHeight);
-    mBounds = rect;
-    event.windowSize = &rect;
-    event.mWinWidth = sVirtualBounds.width;
-    event.mWinHeight = sVirtualBounds.height;
-
-    (*mEventCallback)(&event);
+    mBounds = nsIntRect(aX, aY, aWidth, aHeight);
+    if (mWidgetListener)
+        mWidgetListener->WindowResized(this, aWidth, aHeight);
 
     if (aRepaint && gWindowToRedraw)
         gWindowToRedraw->Invalidate(sVirtualBounds);
@@ -485,7 +481,8 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 NS_IMETHODIMP
 nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
 {
-    aStatus = (*mEventCallback)(aEvent);
+    if (mWidgetListener)
+      aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
     return NS_OK;
 }
 
@@ -624,15 +621,15 @@ void
 nsWindow::BringToTop()
 {
     if (!sTopWindows.IsEmpty()) {
-        nsGUIEvent event(true, NS_DEACTIVATE, sTopWindows[0]);
-        (*mEventCallback)(&event);
+        if (nsIWidgetListener* listener = sTopWindows[0]->GetWidgetListener())
+            listener->WindowDeactivated();
     }
 
     sTopWindows.RemoveElement(this);
     sTopWindows.InsertElementAt(0, this);
 
-    nsGUIEvent event(true, NS_ACTIVATE, this);
-    (*mEventCallback)(&event);
+    if (mWidgetListener)
+        mWidgetListener->WindowActivated();
     Invalidate(sVirtualBounds);
 }
 

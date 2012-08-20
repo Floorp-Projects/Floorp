@@ -69,8 +69,6 @@ function ended(e) {
   v.src = "";
   v.parentNode.removeChild(v);
   manager.finished(v.token);
-
-  return false;
 }
 
 function startTest(test, token) {

@@ -45,11 +45,11 @@ public:
    *
    * @param aDirtyRect A pointer to a dirty rect, measured in device units, if
    *   available.  This will be used for optimizing the blur operation. It is
-   *   safe to pass NULL here.
+   *   safe to pass nullptr here.
    *
    * @param aSkipRect A pointer to a rect, measured in device units, that
    *   represents an area where blurring is unnecessary and shouldn't be done for
-   *   speed reasons. It is safe to pass NULL here.
+   *   speed reasons. It is safe to pass nullptr here.
    */
   AlphaBoxBlur(const Rect& aRect,
                const IntSize& aSpreadRadius,
@@ -84,7 +84,7 @@ public:
   IntRect GetRect();
 
   /**
-   * Return a pointer to a dirty rect, as passed in to the constructor, or NULL
+   * Return a pointer to a dirty rect, as passed in to the constructor, or nullptr
    * if none was passed in.
    */
   Rect* GetDirtyRect();

@@ -88,7 +88,16 @@ main (int argc, char **argv)
   hb_blob_destroy (blob);
   blob = NULL;
 
+  hb_font_t *font = hb_font_create (face);
+#ifdef HAVE_FREETYPE
+  hb_ft_font_set_funcs (font);
+#endif
+
   unsigned int len = argc - 3;
-  hb_codepoint_t glyphs[2] = {strtol (argv[3], NULL, 0), argc > 4 ? strtol (argv[4], NULL, 0) : (hb_codepoint_t) -1};
+  hb_codepoint_t glyphs[2];
+  if (!hb_font_glyph_from_string (font, argv[3], -1, &glyphs[0]) ||
+      (argc > 4 &&
+       !hb_font_glyph_from_string (font, argv[4], -1, &glyphs[1])))
+    return 2;
   return !hb_ot_layout_would_substitute_lookup (face, glyphs, len, strtol (argv[2], NULL, 0));
 }

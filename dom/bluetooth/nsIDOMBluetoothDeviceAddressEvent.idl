@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(afcb832f-bbb5-45fa-b703-f8185bd2d26d)]
+interface nsIDOMBluetoothDeviceAddressEvent : nsIDOMEvent
+{
+  readonly attribute DOMString  deviceAddress;
+
+  [noscript] void initBluetoothDeviceAddressEvent(in DOMString aType,
+                                                  in boolean aCanBubble,
+                                                  in boolean aCancelable,
+                                                  in DOMString aDeviceAddress);
+};
+
+dictionary BluetoothDeviceAddressEventInit : EventInit
+{
+  DOMString  deviceAddress;
+};

@@ -17,13 +17,11 @@ LIBXUL_LIBRARY 	= 1
 
 EXPORTS		+= \
 		nsOggDecoder.h \
-		nsOggDecoderStateMachine.h \
 		nsOggCodecState.h \
 		$(NULL)
 
 CPPSRCS		= \
 		nsOggDecoder.cpp \
-		nsOggDecoderStateMachine.cpp \
 		nsOggCodecState.cpp \
 		nsOggReader.cpp \
 		$(NULL)

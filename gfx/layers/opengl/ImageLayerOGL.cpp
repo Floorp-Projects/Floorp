@@ -6,6 +6,7 @@
 #include "gfxSharedImageSurface.h"
 #include "mozilla/layers/ImageContainerParent.h"
 
+#include "ImageContainer.h" // for PlanarYCBCRImage
 #include "ipc/AutoOpenSurface.h"
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
@@ -19,6 +20,12 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsSurfaceTexture.h"
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+# include "GonkIOSurfaceImage.h"
+# include <ui/GraphicBuffer.h>
+using namespace android;
 #endif
 
 using namespace mozilla::gfx;
@@ -237,12 +244,12 @@ ImageLayerOGL::RenderLayer(int,
     return;
   }
 
-  NS_ASSERTION(image->GetFormat() != Image::REMOTE_IMAGE_BITMAP,
+  NS_ASSERTION(image->GetFormat() != REMOTE_IMAGE_BITMAP,
     "Remote images aren't handled yet in OGL layers!");
   NS_ASSERTION(mScaleMode == SCALE_NONE,
     "Scale modes other than none not handled yet in OGL layers!");
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  if (image->GetFormat() == PLANAR_YCBCR) {
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
@@ -302,7 +309,7 @@ ImageLayerOGL::RenderLayer(int,
     // We shouldn't need to do this, but do it anyway just in case
     // someone else forgets.
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
+  } else if (image->GetFormat() == CAIRO_SURFACE) {
     CairoImage *cairoImage =
       static_cast<CairoImage*>(image);
 
@@ -378,7 +385,7 @@ ImageLayerOGL::RenderLayer(int,
     }
 #endif
 #ifdef XP_MACOSX
-  } else if (image->GetFormat() == Image::MAC_IO_SURFACE) {
+  } else if (image->GetFormat() == MAC_IO_SURFACE) {
      MacIOSurfaceImage *ioImage =
        static_cast<MacIOSurfaceImage*>(image);
 
@@ -434,7 +441,7 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
 #ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == Image::GONK_IO_SURFACE) {
+  } else if (image->GetFormat() == GONK_IO_SURFACE) {
 
     GonkIOSurfaceImage *ioImage = static_cast<GonkIOSurfaceImage*>(image);
     if (!ioImage) {
@@ -629,7 +636,7 @@ ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
     return false;
   }
 
-  if (image->GetFormat() != Image::CAIRO_SURFACE) {
+  if (image->GetFormat() != CAIRO_SURFACE) {
     return false;
   }
 
@@ -889,6 +896,21 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
         UploadSharedYUVToTexture(img->get_YUVImage());
   
         mImageVersion = imgVersion;
+#ifdef MOZ_WIDGET_GONK
+      } else if (img
+                 && (img->type() == SharedImage::TSurfaceDescriptor)
+                 && (img->get_SurfaceDescriptor().type() == SurfaceDescriptor::TSurfaceDescriptorGralloc)) {
+        const SurfaceDescriptorGralloc& desc = img->get_SurfaceDescriptor().get_SurfaceDescriptorGralloc();
+        sp<GraphicBuffer> graphicBuffer = GrallocBufferActor::GetFrom(desc);
+        mSize = gfxIntSize(graphicBuffer->getWidth(), graphicBuffer->getHeight());
+        if (!mExternalBufferTexture.IsAllocated()) {
+          mExternalBufferTexture.Allocate(gl());
+        }
+        gl()->MakeCurrent();
+        gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+        gl()->BindExternalBuffer(mExternalBufferTexture.GetTextureID(), graphicBuffer->getNativeBuffer());
+        mImageVersion = imgVersion;
+#endif
       }
     }
   }
@@ -929,6 +951,25 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                                     mTexImage->GetTileRect().Size());
       } while (mTexImage->NextTile());
     }
+#ifdef MOZ_WIDGET_GONK
+  } else if (mExternalBufferTexture.IsAllocated()) {
+    ShaderProgramOGL *program = mOGLManager->GetProgram(RGBAExternalLayerProgramType, GetMaskLayer());
+
+    gl()->ApplyFilterToBoundTexture(mFilter);
+
+    program->Activate();
+    program->SetLayerQuadRect(nsIntRect(0, 0,
+                                        mSize.width, mSize.height));
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
+    program->SetRenderOffset(aOffset);
+    program->SetTextureUnit(0);
+    program->LoadMask(GetMaskLayer());
+
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                GetVisibleRegion().GetBounds(),
+                                                nsIntSize(mSize.width, mSize.height));
+#endif
   } else if (mSharedHandle) {
     GLContext::SharedHandleDetails handleDetails;
     if (!gl()->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
@@ -1015,9 +1056,10 @@ ShadowImageLayerOGL::CleanupResources()
 {
   if (mSharedHandle) {
     gl()->ReleaseSharedHandle(mShareType, mSharedHandle);
-    mSharedHandle = NULL;
+    mSharedHandle = 0;
   }
 
+  mExternalBufferTexture.Release();
   mYUVTexture[0].Release();
   mYUVTexture[1].Release();
   mYUVTexture[2].Release();

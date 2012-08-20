@@ -5885,25 +5885,29 @@ xml_elements(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 xml_hasOwnProperty(JSContext *cx, unsigned argc, jsval *vp)
 {
-    jsval name;
-    JSBool found;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject *obj = ToObject(cx, HandleValue::fromMarkedLocation(&vp[1]));
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
-        return JS_FALSE;
+        return false;
     if (!obj->isXML()) {
         ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &XMLClass);
-        return JS_FALSE;
+        return false;
     }
 
-    name = argc != 0 ? vp[2] : JSVAL_VOID;
+    Value name = args.length() != 0 ? args[0] : UndefinedValue();
+    JSBool found;
     if (!HasProperty(cx, obj, name, &found))
-        return JS_FALSE;
+        return false;
     if (found) {
-        *vp = JSVAL_TRUE;
-        return JS_TRUE;
+        args.rval().setBoolean(true);
+        return true;
     }
-    return js_HasOwnPropertyHelper(cx, baseops::LookupProperty, argc, vp);
+
+    RootedId id(cx);
+    if (!ValueToId(cx, name, id.address()))
+        return false;
+    return js_HasOwnPropertyHelper(cx, baseops::LookupProperty, obj, id, args.rval());
 }
 
 /* XML and XMLList */

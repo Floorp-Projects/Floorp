@@ -192,6 +192,16 @@ protected:
 private:
   PRUint64 mImageContainerID;
   nsTArray<SharedImage*> mSharedImagePool;
+
+  /**
+   * Save a reference to the outgoing images and remove the reference
+   * once the image is returned from the compositor.
+   * GonkIOSurfaceImage needs to know when to return the buffer to the
+   * producing thread. The buffer is returned when GonkIOSurfaceImage
+   * destructs.
+   */
+  nsTArray<nsRefPtr<Image> > mImageQueue;
+
   int mActiveImageCount;
   bool mStop;
   bool mDispatchedDestroy;

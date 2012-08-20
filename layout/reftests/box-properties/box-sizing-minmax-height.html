@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html><head>
+    <title>min-/max-height testcase for bug 308801</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0; 
+        }
+
+        div {
+            margin:0;
+            padding:0;
+        }
+        
+	.min { min-height:37px; }
+	.max { max-height:37px; }
+	.hidden { overflow:hidden;  }
+
+        .box {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+        }
+
+        .test1 {
+            border:1px solid black;
+        }
+
+        .test2 {
+            padding:3px;
+	    background:black;
+        }
+
+        .test3 {
+            border:8px solid black;
+            padding:5px;
+        }
+
+        p { height:43px; margin:0; padding:0; }
+
+    </style>
+</head>
+<body>
+
+<div class="box min test1"></div>
+
+<br><div class="box min test2"></div>
+
+<br><div class="box min test3"></div>
+
+<br><div class="box max test1"><p></div>
+
+<br><div class="box max test2"><p></div>
+
+<br><div class="box max test3"><p></div>
+
+<br><!-- overflow:hidden -->
+
+<div class="hidden box min test1"></div>
+
+<br><div class="hidden box min test2"></div>
+
+<br><div class="hidden box min test3"></div>
+
+<br><div class="hidden box max test1"><p></div>
+
+<br><div class="hidden box max test2"><p></div>
+
+<br><div class="hidden box max test3"><p></div>
+
+</body>
+</html>

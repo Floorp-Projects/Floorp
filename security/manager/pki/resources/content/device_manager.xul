@@ -16,7 +16,7 @@
 	windowtype="mozilla:devicemanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&devmgr.title;"
-        style="width: 52em; height: 32em;"
+        style="&devmgr.style;"
         persist="screenX screenY width height"
         onload="LoadModules();"
         buttons="accept">

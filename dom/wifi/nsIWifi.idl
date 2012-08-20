@@ -17,7 +17,7 @@ interface nsIWifi : nsISupports
     void shutdown();
 };
 
-[scriptable, uuid(eda793cd-0bb3-475e-9223-0e778856ebd1)]
+[scriptable, uuid(b1f2e67f-75a8-4781-bf7f-eb21662ae9f3)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -62,6 +62,20 @@ interface nsIDOMWifiManager : nsISupports
      * onerror: We were unable to remove the network.
      */
     nsIDOMDOMRequest forget(in jsval network);
+
+    /**
+     * Wi-Fi Protected Setup functionality.
+     * @param detail WPS detail which has 'method' and 'pin' field.
+     *               The possible method field values are:
+     *                 - pbc: The Push Button Configuration.
+     *                 - pin: The PIN configuration.
+     *                 - cancel: Request to cancel WPS in progress.
+     *               If method field is 'pin', 'pin' field can exist and has
+     *               a PIN number.
+     * onsuccess: We have successfully started/canceled wps.
+     * onerror: We have failed to start/cancel wps.
+     */
+    nsIDOMDOMRequest wps(in jsval detail);
 
     /**
      * TODO Remove in favor of a settings API.

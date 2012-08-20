@@ -19,7 +19,7 @@ PathBuilderCG::~PathBuilderCG()
 void
 PathBuilderCG::MoveTo(const Point &aPoint)
 {
-  CGPathMoveToPoint(mCGPath, NULL, aPoint.x, aPoint.y);
+  CGPathMoveToPoint(mCGPath, nullptr, aPoint.x, aPoint.y);
 }
 
 void
@@ -28,7 +28,7 @@ PathBuilderCG::LineTo(const Point &aPoint)
   if (CGPathIsEmpty(mCGPath))
     MoveTo(aPoint);
   else
-    CGPathAddLineToPoint(mCGPath, NULL, aPoint.x, aPoint.y);
+    CGPathAddLineToPoint(mCGPath, nullptr, aPoint.x, aPoint.y);
 }
 
 void
@@ -39,7 +39,7 @@ PathBuilderCG::BezierTo(const Point &aCP1,
 
   if (CGPathIsEmpty(mCGPath))
     MoveTo(aCP1);
-  CGPathAddCurveToPoint(mCGPath, NULL,
+  CGPathAddCurveToPoint(mCGPath, nullptr,
                           aCP1.x, aCP1.y,
                           aCP2.x, aCP2.y,
                           aCP3.x, aCP3.y);
@@ -52,7 +52,7 @@ PathBuilderCG::QuadraticBezierTo(const Point &aCP1,
 {
   if (CGPathIsEmpty(mCGPath))
     MoveTo(aCP1);
-  CGPathAddQuadCurveToPoint(mCGPath, NULL,
+  CGPathAddQuadCurveToPoint(mCGPath, nullptr,
                               aCP1.x, aCP1.y,
                               aCP2.x, aCP2.y);
 }
@@ -171,7 +171,7 @@ PathCG::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 
   // The transform parameter of CGPathContainsPoint doesn't seem to work properly on OS X 10.5
   // so we transform aPoint ourselves.
-  return CGPathContainsPoint(mPath, NULL, point, mFillRule == FILL_EVEN_ODD);
+  return CGPathContainsPoint(mPath, nullptr, point, mFillRule == FILL_EVEN_ODD);
 }
 
 static size_t
@@ -184,9 +184,9 @@ PutBytesNull(void *info, const void *buffer, size_t count)
 static CGContextRef
 CreateScratchContext()
 {
-  CGDataConsumerCallbacks callbacks = {PutBytesNull, NULL};
-  CGDataConsumerRef consumer = CGDataConsumerCreate(NULL, &callbacks);
-  CGContextRef cg = CGPDFContextCreate(consumer, NULL, NULL);
+  CGDataConsumerCallbacks callbacks = {PutBytesNull, nullptr};
+  CGDataConsumerRef consumer = CGDataConsumerCreate(nullptr, &callbacks);
+  CGContextRef cg = CGPDFContextCreate(consumer, nullptr, nullptr);
   CGDataConsumerRelease(consumer);
   return cg;
 }

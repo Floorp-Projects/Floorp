@@ -14,7 +14,7 @@ var completed = false;
 
 function audioavailable(e) {
   if (completed)
-    return false;
+    return;
 
   completed = true;
   var samples = e.frameBuffer;
@@ -29,16 +29,14 @@ function audioavailable(e) {
 
   // Only care about the first few samples
   SimpleTest.finish();
-  return false;
 }
 
 function startTest() {
   if (completed)
-    return false;
+    return;
   var v = document.getElementById('v');
   v.addEventListener('MozAudioAvailable', audioavailable, false);
   v.play();
-  return false;
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -58,9 +58,7 @@ ContentPermissionPrompt.prototype = {
       "id": requestId,
       "url": request.principal.URI.spec
     };
-    let event = content.document.createEvent("CustomEvent");
-    event.initCustomEvent("mozChromeEvent", true, true, details);
-    content.dispatchEvent(event);
+    browser.shell.sendChromeEvent(details);
   },
 
   classID: Components.ID("{8c719f03-afe0-4aac-91ff-6c215895d467}"),

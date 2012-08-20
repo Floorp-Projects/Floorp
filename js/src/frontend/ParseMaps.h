@@ -363,10 +363,10 @@ class AtomDecls
     }
 
     /* Return the definition at the head of the chain for |atom|. */
-    inline Definition *lookupFirst(JSAtom *atom);
+    inline Definition *lookupFirst(JSAtom *atom) const;
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
-    inline DefinitionList::Range lookupMulti(JSAtom *atom);
+    inline DefinitionList::Range lookupMulti(JSAtom *atom) const;
 
     /* Add-or-update a known-unique definition for |atom|. */
     inline bool addUnique(JSAtom *atom, Definition *defn);
@@ -394,7 +394,7 @@ class AtomDecls
         }
     }
 
-    AtomDefnListMap::Range all() {
+    AtomDefnListMap::Range all() const {
         JS_ASSERT(map);
         return map->all();
     }

@@ -48,6 +48,7 @@
 #include "nsJSEnvironment.h"
 #include "SandboxHal.h"
 #include "nsDebugImpl.h"
+#include "nsLayoutStylesheetCache.h"
 
 #include "History.h"
 #include "nsDocShellCID.h"
@@ -908,11 +909,20 @@ ContentChild::RecvCycleCollect()
     return true;
 }
 
+static void
+PreloadSlowThings()
+{
+    // This fetches and creates all the built-in stylesheets.
+    nsLayoutStylesheetCache::UserContentSheet();
+}
+
 bool
 ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
 {
     mAppInfo.version.Assign(version);
     mAppInfo.buildID.Assign(buildID);
+
+    PreloadSlowThings();
     return true;
 }
 
@@ -937,15 +947,13 @@ ContentChild::RecvLastPrivateDocShellDestroyed()
 bool
 ContentChild::RecvFilePathUpdate(const nsString& path, const nsCString& aReason)
 {
-    // data strings will have the format of
-    //  reason:path
-    nsString data;
-    CopyASCIItoUTF16(aReason, data);
-    data.Append(NS_LITERAL_STRING(":"));
-    data.Append(path);
+    nsCOMPtr<nsIFile> file;
+    NS_NewLocalFile(path, false, getter_AddRefs(file));
 
+    nsString reason;
+    CopyASCIItoUTF16(aReason, reason);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(nullptr, "file-watcher-update", data.get());
+    obs->NotifyObservers(file, "file-watcher-update", reason.get());
     return true;
 }
 

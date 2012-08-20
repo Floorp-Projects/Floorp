@@ -353,7 +353,7 @@ OPDEF(JSOP_ALIASEDVARDEC, 142,"aliasedvardec",NULL,   10, 0,  1, 15,  JOF_SCOPEC
 
 /*
  * Intrinsic names have the syntax %name and can only be used when the 
- * CompileOptions flag "allowIntrinsicsCalls" is set.
+ * CompileOptions flag "selfHostingMode" is set.
  *
  * They are used to access intrinsic functions the runtime doesn't give 
  * client JS code access to from self-hosted code.

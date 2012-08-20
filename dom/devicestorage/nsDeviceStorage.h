@@ -57,6 +57,7 @@ public:
   // outside of the type of storage the user asked for.
   bool IsSafePath();
 
+  nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
   nsresult Write(InfallibleTArray<PRUint8>& bits);
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRUint64 aSince = 0);

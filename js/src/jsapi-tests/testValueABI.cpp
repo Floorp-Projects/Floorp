@@ -17,7 +17,7 @@
 extern "C" {
 
 extern JSBool
-C_ValueToObject(JSContext *cx, jsval v, JSMutableHandleObject obj);
+C_ValueToObject(JSContext *cx, jsval v, JSObject **obj);
 
 extern jsval
 C_GetEmptyStringValue(JSContext *cx);
@@ -32,7 +32,7 @@ BEGIN_TEST(testValueABI_retparam)
     JS::RootedObject obj(cx, JS_GetGlobalObject(cx));
     jsval v = OBJECT_TO_JSVAL(obj);
     obj = NULL;
-    CHECK(C_ValueToObject(cx, v, &obj));
+    CHECK(C_ValueToObject(cx, v, obj.address()));
     JSBool equal;
     CHECK(JS_StrictlyEqual(cx, v, OBJECT_TO_JSVAL(obj), &equal));
     CHECK(equal);

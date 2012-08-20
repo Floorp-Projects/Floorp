@@ -28,6 +28,9 @@
 #include "nsIDragSession.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIPrincipal.h"
 #include "nsIFormControl.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelection.h"
@@ -173,9 +176,21 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   NS_ASSERTION(dragSession, "No drag session");
 
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
+
+  nsCOMPtr<nsIDOMDocument> srcdomdoc;
+  if (sourceNode) {
+    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
+    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
+  }
+
   nsDragEvent* dragEventInternal = static_cast<nsDragEvent *>(aDropEvent->GetInternalNSEvent());
   if (nsContentUtils::CheckForSubFrameDrop(dragSession, dragEventInternal)) {
-    return NS_OK;
+    // Don't allow drags from subframe documents with different origins than
+    // the drop destination.
+    if (srcdomdoc && !IsSafeToInsertData(srcdomdoc))
+      return NS_OK;
   }
 
   // Current doc is destination
@@ -212,15 +227,6 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   bool isCollapsed = selection->Collapsed();
-
-  nsCOMPtr<nsIDOMNode> sourceNode;
-  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
-
-  nsCOMPtr<nsIDOMDocument> srcdomdoc;
-  if (sourceNode) {
-    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
-  }
 
   // Only the nsHTMLEditor::FindUserSelectAllNode returns a node.
   nsCOMPtr<nsIDOMNode> userSelectNode = FindUserSelectAllNode(newSelectionParent);
@@ -419,3 +425,33 @@ NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransfer
   
   return NS_OK;
 }
+
+bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
+{
+  // Try to determine whether we should use a sanitizing fragment sink
+  bool isSafe = false;
+
+  nsCOMPtr<nsIDocument> destdoc = GetDocument();
+  NS_ASSERTION(destdoc, "Where is our destination doc?");
+  nsCOMPtr<nsISupports> container = destdoc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  if (dsti)
+    dsti->GetRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(root);
+  PRUint32 appType;
+  if (docShell && NS_SUCCEEDED(docShell->GetAppType(&appType)))
+    isSafe = appType == nsIDocShell::APP_TYPE_EDITOR;
+  if (!isSafe && aSourceDoc) {
+    nsCOMPtr<nsIDocument> srcdoc = do_QueryInterface(aSourceDoc);
+    NS_ASSERTION(srcdoc, "Where is our source doc?");
+
+    nsIPrincipal* srcPrincipal = srcdoc->NodePrincipal();
+    nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
+    NS_ASSERTION(srcPrincipal && destPrincipal, "How come we don't have a principal?");
+    srcPrincipal->Subsumes(destPrincipal, &isSafe);
+  }
+
+  return isSafe;
+}
+

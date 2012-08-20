@@ -71,15 +71,15 @@ _hb_fallback_shaper_font_data_destroy (hb_fallback_shaper_font_data_t *data)
 struct hb_fallback_shaper_shape_plan_data_t {};
 
 hb_fallback_shaper_shape_plan_data_t *
-_hb_fallback_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan,
-					    const hb_feature_t *user_features,
-					    unsigned int        num_user_features)
+_hb_fallback_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
+					    const hb_feature_t *user_features HB_UNUSED,
+					    unsigned int        num_user_features HB_UNUSED)
 {
   return (hb_fallback_shaper_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_fallback_shaper_shape_plan_data_destroy (hb_fallback_shaper_shape_plan_data_t *data)
+_hb_fallback_shaper_shape_plan_data_destroy (hb_fallback_shaper_shape_plan_data_t *data HB_UNUSED)
 {
 }
 

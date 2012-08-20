@@ -169,7 +169,6 @@ hb_ot_layout_feature_get_lookup_indexes (hb_face_t    *face,
 hb_bool_t
 hb_ot_layout_has_substitution (hb_face_t *face);
 
-/* Supports length 1 or 2 right now. */
 hb_bool_t
 hb_ot_layout_would_substitute_lookup (hb_face_t            *face,
 				      const hb_codepoint_t *glyphs,

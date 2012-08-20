@@ -139,7 +139,11 @@ class THEBES_API LayerManager {
   NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
-  LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true), mId(0)
+  LayerManager()
+    : mDestroyed(false)
+    , mSnapEffectiveTransforms(true)
+    , mId(0)
+    , mInTransaction(false)
   {
     InitLog();
   }
@@ -455,6 +459,8 @@ public:
 
   virtual bool IsCompositingCheap() { return true; }
 
+  bool IsInTransaction() const { return mInTransaction; }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -468,6 +474,7 @@ protected:
   static void InitLog();
   static PRLogModuleInfo* sLog;
   uint64_t mId;
+  bool mInTransaction;
 private:
   TimeStamp mLastFrameTime;
   nsTArray<float> mFrameTimes;
@@ -544,8 +551,10 @@ public:
     NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
                  (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
                  "Can't be opaque and require component alpha");
-    mContentFlags = aFlags;
-    Mutated();
+    if (mContentFlags != aFlags) {
+      mContentFlags = aFlags;
+      Mutated();
+    }
   }
   /**
    * CONSTRUCTION PHASE ONLY
@@ -562,8 +571,10 @@ public:
    */
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
-    mVisibleRegion = aRegion;
-    Mutated();
+    if (!mVisibleRegion.IsEqual(aRegion)) {
+      mVisibleRegion = aRegion;
+      Mutated();
+    }
   }
 
   /**
@@ -573,8 +584,10 @@ public:
    */
   void SetOpacity(float aOpacity)
   {
-    mOpacity = aOpacity;
-    Mutated();
+    if (mOpacity != aOpacity) {
+      mOpacity = aOpacity;
+      Mutated();
+    }
   }
 
   /**
@@ -589,11 +602,25 @@ public:
    */
   void SetClipRect(const nsIntRect* aRect)
   {
-    mUseClipRect = aRect != nullptr;
-    if (aRect) {
-      mClipRect = *aRect;
+    if (mUseClipRect) {
+      if (!aRect) {
+        mUseClipRect = false;
+        Mutated();
+      } else {
+        if (!aRect->IsEqualEdges(mClipRect)) {
+          mClipRect = *aRect;
+          Mutated();
+        }
+      }
+    } else {
+      if (aRect) {
+        Mutated();
+        mUseClipRect = true;
+        if (!aRect->IsEqualEdges(mClipRect)) {
+          mClipRect = *aRect;
+        }
+      }
     }
-    Mutated();
   }
 
   /**
@@ -642,8 +669,10 @@ public:
     }
 #endif
 
-    mMaskLayer = aMaskLayer;
-    Mutated();
+    if (mMaskLayer != aMaskLayer) {
+      mMaskLayer = aMaskLayer;
+      Mutated();
+    }
   }
 
   /**
@@ -655,6 +684,9 @@ public:
    */
   void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
+    if (mTransform == aMatrix) {
+      return;
+    }
     mTransform = aMatrix;
     Mutated();
   }
@@ -1109,8 +1141,10 @@ public:
    */
   void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
   {
-    mFrameMetrics = aFrameMetrics;
-    Mutated();
+    if (mFrameMetrics != aFrameMetrics) {
+      mFrameMetrics = aFrameMetrics;
+      Mutated();
+    }
   }
 
   void SetPreScale(float aXScale, float aYScale)
@@ -1400,7 +1434,10 @@ public:
   void SetReferentId(uint64_t aId)
   {
     MOZ_ASSERT(aId != 0);
-    mId = aId;
+    if (mId != aId) {
+      mId = aId;
+      Mutated();
+    }
   }
   /**
    * CONSTRUCTION PHASE ONLY

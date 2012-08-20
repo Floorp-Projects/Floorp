@@ -45,10 +45,12 @@ public:
   void SetBackingBuffer(gfxASurface* aBuffer,
                         const nsIntRect& aRect, const nsIntPoint& aRotation)
   {
+#ifdef DEBUG
     gfxIntSize prevSize = gfxIntSize(BufferRect().width, BufferRect().height);
     gfxIntSize newSize = aBuffer->GetSize();
     NS_ABORT_IF_FALSE(newSize == prevSize,
                       "Swapped-in buffer size doesn't match old buffer's!");
+#endif
     nsRefPtr<gfxASurface> oldBuffer;
     oldBuffer = SetBuffer(aBuffer, aRect, aRotation);
   }

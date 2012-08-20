@@ -10,9 +10,9 @@ class TestState(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         l = self.marionette.find_element("name", "myCheckBox")
-        self.assertTrue(l.enabled())
+        self.assertTrue(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = true;", [l])
-        self.assertFalse(l.enabled())
+        self.assertFalse(l.is_enabled())
 
     def test_isDisplayed(self):
         test_html = self.marionette.absolute_url("test.html")
@@ -36,9 +36,9 @@ class TestStateChrome(MarionetteTestCase):
 
     def test_isEnabled(self):
         l = self.marionette.find_element("id", "textInput")
-        self.assertTrue(l.enabled())
+        self.assertTrue(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = true;", [l])
-        self.assertFalse(l.enabled())
+        self.assertFalse(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = false;", [l])
 
     def test_isDisplayed(self):

@@ -19,7 +19,7 @@ let whitelistedEvents = [
 SimpleTest.waitForExplicitFinish();
 
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addToWhitelist();
+browserElementTestHelpers.addPermission();
 browserElementTestHelpers.setOOPDisabledPref(true); // this is breaking the autofocus.
 
 var iframe = document.createElement('iframe');

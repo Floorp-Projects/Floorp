@@ -8,6 +8,7 @@
 
 #include "LayerManagerD3D10.h"
 #include "ImageLayers.h"
+#include "ImageContainer.h"
 #include "yuv_convert.h"
 
 namespace mozilla {

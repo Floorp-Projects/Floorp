@@ -231,7 +231,7 @@ CPPSRCS = \
 	SkMaskFilter.cpp \
 	SkMath.cpp \
 	SkMatrix.cpp \
-	SkMemory_malloc.cpp \
+	SkMemory_mozalloc.cpp \
 	SkMetaData.cpp \
 	SkMorphologyImageFilter.cpp \
 	SkOrderedReadBuffer.cpp \

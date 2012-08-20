@@ -35,6 +35,7 @@ class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;
 class   ViewWrapper;
+class   nsIWidgetListener;
 
 namespace mozilla {
 namespace dom {
@@ -87,8 +88,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x91aafae4, 0xd814, 0x4803, \
-    { 0x9a, 0xf5, 0xb0, 0x2f, 0x1b, 0x2c, 0xaf, 0x57 } }
+  { 0xb8f43b25, 0x9036, 0x44e7, \
+    { 0xaa, 0xe2, 0x33, 0x76, 0x6c, 0x35, 0x91, 0xfc } }
 
 /*
  * Window shadow styles
@@ -427,7 +428,6 @@ class nsIWidget : public nsISupports {
      * @param     aParent       parent nsIWidget
      * @param     aNativeParent native parent widget
      * @param     aRect         the widget dimension
-     * @param     aHandleEventFunction the event handler callback function
      * @param     aContext
      * @param     aInitData     data that is used for widget initialization
      *
@@ -435,7 +435,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Create(nsIWidget        *aParent,
                       nsNativeWidget   aNativeParent,
                       const nsIntRect  &aRect,
-                      EVENT_CALLBACK   aHandleEventFunction,
                       nsDeviceContext *aContext,
                       nsWidgetInitData *aInitData = nullptr) = 0;
 
@@ -457,48 +456,42 @@ class nsIWidget : public nsISupports {
      */
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect  &aRect,
-                EVENT_CALLBACK   aHandleEventFunction,
                 nsDeviceContext  *aContext,
                 nsWidgetInitData *aInitData = nullptr,
                 bool             aForceUseIWidgetParent = false) = 0;
 
     /**
-     * Set the event callback for a widget. If a device context is not
-     * provided then the existing device context will remain, it will
-     * not be nulled out.
-     */
-    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
-                                nsDeviceContext *aContext) = 0;
-
-    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
-     * container, attach a secondary event callback and update the device
-     * context. The primary event callback will continue to be called, so the
-     * owning base window will continue to function.
+     * container, attach a secondary listener and update the device
+     * context. The primary widget listener will continue to be called for
+     * notifications relating to the top-level window, whereas other
+     * notifications such as painting and events will instead be called via
+     * the attached listener. SetAttachedWidgetListener should be used to
+     * assign the attached listener.
      *
-     * aViewEventFunction Event callback that will receive mirrored
-     *                    events.
+     * aUseAttachedEvents if true, events are sent to the attached listener
+     * instead of the normal listener.
      * aContext The new device context for the view
      */
-    NS_IMETHOD AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
+    NS_IMETHOD AttachViewToTopLevel(bool aUseAttachedEvents,
                                     nsDeviceContext *aContext) = 0;
 
     /**
-     * Accessor functions to get and set secondary client data. Used by
+     * Accessor functions to get and set the attached listener. Used by
      * nsIView in connection with AttachViewToTopLevel above.
      */
-    NS_IMETHOD SetAttachedViewPtr(ViewWrapper* aViewWrapper) = 0;
-    virtual ViewWrapper* GetAttachedViewPtr() = 0;
+    virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
+    virtual nsIWidgetListener* GetAttachedWidgetListener() = 0;
 
     /**
-     * Accessor functions to get and set the client data associated with the
-     * widget.
+     * Accessor functions to get and set the listener which handles various
+     * actions for the widget.
      */
     //@{
-    NS_IMETHOD  GetClientData(void*& aClientData) = 0;
-    NS_IMETHOD  SetClientData(void* aClientData) = 0;
+    virtual nsIWidgetListener* GetWidgetListener() = 0;
+    virtual void SetWidgetListener(nsIWidgetListener* alistener) = 0;
     //@}
 
     /**
@@ -792,9 +785,7 @@ class nsIWidget : public nsISupports {
      *               widget's toplevel window.
      *               If false, the appropriate toplevel window (which in
      *               the case of popups may not be this widget's toplevel
-     *               window) is already active, and this function indicates
-     *               that keyboard events should be reported through the
-     *               aHandleEventFunction provided to this->Create().
+     *               window) is already active.
      */
     NS_IMETHOD SetFocus(bool aRaise = false) = 0;
 

@@ -40,7 +40,7 @@ var addon2 = {
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-profileDir.create(AM_Ci.nsILocalFile.DIRECTORY_TYPE, 0755);
+profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
 const sourceDir = gProfD.clone();
 sourceDir.append("source");
@@ -71,8 +71,7 @@ function writeRelativePointer(aId, aName) {
   let absTarget = sourceDir.clone();
   absTarget.append(do_get_expected_addon_name(aId));
 
-  var relTarget = absTarget.QueryInterface(AM_Ci.nsILocalFile)
-                           .getRelativeDescriptor(profileDir);
+  var relTarget = absTarget.getRelativeDescriptor(profileDir);
 
   var fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(AM_Ci.nsIFileOutputStream);

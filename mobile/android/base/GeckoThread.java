@@ -14,7 +14,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 
 public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
@@ -22,23 +21,12 @@ public class GeckoThread extends Thread {
     Intent mIntent;
     String mUri;
     int mRestoreMode;
-    CountDownLatch mStartSignal;
 
-    GeckoThread() {
-        mStartSignal = new CountDownLatch(1);
-        setName("Gecko");
-    }
-
-    public void init(Intent intent, String uri, int restoreMode) {
+    GeckoThread(Intent intent, String uri, int restoreMode) {
         mIntent = intent;
         mUri = uri;
         mRestoreMode = restoreMode;
-    }
-
-    public void reallyStart() {
-        mStartSignal.countDown();
-        if (getState() == Thread.State.NEW)
-            start();
+        setName("Gecko");
     }
 
     public void run() {
@@ -65,11 +53,6 @@ public class GeckoThread extends Thread {
         GeckoAppShell.loadGeckoLibs(resourcePath);
 
         Locale.setDefault(locale);
-
-        try {
-            mStartSignal.await();
-        } catch (Exception e) { }
-
         Resources res = app.getBaseContext().getResources();
         Configuration config = res.getConfiguration();
         config.locale = locale;

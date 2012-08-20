@@ -89,6 +89,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mCaps(0)
     , mClassification(CLASS_GENERAL)
     , mPipelinePosition(0)
+    , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
     , mClosed(false)
     , mConnected(false)
     , mHaveStatusLine(false)
@@ -1178,6 +1179,10 @@ nsHttpTransaction::HandleContentStart()
             LOG3(("]\n"));
         }
 #endif
+        // Save http version, mResponseHead isn't available anymore after
+        // TakeResponseHead() is called
+        mHttpVersion = mResponseHead->Version();
+
         // notify the connection, give it a chance to cause a reset.
         bool reset = false;
         if (!mRestartInProgressVerifier.IsSetup())
@@ -1301,7 +1306,8 @@ nsHttpTransaction::HandleContent(char *buf,
         // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
-        if (mConnection->IsPersistent() || mPreserveStream) {
+        if (mConnection->IsPersistent() || mPreserveStream ||
+            mHttpVersion >= NS_HTTP_VERSION_1_1) {
             PRInt64 remaining = mContentLength - mContentRead;
             *contentRead = PRUint32(NS_MIN<PRInt64>(count, remaining));
             *contentRemaining = count - *contentRead;

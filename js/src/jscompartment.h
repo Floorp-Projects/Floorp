@@ -155,6 +155,14 @@ struct JSCompartment
         return needsBarrier_;
     }
 
+    bool compileBarriers(bool needsBarrier) const {
+        return needsBarrier || rt->gcZeal() == js::gc::ZealVerifierPreValue;
+    }
+
+    bool compileBarriers() const {
+        return compileBarriers(needsBarrier());
+    }
+
     void setNeedsBarrier(bool needs);
 
     js::GCMarker *barrierTracer() {
@@ -292,6 +300,9 @@ struct JSCompartment
     size_t                       gcMallocAndFreeBytes;
     size_t                       gcTriggerMallocAndFreeBytes;
 
+    /* During GC, stores the index of this compartment in rt->compartments. */
+    unsigned                     index;
+
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from
@@ -325,6 +336,7 @@ struct JSCompartment
 
     void markTypes(JSTracer *trc);
     void discardJitCode(js::FreeOp *fop);
+    bool isDiscardingJitCode(JSTracer *trc);
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();
     void purge();

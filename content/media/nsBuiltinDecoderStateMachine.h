@@ -468,13 +468,6 @@ protected:
   // Accessed on state machine, audio, main, and AV thread.
   State mState;
 
-  // The size of the decoded YCbCr frame.
-  // Accessed on state machine thread.
-  PRUint32 mCbCrSize;
-
-  // Accessed on state machine thread.
-  nsAutoArrayPtr<unsigned char> mCbCrBuffer;
-
   // Thread for pushing audio onto the audio hardware.
   // The "audio push thread".
   nsCOMPtr<nsIThread> mAudioThread;
@@ -566,6 +559,11 @@ protected:
   // Time at which we started decoding. Synchronised via decoder monitor.
   TimeStamp mDecodeStartTime;
 
+  // The maximum number of second we spend buffering when we are short on
+  // unbuffered data.
+  PRUint32 mBufferingWait;
+  PRInt64  mLowDataThresholdUsecs;
+
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams).
   bool mAudioCaptured;
@@ -647,11 +645,6 @@ protected:
   // created. Synchronized by the decoder monitor.
   bool mRequestedNewDecodeThread;
   
-  // The maximum number of second we spend buffering when we are short on
-  // unbuffered data.
-  PRUint32 mBufferingWait;
-  PRInt64  mLowDataThresholdUsecs;
-
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
   // event manager is accessed from the state machine and audio threads,

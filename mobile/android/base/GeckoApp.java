@@ -1514,12 +1514,7 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
-        if (sGeckoThread == null) {
-            sGeckoThread = new GeckoThread();
-            String uri = getURIFromIntent(getIntent());
-            if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
-                sGeckoThread.start();
-        } else {
+        if (sGeckoThread != null) {
             // this happens when the GeckoApp activity is destroyed by android
             // without killing the entire application (see bug 769269)
             mIsRestoringActivity = true;
@@ -1627,17 +1622,19 @@ abstract public class GeckoApp
             passedUri = "about:empty";
         }
 
-        sGeckoThread.init(intent, passedUri, mRestoreMode);
+        if (!mIsRestoringActivity) {
+            sGeckoThread = new GeckoThread(intent, passedUri, mRestoreMode);
+        }
         if (!ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
-            sGeckoThread.reallyStart();
+            sGeckoThread.start();
         } else if (ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
             mMainHandler.postDelayed(new Runnable() {
                 public void run() {
                     Log.i(LOGTAG, "Launching from debug intent after 5s wait");
                     setLaunchState(LaunchState.Launching);
-                    sGeckoThread.reallyStart();
+                    sGeckoThread.start();
                 }
             }, 1000 * 5 /* 5 seconds */);
             Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");

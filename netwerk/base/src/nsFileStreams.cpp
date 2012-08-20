@@ -28,8 +28,13 @@
 #include "nsReadLine.h"
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
+#include "mozilla/ipc/IPCSerializableParams.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
+
+typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
+
+using namespace mozilla::ipc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStreamBase
@@ -286,12 +291,16 @@ nsFileStreamBase::CleanUpOpen()
 nsresult
 nsFileStreamBase::DoOpen()
 {
-    NS_PRECONDITION(mOpenParams.localFile, "Must have a file to open");
+    NS_ASSERTION(!mFD, "Already have a file descriptor!");
+    NS_ASSERTION(mOpenParams.localFile, "Must have a file to open");
 
     PRFileDesc* fd;
-    nsresult rv = mOpenParams.localFile->OpenNSPRFileDesc(mOpenParams.ioFlags, mOpenParams.perm, &fd);
+    nsresult rv = mOpenParams.localFile->OpenNSPRFileDesc(mOpenParams.ioFlags,
+                                                          mOpenParams.perm,
+                                                          &fd);
     CleanUpOpen();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
     mFD = fd;
 
     return NS_OK;
@@ -320,16 +329,16 @@ NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
-NS_IMPL_CI_INTERFACE_GETTER5(nsFileInputStream,
+NS_IMPL_CI_INTERFACE_GETTER4(nsFileInputStream,
                              nsIInputStream,
                              nsIFileInputStream,
                              nsISeekableStream,
-                             nsILineInputStream,
-                             nsIIPCSerializable)
+                             nsILineInputStream)
 
 nsresult
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -505,6 +514,76 @@ nsFileInputStream::Write(IPC::Message *aMsg)
     WriteParam(aMsg, mBehaviorFlags);
 }
 
+void
+nsFileInputStream::Serialize(InputStreamParams& aParams)
+{
+    FileInputStreamParams params;
+
+    if (mFD) {
+        FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
+        NS_ASSERTION(fd, "This should never be null!");
+
+        params.file() = FileDescriptor(fd);
+        NS_ASSERTION(params.file().IsValid(),
+                     "Sending an invalid file descriptor!");
+    } else {
+        NS_WARNING("This file has not been opened (or could not be opened). "
+                   "Sending an invalid file descriptor to the other process!");
+    }
+
+    PRInt32 behaviorFlags = mBehaviorFlags;
+
+    // The other process shouldn't close when it reads the end because it will
+    // not be able to reopen the file later.
+    behaviorFlags &= ~nsIFileInputStream::CLOSE_ON_EOF;
+
+    // The other process will not be able to reopen the file so transferring
+    // this flag is meaningless.
+    behaviorFlags &= ~nsIFileInputStream::REOPEN_ON_REWIND;
+
+    // The other process is going to have an open file descriptor automatically
+    // so transferring this flag is meaningless.
+    behaviorFlags &= ~nsIFileInputStream::DEFER_OPEN;
+
+    params.behaviorFlags() = behaviorFlags;
+    params.ioFlags() = mIOFlags;
+
+    aParams = params;
+}
+
+bool
+nsFileInputStream::Deserialize(const InputStreamParams& aParams)
+{
+    NS_ASSERTION(!mFD, "Already have a file descriptor?!");
+    NS_ASSERTION(!mDeferredOpen, "Deferring open?!");
+    NS_ASSERTION(!mFile, "Should never have a file here!");
+    NS_ASSERTION(!mPerm, "This should always be 0!");
+
+    if (aParams.type() != InputStreamParams::TFileInputStreamParams) {
+        NS_WARNING("Received unknown parameters from the other process!");
+        return false;
+    }
+
+    const FileInputStreamParams& params = aParams.get_FileInputStreamParams();
+
+    const FileDescriptor& fd = params.file();
+    NS_WARN_IF_FALSE(fd.IsValid(), "Received an invalid file descriptor!");
+
+    if (fd.IsValid()) {
+        PRFileDesc* fileDesc = PR_ImportFile(PROsfd(fd.PlatformHandle()));
+        if (!fileDesc) {
+            NS_WARNING("Failed to import file handle!");
+            return false;
+        }
+        mFD = fileDesc;
+    }
+
+    mBehaviorFlags = params.behaviorFlags();
+    mIOFlags = params.ioFlags();
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsPartialFileInputStream
 
@@ -520,16 +599,16 @@ NS_INTERFACE_MAP_BEGIN(nsPartialFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIPartialFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsPartialFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
-NS_IMPL_CI_INTERFACE_GETTER5(nsPartialFileInputStream,
+NS_IMPL_CI_INTERFACE_GETTER4(nsPartialFileInputStream,
                              nsIInputStream,
                              nsIPartialFileInputStream,
                              nsISeekableStream,
-                             nsILineInputStream,
-                             nsIIPCSerializable)
+                             nsILineInputStream)
 
 nsresult
 nsPartialFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID,
@@ -678,6 +757,64 @@ nsPartialFileInputStream::Write(IPC::Message *aMsg)
 
     // Now run base class serialization.
     nsFileInputStream::Write(aMsg);
+}
+
+void
+nsPartialFileInputStream::Serialize(InputStreamParams& aParams)
+{
+    // Serialize the base class first.
+    InputStreamParams fileParams;
+    nsFileInputStream::Serialize(fileParams);
+
+    if (fileParams.type() != InputStreamParams::TFileInputStreamParams) {
+        NS_ERROR("Base class serialize failed!");
+        return;
+    }
+
+    PartialFileInputStreamParams params;
+
+    params.fileStreamParams() = fileParams.get_FileInputStreamParams();
+    params.begin() = mStart;
+    params.length() = mLength;
+
+    aParams = params;
+}
+
+bool
+nsPartialFileInputStream::Deserialize(const InputStreamParams& aParams)
+{
+    NS_ASSERTION(!mFD, "Already have a file descriptor?!");
+    NS_ASSERTION(!mStart, "Already have a start?!");
+    NS_ASSERTION(!mLength, "Already have a length?!");
+    NS_ASSERTION(!mPosition, "Already have a position?!");
+
+    if (aParams.type() != InputStreamParams::TPartialFileInputStreamParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
+        return false;
+    }
+
+    const PartialFileInputStreamParams& params =
+        aParams.get_PartialFileInputStreamParams();
+
+    // Deserialize the base class first.
+    InputStreamParams fileParams(params.fileStreamParams());
+    if (!nsFileInputStream::Deserialize(fileParams)) {
+        NS_ERROR("Base class deserialize failed!");
+        return false;
+    }
+
+    NS_ASSERTION(mFD, "Must have a file descriptor now!");
+
+    mStart = params.begin();
+    mLength = params.length();
+    mPosition = 0;
+
+    if (!mStart) {
+      return true;
+    }
+
+    // XXX This is so broken. Main thread IO alert.
+    return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, mStart));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

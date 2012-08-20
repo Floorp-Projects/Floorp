@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Hal.h"
+#include "mozilla/AppProcessPermissions.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
@@ -300,12 +301,15 @@ public:
               const InfallibleTArray<uint64_t> &id,
               PBrowserParent *browserParent) MOZ_OVERRIDE
   {
+    // We give all content vibration permission.
+
     // Check whether browserParent is active.  We should have already
     // checked that the corresponding window is active, but this check
     // isn't redundant.  A window may be inactive in an active
     // browser.  And a window is not notified synchronously when it's
     // deactivated, so the window may think it's active when the tab
-    // is actually inactive.
+    // is actually inactive.  This also mitigates user annoyance that
+    // buggy/malicious processes could cause.
     TabParent *tabParent = static_cast<TabParent*>(browserParent);
     if (!tabParent->Active()) {
       HAL_LOG(("RecvVibrate: Tab is not active. Cancelling."));
@@ -336,6 +340,7 @@ public:
 
   virtual bool
   RecvEnableBatteryNotifications() MOZ_OVERRIDE {
+    // We give all content battery-status permission.
     hal::RegisterBatteryObserver(this);
     return true;
   }
@@ -348,6 +353,7 @@ public:
 
   virtual bool
   RecvGetCurrentBatteryInformation(BatteryInformation* aBatteryInfo) MOZ_OVERRIDE {
+    // We give all content battery-status permission.
     hal::GetCurrentBatteryInformation(aBatteryInfo);
     return true;
   }
@@ -358,6 +364,7 @@ public:
 
   virtual bool
   RecvEnableNetworkNotifications() MOZ_OVERRIDE {
+    // We give all content access to this network-status information.
     hal::RegisterNetworkObserver(this);
     return true;
   }
@@ -380,6 +387,8 @@ public:
 
   virtual bool
   RecvEnableScreenConfigurationNotifications() MOZ_OVERRIDE {
+    // Screen configuration is used to implement CSS and DOM
+    // properties, so all content already has access to this.
     hal::RegisterScreenConfigurationObserver(this);
     return true;
   }
@@ -399,6 +408,10 @@ public:
   virtual bool
   RecvLockScreenOrientation(const dom::ScreenOrientation& aOrientation, bool* aAllowed) MOZ_OVERRIDE
   {
+    // FIXME/bug 777980: unprivileged content may only lock
+    // orientation while fullscreen.  We should check whether the
+    // request comes from an actor in a process that might be
+    // fullscreen.  We don't have that information currently.
     *aAllowed = hal::LockScreenOrientation(aOrientation);
     return true;
   }
@@ -417,6 +430,9 @@ public:
   virtual bool
   RecvGetScreenEnabled(bool *enabled) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     *enabled = hal::GetScreenEnabled();
     return true;
   }
@@ -424,6 +440,9 @@ public:
   virtual bool
   RecvSetScreenEnabled(const bool &enabled) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::SetScreenEnabled(enabled);
     return true;
   }
@@ -431,6 +450,9 @@ public:
   virtual bool
   RecvGetCpuSleepAllowed(bool *allowed) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     *allowed = hal::GetCpuSleepAllowed();
     return true;
   }
@@ -438,6 +460,9 @@ public:
   virtual bool
   RecvSetCpuSleepAllowed(const bool &allowed) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::SetCpuSleepAllowed(allowed);
     return true;
   }
@@ -445,6 +470,9 @@ public:
   virtual bool
   RecvGetScreenBrightness(double *brightness) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     *brightness = hal::GetScreenBrightness();
     return true;
   }
@@ -452,6 +480,9 @@ public:
   virtual bool
   RecvSetScreenBrightness(const double &brightness) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::SetScreenBrightness(brightness);
     return true;
   }
@@ -459,6 +490,13 @@ public:
   virtual bool
   RecvSetLight(const LightType& aLight,  const hal::LightConfiguration& aConfig, bool *status) MOZ_OVERRIDE
   {
+    // XXX currently, the hardware key light and screen backlight are
+    // controlled as a unit.  Those are set through the power API, and
+    // there's no other way to poke lights currently, so we require
+    // "power" privileges here.
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     *status = hal::SetLight(aLight, aConfig);
     return true;
   }
@@ -466,6 +504,9 @@ public:
   virtual bool
   RecvGetLight(const LightType& aLight, LightConfiguration* aConfig, bool* status) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     *status = hal::GetLight(aLight, aConfig);
     return true;
   }
@@ -473,6 +514,9 @@ public:
   virtual bool
   RecvAdjustSystemClock(const int32_t &aDeltaMilliseconds) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "systemclock-write")) {
+      return false;
+    }
     hal::AdjustSystemClock(aDeltaMilliseconds);
     return true;
   }
@@ -480,6 +524,9 @@ public:
   virtual bool 
   RecvSetTimezone(const nsCString& aTimezoneSpec) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "systemclock-write")) {
+      return false;
+    }
     hal::SetTimezone(aTimezoneSpec);
     return true;  
   }
@@ -487,6 +534,9 @@ public:
   virtual bool
   RecvReboot() MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::Reboot();
     return true;
   }
@@ -494,12 +544,17 @@ public:
   virtual bool
   RecvPowerOff() MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::PowerOff();
     return true;
   }
 
   virtual bool
   RecvEnableSensorNotifications(const SensorType &aSensor) MOZ_OVERRIDE {
+    // We currently allow any content to register device-sensor
+    // listeners.
     hal::RegisterSensorObserver(aSensor, this);
     return true;
   }
@@ -519,6 +574,9 @@ public:
                      const WakeLockControl &aLockAdjust,
                      const WakeLockControl &aHiddenAdjust) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::ModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust);
     return true;
   }
@@ -526,6 +584,9 @@ public:
   virtual bool
   RecvEnableWakeLockNotifications() MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::RegisterWakeLockObserver(this);
     return true;
   }
@@ -540,6 +601,9 @@ public:
   virtual bool
   RecvGetWakeLockInfo(const nsString &aTopic, WakeLockInformation *aWakeLockInfo) MOZ_OVERRIDE
   {
+    if (!AppProcessHasPermission(this, "power")) {
+      return false;
+    }
     hal::GetWakeLockInfo(aTopic, aWakeLockInfo);
     return true;
   }
@@ -552,8 +616,8 @@ public:
   virtual bool
   RecvEnableSwitchNotifications(const SwitchDevice& aDevice) MOZ_OVERRIDE
   {
-    hal::RegisterSwitchObserver(aDevice, this);
-    return true;
+    // Content has no reason to listen to switch events currently.
+    return false;
   }
 
   virtual bool
@@ -571,8 +635,8 @@ public:
   virtual bool
   RecvGetCurrentSwitchState(const SwitchDevice& aDevice, hal::SwitchState *aState) MOZ_OVERRIDE
   {
-    *aState = hal::GetCurrentSwitchState(aDevice);
-    return true;
+    // Content has no reason to listen to switch events currently.
+    return false;
   }
 
   virtual bool

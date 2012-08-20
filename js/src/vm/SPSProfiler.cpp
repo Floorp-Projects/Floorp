@@ -146,8 +146,7 @@ SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc
         stack[current].setLabel(string);
         stack[current].setStackAddress(sp);
         stack[current].setScript(script);
-        if (pc != NULL)
-            stack_[current].setPC(pc);
+        stack[current].setPC(pc);
     }
     *size = current + 1;
 }
@@ -229,14 +228,14 @@ SPSProfiler::ipToPC(JSScript *script, size_t ip)
     JMScriptInfo *info = ptr->value;
 
     /* First check if this ip is in any of the ICs compiled for the script */
-    for (int i = 0; i < info->ics.length(); i++) {
+    for (unsigned i = 0; i < info->ics.length(); i++) {
         ICInfo &ic = info->ics[i];
         if (ic.base <= ip && ip < ic.base + ic.size)
             return ic.pc;
     }
 
     /* Otherwise if it's not in any of the chunks, then we can't find it */
-    for (int i = 0; i < info->chunks.length(); i++) {
+    for (unsigned i = 0; i < info->chunks.length(); i++) {
         jsbytecode *pc = info->chunks[i].convert(script, ip);
         if (pc != NULL)
             return pc;
@@ -296,7 +295,7 @@ SPSProfiler::registerMJITCode(mjit::JITChunk *chunk,
      * the corresponding script for that frame.
      */
     mjit::PCLengthEntry *pcLengths = chunk->pcLengths + outerFrame->script->length;
-    for (int i = 0; i < chunk->nInlineFrames; i++) {
+    for (unsigned i = 0; i < chunk->nInlineFrames; i++) {
         JMChunkInfo *child = registerScript(inlineFrames[i], pcLengths, chunk);
         if (!child)
             return false;
@@ -361,7 +360,7 @@ SPSProfiler::discardMJITCode(mjit::JITScript *jscr,
         return;
 
     unregisterScript(jscr->script, chunk);
-    for (int i = 0; i < chunk->nInlineFrames; i++)
+    for (unsigned i = 0; i < chunk->nInlineFrames; i++)
         unregisterScript(chunk->inlineFrames()[i].fun->script(), chunk);
 }
 
@@ -372,7 +371,7 @@ SPSProfiler::unregisterScript(JSScript *script, mjit::JITChunk *chunk)
     if (!ptr)
         return;
     JMScriptInfo *info = ptr->value;
-    for (int i = 0; i < info->chunks.length(); i++) {
+    for (unsigned i = 0; i < info->chunks.length(); i++) {
         if (info->chunks[i].chunk == chunk) {
             info->chunks.erase(&info->chunks[i]);
             break;
@@ -404,10 +403,10 @@ SPSEntryMarker::~SPSEntryMarker()
 
 JS_FRIEND_API(jsbytecode*)
 ProfileEntry::pc() volatile {
-    return script()->code + idx;
+    return idx == NullPCIndex ? NULL : script()->code + idx;
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile {
-    idx = pc - script()->code;
+    idx = pc == NULL ? NullPCIndex : pc - script()->code;
 }

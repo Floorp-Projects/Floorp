@@ -45,6 +45,15 @@ struct SharedTextureDescriptor {
 
 struct SurfaceDescriptorGralloc {
   PGrallocBuffer buffer;
+
+  /**
+   * We can have one source producing gralloc buffers and sharing them
+   * with another source that may also produce its own gralloc buffers.
+   * This happens for camera preview buffers sent to video code.  When
+   * that happens, the producer can mark the buffer as "external" to
+   * prevent its consumer from mistakenly freeing the buffer.
+   */
+  bool external;
 };
 
 struct SharedImageID {

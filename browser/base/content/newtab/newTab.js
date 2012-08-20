@@ -20,7 +20,8 @@ let {
   allPages: gAllPages,
   linkChecker: gLinkChecker,
   pinnedLinks: gPinnedLinks,
-  blockedLinks: gBlockedLinks
+  blockedLinks: gBlockedLinks,
+  gridPrefs: gGridPrefs
 } = NewTabUtils;
 
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {

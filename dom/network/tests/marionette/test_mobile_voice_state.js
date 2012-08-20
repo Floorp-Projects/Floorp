@@ -3,16 +3,25 @@
 
 MARIONETTE_TIMEOUT = 30000;
 
-const WHITELIST_PREF = "dom.mobileconnection.whitelist";
-let uriPrePath = window.location.protocol + "//" + window.location.host;
-SpecialPowers.setCharPref(WHITELIST_PREF, uriPrePath);
+SpecialPowers.addPermission("mobileconnection", true, document);
 
 let connection = navigator.mozMobileConnection;
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 
+let emulatorCmdPendingCount = 0;
 function setEmulatorVoiceState(state) {
+  emulatorCmdPendingCount++;
   runEmulatorCmd("gsm voice " + state, function (result) {
+    emulatorCmdPendingCount--;
+    is(result[0], "OK");
+  });
+}
+
+function setEmulatorGsmLocation(lac, cid) {
+  emulatorCmdPendingCount++;
+  runEmulatorCmd("gsm location " + lac + " " + cid, function (result) {
+    emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
 }
@@ -24,7 +33,31 @@ function testConnectionInfo() {
   is(voice.emergencyCallsOnly, false);
   is(voice.roaming, false);
 
-  testUnregistered();
+  testCellLocation();
+}
+
+function testCellLocation() {
+  let voice = connection.voice;
+
+  // Emulator always reports valid lac/cid value because its AT command parser
+  // insists valid value for every complete response. See source file
+  // hardare/ril/reference-ril/at_tok.c, function at_tok_nexthexint().
+  ok(voice.cell, "location available");
+
+  // Initial LAC/CID. Android emulator initializes both value to -1.
+  is(voice.cell.gsmLocationAreaCode, 65535);
+  is(voice.cell.gsmCellId, 268435455);
+
+  connection.addEventListener("voicechange", function onvoicechange() {
+    connection.removeEventListener("voicechange", onvoicechange);
+
+    is(voice.cell.gsmLocationAreaCode, 100);
+    is(voice.cell.gsmCellId, 100);
+
+    testUnregistered();
+  });
+
+  setEmulatorGsmLocation(100, 100);
 }
 
 function testUnregistered() {
@@ -108,7 +141,12 @@ function testHome() {
 }
 
 function cleanUp() {
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  if (emulatorCmdPendingCount > 0) {
+    setTimeout(cleanUp, 100);
+    return;
+  }
+
+  SpecialPowers.removePermission("mobileconnection", document);
   finish();
 }
 

@@ -1,23 +1,21 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
 function test() {
   waitForExplicitFinish();
 
-  installWebapp("window-title.webapp", undefined,
-                function onInstall(appConfig) {
+  loadWebapp("window-title.webapp", undefined, function onLoad() {
     is(document.documentElement.getAttribute("title"),
-       appConfig.app.manifest.name,
+       WebappRT.config.app.manifest.name,
        "initial window title should be webapp name");
-
-    let appBrowser = document.getElementById("content");
 
     // Tests are triples of [URL to load, expected window title, test message].
     let tests = [
       ["http://example.com/webapprtChrome/webapprt/test/chrome/window-title.html",
-       "http://example.com" + " - " + appConfig.app.manifest.name,
+       "http://example.com" + " - " + WebappRT.config.app.manifest.name,
        "window title should show origin of page at different origin"],
       ["http://mochi.test:8888/webapprtChrome/webapprt/test/chrome/window-title.html",
-       appConfig.app.manifest.name,
+       WebappRT.config.app.manifest.name,
        "after returning to app origin, window title should no longer show origin"],
     ];
 
@@ -36,18 +34,18 @@ function test() {
       }
     };
 
-    appBrowser.addProgressListener(progressListener,
-                                   Ci.nsIWebProgress.NOTIFY_LOCATION);
+    gAppBrowser.addProgressListener(progressListener,
+                                    Ci.nsIWebProgress.NOTIFY_LOCATION);
 
     function testNext() {
       if (!tests.length) {
-        appBrowser.removeProgressListener(progressListener);
-        appBrowser.stop();
+        gAppBrowser.removeProgressListener(progressListener);
+        gAppBrowser.stop();
         finish();
         return;
       }
 
-      [appBrowser.contentDocument.location, title, message] = tests.shift();
+      [gAppBrowser.contentDocument.location, title, message] = tests.shift();
     }
 
     testNext();

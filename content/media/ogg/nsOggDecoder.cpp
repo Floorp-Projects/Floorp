@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsOggDecoderStateMachine.h"
+#include "nsBuiltinDecoderStateMachine.h"
 #include "nsOggReader.h"
 #include "nsOggDecoder.h"
 
 nsDecoderStateMachine* nsOggDecoder::CreateStateMachine()
 {
-  return new nsOggDecoderStateMachine(this);
+  return new nsBuiltinDecoderStateMachine(this, new nsOggReader(this));
 }

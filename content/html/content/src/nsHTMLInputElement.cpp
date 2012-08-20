@@ -67,7 +67,6 @@
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
-#include "nsIFilePicker.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"
 #include "nsIMIMEService.h"
@@ -211,26 +210,99 @@ class nsHTMLInputElementState MOZ_FINAL : public nsISupports
 NS_IMPL_ISUPPORTS1(nsHTMLInputElementState, nsHTMLInputElementState)
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLInputElementState, NS_INPUT_ELEMENT_STATE_IID)
 
-class AsyncClickHandler : public nsRunnable {
-public:
-  AsyncClickHandler(nsHTMLInputElement* aInput)
-   : mInput(aInput) {
-    
-    nsPIDOMWindow* win = aInput->OwnerDoc()->GetWindow();
-    if (win) {
-      mPopupControlState = win->GetPopupControlState();
-    }
-  };
-
-  NS_IMETHOD Run();
-
-protected:
-  nsRefPtr<nsHTMLInputElement> mInput;
-  PopupControlState mPopupControlState;
-};
+nsHTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
+  nsHTMLInputElement* aInput, nsIFilePicker* aFilePicker, bool aMulti)
+  : mFilePicker(aFilePicker)
+  , mInput(aInput)
+  , mMulti(aMulti)
+{
+}
 
 NS_IMETHODIMP
-AsyncClickHandler::Run()
+nsHTMLInputElement::nsFilePickerShownCallback::Done(PRInt16 aResult)
+{
+  if (aResult == nsIFilePicker::returnCancel) {
+    return NS_OK;
+  }
+
+  // Collect new selected filenames
+  nsCOMArray<nsIDOMFile> newFiles;
+  if (mMulti) {
+    nsCOMPtr<nsISimpleEnumerator> iter;
+    nsresult rv = mFilePicker->GetFiles(getter_AddRefs(iter));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> tmp;
+    bool prefSaved = false;
+    bool loop = true;
+    while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
+      iter->GetNext(getter_AddRefs(tmp));
+      nsCOMPtr<nsIFile> localFile = do_QueryInterface(tmp);
+      if (!localFile) {
+        continue;
+      }
+      nsString path;
+      localFile->GetPath(path);
+      if (path.IsEmpty()) {
+        continue;
+      }
+      nsCOMPtr<nsIDOMFile> domFile =
+        do_QueryObject(new nsDOMFileFile(localFile));
+      newFiles.AppendObject(domFile);
+      if (!prefSaved) {
+        // Store the last used directory using the content pref service
+        nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
+          mInput->OwnerDoc()->GetDocumentURI(), localFile);
+        prefSaved = true;
+      }
+    }
+  }
+  else {
+    nsCOMPtr<nsIFile> localFile;
+    nsresult rv = mFilePicker->GetFile(getter_AddRefs(localFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (localFile) {
+      nsString path;
+      rv = localFile->GetPath(path);
+      if (!path.IsEmpty()) {
+        nsCOMPtr<nsIDOMFile> domFile=
+          do_QueryObject(new nsDOMFileFile(localFile));
+        newFiles.AppendObject(domFile);
+        // Store the last used directory using the content pref service
+        nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
+          mInput->OwnerDoc()->GetDocumentURI(), localFile);
+      }
+    }
+  }
+
+  if (!newFiles.Count()) {
+    return NS_OK;
+  }
+
+  // The text control frame (if there is one) isn't going to send a change
+  // event because it will think this is done by a script.
+  // So, we can safely send one by ourself.
+  mInput->SetFiles(newFiles, true);
+  return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
+                                              static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                              NS_LITERAL_STRING("change"), true,
+                                              false);
+}
+
+NS_IMPL_ISUPPORTS1(nsHTMLInputElement::nsFilePickerShownCallback,
+                   nsIFilePickerShownCallback);
+
+nsHTMLInputElement::AsyncClickHandler::AsyncClickHandler(nsHTMLInputElement* aInput)
+  : mInput(aInput)
+{
+  nsPIDOMWindow* win = aInput->OwnerDoc()->GetWindow();
+  if (win) {
+    mPopupControlState = win->GetPopupControlState();
+  }
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::AsyncClickHandler::Run()
 {
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
@@ -326,77 +398,9 @@ AsyncClickHandler::Run()
     filePicker->SetDisplayDirectory(localFile);
   }
 
-  // Open dialog
-  PRInt16 mode;
-  {
-    nsAutoSyncOperation sync(doc);
-    rv = filePicker->Show(&mode);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (mode == nsIFilePicker::returnCancel) {
-    return NS_OK;
-  }
-
-  // Collect new selected filenames
-  nsCOMArray<nsIDOMFile> newFiles;
-  if (multi) {
-    nsCOMPtr<nsISimpleEnumerator> iter;
-    rv = filePicker->GetFiles(getter_AddRefs(iter));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISupports> tmp;
-    bool prefSaved = false;
-    bool loop = true;
-    while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
-      iter->GetNext(getter_AddRefs(tmp));
-      nsCOMPtr<nsIFile> localFile = do_QueryInterface(tmp);
-      if (localFile) {
-        nsString unicodePath;
-        rv = localFile->GetPath(unicodePath);
-        if (!unicodePath.IsEmpty()) {
-          nsCOMPtr<nsIDOMFile> domFile =
-            do_QueryObject(new nsDOMFileFile(localFile));
-          newFiles.AppendObject(domFile);
-        }
-        if (!prefSaved) {
-          // Store the last used directory using the content pref service
-          nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(),
-                                                                     localFile);
-          prefSaved = true;
-        }
-      }
-    }
-  }
-  else {
-    nsCOMPtr<nsIFile> localFile;
-    rv = filePicker->GetFile(getter_AddRefs(localFile));
-    if (localFile) {
-      nsString unicodePath;
-      rv = localFile->GetPath(unicodePath);
-      if (!unicodePath.IsEmpty()) {
-        nsCOMPtr<nsIDOMFile> domFile=
-          do_QueryObject(new nsDOMFileFile(localFile));
-        newFiles.AppendObject(domFile);
-      }
-      // Store the last used directory using the content pref service
-      nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(),
-                                                                 localFile);
-    }
-  }
-
-  // Set new selected files
-  if (newFiles.Count()) {
-    // The text control frame (if there is one) isn't going to send a change
-    // event because it will think this is done by a script.
-    // So, we can safely send one by ourself.
-    mInput->SetFiles(newFiles, true);
-    nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                                         static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
-                                         NS_LITERAL_STRING("change"), true,
-                                         false);
-  }
-
-  return NS_OK;
+  nsCOMPtr<nsIFilePickerShownCallback> callback =
+    new nsHTMLInputElement::nsFilePickerShownCallback(mInput, filePicker, multi);
+  return filePicker->Open(callback);
 }
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("browser.upload.lastDir")

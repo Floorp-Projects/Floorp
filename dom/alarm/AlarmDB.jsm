@@ -46,6 +46,7 @@ AlarmDB.prototype = {
     objectStore.createIndex("ignoreTimezone", "ignoreTimezone", { unique: false });
     objectStore.createIndex("timezoneOffset", "timezoneOffset", { unique: false });
     objectStore.createIndex("data",           "data",           { unique: false });
+    objectStore.createIndex("pageURL",        "pageURL",        { unique: false });
     objectStore.createIndex("manifestURL",    "manifestURL",    { unique: false });
 
     debug("Created object stores and indexes");

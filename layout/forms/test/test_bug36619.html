@@ -40,23 +40,27 @@ SpecialPowers.pushPrefEnv({'set': [
     b.focus(); // Be sure the element is visible.
     synthesizeMouseAtCenter(b, {});
     SimpleTest.executeSoon(function() {
-      ok(MockFilePicker.shown, "File picker show method should have been called");
+      ok(MockFilePicker.showing,
+         "File picker showAsync method should have been called");
       MockFilePicker.reset();
 
       // Tests that a click on 'a' doesn't call the show method, because it is hidden.
       document.getElementById("a").click();
       SimpleTest.executeSoon(function() {
-        ok(!MockFilePicker.shown, "File picker show method should not have been called");
+        ok(!MockFilePicker.showing,
+           "File picker showAsync method should not have been called");
         MockFilePicker.reset();
 
         synthesizeMouseAtCenter(document.getElementById('c'), {});
         SimpleTest.executeSoon(function() {
-          ok(!MockFilePicker.shown, "File picker show method should have been called");
+          ok(!MockFilePicker.showing,
+             "File picker showAsync method should have been called");
           MockFilePicker.reset();
 
           synthesizeMouseAtCenter(document.getElementById('d'), {});
           SimpleTest.executeSoon(function() {
-            ok(MockFilePicker.shown, "File picker show method should have been called");
+            ok(MockFilePicker.showing,
+               "File picker showAsync method should have been called");
 
             MockFilePicker.cleanup();
             SimpleTest.finish();

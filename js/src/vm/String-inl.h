@@ -103,7 +103,7 @@ JSString::validateLength(JSContext *cx, size_t length)
 JS_ALWAYS_INLINE void
 JSRope::init(JSString *left, JSString *right, size_t length)
 {
-    d.lengthAndFlags = buildLengthAndFlags(length, ROPE_BIT);
+    d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
     JSString::writeBarrierPost(d.u1.left, &d.u1.left);
@@ -213,7 +213,7 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
 JS_ALWAYS_INLINE JSAtom *
 JSFixedString::morphAtomizedStringIntoAtom()
 {
-    d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_FLAGS);
+    d.lengthAndFlags = buildLengthAndFlags(length(), ATOM_BIT);
     return &asAtom();
 }
 
