@@ -270,6 +270,10 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \
 		file_iframe_sandbox_b_if3.html \
+		test_iframe_sandbox_plugins.html \
+		file_iframe_sandbox_f_if1.html \
+		file_iframe_sandbox_f_if2.html \
+		file_iframe_sandbox_f_if2.html^headers^ \
 		test_iframe_sandbox_workers.html \
 		file_iframe_sandbox_g_if1.html \
 		file_iframe_sandbox_worker.js \
