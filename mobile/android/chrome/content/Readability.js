@@ -89,30 +89,8 @@ Readability.prototype = {
    * @return void
   **/
   _postProcessContent: function(articleContent) {
-    this._fixImageFloats(articleContent);
-
     // Readability cannot open relative uris so we convert them to absolute uris. 
     this._fixRelativeUris(articleContent);
-  },
-
-  /**
-   * Some content ends up looking ugly if the image is too large to be floated.
-   * If the image is wider than a threshold (currently 55%), no longer float it,
-   * center it instead.
-   *
-   * @param Element
-   * @return void
-  **/
-  _fixImageFloats: function(articleContent) {
-    let imageWidthThreshold = Math.min(articleContent.offsetWidth, 800) * 0.55;
-    let images = articleContent.getElementsByTagName('img');
-
-    for (let i = 0, il = images.length; i < il; i += 1) {
-      let image = images[i];
-
-      if (image.offsetWidth > imageWidthThreshold)
-        image.className += " blockImage";
-    }
   },
 
   /**
@@ -227,51 +205,6 @@ Readability.prototype = {
       } catch(e) {
         doc.documentElement.appendChild(body);
         this.log(e);
-      }
-    }
-
-    let frames = doc.getElementsByTagName('frame');
-    if (frames.length > 0) {
-      let bestFrame = null;
-
-      // The frame to try to run readability upon. Must be on same domain.
-      let bestFrameSize = 0;
-
-      // Used for the error message. Can be on any domain.
-      let biggestFrameSize = 0;
-
-      for (let frameIndex = 0; frameIndex < frames.length; frameIndex += 1) {
-        let frameSize = frames[frameIndex].offsetWidth + frames[frameIndex].offsetHeight;
-
-        let canAccessFrame = false;
-        try {
-          let frameBody = frames[frameIndex].contentWindow.document.body;
-          canAccessFrame = true;
-        } catch(eFrames) {
-          this.log(eFrames);
-        }
-
-        if (frameSize > biggestFrameSize) {
-          biggestFrameSize = frameSize;
-          this._biggestFrame = frames[frameIndex];
-        }
-
-        if (canAccessFrame && frameSize > bestFrameSize) {
-          bestFrame = frames[frameIndex];
-          bestFrameSize = frameSize;
-        }
-      }
-
-      if (bestFrame) {
-        let newBody = doc.createElement('body');
-        newBody.innerHTML = bestFrame.contentWindow.document.body.innerHTML;
-        newBody.style.overflow = 'scroll';
-        doc.body = newBody;
-
-        let frameset = doc.getElementsByTagName('frameset')[0];
-        if (frameset) {
-          frameset.parentNode.removeChild(frameset);
-        }
       }
     }
 
