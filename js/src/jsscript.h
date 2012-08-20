@@ -387,6 +387,10 @@ struct JSScript : public js::gc::Cell
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
 
+    uint32_t        maxLoopCount; /* Maximum loop count that has been encountered. */
+    uint32_t        loopCount;    /* Number of times a LOOPHEAD has been encountered.
+                                     after a LOOPENTRY. Modified only by interpreter. */
+
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
@@ -588,6 +592,9 @@ struct JSScript : public js::gc::Cell
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
+    /* Heuristic to check if the function is expected to be "short running". */
+    bool isShortRunning();
+
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
@@ -655,6 +662,22 @@ struct JSScript : public js::gc::Cell
     uint32_t incUseCount() { return ++useCount; }
     uint32_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
+
+    void resetLoopCount() {
+        if (loopCount > maxLoopCount)
+            maxLoopCount = loopCount;
+        loopCount = 0;
+    }
+
+    void incrLoopCount() {
+        ++loopCount;
+    }
+
+    uint32_t getMaxLoopCount() {
+        if (loopCount > maxLoopCount)
+            maxLoopCount = loopCount;
+        return maxLoopCount;
+    }
 
     /*
      * Size of the JITScript and all sections.  If |mallocSizeOf| is NULL, the

@@ -1232,6 +1232,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     Rooted<JSScript*> script(cx);
     SET_SCRIPT(regs.fp()->script());
 
+    /* Reset the loop count on the script we're entering. */
+    script->resetLoopCount();
+
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
                         TraceLogging::INTERPRETER_START,
@@ -1458,8 +1461,13 @@ ADD_EMPTY_CASE(JSOP_TRY)
 ADD_EMPTY_CASE(JSOP_STARTXML)
 ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
-ADD_EMPTY_CASE(JSOP_LOOPHEAD)
 END_EMPTY_CASES
+
+BEGIN_CASE(JSOP_LOOPHEAD)
+
+    script->incrLoopCount();
+
+END_CASE(JSOP_LOOPHEAD)
 
 BEGIN_CASE(JSOP_LABEL)
 END_CASE(JSOP_LABEL)
@@ -2486,6 +2494,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     SET_SCRIPT(regs.fp()->script());
+    script->resetLoopCount();
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
