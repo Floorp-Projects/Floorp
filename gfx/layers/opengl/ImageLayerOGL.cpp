@@ -1056,7 +1056,7 @@ ShadowImageLayerOGL::CleanupResources()
 {
   if (mSharedHandle) {
     gl()->ReleaseSharedHandle(mShareType, mSharedHandle);
-    mSharedHandle = NULL;
+    mSharedHandle = 0;
   }
 
   mExternalBufferTexture.Release();
