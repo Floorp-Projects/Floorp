@@ -266,6 +266,10 @@ MOCHITEST_FILES = \
 		test_input_file_picker.html \
 		test_bug763626.html \
 		test_bug780993.html \
+		test_iframe_sandbox_same_origin.html \
+		file_iframe_sandbox_b_if1.html \
+		file_iframe_sandbox_b_if2.html \
+		file_iframe_sandbox_b_if3.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \
