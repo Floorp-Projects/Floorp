@@ -848,7 +848,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object. In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(721724e0-7716-4bf4-b48f-92b78d056141)]
+[scriptable, uuid(8ce9b2a2-cc33-48a8-9f47-8696186ed9a5)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -884,6 +884,12 @@ interface jsdIScript : jsdIEphemeral
      * The context flag JSD_DEBUG_WHEN_SET decides the logic.
      */
     const unsigned long FLAG_DEBUG   = 0x02;
+    /**
+     * Determines whether to invoke the onScriptDestroy callback for this
+     * script. The default is for this to be true if the onScriptCreated
+     * callback was invoked for this script.
+     */
+    const unsigned long FLAG_CALL_DESTROY_HOOK = 0x04;
     
     /**
      * FLAG_* attributes from above, OR'd together.

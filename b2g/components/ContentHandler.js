@@ -13,6 +13,10 @@ const PDF_CONTENT_TYPE = "application/pdf";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
+  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+});
+
 function log(aMsg) {
   let msg = "ContentHandler.js: " + (aMsg.join ? aMsg.join("") : aMsg);
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
@@ -36,7 +40,7 @@ ContentHandler.prototype = {
       "type": aMimetype,
       "url": aRequest.URI.spec
     };
-    Services.obs.notifyObservers(this, "content-handler", JSON.stringify(detail)); 
+    cpmm.sendAsyncMessage("content-handler", detail);
 
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
   },

@@ -35,6 +35,16 @@
     commented out, so including it will have no effect.
 */
 
+/*
+    Override new/delete with Mozilla's allocator, mozalloc
+
+    Ideally we shouldn't need to do this here, but until
+    http://code.google.com/p/skia/issues/detail?id=598 is fixed
+    we need to include this here to override operator new and delete
+*/
+
+#include "mozilla/mozalloc.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /*  Scalars (the fractional value type in skia) can be implemented either as

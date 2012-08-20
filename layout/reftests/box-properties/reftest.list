@@ -16,6 +16,8 @@
 == box-sizing-2.html box-sizing-2-ref.html
 == box-sizing-3.html box-sizing-1-ref.html
 == box-sizing-4.html box-sizing-4-ref.html
+== box-sizing-minmax-height.html box-sizing-minmax-height-ref.html
+== box-sizing-minmax-width.html box-sizing-minmax-width-ref.html
 == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
 == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
 HTTP(..) == CSS21-t100301.xhtml CSS21-t100301-ref.xhtml

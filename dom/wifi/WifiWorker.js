@@ -274,6 +274,14 @@ var WifiManager = (function() {
     doSetScanModeCommand(setActive, callback);
   }
 
+  function wpsPbcCommand(callback) {
+    doBooleanCommand("WPS_PBC", "OK", callback);
+  }
+
+  function wpsCancelCommand(callback) {
+    doBooleanCommand("WPS_CANCEL", "OK", callback);
+  }
+
   function startDriverCommand(callback) {
     doBooleanCommand("DRIVER START", "OK");
   }
@@ -747,7 +755,7 @@ var WifiManager = (function() {
   // handle events sent to us by the event worker
   function handleEvent(event) {
     debug("Event coming in: " + event);
-    if (event.indexOf("CTRL-EVENT-") !== 0) {
+    if (event.indexOf("CTRL-EVENT-") !== 0 && event.indexOf("WPS") !== 0) {
       if (event.indexOf("WPA:") == 0 &&
           event.indexOf("pre-shared key may be incorrect") != -1) {
         notify("passwordmaybeincorrect");
@@ -833,6 +841,18 @@ var WifiManager = (function() {
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
       debug("Notifying of scan results available");
       notify("scanresultsavailable");
+      return true;
+    }
+    if (eventData.indexOf("WPS-TIMEOUT") === 0) {
+      notifyStateChange({ state: "WPS_TIMEOUT", BSSID: null, id: -1 });
+      return true;
+    }
+    if (eventData.indexOf("WPS-FAIL") === 0) {
+      notifyStateChange({ state: "WPS_FAIL", BSSID: null, id: -1 });
+      return true;
+    }
+    if (eventData.indexOf("WPS-OVERLAP-DETECTED") === 0) {
+      notifyStateChange({ state: "WPS_OVERLAP_DETECTED", BSSID: null, id: -1 });
       return true;
     }
     // unknown event
@@ -1155,6 +1175,8 @@ var WifiManager = (function() {
     setScanModeCommand(mode === "active", callback);
   }
   manager.scan = scanCommand;
+  manager.wpsPbc = wpsPbcCommand;
+  manager.wpsCancel = wpsCancelCommand;
   manager.getRssiApprox = getRssiApproxCommand;
   manager.getLinkSpeed = getLinkSpeedCommand;
   manager.getDhcpInfo = function() { return dhcpInfo; }
@@ -1301,7 +1323,7 @@ function WifiWorker() {
   this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
   const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
                     "WifiManager:associate", "WifiManager:forget",
-                    "WifiManager:getState"];
+                    "WifiManager:wps", "WifiManager:getState"];
 
   messages.forEach((function(msgName) {
     this._mm.addMessageListener(msgName, this);
@@ -1527,6 +1549,15 @@ function WifiWorker() {
                                      kNetworkInterfaceStateChangedTopic,
                                      null);
 
+        break;
+      case "WPS_TIMEOUT":
+        self._fireEvent("onwpstimeout", {});
+        break;
+      case "WPS_FAIL":
+        self._fireEvent("onwpsfail", {});
+        break;
+      case "WPS_OVERLAP_DETECTED":
+        self._fireEvent("onwpsoverlap", {});
         break;
     }
   };
@@ -1861,6 +1892,9 @@ WifiWorker.prototype = {
       case "WifiManager:forget":
         this.forget(msg.data, msg.rid, msg.mid);
         break;
+      case "WifiManager:wps":
+        this.wps(msg.data, msg.rid, msg.mid);
+        break;
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
         return { network: net,
@@ -2046,6 +2080,29 @@ WifiWorker.prototype = {
         });
       });
     });
+  },
+
+  wps: function(detail, rid, mid) {
+    const message = "WifiManager:wps:Return";
+    let self = this;
+    if (detail.method === "pbc") {
+      WifiManager.wpsPbc(function(ok) {
+        if (ok)
+          self._sendMessage(message, true, true, rid, mid);
+        else
+          self._sendMessage(message, false, "WPS PBC failed", rid, mid);
+      });
+    } else if (detail.method === "cancel") {
+      WifiManager.wpsCancel(function(ok) {
+        if (ok)
+          self._sendMessage(message, true, true, rid, mid);
+        else
+          self._sendMessage(message, false, "WPS Cancel failed", rid, mid);
+      });
+    } else {
+      self._sendMessage(message, false, "Unknown wps method=" + detail.method +
+        " was received", rid, mid);
+    }
   },
 
   // This is a bit ugly, but works. In particular, this depends on the fact

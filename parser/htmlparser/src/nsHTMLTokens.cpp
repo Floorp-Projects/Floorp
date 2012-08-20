@@ -2169,7 +2169,7 @@ CEntityToken::TranslateToUnicodeStr(nsString& aString)
 
       value = mTextValue.ToInteger(&err, kAutoDetect);
 
-      if (0 == err) {
+      if (NS_SUCCEEDED(err)) {
         AppendNCR(aString, value);
       }
     } else {

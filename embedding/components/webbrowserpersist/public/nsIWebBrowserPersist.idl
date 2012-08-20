@@ -98,7 +98,7 @@ interface nsIWebBrowserPersist : nsICancelable
    * @return NS_BINDING_ABORTED Operation cancelled.
    * @return NS_ERROR_FAILURE Non-specific failure.
    */
-  readonly attribute unsigned long result;
+  readonly attribute nsresult result;
 
   /**
    * Callback listener for progress notifications. The object that the

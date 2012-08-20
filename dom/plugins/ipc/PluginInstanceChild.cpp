@@ -1091,9 +1091,10 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     mWindow.type = aWindow.type;
 
     mWsInfo.colormap = aWindow.colormap;
-    if (!XVisualIDToInfo(mWsInfo.display, aWindow.visualID,
-                         &mWsInfo.visual, &mWsInfo.depth))
-        return false;
+    int depth;
+    FindVisualAndDepth(mWsInfo.display, aWindow.visualID,
+                       &mWsInfo.visual, &depth);
+    mWsInfo.depth = depth;
 
     if (!mWindow.window && mWindow.type == NPWindowTypeWindow) {
         CreateWindow(aWindow);

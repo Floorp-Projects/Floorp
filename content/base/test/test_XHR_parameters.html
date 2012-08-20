@@ -84,11 +84,11 @@ function runTests() {
 
   // ...and once with privileges.
   havePrivileges = true;
-  SpecialPowers.setCharPref("dom.systemXHR.whitelist",
-                            "http://mochi.test:8888");
+  SpecialPowers.addPermission("systemXHR", true, document);
+
   validParameters.forEach(testValidParameter);
   invalidParameters.forEach(testInvalidParameter);
-  SpecialPowers.clearUserPref("dom.systemXHR.whitelist");
+  SpecialPowers.removePermission("systemXHR", document);
 
   SimpleTest.finish();
 }

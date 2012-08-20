@@ -11,6 +11,7 @@ const kFormsFrameScript = "chrome://browser/content/forms.js";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 const messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
                          .getService(Ci.nsIChromeFrameMessageManager);
@@ -103,7 +104,8 @@ MozKeyboard.prototype = {
       "detail": msg.json
     };
 
-    let evt = new this._window.CustomEvent("focuschanged", detail);
+    let evt = new this._window.CustomEvent("focuschanged",
+                                           ObjectWrapper.wrap(detail, this._window));
     handler.handleEvent(evt);
   },
 

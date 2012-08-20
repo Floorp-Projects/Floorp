@@ -118,7 +118,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttrib", NULL } },
         // WARNING: xGetFBConfigs not set in symbols13_ext
         { (PRFuncPtr*) &xGetFBConfigsInternal, { "glXGetFBConfigs", NULL } },
-        { (PRFuncPtr*) &xGetVisualFromFBConfigInternal, { "glXGetVisualFromFBConfig", NULL } },
         // WARNING: symbols13_ext sets xCreateGLXPixmapWithConfig instead
         { (PRFuncPtr*) &xCreatePixmapInternal, { "glXCreatePixmap", NULL } },
         { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyPixmap", NULL } },
@@ -132,7 +131,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfigSGIX", NULL } },
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttribSGIX", NULL } },
         // WARNING: no xGetFBConfigs equivalent in extensions
-        { (PRFuncPtr*) &xGetVisualFromFBConfigInternal, { "glXGetVisualFromFBConfig", NULL } },
         // WARNING: different from symbols13:
         { (PRFuncPtr*) &xCreateGLXPixmapWithConfigInternal, { "glXCreateGLXPixmapWithConfigSGIX", NULL } },
         { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyGLXPixmap", NULL } }, // not from ext
@@ -270,14 +268,16 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
     if (!format || format->type != PictTypeDirect) {
         return None;
     }
-
-    bool withAlpha =
-        aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+    const XRenderDirectFormat& direct = format->direct;
+    int alphaSize;
+    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
+    NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
+                 "Unexpected render format with non-adjacent alpha bits");
 
     int attribs[] = { GLX_DOUBLEBUFFER, False,
                       GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-                      GLX_ALPHA_SIZE, (withAlpha ? 1 : 0),
-                      (withAlpha ? GLX_BIND_TO_TEXTURE_RGBA_EXT
+                      GLX_ALPHA_SIZE, alphaSize,
+                      (alphaSize ? GLX_BIND_TO_TEXTURE_RGBA_EXT
                        : GLX_BIND_TO_TEXTURE_RGB_EXT), True,
                       GLX_RENDER_TYPE, GLX_RGBA_BIT,
                       None };
@@ -291,42 +291,83 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
                                                   attribs,
                                                   &numConfigs));
 
+    // Find an fbconfig that matches the pixel format used on the Pixmap. 
     int matchIndex = -1;
-    const XRenderDirectFormat& direct = format->direct;
     unsigned long redMask =
         static_cast<unsigned long>(direct.redMask) << direct.red;
     unsigned long greenMask =
         static_cast<unsigned long>(direct.greenMask) << direct.green;
     unsigned long blueMask =
         static_cast<unsigned long>(direct.blueMask) << direct.blue;
-    // XVisualInfo doesn't have information on the alpha channel, so just
-    // check the number of bits.
-    int alphaSize;
-    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
-    NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
-                 "Unexpected render format with non-adjacent alpha bits");
-    ScopedXFree<XVisualInfo> vinfo;
+    // This is true if the Pixmap has bits for alpha or unused bits.
+    bool haveNonColorBits =
+        ~(redMask | greenMask | blueMask) != -1UL << format->depth;
 
     for (int i = 0; i < numConfigs; i++) {
-        int size;
-        if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
-                                           GLX_ALPHA_SIZE, &size) != Success ||
-            size != alphaSize) {
+        int id = None;
+        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &id);
+        Visual *visual;
+        int depth;
+        FindVisualAndDepth(display, id, &visual, &depth);
+        if (!visual ||
+            visual->c_class != TrueColor ||
+            visual->red_mask != redMask ||
+            visual->green_mask != greenMask ||
+            visual->blue_mask != blueMask ) {
             continue;
         }
 
-        // The visual depth won't necessarily match the render format depth as
-        // it may not include the alpha channel.
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-        if (!vinfo ||
-            vinfo->c_class != TrueColor ||
-            vinfo->red_mask != redMask ||
-            vinfo->green_mask != greenMask ||
-            vinfo->blue_mask != blueMask ) {
+        // Historically Xlib Visuals did not try to represent an alpha channel
+        // and there was no means to use an alpha channel on a Pixmap.  The
+        // Xlib Visual from the fbconfig was not intended to have any
+        // information about alpha bits.
+        //
+        // Since then, RENDER has added formats for 32 bit depth Pixmaps.
+        // Some of these formats have bits for alpha and some have unused
+        // bits.
+        //
+        // Then the Composite extension added a 32 bit depth Visual intended
+        // for Windows with an alpha channel, so bits not in the visual color
+        // masks were expected to be treated as alpha bits.
+        //
+        // Usually GLX counts only color bits in the Visual depth, but the
+        // depth of Composite's ARGB Visual includes alpha bits.  However,
+        // bits not in the color masks are not necessarily alpha bits because
+        // sometimes (NVIDIA) 32 bit Visuals are added for fbconfigs with 32
+        // bit BUFFER_SIZE but zero alpha bits and 24 color bits (NVIDIA
+        // again).
+        //
+        // This checks that the depth matches in one of the two ways.
+        if (depth != format->depth && depth != format->depth - alphaSize) {
             continue;
+        }
+
+        // If all bits of the Pixmap are color bits and the Pixmap depth
+        // matches the depth of the fbconfig visual, then we can assume that
+        // the driver will do whatever is necessary to ensure that any
+        // GLXPixmap alpha bits are treated as set.  We can skip the
+        // ALPHA_SIZE check in this situation.  We need to skip this check for
+        // situations (ATI) where there are no fbconfigs without alpha bits.
+        //
+        // glXChooseFBConfig should prefer configs with smaller
+        // GLX_BUFFER_SIZE, so we should still get zero alpha bits if
+        // available, except perhaps with NVIDIA drivers where buffer size is
+        // not the specified sum of the component sizes.
+        if (haveNonColorBits) {
+            // There are bits in the Pixmap format that haven't been matched
+            // against the fbconfig visual.  These bits could either represent
+            // alpha or be unused, so just check that the number of alpha bits
+            // matches.
+            int size = 0;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i],
+                                           GLX_ALPHA_SIZE, &size);
+            if (size != alphaSize) {
+                continue;
+            }
         }
 
         matchIndex = i;
+        break;
     }
     if (matchIndex == -1) {
         NS_WARNING("[GLX] Couldn't find a FBConfig matching Pixmap format");
@@ -335,7 +376,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 
     int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
                             GLX_TEXTURE_FORMAT_EXT,
-                            (withAlpha ? GLX_TEXTURE_FORMAT_RGBA_EXT
+                            (alphaSize ? GLX_TEXTURE_FORMAT_RGBA_EXT
                              : GLX_TEXTURE_FORMAT_RGB_EXT),
                             None};
 
@@ -519,16 +560,6 @@ GLXLibrary::xCreateNewContext(Display* display,
     return result;
 }
 
-XVisualInfo*
-GLXLibrary::xGetVisualFromFBConfig(Display* display, 
-                                   GLXFBConfig config)
-{
-    BEFORE_GLX_CALL;
-    XVisualInfo* result = xGetVisualFromFBConfigInternal(display, config);
-    AFTER_GLX_CALL;
-    return result;
-}
-
 int
 GLXLibrary::xGetFBConfigAttrib(Display *display,
                                GLXFBConfig config,
@@ -612,18 +643,6 @@ GLXLibrary::xDestroyPixmap(Display *display, GLXPixmap pixmap)
     AFTER_GLX_CALL;
 }
 
-GLXContext
-GLXLibrary::xCreateContext(Display *display,
-                           XVisualInfo *vis,
-                           GLXContext shareList,
-                           Bool direct)
-{
-    BEFORE_GLX_CALL;
-    GLXContext result = xCreateContextInternal(display, vis, shareList, direct);
-    AFTER_GLX_CALL;
-    return result;
-}
-
 Bool
 GLXLibrary::xQueryVersion(Display *display,
                           int *major,
@@ -699,7 +718,6 @@ public:
                     Display *display,
                     GLXDrawable drawable,
                     GLXFBConfig cfg,
-                    XVisualInfo *vinfo,
                     GLContextGLX *shareContext,
                     bool deleteDrawable,
                     gfxXlibSurface *pixmap = nullptr)
@@ -1073,15 +1091,11 @@ GetGlobalContextGLX()
 }
 
 static bool
-AreCompatibleVisuals(XVisualInfo *one, XVisualInfo *two)
+AreCompatibleVisuals(Visual *one, Visual *two)
 {
     if (one->c_class != two->c_class) {
         return false;
     }
-
-    if (one->depth != two->depth) {
-        return false;
-    }	
 
     if (one->red_mask != two->red_mask ||
         one->green_mask != two->green_mask ||
@@ -1150,34 +1164,25 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     printf("[GLX] widget has VisualID 0x%lx\n", widgetVisualID);
 #endif
 
-    ScopedXFree<XVisualInfo> vi;
-    if (gIsATI) {
-        XVisualInfo vinfo_template;
-        int nvisuals;
-        vinfo_template.visual   = widgetAttrs.visual;
-        vinfo_template.visualid = XVisualIDFromVisual(vinfo_template.visual);
-        vinfo_template.depth    = widgetAttrs.depth;
-        vinfo_template.screen   = xscreen;
-        vi = XGetVisualInfo(display, VisualIDMask|VisualDepthMask|VisualScreenMask,
-                            &vinfo_template, &nvisuals);
-        NS_ASSERTION(vi && nvisuals == 1, "Could not locate unique matching XVisualInfo for Visual");
-    }
-
     int matchIndex = -1;
-    ScopedXFree<XVisualInfo> vinfo;
 
     for (int i = 0; i < numConfigs; i++) {
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-        if (!vinfo) {
+        int visid = None;
+        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &visid);
+        if (!visid) {
             continue;
         }
         if (gIsATI) {
-            if (AreCompatibleVisuals(vi, vinfo)) {
+            int depth;
+            Visual *visual;
+            FindVisualAndDepth(display, visid, &visual, &depth);
+            if (depth == widgetAttrs.depth &&
+                AreCompatibleVisuals(widgetAttrs.visual, visual)) {
                 matchIndex = i;
                 break;
             }
         } else {
-            if (widgetVisualID == vinfo->visualid) {
+            if (widgetVisualID == static_cast<VisualID>(visid)) {
                 matchIndex = i;
                 break;
             }
@@ -1195,7 +1200,6 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
                                                                      display,
                                                                      window,
                                                                      cfgs[matchIndex],
-                                                                     vinfo,
                                                                      shareContext,
                                                                      false);
 
@@ -1239,11 +1243,11 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
     NS_ASSERTION(numConfigs > 0,
                  "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
 
-    ScopedXFree<XVisualInfo> vinfo;
+    int visid = None;
     int chosenIndex = 0;
 
     for (int i = 0; i < numConfigs; ++i) {
-        int dtype, visid;
+        int dtype;
 
         if (sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], GLX_DRAWABLE_TYPE, &dtype) != Success
             || !(dtype & GLX_PIXMAP_BIT))
@@ -1256,25 +1260,24 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
             continue;
         }
 
-        vinfo = sGLXLibrary.xGetVisualFromFBConfig(display, cfgs[i]);
-
-        if (vinfo) {
-            chosenIndex = i;
-            break;
-        }
+        chosenIndex = i;
+        break;
     }
 
-    if (!vinfo) {
+    if (!visid) {
         NS_WARNING("glXChooseFBConfig() didn't give us any configs with visuals!");
         return nullptr;
     }
 
+    Visual *visual;
+    int depth;
+    FindVisualAndDepth(display, visid, &visual, &depth);
     ScopedXErrorHandler xErrorHandler;
     GLXPixmap glxpixmap = 0;
     bool error = false;
 
     nsRefPtr<gfxXlibSurface> xsurface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
-                                                               vinfo->visual,
+                                                               visual,
                                                                gfxIntSize(16, 16));
     if (xsurface->CairoStatus() != 0) {
         error = true;
@@ -1312,7 +1315,6 @@ DONE_CREATING_PIXMAP:
                         display,
                         glxpixmap,
                         cfgs[chosenIndex],
-                        vinfo,
                         aShare ? GetGlobalContextGLX() : nullptr,
                         true,
                         xsurface);

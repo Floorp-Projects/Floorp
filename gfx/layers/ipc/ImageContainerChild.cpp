@@ -9,7 +9,8 @@
 #include "ShadowLayers.h"
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/SharedImageUtils.h"
-#include "ImageLayers.h"
+#include "ImageContainer.h"
+#include "GonkIOSurfaceImage.h"
 
 namespace mozilla {
 namespace layers {
@@ -98,6 +99,10 @@ void ImageContainerChild::StopChild()
 bool ImageContainerChild::RecvReturnImage(const SharedImage& aImage)
 {
   SharedImage* img = new SharedImage(aImage);
+  // Remove oldest image from the queue.
+  if (mImageQueue.Length() > 0) {
+    mImageQueue.RemoveElementAt(0);
+  }
   if (!AddSharedImageToPool(img) || mStop) {
     DestroySharedImage(*img);
     delete img;
@@ -116,7 +121,7 @@ void ImageContainerChild::DestroySharedImage(const SharedImage& aImage)
 
 bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 {
-  if ((src->GetFormat() == Image::PLANAR_YCBCR) && 
+  if ((src->GetFormat() == PLANAR_YCBCR) && 
       (dest->type() == SharedImage::TYUVImage)) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(src);
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
@@ -156,7 +161,7 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
   
   ++mActiveImageCount;
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR ) {
+  if (image->GetFormat() == PLANAR_YCBCR ) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(image);
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
     NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");
@@ -196,6 +201,12 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
     NS_ABORT_IF_FALSE(result->type() == SharedImage::TYUVImage,
                       "SharedImage type not set correctly");
     return result;
+#ifdef MOZ_WIDGET_GONK
+  } else if (image->GetFormat() == GONK_IO_SURFACE) {
+    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(image);
+    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
+    return result;
+#endif
   } else {
     NS_RUNTIMEABORT("TODO: Only YUVImage is supported here right now.");
   }
@@ -225,7 +236,7 @@ SharedImageCompatibleWith(SharedImage* aSharedImage, Image* aImage)
 {
   // TODO accept more image formats
   switch (aImage->GetFormat()) {
-  case Image::PLANAR_YCBCR: {
+  case PLANAR_YCBCR: {
     if (aSharedImage->type() != SharedImage::TYUVImage) {
       return false;
     }
@@ -319,6 +330,9 @@ SharedImage* ImageContainerChild::ImageToSharedImage(Image* aImage)
   } else {
     img = CreateSharedImageFromData(aImage);
   }
+  // Keep a reference to the image we sent to compositor to maintain a
+  // correct reference count.
+  mImageQueue.AppendElement(aImage);
   return img;
 }
 

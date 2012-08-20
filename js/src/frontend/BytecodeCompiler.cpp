@@ -34,6 +34,16 @@ CheckLength(JSContext *cx, size_t length)
     return true;
 }
 
+static bool
+SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, JSScript *script)
+{
+    if (tokenStream.hasSourceMap()) {
+        if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap(), script->filename))
+            return false;
+    }
+    return true;
+}
+
 JSScript *
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
                         const CompileOptions &options,
@@ -100,13 +110,18 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     if (!script)
         return NULL;
 
+    // Global/eval script bindings are always empty (all names are added to the
+    // scope dynamically via JSOP_DEFFUN/VAR).
+    if (!script->bindings.initWithTemporaryStorage(cx, 0, 0, NULL))
+        return NULL;
+
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
     JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : NULL;
     JS_ASSERT_IF(globalScope, globalScope->isNative());
     JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
 
     BytecodeEmitter bce(/* parent = */ NULL, &parser, &sc, script, callerFrame, !!globalScope,
-                        options.lineno);
+                        options.lineno, options.selfHostingMode);
     if (!bce.init())
         return NULL;
 
@@ -176,7 +191,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         if (!FoldConstants(cx, pn, &parser))
             return NULL;
 
-        if (!AnalyzeFunctions(&parser, callerFrame))
+        if (!AnalyzeFunctions(&parser))
             return NULL;
         tc.functionList = NULL;
 
@@ -190,8 +205,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         parser.freeTree(pn);
     }
 
-    if (tokenStream.hasSourceMap())
-        ss->setSourceMap(tokenStream.releaseSourceMap());
+    if (!SetSourceMap(cx, tokenStream, ss, script))
+        return NULL;
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -215,8 +230,6 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
                 return NULL;
             }
         }
-        // We're not in a function context, so we don't expect any bindings.
-        JS_ASSERT(!sc.bindings.hasBinding(cx, arguments));
     }
 
     /*
@@ -238,7 +251,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 bool
 frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
-                              Bindings *bindings, const jschar *chars, size_t length)
+                              const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     if (!CheckLength(cx, length))
         return NULL;
@@ -262,23 +275,11 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     JS_ASSERT(fun);
     SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
                         StrictModeFromContext(cx));
-    funsc.bindings.transfer(bindings);
-    fun->setArgCount(funsc.bindings.numArgs());
+    fun->setArgCount(formals.length());
 
     unsigned staticLevel = 0;
     TreeContext funtc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
     if (!funtc.init())
-        return false;
-
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
-                                                  staticLevel, ss, 0, length));
-    if (!script)
-        return false;
-
-    StackFrame *nullCallerFrame = NULL;
-    BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, nullCallerFrame,
-                           /* hasGlobalScope = */ false, options.lineno);
-    if (!funbce.init())
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
@@ -296,22 +297,9 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     argsbody->makeEmpty();
     fn->pn_body = argsbody;
 
-    unsigned nargs = fun->nargs;
-    if (nargs) {
-        /*
-         * NB: do not use AutoLocalNameArray because it will release space
-         * allocated from cx->tempLifoAlloc by DefineArg.
-         */
-        BindingVector names(cx);
-        if (!GetOrderedBindings(cx, funsc.bindings, &names))
+    for (unsigned i = 0; i < formals.length(); i++) {
+        if (!DefineArg(&parser, fn, formals[i]))
             return false;
-
-        RootedPropertyName name(cx);
-        for (unsigned i = 0; i < nargs; i++) {
-            name = names[i].maybeName;
-            if (!DefineArg(fn, name, i, &parser))
-                return false;
-        }
     }
 
     /*
@@ -331,7 +319,20 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     if (!FoldConstants(cx, pn, &parser))
         return false;
 
-    if (!AnalyzeFunctions(&parser, nullCallerFrame))
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
+                                                  staticLevel, ss, 0, length));
+    if (!script)
+        return false;
+
+    if (!funtc.generateFunctionBindings(cx, &script->bindings))
+        return false;
+
+    BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, /* callerFrame = */ NULL,
+                           /* hasGlobalScope = */ false, options.lineno);
+    if (!funbce.init())
+        return false;
+
+    if (!AnalyzeFunctions(&parser))
         return false;
 
     if (fn->pn_body) {
@@ -341,8 +342,8 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         pn = fn->pn_body;
     }
 
-    if (parser.tokenStream.hasSourceMap())
-        ss->setSourceMap(parser.tokenStream.releaseSourceMap());
+    if (!SetSourceMap(cx, parser.tokenStream, ss, script))
+        return false;
 
     if (!EmitFunctionScript(cx, &funbce, pn))
         return false;

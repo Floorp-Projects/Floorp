@@ -1128,6 +1128,12 @@ pref("browser.newtab.preload", false);
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
+// number of rows of newtab grid
+pref("browser.newtabpage.rows", 3);
+
+// number of columns of newtab grid
+pref("browser.newtabpage.columns", 3);
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

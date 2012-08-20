@@ -52,7 +52,7 @@ typedef hb_blob_t * (*hb_reference_table_func_t)  (hb_face_t *face, hb_tag_t tag
 
 /* calls destroy() when not needing user_data anymore */
 hb_face_t *
-hb_face_create_for_tables (hb_reference_table_func_t  reference_table,
+hb_face_create_for_tables (hb_reference_table_func_t  reference_table_func,
 			   void                      *user_data,
 			   hb_destroy_func_t          destroy);
 
@@ -143,7 +143,8 @@ hb_font_funcs_make_immutable (hb_font_funcs_t *ffuncs);
 hb_bool_t
 hb_font_funcs_is_immutable (hb_font_funcs_t *ffuncs);
 
-/* funcs */
+
+/* glyph extents */
 
 typedef struct hb_glyph_extents_t
 {
@@ -345,6 +346,17 @@ hb_font_get_glyph_contour_point_for_origin (hb_font_t *font,
 					    hb_codepoint_t glyph, unsigned int point_index,
 					    hb_direction_t direction,
 					    hb_position_t *x, hb_position_t *y);
+
+/* Generates gidDDD if glyph has no name. */
+void
+hb_font_glyph_to_string (hb_font_t *font,
+			 hb_codepoint_t glyph,
+			 char *s, unsigned int size);
+/* Parses gidDDD and uniUUUU strings automatically. */
+hb_bool_t
+hb_font_glyph_from_string (hb_font_t *font,
+			   const char *s, int len, /* -1 means nul-terminated */
+			   hb_codepoint_t *glyph);
 
 
 /*

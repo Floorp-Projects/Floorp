@@ -30,11 +30,9 @@ namespace js {
 class CallObject;
 
 
-#ifdef JS_METHODJIT
 namespace mjit {
     struct JITScript;
 }
-#endif
 
 namespace types {
 
@@ -931,8 +929,6 @@ class TypeScript
     TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
     static inline unsigned NumTypeSets(JSScript *script);
-
-    static bool SetScope(JSContext *cx, JSScript *script, JSObject *scope);
 
     static inline TypeSet *ReturnTypes(JSScript *script);
     static inline TypeSet *ThisTypes(JSScript *script);

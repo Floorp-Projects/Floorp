@@ -9,7 +9,7 @@
 #include "gfxTypes.h"
 #include "gfxPattern.h"
 #include "gfxImageSurface.h"
-#include "ImageLayers.h"
+#include "ImageContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
 

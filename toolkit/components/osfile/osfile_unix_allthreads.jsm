@@ -147,4 +147,16 @@ if (typeof Components != "undefined") {
    Object.defineProperty(exports.OS.Shared, "POS_START", { value: exports.OS.Constants.libc.SEEK_SET });
    Object.defineProperty(exports.OS.Shared, "POS_CURRENT", { value: exports.OS.Constants.libc.SEEK_CUR });
    Object.defineProperty(exports.OS.Shared, "POS_END", { value: exports.OS.Constants.libc.SEEK_END });
+
+  // Special types that need to be defined for communication
+  // between threads
+  let Types = exports.OS.Shared.Type;
+
+   /**
+    * Native paths
+    *
+    * Under Unix, expressed as C strings
+    */
+  Types.path = Types.cstring.withName("[in] path");
+  Types.out_path = Types.out_cstring.withName("[out] path");
 })(this);

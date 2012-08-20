@@ -15,6 +15,7 @@ MockFilePicker.init();
 
 var observer = {
   lastDisplayed: null,
+  callback: null,
   checkDisplayed: function(aExpected) {
     is(this.lastDisplayed, aExpected, "'addon-options-displayed' notification should have fired");
     this.lastDisplayed = null;
@@ -41,6 +42,12 @@ var observer = {
 
       // Add some extra height to the scrolling pane to ensure that it needs to scroll when appropriate.
       gManagerWindow.document.getElementById("detail-controls").style.marginBottom = "1000px";
+
+      if (this.callback) {
+        var tempCallback = this.callback;
+        this.callback = null;
+        tempCallback();
+      }
     } else if (aTopic == "addon-options-hidden") {
       this.lastHidden = aData;
     }
@@ -504,17 +511,19 @@ add_test(function() {
         var grid = gManagerWindow.document.getElementById("detail-grid");
         var settings = grid.querySelectorAll("rows > setting");
         is(settings.length, 0, "Grid should not have settings children");
-        
+
         // enable
         var button = gManagerWindow.document.getElementById("detail-enable-btn");
         EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-        observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
+        observer.callback = function() {
+          observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
 
-        settings = grid.querySelectorAll("rows > setting");
-        is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
+          settings = grid.querySelectorAll("rows > setting");
+          is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
 
-        gCategoryUtilities.openType("extension", run_next_test);
+          gCategoryUtilities.openType("extension", run_next_test);
+        };
       });
     });
   });

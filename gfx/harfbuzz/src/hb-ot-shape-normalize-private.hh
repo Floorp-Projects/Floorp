@@ -32,6 +32,8 @@
 #include "hb-font.h"
 #include "hb-buffer.h"
 
+/* buffer var allocations, used during the normalization process */
+#define glyph_index()	var1.u32
 
 enum hb_ot_shape_normalization_mode_t {
   HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED,

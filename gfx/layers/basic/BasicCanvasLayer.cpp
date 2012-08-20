@@ -7,6 +7,7 @@
 #include "gfxImageSurface.h"
 #include "GLContext.h"
 #include "gfxUtils.h"
+#include "gfxPlatform.h"
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"

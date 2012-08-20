@@ -76,6 +76,7 @@
 #include "nsIDOMFormData.h"
 #include "DictionaryHelpers.h"
 #include "mozilla/Attributes.h"
+#include "nsIPermissionManager.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -572,9 +573,16 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
       return;
     }
 
-    nsCOMPtr<nsIURI> uri;
-    doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.systemXHR.whitelist")) {
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    nsCOMPtr<nsIPermissionManager> permMgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    if (!permMgr)
+      return;
+
+    PRUint32 permission;
+    nsresult rv =
+      permMgr->TestPermissionFromPrincipal(principal, "systemXHR", &permission);
+    if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
       return;
     }
   }

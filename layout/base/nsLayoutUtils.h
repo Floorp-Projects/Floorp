@@ -913,13 +913,17 @@ public:
    * Likewise, but for 'height', 'min-height', or 'max-height'.
    */
   static nscoord ComputeHeightValue(nscoord aContainingBlockHeight,
+                                    nscoord aContentEdgeToBoxSizingBoxEdge,
                                     const nsStyleCoord& aCoord)
   {
+    MOZ_ASSERT(aContainingBlockHeight != NS_AUTOHEIGHT || !aCoord.HasPercent(),
+               "caller must deal with %% of unconstrained height");
+    MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
+
     nscoord result =
-      ComputeHeightDependentValue(aContainingBlockHeight, aCoord);
-    if (result < 0)
-      result = 0; // clamp calc()
-    return result;
+      nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockHeight);
+    // Clamp calc(), and the subtraction for box-sizing.
+    return NS_MAX(0, result - aContentEdgeToBoxSizingBoxEdge);
   }
 
   static bool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)

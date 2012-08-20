@@ -72,6 +72,7 @@ EXPORTS		= \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
 		nsIRollupListener.h \
+		nsIWidgetListener.h \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

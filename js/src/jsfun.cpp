@@ -606,7 +606,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
                 return NULL;
         }
     }
-    bool haveSource = fun->isInterpreted();
+    bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
     if (haveSource && !fun->script()->scriptSource()->hasSourceData() &&
         !fun->script()->loadSource(cx, &haveSource))
     {
@@ -652,12 +652,12 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             // Fish out the argument names.
             BindingVector *localNames = cx->new_<BindingVector>(cx);
             js::ScopedDeletePtr<BindingVector> freeNames(localNames);
-            if (!GetOrderedBindings(cx, script->bindings, localNames))
+            if (!FillBindingVector(script->bindings, localNames))
                 return NULL;
             for (unsigned i = 0; i < fun->nargs; i++) {
                 if ((i && !out.append(", ")) ||
                     (i == unsigned(fun->nargs - 1) && fun->hasRest() && !out.append("...")) ||
-                    !out.append((*localNames)[i].maybeName)) {
+                    !out.append((*localNames)[i].name())) {
                     return NULL;
                 }
             }
@@ -709,7 +709,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             if (!out.append(")"))
                 return NULL;
         }
-    } else if (fun->isInterpreted()) {
+    } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
         if ((!bodyOnly && !out.append("() {\n    ")) ||
             !out.append("[sourceless code]") ||
             (!bodyOnly && !out.append("\n}")))
@@ -1166,8 +1166,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Bindings bindings;
-    Bindings::AutoRooter bindingsRoot(cx, &bindings);
+    AutoKeepAtoms keepAtoms(cx->runtime);
+    AutoNameVector formals(cx);
 
     bool hasRest = false;
 
@@ -1288,18 +1288,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                     }
                 }
 
-                /* Check for a duplicate parameter name. */
-                Rooted<PropertyName*> name(cx, ts.currentToken().name());
-                if (bindings.hasBinding(cx, name)) {
-                    JSAutoByteString bytes;
-                    if (!js_AtomToPrintableString(cx, name, &bytes))
-                        return false;
-                    if (!ts.reportStrictWarning(JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
-                        return false;
-                }
-
-                uint16_t dummy;
-                if (!bindings.addArgument(cx, name, &dummy))
+                if (!formals.append(ts.currentToken().name()))
                     return false;
 
                 /*
@@ -1314,6 +1303,11 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                 tt = ts.getToken();
             }
         }
+    }
+
+    for (unsigned i = 0; i < formals.length(); ++i) {
+        JSString *str = formals[i];
+        JS_ASSERT(str->asAtom().asPropertyName() == formals[i]);
     }
 
     JS::Anchor<JSString *> strAnchor(NULL);
@@ -1341,14 +1335,14 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     RootedFunction fun(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                             global, cx->runtime->atomState.anonymousAtom));
+                                          global, cx->runtime->atomState.anonymousAtom));
     if (!fun)
         return false;
 
     if (hasRest)
         fun->setHasRest();
 
-    bool ok = frontend::CompileFunctionBody(cx, fun, options, &bindings, chars, length);
+    bool ok = frontend::CompileFunctionBody(cx, fun, options, formals, chars, length);
     args.rval().setObject(*fun);
     return ok;
 }
@@ -1457,7 +1451,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT_IF(script->compartment() != cx->compartment,
-                         !script->enclosingStaticScope() && !script->compileAndGo);
+                         !script->enclosingStaticScope());
 
             RootedObject scope(cx, script->enclosingStaticScope());
 
@@ -1481,7 +1475,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned attrs, AllocKind kind)
+                  unsigned nargs, unsigned attrs, const char *selfHostedName, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
@@ -1503,11 +1497,24 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         sop = NULL;
     }
 
-    fun = js_NewFunction(cx, NULL, native, nargs,
-                         attrs & (JSFUN_FLAGS_MASK),
-                         obj,
-                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
-                         kind);
+    /*
+     * To support specifying both native and self-hosted functions using
+     * JSFunctionSpec, js_DefineFunction can be invoked with either native
+     * or selfHostedName set. It is assumed that selfHostedName is set if
+     * native isn't.
+     */
+    if (native) {
+        JS_ASSERT(!selfHostedName);
+        fun = js_NewFunction(cx, NULL, native, nargs,
+                             attrs & (JSFUN_FLAGS_MASK),
+                             obj,
+                             JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
+                             kind);
+    } else {
+        JS_ASSERT(attrs & JSFUN_INTERPRETED);
+        fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
+        fun->atom = JSID_TO_ATOM(id);
+    }
     if (!fun)
         return NULL;
 

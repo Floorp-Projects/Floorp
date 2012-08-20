@@ -2070,7 +2070,7 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
         }
     }
  
-    OnMsgProcessPendingQ(NS_OK, ci); // releases |ci|
+    OnMsgProcessPendingQ(0, ci); // releases |ci|
     NS_RELEASE(conn);
 }
 
@@ -2705,7 +2705,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
             nsRefPtr<nsHttpConnection> copy(conn);
             // forget() to effectively addref because onmsg*() will drop a ref
             gHttpHandler->ConnMgr()->OnMsgReclaimConnection(
-                NS_OK, conn.forget().get());
+                0, conn.forget().get());
         }
     }
 

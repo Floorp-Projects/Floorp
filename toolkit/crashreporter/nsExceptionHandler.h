@@ -40,6 +40,8 @@ nsresult SetMinidumpPath(const nsAString& aPath);
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data);
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
+nsresult SetGarbageCollecting(bool collecting);
+
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsIFile* aAppDataDirectory,
                         const nsACString& aBuildID);

@@ -77,7 +77,7 @@ CGBlendMode ToBlendMode(CompositionOp op)
 
 
 
-DrawTargetCG::DrawTargetCG() : mSnapshot(NULL)
+DrawTargetCG::DrawTargetCG() : mSnapshot(nullptr)
 {
 }
 
@@ -128,7 +128,7 @@ DrawTargetCG::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aForma
   if (newTarget->Init(GetType(), aSize, aFormat)) {
     return newTarget;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -141,7 +141,7 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
   RefPtr<SourceSurfaceCG> newSurf = new SourceSurfaceCG();
 
  if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
-    return NULL;
+    return nullptr;
   }
 
   return newSurf;
@@ -162,7 +162,7 @@ GetImageFromSourceSurface(SourceSurface *aSurface)
 TemporaryRef<SourceSurface>
 DrawTargetCG::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  return NULL;
+  return nullptr;
 }
 
 class UnboundnessFixer
@@ -171,7 +171,7 @@ class UnboundnessFixer
     CGLayerRef mLayer;
     CGContextRef mCg;
   public:
-    UnboundnessFixer() : mCg(NULL) {}
+    UnboundnessFixer() : mCg(nullptr) {}
 
     CGContextRef Check(CGContextRef baseCg, CompositionOp blend)
     {
@@ -182,8 +182,8 @@ class UnboundnessFixer
 
         //XXX: The size here is in default user space units, of the layer relative to the graphics context.
         // is the clip bounds still correct if, for example, we have a scale applied to the context?
-        mLayer = CGLayerCreateWithContext(baseCg, mClipBounds.size, NULL);
-        //XXX: if the size is 0x0 we get a NULL CGContext back from GetContext
+        mLayer = CGLayerCreateWithContext(baseCg, mClipBounds.size, nullptr);
+        //XXX: if the size is 0x0 we get a nullptr CGContext back from GetContext
         mCg = CGLayerGetContext(mLayer);
         // CGContext's default to have the origin at the bottom left
         // so flip it to the top left and adjust for the origin
@@ -219,7 +219,7 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   MarkChanged();
 
   CGImageRef image;
-  CGImageRef subimage = NULL;
+  CGImageRef subimage = nullptr;
   CGContextSaveGState(mCg);
 
   CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
@@ -429,7 +429,7 @@ SetFillFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern &
   } else if (aPattern.GetType() == PATTERN_SURFACE) {
 
     CGColorSpaceRef patternSpace;
-    patternSpace = CGColorSpaceCreatePattern (NULL);
+    patternSpace = CGColorSpaceCreatePattern (nullptr);
     CGContextSetFillColorSpace(cg, patternSpace);
     CGColorSpaceRelease(patternSpace);
 
@@ -452,7 +452,7 @@ SetStrokeFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern
     CGColorRelease(cgcolor);
   } else if (aPattern.GetType() == PATTERN_SURFACE) {
     CGColorSpaceRef patternSpace;
-    patternSpace = CGColorSpaceCreatePattern (NULL);
+    patternSpace = CGColorSpaceCreatePattern (nullptr);
     CGContextSetStrokeColorSpace(cg, patternSpace);
     CGColorSpaceRelease(patternSpace);
 
@@ -756,7 +756,7 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
   MarkChanged();
 
   CGImageRef image;
-  CGImageRef subimage = NULL;
+  CGImageRef subimage = nullptr;
   if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE) {
     image = GetImageFromSourceSurface(aSurface);
     /* we have two options here:
@@ -830,9 +830,9 @@ DrawTargetCG::Init(BackendType aType,
       // 32767 is the maximum size supported by cairo
       // we clamp to that to make it easier to interoperate
       aSize.width > 32767 || aSize.height > 32767) {
-    mColorSpace = NULL;
-    mCg = NULL;
-    mData = NULL;
+    mColorSpace = nullptr;
+    mCg = nullptr;
+    mData = nullptr;
     return false;
   }
 
@@ -841,14 +841,14 @@ DrawTargetCG::Init(BackendType aType,
   //XXX: we'd be better off reusing the Colorspace across draw targets
   mColorSpace = CGColorSpaceCreateDeviceRGB();
 
-  if (aData == NULL && aType != BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aData == nullptr && aType != BACKEND_COREGRAPHICS_ACCELERATED) {
     // XXX: Currently, Init implicitly clears, that can often be a waste of time
     mData = calloc(aSize.height * aStride, 1);
     aData = static_cast<unsigned char*>(mData);  
   } else {
-    // mData == NULL means DrawTargetCG doesn't own the image data and will not
+    // mData == nullptr means DrawTargetCG doesn't own the image data and will not
     // delete it in the destructor
-    mData = NULL;
+    mData = nullptr;
   }
 
   mSize = aSize;
@@ -858,7 +858,7 @@ DrawTargetCG::Init(BackendType aType,
     mCg = ioSurface->CreateIOSurfaceContext();
     // If we don't have the symbol for 'CreateIOSurfaceContext' mCg will be null
     // and we will fallback to software below
-    mData = NULL;
+    mData = nullptr;
   }
 
   if (!mCg || aType == BACKEND_COREGRAPHICS) {
@@ -916,9 +916,9 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   // XXX: we should come up with some consistent semantics for dealing
   // with zero area drawtargets
   if (aSize.width == 0 || aSize.height == 0) {
-    mColorSpace = NULL;
-    mCg = NULL;
-    mData = NULL;
+    mColorSpace = nullptr;
+    mCg = nullptr;
+    mData = nullptr;
     return false;
   }
 
@@ -931,7 +931,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
 
   mCg = cgContext;
 
-  mData = NULL;
+  mData = nullptr;
 
   assert(mCg);
   // CGContext's default to have the origin at the bottom left
@@ -950,8 +950,8 @@ DrawTargetCG::Init(BackendType aType, const IntSize &aSize, SurfaceFormat &aForm
 {
   int stride = aSize.width*4;
   
-  // Calling Init with aData == NULL will allocate.
-  return Init(aType, NULL, aSize, stride, aFormat);
+  // Calling Init with aData == nullptr will allocate.
+  return Init(aType, nullptr, aSize, stride, aFormat);
 }
 
 TemporaryRef<PathBuilder>
@@ -968,7 +968,7 @@ DrawTargetCG::GetNativeSurface(NativeSurfaceType aType)
       aType == NATIVE_SURFACE_CGCONTEXT_ACCELERATED && GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
     return mCg;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -1066,7 +1066,7 @@ DrawTargetCG::MarkChanged()
       // We only need to worry about snapshots that someone else knows about
       mSnapshot->DrawTargetWillChange();
     }
-    mSnapshot = NULL;
+    mSnapshot = nullptr;
   }
 }
 

@@ -388,7 +388,6 @@ public:
   NS_IMETHOD              Create(nsIWidget *aParent,
                                  nsNativeWidget aNativeParent,
                                  const nsIntRect &aRect,
-                                 EVENT_CALLBACK aHandleEventFunction,
                                  nsDeviceContext *aContext,
                                  nsWidgetInitData *aInitData = nullptr);
 
@@ -479,7 +478,9 @@ public:
   // Mac specific methods
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
-  
+
+  bool PaintWindow(nsIntRegion aRegion);
+
 #ifdef ACCESSIBILITY
   already_AddRefed<Accessible> GetDocumentAccessible();
 #endif
@@ -519,9 +520,8 @@ public:
 
 protected:
 
-  bool              ReportDestroyEvent();
-  bool              ReportMoveEvent();
-  bool              ReportSizeEvent();
+  void              ReportMoveEvent();
+  void              ReportSizeEvent();
 
   // override to create different kinds of child views. Autoreleases, so
   // caller must retain.

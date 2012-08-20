@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "base/basictypes.h"
 #include "nsDebug.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkNativeWindow.h"
@@ -22,6 +23,8 @@
 #include "CameraCommon.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
+using namespace android;
 
 #if GIHM_TIMING_RECEIVEFRAME
 #define INCLUDE_TIME_H                  1
@@ -59,6 +62,17 @@ GonkCameraHardware::GonkCameraHardware(GonkCamera* aTarget, PRUint32 aCamera)
   init();
 }
 
+void
+GonkCameraHardware::OnNewFrame()
+{
+  if (mClosing) {
+    return;
+  }
+  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(mWindow.get());
+  nsRefPtr<GraphicBufferLocked> buffer = window->getCurrentBuffer();
+  ReceiveFrame(mTarget, buffer);
+}
+
 // Android data callback
 void
 GonkCameraHardware::DataCallback(int32_t aMsgType, const sp<IMemory> &aDataPtr, camera_frame_metadata_t* aMetadata, void* aUser)
@@ -76,7 +90,7 @@ GonkCameraHardware::DataCallback(int32_t aMsgType, const sp<IMemory> &aDataPtr, 
   if (camera) {
     switch (aMsgType) {
       case CAMERA_MSG_PREVIEW_FRAME:
-        ReceiveFrame(camera, (PRUint8*)aDataPtr->pointer(), aDataPtr->size());
+        // Do nothing
         break;
 
       case CAMERA_MSG_COMPRESSED_IMAGE:
@@ -149,7 +163,7 @@ GonkCameraHardware::init()
     return;
   }
 
-  mWindow = new android::GonkNativeWindow();
+  mWindow = new GonkNativeWindow(this);
 
   if (sHwHandle == 0) {
     sHwHandle = 1;  // don't use 0
@@ -188,6 +202,8 @@ GonkCameraHardware::ReleaseHandle(PRUint32 aHwHandle)
   hw->mHardware->disableMsgType(CAMERA_MSG_ALL_MSGS);
   hw->mHardware->stopPreview();
   hw->mHardware->release();
+  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(hw->mWindow.get());
+  window->abandon();
   DOM_CAMERA_LOGI("%s: after: sHwHandle = %d\n", __func__, sHwHandle);
   delete hw;     // destroy the camera hardware instance
 }
@@ -367,8 +383,6 @@ int
 GonkCameraHardware::StartPreview()
 {
   const char* format;
-
-  mHardware->enableMsgType(CAMERA_MSG_PREVIEW_FRAME);
 
   DOM_CAMERA_LOGI("Preview formats: %s\n", mParams.get(mParams.KEY_SUPPORTED_PREVIEW_FORMATS));
 

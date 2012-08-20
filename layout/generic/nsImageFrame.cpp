@@ -66,6 +66,7 @@
 
 #include "gfxRect.h"
 #include "ImageLayers.h"
+#include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Util.h" // for DebugOnly

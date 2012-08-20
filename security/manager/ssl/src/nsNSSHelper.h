@@ -52,9 +52,5 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 nsresult
 setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx);
 
-#ifdef XP_MAC
-extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
-#endif
-
 #endif
 

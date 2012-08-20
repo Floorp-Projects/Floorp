@@ -380,7 +380,6 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
                                                            bool aRealTime) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
-  mCbCrSize(0),
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),

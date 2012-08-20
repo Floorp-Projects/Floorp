@@ -301,9 +301,6 @@ function testDeltaMultiplierPrefs()
 
       for (var j = 0; j < kPrefValues.length; j++) {
         currentMultiplier = kPrefValues[j] / 100;
-        if (currentMultiplier > -1.0 && currentMultiplier < 1.0) {
-          currentMultiplier = currentMultiplier < 0 ? -1.0 : 1.0;
-        }
         for (var k = 0; k < kDeltaMultiplierPrefs.length; k++) {
           currentPref = "mousewheel." + currentTest.name + "." + kDeltaMultiplierPrefs[k];
 
@@ -318,15 +315,29 @@ function testDeltaMultiplierPrefs()
             ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";
           synthesizeWheel(gScrollableElement, 10, 10, currentEvent);
 
-          ok(calledHandlers.wheel, description + "wheel event was not fired");
-          ok(calledHandlers.DOMMouseScroll.horizontal,
-             description + "Horizontal DOMMouseScroll event was not fired");
-          ok(calledHandlers.DOMMouseScroll.vertical,
-             description + "Vertical DOMMouseScroll event was not fired");
-          ok(calledHandlers.MozMousePixelScroll.horizontal,
-             description + "Horizontal MozMousePixelScroll event was not fired");
-          ok(calledHandlers.MozMousePixelScroll.vertical,
-             description + "Vertical MozMousePixelScroll event was not fired");
+          var expectedProps = {
+            deltaX: currentEvent.deltaX * currentMultiplier,
+            deltaY: currentEvent.deltaY * currentMultiplier,
+            dletaZ: currentEvent.deltaZ * currentMultiplier,
+            lineOrPageDeltaX: currentEvent.lineOrPageDeltaX * currentMultiplier,
+            lineOrPageDeltaY: currentEvent.lineOrPageDeltaY * currentMultiplier,
+          };
+
+          is(calledHandlers.wheel,
+             expectedProps.deltaX != 0 || expectedProps.deltaY != 0 || expectedProps.deltaZ != 0,
+             description + "wheel event was (not) fired");
+          is(calledHandlers.DOMMouseScroll.horizontal,
+             expectedProps.lineOrPageDeltaX >= 1 || expectedProps.lineOrPageDeltaX <= -1,
+             description + "Horizontal DOMMouseScroll event was (not) fired");
+          is(calledHandlers.DOMMouseScroll.vertical,
+             expectedProps.lineOrPageDeltaY >= 1 || expectedProps.lineOrPageDeltaY <= -1,
+             description + "Vertical DOMMouseScroll event was (not) fired");
+          is(calledHandlers.MozMousePixelScroll.horizontal,
+             expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1,
+             description + "Horizontal MozMousePixelScroll event was (not) fired");
+          is(calledHandlers.MozMousePixelScroll.vertical,
+             expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1,
+             description + "Vertical MozMousePixelScroll event was (not) fired");
 
           calledHandlers = { wheel: false,
                              DOMMouseScroll: { horizontal: false, vertical: false },
@@ -652,6 +663,42 @@ function testEventOrder()
   SpecialPowers.removeSystemEventListener(window, "MozMousePixelScroll", systemHandler, true);
 }
 
+var gOnWheelAttrHandled = new Array;
+
+function testOnWheelAttr()
+{
+  document.documentElement.setAttribute("onwheel", "gOnWheelAttrHandled['html'] = true;");
+  document.body.setAttribute("onwheel", "gOnWheelAttrHandled['body'] = true;");
+  gScrollableElement.setAttribute("onwheel", "gOnWheelAttrHandled['div'] = true;");
+  var target = document.getElementById("onwheel");
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, deltaY: 2.0 });
+  ok(gOnWheelAttrHandled['html'], "html element's onwheel attribute isn't performed");
+  ok(gOnWheelAttrHandled['body'], "body element's onwheel attribute isn't performed");
+  ok(gOnWheelAttrHandled['div'], "div element's onwheel attribute isn't performed");
+}
+
+var gOnWheelPropHandled = new Array;
+
+function testOnWheelProperty()
+{
+  window.onwheel = function (e) { gOnWheelPropHandled["window"] = true; }
+  document.onwheel = function (e) { gOnWheelPropHandled["document"] = true; }
+  document.documentElement.onwheel = function (e) { gOnWheelPropHandled["html"] = true; };
+  document.body.onwheel = function (e) { gOnWheelPropHandled["body"] = true; };
+  gScrollableElement.onwheel = function (e) { gOnWheelPropHandled["div"] = true; };
+  var target = document.getElementById("onwheel");
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, deltaY: 2.0 });
+  ok(gOnWheelPropHandled['window'], "window's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['document'], "document's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['html'], "html element's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['body'], "body element's onwheel property isn't performed");
+  ok(gOnWheelPropHandled['div'], "div element's onwheel property isn't performed");
+}
+
 function runTests()
 {
   SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
@@ -678,6 +725,8 @@ function runTests()
   testDeltaMultiplierPrefs();
   testDispatchingUntrustEvent();
   testEventOrder();
+  testOnWheelAttr();
+  testOnWheelProperty();
 
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");

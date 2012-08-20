@@ -78,10 +78,12 @@ DOMWifiManager.prototype = {
                       "WifiManager:getNetworks:Return:OK", "WifiManager:getNetworks:Return:NO",
                       "WifiManager:associate:Return:OK", "WifiManager:associate:Return:NO",
                       "WifiManager:forget:Return:OK", "WifiManager:forget:Return:NO",
+                      "WifiManager:wps:Return:OK", "WifiManager:wps:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
-                      "WifiManager:connectionInfoUpdate"];
+                      "WifiManager:onwpstimeout", "WifiManager:onwpsfail",
+                      "WifiManager:onwpsoverlap", "WifiManager:connectionInfoUpdate"];
     this.initHelper(aWindow, messages);
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
@@ -163,6 +165,16 @@ DOMWifiManager.prototype = {
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
+      case "WifiManager:wps:Return:OK":
+        request = this.takeRequest(msg.rid);
+        Services.DOMRequest.fireSuccess(request, true);
+        break;
+
+      case "WifiManager:wps:Return:NO":
+        request = this.takeRequest(msg.rid);
+        Services.DOMRequest.fireError(request, msg.data);
+        break;
+
       case "WifiManager:wifiDown":
         this._enabled = false;
         this._currentNetwork = null;
@@ -198,6 +210,27 @@ DOMWifiManager.prototype = {
       case "WifiManager:ondisconnect":
         this._currentNetwork = null;
         this._connectionStatus = "disconnected";
+        this._lastConnectionInfo = null;
+        this._fireStatusChangeEvent();
+        break;
+
+      case "WifiManager:onwpstimeout":
+        this._currentNetwork = null;
+        this._connectionStatus = "wps-timedout";
+        this._lastConnectionInfo = null;
+        this._fireStatusChangeEvent();
+        break;
+
+      case "WifiManager:onwpsfail":
+        this._currentNetwork = null;
+        this._connectionStatus = "wps-failed";
+        this._lastConnectionInfo = null;
+        this._fireStatusChangeEvent();
+        break;
+
+      case "WifiManager:onwpsoverlap":
+        this._currentNetwork = null;
+        this._connectionStatus = "wps-overlapped";
         this._lastConnectionInfo = null;
         this._fireStatusChangeEvent();
         break;
@@ -271,6 +304,14 @@ DOMWifiManager.prototype = {
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
     var request = this.createRequest();
     this._sendMessageForRequest("WifiManager:forget", network, request);
+    return request;
+  },
+
+  wps: function nsIDOMWifiManager_wps(detail) {
+    if (!this._hasPrivileges)
+      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:wps", detail, request);
     return request;
   },
 

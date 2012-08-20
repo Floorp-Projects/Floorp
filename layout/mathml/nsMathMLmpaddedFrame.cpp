@@ -184,7 +184,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
   nsresult errorCode;
   float floatValue = number.ToFloat(&errorCode);
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     aSign = NS_MATHML_SIGN_INVALID;
     return false;
   }

@@ -937,7 +937,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
     NS_INTERFACE_MAP_ENTRY(nsIMutable)
     // see nsStandardURL::Equals
@@ -2876,7 +2876,7 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 }
 
 //---------------------------------------------------------------------------
-// nsStandardURL::nsIIPCSerializable
+// nsStandardURL::nsIIPCSerializableObsolete
 //---------------------------------------------------------------------------
 
 bool

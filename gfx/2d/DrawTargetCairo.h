@@ -95,7 +95,7 @@ public:
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions,
-                          const GlyphRenderingOptions *aRenderingOptions = NULL);
+                          const GlyphRenderingOptions *aRenderingOptions = nullptr);
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
                     const DrawOptions &aOptions = DrawOptions());
@@ -132,7 +132,7 @@ public:
   // Call to set up aContext for drawing (with the current transform, etc).
   // Pass the path you're going to be using if you have one.
   // Implicitly calls WillChange(aPath).
-  void PrepareForDrawing(cairo_t* aContext, const Path* aPath = NULL);
+  void PrepareForDrawing(cairo_t* aContext, const Path* aPath = nullptr);
 
 private: // methods
   enum DrawPatternType { DRAW_FILL, DRAW_STROKE };
@@ -149,7 +149,7 @@ private: // methods
   // Call before you make any changes to the backing surface with which this
   // context is associated. Pass the path you're going to be using if you have
   // one.
-  void WillChange(const Path* aPath = NULL);
+  void WillChange(const Path* aPath = nullptr);
 
   // Call if there is any reason to disassociate all snapshots from this draw
   // target; for example, because we're going to be destroyed.

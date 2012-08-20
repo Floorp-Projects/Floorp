@@ -201,7 +201,7 @@ hb_ft_get_glyph_extents (hb_font_t *font HB_UNUSED,
   extents->x_bearing = ft_face->glyph->metrics.horiBearingX;
   extents->y_bearing = ft_face->glyph->metrics.horiBearingY;
   extents->width = ft_face->glyph->metrics.width;
-  extents->height = ft_face->glyph->metrics.height;
+  extents->height = -ft_face->glyph->metrics.height;
   return true;
 }
 
@@ -464,6 +464,7 @@ hb_ft_font_set_funcs (hb_font_t *font)
 
   FT_Select_Charmap (ft_face, FT_ENCODING_UNICODE);
 
+  assert (font->y_scale >= 0);
   FT_Set_Char_Size (ft_face,
 		    font->x_scale, font->y_scale,
 		    0, 0);

@@ -23,7 +23,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
-#include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 
 class mozIApplication;
@@ -58,6 +57,14 @@ private:
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
+    /**
+     * Start up the content-process machinery.  This might include
+     * scheduling pre-launch tasks.
+     */
+    static void StartUp();
+    /** Shut down the content-process machinery. */
+    static void ShutDown();
+
     static ContentParent* GetNewOrUsed();
 
     /**
@@ -112,6 +119,11 @@ private:
     static nsTArray<ContentParent*>* gNonAppContentParents;
     static nsTArray<ContentParent*>* gPrivateContent;
 
+    static void PreallocateAppProcess();
+    static void DelayedPreallocateAppProcess();
+    static void ScheduleDelayedPreallocateAppProcess();
+    static already_AddRefed<ContentParent> MaybeTakePreallocatedAppProcess();
+
     // Hide the raw constructor methods since we don't want client code
     // using them.
     using PContentParent::SendPBrowserConstructor;
@@ -121,6 +133,10 @@ private:
     virtual ~ContentParent();
 
     void Init();
+
+    // Transform a pre-allocated app process into a "real" app
+    // process, for the specified manifest URL.
+    void SetManifestFromPreallocated(const nsAString& aAppManifestURL);
 
     /**
      * Mark this ContentParent as dead for the purposes of Get*().
@@ -134,7 +150,7 @@ private:
      * by the Get*() funtions.  However, the shutdown sequence itself
      * may be asynchronous.
      */
-    void ShutDown();
+    void ShutDownProcess();
 
     PCompositorParent* AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                         base::ProcessId aOtherProcess) MOZ_OVERRIDE;
@@ -201,7 +217,7 @@ private:
 
     virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);
 
-    virtual bool RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard);
+    virtual bool RecvSetClipboardText(const nsString& text, const bool& isPrivateData, const PRInt32& whichClipboard);
     virtual bool RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text);
     virtual bool RecvEmptyClipboard();
     virtual bool RecvClipboardHasText(bool* hasText);
@@ -257,9 +273,6 @@ private:
 
     virtual bool RecvPrivateDocShellsExist(const bool& aExist);
 
-    virtual bool RecvAddFileWatch(const nsString& root);
-    virtual bool RecvRemoveFileWatch(const nsString& root);
-
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     GeckoChildProcessHost* mSubprocess;
@@ -279,34 +292,6 @@ private:
 
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
-
-    class WatchedFile MOZ_FINAL : public nsIFileUpdateListener {
-      public:
-        WatchedFile(ContentParent* aParent, const nsString& aPath)
-          : mParent(aParent)
-          , mUsageCount(1)
-        {
-          NS_NewLocalFile(aPath, false, getter_AddRefs(mFile));
-        }
-
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIFILEUPDATELISTENER
-
-        void Watch() {
-          mFile->Watch(this);
-        }
-
-        void Unwatch() {
-          mFile->Watch(this);
-        }
-
-        nsRefPtr<ContentParent> mParent;
-        PRInt32 mUsageCount;
-        nsCOMPtr<nsIFile> mFile;
-    };
-
-    // This is a cache of all of the registered file watchers.
-    nsInterfaceHashtable<nsStringHashKey, WatchedFile> mFileWatchers;
 
     friend class CrashReporterParent;
 };

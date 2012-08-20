@@ -36,6 +36,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrintSettings.h"
 #include "nsEmbedStream.h"
+#include "nsIWidgetListener.h"
 
 #include "nsTArray.h"
 #include "nsWeakPtr.h"
@@ -84,6 +85,7 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebBrowserFocus,
                      public nsIWebProgressListener,
                      public nsIWebBrowserStream,
+                     public nsIWidgetListener,
                      public nsSupportsWeakReference
 {
 friend class nsDocShellTreeOwner;
@@ -119,7 +121,10 @@ protected:
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
-    static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
+    // nsIWidgetListener
+    virtual void WindowRaised(nsIWidget* aWidget);
+    virtual void WindowLowered(nsIWidget* aWidget);
+    virtual bool PaintWindow(nsIWidget* aWidget, bool isRequest, nsIntRegion aRegion, bool aWillSendDidPaint);
 
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;
@@ -149,7 +154,7 @@ protected:
    // persistence object
    nsCOMPtr<nsIWebBrowserPersist> mPersist;
    PRUint32                       mPersistCurrentState;
-   PRUint32                       mPersistResult;
+   nsresult                       mPersistResult;
    PRUint32                       mPersistFlags;
 
    // stream

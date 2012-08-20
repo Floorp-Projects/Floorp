@@ -168,6 +168,11 @@ public: // NOT in nsIViewManager, so private to the view module
   // be deferred while refresh is disabled.
   bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
 
+  void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
+  bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
+                   bool aSentWillPaint, bool aWillSendDidPaint);
+  void DidPaintWindow();
+
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
   void PostPendingUpdate();

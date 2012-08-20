@@ -37,8 +37,6 @@
 #define HB_DEBUG_BUFFER (HB_DEBUG+0)
 #endif
 
-#define _HB_BUFFER_UNICODE_FUNCS_DEFAULT (const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_default))
-
 /* Here is how the buffer works internally:
  *
  * There are two info pointers: info and out_info.  They always have
@@ -144,7 +142,7 @@ hb_buffer_t::reset (void)
     return;
 
   hb_unicode_funcs_destroy (unicode);
-  unicode = _HB_BUFFER_UNICODE_FUNCS_DEFAULT;
+  unicode = hb_unicode_funcs_get_default ();
 
   hb_segment_properties_t default_props = _HB_BUFFER_PROPS_DEFAULT;
   props = default_props;
@@ -552,7 +550,7 @@ hb_buffer_get_empty (void)
   static const hb_buffer_t _hb_buffer_nil = {
     HB_OBJECT_HEADER_STATIC,
 
-    _HB_BUFFER_UNICODE_FUNCS_DEFAULT,
+    const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
     _HB_BUFFER_PROPS_DEFAULT,
 
     true, /* in_error */
@@ -608,7 +606,8 @@ hb_buffer_set_unicode_funcs (hb_buffer_t        *buffer,
     return;
 
   if (!unicode)
-    unicode = _HB_BUFFER_UNICODE_FUNCS_DEFAULT;
+    unicode = hb_unicode_funcs_get_default ();
+
 
   hb_unicode_funcs_reference (unicode);
   hb_unicode_funcs_destroy (buffer->unicode);

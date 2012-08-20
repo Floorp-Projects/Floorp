@@ -87,6 +87,8 @@ HBSOURCES += \
 	hb-ot-shape-complex-private.hh \
 	hb-ot-shape-normalize-private.hh \
 	hb-ot-shape-normalize.cc \
+	hb-ot-shape-fallback-private.hh \
+	hb-ot-shape-fallback.cc \
 	hb-ot-shape-private.hh \
 	$(NULL)
 HBHEADERS += \
@@ -162,15 +164,35 @@ endif
 DIST_SUBDIRS += hb-old
 
 
+
+# Put the library together
+
+if OS_WIN32
+export_symbols = -export-symbols harfbuzz.def
+harfbuzz_def_dependency = harfbuzz.def
+endif
+
 # Use a C linker, not C++; Don't link to libstdc++
 libharfbuzz_la_LINK = $(LINK) $(libharfbuzz_la_LDFLAGS)
 libharfbuzz_la_SOURCES = $(HBSOURCES) $(HBHEADERS)
 nodist_libharfbuzz_la_SOURCES = $(nodist_HBSOURCES)
 libharfbuzz_la_CPPFLAGS = $(HBCFLAGS)
-libharfbuzz_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) -no-undefined
+libharfbuzz_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) $(export_symbols) -no-undefined
 libharfbuzz_la_LIBADD = $(HBLIBS)
+libharfbuzz_la_DEPENDENCIES = $(harfbuzz_def_dependency)
 pkginclude_HEADERS = $(HBHEADERS)
 nodist_pkginclude_HEADERS = hb-version.h
+
+CLEANFILES += harfbuzz.def
+harfbuzz.def: $(HBHEADERS)
+	$(AM_V_GEN) (echo EXPORTS; \
+	(cat $^ || echo 'hb_ERROR ()' ) | \
+	$(EGREP) '^hb_.* \(' | \
+	sed -e 's/ (.*//' | \
+	LANG=C sort; \
+	echo LIBRARY libharfbuzz-$(HB_VERSION_MAJOR).dll; \
+	) >"$@.tmp"
+	@ ! grep -q hb_ERROR "$@.tmp" && mv "$@.tmp" "$@" || ($(RM) "$@"; false)
 
 
 GENERATORS = \
@@ -219,6 +241,7 @@ test_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.sh \
 	check-header-guards.sh \
+	check-exported-symbols.sh \
 	check-includes.sh \
 	check-internal-symbols.sh \
 	check-static-inits.sh \

@@ -463,7 +463,7 @@ Number(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 IsNumber(const Value &v)
 {
     return v.isNumber() || (v.isObject() && v.toObject().hasClass(&NumberClass));
@@ -478,7 +478,7 @@ Extract(const Value &v)
 }
 
 #if JS_HAS_TOSOURCE
-static bool
+JS_ALWAYS_INLINE bool
 num_toSource_impl(JSContext *cx, CallArgs args)
 {
     double d = Extract(args.thisv());
@@ -502,7 +502,7 @@ static JSBool
 num_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toSource_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toSource_impl>(cx, args);
 }
 #endif
 
@@ -593,7 +593,7 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, int base);
 
-static bool
+JS_ALWAYS_INLINE bool
 num_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -626,10 +626,10 @@ static JSBool
 num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toString_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 num_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -755,14 +755,14 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toLocaleString_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toLocaleString_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 num_valueOf_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -774,9 +774,8 @@ JSBool
 js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_valueOf_impl, args);
+    return CallNonGenericMethod<IsNumber, num_valueOf_impl>(cx, args);
 }
-
 
 const unsigned MAX_PRECISION = 100;
 
@@ -818,7 +817,7 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
  * In the following three implementations, we allow a larger range of precision
  * than ECMA requires; this is permitted by ECMA-262.
  */
-static bool
+JS_ALWAYS_INLINE bool
 num_toFixed_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -834,14 +833,14 @@ num_toFixed_impl(JSContext *cx, CallArgs args)
     return DToStrResult(cx, Extract(args.thisv()), DTOSTR_FIXED, precision, args);
 }
 
-static JSBool
+JSBool
 num_toFixed(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toFixed_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toFixed_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 num_toExponential_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -860,14 +859,14 @@ num_toExponential_impl(JSContext *cx, CallArgs args)
     return DToStrResult(cx, Extract(args.thisv()), mode, precision + 1, args);
 }
 
-static JSBool
+JSBool
 num_toExponential(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toExponential_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toExponential_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 num_toPrecision_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -898,11 +897,11 @@ num_toPrecision_impl(JSContext *cx, CallArgs args)
     return DToStrResult(cx, d, mode, precision, args);
 }
 
-static JSBool
+JSBool
 num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsNumber, num_toPrecision_impl, args);
+    return CallNonGenericMethod<IsNumber, num_toPrecision_impl>(cx, args);
 }
 
 static JSFunctionSpec number_methods[] = {

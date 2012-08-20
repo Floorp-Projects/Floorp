@@ -15,7 +15,6 @@
 #include "nsHttpHeaderArray.h"
 #include "nsHttpResponseHead.h"
 
-#include "nsIIPCSerializable.h"
 #include "nsIClassInfo.h"
 #include "nsNetUtil.h"
 
