@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=341604
+Implement HTML5 sandbox attribute for IFRAMEs - inheritance tests
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+/** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs **/
+/** Inheritance Tests **/
+
+SimpleTest.waitForExplicitFinish();
+  
+// A postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// It expects to be called with an object like {ok: true/false, desc:
+// <description of the test> which it then forwards to ok().
+window.addEventListener("message", receiveMessage, false);
+
+var completedTests = 0;
+var passedTests = 0;
+
+function receiveMessage(event)
+{
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+	  passedTests++;
+  } 
+     
+  if (completedTests == 4) {
+    is(passedTests, 4, "there should be 3 passed inheritance tests");
+    SimpleTest.finish();
+  }
+}
+
+function doTest() {
+  // fails if bad
+  // 1) an iframe with no sandbox attribute inside an iframe that has sandbox = ""
+  // should not be able to execute scripts (cannot ever loosen permissions)
+  // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if1.html)
+
+  // fails if bad
+  // 2) an iframe with sandbox = "allow-scripts" inside an iframe that has sandbox = ""
+  // should not be able to execute scripts (cannot ever loosen permissions)
+  // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if1.html)
+
+  // fails if bad
+  // 3) an iframe with no sandbox attribute inside an iframe that has sandbox = "allow-scripts"
+  // should not be same origin with the top window
+  // (done by file_iframe_sandbox_a_if4.html contained within file_iframe_sandbox_a_if3.html)
+
+  // fails if bad
+  // 4) an iframe with no sandbox attribute inside an iframe that has sandbox = "allow-scripts"
+  // should not be same origin with its parent
+  // (done by file_iframe_sandbox_a_if4.html contained within file_iframe_sandbox_a_if3.html)
+
+  // passes if good
+  // 5) an iframe with 'allow-same-origin' and 'allow-scripts' inside an iframe with 'allow-same-origin'
+  // and 'allow-scripts' should be same origin with the top window
+  // (done by file_iframe_sandbox_a_if6.html contained within file_iframe_sandbox_a_if5.html)
+
+  // passes if good
+  // 6) an iframe with 'allow-same-origin' and 'allow-scripts' inside an iframe with 'allow-same-origin'
+  // and 'allow-scripts' should be same origin with its parent
+  // (done by file_iframe_sandbox_a_if6.html contained within file_iframe_sandbox_a_if5.html)
+
+  // passes if good
+  // 7) an iframe with no sandbox attribute inside an iframe that has sandbox = "allow-scripts"
+  // should be able to execute scripts
+  // (done by file_iframe_sandbox_a_if7.html contained within file_iframe_sandbox_a_if3.html)
+
+  // fails if bad
+  // 8) an iframe with sandbox="" inside an iframe that has allow-scripts should not be able
+  // to execute scripts
+  // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if3.html)
+
+  // passes if good
+  // 9) make sure that changing the sandbox flags on an iframe (if_8) doesn't affect
+  // the sandboxing of subloads of content within that iframe
+  var if_8 = document.getElementById('if_8');
+  if_8.sandbox = 'allow-scripts';
+  if_8.contentWindow.doSubload(); 
+}
+
+addLoadEvent(doTest);
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="" id="if_1" src="file_iframe_sandbox_a_if1.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id="if_3" src="file_iframe_sandbox_a_if3.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-same-origin" id="if_5" src="file_iframe_sandbox_a_if5.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-same-origin" id="if_8" src="file_iframe_sandbox_a_if8.html" height="10" width="10"></iframe>
+</div>
