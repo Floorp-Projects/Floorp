@@ -2310,7 +2310,10 @@ nsWindow::NeedsPaint()
   if (sCompositorPaused || FindTopLevel() != nsWindow::TopWindow()) {
     return false;
   }
-  return nsIWidget::NeedsPaint();
+  nsIntRect bounds;
+  nsresult rv = GetBounds(bounds);
+  NS_ENSURE_SUCCESS(rv, false);
+  return !bounds.IsEmpty();
 }
 
 #endif
