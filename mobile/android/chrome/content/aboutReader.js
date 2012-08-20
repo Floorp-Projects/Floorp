@@ -408,6 +408,8 @@ let AboutReader = {
     let domain = Services.io.newURI(article.url, null, null).host;
     this._domainElement.innerHTML = domain;
 
+    this._creditsElement.innerHTML = article.byline;
+
     this._titleElement.innerHTML = article.title;
     document.title = article.title;
 
