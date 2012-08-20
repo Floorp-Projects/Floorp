@@ -14,12 +14,14 @@
 #include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
+#include "GeneratedEvents.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIDOMDOMRequest.h"
+#include "nsIDOMBluetoothDeviceAddressEvent.h"
 #include "nsContentUtils.h"
 
 #include "mozilla/LazyIdleThread.h"
@@ -298,6 +300,18 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsRefPtr<BluetoothDevice> d = BluetoothDevice::Create(GetOwner(), mPath, aData.value());
     nsRefPtr<BluetoothDeviceEvent> e = BluetoothDeviceEvent::Create(d);
     e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("devicefound"));
+  } else if (aData.name().EqualsLiteral("DeviceDisappeared")) {
+		const nsAString& deviceAddress = aData.value().get_nsString();
+
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
+    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("devicedisappeared"),
+                                       false, false, deviceAddress);
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
     // Get BluetoothNamedValue, make sure array length is 1
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
