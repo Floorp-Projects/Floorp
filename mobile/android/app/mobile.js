@@ -243,8 +243,8 @@ pref("browser.search.update", false);
 pref("browser.search.update.log", false);
 pref("browser.search.updateinterval", 6);
 
-// enable search suggestions by default
-pref("browser.search.suggest.enabled", true);
+// disable search suggestions by default
+pref("browser.search.suggest.enabled", false);
 
 // Tell the search service to load search plugins from the locale JAR
 pref("browser.search.loadFromJars", true);
