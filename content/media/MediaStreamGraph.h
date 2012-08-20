@@ -66,8 +66,9 @@ const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 class MediaStreamGraph;
 
 /**
- * This is a base class for listener callbacks. Override methods to be
- * notified of audio or video data or changes in stream state.
+ * This is a base class for media graph thread listener callbacks.
+ * Override methods to be notified of audio or video data or changes in stream
+ * state.
  *
  * This can be used by stream recorders or network connections that receive
  * stream input. It could also be used for debugging.
@@ -78,6 +79,7 @@ class MediaStreamGraph;
  * reentry into media graph methods is possible, although very much discouraged!
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
  * event to some thread) and return.
+ * The listener is not allowed to add/remove any listeners from the stream.
  *
  * When a listener is first attached, we guarantee to send a NotifyBlockingChanged
  * callback to notify of the initial blocking state. Also, if a listener is
@@ -150,6 +152,27 @@ public:
                                         TrackTicks aTrackOffset,
                                         PRUint32 aTrackEvents,
                                         const MediaSegment& aQueuedMedia) {}
+};
+
+/**
+ * This is a base class for main-thread listener callbacks.
+ * This callback is invoked on the main thread when the main-thread-visible
+ * state of a stream has changed.
+ *
+ * These methods are called without the media graph monitor held, so
+ * reentry into media graph methods is possible, although very much discouraged!
+ * You should do something non-blocking and non-reentrant (e.g. dispatch an
+ * event) and return.
+ * The listener is allowed to synchronously remove itself from the stream, but
+ * not add or remove any other listeners.
+ */
+class MainThreadMediaStreamListener {
+public:
+  virtual ~MainThreadMediaStreamListener() {}
+
+  NS_INLINE_DECL_REFCOUNTING(MainThreadMediaStreamListener)
+
+  virtual void NotifyMainThreadStateChanged() = 0;
 };
 
 class MediaStreamGraphImpl;
@@ -271,6 +294,16 @@ public:
   // Events will be dispatched by calling methods of aListener.
   void AddListener(MediaStreamListener* aListener);
   void RemoveListener(MediaStreamListener* aListener);
+  void AddMainThreadListener(MainThreadMediaStreamListener* aListener)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    mMainThreadListeners.AppendElement(aListener);
+  }
+  void RemoveMainThreadListener(MainThreadMediaStreamListener* aListener)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    mMainThreadListeners.RemoveElement(aListener);
+  }
   // Signal that the client is done with this MediaStream. It will be deleted later.
   void Destroy();
   // Returns the main-thread's view of how much data has been processed by
@@ -383,6 +416,7 @@ protected:
   // API, minus the number of times it has been explicitly unblocked.
   TimeVarying<GraphTime,PRUint32> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
+  nsTArray<nsRefPtr<MainThreadMediaStreamListener> > mMainThreadListeners;
 
   // Precomputed blocking status (over GraphTime).
   // This is only valid between the graph's mCurrentTime and
