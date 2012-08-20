@@ -11,6 +11,7 @@ const Cr = Components.results;
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
+Cu.import('resource://gre/modules/Geometry.jsm');
 
 var EXPORTED_SYMBOLS = ['VisualPresenter',
                         'AndroidPresenter',
@@ -137,12 +138,12 @@ VisualPresenter.prototype = {
   },
 
   viewportChanged: function VisualPresenter_viewportChanged() {
-    if (this._currentObject)
-      this._highlight(this._currentObject);
+    if (this._currentContext)
+      this._highlight(this._currentContext);
   },
 
   pivotChanged: function VisualPresenter_pivotChanged(aContext, aReason) {
-    this._currentObject = aContext.accessible;
+    this._currentContext = aContext;
 
     if (!aContext.accessible) {
       this._hide();
@@ -152,7 +153,7 @@ VisualPresenter.prototype = {
     try {
       aContext.accessible.scrollTo(
         Ci.nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE);
-      this._highlight(aContext.accessible);
+      this._highlight(aContext);
     } catch (e) {
       Logger.error('Failed to get bounds: ' + e);
       return;
@@ -175,42 +176,17 @@ VisualPresenter.prototype = {
     this.highlightBox.style.display = 'none';
   },
 
-  _highlight: function _highlight(aObject) {
+  _highlight: function _highlight(aContext) {
     let vp = Utils.getViewport(this.chromeWin) || { zoom: 1.0, offsetY: 0 };
-    let bounds = this._getBounds(aObject, vp.zoom);
+    let r = aContext.bounds.scale(vp.zoom, vp.zoom).expandToIntegers();
 
     // First hide it to avoid flickering when changing the style.
     this.highlightBox.style.display = 'none';
-    this.highlightBox.style.top = bounds.top + 'px';
-    this.highlightBox.style.left = bounds.left + 'px';
-    this.highlightBox.style.width = bounds.width + 'px';
-    this.highlightBox.style.height = bounds.height + 'px';
+    this.highlightBox.style.top = (r.top - this.BORDER_PADDING) + 'px';
+    this.highlightBox.style.left = (r.left - this.BORDER_PADDING) + 'px';
+    this.highlightBox.style.width = (r.width + this.BORDER_PADDING*2) + 'px';
+    this.highlightBox.style.height = (r.height + this.BORDER_PADDING*2) + 'px';
     this.highlightBox.style.display = 'block';
-  },
-
-  _getBounds: function _getBounds(aObject, aZoom, aStart, aEnd) {
-    let objX = {}, objY = {}, objW = {}, objH = {};
-
-    if (aEnd >= 0 && aStart >= 0 && aEnd != aStart) {
-      // TODO: Get bounds for text ranges. Leaving this blank until we have
-      // proper text navigation in the virtual cursor.
-    }
-
-    aObject.getBounds(objX, objY, objW, objH);
-
-    // Can't specify relative coords in nsIAccessible.getBounds, so we do it.
-    let docX = {}, docY = {};
-    let docRoot = aObject.rootDocument.QueryInterface(Ci.nsIAccessible);
-    docRoot.getBounds(docX, docY, {}, {});
-
-    let rv = {
-      left: Math.round((objX.value - docX.value - this.BORDER_PADDING) * aZoom),
-      top: Math.round((objY.value - docY.value - this.BORDER_PADDING) * aZoom),
-      width: Math.round((objW.value + (this.BORDER_PADDING * 2)) * aZoom),
-      height: Math.round((objH.value + (this.BORDER_PADDING * 2)) * aZoom)
-    };
-
-    return rv;
   }
 };
 
@@ -233,6 +209,8 @@ AndroidPresenter.prototype = {
   ANDROID_VIEW_HOVER_ENTER: 0x80,
   ANDROID_VIEW_HOVER_EXIT: 0x100,
   ANDROID_VIEW_SCROLLED: 0x1000,
+  ANDROID_ANNOUNCEMENT: 0x4000,
+  ANDROID_VIEW_ACCESSIBILITY_FOCUSED: 0x8000,
 
   attach: function AndroidPresenter_attach(aWindow) {
     this.chromeWin = aWindow;
@@ -242,8 +220,13 @@ AndroidPresenter.prototype = {
     if (!aContext.accessible)
       return;
 
+    this._currentContext = aContext;
+
     let isExploreByTouch = (aReason == Ci.nsIAccessiblePivot.REASON_POINT &&
                             Utils.AndroidSdkVersion >= 14);
+    let focusEventType = (Utils.AndroidSdkVersion >= 16) ?
+      this.ANDROID_VIEW_ACCESSIBILITY_FOCUSED :
+      this.ANDROID_VIEW_FOCUSED;
 
     if (isExploreByTouch) {
       // This isn't really used by TalkBack so this is a half-hearted attempt
@@ -257,6 +240,8 @@ AndroidPresenter.prototype = {
       });
     }
 
+    let vp = Utils.getViewport(this.chromeWin) || { zoom: 1.0, offsetY: 0 };
+    let bounds = aContext.bounds.scale(vp.zoom, vp.zoom).expandToIntegers();
     let output = [];
 
     aContext.newAncestry.forEach(
@@ -277,10 +262,9 @@ AndroidPresenter.prototype = {
     this.sendMessageToJava({
       gecko: {
         type: 'Accessibility:Event',
-        eventType: isExploreByTouch ?
-          this.ANDROID_VIEW_HOVER_ENTER :
-          this.ANDROID_VIEW_FOCUSED,
-        text: output
+        eventType: (isExploreByTouch) ? this.ANDROID_VIEW_HOVER_ENTER : focusEventType,
+        text: output,
+        bounds: bounds
       }
     });
   },
@@ -360,13 +344,19 @@ AndroidPresenter.prototype = {
     this.sendMessageToJava({
       gecko: {
         type: 'Accessibility:Event',
-        eventType: this.ANDROID_VIEW_TEXT_CHANGED,
+        eventType: (Utils.AndroidSdkVersion >= 16) ?
+          this.ANDROID_ANNOUNCEMENT : this.ANDROID_VIEW_TEXT_CHANGED,
         text: aUtterance,
         addedCount: aUtterance.join(' ').length,
         removedCount: 0,
         fromIndex: 0
       }
     });
+  },
+
+  accessibilityFocus: function AndroidPresenter_accessibilityFocus() {
+    if (this._currentContext)
+      this.pivotChanged(this._currentContext);
   },
 
   sendMessageToJava: function AndroidPresenter_sendMessageTojava(aMessage) {
@@ -506,6 +496,25 @@ PresenterContext.prototype = {
       this._subtreePreOrder = traversePreorder(this._accessible);
 
     return this._subtreePreOrder;
+  },
+
+  get bounds() {
+    if (!this._bounds) {
+      let objX = {}, objY = {}, objW = {}, objH = {};
+
+      this._accessible.getBounds(objX, objY, objW, objH);
+
+      // Can't specify relative coords in nsIAccessible.getBounds, so we do it.
+      let docX = {}, docY = {};
+      let docRoot = this._accessible.rootDocument.
+        QueryInterface(Ci.nsIAccessible);
+      docRoot.getBounds(docX, docY, {}, {});
+
+      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value).
+        translate(-docX.value, -docY.value);
+    }
+
+    return this._bounds.clone();
   },
 
   _isDefunct: function _isDefunct(aAccessible) {
