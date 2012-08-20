@@ -7,11 +7,13 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.util.EventDispatcher;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.PointF;
 import android.graphics.SurfaceTexture;
@@ -47,7 +49,9 @@ public class LayerView extends FrameLayout {
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
-    private int mPaintState = PAINT_NONE;
+    private int mPaintState;
+    private int mCheckerboardColor;
+    private boolean mCheckerboardShouldShowChecks;
 
     private SurfaceView mSurfaceView;
     private TextureView mTextureView;
@@ -95,6 +99,9 @@ public class LayerView extends FrameLayout {
         }
 
         mGLController = new GLController(this);
+        mPaintState = PAINT_NONE;
+        mCheckerboardColor = Color.WHITE;
+        mCheckerboardShouldShowChecks = true;
     }
 
     public GeckoLayerClient createLayerClient(EventDispatcher eventDispatcher) {
@@ -140,6 +147,28 @@ public class LayerView extends FrameLayout {
 
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         return mLayerClient.convertViewPointToLayerPoint(viewPoint);
+    }
+
+    int getCheckerboardColor() {
+        return mCheckerboardColor;
+    }
+
+    public void setCheckerboardColor(int newColor) {
+        mCheckerboardColor = newColor;
+        requestRender();
+    }
+
+    boolean checkerboardShouldShowChecks() {
+        return mCheckerboardShouldShowChecks;
+    }
+
+    void setCheckerboardShouldShowChecks(boolean value) {
+        mCheckerboardShouldShowChecks = value;
+        requestRender();
+    }
+
+    public void setZoomConstraints(ZoomConstraints constraints) {
+        mLayerClient.setZoomConstraints(constraints);
     }
 
     /** The LayerRenderer calls this to indicate that the window has changed size. */
