@@ -239,6 +239,7 @@ def writeAttributeParams(fd, a):
 
 def write_cpp(eventname, iface, fd):
     classname = ("nsDOM%s" % eventname)
+    basename = ("ns%s" % iface.base[3:])
     attributes = []
     ccattributes = []
     for member in iface.members:
@@ -247,19 +248,37 @@ def write_cpp(eventname, iface, fd):
             if (member.realtype.nativeType('in').endswith('*')):
                 ccattributes.append(member);
 
-    fd.write("\nclass %s : public nsDOMEvent, public %s\n" % (classname, iface.name))
+    baseinterfaces = []
+    baseiface = iface.idl.getName(iface.base, iface.location)
+    while baseiface.name != "nsIDOMEvent":
+        baseinterfaces.append(baseiface)
+        baseiface = baseiface.idl.getName(baseiface.base, baseiface.location)
+    baseinterfaces.reverse()
+
+    baseattributes = []
+    for baseiface in baseinterfaces:
+        for member in baseiface.members:
+            if isinstance(member, xpidl.Attribute):
+                baseattributes.append(member)
+
+
+    fd.write("\nclass %s : public %s, public %s\n" % (classname, basename, iface.name))
     fd.write("{\n")
     fd.write("public:\n")
     fd.write("  %s(nsPresContext* aPresContext, nsEvent* aEvent)\n" % classname)
-    fd.write("  : nsDOMEvent(aPresContext, aEvent)")
+    fd.write("  : %s(aPresContext, aEvent)" % basename)
     for a in attributes:
         fd.write(",\n    m%s(%s)" % (firstCap(a.name), init_value(a)))
     fd.write("\n  {}\n")
     fd.write("  virtual ~%s() {}\n\n" % classname)
     fd.write("  NS_DECL_ISUPPORTS_INHERITED\n")
-    if len(ccattributes) > 0:
-        fd.write("  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(%s, nsDOMEvent)\n" % classname)
+    fd.write("  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(%s, %s)\n" % (classname, basename))
     fd.write("  NS_FORWARD_TO_NSDOMEVENT\n")
+
+    for baseiface in baseinterfaces:
+        baseimpl = ("ns%s" % baseiface.name[3:])
+        fd.write("  NS_FORWARD_%s(%s::)\n" % (baseiface.name.upper(), baseimpl))
+
     fd.write("  NS_DECL_%s\n" % iface.name.upper())
     fd.write("  virtual nsresult InitFromCtor(const nsAString& aType, JSContext* aCx, jsval* aVal);\n")
     fd.write("protected:\n")
@@ -267,31 +286,25 @@ def write_cpp(eventname, iface, fd):
         fd.write("  %s\n" % attributeVariableTypeAndName(a))
     fd.write("};\n\n")
 
-    if len(ccattributes) > 0:
-        fd.write("NS_IMPL_CYCLE_COLLECTION_CLASS(%s)\n\n" % classname)
-        fd.write("NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(%s, nsDOMEvent)\n" % classname)
-        for c in ccattributes:
-            fd.write("  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(m%s)\n" % firstCap(a.name))
-        fd.write("NS_IMPL_CYCLE_COLLECTION_UNLINK_END\n\n");
-        fd.write("NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(%s, nsDOMEvent)\n" % classname)
-        for c in ccattributes:
-            fd.write("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(m%s)\n" % firstCap(a.name))
-        fd.write("NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END\n\n");
+    fd.write("NS_IMPL_CYCLE_COLLECTION_CLASS(%s)\n\n" % classname)
+    fd.write("NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(%s, %s)\n" % (classname, basename))
+    for c in ccattributes:
+        fd.write("  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(m%s)\n" % firstCap(c.name))
+    fd.write("NS_IMPL_CYCLE_COLLECTION_UNLINK_END\n\n");
+    fd.write("NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(%s, %s)\n" % (classname, basename))
+    for c in ccattributes:
+        fd.write("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(m%s)\n" % firstCap(c.name))
+    fd.write("NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END\n\n");
 
-    fd.write("NS_IMPL_ADDREF_INHERITED(%s, nsDOMEvent)\n" % classname)
-    fd.write("NS_IMPL_RELEASE_INHERITED(%s, nsDOMEvent)\n\n" % classname)
+    fd.write("NS_IMPL_ADDREF_INHERITED(%s, %s)\n" % (classname, basename))
+    fd.write("NS_IMPL_RELEASE_INHERITED(%s, %s)\n\n" % (classname, basename))
 
     fd.write("DOMCI_DATA(%s, %s)\n\n" % (eventname, classname))
 
-    if len(ccattributes) > 0:
-        fd.write("NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(%s)\n" % classname)
-    else:
-        fd.write("NS_INTERFACE_MAP_BEGIN(%s)\n" % classname)
-
+    fd.write("NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(%s)\n" % classname)
     fd.write("  NS_INTERFACE_MAP_ENTRY(nsIDOM%s)\n" % eventname)
     fd.write("  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(%s)\n" % eventname)
-    fd.write("NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)\n\n")
-
+    fd.write("NS_INTERFACE_MAP_END_INHERITING(%s)\n\n" % basename)
 
     fd.write("nsresult\n")
     fd.write("%s::InitFromCtor(const nsAString& aType, JSContext* aCx, jsval* aVal)\n" % classname)
@@ -300,6 +313,8 @@ def write_cpp(eventname, iface, fd):
     fd.write("  nsresult rv = d.Init(aCx, aVal);\n")
     fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
     fd.write("  return Init%s(aType, d.bubbles, d.cancelable" % eventname)
+    for a in baseattributes:
+      fd.write(", d.%s" % a.name)
     for a in attributes:
         fd.write(", d.%s" % a.name)
     fd.write(");\n")
@@ -308,10 +323,15 @@ def write_cpp(eventname, iface, fd):
     fd.write("NS_IMETHODIMP\n")
     fd.write("%s::Init%s(" % (classname, eventname))
     fd.write("const nsAString& aType, bool aCanBubble, bool aCancelable")
+    for a in baseattributes:
+      writeAttributeParams(fd, a)
     for a in attributes:
         writeAttributeParams(fd, a)
     fd.write(")\n{\n")
-    fd.write("  nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);\n")
+    fd.write("  nsresult rv = %s::Init%s(aType, aCanBubble, aCancelable" % (basename, basename[5:]))
+    for a in baseattributes:
+      fd.write(", a%s" % firstCap(a.name))
+    fd.write(");\n");
     fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
     for a in attributes:
         fd.write("  m%s = a%s;\n" % (firstCap(a.name), firstCap(a.name)))
