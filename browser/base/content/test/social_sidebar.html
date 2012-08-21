@@ -8,6 +8,11 @@
         port.onmessage = function(e) {
           var topic = e.data.topic;
           switch (topic) {
+            case "test-chatbox-open":
+              navigator.mozSocial.openChatWindow("social_chat.html", function(chatwin) {
+                port.postMessage({topic: "chatbox-opened", result: chatwin ? "ok" : "failed"});
+              });
+              break;
             case "test-service-window":
               win = navigator.mozSocial.openServiceWindow("social_window.html", "test-service-window", "width=300,height=300");
               break;

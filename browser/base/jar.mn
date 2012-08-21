@@ -102,6 +102,7 @@ browser.jar:
         content/browser/win6BrowserOverlay.xul        (content/win6BrowserOverlay.xul)
 #endif
         content/browser/social-icon.png               (content/social-icon.png)
+        content/browser/socialchat.xml                (content/socialchat.xml)
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html

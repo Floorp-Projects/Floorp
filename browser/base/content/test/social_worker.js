@@ -39,6 +39,15 @@ onconnect = function(e) {
         if (testPort && event.data.result == "ok")
           testPort.postMessage({topic:"got-panel-message"});
         break;
+      case "test-chatbox-open":
+        sidebarPort.postMessage({topic:"test-chatbox-open"});
+        break;
+      case "chatbox-message":
+        testPort.postMessage({topic:"got-chatbox-message", result: event.data.result});
+        break;
+      case "chatbox-visibility":
+        testPort.postMessage({topic:"got-chatbox-visibility", result: event.data.result});
+        break;
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
         port.postMessage({topic: "social.initialize-response"});
