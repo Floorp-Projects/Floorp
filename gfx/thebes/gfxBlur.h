@@ -9,7 +9,6 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxTypes.h"
-#include "gfxUtils.h"
 
 namespace mozilla {
   namespace gfx {

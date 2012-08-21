@@ -27,6 +27,8 @@ const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
 const ViewID FrameMetrics::ROOT_SCROLL_ID = 1;
 const ViewID FrameMetrics::START_SCROLL_ID = 2;
 
+PRUint8 gLayerManagerLayerBuilder;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
 FILE*
 FILEOrDefault(FILE* aFile)

@@ -7,15 +7,21 @@
 #ifndef VIDEOFRAMECONTAINER_H_
 #define VIDEOFRAMECONTAINER_H_
 
-#include "ImageContainer.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "gfxPoint.h"
+#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 class nsHTMLMediaElement;
 
 namespace mozilla {
+
+namespace layers {
+class Image;
+class ImageContainer;
+}
 
 /**
  * This object is used in the decoder backend threads and the main thread
@@ -34,15 +40,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameContainer)
 
   VideoFrameContainer(nsHTMLMediaElement* aElement,
-                      already_AddRefed<ImageContainer> aContainer)
-    : mElement(aElement),
-      mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
-      mIntrinsicSizeChanged(false), mImageSizeChanged(false),
-      mNeedInvalidation(true)
-  {
-    NS_ASSERTION(aElement, "aElement must not be null");
-    NS_ASSERTION(mImageContainer, "aContainer must not be null");
-  }
+                      already_AddRefed<ImageContainer> aContainer);
+  ~VideoFrameContainer();
 
   // Call on any thread
   void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
@@ -53,7 +52,7 @@ public:
   double GetFrameDelay();
   // Call on main thread
   void Invalidate();
-  ImageContainer* GetImageContainer() { return mImageContainer; }
+  ImageContainer* GetImageContainer();
   void ForgetElement() { mElement = nullptr; }
 
 protected:

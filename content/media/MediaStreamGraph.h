@@ -15,6 +15,7 @@
 #include "TimeVarying.h"
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
+#include "nsThreadUtils.h"
 
 class nsDOMMediaStream;
 
