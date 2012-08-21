@@ -263,15 +263,9 @@ nsDirectoryService::RealInit()
     NS_ASSERTION(!gService, 
                  "nsDirectoryService::RealInit Mustn't initialize twice!");
 
-    nsresult rv;
-
     nsRefPtr<nsDirectoryService> self = new nsDirectoryService();
     if (!self)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = NS_NewISupportsArray(getter_AddRefs(((nsDirectoryService*) self)->mProviders));
-    if (NS_FAILED(rv))
-        return rv;
 
     NS_RegisterStaticAtoms(directory_atoms);
     
@@ -279,12 +273,7 @@ nsDirectoryService::RealInit()
     nsAppFileLocationProvider *defaultProvider = new nsAppFileLocationProvider;
     if (!defaultProvider)
         return NS_ERROR_OUT_OF_MEMORY;
-    // AppendElement returns true for success.
-    rv = static_cast<bool>(((nsDirectoryService*) self)
-                           ->mProviders->AppendElement(defaultProvider))
-        ? NS_OK : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv))
-        return rv;
+    self->mProviders.AppendElement(defaultProvider);
 
     self.swap(gService);
     return NS_OK;
@@ -408,7 +397,11 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     // it is not one of our defaults, lets check any providers
     FileData fileData(prop, uuid);
 
-    mProviders->EnumerateBackwards(FindProviderFile, &fileData);
+    for (int32_t i = mProviders.Length() - 1; i >= 0; i--) {
+        if (!FindProviderFile(mProviders[i], &fileData)) {
+            break;
+        }
+    }
     if (fileData.data)
     {
         if (fileData.persistent)
@@ -480,18 +473,11 @@ nsDirectoryService::Has(const char *prop, bool *_retval)
 NS_IMETHODIMP
 nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
 {
-    nsresult rv;
     if (!prov)
         return NS_ERROR_FAILURE;
-    if (!mProviders)
-        return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(prov, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // AppendElement returns true for success.
-    return static_cast<bool>(mProviders->AppendElement(supports))
-        ? NS_OK : NS_ERROR_FAILURE;
+    mProviders.AppendElement(prov);
+    return NS_OK;
 }
 
 void
@@ -529,18 +515,11 @@ nsDirectoryService::RegisterCategoryProviders()
 NS_IMETHODIMP
 nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
 {
-    nsresult rv;
     if (!prov)
         return NS_ERROR_FAILURE;
-    if (!mProviders)
-        return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(prov, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // RemoveElement returns true for success.
-    return static_cast<bool>(mProviders->RemoveElement(supports))
-        ? NS_OK : NS_ERROR_FAILURE;
+    mProviders.RemoveElement(prov);
+    return NS_OK;
 }
 
 // DO NOT ADD ANY LOCATIONS TO THIS FUNCTION UNTIL YOU TALK TO: dougt@netscape.com.
