@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_OMX_H_
-#define ANDROID_OMX_H_
+#ifndef OMX_CLIENT_H_
+
+#define OMX_CLIENT_H_
 
 #include <media/IOMX.h>
-#include <utils/threads.h>
-#include <utils/KeyedVector.h>
-
-#if !defined(STAGEFRIGHT_EXPORT)
-#define STAGEFRIGHT_EXPORT
-#endif
 
 namespace android {
 
-struct OMXMaster;
-class OMXNodeInstance;
-class STAGEFRIGHT_EXPORT OMX {
+class OMXClient {
 public:
-  OMX();
-  virtual ~OMX();
+    OMXClient();
+
+    status_t connect();
+    void disconnect();
+
+    sp<IOMX> interface() {
+        return mOMX;
+    }
 
 private:
-  char reserved[96];
+    sp<IOMX> mOMX;
+
+    OMXClient(const OMXClient &);
+    OMXClient &operator=(const OMXClient &);
 };
+
 }  // namespace android
 
-#endif  // ANDROID_OMX_H_
+#endif  // OMX_CLIENT_H_
