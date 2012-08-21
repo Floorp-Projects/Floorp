@@ -37,20 +37,21 @@ var tests = {
 
     let port = Social.provider.port;
     ok(port, "provider has a port");
-    port.postMessage({topic: "test-init"});
-    Social.provider.port.onmessage = function (e) {
+    port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
         case "got-panel-message":
           ok(true, "got panel message");
-          // Wait for the panel to close before ending the test
-          let panel = document.getElementById("social-notification-panel");
-          panel.addEventListener("popuphidden", function hiddenListener() {
-            panel.removeEventListener("popuphidden", hiddenListener);
-            next();
-          });
-          panel.hidePopup();
           break;
+        case "got-social-panel-visibility":
+          if (e.data.result == "shown") {
+            ok(true, "panel shown");
+            let panel = document.getElementById("social-notification-panel");
+            panel.hidePopup();
+          } else if (e.data.result == "hidden") {
+            ok(true, "panel hidden");
+            next();
+          }
         case "got-sidebar-message":
           // The sidebar message will always come first, since it loads by default
           ok(true, "got sidebar message");
@@ -59,6 +60,7 @@ var tests = {
           break;
       }
     }
+    port.postMessage({topic: "test-init"});
 
     // Our worker sets up ambient notification at the same time as it responds to
     // the workerAPI initialization. If it's already initialized, we can
