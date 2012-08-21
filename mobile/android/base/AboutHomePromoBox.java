@@ -54,7 +54,6 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        Log.d(LOGTAG, "I work out.");
         switch (mType) {
             case SYNC:
                 final Context context = v.getContext();
