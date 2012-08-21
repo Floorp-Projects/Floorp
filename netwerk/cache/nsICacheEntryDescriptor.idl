@@ -15,7 +15,7 @@ interface nsIFile;
 interface nsICacheMetaDataVisitor;
 
 
-[scriptable, uuid(90b17d31-46aa-4fb1-a206-473c966cbc18)]
+[scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
 interface nsICacheEntryDescriptor : nsICacheEntryInfo
 {
     /**
@@ -117,14 +117,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      */
     void doom();
     void doomAndFailPendingRequests(in nsresult status);
-
-    /**
-     * Asynchronously doom an entry. Listener will be notified about the status
-     * of the operation. Null may be passed if caller doesn't care about the
-     * result.
-     */
-    void asyncDoom(in nsICacheListener listener);
-
+    
     /**
      * A writer must validate this cache object before any readers are given
      * a descriptor to the object.
