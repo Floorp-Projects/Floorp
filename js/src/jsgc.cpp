@@ -1614,7 +1614,7 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
 void
 ArenaLists::finalizeNow(FreeOp *fop, AllocKind thingKind)
 {
-    JS_ASSERT(!fop->onBackgroundThread());
+    JS_ASSERT(!IsBackgroundFinalized(thingKind));
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE ||
               backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED);
 
@@ -1630,7 +1630,6 @@ void
 ArenaLists::queueForForegroundSweep(FreeOp *fop, AllocKind thingKind)
 {
     JS_ASSERT(!IsBackgroundFinalized(thingKind));
-    JS_ASSERT(!fop->onBackgroundThread());
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
     JS_ASSERT(!arenaListsToSweep[thingKind]);
 
@@ -1642,7 +1641,6 @@ inline void
 ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 {
     JS_ASSERT(IsBackgroundFinalized(thingKind));
-    JS_ASSERT(!fop->onBackgroundThread());
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(!fop->runtime()->gcHelperThread.sweeping());
@@ -2826,7 +2824,7 @@ SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
      * We must finalize in the correct order, see comments in
      * finalizeObjects.
      */
-    FreeOp fop(rt, false, false);
+    FreeOp fop(rt, false);
     for (int phase = 0 ; phase < BackgroundPhaseCount ; ++phase) {
         for (JSCompartment *c = rt->gcSweepingCompartments; c; c = c->gcNextCompartment) {
             for (int index = 0 ; index < BackgroundPhaseLength[phase] ; ++index) {
@@ -3694,7 +3692,7 @@ BeginSweepPhase(JSRuntime *rt)
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.purge();
 
-    FreeOp fop(rt, rt->gcSweepOnBackgroundThread, false);
+    FreeOp fop(rt, rt->gcSweepOnBackgroundThread);
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
@@ -3790,7 +3788,7 @@ static bool
 SweepPhase(JSRuntime *rt, SliceBudget &sliceBudget)
 {
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
-    FreeOp fop(rt, rt->gcSweepOnBackgroundThread, false);
+    FreeOp fop(rt, rt->gcSweepOnBackgroundThread);
 
     for (; rt->gcSweepPhase < FinalizePhaseCount ; ++rt->gcSweepPhase) {
         gcstats::AutoPhase ap(rt->gcStats, FinalizePhaseStatsPhase[rt->gcSweepPhase]);
@@ -3820,7 +3818,7 @@ static void
 EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReason)
 {
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
-    FreeOp fop(rt, rt->gcSweepOnBackgroundThread, false);
+    FreeOp fop(rt, rt->gcSweepOnBackgroundThread);
 
 #ifdef DEBUG
     PropertyTree::dumpShapes(rt);
