@@ -526,6 +526,7 @@ HISTOGRAM(PANORAMA_MEDIAN_TABS_IN_GROUPS_COUNT, 1, 100, 15, EXPONENTIAL, "Median
 HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_TIME, 20, 600000, 20, EXPONENTIAL, "Time for the initial conversion of a XUL places database (ms)")
 HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS, 1, 50000, 20, EXPONENTIAL, "Number of bookmarks in the original XUL places database")
 HISTOGRAM(BROWSERPROVIDER_XUL_IMPORT_HISTORY, 1, 1000000, 20, EXPONENTIAL, "Number of history entries in the original XUL places database")
+HISTOGRAM_FLAG(OUT_OF_MEMORY_KILLED, "Killed due to an OOM condition")
 #endif
 
 /**
