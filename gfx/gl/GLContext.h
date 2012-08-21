@@ -1385,15 +1385,16 @@ public:
     already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader);
 
     /**
-     * Call ReadPixels into an existing gfxImageSurface for the given bounds.
-     * The image surface must be using image format RGBA32 or RGB24.
+     * Call ReadPixels into an existing gfxImageSurface.
+     * The image surface must be using image format RGBA32 or RGB24,
+     * and must have stride == width*4.
+     * Note that neither ReadPixelsIntoImageSurface nor
+     * ReadScreenIntoImageSurface call dest->Flush/MarkDirty.
      */
-    void THEBES_API ReadPixelsIntoImageSurface(GLint aX, GLint aY,
-                                    GLsizei aWidth, GLsizei aHeight,
-                                    gfxImageSurface *aDest);
+    void THEBES_API ReadPixelsIntoImageSurface(gfxImageSurface* dest);
 
     // Similar to ReadPixelsIntoImageSurface, but pulls from the screen
-    // instead of the currenly bound framebuffer.
+    // instead of the currently bound framebuffer.
     void ReadScreenIntoImageSurface(gfxImageSurface* dest);
 
     /**

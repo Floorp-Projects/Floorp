@@ -1769,16 +1769,15 @@ GLContext::MarkDestroyed()
     mSymbols.Zero();
 }
 
-static void SwapRAndBComponents(gfxImageSurface* aSurf)
+static void SwapRAndBComponents(gfxImageSurface* surf)
 {
-  gfxIntSize size = aSurf->GetSize();
-  for (int j = 0; j < size.height; ++j) {
-    PRUint32 *row = (PRUint32*) (aSurf->Data() + aSurf->Stride() * j);
-    for (int i = 0; i < size.width; ++i) {
-      *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
-      row++;
+    for (int j = 0; j < surf->Height(); ++j) {
+        uint32_t* row = (uint32_t*)(surf->Data() + surf->Stride() * j);
+        for (int i = 0; i < surf->Width(); ++i) {
+            *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
+            row++;
+        }
     }
-  }
 }
 
 static already_AddRefed<gfxImageSurface> YInvertImageSurface(gfxImageSurface* aSurf)
@@ -2005,32 +2004,24 @@ GLContext::ReadScreenIntoImageSurface(gfxImageSurface* dest)
     fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&boundFB);
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
-    ReadPixelsIntoImageSurface(0, 0, dest->Width(), dest->Height(), dest);
+    ReadPixelsIntoImageSurface(dest);
 
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, boundFB);
 }
 
 void
-GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
-                                      GLsizei aWidth, GLsizei aHeight,
-                                      gfxImageSurface *aDest)
+GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
 {
+    MOZ_ASSERT(dest->Format() == gfxASurface::ImageFormatARGB32 ||
+               dest->Format() == gfxASurface::ImageFormatRGB24);
+
+    MOZ_ASSERT(dest->Stride() == dest->Width() * 4);
+    MOZ_ASSERT(dest->Format() == gfxASurface::ImageFormatARGB32 ||
+               dest->Format() == gfxASurface::ImageFormatRGB24);
+
+    MOZ_ASSERT(dest->Stride() == dest->Width() * 4);
+
     MakeCurrent();
-
-    if (aDest->Format() != gfxASurface::ImageFormatARGB32 &&
-        aDest->Format() != gfxASurface::ImageFormatRGB24)
-    {
-        NS_WARNING("ReadPixelsIntoImageSurface called with invalid image format");
-        return;
-    }
-
-    if (aDest->Width() != aWidth ||
-        aDest->Height() != aHeight ||
-        aDest->Stride() != aWidth * 4)
-    {
-        NS_WARNING("ReadPixelsIntoImageSurface called with wrong size or stride surface");
-        return;
-    }
 
     GLint currentPackAlignment = 0;
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &currentPackAlignment);
@@ -2043,20 +2034,14 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
 
     GetOptimalReadFormats(this, format, datatype);
 
-    fReadPixels(0, 0, aWidth, aHeight,
+    fReadPixels(0, 0,
+                dest->Width(), dest->Height(),
                 format, datatype,
-                aDest->Data());
+                dest->Data());
 
-    // Output should be in BGRA, so swap if RGBA
+    // Output should be in BGRA, so swap if RGBA.
     if (format == LOCAL_GL_RGBA) {
-        // swap B and R bytes
-        for (int j = 0; j < aHeight; ++j) {
-            PRUint32 *row = (PRUint32*) (aDest->Data() + aDest->Stride() * j);
-            for (int i = 0; i < aWidth; ++i) {
-                *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
-                row++;
-            }
-        }
+        SwapRAndBComponents(dest);
     }
 
     if (currentPackAlignment != 4)
