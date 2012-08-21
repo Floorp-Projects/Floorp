@@ -427,26 +427,6 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         if (!wrapperAC.enter(cx, wrapper))
             return false;
 
-        // Make a temporary exception for objects in a chrome sandbox to help
-        // out jetpack. See bug 784233.
-        if (!JS_ObjectIsFunction(cx, wrappedObject) &&
-            strcmp(js::GetObjectJSClass(JS_GetGlobalForObject(cx, wrappedObject))->name, "Sandbox"))
-        {
-            // This little loop hole will go away soon! See bug 553102.
-            nsCOMPtr<nsPIDOMWindow> win =
-                do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, wrapper));
-            if (win) {
-                nsCOMPtr<nsIDocument> doc =
-                    do_QueryInterface(win->GetExtantDocument());
-                if (doc) {
-                    doc->WarnOnceAbout(nsIDocument::eNoExposedProps,
-                                       /* asError = */ true);
-                }
-            }
-
-            perm = PermitPropertyAccess;
-            return true;
-        }
         return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
