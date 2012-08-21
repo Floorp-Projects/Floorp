@@ -379,6 +379,10 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         NS_ASSERTION(false, "All functions should be implemented?");
     }
   }
+  if (aFunctions.Length() == 0) {
+    result = new nsCSSValueList();
+    result->mValue.SetNoneValue();
+  }
   return result.forget();
 }
 
@@ -388,9 +392,8 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   mAnimations = aAnimations;
   mAnimationData.Clear();
   for (PRUint32 i = 0; i < mAnimations.Length(); i++) {
-    AnimData data;
-    InfallibleTArray<css::ComputedTimingFunction*>* functions =
-      &data.mFunctions;
+    AnimData* data = mAnimationData.AppendElement();
+    InfallibleTArray<css::ComputedTimingFunction*>& functions = data->mFunctions;
     nsTArray<AnimationSegment> segments = mAnimations.ElementAt(i).segments();
     for (PRUint32 j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
@@ -411,56 +414,34 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
           break;
         }
       }
-      functions->AppendElement(ctf);
+      functions.AppendElement(ctf);
     }
 
     // Precompute the nsStyleAnimation::Values that we need if this is a transform
     // animation.
-    InfallibleTArray<nsStyleAnimation::Value>* startValues =
-      &data.mStartValues;
-    InfallibleTArray<nsStyleAnimation::Value>* endValues =
-      &data.mEndValues;
+    InfallibleTArray<nsStyleAnimation::Value>& startValues = data->mStartValues;
+    InfallibleTArray<nsStyleAnimation::Value>& endValues = data->mEndValues;
     for (PRUint32 j = 0; j < mAnimations[i].segments().Length(); j++) {
       const AnimationSegment& segment = mAnimations[i].segments()[j];
+      nsStyleAnimation::Value* startValue = startValues.AppendElement();
+      nsStyleAnimation::Value* endValue = endValues.AppendElement();
       if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
         const InfallibleTArray<TransformFunction>& startFunctions =
           segment.startState().get_ArrayOfTransformFunction();
-        nsStyleAnimation::Value startValue;
-        nsCSSValueList* startList;
-        if (startFunctions.Length() > 0) {
-          startList = CreateCSSValueList(startFunctions);
-        } else {
-          startList = new nsCSSValueList();
-          startList->mValue.SetNoneValue();
-        }
-        startValue.SetAndAdoptCSSValueListValue(startList, nsStyleAnimation::eUnit_Transform);
-        startValues->AppendElement(startValue);
+        startValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(startFunctions),
+                                                 nsStyleAnimation::eUnit_Transform);
 
         const InfallibleTArray<TransformFunction>& endFunctions =
           segment.endState().get_ArrayOfTransformFunction();
-        nsStyleAnimation::Value endValue;
-        nsCSSValueList* endList;
-        if (endFunctions.Length() > 0) {
-          endList = CreateCSSValueList(endFunctions);
-        } else {
-          endList = new nsCSSValueList();
-          endList->mValue.SetNoneValue();
-        }
-        endValue.SetAndAdoptCSSValueListValue(endList, nsStyleAnimation::eUnit_Transform);
-        endValues->AppendElement(endValue);
+        endValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(endFunctions),
+                                               nsStyleAnimation::eUnit_Transform);
       } else {
         NS_ASSERTION(segment.endState().type() == Animatable::Tfloat,
                      "Unknown Animatable type");
-        nsStyleAnimation::Value startValue;
-        startValue.SetFloatValue(segment.startState().get_float());
-        startValues->AppendElement(startValue);
-
-        nsStyleAnimation::Value endValue;
-        endValue.SetFloatValue(segment.endState().get_float());
-        endValues->AppendElement(endValue);
+        startValue->SetFloatValue(segment.startState().get_float());
+        endValue->SetFloatValue(segment.endState().get_float());
       }
     }
-    mAnimationData.AppendElement(data);
   }
 
   Mutated();
