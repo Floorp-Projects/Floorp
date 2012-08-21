@@ -2452,6 +2452,7 @@ CSSParserImpl::ParseSupportsConditionInParens(bool& aConditionMet)
   }
 
   if (!ParseSupportsConditionInParensInsideParens(aConditionMet)) {
+    SkipUntil(')');
     return false;
   }
 
