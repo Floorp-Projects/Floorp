@@ -484,9 +484,6 @@
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/AlarmsManager.js
 @BINPATH@/components/AlarmsManager.manifest
-@BINPATH@/components/TCPSocket.js
-@BINPATH@/components/TCPSocket.manifest
-
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
