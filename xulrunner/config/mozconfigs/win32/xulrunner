@@ -1,3 +1,5 @@
+. "$topsrcdir/xulrunner/config/mozconfigs/common"
+
 export MOZILLA_OFFICIAL=1
 export JAVA_HOME=/d/jdk1.6.0_14
 
