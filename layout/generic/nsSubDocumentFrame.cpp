@@ -811,12 +811,14 @@ public:
       mPresShell->FlushPendingNotifications(Flush_Frames);
     }
     nsIFrame* frame = mFrameElement->GetPrimaryFrame();
-    if (!frame && mHideViewerIfFrameless) {
-      // The frame element has no nsIFrame. Hide the nsFrameLoader,
-      // which destroys the presentation.
+    if ((!frame && mHideViewerIfFrameless) ||
+        mPresShell->IsDestroying()) {
+      // Either the frame element has no nsIFrame or the presshell is being
+      // destroyed. Hide the nsFrameLoader, which destroys the presentation,
+      // and clear our references to the stashed presentation.
       mFrameLoader->SetDetachedSubdocView(nullptr, nullptr);
       mFrameLoader->Hide();
-   }
+    }
     return NS_OK;
   }
 private:
