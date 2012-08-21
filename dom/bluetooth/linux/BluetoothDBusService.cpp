@@ -1268,12 +1268,11 @@ BluetoothDBusService::GetPairedDevicePropertiesInternal(const nsTArray<nsString>
     NS_ERROR("Bluetooth service not started yet!");
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(!NS_IsMainThread());
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
   nsRefPtr<nsRunnable> func(new BluetoothPairedDevicePropertiesRunnable(runnable, aDeviceAddresses));
   if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
+    NS_WARNING("Cannot dispatch task!");
     return NS_ERROR_FAILURE;
   }
 
