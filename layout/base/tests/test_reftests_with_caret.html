@@ -102,7 +102,6 @@ var isWindows = /WINNT/.test(SpecialPowers.OS);
 var tests = [
     [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
     [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
-    [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
     [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
     [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
     [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
@@ -115,6 +114,7 @@ if (!isWindows) {
   tests.push([ 'bug240933-1.html' , 'bug240933-1-ref.html' ]); // bug 681144
   tests.push([ 'bug240933-2.html' , 'bug240933-1-ref.html' ]); // bug 681162
   tests.push([ 'bug389321-1.html' , 'bug389321-1-ref.html' ]); // bug 683163
+  tests.push([ 'bug482484.html'   , 'bug482484-ref.html'   ]); // bug 688575
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]); // bug 681152
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]); // bug 681331
   tests.push([ 'bug597519-1.html' , 'bug597519-1-ref.html' ]); // bug 680579
