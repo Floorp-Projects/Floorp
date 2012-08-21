@@ -26,7 +26,6 @@
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
-#include "ImageLayers.h"
 #include "BasicLayers.h"
 #include "imgIEncoder.h"
 

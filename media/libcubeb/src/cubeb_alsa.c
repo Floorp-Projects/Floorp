@@ -6,7 +6,7 @@
  */
 #undef NDEBUG
 #define _BSD_SOURCE
-#define _POSIX_SOURCE
+#define _XOPEN_SOURCE 500
 #include <pthread.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -727,9 +727,14 @@ cubeb_stream_start(cubeb_stream * stm)
 
   pthread_mutex_lock(&stm->mutex);
   snd_pcm_pause(stm->pcm, 0);
+  gettimeofday(&stm->last_activity, NULL);
   pthread_mutex_unlock(&stm->mutex);
 
   pthread_mutex_lock(&ctx->mutex);
+  if (stm->state != INACTIVE) {
+    pthread_mutex_unlock(&ctx->mutex);
+    return CUBEB_ERROR;
+  }
   cubeb_set_stream_state(stm, RUNNING);
   pthread_mutex_unlock(&ctx->mutex);
 

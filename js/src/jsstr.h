@@ -199,6 +199,9 @@ js_strncpy(jschar *dst, const jschar *src, size_t nelem)
     return js::PodCopy(dst, src, nelem);
 }
 
+extern jschar *
+js_strdup(JSContext *cx, const jschar *s);
+
 namespace js {
 
 /*

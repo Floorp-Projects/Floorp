@@ -373,10 +373,10 @@ public:
    */
   void FireTimeUpdate(bool aPeriodic);
 
-  MediaStream* GetMediaStream()
+  MediaStream* GetSrcMediaStream()
   {
-    NS_ASSERTION(mStream, "Don't call this when not playing a stream");
-    return mStream->GetStream();
+    NS_ASSERTION(mSrcStream, "Don't call this when not playing a stream");
+    return mSrcStream->GetStream();
   }
 
 protected:
@@ -403,11 +403,11 @@ protected:
   /**
    * Initialize the media element for playback of mSrcAttrStream
    */
-  void SetupMediaStreamPlayback();
+  void SetupSrcMediaStreamPlayback();
   /**
-   * Stop playback on mStream.
+   * Stop playback on mSrcStream.
    */
-  void EndMediaStreamPlayback();
+  void EndSrcMediaStreamPlayback();
 
   /**
    * Returns an nsDOMMediaStream containing the played contents of this
@@ -623,7 +623,7 @@ protected:
   void ProcessMediaFragmentURI();
 
   // The current decoder. Load() has been called on this decoder.
-  // At most one of mDecoder and mStream can be non-null.
+  // At most one of mDecoder and mSrcStream can be non-null.
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   // A reference to the VideoFrameContainer which contains the current frame
@@ -636,8 +636,8 @@ protected:
 
   // Holds a reference to the DOM wrapper for the MediaStream that we're
   // actually playing.
-  // At most one of mDecoder and mStream can be non-null.
-  nsRefPtr<nsDOMMediaStream> mStream;
+  // At most one of mDecoder and mSrcStream can be non-null.
+  nsRefPtr<nsDOMMediaStream> mSrcStream;
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
@@ -647,8 +647,8 @@ protected:
   };
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Holds a reference to the MediaStreamListener attached to mStream. STRONG!
-  StreamListener* mStreamListener;
+  // Holds a reference to the MediaStreamListener attached to mSrcStream. STRONG!
+  StreamListener* mSrcStreamListener;
 
   // Holds a reference to the first channel we open to the media resource.
   // Once the decoder is created, control over the channel passes to the

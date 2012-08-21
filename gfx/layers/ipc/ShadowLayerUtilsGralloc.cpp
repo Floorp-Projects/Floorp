@@ -15,6 +15,7 @@
 #include "ShadowLayerUtilsGralloc.h"
 
 #include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 #include "sampler.h"
 
@@ -192,6 +193,24 @@ ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
   // Nothing to be done for gralloc.
 }
 
+/*static*/ PGrallocBufferParent*
+GrallocBufferActor::Create(const gfxIntSize& aSize,
+                           const uint32_t& aFormat,
+                           const uint32_t& aUsage,
+                           MaybeMagicGrallocBufferHandle* aOutHandle)
+{
+  GrallocBufferActor* actor = new GrallocBufferActor();
+  *aOutHandle = null_t();
+  sp<GraphicBuffer> buffer(
+    new GraphicBuffer(aSize.width, aSize.height, aFormat, aUsage));
+  if (buffer->initCheck() != OK)
+    return actor;
+
+  actor->mGraphicBuffer = buffer;
+  *aOutHandle = MagicGrallocBufferHandle(buffer);
+  return actor;
+}
+
 bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 {
@@ -244,7 +263,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc);
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, /* external */ false);
   return true;
 }
 

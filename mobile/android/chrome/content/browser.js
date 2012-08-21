@@ -1361,19 +1361,17 @@ var NativeWindow = {
       if (!rootElement)
         rootElement = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY)
 
-      this.menuitems = null;
+      this.menuitems = {};
+      let menuitemsSet = false;
       let element = rootElement;
       if (!element)
         return;
 
       while (element) {
         for each (let item in this.items) {
-          // since we'll have to spin through this for each element, check that
-          // it is not already in the list
-          if ((!this.menuitems || !this.menuitems[item.id]) && item.matches(element, aX, aY)) {
-            if (!this.menuitems)
-              this.menuitems = {};
+          if (!this.menuitems[item.id] && item.matches(element)) {
             this.menuitems[item.id] = item;
+            menuitemsSet = true;
           }
         }
 
@@ -1383,15 +1381,14 @@ var NativeWindow = {
       }
 
       // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
-      if (this.menuitems) {
+      if (menuitemsSet) {
         let event = rootElement.ownerDocument.createEvent("MouseEvent");
         event.initMouseEvent("contextmenu", true, true, content,
                              0, aX, aY, aX, aY, false, false, false, false,
                              0, null);
         rootElement.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
         rootElement.dispatchEvent(event);
-      } else {
-        // Otherwise, let the selection handler take over
+      } else if (SelectionHandler.canSelect(rootElement)) {
         SelectionHandler.startSelection(rootElement, aX, aY);
       }
     },
@@ -1643,6 +1640,14 @@ var SelectionHandler = {
     }
 
     this._ignoreCollapsedSelection = false;
+  },
+
+  /** Returns true if the provided element can be selected in text selection, false otherwise. */
+  canSelect: function sh_canSelect(aElement) {
+    return !(aElement instanceof Ci.nsIDOMHTMLButtonElement ||
+             aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
+             aElement instanceof Ci.nsIDOMHTMLImageElement ||
+             aElement instanceof Ci.nsIDOMHTMLMediaElement);
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -2096,6 +2101,7 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
+  this.savedArticle = null;
 
   this.create(aURL, aParams);
 }
@@ -2188,7 +2194,7 @@ Tab.prototype = {
           }
         };
         sendMessageToJava(message);
-        dump("Handled load error: " + e)
+        dump("Handled load error: " + e);
       }
     }
   },
@@ -2835,8 +2841,16 @@ Tab.prototype = {
           // Do nothing if there's no article or the page in this tab has
           // changed
           let tabURL = this.browser.currentURI.specIgnoringRef;
-          if (article == null || (article.url != tabURL))
+          if (article == null || (article.url != tabURL)) {
+            // Don't clear the article for about:reader pages since we want to
+            // use the article from the previous page
+            if (!/^about:reader/i.test(tabURL))
+              this.savedArticle = null;
+
             return;
+          }
+
+          this.savedArticle = article;
 
           sendMessageToJava({
             gecko: {
@@ -6343,7 +6357,8 @@ let Reader = {
     switch(aTopic) {
       case "Reader:Add": {
         let tab = BrowserApp.getTabForId(aData);
-        let url = tab.browser.contentWindow.location.href;
+        let currentURI = tab.browser.currentURI;
+        let url = currentURI.spec;
 
         let sendResult = function(success, title) {
           this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
@@ -6358,7 +6373,7 @@ let Reader = {
           });
         }.bind(this);
 
-        this.parseDocumentFromTab(aData, function(article) {
+        this.getArticleForTab(aData, currentURI.specIgnoringRef, function (article) {
           if (!article) {
             sendResult(false, "");
             return;
@@ -6415,6 +6430,18 @@ let Reader = {
     } catch (e) {
       this.log("Error parsing document from URL: " + e);
       this._runCallbacksAndFinish(request, null);
+    }
+  },
+
+  getArticleForTab: function Reader_getArticleForTab(tabId, url, callback) {
+    let tab = BrowserApp.getTabForId(tabId);
+    let article = tab.savedArticle;
+
+    if (article && article.url == url) {
+      this.log("Saved article found in tab");
+      callback(article);
+    } else {
+      this.parseDocumentFromURL(url, callback);
     }
   },
 

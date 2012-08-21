@@ -16,6 +16,10 @@
 #include "GLContextProvider.h"
 #include "gfxPlatform.h"
 
+#ifdef XP_MACOSX
+#include "mozilla/gfx/MacIOSurface.h"
+#endif
+
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
 #include "WGLLibrary.h"
@@ -207,10 +211,9 @@ CanvasLayerOGL::UpdateSurface()
       nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
         GetTempSurface(size, gfxASurface::ImageFormatARGB32);
 
-      mCanvasGLContext->ReadPixelsIntoImageSurface(0, 0,
-                                                   mBounds.width,
-                                                   mBounds.height,
-                                                   updatedAreaImageSurface);
+      updatedAreaImageSurface->Flush();
+      mCanvasGLContext->ReadScreenIntoImageSurface(updatedAreaImageSurface);
+      updatedAreaImageSurface->MarkDirty();
 
       updatedAreaSurface = updatedAreaImageSurface;
     }

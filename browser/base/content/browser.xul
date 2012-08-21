@@ -269,7 +269,7 @@
     </panel>
 
     <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
-      <browser id="social-notification-browser" type="content" flex="1"/>
+      <box id="social-notification-box" flex="1"></box>
     </panel>
 
     <menupopup id="inspector-node-popup">
@@ -685,21 +685,6 @@
             </menupopup>
           </button>
           <hbox id="social-status-iconbox" flex="1">
-            <box class="social-notification-icon-container" collapsed="true"
-                     onclick="SocialToolbar.showAmbientPopup(this);">
-              <image class="social-notification-icon-image"/>
-              <box class="social-notification-icon-counter" collapsed="true"/>
-            </box>
-            <box class="social-notification-icon-container" collapsed="true"
-                     onclick="SocialToolbar.showAmbientPopup(this);">
-              <image class="social-notification-icon-image"/>
-              <box class="social-notification-icon-counter" collapsed="true"/>
-            </box>
-            <box class="social-notification-icon-container" collapsed="true"
-                     onclick="SocialToolbar.showAmbientPopup(this);">
-              <image class="social-notification-icon-image"/>
-              <box class="social-notification-icon-counter" collapsed="true"/>
-            </box>
           </hbox>
         </hbox>
       </toolbaritem>
@@ -1066,6 +1051,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="contentAreaClick(event, false);"/>
+      <chatbar id="pinnedchats" layer="true" mousethrough="always"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>

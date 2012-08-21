@@ -46,6 +46,7 @@
 #include "sampler.h"
 #include "nsCSSRenderingBorders.h"
 #include "mozilla/css/ImageLoader.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -2124,9 +2125,28 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       gfxRect fillRect =
         forceRepeatToCoverTiles ? areaToFill : tileRect.Intersect(areaToFill);
       ctx->NewPath();
-      ctx->Translate(tileRect.TopLeft());
+      // If we can snap the gradient tile and fill rects, do so, but make sure
+      // that the gradient is scaled precisely to the tile rect.
+      gfxRect fillRectSnapped = fillRect;
+      // Don't snap the tileRect directly since that would lose information
+      // about the orientation of the current transform (i.e. vertical or
+      // horizontal flipping). Instead snap the corners independently so if
+      // the CTM has a flip, our Scale() below preserves the flip.
+      gfxPoint tileRectSnappedTopLeft = tileRect.TopLeft();
+      gfxPoint tileRectSnappedBottomRight = tileRect.BottomRight();
+      if (ctx->UserToDevicePixelSnapped(fillRectSnapped, true) &&
+          ctx->UserToDevicePixelSnapped(tileRectSnappedTopLeft, true) &&
+          ctx->UserToDevicePixelSnapped(tileRectSnappedBottomRight, true)) {
+        ctx->IdentityMatrix();
+        ctx->Rectangle(fillRectSnapped);
+        ctx->Translate(tileRectSnappedTopLeft);
+        ctx->Scale((tileRectSnappedBottomRight.x - tileRectSnappedTopLeft.x)/tileRect.width,
+                   (tileRectSnappedBottomRight.y - tileRectSnappedTopLeft.y)/tileRect.height);
+      } else {
+        ctx->Rectangle(fillRect);
+        ctx->Translate(tileRect.TopLeft());
+      }
       ctx->SetPattern(gradientPattern);
-      ctx->Rectangle(fillRect - tileRect.TopLeft(), true);
       ctx->Fill();
       ctx->SetMatrix(ctm);
     }

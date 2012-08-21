@@ -20,7 +20,7 @@
 
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
-#include "frontend/TreeContext.h"
+#include "frontend/SharedContext.h"
 
 #include "vm/ScopeObject.h"
 
@@ -115,9 +115,14 @@ struct BytecodeEmitter
     const bool      hasGlobalScope:1;   /* frontend::CompileScript's scope chain is the
                                            global object */
 
+    const bool      selfHostingMode:1;  /* Emit JSOP_CALLINTRINSIC instead of JSOP_NAME
+                                           and assert that JSOP_NAME and JSOP_*GNAME
+                                           don't ever get emitted. See the comment for
+                                           the field |selfHostingMode| in Parser.h for details. */
+
     BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
                     HandleScript script, StackFrame *callerFrame, bool hasGlobalScope,
-                    unsigned lineno);
+                    unsigned lineno, bool selfHostingMode = false);
     bool init();
 
     /*

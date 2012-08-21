@@ -273,7 +273,7 @@ BEGIN_TEST(testXDR_sourceMap)
         CHECK(expected);
 
         // The script source takes responsibility of free'ing |expected|.
-        script->scriptSource()->setSourceMap(expected);
+        CHECK(script->scriptSource()->setSourceMap(cx, expected, script->filename));
         script = FreezeThaw(cx, script);
         CHECK(script);
         CHECK(script->scriptSource());

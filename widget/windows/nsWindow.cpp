@@ -61,6 +61,7 @@
 
 #include "nsWindow.h"
 
+#include <shellapi.h>
 #include <windows.h>
 #include <process.h>
 #include <commctrl.h>
@@ -1973,123 +1974,181 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption)
     reinterpret_cast<HANDLE>(static_cast<int>(aActiveCaption) + 1));
 }
 
-// Called when the window layout changes: full screen mode transitions,
-// theme changes, and composition changes. Calculates the new non-client
-// margins and fires off a frame changed event, which triggers an nc calc
-// size windows event, kicking the changes in.
+/**
+ * Called when the window layout changes: full screen mode transitions,
+ * theme changes, and composition changes. Calculates the new non-client
+ * margins and fires off a frame changed event, which triggers an nc calc
+ * size windows event, kicking the changes in.
+ *
+ * The offsets calculated here are based on the value of `mNonClientMargins`
+ * which is specified in the "chromemargins" attribute of the window.  For
+ * each margin, the value specified has the following meaning:
+ *    -1 - leave the default frame in place
+ *     0 - remove the frame
+ *    >0 - frame size equals min(0, (default frame size - margin value))
+ *
+ * This function calculates and populates `mNonClientOffset`.
+ * In our processing of `WM_NCCALCSIZE`, the frame size will be calculated
+ * as (default frame size - offset).  For example, if the left frame should
+ * be 1 pixel narrower than the default frame size, `mNonClientOffset.left`
+ * will equal 1.
+ *
+ * For maximized, fullscreen, and minimized windows, the values stored in
+ * `mNonClientMargins` are ignored, and special processing takes place.
+ *
+ * For non-glass windows, we only allow frames to be their default size
+ * or removed entirely.
+ */
 bool
 nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, bool aReflowWindow)
 {
   if (!mCustomNonClient)
     return false;
 
-  mNonClientOffset.top = mNonClientOffset.bottom =
-    mNonClientOffset.left = mNonClientOffset.right = 0;
-  mCaptionHeight = mVertResizeMargin = mHorResizeMargin = 0;
-
-  if (aSizeMode == -1)
+  if (aSizeMode == -1) {
     aSizeMode = mSizeMode;
-
-  if (aSizeMode == nsSizeMode_Minimized ||
-      aSizeMode == nsSizeMode_Fullscreen) {
-    return true;
   }
 
-  bool hasCaption = (mBorderStyle & (eBorderStyle_all |
-                                     eBorderStyle_title |
-                                     eBorderStyle_menu |
-                                     eBorderStyle_default)) > 0 ? true : false;
+  bool hasCaption = (mBorderStyle
+                    & (eBorderStyle_all
+                     | eBorderStyle_title
+                     | eBorderStyle_menu
+                     | eBorderStyle_default));
 
-  if (hasCaption)
-    mCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
-  mHorResizeMargin = GetSystemMetrics(SM_CXFRAME);
-  mVertResizeMargin = GetSystemMetrics(SM_CYFRAME);
-  mCaptionHeight += mVertResizeMargin;
+  // mCaptionHeight is the default size of the NC area at
+  // the top of the window. If the window has a caption,
+  // the size is calculated as the sum of:
+  //      SM_CYFRAME        - The thickness of the sizing border
+  //                          around a resizable window
+  //      SM_CXPADDEDBORDER - The amount of border padding
+  //                          for captioned windows
+  //      SM_CYCAPTION      - The height of the caption area
+  //
+  // If the window does not have a caption, mCaptionHeight will be equal to
+  // `GetSystemMetrics(SM_CYFRAME)`
+  mCaptionHeight = GetSystemMetrics(SM_CYFRAME)
+                 + (hasCaption ? GetSystemMetrics(SM_CYCAPTION)
+                                 + GetSystemMetrics(SM_CXPADDEDBORDER)
+                               : 0);
 
-  // Custom margin offset calculations for the chrome margin attribute on a
-  // window. The offsets calculated here are added to the client area in the
-  // WM_NCCALCSIZE event:
-  // -1 - leave the default frame in place
-  //  0 - remove the frame, our frame offset equals the default frame size
-  // >0 - frame size equals (default frame size - margin value) with the
-  //      restriction that the offset <= default frame size.
-  if (!mNonClientMargins.top)
+  // mHorResizeMargin is the size of the default NC areas on the
+  // left and right sides of our window.  It is calculated as
+  // the sum of:
+  //      SM_CXFRAME        - The thickness of the sizing border
+  //      SM_CXPADDEDBORDER - The amount of border padding
+  //                          for captioned windows
+  //
+  // If the window does not have a caption, mHorResizeMargin will be equal to
+  // `GetSystemMetrics(SM_CXFRAME)`
+  mHorResizeMargin = GetSystemMetrics(SM_CXFRAME)
+                   + (hasCaption ? GetSystemMetrics(SM_CXPADDEDBORDER) : 0);
+
+  // mVertResizeMargin is the size of the default NC area at the
+  // bottom of the window. It is calculated as the sum of:
+  //      SM_CYFRAME        - The thickness of the sizing border
+  //      SM_CXPADDEDBORDER - The amount of border padding
+  //                          for captioned windows.
+  //
+  // If the window does not have a caption, mVertResizeMargin will be equal to
+  // `GetSystemMetrics(SM_CYFRAME)`
+  mVertResizeMargin = GetSystemMetrics(SM_CYFRAME)
+                    + (hasCaption ? GetSystemMetrics(SM_CXPADDEDBORDER) : 0);
+
+  if (aSizeMode == nsSizeMode_Minimized) {
+    // Use default frame size for minimized windows
+    mNonClientOffset.top = 0;
+    mNonClientOffset.left = 0;
+    mNonClientOffset.right = 0;
+    mNonClientOffset.bottom = 0;
+  } else if (aSizeMode == nsSizeMode_Fullscreen) {
+    // Remove the default frame from the top of our fullscreen window.  This
+    // makes the whole caption part of our client area, allowing us to draw
+    // in the whole caption area.  Additionally remove the default frame from
+    // the left, right, and bottom.
     mNonClientOffset.top = mCaptionHeight;
-  else if (mNonClientMargins.top > 0)
-    mNonClientOffset.top = NS_MIN(mCaptionHeight, mNonClientMargins.top);
-
-  if (!mNonClientMargins.left)
-    mNonClientOffset.left = mHorResizeMargin;
-  else if (mNonClientMargins.left > 0)
-    mNonClientOffset.left = NS_MIN(mHorResizeMargin, mNonClientMargins.left);
- 
-  if (!mNonClientMargins.right)
-    mNonClientOffset.right = mHorResizeMargin;
-  else if (mNonClientMargins.right > 0)
-    mNonClientOffset.right = NS_MIN(mHorResizeMargin, mNonClientMargins.right);
-
-  if (!mNonClientMargins.bottom)
     mNonClientOffset.bottom = mVertResizeMargin;
-  else if (mNonClientMargins.bottom > 0)
-    mNonClientOffset.bottom = NS_MIN(mVertResizeMargin, mNonClientMargins.bottom);
+    mNonClientOffset.left = mHorResizeMargin;
+    mNonClientOffset.right = mHorResizeMargin;
+  } else if (aSizeMode == nsSizeMode_Maximized) {
+    // Remove the default frame from the top of our maximized window.  This
+    // makes the whole caption part of our client area, allowing us to draw
+    // in the whole caption area.  Use default frame size on left, right, and
+    // bottom. The reason this works is that, for maximized windows,
+    // Windows positions them so that their frames fall off the screen.
+    // This gives the illusion of windows having no frames when they are
+    // maximized.  If we try to mess with the frame sizes by setting these
+    // offsets to positive values, our client area will fall off the screen.
+    mNonClientOffset.top = mCaptionHeight;
+    mNonClientOffset.bottom = 0;
+    mNonClientOffset.left = 0;
+    mNonClientOffset.right = 0;
 
-  // Disable chrome margins > 0 in two cases:
-  // - For non-glass desktops: The window frame is painted with textures that
-  //   require the entire space of the default frame. We allow a full frame or
-  //   no frame at all.
-  // - For maximized windows: Windows positions maximized windows such that the
-  //   outer bounds sit off screen a distance equal to the standard frame size.
-  if(!nsUXThemeData::CheckForCompositor() || aSizeMode == nsSizeMode_Maximized) {
-    if (mNonClientMargins.top > 0)
-      mNonClientOffset.top = 0;
-    if (mNonClientMargins.bottom > 0)
-      mNonClientOffset.bottom = 0;
-    if (mNonClientMargins.left > 0)
-      mNonClientOffset.left = 0;
-    if (mNonClientMargins.right > 0)
-      mNonClientOffset.right = 0;
-  }
-
-  if (aSizeMode == nsSizeMode_Maximized) {
-    // For chrome margins = 0 on maximized windows, Windows places the bounds
-    // off screen a distance equal to the standard frame size. Remove this
-    // area from our expanded client area.
-    if (!mNonClientMargins.bottom)
-      mNonClientOffset.bottom = 0;
-    if (!mNonClientMargins.left)
-      mNonClientOffset.left = 0;
-    if (!mNonClientMargins.right)
-      mNonClientOffset.right = 0;
-
-    // This should be (mCaptionHeight - mVertResizeMargin). But if we offset
-    // the client area by just SM_CYCAPTION (placing the top of the client
-    // area level with the visible screen) Windows dwm def proc fails to pick
-    // up mouse hover and clicks on the glass control buttons. To compensate,
-    // we position the client area off screen by mVertResizeMargin, and add
-    // widget padding in nsNativeThemeWin::GetWidgetPadding().
-    if (!mNonClientMargins.top)
-      mNonClientOffset.top = mCaptionHeight;
-
-    // Address an issue with auto-hide taskbars which fall behind the window.
-    // Ensure a 1 pixel margin at the bottom of the monitor so that unhiding
-    // the taskbar works properly.
-    MONITORINFO info = {sizeof(MONITORINFO)};
-    if (::GetMonitorInfo(::MonitorFromWindow(mWnd, MONITOR_DEFAULTTOPRIMARY),
-                         &info)) {
-      RECT r;
-      if (::GetWindowRect(mWnd, &r)) {
-        // Adjust window rect to account for non-client margins.
-        r.top += mVertResizeMargin - mNonClientOffset.top;
-        r.left += mHorResizeMargin - mNonClientOffset.left;
-        r.bottom -= mVertResizeMargin - mNonClientOffset.bottom;
-        r.right -= mHorResizeMargin - mNonClientOffset.right;
-        // Leave the 1 pixel margin if the window covers the monitor.
-        if (r.top <= info.rcMonitor.top &&
-            r.left <= info.rcMonitor.left && 
-            r.right >= info.rcMonitor.right &&
-            r.bottom >= info.rcMonitor.bottom)
-          mNonClientOffset.bottom -= r.bottom - info.rcMonitor.bottom + 1;
+    APPBARDATA appBarData;
+    appBarData.cbSize = sizeof(appBarData);
+    UINT taskbarState = SHAppBarMessage(ABM_GETSTATE, &appBarData);
+    if (ABS_AUTOHIDE & taskbarState) {
+      UINT edge = -1;
+      appBarData.hWnd = FindWindow(L"Shell_TrayWnd", NULL);
+      if (appBarData.hWnd) {
+        HMONITOR taskbarMonitor = ::MonitorFromWindow(appBarData.hWnd,
+                                                      MONITOR_DEFAULTTOPRIMARY);
+        HMONITOR windowMonitor = ::MonitorFromWindow(mWnd,
+                                                     MONITOR_DEFAULTTONEAREST);
+        if (taskbarMonitor == windowMonitor) {
+          SHAppBarMessage(ABM_GETTASKBARPOS, &appBarData);
+          edge = appBarData.uEdge;
+        }
       }
+
+      if (ABE_LEFT == edge) {
+        mNonClientOffset.left -= 1;
+      } else if (ABE_RIGHT == edge) {
+        mNonClientOffset.right -= 1;
+      } else if (ABE_BOTTOM == edge || ABE_TOP == edge) {
+        mNonClientOffset.bottom -= 1;
+      }
+    }
+  } else {
+    bool glass = nsUXThemeData::CheckForCompositor();
+
+    // We're dealing with a "normal" window (not maximized, minimized, or
+    // fullscreen), so process `mNonClientMargins` and set `mNonClientOffset`
+    // accordingly.
+    //
+    // Setting `mNonClientOffset` to 0 has the effect of leaving the default
+    // frame intact.  Setting it to a value greater than 0 reduces the frame
+    // size by that amount.
+
+    if (mNonClientMargins.top > 0 && glass) {
+      mNonClientOffset.top = NS_MIN(mCaptionHeight, mNonClientMargins.top);
+    } else if (mNonClientMargins.top == 0) {
+      mNonClientOffset.top = mCaptionHeight;
+    } else {
+      mNonClientOffset.top = 0;
+    }
+
+    if (mNonClientMargins.bottom > 0 && glass) {
+      mNonClientOffset.bottom = NS_MIN(mVertResizeMargin, mNonClientMargins.bottom);
+    } else if (mNonClientMargins.bottom == 0) {
+      mNonClientOffset.bottom = mVertResizeMargin;
+    } else {
+      mNonClientOffset.bottom = 0;
+    }
+
+    if (mNonClientMargins.left > 0 && glass) {
+      mNonClientOffset.left = NS_MIN(mHorResizeMargin, mNonClientMargins.left);
+    } else if (mNonClientMargins.left == 0) {
+      mNonClientOffset.left = mHorResizeMargin;
+    } else {
+      mNonClientOffset.left = 0;
+    }
+
+    if (mNonClientMargins.right > 0 && glass) {
+      mNonClientOffset.right = NS_MIN(mHorResizeMargin, mNonClientMargins.right);
+    } else if (mNonClientMargins.right == 0) {
+      mNonClientOffset.right = mHorResizeMargin;
+    } else {
+      mNonClientOffset.right = 0;
     }
   }
 
@@ -4485,37 +4544,34 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_NCCALCSIZE:
     {
-      // If wParam is TRUE, it specifies that the application should indicate
-      // which part of the client area contains valid information. The system
-      // copies the valid information to the specified area within the new
-      // client area. If the wParam parameter is FALSE, the application should
-      // return zero.
       if (mCustomNonClient) {
-        if (!wParam) {
-          result = true;
-          *aRetValue = 0;
-          break;
-        }
-
-        // before:
-        // rgrc[0]: the proposed window
-        // rgrc[1]: the current window
-        // rgrc[2]: the source client area
-        // pncsp->lppos: move/size data
-        // after:
-        // rgrc[0]: the new client area
-        // rgrc[1]: the destination window
-        // rgrc[2]: the source client area
-        // (all values in screen coordiantes)
-        NCCALCSIZE_PARAMS *pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
-        LRESULT res = CallWindowProcW(GetPrevWindowProc(), mWnd, msg, wParam, lParam);
-        pncsp->rgrc[0].top      -= mNonClientOffset.top;
-        pncsp->rgrc[0].left     -= mNonClientOffset.left;
-        pncsp->rgrc[0].right    += mNonClientOffset.right;
-        pncsp->rgrc[0].bottom   += mNonClientOffset.bottom;
+        // If `wParam` is `FALSE`, `lParam` points to a `RECT` that contains
+        // the proposed window rectangle for our window.  During our
+        // processing of the `WM_NCCALCSIZE` message, we are expected to
+        // modify the `RECT` that `lParam` points to, so that its value upon
+        // our return is the new client area.  We must return 0 if `wParam`
+        // is `FALSE`.
+        //
+        // If `wParam` is `TRUE`, `lParam` points to a `NCCALCSIZE_PARAMS`
+        // struct.  This struct contains an array of 3 `RECT`s, the first of
+        // which has the exact same meaning as the `RECT` that is pointed to
+        // by `lParam` when `wParam` is `FALSE`.  The remaining `RECT`s, in
+        // conjunction with our return value, can
+        // be used to specify portions of the source and destination window
+        // rectangles that are valid and should be preserved.  We opt not to
+        // implement an elaborate client-area preservation technique, and
+        // simply return 0, which means "preserve the entire old client area
+        // and align it with the upper-left corner of our new client area".
+        RECT *clientRect = wParam
+                         ? &(reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam))->rgrc[0]
+                         : (reinterpret_cast<RECT*>(lParam));
+        clientRect->top      += (mCaptionHeight - mNonClientOffset.top);
+        clientRect->left     += (mHorResizeMargin - mNonClientOffset.left);
+        clientRect->right    -= (mHorResizeMargin - mNonClientOffset.right);
+        clientRect->bottom   -= (mVertResizeMargin - mNonClientOffset.bottom);
 
         result = true;
-        *aRetValue = res;
+        *aRetValue = 0;
       }
       break;
     }
@@ -6008,9 +6064,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
             newWidth, newHeight));
 #endif
     
-    // If a maximized window is resized, recalculate the non-client margins and
-    // ensure a 1 pixel margin at screen bottom to allow taskbar unhiding to
-    // work properly.
+    // If a maximized window is resized, recalculate the non-client margins.
     if (mSizeMode == nsSizeMode_Maximized) {
       if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
         // gecko resize event already sent by UpdateNonClientMargins.

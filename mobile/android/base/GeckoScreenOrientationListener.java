@@ -10,7 +10,16 @@ import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 
-public class GeckoScreenOrientationListener
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import org.mozilla.gecko.util.GeckoEventListener;
+
+public class GeckoScreenOrientationListener implements GeckoEventListener
 {
   private static final String LOGTAG = "GeckoScreenOrientationListener";
 
@@ -36,7 +45,7 @@ public class GeckoScreenOrientationListener
   static public final short eScreenOrientation_LandscapeSecondary = 8;
   static public final short eScreenOrientation_Landscape          = 12;
 
-  static private final short kDefaultScreenOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+  static private final short DEFAULT_ORIENTATION = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
   private short mOrientation;
   private OrientationEventListenerImpl mListener = null;
@@ -45,9 +54,22 @@ public class GeckoScreenOrientationListener
   private boolean mShouldBeListening = false;
   // Whether the listener should notify Gecko that a change happened.
   private boolean mShouldNotify      = false;
+  // The default orientation to use if nothing is specified
+  private short mDefaultOrientation;
+
+  private static final String DEFAULT_ORIENTATION_PREF = "app.orientation.default";
 
   private GeckoScreenOrientationListener() {
-    mListener = new OrientationEventListenerImpl(GeckoApp.mAppContext);
+      mListener = new OrientationEventListenerImpl(GeckoApp.mAppContext);
+
+      ArrayList<String> prefs = new ArrayList<String>();
+      prefs.add(DEFAULT_ORIENTATION_PREF);
+      JSONArray jsonPrefs = new JSONArray(prefs);
+      GeckoAppShell.registerEventListener("Preferences:Data", this);
+      GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Get", jsonPrefs.toString());
+      GeckoAppShell.sendEventToGecko(event);
+  
+      mDefaultOrientation = DEFAULT_ORIENTATION;
   }
 
   public static GeckoScreenOrientationListener getInstance() {
@@ -98,6 +120,57 @@ public class GeckoScreenOrientationListener
 
   private void stopListening() {
     mListener.disable();
+  }
+
+  public void handleMessage(String event, JSONObject message) {
+      try {
+          if ("Preferences:Data".equals(event)) {
+              JSONArray jsonPrefs = message.getJSONArray("preferences");
+              final int length = jsonPrefs.length();
+              for (int i = 0; i < length; i++) {
+                  JSONObject jPref = jsonPrefs.getJSONObject(i);
+                  final String prefName = jPref.getString("name");
+
+                  if (DEFAULT_ORIENTATION_PREF.equals(prefName)) {
+                      final String value = jPref.getString("value");
+                      mDefaultOrientation = orientationFromStringArray(value);
+                      unlockScreenOrientation();
+
+                      // this is the only pref we care about. unregister after we receive it
+                      GeckoAppShell.unregisterEventListener("Preferences:Data", this);
+                  }
+              }
+          }
+      } catch (Exception e) {
+          Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+      }
+  }
+
+  private short orientationFromStringArray(String val) {
+      List<String> orientations = Arrays.asList(val.split(","));
+      // if nothing is listed, return unspecified
+      if (orientations.size() == 0)
+          return DEFAULT_ORIENTATION;
+
+      // we dont' support multiple orientations yet. To avoid developer confusion,
+      // just take the first one listed
+      return orientationFromString(orientations.get(0));
+  }
+
+  private short orientationFromString(String val) {
+    if ("portrait".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+    else if ("landscape".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+    else if ("portrait-primary".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+    else if ("portrait-secondary".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+    else if ("landscape-primary".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    else if ("landscape-secondary".equals(val))
+      return (short)ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+    return DEFAULT_ORIENTATION;
   }
 
   // NOTE: this is public so OrientationEventListenerImpl can access it.
@@ -160,11 +233,10 @@ public class GeckoScreenOrientationListener
   }
 
   public void unlockScreenOrientation() {
-    if (GeckoApp.mAppContext.getRequestedOrientation() == kDefaultScreenOrientation) {
+    if (GeckoApp.mAppContext.getRequestedOrientation() == mDefaultOrientation)
       return;
-    }
 
-    GeckoApp.mAppContext.setRequestedOrientation(kDefaultScreenOrientation);
+    GeckoApp.mAppContext.setRequestedOrientation(mDefaultOrientation);
     updateScreenOrientation();
   }
 }

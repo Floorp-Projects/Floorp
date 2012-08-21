@@ -117,6 +117,12 @@ private:
   nsWeakFrame mFrame;
 };
 
+static void
+InsertViewsInReverseOrder(nsIView* aSibling, nsIView* aParent);
+
+static void
+EndSwapDocShellsForViews(nsIView* aView);
+
 NS_IMETHODIMP
 nsSubDocumentFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
@@ -145,6 +151,28 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   EnsureInnerView();
+
+  // If we have a detached subdoc's root view on our frame loader, re-insert
+  // it into the view tree. This happens when we've been reframed, and
+  // ensures the presentation persists across reframes. If the frame element
+  // has changed documents however, we blow away the presentation.
+  nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
+  if (frameloader) {
+    nsCOMPtr<nsIDocument> oldContainerDoc;
+    nsIView* detachedViews =
+      frameloader->GetDetachedSubdocView(getter_AddRefs(oldContainerDoc));
+    if (detachedViews) {
+      if (oldContainerDoc == aContent->OwnerDoc()) {
+        // Restore stashed presentation.
+        ::InsertViewsInReverseOrder(detachedViews, mInnerView);
+        ::EndSwapDocShellsForViews(mInnerView->GetFirstChild());
+      } else {
+        // Presentation is for a different document, don't restore it.
+        frameloader->Hide();
+      }
+    }
+    frameloader->SetDetachedSubdocView(nullptr, nullptr);
+  }
 
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
@@ -758,6 +786,51 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
+class nsHideViewer : public nsRunnable {
+public:
+  nsHideViewer(nsIContent* aFrameElement,
+               nsFrameLoader* aFrameLoader,
+               nsIPresShell* aPresShell,
+               bool aHideViewerIfFrameless)
+    : mFrameElement(aFrameElement),
+      mFrameLoader(aFrameLoader),
+      mPresShell(aPresShell),
+      mHideViewerIfFrameless(aHideViewerIfFrameless)
+  {
+    NS_ASSERTION(mFrameElement, "Must have a frame element");
+    NS_ASSERTION(mFrameLoader, "Must have a frame loader");
+    NS_ASSERTION(mPresShell, "Must have a presshell");
+  }
+
+  NS_IMETHOD Run()
+  {
+    // Flush frames, to ensure any pending display:none changes are made.
+    // Note it can be unsafe to flush if we've destroyed the presentation
+    // for some other reason, like if we're shutting down.
+    if (!mPresShell->IsDestroying()) {
+      mPresShell->FlushPendingNotifications(Flush_Frames);
+    }
+    nsIFrame* frame = mFrameElement->GetPrimaryFrame();
+    if ((!frame && mHideViewerIfFrameless) ||
+        mPresShell->IsDestroying()) {
+      // Either the frame element has no nsIFrame or the presshell is being
+      // destroyed. Hide the nsFrameLoader, which destroys the presentation,
+      // and clear our references to the stashed presentation.
+      mFrameLoader->SetDetachedSubdocView(nullptr, nullptr);
+      mFrameLoader->Hide();
+    }
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIContent> mFrameElement;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsCOMPtr<nsIPresShell> mPresShell;
+  bool mHideViewerIfFrameless;
+};
+
+static nsIView*
+BeginSwapDocShellsForViews(nsIView* aSibling);
+
 void
 nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
@@ -765,17 +838,25 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
     PresContext()->PresShell()->CancelReflowCallback(this);
     mPostedReflowCallback = false;
   }
-  
-  HideViewer();
+
+  // Detach the subdocument's views and stash them in the frame loader.
+  // We can then reattach them if we're being reframed (for example if
+  // the frame has been made position:fixed).
+  nsFrameLoader* frameloader = FrameLoader();
+  if (frameloader) {
+    nsIView* detachedViews = ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
+    frameloader->SetDetachedSubdocView(detachedViews, mContent->OwnerDoc());
+
+    // We call nsFrameLoader::HideViewer() in a script runner so that we can
+    // safely determine whether the frame is being reframed or destroyed.
+    nsContentUtils::AddScriptRunner(
+      new nsHideViewer(mContent,
+                       mFrameLoader,
+                       PresContext()->PresShell(),
+                       (mDidCreateDoc || mCallingShow)));
+  }
 
   nsLeafFrame::DestroyFrom(aDestructRoot);
-}
-
-void
-nsSubDocumentFrame::HideViewer()
-{
-  if (mFrameLoader && (mDidCreateDoc || mCallingShow))
-    mFrameLoader->Hide();
 }
 
 nsIntSize

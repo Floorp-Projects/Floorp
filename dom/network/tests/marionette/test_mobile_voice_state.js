@@ -3,22 +3,25 @@
 
 MARIONETTE_TIMEOUT = 30000;
 
-const WHITELIST_PREF = "dom.mobileconnection.whitelist";
-let uriPrePath = window.location.protocol + "//" + window.location.host;
-SpecialPowers.setCharPref(WHITELIST_PREF, uriPrePath);
+SpecialPowers.addPermission("mobileconnection", true, document);
 
 let connection = navigator.mozMobileConnection;
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 
+let emulatorCmdPendingCount = 0;
 function setEmulatorVoiceState(state) {
+  emulatorCmdPendingCount++;
   runEmulatorCmd("gsm voice " + state, function (result) {
+    emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
 }
 
 function setEmulatorGsmLocation(lac, cid) {
+  emulatorCmdPendingCount++;
   runEmulatorCmd("gsm location " + lac + " " + cid, function (result) {
+    emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
 }
@@ -138,7 +141,12 @@ function testHome() {
 }
 
 function cleanUp() {
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  if (emulatorCmdPendingCount > 0) {
+    setTimeout(cleanUp, 100);
+    return;
+  }
+
+  SpecialPowers.removePermission("mobileconnection", document);
   finish();
 }
 

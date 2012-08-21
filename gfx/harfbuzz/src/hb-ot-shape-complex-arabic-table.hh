@@ -914,9 +914,9 @@ static const uint16_t shaping_table[][4] =
 #define SHAPING_TABLE_LAST	0x06D3
 
 
-static const struct {
+static const struct ligature_set_t {
  uint16_t first;
- struct {
+ struct ligature_pairs_t {
    uint16_t second;
    uint16_t ligature;
  } ligatures[4];

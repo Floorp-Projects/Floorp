@@ -639,11 +639,6 @@ let RIL = {
   currentCalls: {},
 
   /**
-   * Current calls length.
-   */
-  currentCallsLength: null,
-
-  /**
    * Existing data calls.
    */
   currentDataCalls: {},
@@ -2380,13 +2375,6 @@ let RIL = {
     // Go through the calls we currently have on file and see if any of them
     // changed state. Remove them from the newCalls map as we deal with them
     // so that only new calls remain in the map after we're done.
-    let lastCallsLength = this.currentCallsLength;
-    if (newCalls) {
-      this.currentCallsLength = newCalls.length;
-    } else {
-      this.currentCallsLength = 0;
-    }
-
     for each (let currentCall in this.currentCalls) {
       let newCall;
       if (newCalls) {
@@ -2396,10 +2384,8 @@ let RIL = {
 
       if (newCall) {
         // Call is still valid.
-        if (newCall.state != currentCall.state ||
-            this.currentCallsLength != lastCallsLength) {
-          // State has changed. Active call may have changed as valid
-          // calls change.
+        if (newCall.state != currentCall.state) {
+          // State has changed.
           currentCall.state = newCall.state;
           currentCall.isActive = this._isActiveCall(currentCall.state);
           this._handleChangedCallState(currentCall);
@@ -2447,19 +2433,14 @@ let RIL = {
 
   _isActiveCall: function _isActiveCall(callState) {
     switch (callState) {
-      case CALL_STATE_INCOMING:
+      case CALL_STATE_ACTIVE:
       case CALL_STATE_DIALING:
       case CALL_STATE_ALERTING:
-      case CALL_STATE_ACTIVE:
         return true;
       case CALL_STATE_HOLDING:
-        return false;
+      case CALL_STATE_INCOMING:
       case CALL_STATE_WAITING:
-        if (this.currentCallsLength == 1) {
-          return true;
-        } else {
-          return false;
-        }
+        return false;
     }
   },
 
@@ -2824,13 +2805,14 @@ let RIL = {
   /**
    * Get a list of current voice calls.
    */
-  enumerateCalls: function enumerateCalls() {
+  enumerateCalls: function enumerateCalls(options) {
     if (DEBUG) debug("Sending all current calls");
     let calls = [];
     for each (let call in this.currentCalls) {
       calls.push(call);
     }
-    this.sendDOMMessage({rilMessageType: "enumerateCalls", calls: calls});
+    options.calls = calls;
+    this.sendDOMMessage(options);
   },
 
   /**
@@ -2977,7 +2959,6 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
 
     calls[call.callIndex] = call;
   }
-  calls.length = calls_length;
   this._processCalls(calls);
 };
 RIL[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
@@ -3278,6 +3259,7 @@ RIL[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, options) {
   }
   options.rilMessageType = "sendussd";
   options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
@@ -3286,6 +3268,7 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   }
   options.rilMessageType = "cancelussd";
   options.success = options.rilRequestError == 0 ? true : false;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_GET_CLIR] = null;

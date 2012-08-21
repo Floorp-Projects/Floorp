@@ -238,17 +238,12 @@ hb_language_to_string (hb_language_t language)
 hb_language_t
 hb_language_get_default (void)
 {
-  static hb_language_t default_language;
+  static hb_language_t default_language = HB_LANGUAGE_INVALID;
 
-  if (!default_language) {
-    /* This block is not quite threadsafe, but is not as bad as
-     * it looks since it's idempotent.  As long as pointer ops
-     * are atomic, we are safe. */
-
-    /* I hear that setlocale() doesn't honor env vars on Windows,
-     * but for now we ignore that. */
-
-    default_language = hb_language_from_string (setlocale (LC_CTYPE, NULL), -1);
+  hb_language_t language = (hb_language_t) hb_atomic_ptr_get (&default_language);
+  if (unlikely (language == HB_LANGUAGE_INVALID)) {
+    language = hb_language_from_string (setlocale (LC_CTYPE, NULL), -1);
+    hb_atomic_ptr_cmpexch (&default_language, HB_LANGUAGE_INVALID, language);
   }
 
   return default_language;

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<script type="text/javascript">
+  function ok(result, desc) {
+    window.parent.ok_wrapper(result, desc);
+  }
+
+  function doStuff() {
+    // try to open a new window via target="_blank", window.open(), and showModalDialog()
+    // the window we try to open closes itself once it opens
+    sendMouseEvent({type:'click'}, 'target_blank');
+
+    var threw = false;
+    try {
+      window.open("about:blank");
+    } catch (error) {
+      threw = true;
+    }
+    
+    ok(threw, "window.open threw a JS exception and was not allowed");
+
+    threw = false;
+    try {
+      window.showModalDialog("about:blank");
+    } catch(error) {
+      threw = true;
+    }
+    
+    ok(threw, "window.showModalDialog threw a JS exception and was not allowed");
+  }
+</script>
+<body onLoad="doStuff()">
+  I am sandboxed but with "allow-scripts allow-same-origin"
+
+  <a href="file_iframe_sandbox_open_window_fail.html" target="_blank" id="target_blank">open window</a>
+</body>
+</html>

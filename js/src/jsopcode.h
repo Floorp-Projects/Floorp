@@ -355,10 +355,16 @@ namespace js {
  * spindex is the negative index of v, measured from cx->fp->sp, or from a
  * lower frame's sp if cx->fp is native.
  *
+ * The optional argument skipStackHits can be used to skip a hit in the stack
+ * frame. This can be useful in self-hosted code that wants to report value
+ * errors containing decompiled values that are useful for the user, instead of
+ * values used internally by the self-hosted code.
+ *
  * The caller must call JS_free on the result after a succsesful call.
  */
 char *
-DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v, HandleString fallback);
+DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
+                        HandleString fallback, int skipStackHits = 0);
 
 /*
  * Sprintf, but with unlimited and automatically allocated buffering.

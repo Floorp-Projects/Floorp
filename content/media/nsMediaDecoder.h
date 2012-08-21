@@ -9,6 +9,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "VideoFrameContainer.h"
 #include "MediaStreamGraph.h"
+#include "nsIObserver.h"
 
 class nsHTMLMediaElement;
 class nsIStreamListener;

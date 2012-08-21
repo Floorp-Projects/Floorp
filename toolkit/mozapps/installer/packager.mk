@@ -933,7 +933,7 @@ ifdef INSTALL_SDK # Here comes the hard part
 	if test -f $(DIST)/include/xpcom-config.h; then \
 	  $(SYSINSTALL) $(IFLAGS1) $(DIST)/include/xpcom-config.h $(DESTDIR)$(sdkdir); \
 	fi
-	find $(DIST)/sdk -name "*.pyc" | xargs rm
+	find $(DIST)/sdk -name "*.pyc" | xargs rm -f
 	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/lib && tar -xf -)
 	(cd $(DIST)/sdk/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/bin && tar -xf -)
 	$(RM) -f $(DESTDIR)$(sdkdir)/lib $(DESTDIR)$(sdkdir)/bin $(DESTDIR)$(sdkdir)/include $(DESTDIR)$(sdkdir)/include $(DESTDIR)$(sdkdir)/sdk/idl $(DESTDIR)$(sdkdir)/idl
@@ -954,7 +954,7 @@ make-sdk:
 	(cd $(DIST)/host/bin && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/host/bin && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/sdk
-	find $(DIST)/sdk -name "*.pyc" | xargs rm
+	find $(DIST)/sdk -name "*.pyc" | xargs rm -f
 	(cd $(DIST)/sdk && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/sdk && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/include

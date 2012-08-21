@@ -14,6 +14,7 @@ STL_FLAGS =
 CPP_UNIT_TESTS = \
   TestCheckedInt.cpp \
   TestTypeTraits.cpp \
+  TestSHA1.cpp \
   $(NULL)
 
 # in order to prevent rules.mk from trying to link to libraries that are
@@ -27,4 +28,4 @@ WRAP_LDFLAGS=
 
 include $(topsrcdir)/config/rules.mk
 
-LIBS=
+LIBS= $(call EXPAND_LIBNAME_PATH,mfbt,$(DEPTH)/mfbt)

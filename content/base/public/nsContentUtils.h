@@ -817,6 +817,16 @@ public:
                                      nsXPIDLString& aResult);
 
   /**
+   * A helper function that parses a sandbox attribute (of an <iframe> or
+   * a CSP directive) and converts it to the set of flags used internally.
+   *
+   * @param aAttribute 	the value of the sandbox attribute
+   * @return 			the set of flags
+   */
+  static PRUint32 ParseSandboxAttributeToFlags(const nsAString& aSandboxAttr);
+
+
+  /**
    * Fill (with the parameters given) the localized string named |aKey| in
    * properties file |aFile|.
    */
@@ -1694,7 +1704,7 @@ public:
   static already_AddRefed<nsIDocument>
   GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
 
-  static bool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel);
+  static bool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal);
 
   /**
    * The method checks whether the caller can access native anonymous content.
@@ -1950,15 +1960,17 @@ public:
    * Set the given principal as the owner of the given channel, if
    * needed.  aURI must be the URI of aChannel.  aPrincipal may be
    * null.  If aSetUpForAboutBlank is true, then about:blank will get
-   * the principal set up on it.
-   *
+   * the principal set up on it. If aForceOwner is true, the owner
+   * will be set on the channel, even if the principal can be determined
+   * from the channel.
    * The return value is whether the principal was set up as the owner
    * of the channel.
    */
   static bool SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
                                 nsIChannel* aChannel,
                                 nsIURI* aURI,
-                                bool aSetUpForAboutBlank);
+                                bool aSetUpForAboutBlank,
+                                bool aForceOwner = false);
 
   static nsresult Btoa(const nsAString& aBinaryData,
                        nsAString& aAsciiBase64String);
@@ -1975,7 +1987,7 @@ public:
 
   /**
    * Returns whether the input element passed in parameter has the autocomplete
-   * functionnality enabled. It is taking into account the form owner.
+   * functionality enabled. It is taking into account the form owner.
    * NOTE: the caller has to make sure autocomplete makes sense for the
    * element's type.
    *

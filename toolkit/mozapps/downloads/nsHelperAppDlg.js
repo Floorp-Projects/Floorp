@@ -162,8 +162,7 @@ nsUnknownContentTypeDialog.prototype = {
     } catch (ex) {
       // The containing window may have gone away.  Break reference
       // cycles and stop doing the download.
-      const NS_BINDING_ABORTED = 0x804b0002;
-      this.mLauncher.cancel(NS_BINDING_ABORTED);
+      this.mLauncher.cancel(Components.results.NS_BINDING_ABORTED);
       return;
     }
 
@@ -455,7 +454,8 @@ nsUnknownContentTypeDialog.prototype = {
         rememberChoice.disabled = true;
       }
       else {
-        rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+        rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling &&
+                                 this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.handleInternally;
       }
       this.toggleRememberChoice(rememberChoice);
 
@@ -778,6 +778,14 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   updateMIMEInfo: function() {
+    // Don't update mime type preferences when the preferred action is set to
+    // the internal handler -- this dialog is the result of the handler fallback
+    // (e.g. Content-Disposition was set as attachment)
+    if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.handleInternally &&
+        !this.dialogElement("rememberChoice").checked) {
+      return false;
+    }
+
     var needUpdate = false;
     // If current selection differs from what's in the mime info object,
     // then we need to update.
@@ -916,8 +924,7 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Cancel app launcher.
     try {
-      const NS_BINDING_ABORTED = 0x804b0002;
-      this.mLauncher.cancel(NS_BINDING_ABORTED);
+      this.mLauncher.cancel(Components.results.NS_BINDING_ABORTED);
     } catch(exception) {
     }
 

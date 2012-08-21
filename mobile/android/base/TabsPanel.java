@@ -143,6 +143,7 @@ public class TabsPanel extends LinearLayout {
             mListContainer.removeAllViews();
         }
 
+        final boolean showAnimation = !mVisible;
         mVisible = true;
         mCurrentPanel = panel;
 
@@ -162,7 +163,8 @@ public class TabsPanel extends LinearLayout {
         mListContainer.addView(mPanel.getLayout());
 
         if (isSideBar()) {
-            dispatchLayoutChange(getWidth(), getHeight());
+            if (showAnimation)
+                dispatchLayoutChange(getWidth(), getHeight());
         } else {
             int actionBarHeight = (int) (mContext.getResources().getDimension(R.dimen.browser_toolbar_height));
 
@@ -171,7 +173,8 @@ public class TabsPanel extends LinearLayout {
             int listHeight = (int) (0.5 * mContext.getResources().getDisplayMetrics().heightPixels);
 
             int height = actionBarHeight + listHeight; 
-            dispatchLayoutChange(getWidth(), height);
+            if (showAnimation)
+                dispatchLayoutChange(getWidth(), height);
         }
 
         // If Sync is set up, query the database for remote clients.

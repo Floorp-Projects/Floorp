@@ -246,16 +246,16 @@ class EqualityCompiler : public BaseCompiler
 
         RegisterID tmp = ic.tempReg;
 
-        /* JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0) */
-        Imm32 atomMask(JSString::ATOM_MASK);
+        /* JSString::isAtom === (lengthAndFlags & ATOM_BIT) */
+        Imm32 atomBit(JSString::ATOM_BIT);
 
         masm.load32(Address(lvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
-        Jump lhsNotAtomized = masm.branchTest32(Assembler::NonZero, tmp, atomMask);
+        Jump lhsNotAtomized = masm.branchTest32(Assembler::Zero, tmp, atomBit);
         linkToStub(lhsNotAtomized);
 
         if (!rvr.isConstant()) {
             masm.load32(Address(rvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
-            Jump rhsNotAtomized = masm.branchTest32(Assembler::NonZero, tmp, atomMask);
+            Jump rhsNotAtomized = masm.branchTest32(Assembler::Zero, tmp, atomBit);
             linkToStub(rhsNotAtomized);
         }
 
@@ -946,7 +946,7 @@ class CallCompiler : public BaseCompiler
     bool patchInlinePath(JSScript *script, JSObject *obj)
     {
         JS_ASSERT(ic.frameSize.isStatic());
-        JITScript *jit = script->getJIT(callingNew, f.cx->compartment->needsBarrier());
+        JITScript *jit = script->getJIT(callingNew, f.cx->compartment->compileBarriers());
 
         /* Very fast path. */
         Repatcher repatch(f.chunk());

@@ -124,8 +124,7 @@ ok(ctx.canvas === canvas, "ctx.canvas === canvas");
 function isPixel(ctx, x,y, r,g,b,a, d) {
 	var pos = x + "," + y;
 	var colour = r + "," + g + "," + b + "," + a;
-    var pixel = SpecialPowers.unwrap(SpecialPowers.wrap(ctx)
-                                                  .getImageData(x, y, 1, 1));
+    var pixel = ctx.getImageData(x, y, 1, 1);
     var pr = pixel.data[0],
         pg = pixel.data[1],
         pb = pixel.data[2],

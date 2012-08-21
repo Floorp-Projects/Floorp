@@ -1999,6 +1999,18 @@ GetOptimalReadFormats(GLContext* gl, GLenum& format, GLenum& type) {
 }
 
 void
+GLContext::ReadScreenIntoImageSurface(gfxImageSurface* dest)
+{
+    GLuint boundFB = 0;
+    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&boundFB);
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+
+    ReadPixelsIntoImageSurface(0, 0, dest->Width(), dest->Height(), dest);
+
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, boundFB);
+}
+
+void
 GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
                                       GLsizei aWidth, GLsizei aHeight,
                                       gfxImageSurface *aDest)

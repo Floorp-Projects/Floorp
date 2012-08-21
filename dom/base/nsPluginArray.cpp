@@ -15,6 +15,8 @@
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsPluginHost.h"
+#include "nsIContentViewer.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -65,14 +67,13 @@ nsPluginArray::GetLength(PRUint32* aLength)
 bool
 nsPluginArray::AllowPlugins()
 {
-  bool allowPlugins = false;
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
 
-  if (docShell)
-    if (NS_FAILED(docShell->GetAllowPlugins(&allowPlugins)))
-      allowPlugins = false;
+  if (!docShell) {
+    return false;
+  }
 
-  return allowPlugins;
+  return docShell->PluginsAllowedInCurrentDoc();
 }
 
 nsIDOMPlugin*

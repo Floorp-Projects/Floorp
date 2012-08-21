@@ -636,8 +636,7 @@ let DOMApplicationRegistry = {
     let tmp = [];
 
     for (let id in this.webapps) {
-      if (this.webapps[id].installOrigin == aData.origin &&
-          !this._isLaunchable(this.webapps[id].origin)) {
+      if (!this._isLaunchable(this.webapps[id].origin)) {
         aData.apps.push(this._cloneAppObject(this.webapps[id]));
         tmp.push({ id: id });
       }

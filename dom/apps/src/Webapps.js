@@ -10,28 +10,11 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
+Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
-
-// Makes sure that we expose correctly chrome JS objects to content.
-function wrapObjectIn(aObject, aCtxt) {
-  let res = Cu.createObjectIn(aCtxt);
-  let propList = { };
-  for (let prop in aObject) {
-    propList[prop] = {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: (typeof(aObject[prop]) == "object") ? wrapObjectIn(aObject[prop], aCtxt)
-                                                 : aObject[prop]
-    }
-  }
-  Object.defineProperties(res, propList);
-  Cu.makeObjectPropsNormal(res);
-  return res;
-};
 
 function convertAppsArray(aApps, aWindow) {
   let apps = Cu.createArrayIn(aWindow);
@@ -54,7 +37,6 @@ WebappsRegistry.prototype = {
                       installPackage: 'r',
                       getSelf: 'r',
                       getInstalled: 'r',
-                      getNotInstalled: 'r',
                       mgmt: 'r'
                      },
 
@@ -99,9 +81,6 @@ WebappsRegistry.prototype = {
         }
         break;
       case "Webapps:GetInstalled:Return:OK":
-        Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
-        break;
-      case "Webapps:GetNotInstalled:Return:OK":
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
         break;
       case "Webapps:GetSelf:Return:KO":
@@ -179,14 +158,6 @@ WebappsRegistry.prototype = {
     return request;
   },
 
-  getNotInstalled: function() {
-    let request = this.createRequest();
-    cpmm.sendAsyncMessage("Webapps:GetNotInstalled", { origin: this._getOrigin(this._window.location.href),
-                                                       oid: this._id,
-                                                       requestID: this.getRequestId(request) });
-    return request;
-  },
-
   installPackage: function(aPackageURL, aParams) {
     let request = this.createRequest();
     let requestID = this.getRequestId(request);
@@ -218,7 +189,7 @@ WebappsRegistry.prototype = {
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
     this.initHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
-                              "Webapps:GetInstalled:Return:OK", "Webapps:GetNotInstalled:Return:OK",
+                              "Webapps:GetInstalled:Return:OK",
                               "Webapps:GetSelf:Return:OK", "Webapps:GetSelf:Return:KO"]);
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -268,7 +239,7 @@ WebappsApplication.prototype = {
 
   init: function(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
     this.origin = aOrigin;
-    this.manifest = wrapObjectIn(aManifest, aWindow);
+    this.manifest = ObjectWrapper.wrap(aManifest, aWindow);
     this.manifestURL = aManifestURL;
     this.receipts = aReceipts;
     this.installOrigin = aInstallOrigin;
@@ -359,7 +330,8 @@ function WebappsApplicationMgmt(aWindow) {
   this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
 
   this.initHelper(aWindow, ["Webapps:GetAll:Return:OK", "Webapps:GetAll:Return:KO",
-                            "Webapps:Install:Return:OK", "Webapps:Uninstall:Return:OK"]);
+                            "Webapps:Install:Return:OK", "Webapps:Uninstall:Return:OK",
+                            "Webapps:GetNotInstalled:Return:OK"]);
 
   this._oninstall = null;
   this._onuninstall = null;
@@ -369,6 +341,7 @@ WebappsApplicationMgmt.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
   __exposedProps__: {
                       getAll: 'r',
+                      getNotInstalled: 'r',
                       oninstall: 'rw',
                       onuninstall: 'rw'
                      },
@@ -383,6 +356,13 @@ WebappsApplicationMgmt.prototype = {
     cpmm.sendAsyncMessage("Webapps:GetAll", { oid: this._id,
                                               requestID: this.getRequestId(request),
                                               hasPrivileges: this.hasPrivileges });
+    return request;
+  },
+
+  getNotInstalled: function() {
+    let request = this.createRequest();
+    cpmm.sendAsyncMessage("Webapps:GetNotInstalled", { oid: this._id,
+                                                       requestID: this.getRequestId(request) });
     return request;
   },
 
@@ -422,6 +402,9 @@ WebappsApplicationMgmt.prototype = {
         break;
       case "Webapps:GetAll:Return:KO":
         Services.DOMRequest.fireError(req, "DENIED");
+        break;
+      case "Webapps:GetNotInstalled:Return:OK":
+        Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
         break;
       case "Webapps:Install:Return:OK":
         if (this._oninstall) {

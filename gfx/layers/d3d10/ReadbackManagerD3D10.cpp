@@ -5,6 +5,7 @@
 
 #include "ReadbackManagerD3D10.h"
 #include "ReadbackProcessor.h"
+#include "ReadbackLayer.h"
 
 #include "nsIThread.h"
 #include "nsThreadUtils.h"

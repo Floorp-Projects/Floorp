@@ -37,11 +37,3 @@
 #if defined(HB_ATOMIC_INT_NIL) || defined(HB_MUTEX_IMPL_NIL)
 #pragma message("To suppress these warnings, define HB_NO_MT.")
 #endif
-
-
-#include "hb-unicode-private.hh"
-
-#if !defined(HB_NO_UNICODE_FUNCS) && defined(HB_UNICODE_FUNCS_NIL)
-#pragma message("Could not find any Unicode functions implementation, you have to provide your own.")
-#pragma message("To suppress this warnings, define HB_NO_UNICODE_FUNCS.")
-#endif

@@ -760,13 +760,13 @@ Iterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 IsIterator(const Value &v)
 {
     return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 iterator_next_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsIterator(args.thisv()));
@@ -792,11 +792,11 @@ iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+JSBool
 iterator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsIterator, iterator_next_impl, args);
+    return CallNonGenericMethod<IsIterator, iterator_next_impl>(cx, args);
 }
 
 static JSFunctionSpec iterator_methods[] = {
@@ -1598,13 +1598,13 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 IsGenerator(const Value &v)
 {
     return v.isObject() && v.toObject().hasClass(&GeneratorClass);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 generator_send_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsGenerator(args.thisv()));
@@ -1634,14 +1634,14 @@ generator_send_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 generator_send(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsGenerator, generator_send_impl, args);
+    return CallNonGenericMethod<IsGenerator, generator_send_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 generator_next_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsGenerator(args.thisv()));
@@ -1661,14 +1661,14 @@ generator_next_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 generator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsGenerator, generator_next_impl, args);
+    return CallNonGenericMethod<IsGenerator, generator_next_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 generator_throw_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsGenerator(args.thisv()));
@@ -1692,14 +1692,14 @@ generator_throw_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 generator_throw(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsGenerator, generator_throw_impl, args);
+    return CallNonGenericMethod<IsGenerator, generator_throw_impl>(cx, args);
 }
 
-static bool
+JS_ALWAYS_INLINE bool
 generator_close_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsGenerator(args.thisv()));
@@ -1726,11 +1726,11 @@ generator_close_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+JSBool
 generator_close(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsGenerator, generator_close_impl, args);
+    return CallNonGenericMethod<IsGenerator, generator_close_impl>(cx, args);
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)

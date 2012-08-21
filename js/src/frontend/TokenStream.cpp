@@ -32,7 +32,6 @@
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "frontend/TreeContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
 
@@ -1229,17 +1228,19 @@ TokenStream::getAtLine()
 bool
 TokenStream::getAtSourceMappingURL()
 {
-    jschar peeked[18];
+    /* Match comments of the form "//@ sourceMappingURL=<url>" */
 
-    /* Match comments of the form @sourceMappingURL=<url> */
-    if (peekChars(18, peeked) && CharsMatch(peeked, "@sourceMappingURL=")) {
-        skipChars(18);
+    jschar peeked[19];
+    int32_t c;
+
+    if (peekChars(19, peeked) && CharsMatch(peeked, "@ sourceMappingURL=")) {
+        skipChars(19);
         tokenbuf.clear();
 
-        jschar c;
-        while (!IsSpaceOrBOM2((c = getChar())) &&
-               c && c != jschar(EOF))
+        while ((c = peekChar()) && c != EOF && !IsSpaceOrBOM2(c)) {
+            getChar();
             tokenbuf.append(c);
+        }
 
         if (tokenbuf.empty())
             /* The source map's URL was missing, but not quite an exception that

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+  function ok(condition, msg) {
+    window.parent.ok_wrapper(condition, msg);
+  }
+
+  function testXHR() {
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("GET", "file_iframe_sandbox_b_if1.html");
+
+    xhr.onreadystatechange = function (oEvent) {
+      var result = false;
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          result = true;
+        }
+        ok(result, "XHR should work normally in an iframe sandboxed with 'allow-same-origin'");
+      }
+    }
+
+    xhr.send(null);
+  }
+
+  function doStuff() {
+    ok(true, "documents sandboxed with 'allow-same-origin' should be able to access their parent");
+
+    // should be able to access document.cookie since we have 'allow-same-origin'
+    ok(document.cookie == "", "a document sandboxed with allow-same-origin should be able to access document.cookie");
+
+    // should be able to access localStorage since we have 'allow-same-origin'
+    ok(window.localStorage, "a document sandboxed with allow-same-origin should be able to access localStorage");
+
+    // should be able to access sessionStorage since we have 'allow-same-origin'
+    ok(window.sessionStorage, "a document sandboxed with allow-same-origin should be able to access sessionStorage");
+
+    testXHR();
+  }
+</script>
+<body onLoad="doStuff()">
+  I am sandboxed but with "allow-same-origin" and "allow-scripts"
+</body>
+</html>

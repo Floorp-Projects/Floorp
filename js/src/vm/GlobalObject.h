@@ -320,6 +320,11 @@ class GlobalObject : public JSObject
         return &getPrototype(JSProto_Iterator).toObject();
     }
 
+    JSObject *getIntrinsicsHolder() {
+        JS_ASSERT(!getSlotRef(INTRINSICS).isUndefined());
+        return &getSlotRef(INTRINSICS).toObject();
+    }
+
   private:
     typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
 
@@ -369,12 +374,18 @@ class GlobalObject : public JSObject
         return HasDataProperty(cx, holder, NameToId(name), &fun);
     }
 
-    JSFunction *getIntrinsicFunction(JSContext *cx, PropertyName *name) {
+    bool getIntrinsicValue(JSContext *cx, PropertyName *name, Value *vp) {
         RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
-        Value fun = NullValue();
-        DebugOnly<bool> ok = HasDataProperty(cx, holder, NameToId(name), &fun);
+        jsid id = NameToId(name);
+        if (HasDataProperty(cx, holder, id, vp))
+            return true;
+        bool ok = cx->runtime->cloneSelfHostedValueById(cx, id, holder, vp);
+        if (!ok)
+            return false;
+
+        ok = JS_DefinePropertyById(cx, holder, id, *vp, NULL, NULL, 0);
         JS_ASSERT(ok);
-        return fun.toObject().toFunction();
+        return true;
     }
 
     inline RegExpStatics *getRegExpStatics() const;

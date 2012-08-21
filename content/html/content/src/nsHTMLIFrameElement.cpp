@@ -7,7 +7,6 @@
 
 #include "nsHTMLIFrameElement.h"
 #include "nsIDOMSVGDocument.h"
-#include "nsGkAtoms.h"
 #include "nsMappedAttributes.h"
 #include "nsError.h"
 #include "nsRuleData.h"
@@ -56,6 +55,7 @@ NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling)
 NS_IMPL_URI_ATTR(nsHTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(nsHTMLIFrameElement, MozAllowFullScreen, mozallowfullscreen)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Sandbox, sandbox)
 
 void
 nsHTMLIFrameElement::GetItemValueText(nsAString& aValue)
@@ -205,3 +205,32 @@ nsHTMLIFrameElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
+nsresult
+nsHTMLIFrameElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  const nsAttrValue* aValue,
+                                  bool aNotify)
+{
+  if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None) {
+    // Parse the new value of the sandbox attribute, and if we have a docshell
+    // set its sandbox flags appropriately.
+    if (mFrameLoader) {
+      nsCOMPtr<nsIDocShell> docshell = mFrameLoader->GetExistingDocShell();
+
+      if (docshell) {
+        PRUint32 newFlags = 0;
+        // If a NULL aValue is passed in, we want to clear the sandbox flags
+        // which we will do by setting them to 0.
+        if (aValue) {
+          nsAutoString strValue;
+          aValue->ToString(strValue);
+          newFlags = nsContentUtils::ParseSandboxAttributeToFlags(
+            strValue);
+        }   
+        docshell->SetSandboxFlags(newFlags);
+      }
+    }
+  }
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
+
+}

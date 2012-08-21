@@ -2734,12 +2734,14 @@ nsLayoutUtils::ComputeWidthValue(
 
   nscoord result;
   if (aCoord.IsCoordPercentCalcUnit()) {
-    result = nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockWidth);
+    result = nsRuleNode::ComputeCoordPercentCalc(aCoord, 
+                                                 aContainingBlockWidth);
     // The result of a calc() expression might be less than 0; we
     // should clamp at runtime (below).  (Percentages and coords that
     // are less than 0 have already been dropped by the parser.)
     result -= aContentEdgeToBoxSizing;
-  } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
+  } else {
+    MOZ_ASSERT(eStyleUnit_Enumerated == aCoord.GetUnit());
     // If aFrame is a container for font size inflation, then shrink
     // wrapping inside of it should not apply font size inflation.
     AutoMaybeDisableFontInflation an(aFrame);
@@ -2768,15 +2770,10 @@ nsLayoutUtils::ComputeWidthValue(
         result = aContainingBlockWidth -
                  (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
     }
-  } else {
-    NS_NOTREACHED("unexpected width value");
-    result = 0;
   }
-  if (result < 0)
-    result = 0;
-  return result;
-}
 
+  return NS_MAX(0, result);
+}
 
 /* static */ nscoord
 nsLayoutUtils::ComputeHeightDependentValue(
@@ -2842,14 +2839,12 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     width = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
               aFrame, aCBSize.width, boxSizingAdjust.width,
               boxSizingToMarginEdgeWidth, stylePos->mWidth);
-    NS_ASSERTION(width >= 0, "negative result from ComputeWidthValue");
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
     maxWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMaxWidth);
-    NS_ASSERTION(maxWidth >= 0, "negative result from ComputeWidthValue");
   } else {
     maxWidth = nscoord_MAX;
   }
@@ -2857,32 +2852,25 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   minWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                aFrame, aCBSize.width, boxSizingAdjust.width,
                boxSizingToMarginEdgeWidth, stylePos->mMinWidth);
-  NS_ASSERTION(minWidth >= 0, "negative result from ComputeWidthValue");
 
   if (!isAutoHeight) {
-    height = nsLayoutUtils::
-      ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
-      boxSizingAdjust.height;
-    if (height < 0)
-      height = 0;
+    height = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                boxSizingAdjust.height, 
+                stylePos->mHeight);
   }
 
   if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
-    maxHeight = nsLayoutUtils::
-      ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
-      boxSizingAdjust.height;
-    if (maxHeight < 0)
-      maxHeight = 0;
+    maxHeight = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                  boxSizingAdjust.height, 
+                  stylePos->mMaxHeight);
   } else {
     maxHeight = nscoord_MAX;
   }
 
   if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
-    minHeight = nsLayoutUtils::
-      ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
-      boxSizingAdjust.height;
-    if (minHeight < 0)
-      minHeight = 0;
+    minHeight = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
+                  boxSizingAdjust.height,
+                  stylePos->mMinHeight);
   } else {
     minHeight = 0;
   }

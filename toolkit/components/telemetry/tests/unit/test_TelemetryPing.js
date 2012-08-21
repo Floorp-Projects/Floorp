@@ -26,6 +26,13 @@ const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
 const ADDON_NAME = "Telemetry test addon";
 const ADDON_HISTOGRAM = "addon-histogram";
 const FLASH_VERSION = "1.1.1.1";
+const SHUTDOWN_TIME = 10000;
+
+// Constants from prio.h for nsIFileOutputStream.init
+const PR_WRONLY = 0x2;
+const PR_CREATE_FILE = 0x8;
+const PR_TRUNCATE = 0x20;
+const RW_OWNER = 0600;
 
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
@@ -167,6 +174,8 @@ function checkPayload(request, reason, successfulPings) {
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
+  do_check_eq(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
+
   var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
   if (isWindows) {
     do_check_true(payload.simpleMeasurements.startupSessionRestoreReadBytes > 0);
@@ -373,6 +382,20 @@ function registerFakePluginHost() {
                             PLUGINHOST_CONTRACTID, PluginHostFactory);
 }
 
+function write_fake_shutdown_file() {
+  let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let file = profileDirectory.clone();
+  file.append("Telemetry.ShutdownTime.txt");
+  let contents = "" + SHUTDOWN_TIME;
+  let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
+                .createInstance(Ci.nsIFileOutputStream);
+  ostream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+	       RW_OWNER, ostream.DEFER_OPEN);
+  ostream.write(contents, contents.length);
+  ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
+  ostream.close();
+}
+
 function run_test() {
   try {
     var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
@@ -385,6 +408,10 @@ function run_test() {
   // Addon manager needs a profile directory
   do_get_profile();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+
+  // Make it look like we've shutdown before.
+  write_fake_shutdown_file();
+  
   // try to make LightweightThemeManager do stuff
   let gInternalManager = Cc["@mozilla.org/addons/integration;1"]
                          .getService(Ci.nsIObserver)

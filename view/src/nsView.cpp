@@ -986,6 +986,7 @@ nsView::WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight)
 {
   // The root view may not be set if this is the resize associated with
   // window creation
+  SetForcedRepaint(true);
   if (this == mViewManager->GetRootView()) {
     nsRefPtr<nsDeviceContext> devContext;
     mViewManager->GetDeviceContext(*getter_AddRefs(devContext));

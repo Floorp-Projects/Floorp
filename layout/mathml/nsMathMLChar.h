@@ -57,24 +57,13 @@ struct nsGlyphCode {
 
 // Class used to handle stretchy symbols (accent, delimiter and boundary
 // symbols).
-// There are composite characters that need to be built recursively from other
-// characters. Since these are rare we use a light-weight mechanism to handle
-// them. Specifically, as need arises we append a singly-linked list of child
-// chars with their mParent pointing to the first element in the list, except in
-// the originating first element itself where it points to null. mSibling points
-// to the next element in the list. Since the originating first element is the
-// parent of the others, we call it the "root" char of the list. Testing
-// !mParent tells whether you are that "root" during the recursion. The parent
-// delegates most of the tasks to the children.
 class nsMathMLChar
 {
 public:
   // constructor and destructor
-  nsMathMLChar(nsMathMLChar* aParent = nullptr) {
+  nsMathMLChar() {
     MOZ_COUNT_CTOR(nsMathMLChar);
     mStyleContext = nullptr;
-    mSibling = nullptr;
-    mParent = aParent;
     mUnscaledAscent = 0;
     mScaleX = mScaleY = 1.0;
     mDrawNormal = true;
@@ -84,14 +73,7 @@ public:
   // not a virtual destructor: this class is not intended to be subclassed
   ~nsMathMLChar() {
     MOZ_COUNT_DTOR(nsMathMLChar);
-    // there is only one style context owned by the "root" char
-    // and it may be used by child chars as well
-    if (!mParent && mStyleContext) { // only the "root" need to release it
-      mStyleContext->Release();
-    }
-    if (mSibling) {
-      delete mSibling;
-    }
+    mStyleContext->Release();
   }
 
   nsresult
@@ -152,16 +134,6 @@ public:
   void
   SetRect(const nsRect& aRect) {
     mRect = aRect;
-    // shift the orgins of child chars if any 
-    if (!mParent && mSibling) { // only a "root" having child chars can
-                                // enter here
-      for (nsMathMLChar* child = mSibling; child; child = child->mSibling) {
-        nsRect rect; 
-        child->GetRect(rect);
-        rect.MoveBy(mRect.x, mRect.y);
-        child->SetRect(rect);
-      }
-    }
   }
 
   // Get the maximum width that the character might have after a vertical
@@ -209,10 +181,6 @@ protected:
   friend class nsGlyphTable;
   nsString           mData;
 
-  // support for handling composite stretchy chars like TeX over/under braces
-  nsMathMLChar*      mSibling;
-  nsMathMLChar*      mParent;
-
 private:
   nsRect             mRect;
   nsStretchDirection mDirection;
@@ -245,14 +213,6 @@ private:
                   PRUint32                 aStretchHint,
                   float           aMaxSize = NS_MATHML_OPERATOR_SIZE_INFINITY,
                   bool            aMaxSizeIsAbsolute = false);
-
-  nsresult
-  ComposeChildren(nsPresContext*       aPresContext,
-                  nsRenderingContext& aRenderingContext,
-                  nsGlyphTable*        aGlyphTable,
-                  nscoord              aTargetSize,
-                  nsBoundingMetrics&   aCompositeSize,
-                  PRUint32             aStretchHint);
 
   nsresult
   PaintVertically(nsPresContext*       aPresContext,
