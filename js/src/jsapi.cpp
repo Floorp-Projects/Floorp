@@ -831,7 +831,7 @@ JSRuntime::JSRuntime()
 #ifdef JS_THREADSAFE
     sourceCompressorThread(thisFromCtor()),
 #endif
-    defaultFreeOp_(thisFromCtor(), false, false),
+    defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
     DOMcallbacks(NULL),
