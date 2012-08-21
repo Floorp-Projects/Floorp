@@ -3,15 +3,15 @@
   <link rel="author" title="Anne van Kesteren" href="http://annevankesteren.nl/"/>
   <link rel="author" title="Opera Software ASA" href="http://opera.com/"/>
   <link rel="help" href="http://www.w3.org/TR/css3-namespace/#syntax"/>
-  <title>CSS Namespaces Test Suite: invalid URI</title>
+  <link rel="match" href="reftest/ref-lime-1.xml"/>
+  <title>CSS Namespaces Test Suite: @namespace url() with escape</title>
   <style>
-   @namespace x url("test");
-   @namespace x url("}x&lt; >x{");
-   t { background:lime }
-   x|t { background:red }
+   @namespace u\00072l("test");
+   *|test { background:red }
+   test { background: lime }
   </style>
  </head>
  <body>
-  <p><t xmlns="test">This sentence should have a green background.</t></p>
+  <p><test xmlns="test">This sentence should have a green background.</test></p>
  </body>
 </html>
