@@ -1081,7 +1081,7 @@ ic::SplatApplyArgs(VMFrame &f)
     /* Steps 4-5. */
     RootedObject aobj(cx, &args[1].toObject());
     uint32_t length;
-    if (!js_GetLengthProperty(cx, aobj, &length))
+    if (!GetLengthProperty(cx, aobj, &length))
         THROWV(false);
 
     /* Step 6. */

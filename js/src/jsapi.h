@@ -1221,7 +1221,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   public:
     AutoEnumStateRooter(JSContext *cx, JSObject *obj
                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue(), context(cx)
+      : AutoGCRooter(cx, ENUMERATOR), obj(cx, obj), stateValue(), context(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
@@ -1237,7 +1237,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   protected:
     void trace(JSTracer *trc);
 
-    JSObject *obj;
+    RootedObject obj;
 
   private:
     Value stateValue;

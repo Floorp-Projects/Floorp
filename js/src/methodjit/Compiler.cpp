@@ -5185,7 +5185,7 @@ mjit::Compiler::testSingletonProperty(HandleObject obj, HandleId id)
 
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (!obj->lookupGeneric(cx, id, &holder, &shape))
+    if (!JSObject::lookupGeneric(cx, obj, id, &holder, &shape))
         return false;
     if (!shape)
         return false;

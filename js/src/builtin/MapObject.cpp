@@ -977,7 +977,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 return false;
 
             RootedValue key(cx);
-            if (!pairobj->getElement(cx, 0, &key))
+            if (!JSObject::getElement(cx, pairobj, pairobj, 0, &key))
                 return false;
             HashableValue hkey;
             if (!hkey.setValue(cx, key))
@@ -986,7 +986,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
             HashableValue::AutoRooter hkeyRoot(cx, &hkey);
 
             RootedValue val(cx);
-            if (!pairobj->getElement(cx, 1, &val))
+            if (!JSObject::getElement(cx, pairobj, pairobj, 1, &val))
                 return false;
 
             RelocatableValue rval(val);

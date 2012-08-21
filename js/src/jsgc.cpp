@@ -2239,7 +2239,6 @@ AutoIdArray::trace(JSTracer *trc)
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    gc::MarkObjectRoot(trc, &obj, "JS::AutoEnumStateRooter.obj");
 }
 
 inline void

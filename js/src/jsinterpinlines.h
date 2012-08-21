@@ -55,7 +55,7 @@ namespace js {
  * common and future-friendly cases.
  */
 inline bool
-ComputeImplicitThis(JSContext *cx, JSObject *obj, Value *vp)
+ComputeImplicitThis(JSContext *cx, HandleObject obj, Value *vp)
 {
     vp->setUndefined();
 
@@ -65,11 +65,11 @@ ComputeImplicitThis(JSContext *cx, JSObject *obj, Value *vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    obj = obj->thisObject(cx);
-    if (!obj)
+    RawObject nobj = JSObject::thisObject(cx, obj);
+    if (!nobj)
         return false;
 
-    vp->setObject(*obj);
+    vp->setObject(*nobj);
     return true;
 }
 
@@ -201,7 +201,7 @@ GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleI
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
 
-    return obj->getGeneric(cx, id, vp);
+    return JSObject::getGeneric(cx, obj, obj, id, vp);
 }
 
 inline bool
@@ -345,7 +345,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
         if (!baseops::SetPropertyHelper(cx, obj, obj, id, DNP_CACHE_RESULT, &rref, strict))
             return false;
     } else {
-        if (!obj->setGeneric(cx, obj, id, &rref, strict))
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, strict))
             return false;
     }
 
@@ -407,7 +407,7 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
     if (!scope->isNative() || !pobj->isNative()) {
         RootedId id(cx, NameToId(name));
         RootedValue value(cx);
-        if (!scope->getGeneric(cx, id, &value))
+        if (!JSObject::getGeneric(cx, scope, scope, id, &value))
             return false;
         *vp = value;
     } else {
@@ -443,7 +443,7 @@ SetNameOperation(JSContext *cx, jsbytecode *pc, HandleObject scope, HandleValue 
         return baseops::SetPropertyHelper(cx, scope, scope, id, DNP_UNQUALIFIED, &valCopy, strict);
     }
 
-    return scope->setProperty(cx, scope, name, &valCopy, strict);
+    return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);
 }
 
 inline bool
@@ -454,14 +454,14 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
     RootedShape prop(cx);
     RootedObject obj2(cx);
-    if (!varobj->lookupProperty(cx, dn, &obj2, &prop))
+    if (!JSObject::lookupProperty(cx, varobj, dn, &obj2, &prop))
         return false;
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->isGlobal())) {
         RootedValue value(cx, UndefinedValue());
-        if (!varobj->defineProperty(cx, dn, value, JS_PropertyStub,
-                                    JS_StrictPropertyStub, attrs)) {
+        if (!JSObject::defineProperty(cx, varobj, dn, value, JS_PropertyStub,
+                                      JS_StrictPropertyStub, attrs)) {
             return false;
         }
     } else {
@@ -470,7 +470,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
          * see a redeclaration that's |const|, we consider it a conflict.
          */
         unsigned oldAttrs;
-        if (!varobj->getPropertyAttributes(cx, dn, &oldAttrs))
+        if (!JSObject::getPropertyAttributes(cx, varobj, dn, &oldAttrs))
             return false;
         if (attrs & JSPROP_READONLY) {
             JSAutoByteString bytes;
@@ -685,7 +685,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 if (obj->asArguments().maybeGetElement(index, res))
                     break;
             }
-            if (!obj->getElement(cx, index, res))
+            if (!JSObject::getElement(cx, obj, obj, index, res))
                 return false;
         } while(0);
     } else {
@@ -699,7 +699,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         SpecialId special;
         res.set(rref);
         if (ValueIsSpecial(obj, res, &special, cx)) {
-            if (!obj->getSpecial(cx, obj, special, res))
+            if (!JSObject::getSpecial(cx, obj, obj, special, res))
                 return false;
         } else {
             JSAtom *name = ToAtom(cx, res);
@@ -707,10 +707,10 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 return false;
 
             if (name->isIndex(&index)) {
-                if (!obj->getElement(cx, index, res))
+                if (!JSObject::getElement(cx, obj, obj, index, res))
                     return false;
             } else {
-                if (!obj->getProperty(cx, name->asPropertyName(), res))
+                if (!JSObject::getProperty(cx, obj, obj, name->asPropertyName(), res))
                     return false;
             }
         }
@@ -800,7 +800,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
     } while (0);
 
     RootedValue tmp(cx, value);
-    return obj->setGeneric(cx, obj, id, &tmp, strict);
+    return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
 }
 
 #define RELATIONAL_OP(OP)                                                     \
