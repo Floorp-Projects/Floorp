@@ -1028,13 +1028,6 @@ nsresult nsHTMLMediaElement::LoadResource()
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
 
-  // If a previous call to mozSetup() was made, kill that media resource
-  // in order to use this new src instead.
-  if (mAudioStream) {
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-  }
-
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nullptr;
