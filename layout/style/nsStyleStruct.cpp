@@ -89,8 +89,9 @@ static nsChangeHint CalcShadowDifference(nsCSSShadowArray* lhs,
 // nsStyleFont
 //
 nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
-  : mFont(aFont),
-    mGenericID(kGenericFont_NONE)
+  : mFont(aFont)
+  , mGenericID(kGenericFont_NONE)
+  , mExplicitLanguage(false)
 {
   MOZ_COUNT_CTOR(nsStyleFont);
   Init(aPresContext);
@@ -101,6 +102,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   , mSize(aSrc.mSize)
   , mGenericID(aSrc.mGenericID)
   , mScriptLevel(aSrc.mScriptLevel)
+  , mExplicitLanguage(aSrc.mExplicitLanguage)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
   , mScriptMinSize(aSrc.mScriptMinSize)
   , mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier)
@@ -111,8 +113,10 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 
 nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
   // passing nullptr to GetDefaultFont make it use the doc language
-  : mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, nullptr))),
-    mGenericID(kGenericFont_NONE)
+  : mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                         nullptr)))
+  , mGenericID(kGenericFont_NONE)
+  , mExplicitLanguage(false)
 {
   MOZ_COUNT_CTOR(nsStyleFont);
   Init(aPresContext);
@@ -137,6 +141,8 @@ nsStyleFont::Init(nsPresContext* aPresContext)
   if (!language.IsEmpty() &&
       language.FindChar(PRUnichar(',')) == kNotFound) {
     mLanguage = do_GetAtom(language);
+    // NOTE:  This does *not* count as an explicit language; in other
+    // words, it doesn't trigger language-specific hyphenation.
   } else {
     // we didn't find a (usable) Content-Language, so we fall back
     // to whatever the presContext guessed from the charset
@@ -161,7 +167,8 @@ nsStyleFont::Destroy(nsPresContext* aContext) {
 nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 {
   if (mSize != aOther.mSize ||
-      mLanguage != aOther.mLanguage) {
+      mLanguage != aOther.mLanguage ||
+      mExplicitLanguage != aOther.mExplicitLanguage) {
     return NS_STYLE_HINT_REFLOW;
   }
   return CalcFontDifference(mFont, aOther.mFont);
