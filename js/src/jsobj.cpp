@@ -3139,8 +3139,8 @@ bool
 JSObject::swap(JSContext *cx, JSObject *other)
 {
     // Ensure swap doesn't cause a finalizer to not be run.
-    JS_ASSERT(IsBackgroundAllocKind(getAllocKind()) ==
-              IsBackgroundAllocKind(other->getAllocKind()));
+    JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
+              IsBackgroundFinalized(other->getAllocKind()));
 
     if (this->compartment() == other->compartment()) {
         TradeGutsReserved reserved(cx);

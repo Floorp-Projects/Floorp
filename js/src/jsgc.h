@@ -318,7 +318,8 @@ struct ArenaLists {
     }
 
     bool doneBackgroundFinalize(AllocKind kind) const {
-        return backgroundFinalizeState[kind] == BFS_DONE;
+        return backgroundFinalizeState[kind] == BFS_DONE ||
+               backgroundFinalizeState[kind] == BFS_JUST_FINISHED;
     }
 
     /*
@@ -419,7 +420,7 @@ struct ArenaLists {
     void queueScriptsForSweep(FreeOp *fop);
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
-    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
+    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
