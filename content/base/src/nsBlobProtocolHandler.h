@@ -6,23 +6,11 @@
 #define nsBlobProtocolHandler_h
 
 #include "nsIProtocolHandler.h"
-#include "nsIURI.h"
-#include "nsCOMPtr.h"
 
 #define BLOBURI_SCHEME "blob"
 
 class nsIDOMBlob;
 class nsIPrincipal;
-class nsIInputStream;
-
-inline bool IsBlobURI(nsIURI* aUri)
-{
-  bool isBlob;
-  return NS_SUCCEEDED(aUri->SchemeIs(BLOBURI_SCHEME, &isBlob)) && isBlob;
-}
-
-extern nsresult
-NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
 
 class nsBlobProtocolHandler : public nsIProtocolHandler
 {
@@ -38,10 +26,11 @@ public:
 
   // Methods for managing uri->file mapping
   static void AddFileDataEntry(nsACString& aUri,
-                               nsIDOMBlob* aFile,
+			       nsIDOMBlob* aFile,
                                nsIPrincipal* aPrincipal);
   static void RemoveFileDataEntry(nsACString& aUri);
   static nsIPrincipal* GetFileDataEntryPrincipal(nsACString& aUri);
+  
 };
 
 #define NS_BLOBPROTOCOLHANDLER_CID \
