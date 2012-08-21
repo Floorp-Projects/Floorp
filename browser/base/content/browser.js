@@ -221,7 +221,7 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 function pageShowEventHandlers(event) {
   // Filter out events that are not about the document load we are interested in
   if (event.target == content.document) {
-    charsetLoadListener(event);
+    charsetLoadListener();
     XULBrowserWindow.asyncUpdateUI();
 
     // The PluginClickToPlay events are not fired when navigating using the
@@ -5497,7 +5497,7 @@ function CreateMenu(node) {
   Services.obs.notifyObservers(null, "charsetmenu-selected", node);
 }
 
-function charsetLoadListener(event) {
+function charsetLoadListener() {
   var charset = window.content.document.characterSet;
 
   if (charset.length > 0 && (charset != gLastBrowserCharset)) {
