@@ -369,20 +369,20 @@ TelemetryPing.prototype = {
     let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware",
                   "hasMMX", "hasSSE", "hasSSE2", "hasSSE3",
                   "hasSSSE3", "hasSSE4A", "hasSSE4_1", "hasSSE4_2",
-                  "hasEDSP", "hasARMv6", "hasNEON"];
+                  "hasEDSP", "hasARMv6", "hasARMv7", "hasNEON"];
     for each (let field in fields) {
       let value;
       try {
         value = sysInfo.getProperty(field);
       } catch (e) {
-        continue
+        continue;
       }
       if (field == "memsize") {
         // Send RAM size in megabytes. Rounding because sysinfo doesn't
         // always provide RAM in multiples of 1024.
-        value = Math.round(value / 1024 / 1024)
+        value = Math.round(value / 1024 / 1024);
       }
-      ret[field] = value
+      ret[field] = value;
     }
 
     // gfxInfo fields are not always available, get what we can.
