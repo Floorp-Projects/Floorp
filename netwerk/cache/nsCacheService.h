@@ -12,8 +12,6 @@
 #include "nsCacheSession.h"
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
-#include "nsThreadUtils.h"
-#include "nsICacheListener.h"
 
 #include "prthread.h"
 #include "nsIObserver.h"
@@ -32,30 +30,6 @@ class nsOfflineCacheDevice;
 class nsCacheServiceAutoLock;
 class nsITimer;
 
-
-/******************************************************************************
- * nsNotifyDoomListener
- *****************************************************************************/
-
-class nsNotifyDoomListener : public nsRunnable {
-public:
-    nsNotifyDoomListener(nsICacheListener *listener,
-                         nsresult status)
-        : mListener(listener)      // transfers reference
-        , mStatus(status)
-    {}
-
-    NS_IMETHOD Run()
-    {
-        mListener->OnCacheEntryDoomed(mStatus);
-        NS_RELEASE(mListener);
-        return NS_OK;
-    }
-
-private:
-    nsICacheListener *mListener;
-    nsresult          mStatus;
-};
 
 /******************************************************************************
  *  nsCacheService
@@ -218,8 +192,6 @@ private:
     friend class nsDoomEvent;
     friend class nsDisableOldMaxSmartSizePrefEvent;
     friend class nsDiskCacheMap;
-    friend class nsAsyncDoomEvent;
-    friend class nsCacheEntryDescriptor;
 
     /**
      * Internal Methods
