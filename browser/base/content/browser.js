@@ -1286,9 +1286,9 @@ var gBrowserInit = {
 
     UpdateUrlbarSearchSplitterState();
 
-    if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
+    if (isLoadingBlank && gURLBar)
       gURLBar.focus();
-    else
+    if (!isLoadingBlank || !gURLBar || !gURLBar.focused)
       gBrowser.selectedBrowser.focus();
 
     gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
@@ -1988,8 +1988,9 @@ function focusAndSelectUrlBar() {
   if (gURLBar) {
     if (window.fullScreen)
       FullScreen.mouseoverToggle(true);
-    if (isElementVisible(gURLBar)) {
-      gURLBar.focus();
+
+    gURLBar.focus();
+    if (gURLBar.focused) {
       gURLBar.select();
       return true;
     }
@@ -3350,10 +3351,10 @@ const BrowserSearch = {
     var searchBar = this.searchBar;
     if (searchBar && window.fullScreen)
       FullScreen.mouseoverToggle(true);
-
-    if (isElementVisible(searchBar)) {
-      searchBar.select();
+    if (searchBar)
       searchBar.focus();
+    if (searchBar && searchBar.textbox.focused) {
+      searchBar.select();
     } else {
       openUILinkIn(Services.search.defaultEngine.searchForm, "current");
     }
