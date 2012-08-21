@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* Ensure that clicking the button in the Offline mode neterror page makes the browser go online. See bug 435325. */
-/* TEST_PATH=docshell/test/browser/browser_bug435325.js make -C $(OBJDIR) mochitest-browser-chrome */
 
 function test() {
   waitForExplicitFinish();
@@ -34,9 +33,8 @@ function checkPage() {
     "The error page has got a #errorTryAgain element");
   gBrowser.contentDocument.getElementById("errorTryAgain").click();
 
-  ok(!Services.io.offline, "After clicking the Try Again button, we're back "
-   +" online. This depends on Components.interfaces.nsIDOMWindowUtils being "
-   +"available from untrusted content (bug 435325).");
+  ok(!Services.io.offline, "After clicking the Try Again button, we're back " +
+                           "online.");
 
   finish();
 }
