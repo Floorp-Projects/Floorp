@@ -1047,7 +1047,7 @@ nsACString&
 RefLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ContainerLayer::PrintInfo(aTo, aPrefix);
-  if (-1 != mId) {
+  if (0 != mId) {
     AppendToString(aTo, mId, " [id=", "]");
   }
   return aTo;
