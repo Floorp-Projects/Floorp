@@ -31,7 +31,7 @@ let gSyncAddDevice = {
 
     // Kick off a sync. That way the server will have the most recent data from
     // this computer and it will show up immediately on the new device.
-    Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
+    Weave.SyncScheduler.scheduleNextSync(0);
   },
 
   onPageShow: function onPageShow() {
