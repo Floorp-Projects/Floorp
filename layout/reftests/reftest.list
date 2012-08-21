@@ -13,6 +13,7 @@ include ../../image/test/reftest/reftest.list
 
 # CSSWG tests
 include w3c-css/submitted/reftest.list
+include w3c-css/received/reftest.list
 
 # relative and absolute positioning
 include abs-pos/reftest.list
