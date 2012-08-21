@@ -44,9 +44,11 @@ interface nsIFileInputStream : nsIInputStream
     const long CLOSE_ON_EOF = 1<<2;
 
     /**
-     * If this is set, the file will be reopened whenever Seek(0) occurs.  If
-     * the file is already open and the seek occurs, it will happen naturally.
-     * (The file will only be reopened if it is closed for some reason.)
+     * If this is set, the file will be reopened whenever we reach the start of
+     * the file, either by doing a Seek(0, NS_SEEK_CUR), or by doing a relative
+     * seek that happen to reach the beginning of the file. If the file is
+     * already open and the seek occurs, it will happen naturally.  (The file
+     * will only be reopened if it is closed for some reason.)
      */
     const long REOPEN_ON_REWIND = 1<<3;
 
