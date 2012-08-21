@@ -35,6 +35,7 @@ cp $1/frameworks/base/include/binder/Binder.h ./binder/Binder.h
 cp $1/frameworks/base/include/binder/IInterface.h ./binder/IInterface.h
 cp $1/frameworks/base/include/media/stagefright/MediaExtractor.h ./stagefright/MediaExtractor.h
 cp $1/frameworks/base/include/media/stagefright/OMXCodec.h ./stagefright/OMXCodec.h
+cp $1/frameworks/base/include/media/stagefright/OMXClient.h ./stagefright/OMXClient.h
 cp $1/frameworks/base/include/media/stagefright/DataSource.h ./stagefright/DataSource.h
 cp $1/frameworks/base/include/media/stagefright/MetaData.h ./stagefright/MetaData.h
 cp $1/frameworks/base/native/include/android/rect.h ./android/rect.h
@@ -54,7 +55,6 @@ cp $1/frameworks/base/include/ui/PixelFormat.h ./ui/PixelFormat.h
 cp $1/frameworks/base/include/ui/egl/android_natives.h ./ui/egl/android_natives.h
 cp $1/frameworks/base/include/ui/android_native_buffer.h ./ui/android_native_buffer.h
 cp $1/frameworks/base/include/ui/GraphicBuffer.h ./ui/GraphicBuffer.h
-cp $1/frameworks/base/media/libstagefright/include/OMX.h ./OMX.h
 cp $1/hardware/libhardware/include/hardware/hardware.h ./hardware/hardware.h
 cp $1/hardware/libhardware/include/hardware/gralloc.h ./hardware/gralloc.h
 cp $1/hardware/libhardware/include/hardware/fb.h ./hardware/fb.h
