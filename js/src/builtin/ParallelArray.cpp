@@ -1050,6 +1050,12 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
         if (!iv.dimensions.resize(1) || !ToUint32(cx, args[0], &iv.dimensions[0]))
             return false;
     }
+
+    // If the first argument wasn't a array-like or had no length, assume
+    // empty parallel array, i.e. with shape being [0].
+    if (iv.dimensions.length() == 0 && !iv.dimensions.append(0))
+        return false;
+
     if (!iv.initialize(0))
         return false;
 
