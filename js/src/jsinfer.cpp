@@ -4270,8 +4270,22 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         }
     }
 
-    /* Handle any remaining 'this' uses on the stack. */
-    if (!pendingPoppedThis.empty() &&
+    /*
+     * There is an invariant that all definite properties come before
+     * non-definite properties in the shape tree. So, we can't process
+     * remaining 'this' uses on the stack unless we have completely analyzed
+     * the function, due to corner cases like the following:
+     *
+     *   this.x = this[this.y = "foo"]++;
+     *
+     * The 'this.y = "foo"' assignment breaks the above loop since the 'this'
+     * in the assignment is popped multiple times, with 'this.x' being left on
+     * the pending stack. But we can't mark 'x' as a definite property, as
+     * that would make it come before 'y' in the shape tree, breaking the
+     * invariant.
+     */
+    if (entirelyAnalyzed &&
+        !pendingPoppedThis.empty() &&
         !AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, pbaseobj,
                            initializerList)) {
         return false;
