@@ -291,7 +291,7 @@ var SocialToolbar = {
     removeItem.setAttribute("accesskey", accesskey);
 
     let statusAreaPopup = document.getElementById("social-statusarea-popup");
-    statusAreaPopup.addEventListener("popupshowing", function(e) {
+    statusAreaPopup.addEventListener("popupshown", function(e) {
       this.button.setAttribute("open", "true");
     }.bind(this));
     statusAreaPopup.addEventListener("popuphidden", function(e) {
@@ -439,12 +439,34 @@ var SocialToolbar = {
 
     sizePanelToContent();
 
+    function dispatchPanelEvent(name) {
+      let evt = notifBrowser.contentDocument.createEvent("CustomEvent");
+      evt.initCustomEvent(name, true, true, {});
+      notifBrowser.contentDocument.documentElement.dispatchEvent(evt);
+    }
+
     panel.addEventListener("popuphiding", function onpopuphiding() {
       panel.removeEventListener("popuphiding", onpopuphiding);
       SocialToolbar.button.removeAttribute("open");
+      dispatchPanelEvent("socialFrameHide");
     });
 
-    this.button.setAttribute("open", "true");
+    panel.addEventListener("popupshown", function onpopupshown() {
+      panel.removeEventListener("popupshown", onpopupshown);
+      SocialToolbar.button.setAttribute("open", "true");
+      if (notifBrowser.contentDocument.readyState == "complete") {
+        dispatchPanelEvent("socialFrameShow");
+      } else {
+        // first time load, wait for load and dispatch after load
+        notifBrowser.addEventListener("load", function panelBrowserOnload(e) {
+          notifBrowser.removeEventListener("load", panelBrowserOnload, true);
+          setTimeout(function() {
+            dispatchPanelEvent("socialFrameShow");
+          }, 0);
+        }, true);
+      }
+    });
+
     panel.openPopup(iconImage, "bottomcenter topleft", 0, 0, false, false);
   }
 }
@@ -499,7 +521,7 @@ var SocialSidebar = {
     let sbrowser = document.getElementById("social-sidebar-browser");
     sbrowser.docShell.isActive = !hideSidebar;
     if (hideSidebar) {
-      this.dispatchEvent("sidebarhide");
+      this.dispatchEvent("socialFrameHide");
       // If we're disabled, unload the sidebar content
       if (!this.canShow) {
         sbrowser.removeAttribute("origin");
@@ -514,11 +536,11 @@ var SocialSidebar = {
           sbrowser.removeEventListener("load", sidebarOnShow);
           // let load finish, then fire our event
           setTimeout(function () {
-            SocialSidebar.dispatchEvent("sidebarshow");
+            SocialSidebar.dispatchEvent("socialFrameShow");
           }, 0);
         });
       } else {
-        this.dispatchEvent("sidebarshow");
+        this.dispatchEvent("socialFrameShow");
       }
     }
   }
