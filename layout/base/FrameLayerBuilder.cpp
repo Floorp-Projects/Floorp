@@ -32,6 +32,16 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
+FrameLayerBuilder::DisplayItemData::DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState, PRUint32 aGeneration)
+  : mLayer(aLayer)
+  , mDisplayItemKey(aKey)
+  , mContainerLayerGeneration(aGeneration)
+  , mLayerState(aLayerState)
+{}
+
+FrameLayerBuilder::DisplayItemData::~DisplayItemData()
+{}
+
 /**
  * This is the userdata we associate with a layer manager.
  */
@@ -588,8 +598,6 @@ ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
 
 } // anonymous namespace
 
-PRUint8 gLayerManagerLayerBuilder;
-
 /* static */ void
 FrameLayerBuilder::Shutdown()
 {
@@ -600,12 +608,13 @@ FrameLayerBuilder::Shutdown()
 }
 
 void
-FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder)
+FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager)
 {
   mRootPresContext = aBuilder->ReferenceFrame()->PresContext()->GetRootPresContext();
   if (mRootPresContext) {
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
+  aManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(this));
 }
 
 bool
@@ -2332,7 +2341,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   PRUint32 flags;
   bool flattenedLayers = false;
   while (true) {
-    ContainerState state(aBuilder, aManager, GetLayerBuilderForManager(aManager),
+    ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),
                          aContainerFrame, containerLayer, scaleParameters);
     if (flattenedLayers) {
       state.SetInvalidateAllThebesContent();
@@ -2679,7 +2688,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
 
-  FrameLayerBuilder *layerBuilder = GetLayerBuilderForManager(aLayer->Manager());
+  FrameLayerBuilder *layerBuilder = aLayer->Manager()->GetLayerBuilder();
 
   if (layerBuilder->CheckDOMModified())
     return;

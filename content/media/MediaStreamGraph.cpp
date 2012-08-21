@@ -19,6 +19,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Attributes.h"
 #include "TrackUnionStream.h"
+#include "ImageContainer.h"
 
 using namespace mozilla::layers;
 
