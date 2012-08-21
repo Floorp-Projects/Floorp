@@ -114,3 +114,6 @@ function f(g) {
 }
 var x = f(function () { return function() {}; });
 assertName(x, 'x</<');
+
+var a = {'b': function(){}};
+assertName(a.b, 'a.b');
