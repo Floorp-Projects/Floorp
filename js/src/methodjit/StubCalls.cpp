@@ -144,7 +144,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setGeneric(cx, obj, id, &rval, strict))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -329,7 +329,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     RootedPropertyName name(cx, fun->atom->asPropertyName());
     RootedShape shape(cx);
     RootedObject pobj(cx);
-    if (!parent->lookupProperty(cx, name, &pobj, &shape))
+    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
         THROW();
 
     RootedValue rval(cx, ObjectValue(*fun));
@@ -337,8 +337,8 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     do {
         /* Steps 5d, 5f. */
         if (!shape || pobj != parent) {
-            if (!parent->defineProperty(cx, name, rval,
-                                        JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            if (!JSObject::defineProperty(cx, parent, name, rval,
+                                          JS_PropertyStub, JS_StrictPropertyStub, attrs))
             {
                 THROW();
             }
@@ -349,8 +349,8 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
         JS_ASSERT(parent->isNative());
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, name, rval,
-                                            JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                if (!JSObject::defineProperty(cx, parent, name, rval,
+                                              JS_PropertyStub, JS_StrictPropertyStub, attrs))
                 {
                     THROW();
                 }
@@ -375,7 +375,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, &rval, strict))
+        if (!JSObject::setProperty(cx, parent, parent, name, &rval, strict))
             THROW();
     } while (false);
 }
@@ -927,10 +927,10 @@ stubs::InitElem(VMFrame &f, uint32_t last)
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (last && !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
+        if (last && !SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
-        if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             THROW();
     }
 }
@@ -990,10 +990,9 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
     JS_ASSERT(lval.isObject());
     JS_ASSERT(name == cx->runtime->atomState.classPrototypeAtom);
 
-    JSObject *obj = &lval.toObject();
-
+    RootedObject obj(cx, &lval.toObject());
     RootedValue rval(cx);
-    if (!obj->getProperty(cx, name, &rval))
+    if (!JSObject::getProperty(cx, obj, obj, name, &rval))
         THROW();
 
     regs.sp[-1] = rval;
@@ -1355,7 +1354,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!obj->deleteProperty(f.cx, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
+        if (!JSObject::deleteProperty(f.cx, obj, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
             THROW();
     }
 }
@@ -1368,12 +1367,12 @@ stubs::DelProp(VMFrame &f, PropertyName *name_)
     RootedPropertyName name(cx, name_);
 
     RootedValue objval(cx, f.regs.sp[-1]);
-    JSObject *obj = ToObjectFromStack(cx, objval);
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
     RootedValue rval(cx);
-    if (!obj->deleteProperty(cx, name, &rval, strict))
+    if (!JSObject::deleteProperty(cx, obj, name, &rval, strict))
         THROW();
 
     f.regs.sp[-1] = rval;
@@ -1389,14 +1388,14 @@ stubs::DelElem(VMFrame &f)
     JSContext *cx = f.cx;
 
     RootedValue objval(cx, f.regs.sp[-2]);
-    JSObject *obj = ToObjectFromStack(cx, objval);
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
     const Value &propval = f.regs.sp[-1];
     MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
-    if (!obj->deleteByValue(cx, propval, rval, strict))
+    if (!JSObject::deleteByValue(cx, obj, propval, rval, strict))
         THROW();
 }
 
@@ -1421,11 +1420,11 @@ stubs::SetConst(VMFrame &f, PropertyName *name)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = &f.fp()->varObj();
+    RootedObject obj(cx, &f.fp()->varObj());
     HandleValue ref = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    if (!obj->defineProperty(cx, name, ref, JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, obj, name, ref, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY))
     {
         THROW();
     }
@@ -1453,7 +1452,7 @@ stubs::In(VMFrame &f)
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
+    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
         THROWV(JS_FALSE);
 
     return !!prop;

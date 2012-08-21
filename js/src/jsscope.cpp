@@ -734,11 +734,11 @@ JSObject::putProperty(JSContext *cx, jsid id_,
     return shape;
 }
 
-Shape *
-JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned mask,
+/* static */ Shape *
+JSObject::changeProperty(JSContext *cx, HandleObject obj, Shape *shape, unsigned attrs, unsigned mask,
                          PropertyOp getter, StrictPropertyOp setter)
 {
-    JS_ASSERT(nativeContainsNoAllocation(*shape));
+    JS_ASSERT(obj->nativeContainsNoAllocation(*shape));
 
     attrs |= shape->attrs & mask;
 
@@ -746,16 +746,16 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned m
     JS_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
               !(attrs & JSPROP_SHARED));
 
-    types::MarkTypePropertyConfigured(cx, this, shape->propid());
+    types::MarkTypePropertyConfigured(cx, obj, shape->propid());
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
-        types::AddTypePropertyId(cx, this, shape->propid(), types::Type::UnknownType());
+        types::AddTypePropertyId(cx, obj, shape->propid(), types::Type::UnknownType());
 
     if (getter == JS_PropertyStub)
         getter = NULL;
     if (setter == JS_StrictPropertyStub)
         setter = NULL;
 
-    if (!CheckCanChangeAttrs(cx, this, shape, &attrs))
+    if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
         return NULL;
 
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
@@ -767,10 +767,10 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned m
      * removeProperty because it will free an allocated shape->slot, and
      * putProperty won't re-allocate it.
      */
-    Shape *newShape = putProperty(cx, shape->propid(), getter, setter, shape->maybeSlot(),
-                                  attrs, shape->flags, shape->maybeShortid());
+    Shape *newShape = obj->putProperty(cx, shape->propid(), getter, setter, shape->maybeSlot(),
+                                       attrs, shape->flags, shape->maybeShortid());
 
-    checkShapeConsistency();
+    obj->checkShapeConsistency();
     return newShape;
 }
 
