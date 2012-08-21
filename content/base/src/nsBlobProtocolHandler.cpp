@@ -163,8 +163,8 @@ nsBlobProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                uri,
-                                stream);
+				uri,
+				stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
@@ -188,24 +188,4 @@ nsBlobProtocolHandler::AllowPort(PRInt32 port, const char *scheme,
     // don't override anything.  
     *_retval = false;
     return NS_OK;
-}
-
-nsresult
-NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
-{
-  NS_ASSERTION(IsBlobURI(aURI), "Only call this with blob URIs");
-
-  *aStream = nullptr;
-
-  nsCString spec;
-  aURI->GetSpec(spec);
-
-  FileDataInfo* info =
-    GetFileDataInfo(spec);
-
-  if (!info) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  return info->mFile->GetInternalStream(aStream);
 }
