@@ -12,7 +12,10 @@ const Ci = Components.interfaces;
 
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
-const LATEST_STORAGE_VERSION = 1;
+const LATEST_STORAGE_VERSION = 2;
+
+const EXPIRATION_MIN_CHUNK_SIZE = 50;
+const EXPIRATION_INTERVAL_SECS = 3600;
 
 /**
  * Name of the directory in the profile that contains the thumbnails.
@@ -37,6 +40,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gUpdateTimerManager",
+  "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
 
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
@@ -84,6 +90,7 @@ let PageThumbs = {
 
       // Migrate the underlying storage, if needed.
       PageThumbsStorageMigrator.migrate();
+      PageThumbsExpiration.init();
     }
   },
 
@@ -198,6 +205,14 @@ let PageThumbs = {
     });
   },
 
+  addExpirationFilter: function PageThumbs_addExpirationFilter(aFilter) {
+    PageThumbsExpiration.addFilter(aFilter);
+  },
+
+  removeExpirationFilter: function PageThumbs_removeExpirationFilter(aFilter) {
+    PageThumbsExpiration.removeFilter(aFilter);
+  },
+
   /**
    * Determines the crop size for a given content window.
    * @param aWindow The content window.
@@ -264,16 +279,23 @@ let PageThumbs = {
 };
 
 let PageThumbsStorage = {
-  getFileForURL: function Storage_getFileForURL(aURL, aOptions) {
+  getDirectory: function Storage_getDirectory(aCreate = true) {
+    return FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], aCreate);
+  },
+
+  getLeafNameForURL: function Storage_getLeafNameForURL(aURL) {
     let hash = this._calculateMD5Hash(aURL);
-    let parts = [THUMBNAIL_DIRECTORY, hash[0], hash[1]];
-    let file = FileUtils.getDir("ProfLD", parts, aOptions && aOptions.createPath);
-    file.append(hash.slice(2) + ".png");
+    return hash + ".png";
+  },
+
+  getFileForURL: function Storage_getFileForURL(aURL) {
+    let file = this.getDirectory();
+    file.append(this.getLeafNameForURL(aURL));
     return file;
   },
 
   write: function Storage_write(aURL, aDataStream, aCallback) {
-    let file = this.getFileForURL(aURL, {createPath: true});
+    let file = this.getFileForURL(aURL);
     let fos = FileUtils.openSafeFileOutputStream(file);
 
     NetUtil.asyncCopy(aDataStream, fos, function (aResult) {
@@ -294,18 +316,17 @@ let PageThumbsStorage = {
   },
 
   remove: function Storage_remove(aURL) {
-    try {
-      this.getFileForURL(aURL).remove(false);
-    } catch (e) {
-      /* The file might not exist or we're not permitted to remove it. */
-    }
+    let file = this.getFileForURL(aURL);
+    PageThumbsWorker.postMessage({type: "removeFile", path: file.path});
   },
 
   wipe: function Storage_wipe() {
+    let dir = this.getDirectory(false);
+    dir.followLinks = false;
     try {
-      FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY]).remove(true);
+      dir.remove(true);
     } catch (e) {
-      /* The file might not exist or we're not permitted to remove it. */
+      /* The directory might not exist or we're not permitted to remove it. */
     }
   },
 
@@ -323,8 +344,7 @@ let PageThumbsStorage = {
     for (let i = 0; i < aData.length; i++)
       hex += ("0" + aData.charCodeAt(i).toString(16)).slice(-2);
     return hex;
-  },
-
+  }
 };
 
 let PageThumbsStorageMigrator = {
@@ -344,8 +364,12 @@ let PageThumbsStorageMigrator = {
   migrate: function Migrator_migrate() {
     let version = this.currentVersion;
 
-    if (version < 1)
+    if (version < 1) {
       this.removeThumbnailsFromRoamingProfile();
+    }
+    if (version < 2) {
+      this.clearThumbnailsFolder();
+    }
 
     this.currentVersion = LATEST_STORAGE_VERSION;
   },
@@ -356,12 +380,138 @@ let PageThumbsStorageMigrator = {
     let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]);
 
     if (!roaming.equals(local) && roaming.exists()) {
+      roaming.followLinks = false;
       try {
         roaming.remove(true);
       } catch (e) {
         // The directory might not exist or we're not permitted to remove it.
       }
     }
+  },
+
+  clearThumbnailsFolder: function Migrator_clearThumbnailsFolder() {
+    let dir = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY]);
+    dir.followLinks = false;
+    try {
+      dir.remove(true);
+    } catch (e) {
+      // The directory might not exist or we're not permitted to remove it.
+    }
+  }
+};
+
+let PageThumbsExpiration = {
+  _filters: [],
+
+  init: function Expiration_init() {
+    gUpdateTimerManager.registerTimer("browser-cleanup-thumbnails", this,
+                                      EXPIRATION_INTERVAL_SECS);
+  },
+
+  addFilter: function Expiration_addFilter(aFilter) {
+    this._filters.push(aFilter);
+  },
+
+  removeFilter: function Expiration_removeFilter(aFilter) {
+    let index = this._filters.indexOf(aFilter);
+    if (index > -1)
+      this._filters.splice(index, 1);
+  },
+
+  notify: function Expiration_notify(aTimer) {
+    let urls = [];
+    let filtersToWaitFor = this._filters.length;
+
+    let expire = function expire() {
+      this.expireThumbnails(urls);
+    }.bind(this);
+
+    // No registered filters.
+    if (!filtersToWaitFor) {
+      expire();
+      return;
+    }
+
+    function filterCallback(aURLs) {
+      urls = urls.concat(aURLs);
+      if (--filtersToWaitFor == 0)
+        expire();
+    }
+
+    for (let filter of this._filters) {
+      if (typeof filter == "function")
+        filter(filterCallback)
+      else
+        filter.filterForThumbnailExpiration(filterCallback);
+    }
+  },
+
+  expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
+    let keep = {};
+
+    // Transform all these URLs into file names.
+    for (let url of aURLsToKeep) {
+      keep[PageThumbsStorage.getLeafNameForURL(url)] = true;
+    }
+
+    let numFilesRemoved = 0;
+    let dir = PageThumbsStorage.getDirectory().path;
+    let msg = {type: "getFilesInDirectory", path: dir};
+
+    PageThumbsWorker.postMessage(msg, function (aData) {
+      let files = [file for (file of aData.result) if (!(file in keep))];
+      let maxFilesToRemove = Math.max(EXPIRATION_MIN_CHUNK_SIZE,
+                                      Math.round(files.length / 2));
+
+      let fileNames = files.slice(0, maxFilesToRemove);
+      let filePaths = [dir + "/" + fileName for (fileName of fileNames)];
+      PageThumbsWorker.postMessage({type: "removeFiles", paths: filePaths});
+    });
+  }
+};
+
+/**
+ * Interface to a dedicated thread handling I/O
+ */
+let PageThumbsWorker = {
+  /**
+   * A (fifo) queue of callbacks registered for execution
+   * upon completion of calls to the worker.
+   */
+  _callbacks: [],
+
+  /**
+   * Get the worker, spawning it if necessary.
+   * Code of the worker is in companion file PageThumbsWorker.js
+   */
+  get _worker() {
+    delete this._worker;
+    this._worker = new ChromeWorker("resource://gre/modules/PageThumbsWorker.js");
+    this._worker.addEventListener("message", this);
+    return this._worker;
+  },
+
+  /**
+   * Post a message to the dedicated thread, registering a callback
+   * to be executed once the reply has been received.
+   *
+   * See PageThumbsWorker.js for the format of messages and replies.
+   *
+   * @param {*} message A JSON message.
+   * @param {Function=} callback An optional callback.
+   */
+  postMessage: function Worker_postMessage(message, callback) {
+    this._callbacks.push(callback);
+    this._worker.postMessage(message);
+  },
+
+  /**
+   * Handle a message from the dedicated thread.
+   */
+  handleEvent: function Worker_handleEvent(aEvent) {
+    let callback = this._callbacks.shift();
+    if (callback)
+      callback(aEvent.data);
   }
 };
 
