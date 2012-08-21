@@ -63,20 +63,6 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mStride > 0;
 }
 
-static bool
-IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
-             const VideoData::YCbCrBuffer::Plane& aCbPlane,
-             const VideoData::YCbCrBuffer::Plane& aCrPlane)
-{
-  return
-    aYPlane.mWidth % 2 == 0 &&
-    aYPlane.mHeight % 2 == 0 &&
-    aYPlane.mWidth / 2 == aCbPlane.mWidth &&
-    aYPlane.mHeight / 2 == aCbPlane.mHeight &&
-    aCbPlane.mWidth == aCrPlane.mWidth &&
-    aCbPlane.mHeight == aCrPlane.mHeight;
-}
-
 bool
 nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
                                  const nsIntRect& aPicture,
@@ -197,46 +183,38 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                                        aKeyframe,
                                        aTimecode,
                                        aInfo.mDisplay));
-  const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
-  const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
-  const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
-
   // Currently our decoder only knows how to output to PLANAR_YCBCR
   // format.
-  ImageFormat format[2] = {PLANAR_YCBCR, GRALLOC_PLANAR_YCBCR};
-  if (IsYV12Format(Y, Cb, Cr)) {
-    v->mImage = aContainer->CreateImage(format, 2);
-  } else {
-    v->mImage = aContainer->CreateImage(format, 1);
-  }
+  ImageFormat format = PLANAR_YCBCR;
+  v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR ||
-               v->mImage->GetFormat() == GRALLOC_PLANAR_YCBCR,
+  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
   PlanarYCbCrImage::Data data;
+  const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
+  const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
+  const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
+
   data.mYChannel = Y.mData;
   data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
-  data.mYOffset = Y.mOffset;
-  data.mYSkip = Y.mSkip;
   data.mCbChannel = Cb.mData;
   data.mCrChannel = Cr.mData;
   data.mCbCrSize = gfxIntSize(Cb.mWidth, Cb.mHeight);
   data.mCbCrStride = Cb.mStride;
-  data.mCbOffset = Cb.mOffset;
-  data.mCbSkip = Cb.mSkip;
-  data.mCrOffset = Cr.mOffset;
-  data.mCrSkip = Cr.mSkip;
   data.mPicX = aPicture.x;
   data.mPicY = aPicture.y;
   data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
-  videoImage->CopyData(data);
+  videoImage->CopyData(data,
+                       Y.mOffset, Y.mSkip,
+                       Cb.mOffset, Cb.mSkip,
+                       Cr.mOffset, Cr.mSkip);
   return v.forget();
 }
 
