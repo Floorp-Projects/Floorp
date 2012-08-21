@@ -38,13 +38,13 @@ function doTest(finishcb) {
   ok(!command.hidden, "toggle command should be visible");
   checkShown(true);
 
-  browser.addEventListener("sidebarhide", function sidebarhide() {
-    browser.removeEventListener("sidebarhide", sidebarhide);
+  browser.addEventListener("socialFrameHide", function sidebarhide() {
+    browser.removeEventListener("socialFrameHide", sidebarhide);
 
     checkShown(false);
 
-    browser.addEventListener("sidebarshow", function sidebarshow() {
-      browser.removeEventListener("sidebarshow", sidebarshow);
+    browser.addEventListener("socialFrameShow", function sidebarshow() {
+      browser.removeEventListener("socialFrameShow", sidebarshow);
 
       checkShown(true);
 
