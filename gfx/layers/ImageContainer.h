@@ -644,7 +644,7 @@ public:
     MAX_DIMENSION = 16384
   };
 
-  ~PlanarYCbCrImage();
+  virtual ~PlanarYCbCrImage();
 
   /**
    * This makes a copy of the data buffers, in order to support functioning
