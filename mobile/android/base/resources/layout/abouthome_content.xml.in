@@ -80,37 +80,18 @@
                                             android:textSize="12sp"
                                             android:gravity="top|center_horizontal"/>
 
-            <LinearLayout android:id="@+id/sync_box"
-                          android:background="@drawable/abouthome_sync_box"
-                          android:orientation="horizontal"
-                          android:layout_width="fill_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_marginLeft="12dp"
-                          android:layout_marginRight="12dp"
-                          android:layout_marginTop="17dp"
-                          android:layout_marginBottom="14dp"
-                          android:gravity="center"
-                          android:clickable="true"
-                          android:visibility="gone">
-
-                <ImageView android:id="@+id/sync_logo"
-                           android:src="@drawable/abouthome_sync_logo"
-                           android:layout_width="wrap_content"
-                           android:layout_height="wrap_content"
-                           android:layout_weight="0"
-                           android:gravity="left|center_vertical"/>
-
-                <TextView android:id="@+id/sync_text"
-                          android:text="@string/abouthome_about_sync"
-                          android:layout_width="0dp"
-                          android:layout_height="wrap_content"
-                          android:layout_weight="1"
-                          android:layout_marginLeft="7dp"
-                          android:gravity="center"
-                          android:textSize="15sp"
-                          android:textColor="#FFFFFF"/>
-
-            </LinearLayout>
+            <org.mozilla.gecko.AboutHomePromoBox android:id="@+id/promo_box"
+                                                 android:orientation="horizontal"
+                                                 android:background="@drawable/abouthome_promo_box"
+                                                 android:layout_width="fill_parent"
+                                                 android:layout_height="wrap_content"
+                                                 android:layout_marginLeft="12dp"
+                                                 android:layout_marginRight="12dp"
+                                                 android:layout_marginTop="17dp"
+                                                 android:layout_marginBottom="14dp"
+                                                 android:gravity="center"
+                                                 android:clickable="true"
+                                                 android:visibility="gone"/>
 
             <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
                                                 android:layout_width="fill_parent"
