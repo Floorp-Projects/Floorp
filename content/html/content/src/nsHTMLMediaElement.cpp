@@ -66,6 +66,8 @@
 #include "nsCSSParser.h"
 #include "nsIMediaList.h"
 
+#include "ImageContainer.h"
+
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif

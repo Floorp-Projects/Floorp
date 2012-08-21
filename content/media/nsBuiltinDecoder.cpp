@@ -16,6 +16,7 @@
 #include "nsBuiltinDecoderStateMachine.h"
 #include "nsTimeRanges.h"
 #include "nsContentUtils.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 
@@ -1046,4 +1047,47 @@ void nsBuiltinDecoder::NotifyAudioAvailableListener()
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mDecoderStateMachine->NotifyAudioAvailableListener();
   }
+}
+
+nsBuiltinDecoder::OutputMediaStream::OutputMediaStream()
+{
+
+}
+
+nsBuiltinDecoder::OutputMediaStream::~OutputMediaStream()
+{
+
+}
+    
+
+void nsBuiltinDecoder::OutputMediaStream::Init(PRInt64 aInitialTime, SourceMediaStream* aStream, bool aFinishWhenEnded)
+{
+  mLastAudioPacketTime = -1;
+  mLastAudioPacketEndTime = -1;
+  mAudioFramesWrittenBaseTime = aInitialTime;
+  mAudioFramesWritten = 0;
+  mNextVideoTime = aInitialTime;
+  mStream = aStream;
+  mStreamInitialized = false;
+  mFinishWhenEnded = aFinishWhenEnded;
+  mHaveSentFinish = false;
+  mHaveSentFinishAudio = false;
+  mHaveSentFinishVideo = false;
+}
+
+nsBuiltinDecoder::OutputMediaStream::OutputMediaStream(const OutputMediaStream& rhs)
+{
+  mLastAudioPacketTime = rhs.mLastAudioPacketTime;
+  mLastAudioPacketEndTime = rhs.mLastAudioPacketEndTime;
+  mAudioFramesWritten = rhs.mAudioFramesWritten;
+  mAudioFramesWrittenBaseTime = rhs.mAudioFramesWrittenBaseTime;
+  mNextVideoTime = rhs.mNextVideoTime;
+  mLastVideoImage = rhs.mLastVideoImage;
+  mStream = rhs.mStream;
+  mLastVideoImageDisplaySize = rhs.mLastVideoImageDisplaySize;
+  mStreamInitialized = rhs.mStreamInitialized;
+  mFinishWhenEnded = rhs.mFinishWhenEnded;
+  mHaveSentFinish = rhs.mHaveSentFinish;
+  mHaveSentFinishAudio = rhs.mHaveSentFinishAudio;
+  mHaveSentFinishVideo = rhs.mHaveSentFinishVideo;
 }

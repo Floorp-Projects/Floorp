@@ -8,6 +8,8 @@
 #include "nsDOMFile.h"
 #include "nsILocalFile.h"
 #include "Layers.h"
+#include "ImageContainer.h"
+#include "ImageTypes.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
