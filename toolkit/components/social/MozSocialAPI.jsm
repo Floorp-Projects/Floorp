@@ -99,7 +99,17 @@ function attachToWindow(provider, targetWindow) {
       configurable: true,
       writable: true,
       value: function(toURL, name, options) {
-        return openServiceWindow(provider, targetWindow, toURL, name, options);
+        let url = targetWindow.document.documentURIObject.resolve(toURL);
+        return openServiceWindow(provider, targetWindow, url, name, options);
+      }
+    },
+    openChatWindow: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, callback) {
+        let url = targetWindow.document.documentURIObject.resolve(toURL);
+        openChatWindow(getChromeWindow(targetWindow), provider, url, callback);
       }
     },
     getAttention: {
@@ -107,13 +117,7 @@ function attachToWindow(provider, targetWindow) {
       configurable: true,
       writable: true,
       value: function() {
-        let mainWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                           .rootTreeItem
-                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow);
-        mainWindow.getAttention();
+        getChromeWindow(targetWindow).getAttention();
       }
     },
     isVisible: {
@@ -152,12 +156,21 @@ function schedule(callback) {
   Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
-function openServiceWindow(provider, contentWindow, url, name, options) {
+function getChromeWindow(contentWin) {
+  return contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebNavigation)
+                   .QueryInterface(Ci.nsIDocShellTreeItem)
+                   .rootTreeItem
+                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
+}
+
+function ensureProviderOrigin(provider, url) {
   // resolve partial URLs and check prePath matches
   let uri;
   let fullURL;
   try {
-    fullURL = contentWindow.document.documentURIObject.resolve(url);
+    fullURL = Services.io.newURI(provider.origin, null, null).resolve(url);
     uri = Services.io.newURI(fullURL, null, null);
   } catch (ex) {
     Cu.reportError("openServiceWindow: failed to resolve window URL: " + url + "; " + ex);
@@ -169,25 +182,33 @@ function openServiceWindow(provider, contentWindow, url, name, options) {
                    provider.origin + " != " + uri.prePath);
     return null;
   }
+  return fullURL;
+}
 
-  function getChromeWindow(contentWin) {
-    return contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIDocShellTreeItem)
-                     .rootTreeItem
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindow);
+function openChatWindow(chromeWindow, provider, url, callback) {
+  if (!chromeWindow.SocialChatBar)
+    return;
+  let fullURL = ensureProviderOrigin(provider, url);
+  if (!fullURL)
+    return;
+  chromeWindow.SocialChatBar.newChat(provider, fullURL, callback);
+}
 
-  }
-  let chromeWindow = Services.ww.getWindowByName("social-service-window-" + name,
-                                                 getChromeWindow(contentWindow));
+function openServiceWindow(provider, contentWindow, url, name, options) {
+  // resolve partial URLs and check prePath matches
+  let fullURL = ensureProviderOrigin(provider, url);
+  if (!fullURL)
+    return null;
+
+  let windowName = provider.origin + name;
+  let chromeWindow = Services.ww.getWindowByName(windowName, null);
   let tabbrowser = chromeWindow && chromeWindow.gBrowser;
   if (tabbrowser &&
       tabbrowser.selectedBrowser.getAttribute("origin") == provider.origin) {
     return tabbrowser.contentWindow;
   }
 
-  let serviceWindow = contentWindow.openDialog(fullURL, name,
+  let serviceWindow = contentWindow.openDialog(fullURL, windowName,
                                                "chrome=no,dialog=no" + options);
 
   // Get the newly opened window's containing XUL window
@@ -195,7 +216,7 @@ function openServiceWindow(provider, contentWindow, url, name, options) {
 
   // set the window's name and origin attribute on its browser, so that it can
   // be found via getWindowByName
-  chromeWindow.name = "social-service-window-" + name;
+  chromeWindow.name = windowName;
   chromeWindow.gBrowser.selectedBrowser.setAttribute("origin", provider.origin);
 
   // we dont want the default title the browser produces, we'll fixup whenever
