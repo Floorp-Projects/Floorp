@@ -202,19 +202,22 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   data.mYChannel = Y.mData;
   data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
+  data.mYOffset = Y.mOffset;
+  data.mYSkip = Y.mSkip;
   data.mCbChannel = Cb.mData;
   data.mCrChannel = Cr.mData;
   data.mCbCrSize = gfxIntSize(Cb.mWidth, Cb.mHeight);
   data.mCbCrStride = Cb.mStride;
+  data.mCbOffset = Cb.mOffset;
+  data.mCbSkip = Cb.mSkip;
+  data.mCrOffset = Cr.mOffset;
+  data.mCrSkip = Cr.mSkip;
   data.mPicX = aPicture.x;
   data.mPicY = aPicture.y;
   data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
-  videoImage->CopyData(data,
-                       Y.mOffset, Y.mSkip,
-                       Cb.mOffset, Cb.mSkip,
-                       Cr.mOffset, Cr.mSkip);
+  videoImage->SetData(data);
   return v.forget();
 }
 
