@@ -35,9 +35,10 @@
                   android:layout_below="@id/abouthome_logo"/>
 
         <ImageView android:src="@drawable/abouthome_icon"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
+                   android:layout_width="180dp"
+                   android:layout_height="153dp"
                    android:layout_marginTop="4dp"
+                   android:layout_marginRight="@dimen/abouthome_icon_crop"
                    android:layout_alignParentTop="true"
                    android:layout_alignParentRight="true"/>
 
