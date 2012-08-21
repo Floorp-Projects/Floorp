@@ -785,6 +785,7 @@ JSRuntime::JSRuntime()
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcSweepOnBackgroundThread(false),
+    gcSweepingCompartments(NULL),
     gcSweepPhase(0),
     gcSweepCompartmentIndex(0),
     gcSweepKindIndex(0),

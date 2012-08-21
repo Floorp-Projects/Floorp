@@ -583,12 +583,15 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Whether any sweeping will take place in the separate GC helper thread. */
     bool                gcSweepOnBackgroundThread;
 
+    /* List head of compartments being swept. */
+    JSCompartment       *gcSweepingCompartments;
+
     /*
      * Incremental sweep state.
      */
-    int                gcSweepPhase;
-    ptrdiff_t          gcSweepCompartmentIndex;
-    int                gcSweepKindIndex;
+    int                 gcSweepPhase;
+    ptrdiff_t           gcSweepCompartmentIndex;
+    int                 gcSweepKindIndex;
 
     /*
      * List head of arenas allocated during the sweep phase.
