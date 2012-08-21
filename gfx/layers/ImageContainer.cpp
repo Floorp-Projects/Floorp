@@ -423,10 +423,7 @@ CopyPlane(PRUint8 *aDst, PRUint8 *aSrc,
 }
 
 void
-PlanarYCbCrImage::CopyData(const Data& aData,
-                           PRInt32 aYOffset, PRInt32 aYSkip,
-                           PRInt32 aCbOffset, PRInt32 aCbSkip,
-                           PRInt32 aCrOffset, PRInt32 aCrSkip)
+PlanarYCbCrImage::CopyData(const Data& aData)
 {
   mData = aData;
 
@@ -445,13 +442,13 @@ PlanarYCbCrImage::CopyData(const Data& aData,
 
   CopyPlane(mData.mYChannel, aData.mYChannel,
             mData.mYSize, mData.mYStride,
-            aYOffset, aYSkip);
+            mData.mYOffset, mData.mYSkip);
   CopyPlane(mData.mCbChannel, aData.mCbChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCbOffset, aCbSkip);
+            mData.mCbOffset, mData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCrOffset, aCrSkip);
+            mData.mCrOffset, mData.mCrSkip);
 
   mSize = aData.mPicSize;
 }
