@@ -117,12 +117,10 @@ bool CanRecord();
  * @param statement - offending SQL statement to record
  * @param dbName - DB filename
  * @param delay - execution time in milliseconds
- * @param isDynamicString - prepared statement or a dynamic string
  */
 void RecordSlowSQLStatement(const nsACString &statement,
                             const nsACString &dbName,
-                            PRUint32 delay,
-                            bool isDynamicString);
+                            PRUint32 delay);
 
 /**
  * Threshold for a statement to be considered slow, in milliseconds
