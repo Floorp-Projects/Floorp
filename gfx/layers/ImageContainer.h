@@ -603,11 +603,6 @@ private:
  * The Image that is rendered is the picture region defined by
  * mPicX, mPicY and mPicSize. The size of the rendered image is
  * mPicSize, not mYSize or mCbCrSize.
- *
- * mYOffset, mYSkip, mCbOffset, mCbSkip, mCrOffset, mCrSkip are added
- * to support various output formats from hardware decoder. m*Offset
- * are the extra left stride and m*Skip are per-pixel skips in the
- * source image.
  */
 class THEBES_API PlanarYCbCrImage : public Image {
 public:
@@ -616,17 +611,11 @@ public:
     PRUint8* mYChannel;
     PRInt32 mYStride;
     gfxIntSize mYSize;
-    PRInt32 mYOffset;
-    PRInt32 mYSkip;
     // Chroma buffers
     PRUint8* mCbChannel;
     PRUint8* mCrChannel;
     PRInt32 mCbCrStride;
     gfxIntSize mCbCrSize;
-    PRInt32 mCbOffset;
-    PRInt32 mCbSkip;
-    PRInt32 mCrOffset;
-    PRInt32 mCrSkip;
     // Picture region
     PRUint32 mPicX;
     PRUint32 mPicY;
@@ -644,7 +633,7 @@ public:
     MAX_DIMENSION = 16384
   };
 
-  virtual ~PlanarYCbCrImage();
+  ~PlanarYCbCrImage();
 
   /**
    * This makes a copy of the data buffers, in order to support functioning
@@ -665,23 +654,20 @@ public:
   virtual const Data* GetData() { return &mData; }
 
   /**
-   * Return the number of bytes of heap memory used to store this image.
-   */
-  virtual PRUint32 GetDataSize() { return mBufferSize; }
-
-  virtual bool IsValid() { return !!mBufferSize; }
-
-  virtual gfxIntSize GetSize() { return mSize; }
-
-  PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
-
-protected:
-  /**
    * Make a copy of the YCbCr data into local storage.
    *
    * @param aData           Input image data.
+   * @param aYOffset        Pixels to skip between lines in the Y plane.
+   * @param aYSkip          Pixels to skip between pixels in the Y plane.
+   * @param aCbOffset       Pixels to skip between lines in the Cb plane.
+   * @param aCbSkip         Pixels to skip between pixels in the Cb plane.
+   * @param aCrOffset       Pixels to skip between lines in the Cr plane.
+   * @param aCrSkip         Pixels to skip between pixels in the Cr plane.
    */
-  void CopyData(const Data& aData);
+  void CopyData(const Data& aData,
+                PRInt32 aYOffset = 0, PRInt32 aYSkip = 0,
+                PRInt32 aCbOffset = 0, PRInt32 aCbSkip = 0,
+                PRInt32 aCrOffset = 0, PRInt32 aCrSkip = 0);
 
   /**
    * Return a buffer to store image data in.
@@ -690,11 +676,19 @@ protected:
    */
   virtual PRUint8* AllocateBuffer(PRUint32 aSize);
 
+  /**
+   * Return the number of bytes of heap memory used to store this image.
+   */
+  virtual PRUint32 GetDataSize() { return mBufferSize; }
+
   already_AddRefed<gfxASurface> GetAsSurface();
+
+  virtual gfxIntSize GetSize() { return mSize; }
 
   void SetOffscreenFormat(gfxASurface::gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   gfxASurface::gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
 
+  // XXX - not easy to protect these sadly.
   nsAutoArrayPtr<PRUint8> mBuffer;
   PRUint32 mBufferSize;
   Data mData;
@@ -702,6 +696,8 @@ protected:
   gfxASurface::gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   nsRefPtr<BufferRecycleBin> mRecycleBin;
+
+  PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 };
 
 /**
