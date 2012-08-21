@@ -93,7 +93,6 @@
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.WEB_SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -111,25 +110,6 @@
         </activity>
 
 #include @OBJDIR@/WebAppManifestFragment.xml.in
-
-        <activity android:name=".MarketplaceApp"
-                  android:label="Mozilla Marketplace"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:icon="@drawable/marketplace"
-                  android:launchMode="singleTask"
-                  android:theme="@style/Gecko.NoActionBar"
-                  android:noHistory="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="marketplace.mozilla.org"/>
-                <data android:scheme="https" android:host="marketplace.mozilla.org"/>
-            </intent-filter>
-
-        </activity>
 
         <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->
         <activity-alias
