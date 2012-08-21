@@ -3415,6 +3415,13 @@ var BrowserEventHandler = {
     // will significantly change what the user is seeing.
     const minDifference = -20;
     const maxDifference = 20;
+    const maxZoomAllowed = 4; // keep this in sync with mobile/android/base/ui/PanZoomController.MAX_ZOOM
+
+    if (Math.abs(aViewport.zoom - maxZoomAllowed) < 1e-6) {
+      // we're already at the max zoom, so even if the block isn't taking up most of the viewport we can't
+      // zoom in any more. return true so that we zoom out
+      return true;
+    }
 
     let vRect = new Rect(aViewport.cssX, aViewport.cssY, aViewport.cssWidth, aViewport.cssHeight);
     let overlap = vRect.intersect(aRect);
