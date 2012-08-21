@@ -120,13 +120,13 @@ CPPSRCS		= \
 		BytecodeCompiler.cpp \
 		BytecodeEmitter.cpp \
 		FoldConstants.cpp \
+		ParallelArray.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \
 		Parser.cpp \
 		SemanticAnalysis.cpp \
 		SPSProfiler.cpp \
 		TokenStream.cpp \
-		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
 		Eval.cpp \
@@ -534,6 +534,8 @@ HOST_CPPSRCS += jsoplengen.cpp
 HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
+GARBAGE += selfhosted.out.h
+
 USE_HOST_CXX = 1
 
 ifdef HAVE_DTRACE
@@ -902,6 +904,24 @@ endif
 ifdef HAVE_LINUX_PERF_EVENT_H
 pm_linux.$(OBJ_SUFFIX): CXXFLAGS += $(LINUX_HEADERS_INCLUDES)
 endif
+
+# Prepare self-hosted JS code for embedding
+export:: selfhosted.out.h
+
+selfhosting_srcs := \
+  $(srcdir)/builtin/array.js \
+  $(NULL)
+
+selfhosted_out_h_deps := \
+  $(selfhosting_srcs) \
+  $(srcdir)/js.msg \
+  $(srcdir)/builtin/macros.py \
+  $(srcdir)/builtin/js2c.py \
+  $(srcdir)/builtin/embedjs.py
+
+selfhosted.out.h: $(selfhosted_out_h_deps)
+	$(PYTHON) $(srcdir)/builtin/embedjs.py $@ $(srcdir)/js.msg \
+	  $(srcdir)/builtin/macros.py $(selfhosting_srcs)
 
 ###############################################
 # BEGIN kludges for the Nitro assembler

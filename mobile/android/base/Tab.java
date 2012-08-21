@@ -439,7 +439,8 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoApp.mAppContext.loadUrl("about:reader?url=" + Uri.encode(getURL()) +
+        GeckoApp.mAppContext.loadUrl("about:reader?tabId=" + mId +
+                                     "&url=" + Uri.encode(getURL()) +
                                      "&readingList=" + (mReadingListItem ? 1 : 0));
     }
 
@@ -553,19 +554,27 @@ public final class Tab {
     }
 
     public void addPluginLayer(Object surfaceOrView, Layer layer) {
-        mPluginLayers.put(surfaceOrView, layer);
+        synchronized(mPluginLayers) {
+            mPluginLayers.put(surfaceOrView, layer);
+        }
     }
 
     public Layer getPluginLayer(Object surfaceOrView) {
-        return mPluginLayers.get(surfaceOrView);
+        synchronized(mPluginLayers) {
+            return mPluginLayers.get(surfaceOrView);
+        }
     }
 
     public Collection<Layer> getPluginLayers() {
-        return mPluginLayers.values();
+        synchronized(mPluginLayers) {
+            return new ArrayList<Layer>(mPluginLayers.values());
+        }
     }
 
     public Layer removePluginLayer(Object surfaceOrView) {
-        return mPluginLayers.remove(surfaceOrView);
+        synchronized(mPluginLayers) {
+            return mPluginLayers.remove(surfaceOrView);
+        }
     }
 
     public int getCheckerboardColor() {

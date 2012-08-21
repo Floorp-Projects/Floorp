@@ -168,6 +168,7 @@
 
 #include "imgILoader.h"
 #include "nsWrapperCacheInlines.h"
+#include "nsSandboxFlags.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1064,18 +1065,12 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
                               nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // Allow data URIs (let them skip the CheckMayLoad call), since we want
+  // Allow data URIs and other URI's that inherit their principal by passing
+  // true as the 3rd argument of CheckMayLoad, since we want
   // to allow external resources from data URIs regardless of the difference
   // in URI scheme.
-  bool doesInheritSecurityContext;
-  rv =
-    NS_URIChainHasFlags(aURI,
-                        nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                        &doesInheritSecurityContext);
-  if (NS_FAILED(rv) || !doesInheritSecurityContext) {
-    rv = requestingPrincipal->CheckMayLoad(aURI, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = requestingPrincipal->CheckMayLoad(aURI, true, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
@@ -2412,6 +2407,15 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   mChannel = aChannel;
 
+  // If this document is being loaded by a docshell, copy its sandbox flags
+  // to the document. These are immutable after being set here.
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
+
+  if (docShell) {
+    nsresult rv = docShell->GetSandboxFlags(&mSandboxFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsresult rv = InitCSP();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2718,6 +2722,24 @@ nsDocument::SetContentType(const nsAString& aContentType)
                "Do you really want to change the content-type?");
 
   SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
+}
+
+nsresult
+nsDocument::GetAllowPlugins(bool * aAllowPlugins)
+{
+  // First, we ask our docshell if it allows plugins.
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+
+  if (docShell) {
+    docShell->GetAllowPlugins(aAllowPlugins);
+      
+    // If the docshell allows plugins, we check whether
+    // we are sandboxed and plugins should not be allowed.
+    if (*aAllowPlugins)
+      *aAllowPlugins = !(mSandboxFlags & SANDBOXED_PLUGINS);
+  }
+
+  return NS_OK;
 }
 
 /* Return true if the document is in the focused top-level window, and is an
@@ -6415,6 +6437,12 @@ nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
 bool
 nsDocument::IsScriptEnabled()
 {
+  // If this document is sandboxed without 'allow-scripts'
+  // script is not enabled
+  if (mSandboxFlags & SANDBOXED_SCRIPTS) {
+    return false;
+  }
+
   nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(sm, false);
 
@@ -8492,10 +8520,13 @@ DispatchFullScreenChange(nsIDocument* aTarget)
 NS_IMETHODIMP
 nsDocument::MozCancelFullScreen()
 {
-  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
-    return NS_OK;
+  // Only perform fullscreen changes if we're running in a webapp
+  // same-origin to the web app, or if we're in a user generated event
+  // handler.
+  if (NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
+      nsContentUtils::IsRequestFullScreenAllowed()) {
+    RestorePreviousFullScreenState();
   }
-  RestorePreviousFullScreenState();
   return NS_OK;
 }
 
@@ -9124,6 +9155,7 @@ nsDocument::RequestFullScreen(Element* aElement,
   // trusted and so are automatically approved.
   if (!mIsApprovedForFullscreen) {
     mIsApprovedForFullscreen =
+      !Preferences::GetBool("full-screen-api.approval-required") ||
       NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
   }

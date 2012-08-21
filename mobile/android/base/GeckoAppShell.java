@@ -505,7 +505,7 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerView().getLayerClient());
 
         Log.i(LOGTAG, "setLayerClient called");
 
@@ -535,11 +535,9 @@ public class GeckoAppShell
 
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
-        final GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        LayerView v = layerClient.getView();
+        LayerView v = GeckoApp.mAppContext.getLayerView();
         mInputConnection = GeckoInputConnection.create(v);
         v.setInputConnectionHandler(mInputConnection);
-        layerClient.setForceRedraw();
     }
 
     static void sendPendingEventsToGecko() {
@@ -1421,8 +1419,7 @@ public class GeckoAppShell
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
         if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
-            GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-            LayerView layerView = layerClient.getView();
+            LayerView layerView = GeckoApp.mAppContext.getLayerView();
             layerView.performHapticFeedback(aIsLongPress ?
                                             HapticFeedbackConstants.LONG_PRESS :
                                             HapticFeedbackConstants.VIRTUAL_KEY);
@@ -1430,9 +1427,7 @@ public class GeckoAppShell
     }
 
     private static Vibrator vibrator() {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        LayerView layerView = layerClient.getView();
-
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
         return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -1479,7 +1474,7 @@ public class GeckoAppShell
     public static void notifyDefaultPrevented(final boolean defaultPrevented) {
         getMainHandler().post(new Runnable() {
             public void run() {
-                LayerView view = GeckoApp.mAppContext.getLayerClient().getView();
+                LayerView view = GeckoApp.mAppContext.getLayerView();
                 view.getTouchEventHandler().handleEventListenerAction(!defaultPrevented);
             }
         });
@@ -2344,11 +2339,11 @@ class ScreenshotHandler implements Runnable {
     }
 
     private void screenshotWholePage(int tabId) {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             return;
         }
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         RectF pageRect = viewport.getCssPageRect();
 
         if (FloatUtils.fuzzyEquals(pageRect.width(), 0) || FloatUtils.fuzzyEquals(pageRect.height(), 0)) {
@@ -2448,14 +2443,14 @@ class ScreenshotHandler implements Runnable {
             return;
         }
 
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             // we could be in the midst of an activity tear-down and re-start, so guard
-            // against a null layer controller.
+            // against a null layer view
             return;
         }
 
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         if (RectUtils.fuzzyEquals(mPageRect, viewport.getCssPageRect())) {
             // the page size hasn't changed, so our dirty rect is still valid and we can just
             // repaint that area
@@ -2535,9 +2530,9 @@ class ScreenshotHandler implements Runnable {
                                 // this screenshot has all its slices done, so push it out
                                 // to the layer renderer and remove it from the list
                             }
-                            GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-                            if (layerClient != null) {
-                                layerClient.getView().getRenderer().setCheckerboardBitmap(
+                            LayerView layerView = GeckoApp.mAppContext.getLayerView();
+                            if (layerView != null) {
+                                layerView.getRenderer().setCheckerboardBitmap(
                                     data, bufferWidth, bufferHeight, handler.mPageRect,
                                     current.getPaintedRegion());
                             }

@@ -1,0 +1,108 @@
+\<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=341604
+Implement HTML5 sandbox attribute for IFRAMEs - same origin tests
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+/** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs **/
+/** Same Origin Tests **/
+
+SimpleTest.waitForExplicitFinish();
+  
+var completedTests = 0;
+var passedTests = 0;
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (completedTests == 12) {
+    is(passedTests, 12, "There are 12 same-origin tests that should pass");
+
+    SimpleTest.finish();
+  }
+}
+
+function receiveMessage(event)
+{
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// it expects to be called with an object like {ok: true/false, desc:
+// <description of the test> which it then forwards to ok()
+window.addEventListener("message", receiveMessage, false);
+
+function doTest() {
+  // 1) test that we can't access an iframe sandboxed without "allow-same-origin"
+  var if_1 = document.getElementById("if_1");
+  try {
+    var b = if_1.contentDocument.body;
+    ok_wrapper(false, "accessing body of a sandboxed document should not be allowed");
+  } catch (err){
+    ok_wrapper(true, "accessing body of a sandboxed document should not be allowed");
+  }
+
+  // 2) test that we can access an iframe sandboxed with "allow-same-origin"
+  var if_2 = document.getElementById("if_2");
+
+  try {
+    var b = if_2.contentDocument.body;
+    ok_wrapper(true, "accessing body of a sandboxed document with allow-same-origin should be allowed");
+  } catch (err) {
+    ok_wrapper(false, "accessing body of a sandboxed document with allow-same-origin should be allowed");
+  }
+
+  // 3) test that a sandboxed iframe without 'allow-same-origin' cannot access its parent
+  // this is done by file_iframe_b_if3.html which has 'allow-scripts' but not 'allow-same-origin'
+
+  // 4) test that a sandboxed iframe with 'allow-same-origin' can access its parent
+  // this is done by file_iframe_b_if2.html which has 'allow-same-origin' and 'allow-scripts'
+
+  // 5) check that a sandboxed iframe with "allow-same-origin" can access document.cookie
+  // this is done by file_iframe_b_if2.html which has 'allow-same-origin' and 'allow-scripts'
+
+  // 6) check that a sandboxed iframe with "allow-same-origin" can access window.localStorage
+  // this is done by file_iframe_b_if2.html which has 'allow-same-origin' and 'allow-scripts'
+
+  // 7) check that a sandboxed iframe with "allow-same-origin" can access window.sessionStorage
+  // this is done by file_iframe_b_if2.html which has 'allow-same-origin' and 'allow-scripts'
+
+  // 8) check that a sandboxed iframe WITHOUT "allow-same-origin" can NOT access document.cookie
+  // this is done by file_iframe_b_if3.html which has 'allow-scripts' but not 'allow-same-origin'
+
+  // 9) check that a sandboxed iframe WITHOUT "allow-same-origin" can NOT access window.localStorage
+  // this is done by file_iframe_b_if3.html which has 'allow-scripts' but not 'allow-same-origin'
+
+  // 10) check that a sandboxed iframe WITHOUT "allow-same-origin" can NOT access window.sessionStorage
+  // this is done by file_iframe_b_if3.html which has 'allow-scripts' but not 'allow-same-origin'
+
+  // 11) check that XHR works normally in a sandboxed iframe with "allow-same-origin" and "allow-scripts"
+  // this is done by file_iframe_b_if2.html which has 'allow-same-origin' and 'allow-scripts'
+
+  // 12) check that XHR is blocked in a sandboxed iframe with "allow-scripts" but WITHOUT "allow-same-origin"
+  // this is done by file_iframe_b_if3.html which has 'allow-scripts' but not 'allow-same-origin'
+}
+addLoadEvent(doTest);
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="" id="if_1" src="file_iframe_sandbox_b_if1.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-same-origin allow-scripts" id="if_2" src="file_iframe_sandbox_b_if2.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id="if_3" src="file_iframe_sandbox_b_if3.html" height="10" width="10"></iframe>
+</div>

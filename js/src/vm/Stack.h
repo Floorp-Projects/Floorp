@@ -1416,6 +1416,8 @@ class StackSpace
         return (Value *)fp >= base_ && (Value *)fp <= trustedEnd_;
     }
 
+    void markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+
   public:
     StackSpace();
     bool init();
@@ -1467,8 +1469,7 @@ class StackSpace
     bool tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
-    void mark(JSTracer *trc);
-    void markFrameValues(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+    void markAndClobber(JSTracer *trc);
 
     /* Called during GC: sets active flag on compartments with active frames. */
     void markActiveCompartments();
@@ -1845,6 +1846,21 @@ class ScriptFrameIter : public StackIter
         : StackIter(cx, opt) { settle(); }
 
     ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
+};
+
+/* A filtering of the StackIter to only stop at non-self-hosted scripts. */
+class NonBuiltinScriptFrameIter : public StackIter
+{
+    void settle() {
+        while (!done() && (!isScript() || (isFunctionFrame() && callee()->isSelfHostedBuiltin())))
+            StackIter::operator++();
+    }
+
+  public:
+    NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : StackIter(cx, opt) { settle(); }
+
+    NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

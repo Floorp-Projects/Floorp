@@ -890,9 +890,9 @@ RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 
     NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
 
-    rv = oldPrincipal->CheckMayLoad(newURI, false);
+    rv = oldPrincipal->CheckMayLoad(newURI, false, false);
     if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-        rv = oldPrincipal->CheckMayLoad(newOriginalURI, false);
+        rv = oldPrincipal->CheckMayLoad(newOriginalURI, false, false);
     }
 
     if (NS_FAILED(rv))

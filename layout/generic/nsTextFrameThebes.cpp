@@ -2215,7 +2215,11 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                 PRUint32    aFlags)
 {
   // textruns have uniform language
-  nsIAtom* language = mMappedFlows[0].mStartFrame->GetStyleFont()->mLanguage;
+  const nsStyleFont *styleFont = mMappedFlows[0].mStartFrame->GetStyleFont();
+  // We should only use a language for hyphenation if it was specified
+  // explicitly.
+  nsIAtom* hyphenationLanguage =
+    styleFont->mExplicitLanguage ? styleFont->mLanguage : nullptr;
   // We keep this pointed at the skip-chars data for the current mappedFlow.
   // This lets us cheaply check whether the flow has compressed initial
   // whitespace...
@@ -2269,11 +2273,11 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
         (aFlags & SBS_SUPPRESS_SINK) ? nullptr : (*breakSink).get();
       if (aFlags & SBS_DOUBLE_BYTE) {
         const PRUnichar* text = reinterpret_cast<const PRUnichar*>(aTextPtr);
-        mLineBreaker.AppendText(language, text + offset,
+        mLineBreaker.AppendText(hyphenationLanguage, text + offset,
                                 length, flags, sink);
       } else {
         const PRUint8* text = reinterpret_cast<const PRUint8*>(aTextPtr);
-        mLineBreaker.AppendText(language, text + offset,
+        mLineBreaker.AppendText(hyphenationLanguage, text + offset,
                                 length, flags, sink);
       }
     }

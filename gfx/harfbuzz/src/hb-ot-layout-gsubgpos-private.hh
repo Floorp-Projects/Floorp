@@ -43,15 +43,6 @@
 	hb_auto_trace_t<HB_DEBUG_CLOSURE> trace (&c->debug_depth, "CLOSURE", this, HB_FUNC, "");
 
 
-/* TODO Add TRACE_RETURN annotation to gsub. */
-#ifndef HB_DEBUG_WOULD_APPLY
-#define HB_DEBUG_WOULD_APPLY (HB_DEBUG+0)
-#endif
-
-#define TRACE_WOULD_APPLY() \
-	hb_auto_trace_t<HB_DEBUG_WOULD_APPLY> trace (&c->debug_depth, "WOULD_APPLY", this, HB_FUNC, "first %u second %u", c->first, c->second);
-
-
 struct hb_closure_context_t
 {
   hb_face_t *face;
@@ -71,23 +62,31 @@ struct hb_closure_context_t
 
 
 
+/* TODO Add TRACE_RETURN annotation to gsub. */
+#ifndef HB_DEBUG_WOULD_APPLY
+#define HB_DEBUG_WOULD_APPLY (HB_DEBUG+0)
+#endif
+
+#define TRACE_WOULD_APPLY() \
+	hb_auto_trace_t<HB_DEBUG_WOULD_APPLY> trace (&c->debug_depth, "WOULD_APPLY", this, HB_FUNC, "%d glyphs", c->len);
+
 
 struct hb_would_apply_context_t
 {
   hb_face_t *face;
-  hb_codepoint_t first;
-  hb_codepoint_t second;
+  const hb_codepoint_t *glyphs;
   unsigned int len;
   const hb_set_digest_t digest;
   unsigned int debug_depth;
 
   hb_would_apply_context_t (hb_face_t *face_,
-			    hb_codepoint_t first_,
-			    hb_codepoint_t second_,
+			    const hb_codepoint_t *glyphs_,
+			    unsigned int len_,
 			    const hb_set_digest_t *digest_
 			    ) :
 			      face (face_),
-			      first (first_), second (second_), len (second == (hb_codepoint_t) -1 ? 1 : 2),
+			      glyphs (glyphs_),
+			      len (len_),
 			      digest (*digest_),
 			      debug_depth (0) {};
 };
@@ -407,7 +406,7 @@ static inline bool would_match_input (hb_would_apply_context_t *c,
     return false;
 
   for (unsigned int i = 1; i < count; i++)
-    if (likely (!match_func (c->second, input[i - 1], match_data)))
+    if (likely (!match_func (c->glyphs[i], input[i - 1], match_data)))
       return false;
 
   return true;
@@ -757,7 +756,7 @@ struct ContextFormat1
   {
     TRACE_WOULD_APPLY ();
 
-    const RuleSet &rule_set = this+ruleSet[(this+coverage) (c->first)];
+    const RuleSet &rule_set = this+ruleSet[(this+coverage) (c->glyphs[0])];
     struct ContextApplyLookupContext lookup_context = {
       {match_glyph, NULL},
       NULL
@@ -830,7 +829,7 @@ struct ContextFormat2
     TRACE_WOULD_APPLY ();
 
     const ClassDef &class_def = this+classDef;
-    unsigned int index = class_def (c->first);
+    unsigned int index = class_def (c->glyphs[0]);
     const RuleSet &rule_set = this+ruleSet[index];
     struct ContextApplyLookupContext lookup_context = {
       {match_class, NULL},
@@ -929,7 +928,6 @@ struct ContextFormat3
     TRACE_SANITIZE ();
     if (!c->check_struct (this)) return TRACE_RETURN (false);
     unsigned int count = glyphCount;
-    if (unlikely (!glyphCount)) return TRACE_RETURN (false);
     if (!c->check_array (coverage, coverage[0].static_size, count)) return TRACE_RETURN (false);
     for (unsigned int i = 0; i < count; i++)
       if (!coverage[i].sanitize (c, this)) return TRACE_RETURN (false);
@@ -1253,7 +1251,7 @@ struct ChainContextFormat1
   {
     TRACE_WOULD_APPLY ();
 
-    const ChainRuleSet &rule_set = this+ruleSet[(this+coverage) (c->first)];
+    const ChainRuleSet &rule_set = this+ruleSet[(this+coverage) (c->glyphs[0])];
     struct ChainContextApplyLookupContext lookup_context = {
       {match_glyph, NULL},
       {NULL, NULL, NULL}
@@ -1329,7 +1327,7 @@ struct ChainContextFormat2
 
     const ClassDef &input_class_def = this+inputClassDef;
 
-    unsigned int index = input_class_def (c->first);
+    unsigned int index = input_class_def (c->glyphs[0]);
     const ChainRuleSet &rule_set = this+ruleSet[index];
     struct ChainContextApplyLookupContext lookup_context = {
       {match_class, NULL},
@@ -1468,7 +1466,6 @@ struct ChainContextFormat3
     if (!backtrack.sanitize (c, this)) return TRACE_RETURN (false);
     OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
     if (!input.sanitize (c, this)) return TRACE_RETURN (false);
-    if (unlikely (!input.len)) return TRACE_RETURN (false);
     OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage> > (input);
     if (!lookahead.sanitize (c, this)) return TRACE_RETURN (false);
     ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord> > (lookahead);

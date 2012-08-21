@@ -380,7 +380,9 @@
     * implicit.
     *
     * We have an explicit constructor from int defined, so that casts like
-    * (Enum)7 will still work.
+    * (Enum)7 will still work.  We also have a zero-argument constructor with
+    * no arguments, so declaration without initialization (like "Enum foo;")
+    * will work.
     *
     * Additionally, we'll delete as many operators as possible for the inner
     * enum type, so statements like this will still fail:
@@ -404,6 +406,7 @@
          {
 #  define MOZ_END_ENUM_CLASS(Name) \
          }; \
+         Name() {} \
          Name(Enum aEnum) : mEnum(aEnum) {} \
          explicit Name(int num) : mEnum((Enum)num) {} \
          operator Enum() const { return mEnum; } \

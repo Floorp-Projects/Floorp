@@ -1477,8 +1477,8 @@ var gCategories = {
     category.setAttribute("priority", aPriority);
     category.setAttribute("hidden", aStartHidden);
 
-    var node = this.node.firstChild;
-    while (node = node.nextSibling) {
+    var node;
+    for (node of this.node.children) {
       var nodePriority = parseInt(node.getAttribute("priority"));
       // If the new type's priority is higher than this one then this is the
       // insertion point
@@ -1650,7 +1650,7 @@ var gHeader = {
     this._search.addEventListener("command", function search_onCommand(aEvent) {
       var query = aEvent.target.value;
       if (query.length == 0)
-        return false;
+        return;
 
       gViewController.loadView("addons://search/" + encodeURIComponent(query));
     }, false);
@@ -2306,6 +2306,7 @@ var gSearchView = {
         return listitem;
       listitem = listitem.nextSibling;
     }
+    return null;
   }
 };
 
@@ -2422,8 +2423,7 @@ var gListView = {
       return;
 
     let prop = aIsInstall ? "mInstall" : "mAddon";
-    for (let i = 0; i < this._listBox.itemCount; i++) {
-      let item = this._listBox.childNodes[i];
+    for (let item of this._listBox.childNodes) {
       if (item[prop] == aObj)
         return;
     }
@@ -2436,8 +2436,7 @@ var gListView = {
   removeItem: function gListView_removeItem(aObj, aIsInstall) {
     let prop = aIsInstall ? "mInstall" : "mAddon";
 
-    for (let i = 0; i < this._listBox.itemCount; i++) {
-      let item = this._listBox.childNodes[i];
+    for (let item of this._listBox.childNodes) {
       if (item[prop] == aObj) {
         this._listBox.removeChild(item);
         this.showEmptyNotice(this._listBox.itemCount == 0);
@@ -2460,6 +2459,7 @@ var gListView = {
         return listitem;
       listitem = listitem.nextSibling;
     }
+    return null;
   }
 };
 
@@ -2653,21 +2653,20 @@ var gDetailView = {
       !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
     
     var gridRows = document.querySelectorAll("#detail-grid rows row");
-    for (var i = 0, first = true; i < gridRows.length; ++i) {
-      if (first && window.getComputedStyle(gridRows[i], null).getPropertyValue("display") != "none") {
-        gridRows[i].setAttribute("first-row", true);
+    let first = true;
+    for (let gridRow of gridRows) {
+      if (first && window.getComputedStyle(gridRow, null).getPropertyValue("display") != "none") {
+        gridRow.setAttribute("first-row", true);
         first = false;
       } else {
-        gridRows[i].removeAttribute("first-row");
+        gridRow.removeAttribute("first-row");
       }
     }
 
-    this.fillSettingsRows(aScrollToPreferences);
-
-    this.updateState();
-
-    gViewController.updateCommands();
-    gViewController.notifyViewChanged();
+    this.fillSettingsRows(aScrollToPreferences, (function updateView_fillSettingsRows() {
+      this.updateState();
+      gViewController.notifyViewChanged();
+    }).bind(this));
   },
 
   show: function gDetailView_show(aAddonId, aRequest) {
@@ -2819,10 +2818,13 @@ var gDetailView = {
       rows.removeChild(rows.lastChild);
   },
 
-  fillSettingsRows: function gDetailView_fillSettingsRows(aScrollToPreferences) {
+  fillSettingsRows: function gDetailView_fillSettingsRows(aScrollToPreferences, aCallback) {
     this.emptySettingsRows();
-    if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE)
+    if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE) {
+      if (aCallback)
+        aCallback();
       return;
+    }
 
     // This function removes and returns the text content of aNode without
     // removing any child elements. Removing the text nodes ensures any XBL
@@ -2842,49 +2844,65 @@ var gDetailView = {
 
     var rows = document.getElementById("detail-downloads").parentNode;
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", this._addon.optionsURL, false);
-    xhr.send();
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", this._addon.optionsURL, true);
+      xhr.responseType = "xml";
+      xhr.onload = (function fillSettingsRows_onload() {
+        var xml = xhr.responseXML;
+        var settings = xml.querySelectorAll(":root > setting");
 
-    var xml = xhr.responseXML;
-    var settings = xml.querySelectorAll(":root > setting");
+        var firstSetting = null;
+        for (let setting of settings) {
 
-    var firstSetting = null;
-    for (let setting of settings) {
+          var desc = stripTextNodes(setting).trim();
+          if (!setting.hasAttribute("desc"))
+            setting.setAttribute("desc", desc);
 
-      var desc = stripTextNodes(setting).trim();
-      if (!setting.hasAttribute("desc"))
-        setting.setAttribute("desc", desc);
+          var type = setting.getAttribute("type");
+          if (type == "file" || type == "directory")
+            setting.setAttribute("fullpath", "true");
 
-      var type = setting.getAttribute("type");
-      if (type == "file" || type == "directory")
-        setting.setAttribute("fullpath", "true");
+          rows.appendChild(setting);
+          var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
+          if (!firstSetting && visible) {
+            setting.setAttribute("first-row", true);
+            firstSetting = setting;
+          }
+        }
 
-      rows.appendChild(setting);
-      var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
-      if (!firstSetting && visible) {
-        setting.setAttribute("first-row", true);
-        firstSetting = setting;
-      }
-    }
-
-    // Ensure the page has loaded and force the XBL bindings to be synchronously applied,
-    // then notify observers.
-    if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
-      gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
-        gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
-        if (firstSetting)
-          firstSetting.clientTop;
-        Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
-        if (aScrollToPreferences)
-          gDetailView.scrollToPreferencesRows();
-      }, false);
-    } else {
-      if (firstSetting)
-        firstSetting.clientTop;
-      Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
-      if (aScrollToPreferences)
-        gDetailView.scrollToPreferencesRows();
+        // Ensure the page has loaded and force the XBL bindings to be synchronously applied,
+        // then notify observers.
+        if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
+          gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
+            gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
+            if (firstSetting)
+              firstSetting.clientTop;
+            Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
+            if (aScrollToPreferences)
+              gDetailView.scrollToPreferencesRows();
+          }, false);
+        } else {
+          if (firstSetting)
+            firstSetting.clientTop;
+          Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+          if (aScrollToPreferences)
+            gDetailView.scrollToPreferencesRows();
+        }
+        if (aCallback)
+          aCallback();
+      }).bind(this);
+      xhr.onerror = function fillSettingsRows_onerror(aEvent) {
+        Cu.reportError("Error " + aEvent.target.status +
+                       " occurred while receiving " + this._addon.optionsURL);
+        if (aCallback)
+          aCallback();
+      };
+      xhr.send();
+    } catch(e) {
+      Cu.reportError(e);
+      if (aCallback)
+        aCallback();
     }
   },
 

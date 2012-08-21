@@ -182,8 +182,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     if (!mLibrary)
 #endif
     {
-        DebugOnly<nsresult> rv = pluginFile.LoadPlugin(&mLibrary);
-        NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
+        nsresult rv = pluginFile.LoadPlugin(&mLibrary);
+        if (NS_FAILED(rv))
+            return false;
     }
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 

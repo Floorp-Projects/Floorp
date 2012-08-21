@@ -89,6 +89,7 @@ struct ElementAnimation
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
 
+  bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
   bool CanPerformOnCompositor(mozilla::dom::Element* aElement,
                               mozilla::TimeStamp aTime) const;
 

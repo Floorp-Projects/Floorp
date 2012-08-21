@@ -846,10 +846,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin) {
             nsCOMPtr<nsIURI> uri, domain;
             subjectPrincipal->GetURI(getter_AddRefs(uri));
-            // Subject can't be system if we failed the security
-            // check, so |uri| is non-null.
-            NS_ASSERTION(uri, "How did that happen?");
-            GetOriginFromURI(uri, subjectOrigin);
+            if (uri) { // Object principal might be expanded
+                GetOriginFromURI(uri, subjectOrigin);
+            }
             subjectPrincipal->GetDomain(getter_AddRefs(domain));
             if (domain) {
                 GetOriginFromURI(domain, subjectDomain);
@@ -1069,55 +1068,63 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
 #ifdef DEBUG_CAPS_LookupPolicy
         printf("DomainLookup ");
 #endif
-
-        nsCAutoString origin;
-        rv = GetPrincipalDomainOrigin(aPrincipal, origin);
-        NS_ENSURE_SUCCESS(rv, rv);
- 
-        char *start = origin.BeginWriting();
-        const char *nextToLastDot = nullptr;
-        const char *lastDot = nullptr;
-        const char *colon = nullptr;
-        char *p = start;
-
-        //-- search domain (stop at the end of the string or at the 3rd slash)
-        for (PRUint32 slashes=0; *p; p++)
+        if (nsCOMPtr<nsIExpandedPrincipal> exp = do_QueryInterface(aPrincipal)) 
         {
-            if (*p == '/' && ++slashes == 3) 
-            {
-                *p = '\0'; // truncate at 3rd slash
-                break;
-            }
-            if (*p == '.')
-            {
-                nextToLastDot = lastDot;
-                lastDot = p;
-            } 
-            else if (!colon && *p == ':')
-                colon = p;
-        }
-
-        nsCStringKey key(nextToLastDot ? nextToLastDot+1 : start);
-        DomainEntry *de = (DomainEntry*) mOriginToPolicyMap->Get(&key);
-        if (!de)
-        {
-            nsCAutoString scheme(start, colon-start+1);
-            nsCStringKey schemeKey(scheme);
-            de = (DomainEntry*) mOriginToPolicyMap->Get(&schemeKey);
-        }
-
-        while (de)
-        {
-            if (de->Matches(start))
-            {
-                dpolicy = de->mDomainPolicy;
-                break;
-            }
-            de = de->mNext;
-        }
-
-        if (!dpolicy)
+            // For expanded principals domain origin is not defined so let's just
+            // use the default policy
             dpolicy = mDefaultPolicy;
+        }
+        else
+        {
+            nsCAutoString origin;
+            rv = GetPrincipalDomainOrigin(aPrincipal, origin);
+            NS_ENSURE_SUCCESS(rv, rv);
+ 
+            char *start = origin.BeginWriting();
+            const char *nextToLastDot = nullptr;
+            const char *lastDot = nullptr;
+            const char *colon = nullptr;
+            char *p = start;
+
+            //-- search domain (stop at the end of the string or at the 3rd slash)
+            for (PRUint32 slashes=0; *p; p++)
+            {
+                if (*p == '/' && ++slashes == 3) 
+                {
+                    *p = '\0'; // truncate at 3rd slash
+                    break;
+                }
+                if (*p == '.')
+                {
+                    nextToLastDot = lastDot;
+                    lastDot = p;
+                } 
+                else if (!colon && *p == ':')
+                    colon = p;
+            }
+
+            nsCStringKey key(nextToLastDot ? nextToLastDot+1 : start);
+            DomainEntry *de = (DomainEntry*) mOriginToPolicyMap->Get(&key);
+            if (!de)
+            {
+                nsCAutoString scheme(start, colon-start+1);
+                nsCStringKey schemeKey(scheme);
+                de = (DomainEntry*) mOriginToPolicyMap->Get(&schemeKey);
+            }
+
+            while (de)
+            {
+                if (de->Matches(start))
+                {
+                    dpolicy = de->mDomainPolicy;
+                    break;
+                }
+                de = de->mNext;
+            }
+
+            if (!dpolicy)
+                dpolicy = mDefaultPolicy;
+        }
 
         aPrincipal->SetSecurityPolicy((void*)dpolicy);
     }
@@ -1387,7 +1394,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (hasFlags) {
-        return aPrincipal->CheckMayLoad(targetBaseURI, true);
+        return aPrincipal->CheckMayLoad(targetBaseURI, true, false);
     }
 
     //-- get the source scheme

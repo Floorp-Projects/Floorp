@@ -379,7 +379,7 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
 static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl)
 {
   if (aIsToolbarControl)
-    return [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
+    return [NativeWindowForFrame(aFrame) isMainWindow];
   return FrameIsInActiveWindow(aFrame);
 }
 
@@ -1789,7 +1789,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   float titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
   float unifiedHeight = titlebarHeight + inBoxRect.size.height;
 
-  BOOL isMain = [aWindow isMainWindow] || ![NSView focusView];
+  BOOL isMain = [aWindow isMainWindow];
 
   CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
@@ -2074,7 +2074,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         DrawUnifiedToolbar(cgContext, macRect, win);
         break;
       }
-      BOOL isMain = [win isMainWindow] || ![NSView focusView];
+      BOOL isMain = [win isMainWindow];
       CGRect drawRect = macRect;
 
       // top border

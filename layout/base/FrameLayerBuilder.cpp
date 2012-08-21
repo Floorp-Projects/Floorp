@@ -32,6 +32,16 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
+FrameLayerBuilder::DisplayItemData::DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState, PRUint32 aGeneration)
+  : mLayer(aLayer)
+  , mDisplayItemKey(aKey)
+  , mContainerLayerGeneration(aGeneration)
+  , mLayerState(aLayerState)
+{}
+
+FrameLayerBuilder::DisplayItemData::~DisplayItemData()
+{}
+
 /**
  * This is the userdata we associate with a layer manager.
  */
@@ -136,8 +146,7 @@ public:
     mLayerBuilder(aLayerBuilder),
     mContainerFrame(aContainerFrame), mContainerLayer(aContainerLayer),
     mParameters(aParameters),
-    mNextFreeRecycledThebesLayer(0), mNextFreeRecycledColorLayer(0),
-    mNextFreeRecycledImageLayer(0), mInvalidateAllThebesContent(false)
+    mNextFreeRecycledThebesLayer(0), mInvalidateAllThebesContent(false)
   {
     nsPresContext* presContext = aContainerFrame->PresContext();
     mAppUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -375,12 +384,12 @@ protected:
    * Grab the next recyclable ColorLayer, or create one if there are no
    * more recyclable ColorLayers.
    */
-  already_AddRefed<ColorLayer> CreateOrRecycleColorLayer();
+  already_AddRefed<ColorLayer> CreateOrRecycleColorLayer(ThebesLayer* aThebes);
   /**
    * Grab the next recyclable ImageLayer, or create one if there are no
    * more recyclable ImageLayers.
    */
-  already_AddRefed<ImageLayer> CreateOrRecycleImageLayer();
+  already_AddRefed<ImageLayer> CreateOrRecycleImageLayer(ThebesLayer* aThebes);
   /**
    * Grab a recyclable ImageLayer for use as a mask layer for aLayer (that is a
    * mask layer which has been used for aLayer before), or create one if such
@@ -472,13 +481,9 @@ protected:
   typedef nsAutoTArray<nsRefPtr<Layer>,1> AutoLayersArray;
   AutoLayersArray                  mNewChildLayers;
   nsTArray<nsRefPtr<ThebesLayer> > mRecycledThebesLayers;
-  nsTArray<nsRefPtr<ColorLayer> >  mRecycledColorLayers;
-  nsTArray<nsRefPtr<ImageLayer> >  mRecycledImageLayers;
   nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
     mRecycledMaskImageLayers;
   PRUint32                         mNextFreeRecycledThebesLayer;
-  PRUint32                         mNextFreeRecycledColorLayer;
-  PRUint32                         mNextFreeRecycledImageLayer;
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mInvalidateAllThebesContent;
   bool                             mSnappingEnabled;
@@ -513,6 +518,9 @@ public:
    * active scrolled root.
    */
   gfxPoint mActiveScrolledRootPosition;
+
+  nsRefPtr<ColorLayer> mColorLayer;
+  nsRefPtr<ImageLayer> mImageLayer;
 };
 
 /*
@@ -590,8 +598,6 @@ ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
 
 } // anonymous namespace
 
-PRUint8 gLayerManagerLayerBuilder;
-
 /* static */ void
 FrameLayerBuilder::Shutdown()
 {
@@ -602,12 +608,13 @@ FrameLayerBuilder::Shutdown()
 }
 
 void
-FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder)
+FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager)
 {
   mRootPresContext = aBuilder->ReferenceFrame()->PresContext()->GetRootPresContext();
   if (mRootPresContext) {
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
+  aManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(this));
 }
 
 bool
@@ -936,15 +943,12 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
 }
 
 already_AddRefed<ColorLayer>
-ContainerState::CreateOrRecycleColorLayer()
+ContainerState::CreateOrRecycleColorLayer(ThebesLayer *aThebes)
 {
-  nsRefPtr<ColorLayer> layer;
-  if (mNextFreeRecycledColorLayer < mRecycledColorLayers.Length()) {
-    // Recycle a layer
-    layer = mRecycledColorLayers[mNextFreeRecycledColorLayer];
-    ++mNextFreeRecycledColorLayer;
-    // Clear clip rect and mask layer so we don't accidentally stay clipped.
-    // We will reapply any necessary clipping.
+  ThebesDisplayItemLayerUserData* data = 
+      static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
+  nsRefPtr<ColorLayer> layer = data->mColorLayer;
+  if (layer) {
     layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
   } else {
@@ -953,21 +957,22 @@ ContainerState::CreateOrRecycleColorLayer()
     if (!layer)
       return nullptr;
     // Mark this layer as being used for Thebes-painting display items
+    data->mColorLayer = layer;
     layer->SetUserData(&gColorLayerUserData, nullptr);
+    
+    // Remove other layer types we might have stored for this ThebesLayer
+    data->mImageLayer = nullptr;
   }
   return layer.forget();
 }
 
 already_AddRefed<ImageLayer>
-ContainerState::CreateOrRecycleImageLayer()
+ContainerState::CreateOrRecycleImageLayer(ThebesLayer *aThebes)
 {
-  nsRefPtr<ImageLayer> layer;
-  if (mNextFreeRecycledImageLayer < mRecycledImageLayers.Length()) {
-    // Recycle a layer
-    layer = mRecycledImageLayers[mNextFreeRecycledImageLayer];
-    ++mNextFreeRecycledImageLayer;
-    // Clear clip rect and mask layer so we don't accidentally stay clipped.
-    // We will reapply any necessary clipping.
+  ThebesDisplayItemLayerUserData* data = 
+      static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
+  nsRefPtr<ImageLayer> layer = data->mImageLayer;
+  if (layer) {
     layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
   } else {
@@ -976,7 +981,11 @@ ContainerState::CreateOrRecycleImageLayer()
     if (!layer)
       return nullptr;
     // Mark this layer as being used for Thebes-painting display items
+    data->mImageLayer = layer;
     layer->SetUserData(&gImageLayerUserData, nullptr);
+
+    // Remove other layer types we might have stored for this ThebesLayer
+    data->mColorLayer = nullptr;
   }
   return layer.forget();
 }
@@ -1263,7 +1272,7 @@ ContainerState::PopThebesLayerData()
     NS_ASSERTION(!(data->mIsSolidColorInVisibleRegion && imageContainer),
                  "Can't be a solid color as well as an image!");
     if (imageContainer) {
-      nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer();
+      nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer(data->mLayer);
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
       imageLayer->SetPostScale(mParameters.mXScale,
@@ -1274,7 +1283,7 @@ ContainerState::PopThebesLayerData()
       }
       layer = imageLayer;
     } else {
-      nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer();
+      nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
       colorLayer->SetColor(data->mSolidColor);
 
@@ -1995,11 +2004,7 @@ ContainerState::CollectOldLayers()
        layer = layer->GetNextSibling()) {
     NS_ASSERTION(!layer->HasUserData(&gMaskLayerUserData),
                  "Mask layer in layer tree; could not be recycled.");
-    if (layer->HasUserData(&gColorLayerUserData)) {
-      mRecycledColorLayers.AppendElement(static_cast<ColorLayer*>(layer));
-    } else if (layer->HasUserData(&gImageLayerUserData)) {
-      mRecycledImageLayers.AppendElement(static_cast<ImageLayer*>(layer));
-    } else if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+    if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsThebesLayer(), "Wrong layer type");
       mRecycledThebesLayers.AppendElement(static_cast<ThebesLayer*>(layer));
     }
@@ -2336,7 +2341,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   PRUint32 flags;
   bool flattenedLayers = false;
   while (true) {
-    ContainerState state(aBuilder, aManager, GetLayerBuilderForManager(aManager),
+    ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),
                          aContainerFrame, containerLayer, scaleParameters);
     if (flattenedLayers) {
       state.SetInvalidateAllThebesContent();
@@ -2683,7 +2688,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
 
-  FrameLayerBuilder *layerBuilder = GetLayerBuilderForManager(aLayer->Manager());
+  FrameLayerBuilder *layerBuilder = aLayer->Manager()->GetLayerBuilder();
 
   if (layerBuilder->CheckDOMModified())
     return;
@@ -3188,7 +3193,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
-    static const Image::Format format = Image::CAIRO_SURFACE;
+    static const ImageFormat format = CAIRO_SURFACE;
     nsRefPtr<Image> image = container->CreateImage(&format, 1);
     NS_ASSERTION(image, "Could not create image container for mask layer.");
     CairoImage::Data data;

@@ -300,11 +300,12 @@ public:
         rv = uri->GetScheme(scheme);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // We exempt data URLs from the same origin check.
-        if (!scheme.EqualsLiteral("data")) {
-          rv = principal->CheckMayLoad(uri, false);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
+        // We pass true as the 3rd argument to checkMayLoad here.
+        // This allows workers in sandboxed documents to load data URLs
+        // (and other URLs that inherit their principal from their
+        // creator.)
+        rv = principal->CheckMayLoad(uri, false, true);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       else {
         rv = secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
@@ -487,9 +488,9 @@ public:
         rv = finalURI->GetScheme(scheme);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // We exempt data urls again.
-        if (!scheme.EqualsLiteral("data") &&
-            NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false))) {
+        // We exempt data urls and other URI's that inherit their
+        // principal again.
+        if (NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false, true))) {
           return NS_ERROR_DOM_BAD_URI;
         }
       }

@@ -93,15 +93,6 @@
          Types.ssize_t.withName("negativeone_or_ssize_t");
 
        /**
-        * A C string
-        */
-       Types.null_or_string =
-         Types.char.in_ptr.withName("null_or_string");
-
-       Types.string =
-         Types.char.in_ptr.withName("string");
-
-       /**
         * Various libc integer types
         */
        Types.mode_t =
@@ -184,7 +175,6 @@
          Types.stat = stat.getType();
        }
 
-
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
@@ -217,32 +207,32 @@
        UnixFile.access =
          declareFFI("access", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string,
+                    /*path*/   Types.path,
                     /*mode*/   Types.int);
 
        UnixFile.chdir =
          declareFFI("chdir", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string);
+                    /*path*/   Types.path);
 
        UnixFile.chmod =
          declareFFI("chmod", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string,
+                    /*path*/   Types.path,
                     /*mode*/   Types.mode_t);
 
        UnixFile.chown =
          declareFFI("chown", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string,
+                    /*path*/   Types.path,
                     /*uid*/    Types.uid_t,
                     /*gid*/    Types.gid_t);
 
        UnixFile.copyfile =
          declareFFI("copyfile", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*source*/ Types.string,
-                    /*dest*/   Types.string,
+                    /*source*/ Types.path,
+                    /*dest*/   Types.path,
                     /*state*/  Types.void_t.in_ptr, // Ignored atm
                     /*flags*/  Types.uint32_t);
 
@@ -254,7 +244,7 @@
        UnixFile.chdir =
          declareFFI("chdir", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string);
+                    /*path*/   Types.path);
 
        UnixFile.fchdir =
          declareFFI("fchdir", ctypes.default_abi,
@@ -275,14 +265,14 @@
 
        UnixFile.getcwd =
          declareFFI("getcwd", ctypes.default_abi,
-                    /*return*/ Types.null_or_string,
-                    /*buf*/    Types.char.out_ptr,
+                    /*return*/ Types.out_path,
+                    /*buf*/    Types.out_path,
                     /*size*/   Types.size_t);
 
        UnixFile.getwd =
          declareFFI("getwd", ctypes.default_abi,
-                    /*return*/ Types.null_or_string,
-                    /*buf*/    Types.char.out_ptr);
+                    /*return*/ Types.out_path,
+                    /*buf*/    Types.out_path);
 
        // Two variants of |getwd| which allocate the memory
        // dynamically.
@@ -290,13 +280,13 @@
        // Linux/Android version
        UnixFile.get_current_dir_name =
          declareFFI("get_current_dir_name", ctypes.default_abi,
-                    /*return*/ Types.null_or_string.releaseWith(UnixFile.free));
+                    /*return*/ Types.out_path.releaseWith(UnixFile.free));
 
        // MacOS/BSD version (will return NULL on Linux/Android)
        UnixFile.getwd_auto =
          declareFFI("getwd", ctypes.default_abi,
-                    /*return*/ Types.null_or_string.releaseWith(UnixFile.free),
-                    /*buf*/    Types.void_t.in_ptr);
+                    /*return*/ Types.out_path.releaseWith(UnixFile.free),
+                    /*buf*/    Types.void_t.out_ptr);
 
        UnixFile.fdatasync =
          declareFFI("fdatasync", ctypes.default_abi,
@@ -328,15 +318,15 @@
        UnixFile.lchown =
          declareFFI("lchown", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string,
+                    /*path*/   Types.path,
                     /*uid_t*/  Types.uid_t,
                     /*gid_t*/  Types.gid_t);
 
        UnixFile.link =
          declareFFI("link", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*source*/ Types.string,
-                    /*dest*/   Types.string);
+                    /*source*/ Types.path,
+                    /*dest*/   Types.path);
 
        UnixFile.lseek =
          declareFFI("lseek", ctypes.default_abi,
@@ -348,31 +338,31 @@
        UnixFile.mkdir =
          declareFFI("mkdir", ctypes.default_abi,
                     /*return*/ Types.int,
-                    /*path*/ Types.string,
+                    /*path*/ Types.path,
                     /*mode*/ Types.int);
 
        UnixFile.mkstemp =
          declareFFI("mkstemp", ctypes.default_abi,
-                    /*return*/ Types.null_or_string,
-                    /*template*/Types.string);
+                    /*return*/ Types.out_path,
+                    /*template*/Types.out_path);
 
        UnixFile.open =
          declareFFI("open", ctypes.default_abi,
                     /*return*/Types.negativeone_or_fd,
-                    /*path*/  Types.string,
+                    /*path*/  Types.path,
                     /*oflags*/Types.int,
                     /*mode*/  Types.int);
 
        UnixFile.opendir =
          declareFFI("opendir", ctypes.default_abi,
                     /*return*/ Types.null_or_DIR_ptr,
-                    /*path*/   Types.string);
+                    /*path*/   Types.path);
 
        UnixFile.pread =
          declareFFI("pread", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_ssize_t,
                     /*fd*/     Types.fd,
-                    /*buf*/    Types.char.out_ptr,
+                    /*buf*/    Types.void_t.out_ptr,
                     /*nbytes*/ Types.size_t,
                     /*offset*/ Types.off_t);
 
@@ -380,7 +370,7 @@
          declareFFI("pwrite", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_ssize_t,
                     /*fd*/     Types.fd,
-                    /*buf*/    Types.char.in_ptr,
+                    /*buf*/    Types.void_t.in_ptr,
                     /*nbytes*/ Types.size_t,
                     /*offset*/ Types.off_t);
 
@@ -388,7 +378,7 @@
          declareFFI("read", ctypes.default_abi,
                     /*return*/Types.negativeone_or_ssize_t,
                     /*fd*/    Types.fd,
-                    /*buf*/   Types.char.out_ptr,
+                    /*buf*/   Types.void_t.out_ptr,
                     /*nbytes*/Types.size_t);
 
        if (OS.Constants.libc._DARWIN_FEATURE_64_BIT_INODE) {
@@ -410,13 +400,13 @@
        UnixFile.rename =
          declareFFI("rename", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*old*/    Types.string,
-                    /*new*/    Types.string);
+                    /*old*/    Types.path,
+                    /*new*/    Types.path);
 
        UnixFile.rmdir =
          declareFFI("rmdir", ctypes.default_abi,
                     /*return*/ Types.int,
-                    /*path*/   Types.string);
+                    /*path*/   Types.path);
 
        UnixFile.splice =
          declareFFI("splice", ctypes.default_abi,
@@ -431,25 +421,25 @@
        UnixFile.symlink =
          declareFFI("symlink", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*source*/ Types.string,
-                    /*dest*/   Types.string);
+                    /*source*/ Types.path,
+                    /*dest*/   Types.path);
 
        UnixFile.truncate =
          declareFFI("truncate", ctypes.default_abi,
                     /*return*/Types.negativeone_or_nothing,
-                    /*path*/  Types.string,
+                    /*path*/  Types.path,
                     /*length*/ Types.off_t);
 
        UnixFile.unlink =
          declareFFI("unlink", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
-                    /*path*/   Types.string);
+                    /*path*/ Types.path);
 
        UnixFile.write =
          declareFFI("write", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_ssize_t,
                     /*fd*/     Types.fd,
-                    /*buf*/    Types.char.in_ptr,
+                    /*buf*/    Types.void_t.in_ptr,
                     /*nbytes*/ Types.size_t);
 
        // Weird cases that require special treatment
@@ -461,13 +451,13 @@
          UnixFile.stat =
            declareFFI("stat$INODE64", ctypes.default_abi,
                       /*return*/ Types.negativeone_or_nothing,
-                      /*path*/   Types.string,
+                      /*path*/   Types.path,
                       /*buf*/    Types.stat.out_ptr
                      );
          UnixFile.lstat =
            declareFFI("lstat$INODE64", ctypes.default_abi,
                       /*return*/ Types.negativeone_or_nothing,
-                      /*path*/   Types.string,
+                      /*path*/   Types.path,
                       /*buf*/    Types.stat.out_ptr
                      );
          UnixFile.fstat =
@@ -483,13 +473,13 @@
            declareFFI("__xstat", ctypes.default_abi,
                       /*return*/    Types.negativeone_or_nothing,
                       /*_stat_ver*/ Types.int,
-                      /*path*/      Types.string,
+                      /*path*/      Types.path,
                       /*buf*/       Types.stat.out_ptr);
          let lxstat =
            declareFFI("__lxstat", ctypes.default_abi,
                       /*return*/    Types.negativeone_or_nothing,
                       /*_stat_ver*/ Types.int,
-                      /*path*/      Types.string,
+                      /*path*/      Types.path,
                       /*buf*/       Types.stat.out_ptr);
          let fxstat =
            declareFFI("__fxstat", ctypes.default_abi,
@@ -512,13 +502,13 @@
          UnixFile.stat =
            declareFFI("stat", ctypes.default_abi,
                       /*return*/ Types.negativeone_or_nothing,
-                      /*path*/   Types.string,
+                      /*path*/   Types.path,
                       /*buf*/    Types.stat.out_ptr
                      );
          UnixFile.lstat =
            declareFFI("lstat", ctypes.default_abi,
                       /*return*/ Types.negativeone_or_nothing,
-                      /*path*/   Types.string,
+                      /*path*/   Types.path,
                       /*buf*/    Types.stat.out_ptr
                      );
          UnixFile.fstat =

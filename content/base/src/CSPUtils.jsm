@@ -13,6 +13,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
@@ -30,6 +31,41 @@ var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
 
 var gETLDService = Components.classes["@mozilla.org/network/effective-tld-service;1"]
                    .getService(Components.interfaces.nsIEffectiveTLDService);
+
+// These regexps represent the concrete syntax on the w3 spec as of 7-5-2012
+// scheme          = <scheme production from RFC 3986>
+const R_SCHEME     = new RegExp ("([a-zA-Z0-9\\-]+)", 'i');
+const R_GETSCHEME  = new RegExp ("^" + R_SCHEME.source + "(?=\\:)", 'i');
+
+// scheme-source   = scheme ":"
+const R_SCHEMESRC  = new RegExp ("^" + R_SCHEME.source + "\\:$", 'i');
+
+// host-char       = ALPHA / DIGIT / "-"
+const R_HOSTCHAR   = new RegExp ("[a-zA-Z0-9\\-]", 'i');
+
+// host            = "*" / [ "*." ] 1*host-char *( "." 1*host-char )
+const R_HOST       = new RegExp ("\\*|(((\\*\\.)?" + R_HOSTCHAR.source +
+                                      "+)(\\." + R_HOSTCHAR.source +"+)+)",'i');
+// port            = ":" ( 1*DIGIT / "*" )
+const R_PORT       = new RegExp ("(\\:([0-9]+|\\*))", 'i');
+
+// host-source     = [ scheme "://" ] host [ port ]
+const R_HOSTSRC    = new RegExp ("^((" + R_SCHEME.source + "\\:\\/\\/)?("
+                                       +   R_HOST.source + ")"
+                                       +   R_PORT.source + "?)$", 'i');
+
+// ext-host-source = host-source "/" *( <VCHAR except ";" and ","> )
+//                 ; ext-host-source is reserved for future use.
+const R_EXTHOSTSRC = new RegExp ("^" + R_HOSTSRC.source + "\\/[:print:]+$", 'i');
+
+// keyword-source  = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
+const R_KEYWORDSRC = new RegExp ("^('self'|'unsafe-inline'|'unsafe-eval')$", 'i');
+
+// source-exp      = scheme-source / host-source / keyword-source
+const R_SOURCEEXP  = new RegExp (R_SCHEMESRC.source + "|" +
+                                   R_HOSTSRC.source + "|" +
+                                R_KEYWORDSRC.source,  'i');
+
 
 var gPrefObserver = {
   get debugEnabled () {
@@ -479,8 +515,10 @@ CSPRep.prototype = {
 
     for (var dir in CSPRep.SRC_DIRECTIVES) {
       var dirv = CSPRep.SRC_DIRECTIVES[dir];
-      newRep._directives[dirv] = this._directives[dirv]
-               .intersectWith(aCSPRep._directives[dirv]);
+      if (this._directives.hasOwnProperty(dirv))
+        newRep._directives[dirv] = this._directives[dirv].intersectWith(aCSPRep._directives[dirv]);
+      else
+        newRep._directives[dirv] = aCSPRep._directives[dirv];
     }
 
     // REPORT_URI
@@ -496,12 +534,6 @@ CSPRep.prototype = {
     else if (aCSPRep._directives[reportURIDir]) {
       // blank concat makes a copy of the string.
       newRep._directives[reportURIDir] = aCSPRep._directives[reportURIDir].concat();
-    }
-
-    for (var dir in CSPRep.SRC_DIRECTIVES) {
-      var dirv = CSPRep.SRC_DIRECTIVES[dir];
-      newRep._directives[dirv] = this._directives[dirv]
-               .intersectWith(aCSPRep._directives[dirv]);
     }
 
     newRep._allowEval =          this.allowsEvalInScripts
@@ -588,11 +620,8 @@ function CSPSourceList() {
  *        an instance of CSPSourceList 
  */
 CSPSourceList.fromString = function(aStr, self, enforceSelfChecks) {
-  // Source list is:
-  //    <host-dir-value> ::= <source-list>
-  //                       | "'none'"
-  //    <source-list>    ::= <source>
-  //                       | <source-list>" "<source>
+  // source-list = *WSP [ source-expression *( 1*WSP source-expression ) *WSP ]
+  //             / *WSP "'none'" *WSP
 
   /* If self parameter is passed, convert to CSPSource,
      unless it is already a CSPSource. */
@@ -601,23 +630,33 @@ CSPSourceList.fromString = function(aStr, self, enforceSelfChecks) {
   }
 
   var slObj = new CSPSourceList();
-  if (aStr === "'none'")
-    return slObj;
-
-  if (aStr === "*") {
-    slObj._permitAllSources = true;
+  aStr = aStr.trim();
+  // w3 specifies case insensitive equality
+  if (aStr.toUpperCase() === "'NONE'"){
+    slObj._permitAllSources = false;
     return slObj;
   }
 
   var tokens = aStr.split(/\s+/);
   for (var i in tokens) {
-    if (tokens[i] === "") continue;
-    var src = CSPSource.create(tokens[i], self, enforceSelfChecks);
-    if (!src) {
-      CSPWarning(CSPLocalizer.getFormatStr("failedToParseUnrecognizedSource", [tokens[i]]));
+    if (!R_SOURCEEXP.test(tokens[i])){
+      CSPWarning(CSPLocalizer.getFormatStr("failedToParseUnrecognizedSource",
+                                           [tokens[i]]));
       continue;
     }
-    slObj._sources.push(src);
+    var src = CSPSource.create(tokens[i], self, enforceSelfChecks);
+    if (!src) {
+      CSPWarning(CSPLocalizer.getFormatStr("failedToParseUnrecognizedSource",
+                                           [tokens[i]]));
+      continue;
+    }
+    // if a source is a *, then we can permit all sources
+    if (src.permitAll){
+      slObj._permitAllSources = true;
+      return slObj;
+    } else {
+      slObj._sources.push(src);
+    }
   }
 
   return slObj;
@@ -736,6 +775,8 @@ CSPSourceList.prototype = {
 
     var newCSPSrcList = null;
 
+    if (!that) return this.clone();
+
     if (this.isNone() || that.isNone())
       newCSPSrcList = CSPSourceList.fromString("'none'");
 
@@ -786,6 +827,9 @@ function CSPSource() {
   this._scheme = undefined;
   this._port = undefined;
   this._host = undefined;
+
+  //when set to true, this allows all source
+  this._permitAll = false;
 
   // when set to true, this source represents 'self'
   this._isSelf = false;
@@ -924,6 +968,15 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
     return null;
   }
 
+  var sObj = new CSPSource();
+  sObj._self = self;
+
+  // if equal, return does match
+  if (aStr === "*"){
+    sObj._permitAll = true;
+    return sObj;
+  }
+
   if (!self && enforceSelfChecks) {
     CSPError(CSPLocalizer.getStr("selfDataNotProvided"));
     return null;
@@ -933,12 +986,50 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
     self = CSPSource.create(self, undefined, false);
   }
 
-  var sObj = new CSPSource();
-  sObj._self = self;
+  // check for scheme-source match
+  if (R_SCHEMESRC.test(aStr)){
+    var schemeSrcMatch = R_GETSCHEME.exec(aStr);
+    sObj._scheme = schemeSrcMatch[0];
+    if (!sObj._host) sObj._host = CSPHost.fromString("*");
+    if (!sObj._port) sObj._port = "*";
+    return sObj;
+  }
 
-  // take care of 'self' keyword
-  if (aStr === "'self'") {
-    if (!self) {
+  // check for host-source or ext-host-source match
+  if (R_HOSTSRC.test(aStr) || R_EXTHOSTSRC.test(aStr)){
+    var schemeMatch = R_GETSCHEME.exec(aStr);
+    if (!schemeMatch)
+      sObj._scheme = self.scheme;
+    else {
+      sObj._scheme = schemeMatch[0];
+    }
+
+    var hostMatch = R_HOST.exec(aStr);
+    if (!hostMatch) {
+      CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource", [aStr]));
+      return null;
+    }
+    sObj._host = CSPHost.fromString(hostMatch[0]);
+    var portMatch = R_PORT.exec(aStr);
+    if (!portMatch) {
+      // gets the default port for the given scheme
+      defPort = Services.io.getProtocolHandler(sObj._scheme).defaultPort;
+      if (!defPort) {
+        CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource", [aStr]));
+        return null;
+      }
+      sObj._port = defPort;
+    }
+    else {
+      // strip the ':' from the port
+      sObj._port = portMatch[0].substr(1);
+    }
+    return sObj;
+  }
+
+  // check for 'self' (case insensitive)
+  if (aStr.toUpperCase() === "'SELF'"){
+    if (!self){
       CSPError(CSPLocalizer.getStr("selfKeywordNoSelfData"));
       return null;
     }
@@ -946,125 +1037,14 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
     sObj._isSelf = true;
     return sObj;
   }
-
-  // We could just create a URI and then send this off to fromURI, but
-  // there's no way to leave out the scheme or wildcard the port in an nsURI.
-  // That has to be supported here.
-
-  // split it up
-  var chunks = aStr.split(":");
-
-  // If there is only one chunk, it's gotta be a host.
-  if (chunks.length == 1) {
-    sObj._host = CSPHost.fromString(chunks[0]);
-    if (!sObj._host) {
-      CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource",[aStr]));
-      return null;
-    }
-
-    // enforce 'self' inheritance
-    if (enforceSelfChecks) {
-      // note: the non _scheme accessor checks sObj._self
-      if (!sObj.scheme || !sObj.port) {
-        CSPError(CSPLocalizer.getFormatStr("hostSourceWithoutData",[aStr]));
-        return null;
-      }
-    }
-    return sObj;
-  }
-
-  // If there are two chunks, it's either scheme://host or host:port
-  //   ... but scheme://host can have an empty host.
-  //   ... and host:port can have an empty host
-  if (chunks.length == 2) {
-
-    // is the last bit a port?
-    if (chunks[1] === "*" || chunks[1].match(/^\d+$/)) {
-      sObj._port = chunks[1];
-      // then the previous chunk *must* be a host or empty.
-      if (chunks[0] !== "") {
-        sObj._host = CSPHost.fromString(chunks[0]);
-        if (!sObj._host) {
-          CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource",[aStr]));
-          return null;
-        }
-      }
-      // enforce 'self' inheritance 
-      // (scheme:host requires port, host:port does too.  Wildcard support is
-      // only available if the scheme and host are wildcarded)
-      if (enforceSelfChecks) {
-        // note: the non _scheme accessor checks sObj._self
-        if (!sObj.scheme || !sObj.host || !sObj.port) {
-          CSPError(CSPLocalizer.getFormatStr("sourceWithoutData",[aStr]));
-          return null;
-        }
-      }
-    }
-    // is the first bit a scheme?
-    else if (CSPSource.validSchemeName(chunks[0])) {
-      sObj._scheme = chunks[0];
-      // then the second bit *must* be a host or empty
-      if (chunks[1] === "") {
-        // Allow scheme-only sources!  These default to wildcard host/port,
-        // especially since host and port don't always matter.
-        // Example: "javascript:" and "data:" 
-        if (!sObj._host) sObj._host = CSPHost.fromString("*");
-        if (!sObj._port) sObj._port = "*";
-      } else {
-        // some host was defined.
-        // ... remove <= 3 leading slashes (from the scheme) and parse
-        var cleanHost = chunks[1].replace(/^\/{0,3}/,"");
-        // ... and parse
-        sObj._host = CSPHost.fromString(cleanHost);
-        if (!sObj._host) {
-          CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidHost",[cleanHost]));
-          return null;
-        }
-      }
-
-      // enforce 'self' inheritance (scheme-only should be scheme:*:* now, and
-      // if there was a host provided it should be scheme:host:selfport
-      if (enforceSelfChecks) {
-        // note: the non _scheme accessor checks sObj._self
-        if (!sObj.scheme || !sObj.host || !sObj.port) {
-          CSPError(CSPLocalizer.getFormatStr("sourceWithoutData",[aStr]));
-          return null;
-        }
-      }
-    }
-    else  {
-      // AAAH!  Don't know what to do!  No valid scheme or port!
-      CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource",[aStr]));
-      return null;
-    }
-
-    return sObj;
-  }
-
-  // If there are three chunks, we got 'em all!
-  if (!CSPSource.validSchemeName(chunks[0])) {
-    CSPError(CSPLocalizer.getFormatStr("couldntParseScheme",[aStr]));
-    return null;
-  }
-  sObj._scheme = chunks[0];
-  if (!(chunks[2] === "*" || chunks[2].match(/^\d+$/))) {
-    CSPError(CSPLocalizer.getFormatStr("couldntParsePort",[aStr]));
-    return null;
-  }
-
-  sObj._port = chunks[2];
-
-  // ... remove <= 3 leading slashes (from the scheme) and parse
-  var cleanHost = chunks[1].replace(/^\/{0,3}/,"");
-  sObj._host = CSPHost.fromString(cleanHost);
-
-  return sObj._host ? sObj : null;
+  CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource",[aStr]));
+  return null;
 };
 
 CSPSource.validSchemeName = function(aStr) {
   // <scheme-name>       ::= <alpha><scheme-suffix>
-  // <scheme-suffix>     ::= <scheme-chr> 
-  //                      | <scheme-suffix><scheme-chr> 
+  // <scheme-suffix>     ::= <scheme-chr>
+  //                      | <scheme-suffix><scheme-chr>
   // <scheme-chr>        ::= <letter> | <digit> | "+" | "." | "-"
   
   return aStr.match(/^[a-zA-Z][a-zA-Z0-9+.-]*$/);
@@ -1088,7 +1068,13 @@ CSPSource.prototype = {
     return this._host;
   },
 
-  /** 
+  get permitAll () {
+    if (this._isSelf && this._self)
+      return this._self.permitAll;
+    return this._permitAll;
+  },
+
+  /**
    * If this doesn't have a nonstandard port (hard-defined), use the default
    * port for this source's scheme. Should never inherit port from 'self'.
    */
@@ -1199,32 +1185,32 @@ CSPSource.prototype = {
     // when a scheme, host or port is undefined.)
 
     // port
-    if (!this._port)
-      newSource._port = that._port;
-    else if (!that._port)
-      newSource._port = this._port;
-    else if (this._port === "*") 
-      newSource._port = that._port;
-    else if (that._port === "*")
-      newSource._port = this._port;
-    else if (that._port === this._port)
-      newSource._port = this._port;
+    if (!this.port)
+      newSource._port = that.port;
+    else if (!that.port)
+      newSource._port = this.port;
+    else if (this.port === "*")
+      newSource._port = that.port;
+    else if (that.port === "*")
+      newSource._port = this.port;
+    else if (that.port === this.port)
+      newSource._port = this.port;
     else {
       CSPError(CSPLocalizer.getFormatStr("notIntersectPort", [this.toString(), that.toString()]));
       return null;
     }
 
     // scheme
-    if (!this._scheme)
-      newSource._scheme = that._scheme;
-    else if (!that._scheme)
-      newSource._scheme = this._scheme;
-    if (this._scheme === "*")
-      newSource._scheme = that._scheme;
-    else if (that._scheme === "*")
-      newSource._scheme = this._scheme;
-    else if (that._scheme === this._scheme)
-      newSource._scheme = this._scheme;
+    if (!this.scheme)
+      newSource._scheme = that.scheme;
+    else if (!that.scheme)
+      newSource._scheme = this.scheme;
+    if (this.scheme === "*")
+      newSource._scheme = that.scheme;
+    else if (that.scheme === "*")
+      newSource._scheme = this.scheme;
+    else if (that.scheme === this.scheme)
+      newSource._scheme = this.scheme;
     else {
       CSPError(CSPLocalizer.getFormatStr("notIntersectScheme", [this.toString(), that.toString()]));
       return null;
@@ -1239,14 +1225,14 @@ CSPSource.prototype = {
     // error should still be reported.
 
     // host
-    if (this._host && that._host) {
-      newSource._host = this._host.intersectWith(that._host);
-    } else if (this._host) {
+    if (this.host && that.host) {
+      newSource._host = this.host.intersectWith(that.host);
+    } else if (this.host) {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourceWithUndefinedHost", [that.toString()]));
-      newSource._host = this._host.clone();
-    } else if (that._host) {
+      newSource._host = this.host.clone();
+    } else if (that.host) {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourceWithUndefinedHost", [this.toString()]));
-      newSource._host = that._host.clone();
+      newSource._host = that.host.clone();
     } else {
       CSPError(CSPLocalizer.getFormatStr("intersectingSourcesWithUndefinedHosts", [this.toString(), that.toString()]));
       newSource._host = CSPHost.fromString("*");

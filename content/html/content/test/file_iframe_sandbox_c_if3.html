@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<script type="text/javascript">
+  function doStuff() {
+    dump("*** c_if3 has loaded\n");
+    // try and submit the form - this should succeed
+    document.getElementById('a_form').submit();
+  }
+</script>
+<body onLoad="doStuff()">
+  I am sandboxed but with "allow-scripts allow-forms"
+
+  <form method="get" action="file_iframe_sandbox_form_pass.html" id="a_form">
+    First name: <input type="text" name="firstname">
+    Last name: <input type="text" name="lastname">
+    <input type="submit" onclick="doSubmit()" id="a_button">
+  </form>
+</body>
+</html>

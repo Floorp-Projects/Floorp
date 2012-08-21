@@ -1,0 +1,15 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(b905b05e-2141-444c-a90d-525b6c0daff1)]
+interface nsIDOMBluetoothPairingEvent : nsIDOMEvent
+{
+  readonly attribute DOMString deviceAddress;
+  readonly attribute DOMString uuid;
+  readonly attribute unsigned long passkey;
+};

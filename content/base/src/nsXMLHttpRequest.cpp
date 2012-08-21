@@ -76,6 +76,7 @@
 #include "nsIDOMFormData.h"
 #include "DictionaryHelpers.h"
 #include "mozilla/Attributes.h"
+#include "nsIPermissionManager.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -572,9 +573,16 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
       return;
     }
 
-    nsCOMPtr<nsIURI> uri;
-    doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.systemXHR.whitelist")) {
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    nsCOMPtr<nsIPermissionManager> permMgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    if (!permMgr)
+      return;
+
+    PRUint32 permission;
+    nsresult rv =
+      permMgr->TestPermissionFromPrincipal(principal, "systemXHR", &permission);
+    if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
       return;
     }
   }
@@ -1705,18 +1713,9 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
     return NS_OK;
   }
 
-  // ...or if this is a same-origin request.
-  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel)) {
-    return NS_OK;
-  }
-
-  // exempt data URIs from the same origin check.
-  nsCOMPtr<nsIURI> channelURI;
-  bool dataScheme = false;
-  if (NS_SUCCEEDED(NS_GetFinalChannelURI(aChannel,
-                                         getter_AddRefs(channelURI))) &&
-      NS_SUCCEEDED(channelURI->SchemeIs("data", &dataScheme)) &&
-      dataScheme) {
+  // If this is a same-origin request or the channel's URI inherits
+  // its principal, it's allowed.
+  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel, true)) {
     return NS_OK;
   }
 

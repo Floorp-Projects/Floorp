@@ -62,6 +62,8 @@ HISTOGRAM(GC_MMU_50, 1, 100, 20, LINEAR, "Minimum percentage of time spent outsi
 HISTOGRAM_BOOLEAN(GC_RESET, "Was an incremental GC canceled?")
 HISTOGRAM_BOOLEAN(GC_INCREMENTAL_DISABLED, "Is incremental GC permanently disabled?")
 HISTOGRAM_BOOLEAN(GC_NON_INCREMENTAL, "Was the GC non-incremental?")
+HISTOGRAM(GC_SCC_SWEEP_TOTAL_MS, 1, 500, 50, LINEAR, "Time spent sweeping compartment SCCs (ms)")
+HISTOGRAM(GC_SCC_SWEEP_MAX_PAUSE_MS, 1, 500, 50, LINEAR, "Time spent sweeping slowest compartment SCC (ms)")
 
 HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit telemetry info (ms)")
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
@@ -199,6 +201,7 @@ HISTOGRAM(SPDY_SETTINGS_IW, 1, 1000, 50, EXPONENTIAL,  "SPDY: Settings IW (round
 #undef HTTP_HISTOGRAMS
 
 HISTOGRAM(DISK_CACHE_CORRUPT_DETAILS, 1, 50, 51, LINEAR, "Why the HTTP disk cache was corrupted at startup")
+HISTOGRAM_BOOLEAN(DISK_CACHE_REDUCTION_TRIAL, "Stores 1 if the cache would be corrupted with the disk cache corruption plan of Bug 105843")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_CACHE_DISPOSITION_2,         5, "HTTP Cache Hit, Reval, Failed-Reval, Miss")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_DISK_CACHE_DISPOSITION_2,    5, "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_MEMORY_CACHE_DISPOSITION_2,  5, "HTTP Memory Cache Hit, Reval, Failed-Reval, Miss")
@@ -277,6 +280,7 @@ CACHE_LOCK_HISTOGRAM(NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE)
 CACHE_LOCK_HISTOGRAM(NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED)
 CACHE_LOCK_HISTOGRAM(NSCACHEENTRYDESCRIPTOR_GETCLIENTID)
 CACHE_LOCK_HISTOGRAM(NSBLOCKONCACHETHREADEVENT_RUN)
+CACHE_LOCK_HISTOGRAM(NSDISKCACHEMAP_REVALIDATION)
 
 #undef CACHE_LOCK_HISTOGRAM
  
@@ -323,13 +327,14 @@ HISTOGRAM(MOZ_SQLITE_WEBAPPS_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)
 HISTOGRAM(MOZ_SQLITE_OTHER_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_STORAGE_ASYNC_REQUESTS_MS, 1, 32768, 20, EXPONENTIAL, "mozStorage async requests completion (ms)")
 HISTOGRAM_BOOLEAN(MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS, "mozStorage async requests success")
-HISTOGRAM(STARTUP_MEASUREMENT_ERRORS, 1, mozilla::StartupTimeline::MAX_EVENT_ID, mozilla::StartupTimeline::MAX_EVENT_ID + 1, LINEAR, "Flags errors in startup calculation()")
+HISTOGRAM_ENUMERATED_VALUES(STARTUP_MEASUREMENT_ERRORS, mozilla::StartupTimeline::MAX_EVENT_ID, "Flags errors in startup calculation()")
 HISTOGRAM(NETWORK_DISK_CACHE_OPEN, 1, 10000, 10, EXPONENTIAL, "Time spent opening disk cache (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_TRASHRENAME, 1, 10000, 10, EXPONENTIAL, "Time spent renaming bad Cache to Cache.Trash (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_DELETEDIR, 1, 10000, 10, EXPONENTIAL, "Time spent deleting disk cache (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN, 1, 10000, 10, EXPONENTIAL, "Time spent during showdown stopping thread deleting old disk cache (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_SHUTDOWN, 1, 10000, 10, EXPONENTIAL, "Total Time spent (ms) during disk cache showdown")
 HISTOGRAM(NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE, 1, 10000, 10, EXPONENTIAL, "Time spent (ms) during showdown deleting disk cache for 'clear private data' option")
+HISTOGRAM(NETWORK_DISK_CACHE_REVALIDATION, 1, 10000, 10, EXPONENTIAL, "Total Time spent (ms) during disk cache revalidation")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::Close() on non-main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal() on non-main thread (ms)")

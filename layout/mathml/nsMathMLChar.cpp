@@ -71,22 +71,6 @@ typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
 // sizes (if any).
 // A position that is not relevant to a particular character is indicated there
 // with the UNICODE REPLACEMENT CHARACTER 0xFFFD.
-// Characters that need to be built recursively from other characters are said
-// to be composite. For example, chars like over/underbrace in CMEX10 have to
-// be built from two half stretchy chars and joined in the middle
-// (TeXbook, p.225).
-// Such chars are handled in a special manner by the nsMathMLChar class, which
-// allows several (2 or more) child chars to be composed in order to render
-// another char.
-// To specify such chars, their list of glyphs in the property file should be
-// given as space-separated segments of glyphs. Each segment gives the 4 partial
-// glyphs with which to build the child char that will be joined with its other
-// siblings. In this code, when this situation happens (see the detailed
-// description of Stretch() below), the original char (referred to as "parent")
-// creates a singly-linked list of child chars, asking them to stretch in an
-// equally divided space. The nsGlyphTable embeds the necessary logic to
-// guarantee correctness in a recursive stretch (and in the use of TopOf(),
-// GlueOf(), etc) on these child chars.
 // -----------------------------------------------------------------------------
 
 #define NS_TABLE_TYPE_UNICODE       0
@@ -157,14 +141,8 @@ public:
   // True if this table contains variants of larger sizes to render this char
   bool HasVariantsOf(nsPresContext* aPresContext, nsMathMLChar* aChar);
 
-  // True if this table contains parts (or composite parts) to render this char
+  // True if this table contains parts to render this char
   bool HasPartsOf(nsPresContext* aPresContext, nsMathMLChar* aChar);
-
-  // True if aChar is to be assembled from other child chars in this table
-  bool IsComposite(nsPresContext* aPresContext, nsMathMLChar* aChar);
-
-  // The number of child chars to assemble in order to render aChar
-  PRInt32 ChildCountOf(nsPresContext* aPresContext, nsMathMLChar* aChar);
 
   // Getters for the parts
   nsGlyphCode TopOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
@@ -269,10 +247,6 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
     }
   }
 
-  // If aChar is a child char to be used by a parent composite char, make
-  // sure that it is really attached to this table
-  if (aChar->mParent && (aChar->mGlyphTable != this)) return kNullGlyph;
-
   // Update our cache if it is not associated to this character
   PRUnichar uchar = aChar->mData[0];
   if (mCharCache != uchar) {
@@ -296,16 +270,10 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
     nsAutoString buffer;
     PRInt32 length = value.Length();
     PRInt32 i = 0; // index in value
-    PRInt32 j = 0; // part/variant index
     while (i < length) {
       PRUnichar code = value[i];
       ++i;
       buffer.Append(code);
-      // see if we are at the beginning of a child char
-      if (code == kSpaceCh) {
-        // reset the annotation indicator to be 0 for the next code point
-        j = -1;
-      }
       // Read the next word if we have a non-BMP character.
       if (i < length && NS_IS_HIGH_SURROGATE(code)) {
         code = value[i];
@@ -333,66 +301,20 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
         }
       }
       buffer.Append(font);
-      ++j;
     }
     // update our cache with the new settings
     mGlyphCache.Assign(buffer);
     mCharCache = uchar;
   }
 
-  // If aChar is a composite char, only its children are allowed
-  // to use its glyphs in this table, i.e., the parent char itself
-  // is disabled and cannot be stretched directly with these glyphs.
-  // This guarantees a coherent behavior in Stretch().
-  if (!aChar->mParent && (kNotFound != mGlyphCache.FindChar(kSpaceCh))) {
-    return kNullGlyph;
-  }
-
-  // If aChar is a child char, the index of the glyph is relative to
-  // the offset of the list of glyphs corresponding to the child char.
-  PRUint32 offset = 0;
-  PRUint32 length = mGlyphCache.Length();
-  if (aChar->mParent) {
-    nsMathMLChar* child = aChar->mParent->mSibling;
-    // XXXkt composite chars can't have size variants
-    while (child && (child != aChar)) {
-      offset += 5; // skip the 4 partial glyphs + the whitespace separator
-      child = child->mSibling;
-    }
-    // stay confined in the 4 partial glyphs of this child
-    length = 3*(offset + 4);
-  }
   // 3* is to account for the code@font pairs
-  PRUint32 index = 3*(offset + aPosition);
-  if (index+2 >= length) return kNullGlyph;
+  PRUint32 index = 3*aPosition;
+  if (index+2 >= mGlyphCache.Length()) return kNullGlyph;
   nsGlyphCode ch;
   ch.code[0] = mGlyphCache.CharAt(index);
   ch.code[1] = mGlyphCache.CharAt(index + 1);
   ch.font = mGlyphCache.CharAt(index + 2);
   return ch.code[0] == PRUnichar(0xFFFD) ? kNullGlyph : ch;
-}
-
-bool
-nsGlyphTable::IsComposite(nsPresContext* aPresContext, nsMathMLChar* aChar)
-{
-  // there is only one level of recursion in our model. a child
-  // cannot be composite because it cannot have its own children
-  if (aChar->mParent) return false;
-  // shortcut to sync the cache with this char...
-  mCharCache = 0; mGlyphCache.Truncate(); ElementAt(aPresContext, aChar, 0);
-  // the cache remained empty if the char wasn't found in this table
-  if (4*3 >= mGlyphCache.Length()) return false;
-  // the lists of glyphs of a composite char are space-separated
-  return (kSpaceCh == mGlyphCache.CharAt(4*3));
-}
-
-PRInt32
-nsGlyphTable::ChildCountOf(nsPresContext* aPresContext, nsMathMLChar* aChar)
-{
-  // this will sync the cache as well ...
-  if (!IsComposite(aPresContext, aChar)) return 0;
-  // the lists of glyphs of a composite char are space-separated
-  return 1 + mGlyphCache.CountChar(kSpaceCh);
 }
 
 bool
@@ -414,8 +336,7 @@ nsGlyphTable::HasPartsOf(nsPresContext* aPresContext, nsMathMLChar* aChar)
   return GlueOf(aPresContext, aChar).Exists() ||
     TopOf(aPresContext, aChar).Exists() ||
     BottomOf(aPresContext, aChar).Exists() ||
-    MiddleOf(aPresContext, aChar).Exists() ||
-    IsComposite(aPresContext, aChar);
+    MiddleOf(aPresContext, aChar).Exists();
 }
 
 // -----------------------------------------------------------------------------
@@ -697,7 +618,6 @@ InitGlobals(nsPresContext* aPresContext)
 nsStyleContext*
 nsMathMLChar::GetStyleContext() const
 {
-  NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   NS_ASSERTION(mStyleContext, "chars should always have style context");
   return mStyleContext;
 }
@@ -705,7 +625,6 @@ nsMathMLChar::GetStyleContext() const
 void
 nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
 {
-  NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   NS_PRECONDITION(aStyleContext, "null ptr");
   if (aStyleContext != mStyleContext) {
     if (mStyleContext)
@@ -713,13 +632,6 @@ nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
     if (aStyleContext) {
       mStyleContext = aStyleContext;
       aStyleContext->AddRef();
-
-      // Sync the pointers of child chars.
-      nsMathMLChar* child = mSibling;
-      while (child) {
-        child->mStyleContext = mStyleContext;
-        child = child->mSibling;
-      }
     }
   }
 }
@@ -728,7 +640,6 @@ void
 nsMathMLChar::SetData(nsPresContext* aPresContext,
                       nsString&       aData)
 {
-  NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   if (!gInitialized) {
     InitGlobals(aPresContext);
   }
@@ -803,16 +714,8 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
 
  3) If a variant of appropriate size wasn't found, we see if the char
     can be built by parts using the same glyph table.
-    Issues:
-    a) Certain chars like over/underbrace in CMEX10 have to be built
-       from two half stretchy chars and joined in the middle. Such
-       chars are handled in a special manner. When this situation is
-       detected, the initial char (referred to as "parent") creates a
-       singly-linked list of child chars, asking them to stretch in
-       a divided space. A convention is used in the setup of
-       nsGlyphTable to express that a composite parent char can be built
-       from child chars.
-    b) There are some chars that have no middle and glue glyphs. For
+    Issue:
+       There are chars that have no middle and glue glyphs. For
        such chars, the parts need to be joined using the rule.
        By convention (TeXbook p.225), the descent of the parts is
        zero while their ascent gives the thickness of the rule that
@@ -1192,30 +1095,6 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
 {
   if (!aGlyphTable->HasPartsOf(mPresContext, mChar))
     return false; // to next table
-
-  // See if this is a composite character /////////////////////////////////////
-  if (aGlyphTable->IsComposite(mPresContext, mChar)) {
-    // let the child chars do the job
-    nsBoundingMetrics compositeSize;
-    nsresult rv =
-      mChar->ComposeChildren(mPresContext, mRenderingContext, aGlyphTable,
-                             mTargetSize, compositeSize, mStretchHint);
-#ifdef NOISY_SEARCH
-    printf("    Composing %d chars in font %s %s!\n",
-           aGlyphTable->ChildCountOf(mPresContext, mChar),
-           NS_LossyConvertUTF16toASCII(fontName).get(),
-           NS_SUCCEEDED(rv)? "OK" : "Rejected");
-#endif
-    if (NS_FAILED(rv))
-      return false; // to next table
-
-    // all went well, painting will be delegated from now on to children
-    mChar->mGlyph = kNullGlyph; // this will tell paint to build by parts
-    mGlyphFound = true;
-    mChar->mGlyphTable = aGlyphTable;
-    mBoundingMetrics = compositeSize;
-    return true; // no more searching
-  }
 
   // See if the parts of this table fit in the desired space //////////////////
 
@@ -1715,89 +1594,6 @@ nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
                   bm, aStretchHint | NS_STRETCH_MAXWIDTH);
 
   return NS_MAX(bm.width, bm.rightBearing) - NS_MIN(0, bm.leftBearing);
-}
-
-nsresult
-nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
-                              nsRenderingContext& aRenderingContext,
-                              nsGlyphTable*        aGlyphTable,
-                              nscoord              aTargetSize,
-                              nsBoundingMetrics&   aCompositeSize,
-                              PRUint32             aStretchHint)
-{
-  PRInt32 i = 0;
-  nsMathMLChar* child;
-  PRInt32 count = aGlyphTable->ChildCountOf(aPresContext, this);
-  NS_ASSERTION(count, "something is wrong somewhere");
-  if (!count) return NS_ERROR_FAILURE;
-  // if we haven't been here before, create the linked list of children now
-  // otherwise, use what we have, adding more children as needed or deleting
-  // the extra
-  nsMathMLChar* last = this;
-  while ((i < count) && last->mSibling) {
-    i++;
-    last = last->mSibling;
-  }
-  while (i < count) {
-    child = new nsMathMLChar(this);
-    last->mSibling = child;
-    last = child;
-    i++;
-  }
-  if (last->mSibling) {
-    delete last->mSibling;
-    last->mSibling = nullptr;
-  }
-  // let children stretch in an equal space
-  nsBoundingMetrics splitSize;
-  if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-    splitSize.width = aTargetSize / count;
-  else {
-    splitSize.ascent = aTargetSize / (count * 2);
-    splitSize.descent = splitSize.ascent;
-  }
-  nscoord dx = 0, dy = 0;
-  for (i = 0, child = mSibling; child; child = child->mSibling, i++) {
-    // child chars should just inherit our values - which may change between
-    // calls...
-    child->mData = mData;
-    child->mDirection = mDirection;
-    child->mStyleContext = mStyleContext;
-    child->mGlyphTable = aGlyphTable; // the child is associated to this table
-    child->mMirrored = mMirrored;
-    // there goes the Stretch() ...
-    nsBoundingMetrics childSize;
-    nsresult rv = child->Stretch(aPresContext, aRenderingContext, mDirection,
-                                 splitSize, childSize, aStretchHint, mMirrored);
-    // check if something went wrong or the child couldn't fit in the alloted
-    // space
-    if (NS_FAILED(rv) ||
-        (NS_STRETCH_DIRECTION_UNSUPPORTED == child->mDirection)) {
-      delete mSibling; // don't leave a dangling list behind ...
-      mSibling = nullptr;
-      return NS_ERROR_FAILURE;
-    }
-    child->SetRect(nsRect(dx, dy, childSize.width,
-                          childSize.ascent+childSize.descent));
-    if (0 == i)
-      aCompositeSize = childSize;
-    else {
-      if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-        aCompositeSize += childSize;
-      else {
-        aCompositeSize.descent += childSize.ascent + childSize.descent;
-        if (aCompositeSize.leftBearing > childSize.leftBearing)
-          aCompositeSize.leftBearing = childSize.leftBearing;
-        if (aCompositeSize.rightBearing < childSize.rightBearing)
-          aCompositeSize.rightBearing = childSize.rightBearing;
-      }
-    }
-    if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-      dx += childSize.width;
-    else
-      dy += childSize.ascent + childSize.descent;
-  }
-  return NS_OK;
 }
 
 class nsDisplayMathMLSelectionRect : public nsDisplayItem {

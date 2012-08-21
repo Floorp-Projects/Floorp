@@ -55,9 +55,9 @@
 #include "builtin/Eval.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
+#include "builtin/ParallelArray.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/TreeContext.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
@@ -737,6 +737,7 @@ JSRuntime::JSRuntime()
 #ifdef JS_METHODJIT
     jaegerRuntime_(NULL),
 #endif
+    selfHostedGlobal_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -805,6 +806,7 @@ JSRuntime::JSRuntime()
     gcDeterministicOnly(false),
     gcIncrementalLimit(0),
 #endif
+    gcValidate(true),
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
@@ -899,7 +901,8 @@ JSRuntime::init(uint32_t maxbytes)
 
     if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
         !atomsCompartment->init(NULL) ||
-        !compartments.append(atomsCompartment)) {
+        !compartments.append(atomsCompartment))
+    {
         Foreground::delete_(atomsCompartment);
         return false;
     }
@@ -1879,6 +1882,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
+    {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayObject::class_},
     {NULL,                              0, NULL}
 };
 
@@ -4901,22 +4905,19 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
     }
 
     /*
-     * If a function was compiled as compile-and-go or was compiled to be
-     * lexically nested inside some other script, we cannot clone it without
-     * breaking the compiler's assumptions.
+     * If a function was compiled to be lexically nested inside some other
+     * script, we cannot clone it without breaking the compiler's assumptions.
      */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() &&
-        (fun->script()->compileAndGo || fun->script()->enclosingStaticScope()))
+    if (fun->isInterpreted() && (fun->script()->enclosingStaticScope() ||
+        (fun->script()->compileAndGo && !parent->isGlobal())))
     {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;
     }
 
     if (fun->isBoundFunction()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_CANT_CLONE_OBJECT);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CLONE_OBJECT);
         return NULL;
     }
 
@@ -5038,7 +5039,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags, JSFunction::ExtendedFinalizeKind);
+                                    fs->nargs + 1, flags, NULL, JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -5049,7 +5050,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
-        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
+        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags, fs->selfHostedName);
         if (!fun)
             return JS_FALSE;
         if (fs->call.info)
@@ -5215,7 +5216,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       lineno(1),
       compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
       noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
-      allowIntrinsicsCalls(false),
+      selfHostingMode(false),
       sourcePolicy(SAVE_SOURCE)
 {
 }
@@ -5738,7 +5739,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
-        return NULL;
+        return false;
 
     bool ok = Evaluate(cx, obj, options, chars, length, rval);
     cx->free_(chars);
@@ -5753,7 +5754,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     {
         AutoFile file;
         if (!file.open(cx, filename) || !file.readAll(cx, buffer))
-            return NULL;
+            return false;
     }
 
     options = options.setFileAndLine(filename, 1);
@@ -7135,16 +7136,16 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
             VerifyBarriers(rt, PostBarrierVerifier);
     }
 
-    bool schedule = zeal >= js::gc::ZealAllocValue;
-    rt->gcZeal_ = zeal;
-    rt->gcZealFrequency = frequency;
-    rt->gcNextScheduled = schedule ? frequency : 0;
-
 #ifdef JS_METHODJIT
     /* In case JSCompartment::compileBarriers() changed... */
     for (CompartmentsIter c(rt); !c.done(); c.next())
         mjit::ClearAllFrames(c);
 #endif
+
+    bool schedule = zeal >= js::gc::ZealAllocValue;
+    rt->gcZeal_ = zeal;
+    rt->gcZealFrequency = frequency;
+    rt->gcNextScheduled = schedule ? frequency : 0;
 }
 
 JS_PUBLIC_API(void)

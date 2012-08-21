@@ -45,7 +45,6 @@
 #include "builtin/MapObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
-#include "frontend/TreeContext.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
@@ -744,44 +743,45 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
  * 'instanceof' operators.
  */
 
-/* Proposed ECMA 15.2.4.5. */
+/* ECMA 15.2.4.5. */
 static JSBool
 obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    /* Step 1. */
+    RootedId id(cx);
+    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
+        return false;
+
+    /* Step 2. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-    return js_HasOwnPropertyHelper(cx, obj->getOps()->lookupGeneric, argc, args.rval().address());
+    return js_HasOwnPropertyHelper(cx, obj->getOps()->lookupGeneric, obj, id, args.rval());
 }
 
 JSBool
-js_HasOwnPropertyHelper(JSContext *cx, LookupGenericOp lookup, unsigned argc,
-                        Value *vp)
+js_HasOwnPropertyHelper(JSContext *cx, LookupGenericOp lookup, HandleObject obj,
+                        HandleId id, MutableHandleValue rval)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), id.address()))
-        return JS_FALSE;
-
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
+    /* Non-standard code for proxies. */
     RootedObject obj2(cx);
     RootedShape prop(cx);
     if (obj->isProxy()) {
         bool has;
         if (!Proxy::hasOwn(cx, obj, id, &has))
             return false;
-        args.rval().setBoolean(has);
+        rval.setBoolean(has);
         return true;
     }
+
+    /* Step 3. */
     if (!js_HasOwnProperty(cx, lookup, obj, id, &obj2, &prop))
-        return JS_FALSE;
-    args.rval().setBoolean(!!prop);
-    return JS_TRUE;
+        return false;
+    /* Step 4,5. */
+    rval.setBoolean(!!prop);
+    return true;
 }
 
 JSBool

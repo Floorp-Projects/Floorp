@@ -8,6 +8,7 @@
 #include "nsBuiltinDecoderReader.h"
 #include "nsBuiltinDecoderStateMachine.h"
 #include "VideoUtils.h"
+#include "ImageContainer.h"
 
 #include "mozilla/mozalloc.h"
 #include "mozilla/StandardInteger.h"
@@ -86,6 +87,42 @@ nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
     aDisplay.width * aDisplay.height != 0;
 }
 
+VideoData::  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aEndTime, PRInt64 aTimecode)
+  : mOffset(aOffset),
+    mTime(aTime),
+    mEndTime(aEndTime),
+    mTimecode(aTimecode),
+    mDuplicate(true),
+    mKeyframe(false)
+{
+  MOZ_COUNT_CTOR(VideoData);
+  NS_ASSERTION(aEndTime >= aTime, "Frame must start before it ends.");
+}
+
+VideoData::VideoData(PRInt64 aOffset,
+          PRInt64 aTime,
+          PRInt64 aEndTime,
+          bool aKeyframe,
+          PRInt64 aTimecode,
+          nsIntSize aDisplay)
+  : mDisplay(aDisplay),
+    mOffset(aOffset),
+    mTime(aTime),
+    mEndTime(aEndTime),
+    mTimecode(aTimecode),
+    mDuplicate(false),
+    mKeyframe(aKeyframe)
+{
+  MOZ_COUNT_CTOR(VideoData);
+  NS_ASSERTION(aEndTime >= aTime, "Frame must start before it ends.");
+}
+
+VideoData::~VideoData()
+{
+  MOZ_COUNT_DTOR(VideoData);
+}
+
+
 VideoData* VideoData::Create(nsVideoInfo& aInfo,
                              ImageContainer* aContainer,
                              PRInt64 aOffset,
@@ -148,12 +185,12 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                                        aInfo.mDisplay));
   // Currently our decoder only knows how to output to PLANAR_YCBCR
   // format.
-  Image::Format format = Image::PLANAR_YCBCR;
+  ImageFormat format = PLANAR_YCBCR;
   v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == Image::PLANAR_YCBCR,
+  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
@@ -179,6 +216,19 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                        Cb.mOffset, Cb.mSkip,
                        Cr.mOffset, Cr.mSkip);
   return v.forget();
+}
+
+void* nsBuiltinDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
+  const VideoData* v = static_cast<const VideoData*>(anObject);
+  if (!v->mImage) {
+    return nullptr;
+  }
+  NS_ASSERTION(v->mImage->GetFormat() == mozilla::ImageFormat::PLANAR_YCBCR,
+               "Wrong format?");
+  mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
+
+  mResult += vi->GetDataSize();
+  return nullptr;
 }
 
 nsBuiltinDecoderReader::nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder)

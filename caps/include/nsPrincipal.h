@@ -13,6 +13,9 @@
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsIProtocolHandler.h"
+#include "nsNetUtil.h"
+#include "nsScriptSecurityManager.h"
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -123,7 +126,7 @@ public:
   NS_IMETHOD GetOrigin(char** aOrigin);
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report);
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
   NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);
   NS_IMETHOD GetAppId(PRUint32* aAppStatus);
@@ -157,6 +160,23 @@ public:
 
   virtual void GetScriptLocation(nsACString& aStr) MOZ_OVERRIDE;
   void SetURI(nsIURI* aURI);
+
+  static bool IsPrincipalInherited(nsIURI* aURI) {
+    // return true if the loadee URI has
+    // the URI_INHERITS_SECURITY_CONTEXT flag set.
+    bool doesInheritSecurityContext;
+    nsresult rv =
+    NS_URIChainHasFlags(aURI,
+                        nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                        &doesInheritSecurityContext);
+
+    if (NS_SUCCEEDED(rv) && doesInheritSecurityContext) {
+      return true;
+    }
+
+    return false;
+  }
+
 
   /**
    * Computes the puny-encoded origin of aURI.
@@ -202,7 +222,7 @@ public:
   NS_IMETHOD GetOrigin(char** aOrigin);
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report);
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
   NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);
   NS_IMETHOD GetAppId(PRUint32* aAppStatus);

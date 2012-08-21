@@ -473,7 +473,14 @@ struct Ligature
 
   inline bool would_apply (hb_would_apply_context_t *c) const
   {
-    return c->len == 1 || (c->len == 2 && component.len == 2 && component[1] == c->second);
+    if (c->len != component.len)
+      return false;
+
+    for (unsigned int i = 1; i < c->len; i++)
+      if (likely (c->glyphs[i] != component[i]))
+	return false;
+
+    return true;
   }
 
   inline bool apply (hb_apply_context_t *c) const
@@ -706,7 +713,7 @@ struct LigatureSubstFormat1
 
   inline bool would_apply (hb_would_apply_context_t *c) const
   {
-    return (this+ligatureSet[(this+coverage) (c->first)]).would_apply (c);
+    return (this+ligatureSet[(this+coverage) (c->glyphs[0])]).would_apply (c);
   }
 
   inline bool apply (hb_apply_context_t *c) const
@@ -1064,8 +1071,16 @@ struct SubstLookupSubTable
 			   unsigned int lookup_type) const
   {
     TRACE_WOULD_APPLY ();
-    if (get_coverage (lookup_type).get_coverage (c->first) == NOT_COVERED) return false;
-    if (c->len == 1) return true; /* Done! */
+    if (get_coverage (lookup_type).get_coverage (c->glyphs[0]) == NOT_COVERED) return false;
+    if (c->len == 1) {
+      switch (lookup_type) {
+      case Single:
+      case Multiple:
+      case Alternate:
+      case ReverseChainSingle:
+        return true;
+      }
+    }
 
     /* Only need to look further for lookups that support substitutions
      * of input longer than 1. */
@@ -1170,7 +1185,8 @@ struct SubstLookup : Lookup
 
   inline bool would_apply (hb_would_apply_context_t *c) const
   {
-    if (!c->digest.may_have (c->first)) return false;
+    if (unlikely (!c->len)) return false;
+    if (!c->digest.may_have (c->glyphs[0])) return false;
     unsigned int lookup_type = get_type ();
     unsigned int count = get_subtable_count ();
     for (unsigned int i = 0; i < count; i++)

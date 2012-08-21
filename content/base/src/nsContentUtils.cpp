@@ -12,6 +12,7 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 
+#include "Layers.h"
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"
@@ -159,6 +160,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "mozilla/Attributes.h"
 #include "nsIParserService.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsSandboxFlags.h"
 
 #include "nsWrapperCacheInlines.h"
 
@@ -920,6 +922,53 @@ nsContentUtils::GetParserService()
   }
 
   return sParserService;
+}
+
+/**
+ * A helper function that parses a sandbox attribute (of an <iframe> or
+ * a CSP directive) and converts it to the set of flags used internally.
+ *
+ * @param aAttribute    the value of the sandbox attribute
+ * @return              the set of flags
+ */
+PRUint32
+nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
+{
+  // If there's a sandbox attribute at all (and there is if this is being
+  // called), start off by setting all the restriction flags.
+  PRUint32 out = SANDBOXED_NAVIGATION |
+                 SANDBOXED_TOPLEVEL_NAVIGATION |
+                 SANDBOXED_PLUGINS |
+                 SANDBOXED_ORIGIN |
+                 SANDBOXED_FORMS |
+                 SANDBOXED_SCRIPTS |
+                 SANDBOXED_AUTOMATIC_FEATURES;
+
+  if (!aSandboxAttrValue.IsEmpty()) {
+    // The separator optional flag is used because the HTML5 spec says any
+    // whitespace is ok as a separator, which is what this does.
+    HTMLSplitOnSpacesTokenizer tokenizer(aSandboxAttrValue, ' ',
+      nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>::SEPARATOR_OPTIONAL);
+
+    while (tokenizer.hasMoreTokens()) {
+      nsDependentSubstring token = tokenizer.nextToken();
+
+      if (token.LowerCaseEqualsLiteral("allow-same-origin")) {
+        out &= ~SANDBOXED_ORIGIN;
+      } else if (token.LowerCaseEqualsLiteral("allow-forms")) {
+        out &= ~SANDBOXED_FORMS;
+      } else if (token.LowerCaseEqualsLiteral("allow-scripts")) {
+        // allow-scripts removes both SANDBOXED_SCRIPTS and
+        // SANDBOXED_AUTOMATIC_FEATURES.
+        out &= ~SANDBOXED_SCRIPTS;
+        out &= ~SANDBOXED_AUTOMATIC_FEATURES;
+      } else if (token.LowerCaseEqualsLiteral("allow-top-navigation")) {
+        out &= ~SANDBOXED_TOPLEVEL_NAVIGATION;
+      }
+    }
+  }
+
+  return out;
 }
 
 #ifdef MOZ_XTF
@@ -4557,7 +4606,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
     return NS_OK;
   }
 
-  return aLoadingPrincipal->CheckMayLoad(aURIToLoad, true);
+  return aLoadingPrincipal->CheckMayLoad(aURIToLoad, true, false);
 }
 
 bool
@@ -5707,9 +5756,9 @@ nsContentUtils::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel
 
   NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
 
-  nsresult rv = oldPrincipal->CheckMayLoad(newURI, false);
+  nsresult rv = oldPrincipal->CheckMayLoad(newURI, false, false);
   if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-    rv = oldPrincipal->CheckMayLoad(newOriginalURI, false);
+    rv = oldPrincipal->CheckMayLoad(newOriginalURI, false, false);
   }
 
   return rv;
@@ -5880,13 +5929,13 @@ nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 
 /* static */
 bool
-nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
+nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal)
 {
   nsCOMPtr<nsIURI> channelURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, false);
 
-  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, false));
+  return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, false, aAllowIfInheritsPrincipal));
 }
 
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
@@ -6555,6 +6604,18 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     }
   }
 #endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+  if (nsHTMLMediaElement::IsMediaPluginsEnabled() &&
+      nsHTMLMediaElement::IsMediaPluginsType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
+    }
+    return docFactory.forget();
+  }
+#endif // MOZ_MEDIA_PLUGINS
+
 #endif // MOZ_MEDIA
 
   return NULL;
@@ -6610,7 +6671,8 @@ bool
 nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
                                   nsIChannel* aChannel,
                                   nsIURI* aURI,
-                                  bool aSetUpForAboutBlank)
+                                  bool aSetUpForAboutBlank,
+                                  bool aForceOwner)
 {
   //
   // Set the owner of the channel, but only for channels that can't
@@ -6628,13 +6690,25 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   //      (Currently chrome URIs set the owner when they are created!
   //      So setting a NULL owner would be bad!)
   //
+  // If aForceOwner is true, the owner will be set, even for a channel that
+  // can provide its own security context. This is used for the HTML5 IFRAME
+  // sandbox attribute, so we can force the channel (and its document) to
+  // explicitly have a null principal.
   bool inherit;
   // We expect URIInheritsSecurityContext to return success for an
   // about:blank URI, so don't call NS_IsAboutBlank() if this call fails.
   // This condition needs to match the one in nsDocShell::InternalLoad where
   // we're checking for things that will use the owner.
-  if (NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherit)) &&
-      (inherit || (aSetUpForAboutBlank && NS_IsAboutBlank(aURI)))) {
+  if (aForceOwner || ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherit)) &&
+      (inherit || (aSetUpForAboutBlank && NS_IsAboutBlank(aURI)))))) {
+#ifdef DEBUG
+    // Assert that aForceOwner is only set for null principals
+    if (aForceOwner) {
+      nsCOMPtr<nsIURI> ownerURI;
+      nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(ownerURI));
+      MOZ_ASSERT(NS_SUCCEEDED(rv) && SchemeIs(ownerURI, NS_NULLPRINCIPAL_SCHEME));
+    }
+#endif
     aChannel->SetOwner(aLoadingPrincipal);
     return true;
   }
@@ -6648,7 +6722,7 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   // based on its own codebase later.
   //
   if (URIIsLocalFile(aURI) && aLoadingPrincipal &&
-      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false)) &&
+      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
       // One more check here.  CheckMayLoad will always return true for the
       // system principal, but we do NOT want to inherit in that case.
       !IsSystemPrincipal(aLoadingPrincipal)) {

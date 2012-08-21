@@ -19,6 +19,7 @@
 #include "ShadowLayers.h"
 #include "ShadowLayerUtils.h"
 #include "TiledLayerBuffer.h"
+#include "gfxPlatform.h" 
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -214,7 +215,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const CommonLayerAttributes& common = attrs.common();
       layer->SetVisibleRegion(common.visibleRegion());
       layer->SetContentFlags(common.contentFlags());
-      layer->SetOpacity(common.opacity().value());
+      layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetBaseTransform(common.transform().value());
       layer->SetPostScale(common.postXScale(), common.postYScale());

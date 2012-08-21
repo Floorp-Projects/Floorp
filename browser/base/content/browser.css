@@ -615,3 +615,12 @@ stack[anonid=browserStack][responsivemode] {
 stack[anonid=browserStack][responsivemode][notransition] {
   transition: none;
 }
+
+chatbox {
+  -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
+}
+
+chatbar {
+  -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
+  height: 0;
+}

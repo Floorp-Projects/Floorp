@@ -53,20 +53,7 @@
       function codePoint2(aList)
       {
         if (aList) {
-          if (Array.isArray(aList[0])) {
-            // Generate a string representation for a composite character.
-            // (the syntax may not match the parser in nsMathMLChar, but 
-            // support for composite character is broken anyway).
-            var str = "(";
-            str += codePoint(aList[0][0], aList[1]);
-            for (var i = 1; i < aList[0].length; i++) {
-              str += "," + codePoint(aList[0][i], aList[1]);
-            }
-            str += ")";
-            return str;
-          } else {
-            return codePoint(aList[0], aList[1]);
-          }
+          return codePoint(aList[0], aList[1]);
         } else {
           return noChar;
         }
@@ -129,8 +116,9 @@
         }
 
         if (v.stretch && !isSupported(v.stretch)) {
-          // This construction is not supported. Comment the line.
-          t.value += "# ";
+          // This construction is not supported.
+          t.value += "# " + codePoint(u) + " = [not supported]\n";
+          continue;
         }
 
         t.value += codePoint(u);

@@ -785,18 +785,21 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   if (!key.IsEmpty()) {
     if (mKeyMask == 0)
       mKeyMask = cAllModifiers;
-    nsContentUtils::ASCIIToLower(key);
+    ToLowerCase(key);
 
     // We have a charcode.
     mMisc = 1;
     mDetail = key[0];
     const PRUint8 GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
     if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
-        modifiers.First() != PRUnichar(',') && mDetail == 'u')
+        modifiers.First() != PRUnichar(',') &&
+        (mDetail == 'u' || mDetail == 'U'))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict");
     const PRUint8 WinModifiers = cControl | cAlt | cControlMask | cAltMask;
     if ((mKeyMask & WinModifiers) == WinModifiers &&
-        modifiers.First() != PRUnichar(',') && ('a' <= mDetail && mDetail <= 'z'))
+        modifiers.First() != PRUnichar(',') &&
+        (('A' <= mDetail && mDetail <= 'Z') ||
+         ('a' <= mDetail && mDetail <= 'z')))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict");
   }
   else {

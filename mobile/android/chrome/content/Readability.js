@@ -25,6 +25,7 @@ var Readability = function(uri, doc) {
   this._uri = uri;
   this._doc = doc;
   this._biggestFrame = false;
+  this._articleByline = null;
 
   // Start with all flags set
   this._flags = this.FLAG_STRIP_UNLIKELYS |
@@ -69,6 +70,8 @@ Readability.prototype = {
     positive: /article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
     negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
+    byline: /byline|author|dateline|writtenby/i,
+    stripTags: /(<([^>]+)>)/ig,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
@@ -86,30 +89,8 @@ Readability.prototype = {
    * @return void
   **/
   _postProcessContent: function(articleContent) {
-    this._fixImageFloats(articleContent);
-
     // Readability cannot open relative uris so we convert them to absolute uris. 
     this._fixRelativeUris(articleContent);
-  },
-
-  /**
-   * Some content ends up looking ugly if the image is too large to be floated.
-   * If the image is wider than a threshold (currently 55%), no longer float it,
-   * center it instead.
-   *
-   * @param Element
-   * @return void
-  **/
-  _fixImageFloats: function(articleContent) {
-    let imageWidthThreshold = Math.min(articleContent.offsetWidth, 800) * 0.55;
-    let images = articleContent.getElementsByTagName('img');
-
-    for (let i = 0, il = images.length; i < il; i += 1) {
-      let image = images[i];
-
-      if (image.offsetWidth > imageWidthThreshold)
-        image.className += " blockImage";
-    }
   },
 
   /**
@@ -225,56 +206,6 @@ Readability.prototype = {
         doc.documentElement.appendChild(body);
         this.log(e);
       }
-    }
-
-    let frames = doc.getElementsByTagName('frame');
-    if (frames.length > 0) {
-      let bestFrame = null;
-
-      // The frame to try to run readability upon. Must be on same domain.
-      let bestFrameSize = 0;
-
-      // Used for the error message. Can be on any domain.
-      let biggestFrameSize = 0;
-
-      for (let frameIndex = 0; frameIndex < frames.length; frameIndex += 1) {
-        let frameSize = frames[frameIndex].offsetWidth + frames[frameIndex].offsetHeight;
-
-        let canAccessFrame = false;
-        try {
-          let frameBody = frames[frameIndex].contentWindow.document.body;
-          canAccessFrame = true;
-        } catch(eFrames) {
-          this.log(eFrames);
-        }
-
-        if (frameSize > biggestFrameSize) {
-          biggestFrameSize = frameSize;
-          this._biggestFrame = frames[frameIndex];
-        }
-
-        if (canAccessFrame && frameSize > bestFrameSize) {
-          bestFrame = frames[frameIndex];
-          bestFrameSize = frameSize;
-        }
-      }
-
-      if (bestFrame) {
-        let newBody = doc.createElement('body');
-        newBody.innerHTML = bestFrame.contentWindow.document.body.innerHTML;
-        newBody.style.overflow = 'scroll';
-        doc.body = newBody;
-
-        let frameset = doc.getElementsByTagName('frameset')[0];
-        if (frameset) {
-          frameset.parentNode.removeChild(frameset);
-        }
-      }
-    }
-
-    // Remove all stylesheets
-    for (let k = 0; k < doc.styleSheets.length; k += 1) {
-      doc.styleSheets[k].disabled = true;
     }
 
     // Remove all style tags in head
@@ -501,6 +432,9 @@ Readability.prototype = {
       for (let nodeIndex = 0; nodeIndex < allElements.length; nodeIndex++) {
         if (!(node = allElements[nodeIndex]))
           continue;
+
+        if (node.className.search(this.REGEXPS.byline) !== -1 && !this._articleByline)
+          this._articleByline = node.innerHTML.replace(this.REGEXPS.stripTags, "");
 
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
@@ -758,13 +692,8 @@ Readability.prototype = {
    * @return string
   **/
   _getInnerText: function(e, normalizeSpaces) {
-    let textContent = "";
-
-    if (typeof(e.textContent) === "undefined" && typeof(e.innerText) === "undefined")
-      return "";
-
+    let textContent = e.textContent.replace(this.REGEXPS.trim, "");
     normalizeSpaces = (typeof normalizeSpaces === 'undefined') ? true : normalizeSpaces;
-    textContent = e.textContent.replace(this.REGEXPS.trim, "");
 
     if (normalizeSpaces) {
       return textContent.replace(this.REGEXPS.normalize, " ");
@@ -1427,6 +1356,7 @@ Readability.prototype = {
     // }
 
     return { title: this._getInnerText(articleTitle),
+             byline: this._articleByline,
              content: articleContent.innerHTML };
   }
 };

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="text/javascript">
+  function ok(result, desc) {
+    window.parent.postMessage({ok: result, desc: desc}, "*");
+  }
+
+  function doStuff() {
+    var thing = indexedDB.open("sandbox");
+
+    thing.onerror = function(event) {
+      ok(false, "documents sandboxed with allow-same-origin SHOULD be able to access indexedDB");
+    };
+    thing.onsuccess = function(event) {
+      ok(true, "documents sandboxed with allow-same-origin SHOULD  be able to access indexedDB");
+    };  
+  }
+</script>
+<body onLoad='doStuff();'>
+  I am sandboxed but with "allow-scripts allow-same-origin"
+</body>
+</html>

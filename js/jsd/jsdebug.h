@@ -371,6 +371,12 @@ JSD_GetJSFunction(JSDContext* jsdc, JSDScript *script);
 * The context flag JSD_DEBUG_WHEN_SET decides the logic.
 */
 #define JSD_SCRIPT_DEBUG_BIT   0x02
+/*
+ * Determines whether to invoke the onScriptDestroy callback for this
+ * script. The default is for this to be true if the onScriptCreated
+ * callback was invoked for this script.
+ */
+#define JSD_SCRIPT_CALL_DESTROY_HOOK_BIT 0x04
 
 extern JSD_PUBLIC_API(uint32_t)
 JSD_GetScriptFlags(JSDContext *jsdc, JSDScript* jsdscript);

@@ -2546,6 +2546,26 @@ DebuggerScript_getStaticLevel(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
+DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceMapURL)", args, obj, script);
+
+    ScriptSource *source = script->scriptSource();
+    JS_ASSERT(source);
+
+    if (source->hasSourceMap()) {
+        JSString *str = JS_NewUCStringCopyZ(cx, source->sourceMap());
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else {
+        args.rval().setNull();
+    }
+
+    return true;
+}
+
+static JSBool
 DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getChildScripts", args, obj, script);
@@ -2983,6 +3003,7 @@ static JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
     JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
     JS_PSG("staticLevel", DebuggerScript_getStaticLevel, 0),
+    JS_PSG("sourceMapURL", DebuggerScript_getSourceMapUrl, 0),
     JS_PS_END
 };
 

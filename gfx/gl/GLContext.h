@@ -1392,6 +1392,10 @@ public:
                                     GLsizei aWidth, GLsizei aHeight,
                                     gfxImageSurface *aDest);
 
+    // Similar to ReadPixelsIntoImageSurface, but pulls from the screen
+    // instead of the currenly bound framebuffer.
+    void ReadScreenIntoImageSurface(gfxImageSurface* dest);
+
     /**
      * Copy a rectangle from one TextureImage into another.  The
      * source and destination are given in integer coordinates, and

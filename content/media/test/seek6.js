@@ -13,15 +13,14 @@ function poll() {
 
 function startTest() {
   if (completed)
-    return false;
+    return;
   interval = setInterval(poll, 10);
   v.currentTime = Math.random() * v.duration;
-  return false;
 }
 
 function seekEnded() {
   if (completed)
-    return false;
+    return;
 
   seekCount++;
   ok(true, "Seek " + seekCount);
@@ -32,7 +31,6 @@ function seekEnded() {
   } else {
     v.currentTime = Math.random() * v.duration;
   }
-  return false;
 }
 
 v.addEventListener("loadedmetadata", startTest, false);

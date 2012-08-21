@@ -53,6 +53,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
+#include "nsSandboxFlags.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -573,6 +574,12 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
   // return early preventing the event listener from being added
   // 'doc' is fetched above
   if (doc) {
+    // Don't allow adding an event listener if the document is sandboxed
+    // without 'allow-scripts'.
+    if (doc->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
     NS_ENSURE_SUCCESS(rv, rv);

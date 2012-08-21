@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<script type="application/javascript">
+function doTest() {
+  // this should fail the first time, but work the second
+  try {
+    window.parent.ok_wrapper(true, "a document that was loaded, navigated to another document, had 'allow-same-origin' added and then was" +
+      " navigated back should be same-origin with its parent");
+  } 
+  catch (e) {
+    sendMouseEvent({type:'click'}, 'anchor');
+  }
+}
+
+</script>
+<body onload='doTest()'>
+  I am sandboxed with 'allow-scripts'
+  <a href='file_iframe_sandbox_d_if12.html' id='anchor'>CLICK ME</a>
+</body>
+</html>

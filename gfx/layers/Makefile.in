@@ -31,9 +31,12 @@ EXPORTS = \
         BasicLayers.h \
         BasicTiledThebesLayer.h \
         BasicImplData.h \
+        GonkIOSurfaceImage.h \
         FrameMetrics.h \
         CompositorParent.h \
+        ImageContainer.h \
         ImageLayers.h \
+        ImageTypes.h \
         Layers.h \
         LayersTypes.h \
         LayerManagerOGLShaders.h \
@@ -57,6 +60,7 @@ CPPSRCS = \
         BasicThebesLayer.cpp \
         BasicBuffers.cpp \
         BasicTiledThebesLayer.cpp \
+        ImageContainer.cpp \
         Layers.cpp \
         RenderTrace.cpp \
         ReadbackProcessor.cpp \

@@ -40,7 +40,6 @@
 #include "nsIScriptElement.h"
 #include "nsScriptLoader.h"
 #include "nsStyleLinkElement.h"
-#include "nsIImageLoadingContent.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsICookieService.h"

@@ -488,6 +488,13 @@ pref("javascript.options.mem.log", true);
 // Increase mark slice time from 10ms to 30ms
 pref("javascript.options.mem.gc_incremental_slice_ms", 30);
 
+pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 120);
+pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 101);
+pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 40);
+pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
+pref("javascript.options.mem.gc_low_frequency_heap_growth", 105);
+pref("javascript.options.mem.high_water_mark", 16);
+
 // Show/Hide scrollbars when active/inactive
 pref("ui.showHideScrollbars", 1);
 
@@ -508,3 +515,6 @@ pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 pref("dom.ipc.processPrelauch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelauch.delayMs", 1000);
+
+// Ignore the "dialog=1" feature in window.open.
+pref("dom.disable_window_open_dialog_feature", true);

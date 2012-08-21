@@ -2658,7 +2658,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     bool documentIsChrome = IsChromeURI(mDocumentURI);
     if (!documentIsChrome) {
         // Make sure we're allowed to load this overlay.
-        rv = NodePrincipal()->CheckMayLoad(aURI, true);
+        rv = NodePrincipal()->CheckMayLoad(aURI, true, false);
         if (NS_FAILED(rv)) {
             *aFailureFromContent = true;
             return rv;
