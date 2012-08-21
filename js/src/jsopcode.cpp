@@ -6446,7 +6446,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
 
         if (op == JSOP_GOTO) {
             ptrdiff_t jmpoff = GET_JUMP_OFFSET(pc);
-            if (0 < jmpoff && pc + jmpoff < target) {
+            if (0 < jmpoff && pc + jmpoff <= target) {
                 pc += jmpoff;
                 oplen = 0;
                 if (hpcdepth != unsigned(-1)) {
