@@ -63,6 +63,20 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mStride > 0;
 }
 
+static bool
+IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
+             const VideoData::YCbCrBuffer::Plane& aCbPlane,
+             const VideoData::YCbCrBuffer::Plane& aCrPlane)
+{
+  return
+    aYPlane.mWidth % 2 == 0 &&
+    aYPlane.mHeight % 2 == 0 &&
+    aYPlane.mWidth / 2 == aCbPlane.mWidth &&
+    aYPlane.mHeight / 2 == aCbPlane.mHeight &&
+    aCbPlane.mWidth == aCrPlane.mWidth &&
+    aCbPlane.mHeight == aCrPlane.mHeight;
+}
+
 bool
 nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
                                  const nsIntRect& aPicture,
@@ -183,22 +197,27 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                                        aKeyframe,
                                        aTimecode,
                                        aInfo.mDisplay));
-  // Currently our decoder only knows how to output to PLANAR_YCBCR
-  // format.
-  ImageFormat format = PLANAR_YCBCR;
-  v->mImage = aContainer->CreateImage(&format, 1);
-  if (!v->mImage) {
-    return nullptr;
-  }
-  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR,
-               "Wrong format?");
-  PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
-
-  PlanarYCbCrImage::Data data;
   const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
   const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
   const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
 
+  // Currently our decoder only knows how to output to PLANAR_YCBCR
+  // format.
+  ImageFormat format[2] = {PLANAR_YCBCR, GRALLOC_PLANAR_YCBCR};
+  if (IsYV12Format(Y, Cb, Cr)) {
+    v->mImage = aContainer->CreateImage(format, 2);
+  } else {
+    v->mImage = aContainer->CreateImage(format, 1);
+  }
+  if (!v->mImage) {
+    return nullptr;
+  }
+  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR ||
+               v->mImage->GetFormat() == GRALLOC_PLANAR_YCBCR,
+               "Wrong format?");
+  PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
+
+  PlanarYCbCrImage::Data data;
   data.mYChannel = Y.mData;
   data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
