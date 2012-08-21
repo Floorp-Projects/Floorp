@@ -257,26 +257,21 @@ nsDirectoryService::Init()
     return NS_OK;
 }
 
-nsresult
+void
 nsDirectoryService::RealInit()
 {
     NS_ASSERTION(!gService, 
                  "nsDirectoryService::RealInit Mustn't initialize twice!");
 
     nsRefPtr<nsDirectoryService> self = new nsDirectoryService();
-    if (!self)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     NS_RegisterStaticAtoms(directory_atoms);
     
     // Let the list hold the only reference to the provider.
     nsAppFileLocationProvider *defaultProvider = new nsAppFileLocationProvider;
-    if (!defaultProvider)
-        return NS_ERROR_OUT_OF_MEMORY;
     self->mProviders.AppendElement(defaultProvider);
 
     self.swap(gService);
-    return NS_OK;
 }
 
 bool

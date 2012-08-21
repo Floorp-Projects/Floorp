@@ -37,7 +37,7 @@ class nsDirectoryService MOZ_FINAL : public nsIDirectoryService,
   nsDirectoryService();
    ~nsDirectoryService();
 
-  static nsresult RealInit();
+  static void RealInit();
   void RegisterCategoryProviders();
 
   static nsresult
