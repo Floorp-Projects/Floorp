@@ -3,6 +3,7 @@
   <link rel="author" title="Anne van Kesteren" href="http://annevankesteren.nl/"/>
   <link rel="author" title="Opera Software ASA" href="http://opera.com/"/>
   <link rel="help" href="http://www.w3.org/TR/css3-namespace/#syntax"/>
+  <link rel="match" href="reftest/ref-lime-2.xml"/>
   <title>CSS Namespaces Test Suite: escapes in prefix</title>
   <style>
    @namespace \72x url("test");
@@ -10,7 +11,7 @@
    r\78|t { background:lime }
   </style>
   <style>
-   @namespace \032  url("test"); // two spaces, see CSS 2.1, 4.1.3
+   @namespace \032  url("test"); /* two spaces, see CSS 2.1, 4.1.3 */
    t2 { background:red }
    \32|t2 { background:lime }
   </style>
