@@ -22,18 +22,13 @@ public class WebAppAllocator {
         if (sInstance == null) {
             if (!(cx instanceof GeckoApp))
                 throw new RuntimeException("Context needs to be a GeckoApp");
-
+                
             sContext = (GeckoApp) cx;
             sInstance = new WebAppAllocator(cx);
         }
 
-        // The marketplaceApp will run in this same process, but has a different context
-        // Rather than just failing, we want to create a new Allocator instead
-        if (cx != sContext) {
-            sInstance = null;
-            sContext = (GeckoApp) cx;
-            sInstance = new WebAppAllocator(cx);
-        }
+        if (cx != sContext)
+            throw new RuntimeException("Tried to get WebAppAllocator instance for different context than it was created for");
 
         return sInstance;
     }

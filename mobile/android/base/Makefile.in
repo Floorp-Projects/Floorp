@@ -169,7 +169,6 @@ endif
 
 FENNEC_PP_JAVA_FILES = \
   App.java \
-  MarketplaceApp.java \
   WebApp.java \
   WebApps.java \
   GeckoActivity.java \
@@ -1002,7 +1001,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
   mobile/android/base/resources/drawable/tabs_shadow.xml                        \
   mobile/android/base/resources/drawable/shadow.png                             \
-  mobile/android/base/resources/drawable/marketplace.png                        \
   $(NULL)
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
