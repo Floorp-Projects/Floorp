@@ -27,6 +27,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -202,6 +203,14 @@ public class GeckoAppShell
                 Throwable cause;
                 while ((cause = e.getCause()) != null) {
                     e = cause;
+                }
+
+                if (e instanceof java.lang.OutOfMemoryError) {
+                    SharedPreferences prefs =
+                        GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+                    editor.commit();
                 }
 
                 reportJavaCrash(getStackTraceString(e));
