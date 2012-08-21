@@ -396,6 +396,9 @@ pref("dom.mozSettings.enabled", true);
 pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
 
+// TCPSocket
+pref("dom.mozTCPSocket.enabled", true);
+
 // "Preview" landing of bug 710563, which is bogged down in analysis
 // of talos regression.  This is a needed change for higher-framerate
 // CSS animations, and incidentally works around an apparent bug in
