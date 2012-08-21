@@ -383,6 +383,16 @@ PermitIfUniversalXPConnect(JSContext *cx, jsid id, Wrapper::Action act,
     return Deny(cx, id, act);
 }
 
+static bool
+IsInSandbox(JSContext *cx, JSObject *obj)
+{
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj))
+        return false;
+    JSObject *global = JS_GetGlobalForObject(cx, obj);
+    return !strcmp(js::GetObjectJSClass(global)->name, "Sandbox");
+}
+
 bool
 ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
                              Permission &perm)
@@ -427,6 +437,26 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         if (!wrapperAC.enter(cx, wrapper))
             return false;
 
+        // Make a temporary exception for objects in a chrome sandbox to help
+        // out jetpack. See bug 784233.
+        if (!JS_ObjectIsFunction(cx, wrappedObject) &&
+            IsInSandbox(cx, wrappedObject))
+        {
+            // This little loop hole will go away soon! See bug 553102.
+            nsCOMPtr<nsPIDOMWindow> win =
+                do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, wrapper));
+            if (win) {
+                nsCOMPtr<nsIDocument> doc =
+                    do_QueryInterface(win->GetExtantDocument());
+                if (doc) {
+                    doc->WarnOnceAbout(nsIDocument::eNoExposedProps,
+                                       /* asError = */ true);
+                }
+            }
+
+            perm = PermitPropertyAccess;
+            return true;
+        }
         return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
