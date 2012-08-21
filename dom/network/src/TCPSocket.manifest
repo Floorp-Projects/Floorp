@@ -1,4 +1,0 @@
-# TCPSocket.js
-component {cda91b22-6472-11e1-aa11-834fec09cd0a} TCPSocket.js
-contract @mozilla.org/tcp-socket;1 {cda91b22-6472-11e1-aa11-834fec09cd0a}
-category JavaScript-navigator-property mozTCPSocket @mozilla.org/tcp-socket;1
