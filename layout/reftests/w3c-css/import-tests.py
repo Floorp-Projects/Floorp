@@ -6,8 +6,6 @@
 # FIXME:
 #   * Import more tests rather than just the very limited set currently
 #     chosen.
-#     - Maybe start by moving layout/reftests/css-namespace/ into this
-#       directory structure, since it was manually imported.
 #   * Read in a (checked-in) input file with a list of test assertions
 #     expected to fail.
 #   * Read in a (checked-in) input file with a list of reference choices
@@ -51,6 +49,16 @@ log_output_of(Popen(["hg", "paths", "default"],
                     stdout=PIPE, cwd=srcpath))
 log.write("\n")
 
+# Remove existing directories that we're going to regenerate.  This
+# is necessary so that we can give errors in cases where our import
+# might copy two files to the same location, which we do by giving
+# errors if a copy would overwrite a file.
+for dirname in os.listdir(destpath):
+    fulldir = os.path.join(destpath, dirname)
+    if not os.path.isdir(fulldir):
+        continue
+    shutil.rmtree(fulldir)
+
 # Eventually we should import all the tests that have references.  (At
 # least for a subset of secs.  And we probably want to organize the
 # directory structure by spec to avoid constant file moves when files
@@ -59,33 +67,61 @@ log.write("\n")
 
 # But for now, let's just import one set of tests.
 
-subtree = os.path.join(srcpath, "contributors", "opera", "submitted", "css3-conditional")
+subtrees = [
+    os.path.join(srcpath, "approved", "css3-namespace", "src"),
+    os.path.join(srcpath, "contributors", "opera", "submitted", "css3-conditional")
+]
 testfiles = []
-for dirpath, dirnames, filenames in os.walk(subtree, topdown=True):
-    if "support" in dirnames:
-       dirnames.remove("support")
-    for f in filenames:
-        if f.find("-ref.") != -1:
-            continue
-        testfiles.append(os.path.join(dirpath, f))
+for subtree in subtrees:
+    for dirpath, dirnames, filenames in os.walk(subtree, topdown=True):
+        if "support" in dirnames:
+           dirnames.remove("support")
+        if "reftest" in dirnames:
+           dirnames.remove("reftest")
+        for f in filenames:
+            if f == "README" or \
+               f.find("-ref.") != -1:
+                continue
+            testfiles.append(os.path.join(dirpath, f))
 
 testfiles.sort()
 
-filemap = {}
-def map_file(fn, spec):
-    if fn in filemap:
-        return filemap[fn]
-    if not fn.startswith(srcpath):
-        raise StandardError("Filename " + fn + " does not start with " + srcpath)
-    logname = fn[len(srcpath):]
-    destname = os.path.join(spec, os.path.basename(fn))
-    filemap[fn] = destname
+def copy_file(srcfile, destname):
+    if not srcfile.startswith(srcpath):
+        raise StandardError("Filename " + srcfile + " does not start with " + srcpath)
+    logname = srcfile[len(srcpath):]
     log.write("Importing " + logname + " to " + destname + "\n")
     destfile = os.path.join(destpath, destname)
     destdir = os.path.dirname(destfile)
     if not os.path.exists(destdir):
         os.makedirs(destdir)
-    shutil.copyfile(fn, destfile)
+    if os.path.exists(destfile):
+        raise StandardError("file " + destfile + " already exists")
+    shutil.copyfile(srcfile, destfile)
+
+support_dirs_mapped = set()
+def copy_support_files(dirname, spec):
+    if dirname in support_dirs_mapped:
+        return
+    support_dirs_mapped.add(dirname)
+    support_dir = os.path.join(dirname, "support")
+    if not os.path.exists(support_dir):
+        return
+    for dirpath, dirnames, filenames in os.walk(support_dir):
+        for fn in filenames:
+            if fn == "LOCK":
+                continue
+            full_fn = os.path.join(dirpath, fn)
+            copy_file(full_fn, os.path.join(spec, "support", full_fn[len(support_dir)+1:]))
+
+filemap = {}
+def map_file(fn, spec):
+    if fn in filemap:
+        return filemap[fn]
+    destname = os.path.join(spec, os.path.basename(fn))
+    filemap[fn] = destname
+    copy_file(fn, destname)
+    copy_support_files(os.path.dirname(fn), spec)
     return destname
 
 tests = []
