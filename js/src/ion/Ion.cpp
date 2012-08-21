@@ -127,7 +127,8 @@ IonCompartment::IonCompartment()
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
     invalidator_(NULL),
-    functionWrappers_(NULL)
+    functionWrappers_(NULL),
+    flusher_(NULL)
 {
 }
 
@@ -682,6 +683,7 @@ IonScript::toggleBarriers(bool enabled)
 void
 IonScript::purgeCaches()
 {
+    AutoFlushCache afc("purgeCaches");
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).reset();
 }
@@ -689,6 +691,7 @@ IonScript::purgeCaches()
 void
 ion::ToggleBarriers(JSCompartment *comp, bool needs)
 {
+    AutoFlushCache afc("ToggleBarriers");
     for (gc::CellIterUnderGC i(comp, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
@@ -882,6 +885,8 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
 
     if (!oracle.init(cx, script))
         return false;
+
+    AutoFlushCache afc("IonCompile");
 
     types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
     enterCompiler.init(script, false, 0);
@@ -1378,6 +1383,7 @@ ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
 {
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
         if (iter.activation()->compartment() == c) {
+            AutoFlushCache afc ("InvalidateAll", c->ionCompartment());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.top(), true);
         }
@@ -1390,6 +1396,8 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
+    AutoFlushCache afc ("Invalidate");
+
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
     bool anyInvalidation = false;
@@ -1517,6 +1525,30 @@ ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
     // Note that we use +1 to prefer non-OSR over OSR.
     return minUses + (loop->depth + 1) * 100;
 }
+void
+AutoFlushCache::updateTop(uintptr_t p, size_t len)
+{
+    GetIonContext()->compartment->ionCompartment()->flusher()->update(p, len);
+}
 
+AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
+ : start_(NULL), stop_(NULL), name_(nonce), used_(false)
+{
+    if (comp == NULL) {
+        if (CurrentIonContext() != NULL)
+            comp = GetIonContext()->compartment->ionCompartment();
+    }
+    // If a compartment isn't available, then be a nop, nobody will ever see this flusher
+    if (comp) {
+        if (comp->flusher())
+            IonSpew(IonSpew_CacheFlush, "<%s ", nonce);
+        else
+            IonSpewCont(IonSpew_CacheFlush, "<%s ", nonce);
+        comp->setFlusher(this);
+    } else {
+        IonSpew(IonSpew_CacheFlush, "<%s DEAD>\n", nonce);
+    }
+    myCompartment_ = comp;
+}
 int js::ion::LabelBase::id_count = 0;
 

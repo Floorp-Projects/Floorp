@@ -178,6 +178,7 @@ enum MethodStatus
 // of the Ion compiler. It points to a temporary allocator and the active
 // JSContext, either of which may be NULL, and the active compartment, which
 // will not be NULL.
+
 class IonContext
 {
   public:
@@ -202,6 +203,7 @@ bool InitializeIon();
 
 // Get and set the current Ion context.
 IonContext *GetIonContext();
+
 bool SetIonContext(IonContext *ctx);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,

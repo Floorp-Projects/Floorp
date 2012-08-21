@@ -935,7 +935,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             }
             // Can't assert anything here, since the first pool may be after the target.
         }
-        Asm::retargetNearBranch(i, offset);
+        Asm::retargetNearBranch(i, offset, false);
     }
 
     // Mark the next instruction as a valid guard.  This means we can place a pool here.

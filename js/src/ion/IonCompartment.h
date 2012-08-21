@@ -55,6 +55,9 @@ class IonCompartment
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
 
+    // Keep track of memoryregions that are going to be flushed.
+    js::ion::AutoFlushCache *flusher_;
+
   private:
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateReturnError(JSContext *cx);
@@ -139,6 +142,14 @@ class IonCompartment
         }
         return preBarrier_;
     }
+    AutoFlushCache *flusher() {
+        return flusher_;
+    }
+    void setFlusher(AutoFlushCache *fl) {
+        if (!flusher_ || !fl)
+            flusher_ = fl;
+    }
+
 };
 
 class BailoutClosure;
