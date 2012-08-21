@@ -1366,7 +1366,7 @@ ParallelArrayObject::partition(JSContext *cx, CallArgs args)
 
     // Throw if the outer dimension is not divisible by the new dimension.
     uint32_t outer = obj->outermostDimension();
-    if (outer % newDimension) {
+    if (newDimension == 0 || outer % newDimension) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_PARTITION);
         return false;
     }
