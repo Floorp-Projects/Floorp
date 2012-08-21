@@ -175,12 +175,16 @@ public:
   nsPoint GetOffsetTo(const nsView* aOther, const PRInt32 aAPD) const;
   nsIWidget* GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const;
 
+  void SetForcedRepaint(bool aForceRepaint) { mForcedRepaint = aForceRepaint; }
+  bool ForcedRepaint() { return mForcedRepaint; }
+
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
   void DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize);
 
   nsRegion*    mDirtyRegion;
+  bool mForcedRepaint;
 
 private:
   void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
