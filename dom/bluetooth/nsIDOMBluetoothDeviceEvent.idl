@@ -12,4 +12,14 @@ interface nsIDOMBluetoothDevice;
 interface nsIDOMBluetoothDeviceEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMBluetoothDevice device;
+
+  [noscript] void initBluetoothDeviceEvent(in DOMString aType,
+                                           in boolean aCanBubble,
+                                           in boolean aCancelable,
+                                           in nsIDOMBluetoothDevice aDevice);
+};
+
+dictionary BluetoothDeviceEventInit : EventInit
+{
+  nsIDOMBluetoothDevice  device;
 };
