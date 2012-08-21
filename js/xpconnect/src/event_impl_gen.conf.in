@@ -24,7 +24,8 @@ simple_events = [
 #ifdef MOZ_B2G_BT
     'BluetoothDeviceAddressEvent',
 #endif
-    'DeviceStorageChangeEvent'
+    'DeviceStorageChangeEvent',
+    'PopupBlockedEvent'
   ]
 
 """ include file names """

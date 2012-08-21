@@ -1170,9 +1170,9 @@ if ("nsIWindowsRegKey" in AM_Ci) {
     },
 
     readStringValue: function(aName) {
-      for (let i = 0; i < this.values.length; i++) {
-        if (this.values[i].name == aName)
-          return this.values[i].value;
+      for (let value of this.values) {
+        if (value.name == aName)
+          return value.value;
       }
     }
   };
