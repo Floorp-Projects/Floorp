@@ -528,19 +528,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
       unreadable = 0;
     }
 
-    LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
-        mVideoBuffer->data(), 
-        mVideoBuffer->size(),
-        mVideoBuffer->range_offset(),
-        mVideoBuffer->range_length(),
-        unreadable);
-
     char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
     size_t length = mVideoBuffer->range_length();
-
-    if (unreadable) {
-      LOG("video frame is unreadable");
-    }
 
     if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
       return false;
@@ -563,7 +552,6 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
   status_t err;
-
   if (mAudioMetadataRead && aSeekTimeUs == -1) {
     // Use the data read into the buffer during metadata time
     err = OK;
@@ -600,10 +588,8 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     else
       return ReadAudio(aFrame, aSeekTimeUs);
   }
-  else if (err == ERROR_END_OF_STREAM)
-    return false;
-  else
-    return false; 
+
+  return err == OK;
 }
 
 static OmxDecoder *cast(Decoder *decoder) {

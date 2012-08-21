@@ -256,13 +256,17 @@ bool nsMediaPluginReader::DecodeAudioData()
   }
   mAudioSeekTimeUs = -1;
 
+  // Ignore empty buffers which stagefright media read will sporadically return
+  if (frame.mSize == 0)
+    return true;
+
   nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frame.mSize/2] );
   memcpy(buffer.get(), frame.mData, frame.mSize);
 
   PRUint32 frames = frame.mSize / (2 * frame.mAudioChannels);
   CheckedInt64 duration = FramesToUsecs(frames, frame.mAudioSampleRate);
   if (!duration.isValid()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   mAudioQueue.Push(new AudioData(pos,
