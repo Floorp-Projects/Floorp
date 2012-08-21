@@ -630,14 +630,14 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                                                 animation.direction());
 
     if (positionInIteration == -1) {
-        animations.RemoveElementAt(i);
-        animationData.RemoveElementAt(i);
-        continue;
+      animations.RemoveElementAt(i);
+      animationData.RemoveElementAt(i);
+      continue;
     }
 
     NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
+                      positionInIteration <= 1.0,
+                      "position should be in [0-1]");
 
     int segmentIndex = 0;
     AnimationSegment* segment = animation.segments().Elements();
@@ -660,9 +660,12 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     ShadowLayer* shadow = aLayer->AsShadowLayer();
     switch (animation.property()) {
     case eCSSProperty_opacity:
+    {
       shadow->SetShadowOpacity(interpolatedValue.get_float());
       break;
-    case eCSSProperty_transform: {
+    }
+    case eCSSProperty_transform:
+    {
       gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
       shadow->SetShadowTransform(matrix);
       break;

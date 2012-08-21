@@ -286,17 +286,9 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                      ? ea->mIterationCount : -1;
   int direction = ea->mDirection;
 
-  // If this is a visibility animation, we should not actually add it.
-  // This will be fixed in bug 783893
-  Animation* animation = nullptr;
-  for (PRUint32 propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
-    if (aProperty == ea->mProperties[propIdx].mProperty) {
-      animation = aLayer->AddAnimation(startTime, duration,
-                                       iterations, direction,
-                                       aProperty, aData);
-      break;
-    }
-  }
+  Animation* animation = aLayer->AddAnimation(startTime, duration,
+                                              iterations, direction,
+                                              aProperty, aData);
 
   for (PRUint32 propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
     AnimationProperty* property = &ea->mProperties[propIdx];
@@ -308,9 +300,8 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     for (PRUint32 segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
       AnimationPropertySegment* segment = &property->mSegments[segIdx];
 
-      AnimationSegment* animSegment;
+      AnimationSegment* animSegment = animation->segments().AppendElement();
       if (aProperty == eCSSProperty_transform) {
-        animSegment = animation->segments().AppendElement();
         animSegment->startState() = InfallibleTArray<TransformFunction>();
         animSegment->endState() = InfallibleTArray<TransformFunction>();
 
@@ -322,7 +313,6 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
         AddTransformFunctions(list, styleContext, presContext, bounds, scale,
                               animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
-        animSegment = animation->segments().AppendElement();
         animSegment->startState() = segment->mFromValue.GetFloatValue();
         animSegment->endState() = segment->mToValue.GetFloatValue();
       }
@@ -357,7 +347,6 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   // animation.
   if (!nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, frame)) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsIContent* aContent = frame->GetContent();
       printf_stderr("Performance warning: Async animation disabled because the frame for element '%s'",
                     nsAtomCString(aContent->Tag()).get());
       nsIAtom* id = aContent->GetID();
@@ -399,9 +388,10 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   if (et) {
     for (PRUint32 tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
       ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
-      if (!pt->CanPerformOnCompositor(et->mElement, currentTime)) {
-         continue;
-       }
+      if (pt->mProperty != aProperty ||
+          !pt->CanPerformOnCompositor(et->mElement, currentTime)) {
+        continue;
+      }
 
       ElementAnimation anim;
       anim.mIterationCount = 1;
@@ -428,7 +418,8 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   if (ea) {
     for (PRUint32 animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
       ElementAnimation* anim = &ea->mAnimations[animIdx];
-      if (!anim->CanPerformOnCompositor(ea->mElement, currentTime)) {
+      if (!(anim->HasAnimationOfProperty(aProperty) &&
+            anim->CanPerformOnCompositor(ea->mElement, currentTime))) {
         continue;
       }
       AddAnimationsForProperty(frame, aProperty, anim,
@@ -2387,7 +2378,6 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
   container->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
   AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                      this, eCSSProperty_opacity);
-
   return container.forget();
 }
 
