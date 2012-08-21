@@ -50,7 +50,7 @@ private:
     
     static bool ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsSupportsHashtable mHashtable;
-    nsCOMPtr<nsISupportsArray> mProviders;
+    nsTArray<nsCOMPtr<nsIDirectoryServiceProvider> > mProviders;
 
 public:
 
