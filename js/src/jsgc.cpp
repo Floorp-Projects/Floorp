@@ -1646,6 +1646,7 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(!fop->runtime()->gcHelperThread.sweeping());
+#endif
 
     ArenaList *al = &arenaLists[thingKind];
     if (!al->head) {
@@ -1655,34 +1656,20 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
     }
 
     /*
-     * The state can be just-finished if we have not allocated any GC things
-     * from the arena list after the previous background finalization.
+     * The state can be done, or just-finished if we have not allocated any GC
+     * things from the arena list after the previous background finalization.
      */
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE ||
               backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED);
 
-    if (fop->shouldFreeLater()) {
-        arenaListsToSweep[thingKind] = al->head;
-        al->clear();
-        backgroundFinalizeState[thingKind] = BFS_RUN;
-    } else {
-        finalizeNow(fop, thingKind);
-        backgroundFinalizeState[thingKind] = BFS_DONE;
-    }
-
-#else /* !JS_THREADSAFE */
-
-    finalizeNow(fop, thingKind);
-
-#endif
+    arenaListsToSweep[thingKind] = al->head;
+    al->clear();
+    backgroundFinalizeState[thingKind] = BFS_RUN;
 }
 
 /*static*/ void
-ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
+ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread)
 {
-#ifdef JS_THREADSAFE
-    JS_ASSERT(fop->onBackgroundThread());
-#endif /* JS_THREADSAFE */
     JS_ASSERT(listHead);
     AllocKind thingKind = listHead->getAllocKind();
     JSCompartment *comp = listHead->compartment;
@@ -1704,23 +1691,26 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
     JS_ASSERT(lists->backgroundFinalizeState[thingKind] == BFS_RUN);
     JS_ASSERT(!*al->cursor);
 
-    /*
-     * We must set the state to BFS_JUST_FINISHED if we touch arenaList list,
-     * even if we add to the list only fully allocated arenas without any free
-     * things. It ensures that the allocation thread takes the GC lock and all
-     * writes to the free list elements are propagated. As we always take the
-     * GC lock when allocating new arenas from the chunks we can set the state
-     * to BFS_DONE if we have released all finalized arenas back to their
-     * chunks.
-     */
     if (finalized.head) {
         *al->cursor = finalized.head;
         if (finalized.cursor != &finalized.head)
             al->cursor = finalized.cursor;
-        lists->backgroundFinalizeState[thingKind] = BFS_JUST_FINISHED;
-    } else {
-        lists->backgroundFinalizeState[thingKind] = BFS_DONE;
     }
+
+    /*
+     * We must set the state to BFS_JUST_FINISHED if we are running on the
+     * background thread and we have touched arenaList list, even if we add to
+     * the list only fully allocated arenas without any free things. It ensures
+     * that the allocation thread takes the GC lock and all writes to the free
+     * list elements are propagated. As we always take the GC lock when
+     * allocating new arenas from the chunks we can set the state to BFS_DONE if
+     * we have released all finalized arenas back to their chunks.
+     */
+    if (onBackgroundThread && finalized.head)
+        lists->backgroundFinalizeState[thingKind] = BFS_JUST_FINISHED;
+    else
+        lists->backgroundFinalizeState[thingKind] = BFS_DONE;
+
     lists->arenaListsToSweep[thingKind] = NULL;
 }
 
@@ -2830,12 +2820,40 @@ ExpireChunksAndArenas(JSRuntime *rt, bool shouldShrink)
 }
 
 static void
+SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
+{
+    /*
+     * We must finalize in the correct order, see comments in
+     * finalizeObjects.
+     */
+    FreeOp fop(rt, false, false);
+    for (int phase = 0 ; phase < BackgroundPhaseCount ; ++phase) {
+        for (JSCompartment *c = rt->gcSweepingCompartments; c; c = c->gcNextCompartment) {
+            for (int index = 0 ; index < BackgroundPhaseLength[phase] ; ++index) {
+                AllocKind kind = BackgroundPhases[phase][index];
+                ArenaHeader *arenas = c->arenas.arenaListsToSweep[kind];
+                if (arenas) {
+                    ArenaLists::backgroundFinalize(&fop, arenas, onBackgroundThread);
+                }
+            }
+        }
+    }
+
+    while (JSCompartment *c = rt->gcSweepingCompartments) {
+        rt->gcSweepingCompartments = c->gcNextCompartment;
+        c->gcNextCompartment = NULL;
+    }
+}
+
+static void
 AssertBackgroundSweepingFinshed(JSRuntime *rt)
 {
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         JS_ASSERT(!c->gcNextCompartment);
-        for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i)
+        for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i) {
             JS_ASSERT(!c->arenas.arenaListsToSweep[i]);
+            JS_ASSERT(c->arenas.doneBackgroundFinalize(AllocKind(i)));
+        }
     }
 }
 
@@ -3089,27 +3107,7 @@ GCHelperThread::doSweep()
         sweepFlag = false;
         AutoUnlockGC unlock(rt);
 
-        /*
-         * We must finalize in the insert order, see comments in
-         * finalizeObjects.
-         */
-        FreeOp fop(rt, false, true);
-        for (int phase = 0; phase < BackgroundPhaseCount; ++phase) {
-            for (JSCompartment *c = rt->gcSweepingCompartments; c; c = c->gcNextCompartment) {
-                for (int index = 0; index < BackgroundPhaseLength[phase]; ++index) {
-                    AllocKind kind = BackgroundPhases[phase][index];
-                    ArenaHeader *arenas = c->arenas.arenaListsToSweep[kind];
-                    if (arenas) {
-                        ArenaLists::backgroundFinalize(&fop, arenas);
-                    }
-                }
-            }
-        }
-
-        while (JSCompartment *c = rt->gcSweepingCompartments) {
-            rt->gcSweepingCompartments = c->gcNextCompartment;
-            c->gcNextCompartment = NULL;
-        }
+        SweepBackgroundThings(rt, true);
 
         if (freeCursor) {
             void **array = freeCursorEnd - FREE_ARRAY_LENGTH;
@@ -3178,7 +3176,7 @@ SweepCompartments(FreeOp *fop, gcreason::Reason gcReason)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        if (!compartment->hold && compartment->isCollecting() &&
+        if (!compartment->hold && compartment->wasGCStarted() &&
             (compartment->arenas.arenaListsAreEmpty() || gcReason == gcreason::LAST_CONTEXT))
         {
             compartment->arenas.checkEmptyFreeLists();
@@ -3828,11 +3826,22 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReaso
     PropertyTree::dumpShapes(rt);
 #endif
 
+    /*
+     * Set up list of compartments for sweeping of background things.
+     */
+    JS_ASSERT(!rt->gcSweepingCompartments);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        c->gcNextCompartment = rt->gcSweepingCompartments;
+        rt->gcSweepingCompartments = c;
+    }
+
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DESTROY);
 
-        if (!rt->gcSweepOnBackgroundThread)
+        if (!rt->gcSweepOnBackgroundThread) {
             rt->freeLifoAlloc.freeAll();
+            SweepBackgroundThings(rt, false);
+        }
 
         /*
          * Sweep script filenames after sweeping functions in the generic loop
@@ -3865,19 +3874,6 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReaso
     while (ArenaHeader *arena = rt->gcArenasAllocatedDuringSweep) {
         rt->gcArenasAllocatedDuringSweep = arena->getNextAllocDuringSweep();
         arena->unsetAllocDuringSweep();
-    }
-
-    /*
-     * Set up list of compartments to be swept by the background thread.
-     */
-    JS_ASSERT(!rt->gcSweepingCompartments);
-    if (rt->gcSweepOnBackgroundThread) {
-        JSCompartment **cursor = &rt->gcSweepingCompartments;
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            JS_ASSERT(!c->gcNextCompartment);
-            *cursor = c.get();
-            cursor = &c->gcNextCompartment;
-        }
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
