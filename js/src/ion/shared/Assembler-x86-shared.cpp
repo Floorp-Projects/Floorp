@@ -129,3 +129,16 @@ AssemblerX86Shared::InvertCondition(Condition cond)
     }
 }
 
+void
+AutoFlushCache::update(uintptr_t newStart, size_t len)
+{
+}
+
+AutoFlushCache::~AutoFlushCache()
+{
+    if (!myCompartment_)
+        return;
+
+    if (myCompartment_->flusher() == this)
+        myCompartment_->setFlusher(NULL);
+}

@@ -489,6 +489,7 @@ class CodeLocationLabel
     }
 };
 
+
 } // namespace ion
 } // namespace js
 

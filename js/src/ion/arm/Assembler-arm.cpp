@@ -8,9 +8,10 @@
 #include "Assembler-arm.h"
 #include "MacroAssembler-arm.h"
 #include "gc/Marking.h"
-
+#include "jsutil.h"
 #include "assembler/jit/ExecutableAllocator.h"
-
+#include "jscompartment.h"
+#include "ion/IonCompartment.h"
 using namespace js;
 using namespace js::ion;
 
@@ -466,8 +467,7 @@ Assembler::executableCopy(uint8 *buffer)
 {
     JS_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
-
-    JSC::ExecutableAllocator::cacheFlush(buffer, m_buffer.size());
+    AutoFlushCache::updateTop((uintptr_t)buffer, m_buffer.size());
 }
 
 void
@@ -2158,21 +2158,25 @@ Assembler::getBranchOffset(const Instruction *i_)
     return 0;
 }
 void
-Assembler::retargetNearBranch(Instruction *i, int offset)
+Assembler::retargetNearBranch(Instruction *i, int offset, bool final)
 {
     Assembler::Condition c;
     i->extractCond(&c);
-    retargetNearBranch(i, offset, c);
+    retargetNearBranch(i, offset, c, final);
 }
 
 void
-Assembler::retargetNearBranch(Instruction *i, int offset, Condition cond)
+Assembler::retargetNearBranch(Instruction *i, int offset, Condition cond, bool final)
 {
     // Retargeting calls is totally unsupported!
     JS_ASSERT_IF(i->is<InstBranchImm>(), i->is<InstBImm>());
     new (i) InstBImm(BOffImm(offset), cond);
     // Flush the cache, since an instruction was overwritten
-    JSC::ExecutableAllocator::cacheFlush(i, 4);
+    if (final) {
+        AutoFlushCache::updateTop(uintptr_t(i), 4);
+    }
+
+
 }
 
 void
@@ -2181,7 +2185,7 @@ Assembler::retargetFarBranch(Instruction *i, uint8 **slot, uint8 *dest, Conditio
     int32 offset = reinterpret_cast<uint8*>(slot) - reinterpret_cast<uint8*>(i);
     if (!i->is<InstLDR>()) {
         new (i) InstLDR(Offset, pc, DTRAddr(pc, DtrOffImm(offset - 8)), cond);
-        JSC::ExecutableAllocator::cacheFlush(i, 4);
+        AutoFlushCache::updateTop(uintptr_t(i), 4);
     }
     *slot = dest;
 
@@ -2269,7 +2273,9 @@ Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
     uint8 *dest = toCall.raw();
     new (inst) InstBLImm(BOffImm(dest - (uint8*)inst) , Always);
     // Ensure everyone sees the code that was just written into memory.
-    JSC::ExecutableAllocator::cacheFlush(inst, sizeof(uint32));
+
+    AutoFlushCache::updateTop(uintptr_t(inst), 4);
+
 }
 void
 Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, ImmWord expectedValue)
@@ -2281,7 +2287,9 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
     const uint32 *val = getPtr32Target(&iter, &dest, &rs);
     JS_ASSERT((uint32)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
-    JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(uintptr_t)*2);
+
+    AutoFlushCache::updateTop(uintptr_t(ptr), 4);
+    AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to
@@ -2404,8 +2412,7 @@ Assembler::ToggleToJmp(CodeLocationLabel inst_)
     // Zero bits 20-27, then set 24-27 to be correct for a branch.
     // 20-23 will be party of the B's immediate, and should be 0.
     *ptr = (*ptr & ~(0xff << 20)) | (0xa0 << 20);
-
-    JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(Instruction));
+    AutoFlushCache::updateTop((uintptr_t)ptr, 4);
 }
 
 void
@@ -2428,7 +2435,51 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
     // Zero out bits 20-27, then set them to be correct for a compare.
     *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
 
-    JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(Instruction));
+    AutoFlushCache::updateTop((uintptr_t)ptr, 4);
 }
 
+void
+AutoFlushCache::update(uintptr_t newStart, size_t len)
+{
+    uintptr_t newStop = newStart + len;
+    used_ = true;
+    static int count = 0;
+    if (start_ == NULL) {
+        IonSpewCont(IonSpew_CacheFlush,  ".");
+        start_ = newStart;
+        stop_ = newStop;
+        return;
+    }
+
+    if (newStop < start_ - 4096 || newStart > stop_ + 4096) {
+        // If this would add too many pages to the range, bail and just do the flush now.
+        IonSpewCont(IonSpew_CacheFlush, "*");
+        JSC::ExecutableAllocator::cacheFlush((void*)newStart, len);
+        return;
+    }
+    start_ = Min(start_, newStart);
+    stop_ = Max(stop_, newStop);
+    IonSpewCont(IonSpew_CacheFlush, ".");
+}
+
+AutoFlushCache::~AutoFlushCache()
+{
+    if (!myCompartment_)
+        return;
+
+    IonSpewCont(IonSpew_CacheFlush, ">", name_);
+    if (myCompartment_->flusher() == this) {
+        IonSpewFin(IonSpew_CacheFlush);
+        myCompartment_->setFlusher(NULL);
+    }
+    if (!used_) {
+        return;
+    }
+    if (start_ != NULL) {
+        JSC::ExecutableAllocator::cacheFlush((void*)start_, (size_t)(stop_ - start_ + sizeof(Instruction)));
+    } else {
+        JSC::ExecutableAllocator::cacheFlush(NULL, 0xff000000);
+    }
+
+}
 Assembler *Assembler::dummy = NULL;

@@ -34,10 +34,11 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
-
+    
     if (fun->isInterpreted() && !fun->script()->canIonCompile()) {
         JSScript *script = GetTopIonJSScript(cx);
         if (script->hasIonScript() && ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
+            AutoFlushCache afc("InvokeFunction");
             Invalidate(cx, script, false);
 
             // Finally, poison the script so we don't try to run it again

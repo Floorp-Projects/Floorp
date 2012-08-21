@@ -49,7 +49,9 @@ namespace ion {
     /* Debug info about safepoints */       \
     _(Safepoints)                           \
     /* Debug info about Pools*/             \
-    _(Pools)
+    _(Pools)                                \
+    /* Debug info about the I$ */           \
+    _(CacheFlush)
 
 
 enum IonSpewChannel {

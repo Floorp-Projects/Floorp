@@ -389,6 +389,24 @@ struct IonScript
 
 struct VMFunction;
 
+class IonCompartment;
+
+struct AutoFlushCache {
+
+  private:
+    uintptr_t start_;
+    uintptr_t stop_;
+    const char *name_;
+    IonCompartment *myCompartment_;
+    bool used_;
+
+  public:
+    void update(uintptr_t p, size_t len);
+    static void updateTop(uintptr_t p, size_t len);
+    ~AutoFlushCache();
+    AutoFlushCache(const char * nonce, IonCompartment *comp = NULL);
+};
+
 } // namespace ion
 
 namespace gc {

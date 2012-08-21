@@ -293,6 +293,7 @@ TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, HandleObject obj,
 bool
 js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp)
 {
+    AutoFlushCache afc ("GetPropertyCache");
     JSScript *topScript = GetTopIonJSScript(cx);
     IonScript *ion = topScript->ionScript();
 
@@ -611,6 +612,8 @@ bool
 js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value,
                           bool isSetName)
 {
+    AutoFlushCache afc ("SetPropertyCache");
+
     IonScript *ion = GetTopIonJSScript(cx)->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());
@@ -781,6 +784,8 @@ bool
 js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, HandleValue idval,
                          MutableHandleValue res)
 {
+    AutoFlushCache afc ("GetElementCache");
+
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
@@ -994,6 +999,8 @@ IsCacheableScopeChain(JSObject *scopeChain, JSObject *holder)
 JSObject *
 js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
 {
+    AutoFlushCache afc ("BindNameCache");
+
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
     IonCacheBindName &cache = ion->getCache(cacheIndex).toBindName();
     HandlePropertyName name = cache.name();
@@ -1126,6 +1133,8 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
 bool
 js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp)
 {
+    AutoFlushCache afc ("GetNameCache");
+
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheName &cache = ion->getCache(cacheIndex).toName();
