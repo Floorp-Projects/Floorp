@@ -3598,6 +3598,7 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // -moz-locale-dir and :dir can only have values of 'ltr' or 'rtl'.
   if (aType == nsCSSPseudoClasses::ePseudoClass_mozLocaleDir ||
       aType == nsCSSPseudoClasses::ePseudoClass_dir) {
+    nsContentUtils::ASCIIToLower(mToken.mIdent); // case insensitive
     if (!mToken.mIdent.EqualsLiteral("ltr") &&
         !mToken.mIdent.EqualsLiteral("rtl")) {
       REPORT_UNEXPECTED_TOKEN(PEBadDirValue);
