@@ -12,9 +12,62 @@
 #include "nsReadableUtils.h"
 #include "nsIOutputStream.h"
 #include "nsCRT.h"
+#include "nsThreadUtils.h"
 
 #define kMinDecompressReadBufLen 1024
 #define kMinCompressWriteBufLen  1024
+
+
+/******************************************************************************
+ * nsAsyncDoomEvent
+ *****************************************************************************/
+
+class nsAsyncDoomEvent : public nsRunnable {
+public:
+    nsAsyncDoomEvent(nsCacheEntryDescriptor *descriptor,
+                     nsICacheListener *listener)
+    {
+        mDescriptor = descriptor;
+        mListener = listener;
+        mThread = do_GetCurrentThread();
+        // We addref the listener here and release it in nsNotifyDoomListener
+        // on the callers thread. If posting of nsNotifyDoomListener event fails
+        // we leak the listener which is better than releasing it on a wrong
+        // thread.
+        NS_IF_ADDREF(mListener);
+    }
+
+    NS_IMETHOD Run()
+    {
+        nsresult status = NS_OK;
+
+        {
+            nsCacheServiceAutoLock lock(LOCK_TELEM(NSASYNCDOOMEVENT_RUN));
+
+            if (mDescriptor->mCacheEntry) {
+                status = nsCacheService::gService->DoomEntry_Internal(
+                             mDescriptor->mCacheEntry, true);
+            } else if (!mDescriptor->mDoomedOnClose) {
+                status = NS_ERROR_NOT_AVAILABLE;
+            }
+        }
+
+        if (mListener) {
+            mThread->Dispatch(new nsNotifyDoomListener(mListener, status),
+                              NS_DISPATCH_NORMAL);
+            // posted event will release the reference on the correct thread
+            mListener = nullptr;
+        }
+
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsCacheEntryDescriptor> mDescriptor;
+    nsICacheListener                *mListener;
+    nsCOMPtr<nsIThread>              mThread;
+};
+
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheEntryDescriptor,
                               nsICacheEntryDescriptor,
@@ -24,7 +77,10 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
     : mCacheEntry(entry),
       mAccessGranted(accessGranted),
-      mOutput(nullptr)
+      mOutput(nullptr),
+      mLock("nsCacheEntryDescriptor.mLock"),
+      mAsyncDoomPending(false),
+      mDoomedOnClose(false)
 {
     PR_INIT_CLIST(this);
     NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
@@ -436,6 +492,34 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryDescriptor::AsyncDoom(nsICacheListener *listener)
+{
+    bool asyncDoomPending;
+    {
+        mozilla::MutexAutoLock lock(mLock);
+        asyncDoomPending = mAsyncDoomPending;
+        mAsyncDoomPending = true;
+    }
+
+    if (asyncDoomPending) {
+        // AsyncDoom was already called. Notify listener if it is non-null,
+        // otherwise just return success.
+        if (listener) {
+            nsresult rv = NS_DispatchToCurrentThread(
+                new nsNotifyDoomListener(listener, NS_ERROR_NOT_AVAILABLE));
+            if (NS_SUCCEEDED(rv))
+                NS_IF_ADDREF(listener);
+            return rv;
+        }
+        return NS_OK;
+    }
+
+    return nsCacheService::DispatchToCacheIOThread(
+        new nsAsyncDoomEvent(this, listener));
 }
 
 
