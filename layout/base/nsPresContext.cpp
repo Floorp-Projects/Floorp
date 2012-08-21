@@ -2110,8 +2110,6 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
 void
 nsPresContext::NotifyDidPaintForSubtree()
 {
-  Document()->StyleImageLoader()->NotifyPaint();
-
   if (!mFireAfterPaintEvents)
     return;
   mFireAfterPaintEvents = false;
