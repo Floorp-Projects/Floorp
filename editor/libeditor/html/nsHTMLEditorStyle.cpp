@@ -800,19 +800,17 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }
 
   // then process the node itself
-  if (
-    (!aChildrenOnly &&
-      (
-        // node is prop we asked for
-        (aProperty && NodeIsType(aNode, aProperty)) ||
-        // but check for link (<a href=...)
-        (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) ||
-        // and for named anchors
-        (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode))
-      )
-    ) ||
-    // or node is any prop and we asked for that
-    (!aProperty && NodeIsProperty(aNode))
+  if (!aChildrenOnly &&
+    (
+      // node is prop we asked for
+      (aProperty && NodeIsType(aNode, aProperty)) ||
+      // but check for link (<a href=...)
+      (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) ||
+      // and for named anchors
+      (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode)) ||
+      // or node is any prop and we asked for that
+      (!aProperty && NodeIsProperty(aNode))
+    )
   ) {
     // if we weren't passed an attribute, then we want to 
     // remove any matching inlinestyles entirely
