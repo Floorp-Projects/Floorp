@@ -1412,11 +1412,12 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
         else if (!js_GetLengthProperty(cx, indicesObj, &length))
             return false;
 
-        // If we're one dimensional, indexing more than one dimension is
-        // definitely out of bounds.
-        if (length > 1) {
-            args.rval().setUndefined();
-            return true;
+        // If we're one dimensional, the index vector must also be one
+        // dimensional.
+        if (length != 1) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
+                                 ".prototype.get");
+            return false;
         }
 
         RootedValue elem(cx);
@@ -1441,10 +1442,11 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
     if (!ArrayLikeToIndexVector(cx, indicesObj, iv.indices))
         return false;
 
-    // Set undefined if definitely out of bounds.
-    if (iv.indices.length() > iv.dimensions.length()) {
-        args.rval().setUndefined();
-        return true;
+    // Throw if the shape of the index vector is wrong.
+    if (iv.indices.length() == 0 || iv.indices.length() > iv.dimensions.length()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
+                             ".prototype.get");
+        return false;
     }
 
     return obj->getParallelArrayElement(cx, iv, args.rval());
