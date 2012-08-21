@@ -328,47 +328,43 @@ struct FileData
   const nsIID&  uuid;
 };
 
-static bool FindProviderFile(nsISupports* aElement, void *aData)
+static bool FindProviderFile(nsIDirectoryServiceProvider* aElement,
+                             FileData* aData)
 {
   nsresult rv;
-  FileData* fileData = (FileData*)aData;
-  if (fileData->uuid.Equals(NS_GET_IID(nsISimpleEnumerator)))
-  {
+  if (aData->uuid.Equals(NS_GET_IID(nsISimpleEnumerator))) {
       // Not all providers implement this iface
       nsCOMPtr<nsIDirectoryServiceProvider2> prov2 = do_QueryInterface(aElement);
       if (prov2)
       {
           nsCOMPtr<nsISimpleEnumerator> newFiles;
-          rv = prov2->GetFiles(fileData->property, getter_AddRefs(newFiles));
+          rv = prov2->GetFiles(aData->property, getter_AddRefs(newFiles));
           if (NS_SUCCEEDED(rv) && newFiles) {
-              if (fileData->data) {
+              if (aData->data) {
                   nsCOMPtr<nsISimpleEnumerator> unionFiles;
 
                   NS_NewUnionEnumerator(getter_AddRefs(unionFiles),
-                                        (nsISimpleEnumerator*) fileData->data, newFiles);
+                                        (nsISimpleEnumerator*) aData->data, newFiles);
 
                   if (unionFiles)
-                      unionFiles.swap(* (nsISimpleEnumerator**) &fileData->data);
+                      unionFiles.swap(* (nsISimpleEnumerator**) &aData->data);
               }
               else
               {
-                  NS_ADDREF(fileData->data = newFiles);
+                  NS_ADDREF(aData->data = newFiles);
               }
                   
-              fileData->persistent = false; // Enumerators can never be persistent
+              aData->persistent = false; // Enumerators can never be persistent
               return rv == NS_SUCCESS_AGGREGATE_RESULT;
           }
       }
   }
   else
   {
-      nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
-      if (prov)
-      {
-          rv = prov->GetFile(fileData->property, &fileData->persistent, (nsIFile **)&fileData->data);
-          if (NS_SUCCEEDED(rv) && fileData->data)
-              return false;
-      }
+      rv = aElement->GetFile(aData->property, &aData->persistent,
+                             (nsIFile **)&aData->data);
+      if (NS_SUCCEEDED(rv) && aData->data)
+          return false;
   }
 
   return true;
