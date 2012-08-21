@@ -72,6 +72,8 @@ struct EnterJITStack
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
+    AutoFlushCache afc("GenerateEnterJIT", cx->compartment->ionCompartment());
+
     const Register reg_code  = r0;
     const Register reg_argc  = r1;
     const Register reg_argv  = r2;

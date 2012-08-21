@@ -185,6 +185,7 @@ ion::CheckLogging()
             "  osi        Invalidation\n"
             "  safepoints Safepoints\n"
             "  pools      Literal Pools (ARM only for now)\n"
+            "  cacheflush Instruction Cache flushes (ARM only for now)\n"
             "  logs       C1 and JSON visualization logging\n"
             "  all        Everything\n"
             "\n"

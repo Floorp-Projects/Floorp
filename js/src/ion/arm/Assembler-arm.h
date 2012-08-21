@@ -1026,7 +1026,7 @@ void
 PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
 class InstructionIterator;
 class Assembler;
-typedef js::ion::AssemblerBufferWithConstantPool<16, 4, Instruction, Assembler, 1> ARMBuffer;
+typedef js::ion::AssemblerBufferWithConstantPool<1024, 4, Instruction, Assembler, 1> ARMBuffer;
 
 class Assembler
 {
@@ -1649,8 +1649,8 @@ class Assembler
     // this should return a BOffImm, but I didn't want to require everyplace that used the
     // AssemblerBuffer to make that class.
     static ptrdiff_t getBranchOffset(const Instruction *i);
-    static void retargetNearBranch(Instruction *i, int offset, Condition cond);
-    static void retargetNearBranch(Instruction *i, int offset);
+    static void retargetNearBranch(Instruction *i, int offset, Condition cond, bool final = true);
+    static void retargetNearBranch(Instruction *i, int offset, bool final = true);
     static void retargetFarBranch(Instruction *i, uint8 **slot, uint8 *dest, Condition cond);
 
     static void writePoolHeader(uint8 *start, Pool *p, bool isNatural);
@@ -1669,6 +1669,7 @@ class Assembler
     }
     static uint8 *nextInstruction(uint8 *instruction, uint32 *count = NULL);
     // Toggle a jmp or cmp emitted by toggledJump().
+
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
