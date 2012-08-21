@@ -932,7 +932,10 @@ ParallelArrayObject::create(JSContext *cx, MutableHandleValue vp)
     IndexVector dims(cx);
     if (!dims.append(0))
         return false;
-    return create(cx, NullPtr(), 0, dims, vp);
+    RootedObject buffer(cx, NewDenseArrayWithType(cx, 0));
+    if (!buffer)
+        return false;
+    return create(cx, buffer, 0, dims, vp);
 }
 
 bool
@@ -948,14 +951,14 @@ bool
 ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
                             const IndexVector &dims, MutableHandleValue vp)
 {
-    JS_ASSERT_IF(buffer, buffer->isDenseArray());
+    JS_ASSERT(buffer->isDenseArray());
 
     RootedObject result(cx, NewBuiltinClassInstance(cx, &class_));
     if (!result)
         return false;
 
     // Propagate element types.
-    if (buffer && cx->typeInferenceEnabled()) {
+    if (cx->typeInferenceEnabled()) {
         AutoEnterTypeInference enter(cx);
         TypeSet *bufferTypes = buffer->getType(cx)->getProperty(cx, JSID_VOID, false);
         TypeSet *resultTypes = result->getType(cx)->getProperty(cx, JSID_VOID, true);
@@ -973,13 +976,8 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
     result->setSlot(SLOT_DIMENSIONS, ObjectValue(*dimArray));
 
     // Store the buffer and offset.
-    if (buffer) {
-        result->setSlot(SLOT_BUFFER, ObjectValue(*buffer));
-        result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(static_cast<int32_t>(offset)));
-    } else {
-        result->setSlot(SLOT_BUFFER, UndefinedValue());
-        result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(0));
-    }
+    result->setSlot(SLOT_BUFFER, ObjectValue(*buffer));
+    result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(static_cast<int32_t>(offset)));
 
     // This is usually args.rval() from build or construct.
     vp.setObject(*result);
@@ -1607,8 +1605,6 @@ JSBool
 ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    RootedObject buffer(cx, as(obj)->buffer());
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
         as(obj)->inOutermostDimensionRange(cx, id)) {
         MarkNonNativePropertyFound(obj, propp);
