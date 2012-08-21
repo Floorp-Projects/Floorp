@@ -145,6 +145,37 @@ IsNurseryAllocable(AllocKind kind)
     return map[kind];
 }
 
+static inline bool
+IsBackgroundFinalized(AllocKind kind)
+{
+    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    static const bool map[FINALIZE_LIMIT] = {
+        false,     /* FINALIZE_OBJECT0 */
+        true,      /* FINALIZE_OBJECT0_BACKGROUND */
+        false,     /* FINALIZE_OBJECT2 */
+        true,      /* FINALIZE_OBJECT2_BACKGROUND */
+        false,     /* FINALIZE_OBJECT4 */
+        true,      /* FINALIZE_OBJECT4_BACKGROUND */
+        false,     /* FINALIZE_OBJECT8 */
+        true,      /* FINALIZE_OBJECT8_BACKGROUND */
+        false,     /* FINALIZE_OBJECT12 */
+        true,      /* FINALIZE_OBJECT12_BACKGROUND */
+        false,     /* FINALIZE_OBJECT16 */
+        true,      /* FINALIZE_OBJECT16_BACKGROUND */
+        false,     /* FINALIZE_SCRIPT */
+        false,     /* FINALIZE_SHAPE */
+        false,     /* FINALIZE_BASE_SHAPE */
+        false,     /* FINALIZE_TYPE_OBJECT */
+#if JS_HAS_XML_SUPPORT
+        false,     /* FINALIZE_XML */
+#endif
+        true,      /* FINALIZE_SHORT_STRING */
+        true,      /* FINALIZE_STRING */
+        false      /* FINALIZE_EXTERNAL_STRING */
+    };
+    return map[kind];
+}
+
 inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing);
 
@@ -590,8 +621,6 @@ class GCHelperThread {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    Vector<js::gc::ArenaHeader *, 64, js::SystemAllocPolicy> finalizeVector;
-
     bool    backgroundAllocation;
 
     friend struct js::gc::ArenaLists;
@@ -676,9 +705,6 @@ class GCHelperThread {
         else
             replenishAndFreeLater(ptr);
     }
-
-    /* Must be called with the GC lock taken. */
-    bool prepareForBackgroundSweep();
 };
 
 
