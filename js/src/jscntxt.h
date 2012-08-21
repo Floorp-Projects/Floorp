@@ -317,26 +317,20 @@ class NewObjectCache
  */
 class FreeOp : public JSFreeOp {
     bool        shouldFreeLater_;
-    bool        onBackgroundThread_;
 
   public:
     static FreeOp *get(JSFreeOp *fop) {
         return static_cast<FreeOp *>(fop);
     }
 
-    FreeOp(JSRuntime *rt, bool shouldFreeLater, bool onBackgroundThread)
+    FreeOp(JSRuntime *rt, bool shouldFreeLater)
       : JSFreeOp(rt),
-        shouldFreeLater_(shouldFreeLater),
-        onBackgroundThread_(onBackgroundThread)
+        shouldFreeLater_(shouldFreeLater)
     {
     }
 
     bool shouldFreeLater() const {
         return shouldFreeLater_;
-    }
-
-    bool onBackgroundThread() const {
-        return onBackgroundThread_;
     }
 
     inline void free_(void* p);
