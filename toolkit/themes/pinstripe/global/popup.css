@@ -68,43 +68,40 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrowcontent {
   -moz-appearance: none;
-  color: white;
-  background: -moz-linear-gradient(rgba(85,85,85,1), rgba(75,75,75,.97) 5px, rgba(58,58,58,.97) 17px, rgba(43,43,43,.97) 40px, rgba(40,40,40,.97) 80px, rgba(40,40,40,.97));
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.15) inset,
+  background: #ededed;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.5) inset,
               0 1px 0 rgba(255,255,255,.05) inset,
               0 0 0 1px rgba(0,0,0,.25);
+  color: #333;
   padding: 16px;
   margin: 1px;
 }
 
-.panel-arrow {
-  opacity: 0.97;
-}
-
 .panel-arrow[side="top"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-up.png");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.png");
   margin-left: 6px;
   margin-right: 6px;
   margin-bottom: -2px;
 }
 
 .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-down.png");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.png");
+  -moz-transform: scaleY(-1);
   margin-left: 6px;
   margin-right: 6px;
   margin-top: -2px;
 }
 
 .panel-arrow[side="left"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.png");
   margin-top: 6px;
   margin-bottom: 6px;
   margin-right: -2px;
 }
 
 .panel-arrow[side="right"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.png");
   transform: scaleX(-1);
   margin-top: 6px;
   margin-bottom: 6px;

@@ -21,13 +21,6 @@ browser.jar:
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/home.png
-  skin/classic/browser/hud-style-check-box-checked.png
-  skin/classic/browser/hud-style-check-box-empty.png
-  skin/classic/browser/hud-style-dropmarker-double-arrows.png
-  skin/classic/browser/hud-style-expander-closed.png
-  skin/classic/browser/hud-style-expander-open.png
-  skin/classic/browser/hud-style-new-folder-plus-sign.png
-  skin/classic/browser/hud-style-twisties.png
   skin/classic/browser/identity.png
   skin/classic/browser/identity-icons-generic.png
   skin/classic/browser/identity-icons-https.png
@@ -37,6 +30,9 @@ browser.jar:
   skin/classic/browser/KUI-close.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
+  skin/classic/browser/panel-expander-closed.png
+  skin/classic/browser/panel-expander-open.png
+  skin/classic/browser/panel-plus-sign.png
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/pageInfo.css
   skin/classic/browser/Privacy-16.png
@@ -45,7 +41,7 @@ browser.jar:
   skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
-  skin/classic/browser/Secure-Glyph-White.png
+  skin/classic/browser/Secure-Glyph.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
