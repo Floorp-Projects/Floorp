@@ -92,6 +92,7 @@ _BROWSER_FILES = \
                  browser_bug427559.js \
                  browser_bug432599.js \
                  browser_bug435035.js \
+                 browser_bug435325.js \
                  browser_bug441778.js \
                  browser_popupNotification.js \
                  browser_bug455852.js \

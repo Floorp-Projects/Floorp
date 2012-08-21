@@ -85,6 +85,7 @@ public class AboutHomeContent extends ScrollView
     protected SimpleCursorAdapter mTopSitesAdapter;
     protected GridView mTopSitesGrid;
 
+    private AboutHomePromoBox mPromoBox;
     protected AboutHomeSection mAddons;
     protected AboutHomeSection mLastTabs;
     protected AboutHomeSection mRemoteTabs;
@@ -155,6 +156,7 @@ public class AboutHomeContent extends ScrollView
             }
         });
 
+        mPromoBox = (AboutHomePromoBox) findViewById(R.id.promo_box);
         mAddons = (AboutHomeSection) findViewById(R.id.recommended_addons);
         mLastTabs = (AboutHomeSection) findViewById(R.id.last_tabs);
         mRemoteTabs = (AboutHomeSection) findViewById(R.id.remote_tabs);
@@ -176,28 +178,6 @@ public class AboutHomeContent extends ScrollView
         mRemoteTabs.setOnMoreTextClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mActivity.showRemoteTabs();
-            }
-        });
-
-        TextView syncTextView = (TextView) findViewById(R.id.sync_text);
-        String syncText = syncTextView.getText().toString() + " \u00BB";
-        String boldName = getContext().getResources().getString(R.string.abouthome_sync_bold_name);
-        int styleIndex = syncText.indexOf(boldName);
-
-        // Highlight any occurrence of "Firefox Sync" in the string
-        // with a bold style.
-        if (styleIndex >= 0) {
-            SpannableString spannableText = new SpannableString(syncText);
-            spannableText.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), styleIndex, styleIndex + 12, 0);
-            syncTextView.setText(spannableText, TextView.BufferType.SPANNABLE);
-        }
-
-        LinearLayout syncBox = (LinearLayout) findViewById(R.id.sync_box);
-        syncBox.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Context context = v.getContext();
-                Intent intent = new Intent(context, SetupSyncActivity.class);
-                context.startActivity(intent);
             }
         });
 
@@ -232,9 +212,11 @@ public class AboutHomeContent extends ScrollView
         findViewById(R.id.no_top_sites_text).setVisibility(visibilityWithoutTopSites);
     }
 
-    private void setSyncVisibility(boolean visible) {
-        int visibility = visible ? View.VISIBLE : View.GONE;
-        findViewById(R.id.sync_box).setVisibility(visibility);
+    private void setPromoBoxVisibility(boolean visible, AboutHomePromoBox.Type type) {
+        if (visible)
+            mPromoBox.show(type);
+        else
+            mPromoBox.hide();
     }
 
     private void updateLayout(GeckoApp.StartupMode startupMode, boolean syncIsSetup) {
@@ -246,7 +228,7 @@ public class AboutHomeContent extends ScrollView
         boolean isFirstRun = (startupMode == GeckoApp.StartupMode.NEW_PROFILE);
 
         setTopSitesVisibility(!isFirstRun || hasTopSites, hasTopSites);
-        setSyncVisibility(!syncIsSetup);
+        setPromoBoxVisibility(!syncIsSetup, AboutHomePromoBox.Type.SYNC);
     }
 
     private void updateLayoutForSync() {

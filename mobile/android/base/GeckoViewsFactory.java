@@ -38,7 +38,9 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
         
             Log.i(LOGTAG, "Creating custom Gecko view: " + viewName);
 
-            if (TextUtils.equals(viewName, "AboutHomeSection"))
+            if (TextUtils.equals(viewName, "AboutHomePromoBox"))
+                return new AboutHomePromoBox(context, attrs);
+            else if (TextUtils.equals(viewName, "AboutHomeSection"))
                 return new AboutHomeSection(context, attrs);
             else if (TextUtils.equals(viewName, "AwesomeBarTabs"))
                 return new AwesomeBarTabs(context, attrs);
