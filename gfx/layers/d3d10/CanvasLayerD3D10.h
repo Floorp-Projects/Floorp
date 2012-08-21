@@ -47,8 +47,6 @@ private:
   nsRefPtr<ID3D10Texture2D> mTexture;
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
 
-  PRUint32 mCanvasFramebuffer;
-
   bool mDataIsPremultiplied;
   bool mNeedsYFlip;
   bool mIsD2DTexture;
