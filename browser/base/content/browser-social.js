@@ -40,6 +40,7 @@ let SocialUI = {
           SocialShareButton.updateButtonHiddenState();
           SocialToolbar.updateButtonHiddenState();
           SocialSidebar.updateSidebar();
+          SocialChatBar.update();
         } catch (e) {
           Components.utils.reportError(e);
           throw e;
@@ -154,6 +155,27 @@ let SocialUI = {
   undoActivation: function SocialUI_undoActivation() {
     Social.active = false;
     this.notificationPanel.hidePopup();
+  }
+}
+
+let SocialChatBar = {
+  get chatbar() {
+    return document.getElementById("pinnedchats");
+  },
+  // Whether the chats can be shown for this window.
+  get canShow() {
+    let docElem = document.documentElement;
+    let chromeless = docElem.getAttribute("disablechrome") ||
+                     docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    return Social.uiVisible && !chromeless;
+  },
+  newChat: function(aProvider, aURL, aCallback) {
+    if (this.canShow)
+      this.chatbar.newChat(aProvider, aURL, aCallback);
+  },
+  update: function() {
+    if (!this.canShow)
+      this.chatbar.removeAll();
   }
 }
 
