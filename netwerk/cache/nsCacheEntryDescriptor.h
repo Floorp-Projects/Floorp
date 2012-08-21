@@ -15,7 +15,6 @@
 #include "nsCacheService.h"
 #include "nsIDiskCacheStreamInternal.h"
 #include "zlib.h"
-#include "mozilla/Mutex.h"
 
 /******************************************************************************
 * nsCacheEntryDescriptor
@@ -28,9 +27,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHEENTRYDESCRIPTOR
     NS_DECL_NSICACHEENTRYINFO
-
-    friend class nsAsyncDoomEvent;
-
+    
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
     virtual ~nsCacheEntryDescriptor();
     
@@ -43,20 +40,7 @@ public:
      * methods callbacks for nsCacheService
      */
     nsCacheEntry * CacheEntry(void)      { return mCacheEntry; }
-    void           ClearCacheEntry(void)
-    {
-      bool asyncDoomPending;
-      {
-        mozilla::MutexAutoLock lock(mLock);
-        asyncDoomPending = mAsyncDoomPending;
-      }
-
-      if (asyncDoomPending && mCacheEntry) {
-        nsCacheService::gService->DoomEntry_Internal(mCacheEntry, true);
-        mDoomedOnClose = true;
-      }
-      mCacheEntry = nullptr;
-    }
+    void           ClearCacheEntry(void) { mCacheEntry = nullptr; }
 
     nsresult       CloseOutput(void)
     {
@@ -223,9 +207,6 @@ private:
      nsCacheEntry          * mCacheEntry; // we are a child of the entry
      nsCacheAccessMode       mAccessGranted;
      nsIOutputStream       * mOutput;
-     mozilla::Mutex          mLock;
-     bool                    mAsyncDoomPending;
-     bool                    mDoomedOnClose;
 };
 
 
