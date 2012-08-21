@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 from marionette_test import MarionetteTestCase
+from errors import MarionetteException
+from errors import TimeoutException
 
 class TestNavigate(MarionetteTestCase):
     def test_navigate(self):
@@ -59,4 +60,26 @@ class TestNavigate(MarionetteTestCase):
         self.marionette.refresh()
         self.assertEqual("Marionette Test", self.marionette.title)
         self.assertTrue(self.marionette.execute_script("return window.document.getElementById('someDiv') == undefined;"))
+
+    def test_navigate_frame(self):
+        self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
+        self.marionette.switch_to_frame(0)
+        self.marionette.navigate(self.marionette.absolute_url("empty.html"))
+        self.assertTrue('empty.html' in self.marionette.get_url())
+        self.marionette.switch_to_frame()
+        self.assertTrue('test_iframe.html' in self.marionette.get_url())
+
+    def test_shouldnt_error_if_nonexistent_url_used(self):
+        try:
+            self.marionette.navigate("http://localhost:12345")
+            self.fail("Should have thrown a MarionetteException")
+        except TimeoutException: 
+            self.fail("The socket shouldn't have timed out when navigating to a non-existent URL")
+        except MarionetteException:
+            pass
+        except Exception as inst:
+            import traceback
+            print traceback.format_exc()
+            self.fail("Should have thrown a MarionetteException instead of %s" % type(inst))
+
 
