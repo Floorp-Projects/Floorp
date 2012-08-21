@@ -77,6 +77,7 @@ protected:
       mCachedFormat = aFormat;
     }
 
+    MOZ_ASSERT(mCachedTempSurface->Stride() == mCachedTempSurface->Width() * 4);
     return mCachedTempSurface;
   }
 
@@ -155,41 +156,67 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
         return;
     }
 #endif
-    nsRefPtr<gfxImageSurface> isurf;
+
+    gfxIntSize readSize(mBounds.width, mBounds.height);
+    gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
+                              ? gfxASurface::ImageFormatRGB24
+                              : gfxASurface::ImageFormatARGB32;
+
+    nsRefPtr<gfxImageSurface> readSurf;
+    nsRefPtr<gfxImageSurface> resultSurf;
+
+    bool usingTempSurface = false;
+
     if (aDestSurface) {
-      DiscardTempSurface();
-      isurf = static_cast<gfxImageSurface*>(aDestSurface);
+      resultSurf = static_cast<gfxImageSurface*>(aDestSurface);
+
+      if (resultSurf->GetSize() != readSize ||
+          resultSurf->Stride() != resultSurf->Width() * 4)
+      {
+        readSurf = GetTempSurface(readSize, format);
+        usingTempSurface = true;
+      }
     } else {
-      nsIntSize size(mBounds.width, mBounds.height);
-      gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
-                                ? gfxASurface::ImageFormatRGB24
-                                : gfxASurface::ImageFormatARGB32;
-
-      isurf = GetTempSurface(size, format);
+      resultSurf = GetTempSurface(readSize, format);
+      usingTempSurface = true;
     }
 
+    if (!usingTempSurface)
+      DiscardTempSurface();
 
-    if (!isurf || isurf->CairoStatus() != 0) {
+    if (!readSurf)
+      readSurf = resultSurf;
+
+    if (!resultSurf || resultSurf->CairoStatus() != 0)
       return;
-    }
 
-    NS_ASSERTION(isurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
+    MOZ_ASSERT(readSurf);
+    MOZ_ASSERT(readSurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
 
     // We need to Flush() the surface before modifying it outside of cairo.
-    isurf->Flush();
-    mGLContext->ReadScreenIntoImageSurface(isurf);
-    isurf->MarkDirty();
+    readSurf->Flush();
+    mGLContext->ReadScreenIntoImageSurface(readSurf);
+    readSurf->MarkDirty();
 
     // If the underlying GLContext doesn't have a framebuffer into which
     // premultiplied values were written, we have to do this ourselves here.
     // Note that this is a WebGL attribute; GL itself has no knowledge of
     // premultiplied or unpremultiplied alpha.
     if (!mGLBufferIsPremultiplied)
-      gfxUtils::PremultiplyImageSurface(isurf);
+      gfxUtils::PremultiplyImageSurface(readSurf);
+
+    if (readSurf != resultSurf) {
+      MOZ_ASSERT(resultSurf->Width() >= readSurf->Width());
+      MOZ_ASSERT(resultSurf->Height() >= readSurf->Height());
+
+      resultSurf->Flush();
+      resultSurf->CopyFrom(readSurf);
+      resultSurf->MarkDirty();
+    }
 
     // stick our surface into mSurface, so that the Paint() path is the same
     if (!aDestSurface) {
-      mSurface = isurf;
+      mSurface = resultSurf;
     }
   }
 }
