@@ -64,8 +64,11 @@ var shell = {
   },
 
   reportCrash: function shell_reportCrash() {
-    let crashID = Cc["@mozilla.org/xre/app-info;1"]
-      .getService(Ci.nsIXULRuntime).lastRunCrashID;
+    let crashID;
+    try {
+      crashID = Cc["@mozilla.org/xre/app-info;1"]
+                .getService(Ci.nsIXULRuntime).lastRunCrashID;
+    } catch(e) { }
     if (Services.prefs.getBoolPref('app.reportCrashes') &&
         crashID) {
       this.CrashSubmit().submit(crashID)
