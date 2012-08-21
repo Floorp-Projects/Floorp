@@ -132,8 +132,7 @@ public:
     NS_IMETHOD Tell(PRInt64 *aResult);
 
     nsFileInputStream()
-      : mIOFlags(0), mPerm(0)
-      : mLineBuffer(nullptr), mCachedPosition(0)
+      : mIOFlags(0), mPerm(0), mLineBuffer(nullptr), mCachedPosition(0)
     { }
 
     virtual ~nsFileInputStream() 
