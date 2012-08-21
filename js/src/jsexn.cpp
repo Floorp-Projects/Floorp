@@ -260,7 +260,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
     Vector<JSStackTraceStackElem> frames(cx);
     {
         SuppressErrorsGuard seg(cx);
-        for (ScriptFrameIter i(cx); !i.done(); ++i) {
+        for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
 
             /* Ask the crystal CAPS ball whether we can see across compartments. */
             if (checkAccess && i.isNonEvalFunctionFrame()) {
@@ -556,7 +556,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Find the scripted caller. */
-    ScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
 
     /* XXX StackIter should not point directly to scripts. */
     SkipRoot skip(cx, &iter);

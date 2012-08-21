@@ -16,6 +16,7 @@ chrome.jar:
 * content/shell.js                      (content/shell.js)
 #ifndef ANDROID
   content/screen.js                     (content/screen.js)
+  content/runapp.js                     (content/runapp.js)
 #endif
   content/content.css                   (content/content.css)
   content/touchcontrols.css             (content/touchcontrols.css)

@@ -108,6 +108,10 @@ public:
 
   // MathML scriptlevel support
   PRInt8  mScriptLevel;          // [inherited]
+
+  // was mLanguage set based on a lang attribute in the document?
+  bool mExplicitLanguage;        // [inherited]
+
   // The value mSize would have had if scriptminsize had never been applied
   nscoord mScriptUnconstrainedSize;
   nscoord mScriptMinSize;        // [inherited] length

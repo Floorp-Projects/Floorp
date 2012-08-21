@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "base/basictypes.h"
 #include "nsDebug.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkNativeWindow.h"
@@ -22,6 +23,18 @@
 #include "CameraCommon.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
+using namespace android;
+
+/**
+ * See bug 783682.  Most camera implementations, despite claiming they
+ * support 'yuv420p' as a preview format, actually ignore this setting
+ * and return 'yuv420sp' data anyway.  We have come across a new implementation
+ * that, while reporting that 'yuv420p' is supported *and* has been accepted,
+ * still returns the frame data in 'yuv420sp' anyway.  So for now, since
+ * everyone seems to return this format, we just force it.
+ */
+#define FORCE_PREVIEW_FORMAT_YUV420SP   1
 
 #if GIHM_TIMING_RECEIVEFRAME
 #define INCLUDE_TIME_H                  1
@@ -48,15 +61,30 @@ static __inline void timespecSubtract(struct timespec* a, struct timespec* b)
 GonkCameraHardware::GonkCameraHardware(GonkCamera* aTarget, PRUint32 aCamera)
   : mCamera(aCamera)
   , mFps(30)
+#if !FORCE_PREVIEW_FORMAT_YUV420SP
   , mPreviewFormat(PREVIEW_FORMAT_UNKNOWN)
+#else
+  , mPreviewFormat(PREVIEW_FORMAT_YUV420SP)
+#endif
   , mClosing(false)
   , mMonitor("GonkCameraHardware.Monitor")
   , mNumFrames(0)
   , mTarget(aTarget)
   , mInitialized(false)
 {
-  DOM_CAMERA_LOGI( "%s: this = %p (aTarget = %p)\n", __func__, (void* )this, (void* )aTarget );
+  DOM_CAMERA_LOGI( "%s: this = %p (aTarget = %p)\n", __func__, (void*)this, (void*)aTarget );
   init();
+}
+
+void
+GonkCameraHardware::OnNewFrame()
+{
+  if (mClosing) {
+    return;
+  }
+  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(mWindow.get());
+  nsRefPtr<GraphicBufferLocked> buffer = window->getCurrentBuffer();
+  ReceiveFrame(mTarget, buffer);
 }
 
 // Android data callback
@@ -76,7 +104,7 @@ GonkCameraHardware::DataCallback(int32_t aMsgType, const sp<IMemory> &aDataPtr, 
   if (camera) {
     switch (aMsgType) {
       case CAMERA_MSG_PREVIEW_FRAME:
-        ReceiveFrame(camera, (PRUint8*)aDataPtr->pointer(), aDataPtr->size());
+        // Do nothing
         break;
 
       case CAMERA_MSG_COMPRESSED_IMAGE:
@@ -149,7 +177,7 @@ GonkCameraHardware::init()
     return;
   }
 
-  mWindow = new android::GonkNativeWindow();
+  mWindow = new GonkNativeWindow(this);
 
   if (sHwHandle == 0) {
     sHwHandle = 1;  // don't use 0
@@ -188,6 +216,8 @@ GonkCameraHardware::ReleaseHandle(PRUint32 aHwHandle)
   hw->mHardware->disableMsgType(CAMERA_MSG_ALL_MSGS);
   hw->mHardware->stopPreview();
   hw->mHardware->release();
+  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(hw->mWindow.get());
+  window->abandon();
   DOM_CAMERA_LOGI("%s: after: sHwHandle = %d\n", __func__, sHwHandle);
   delete hw;     // destroy the camera hardware instance
 }
@@ -368,8 +398,7 @@ GonkCameraHardware::StartPreview()
 {
   const char* format;
 
-  mHardware->enableMsgType(CAMERA_MSG_PREVIEW_FRAME);
-
+#if !FORCE_PREVIEW_FORMAT_YUV420SP
   DOM_CAMERA_LOGI("Preview formats: %s\n", mParams.get(mParams.KEY_SUPPORTED_PREVIEW_FORMATS));
 
   // try to set preferred image format and frame rate
@@ -391,6 +420,11 @@ GonkCameraHardware::StartPreview()
     mPreviewFormat = PREVIEW_FORMAT_UNKNOWN;
     DOM_CAMERA_LOGE("Camera ignored our request for '%s' preview, returned UNSUPPORTED format '%s'\n", PREVIEW_FORMAT, format);
   }
+#else
+  mParams.setPreviewFormat("yuv420sp");
+  mParams.setPreviewFrameRate(mFps);
+  mHardware->setParameters(mParams);
+#endif
 
   // Check the frame rate and log if the camera ignored our setting
   PRUint32 fps = mParams.getPreviewFrameRate();

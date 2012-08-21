@@ -512,6 +512,33 @@ while (testProps.length) {
   }
 }
 
+// PopupBlockedEvent
+
+try {
+  e = new PopupBlockedEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "PopupBlockedEvent: First parameter is required!");
+ex = false;
+
+e = new PopupBlockedEvent("hello");
+ok(e.type, "hello", "PopupBlockedEvent: Wrong event type!");
+ok(!e.isTrusted, "PopupBlockedEvent: Event shouldn't be trusted!");
+ok(!e.bubbles, "PopupBlockedEvent: Event shouldn't bubble!");
+ok(!e.cancelable, "PopupBlockedEvent: Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "PopupBlockedEvent: Wrong event!");
+
+e = new PopupBlockedEvent("hello",
+                          { requestingWindow: window,
+                            popupWindowFeatures: "features",
+                            popupWindowName: "name"
+                          });
+is(e.requestingWindow, window);
+is(e.popupWindowFeatures, "features");
+is(e.popupWindowName, "name");
+
 // WheelEvent
 
 try {

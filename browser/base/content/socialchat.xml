@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+
+<bindings id="socialChatBindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="chatbox">
+    <content orient="vertical" mousethrough="never">
+      <xul:hbox class="chat-titlebar" xbl:inherits="minimized">
+        <xul:image class="chat-status-icon" xbl:inherits="src=image"/>
+        <xul:label class="chat-title" flex="1" xbl:inherits="value=label,crop"/>
+        <xul:toolbarbutton class="chat-toggle-button chat-toolbarbutton"
+                           xbl:inherits="minimized"
+                           oncommand="document.getBindingParent(this).toggle();"/>
+        <xul:toolbarbutton class="chat-close-button chat-toolbarbutton"
+                           oncommand="document.getBindingParent(this).close();"/>
+      </xul:hbox>
+      <xul:iframe anonid="iframe" class="chat-frame" flex="1"
+                  xbl:inherits="src,origin,collapsed=minimized" type="content"/>
+    </content>
+
+    <implementation implements="nsIDOMEventListener">
+      <field name="iframe" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "iframe");
+      </field>
+
+      <method name="init">
+        <parameter name="aProvider"/>
+        <parameter name="aURL"/>
+        <parameter name="aCallback"/>
+        <body><![CDATA[
+          this._callback = aCallback;
+          this.setAttribute("origin", aProvider.origin);
+          this.setAttribute("src", aURL);
+        ]]></body>
+      </method>
+
+      <method name="close">
+        <body><![CDATA[
+          this.parentNode.remove(this);
+        ]]></body>
+      </method>
+
+      <method name="toggle">
+        <body><![CDATA[
+          let type;
+          if (this.getAttribute("minimized") == "true") {
+            this.removeAttribute("minimized");
+            type = "socialFrameShow";
+          } else {
+            this.setAttribute("minimized", "true");
+            type = "socialFrameHide";
+          }
+          // let the chat frame know if it is being shown or hidden
+          let evt = this.iframe.contentDocument.createEvent("CustomEvent");
+          evt.initCustomEvent(type, true, true, {});
+          this.iframe.contentDocument.documentElement.dispatchEvent(evt);
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        this.parentNode.selectedChat = this;
+      </handler>
+      <handler event="DOMContentLoaded" action="if (this._callback) this._callback(this.iframe.contentWindow);"/>
+      <handler event="DOMTitleChanged" action="this.setAttribute('label', this.iframe.contentDocument.title);"/>
+      <handler event="DOMLinkAdded"><![CDATA[
+        // much of this logic is from DOMLinkHandler in browser.js
+        // this sets the presence icon for a chat user, we simply use favicon style updating
+        let link = event.originalTarget;
+        let rel = link.rel && link.rel.toLowerCase();
+        if (!link || !link.ownerDocument || !rel || !link.href)
+          return;
+        if (link.rel.indexOf("icon") < 0)
+          return;
+
+        let uri = DOMLinkHandler.getLinkIconURI(link);
+        if (!uri)
+          return;
+
+        // we made it this far, use it
+        this.setAttribute('image', uri.spec);
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="chatbar">
+    <content>
+      <xul:hbox align="end" pack="end" anonid="innerbox" class="chatbar-innerbox" mousethrough="always" flex="1">
+        <xul:toolbarbutton anonid="nub" class="chatbar-button" type="menu" collapsed="true" mousethrough="never">
+          <xul:menupopup anonid="nubMenu" oncommand="document.getBindingParent(this).swapChat(event)"/>
+        </xul:toolbarbutton>
+        <xul:spacer flex="1" anonid="spacer" class="chatbar-overflow-spacer"/>
+        <children/>
+      </xul:hbox>
+    </content>
+
+    <implementation implements="nsIDOMEventListener">
+
+      <field name="innerbox" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "innerbox");
+      </field>
+
+      <field name="menupopup" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "nubMenu");
+      </field>
+
+      <property name="emptyWidth">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "spacer").boxObject.width;
+        </getter>
+      </property>
+
+      <field name="selectedChat"/>
+
+      <field name="menuitemMap">new WeakMap()</field>
+
+      <property name="firstCollapsedChild">
+        <getter><![CDATA[
+          let child = this.lastChild;
+          while (child && !child.collapsed) {
+            child = child.previousSibling;
+          }
+          return child;
+        ]]></getter>
+      </property>
+
+      <property name="firstVisibleChild">
+        <getter><![CDATA[
+          let child = this.firstChild;
+          while (child && child.collapsed) {
+            child = child.nextSibling;
+          }
+          return child;
+        ]]></getter>
+      </property>
+
+      <property name="firstRemovableChild">
+        <getter><![CDATA[
+          let child = this.firstChild;
+          // find the first visible non-focused chatbox, always keep one visible if we
+          // have enough width to do so.
+          while (child &&
+                (child.collapsed || child == this.selectedChat)) {
+            child = child.nextSibling;
+          }
+          if (!child && this.selectedChat) {
+            child = this.selectedChat;
+          }
+          return child;
+        ]]></getter>
+      </property>
+
+      <method name="resize">
+        <body><![CDATA[
+          let child = this.firstCollapsedChild;
+          if (child && this.emptyWidth > 200) {
+            this.showChat(child);
+          }
+          if (!this.firstCollapsedChild) {
+            window.removeEventListener("resize", this);
+            this.menupopup.parentNode.collapsed = true;
+          }
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "resize") {
+            this.resize();
+          }
+        ]]></body>
+      </method>
+
+      <method name="swapChat">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          let menuitem = aEvent.target;
+          let newChat = menuitem.chat;
+          let oldChat = this.firstVisibleChild;
+          if (oldChat)
+            this.collapseChat(oldChat);
+          if (newChat) 
+            this.showChat(newChat);
+        ]]></body>
+      </method>
+
+      <method name="collapseChat">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
+          aChatbox.collapsed = true;
+          let menu = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+          menu.setAttribute("label", aChatbox.iframe.contentDocument.title);
+          menu.chat = aChatbox;
+          this.menuitemMap.set(aChatbox, menu);
+          this.menupopup.appendChild(menu);
+          this.menupopup.parentNode.collapsed = false;
+        ]]></body>
+      </method>
+
+      <method name="showChat">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
+          let menuitem = this.menuitemMap.get(aChatbox);
+          this.menuitemMap.delete(aChatbox);
+          this.menupopup.removeChild(menuitem);
+          aChatbox.collapsed = false;
+        ]]></body>
+      </method>
+
+      <method name="remove">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
+          if (this.selectedChat == aChatbox) {
+            this.selectedChat = aChatbox.previousSibling ? aChatbox.previousSibling : aChatbox.nextSibling
+          }
+          this.removeChild(aChatbox);
+          this.resize();
+        ]]></body>
+      </method>
+
+      <method name="removeAll">
+        <body><![CDATA[
+          while (this.firstChild) {
+            this.removeChild(this.firstChild);
+          }
+        ]]></body>
+      </method>
+
+      <method name="newChat">
+        <parameter name="aProvider"/>
+        <parameter name="aURL"/>
+        <parameter name="aCallback"/>
+        <body><![CDATA[
+          let cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
+          this.selectedChat = cb;
+          this.appendChild(cb);
+          cb.init(aProvider, aURL, aCallback);
+        ]]></body>
+      </method>
+
+    </implementation>
+    <handlers>
+      <handler event="overflow"><![CDATA[
+        // make sure we're not getting an overflow from content
+        if (event.originalTarget != this.innerbox)
+          return;
+
+        let hasHidden = this.firstCollapsedChild;
+        let child = this.firstRemovableChild;
+        if (child)
+          this.collapseChat(child);
+        if (!hasHidden) {
+          window.addEventListener("resize", this);
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>

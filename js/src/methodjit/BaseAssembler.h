@@ -1539,7 +1539,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     }
 
   public:
-    void spsUpdatePCIdx(SPSProfiler *p, uint32_t idx, RegisterID reg) {
+    void spsUpdatePCIdx(SPSProfiler *p, int32_t idx, RegisterID reg) {
         Jump j = spsProfileEntryAddress(p, -1, reg);
         store32(Imm32(idx), Address(reg, ProfileEntry::offsetOfPCIdx()));
         j.linkTo(label(), this);
@@ -1551,7 +1551,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         storePtr(ImmPtr(str),  Address(reg, ProfileEntry::offsetOfString()));
         storePtr(ImmPtr(s),    Address(reg, ProfileEntry::offsetOfScript()));
         storePtr(ImmPtr(NULL), Address(reg, ProfileEntry::offsetOfStackAddress()));
-        store32(Imm32(0),      Address(reg, ProfileEntry::offsetOfPCIdx()));
+        store32(Imm32(ProfileEntry::NullPCIndex),
+                Address(reg, ProfileEntry::offsetOfPCIdx()));
 
         /* Always increment the stack size, regardless if we actually pushed */
         j.linkTo(label(), this);
@@ -1641,7 +1642,7 @@ SPSInstrumentation::pushManual(Assembler &masm, RegisterID scratch)
     JS_ASSERT(frame->left == 0);
     if (!enabled())
         return;
-    masm.spsUpdatePCIdx(profiler_, 0, scratch);
+    masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
     frame->pushed = true;
 }
 
@@ -1671,7 +1672,7 @@ SPSInstrumentation::reenter(Assembler &masm, RegisterID scratch)
     if (frame->skipNext)
         frame->skipNext = false;
     else
-        masm.spsUpdatePCIdx(profiler_, 0, scratch);
+        masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);
 }
 
 /*

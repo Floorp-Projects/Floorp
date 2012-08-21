@@ -16,6 +16,8 @@ Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
+Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
+Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -314,7 +316,8 @@ var shell = {
   },
 
   sendChromeEvent: function shell_sendChromeEvent(details) {
-    this.sendEvent(getContentWindow(), "mozChromeEvent", details);
+    this.sendEvent(getContentWindow(), "mozChromeEvent",
+                   ObjectWrapper.wrap(details, getContentWindow()));
   },
 
   receiveMessage: function shell_receiveMessage(message) {
@@ -372,14 +375,14 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
     url: msg.uri,
     origin: origin,
     manifest: msg.manifest,
+    isActivity: (msg.type == 'activity'),
     target: msg.target
   });
 }, 'system-messages-open-app', false);
 
 Services.obs.addObserver(function(aSubject, aTopic, aData) {
-  shell.sendEvent(shell.contentBrowser.contentWindow,
-                  "mozChromeEvent", { type: "fullscreenoriginchange",
-                                      fullscreenorigin: aData } );
+  shell.sendChromeEvent({ type: "fullscreenoriginchange",
+                          fullscreenorigin: aData });
 }, "fullscreen-origin-change", false);
 
 (function Repl() {
@@ -645,4 +648,25 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
       });
     }
 }, "geolocation-device-events", false);
+})();
+
+(function recordingStatusTracker() {
+  let gRecordingActiveCount = 0;
+
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    let oldCount = gRecordingActiveCount;
+    if (aData == "starting") {
+      gRecordingActiveCount += 1;
+    } else if (aData == "shutdown") {
+      gRecordingActiveCount -= 1;
+    }
+
+    // We need to track changes from 1 <-> 0
+    if (gRecordingActiveCount + oldCount == 1) {
+      shell.sendChromeEvent({
+        type: 'recording-status',
+        active: (gRecordingActiveCount == 1)
+      });
+    }
+}, "recording-device-events", false);
 })();

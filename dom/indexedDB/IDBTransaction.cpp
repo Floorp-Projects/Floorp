@@ -212,7 +212,7 @@ IDBTransaction::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
-    NS_ASSERTION(mAbortCode || mReadyState == IDBTransaction::LOADING,
+    NS_ASSERTION(NS_FAILED(mAbortCode) || mReadyState == IDBTransaction::LOADING,
                  "Bad state!");
     mReadyState = IDBTransaction::COMMITTING;
     CommitOrRollback();
@@ -843,7 +843,7 @@ CommitHelper::Run()
     }
 
     nsCOMPtr<nsIDOMEvent> event;
-    if (mAbortCode) {
+    if (NS_FAILED(mAbortCode)) {
       if (mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE) {
         // This will make the database take a snapshot of it's DatabaseInfo
         mTransaction->Database()->Close();
@@ -898,16 +898,16 @@ CommitHelper::Run()
   if (mConnection) {
     IndexedDatabaseManager::SetCurrentWindow(database->GetOwner());
 
-    if (!mAbortCode && mUpdateFileRefcountFunction &&
+    if (NS_SUCCEEDED(mAbortCode) && mUpdateFileRefcountFunction &&
         NS_FAILED(mUpdateFileRefcountFunction->UpdateDatabase(mConnection))) {
       mAbortCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    if (!mAbortCode && NS_FAILED(WriteAutoIncrementCounts())) {
+    if (NS_SUCCEEDED(mAbortCode) && NS_FAILED(WriteAutoIncrementCounts())) {
       mAbortCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    if (!mAbortCode) {
+    if (NS_SUCCEEDED(mAbortCode)) {
       NS_NAMED_LITERAL_CSTRING(release, "COMMIT TRANSACTION");
       nsresult rv = mConnection->ExecuteSimpleSQL(release);
       if (NS_SUCCEEDED(rv)) {
@@ -926,7 +926,7 @@ CommitHelper::Run()
       }
     }
 
-    if (mAbortCode) {
+    if (NS_FAILED(mAbortCode)) {
       RevertAutoIncrementCounts();
       NS_NAMED_LITERAL_CSTRING(rollback, "ROLLBACK TRANSACTION");
       if (NS_FAILED(mConnection->ExecuteSimpleSQL(rollback))) {

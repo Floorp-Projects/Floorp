@@ -103,7 +103,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 static const uint32_t XBLPROTO_SLOT = 0;
 static const uint32_t FIELD_SLOT = 1;
 
-static bool
+bool
 ValueHasISupportsPrivate(const JS::Value &v)
 {
   if (!v.isObject()) {
@@ -214,7 +214,7 @@ InstallXBLField(JSContext* cx,
   return false;
 }
 
-static bool
+bool
 FieldGetterImpl(JSContext *cx, JS::CallArgs args)
 {
   const JS::Value &thisv = args.thisv();
@@ -246,11 +246,11 @@ static JSBool
 FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod(cx, ValueHasISupportsPrivate, FieldGetterImpl,
-                                  args);
+  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldGetterImpl>
+                                 (cx, args);
 }
 
-static bool
+bool
 FieldSetterImpl(JSContext *cx, JS::CallArgs args)
 {
   const JS::Value &thisv = args.thisv();
@@ -274,8 +274,8 @@ static JSBool
 FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod(cx, ValueHasISupportsPrivate, FieldSetterImpl,
-                                  args);
+  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldSetterImpl>
+                                 (cx, args);
 }
 
 static JSBool

@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html><head>
+    <title>min-/max-width testcase for bug 308801</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px;
+        }
+
+        .test1, .test2 {
+            width:100px;
+            height:20px;
+	    background:black;
+        }
+
+        .test3 {
+            width:30px;
+            border:10px solid black;
+            padding:25px;
+        }
+br { margin-top:13px; }
+    </style>
+</head>
+<body>
+
+<div style="float:left"><div class="box min test1"></div></div>
+
+<br clear="all">
+<div style="float:left"><div class="box min test2"></div></div>
+
+<br clear="all">
+<div style="float:left"><div class="box min test3"></div></div>
+
+<br clear="all">
+<br clear="all">
+<div class="box max test1"></div>
+
+<br clear="all">
+<div class="box max test2"></div>
+
+<br clear="all">
+<div class="box max test3"></div>
+
+<br clear="all">
+<!-- overflow:hidden -->
+
+<div style="float:left"><div class="hidden box min test1"></div></div>
+
+<br clear="all">
+<div style="float:left"><div class="hidden box min test2"></div></div>
+
+<br clear="all">
+<div style="float:left"><div class="hidden box min test3"></div></div>
+
+<br clear="all">
+<br clear="all">
+<div class="hidden box max test1"></div>
+
+<br clear="all">
+<div class="hidden box max test2"></div>
+
+<br clear="all">
+<div class="hidden box max test3"></div>
+
+
+
+</body>
+</html>

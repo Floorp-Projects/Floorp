@@ -15,10 +15,15 @@
 #include "TimeVarying.h"
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
+#include "nsThreadUtils.h"
 
 class nsDOMMediaStream;
 
 namespace mozilla {
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gMediaStreamGraphLog;
+#endif
 
 /**
  * Microseconds relative to the start of the graph timeline.
@@ -57,22 +62,14 @@ const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
  *
  * When the graph is changed, we may need to throw out buffered data and
  * reprocess it. This is triggered automatically by the MediaStreamGraph.
- *
- * Streams that use different sampling rates complicate things a lot. We
- * considered forcing all streams to have the same audio sample rate, resampling
- * at inputs and outputs only, but that would create situations where a stream
- * is resampled from X to Y and then back to X unnecessarily. It seems easier
- * to just live with streams having different sample rates. We do require that
- * the sample rate for a stream be constant for the life of a stream.
- *
- * XXX does not yet support blockInput/blockOutput functionality.
  */
 
 class MediaStreamGraph;
 
 /**
- * This is a base class for listener callbacks. Override methods to be
- * notified of audio or video data or changes in stream state.
+ * This is a base class for media graph thread listener callbacks.
+ * Override methods to be notified of audio or video data or changes in stream
+ * state.
  *
  * This can be used by stream recorders or network connections that receive
  * stream input. It could also be used for debugging.
@@ -83,6 +80,7 @@ class MediaStreamGraph;
  * reentry into media graph methods is possible, although very much discouraged!
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
  * event to some thread) and return.
+ * The listener is not allowed to add/remove any listeners from the stream.
  *
  * When a listener is first attached, we guarantee to send a NotifyBlockingChanged
  * callback to notify of the initial blocking state. Also, if a listener is
@@ -148,6 +146,7 @@ public:
    * aTrackEvents can be any combination of TRACK_EVENT_CREATED and
    * TRACK_EVENT_ENDED. aQueuedMedia is the data being added to the track
    * at aTrackOffset (relative to the start of the stream).
+   * aQueuedMedia can be null if there is no output.
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         TrackRate aTrackRate,
@@ -156,8 +155,31 @@ public:
                                         const MediaSegment& aQueuedMedia) {}
 };
 
+/**
+ * This is a base class for main-thread listener callbacks.
+ * This callback is invoked on the main thread when the main-thread-visible
+ * state of a stream has changed.
+ *
+ * These methods are called without the media graph monitor held, so
+ * reentry into media graph methods is possible, although very much discouraged!
+ * You should do something non-blocking and non-reentrant (e.g. dispatch an
+ * event) and return.
+ * The listener is allowed to synchronously remove itself from the stream, but
+ * not add or remove any other listeners.
+ */
+class MainThreadMediaStreamListener {
+public:
+  virtual ~MainThreadMediaStreamListener() {}
+
+  NS_INLINE_DECL_REFCOUNTING(MainThreadMediaStreamListener)
+
+  virtual void NotifyMainThreadStateChanged() = 0;
+};
+
 class MediaStreamGraphImpl;
 class SourceMediaStream;
+class ProcessedMediaStream;
+class MediaInputPort;
 
 /**
  * A stream of synchronized audio and video data. All (not blocked) streams
@@ -233,16 +255,11 @@ public:
     , mGraphUpdateIndices(0)
     , mFinished(false)
     , mNotifiedFinished(false)
-    , mAudioPlaybackStartTime(0)
-    , mBlockedAudioTime(0)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
     , mMainThreadDestroyed(false)
   {
-    for (PRUint32 i = 0; i < ArrayLength(mFirstActiveTracks); ++i) {
-      mFirstActiveTracks[i] = TRACK_NONE;
-    }
   }
   virtual ~MediaStream() {}
 
@@ -250,6 +267,7 @@ public:
    * Returns the graph that owns this stream.
    */
   MediaStreamGraphImpl* GraphImpl();
+  MediaStreamGraph* Graph();
 
   // Control API.
   // Since a stream can be played multiple ways, we need to combine independent
@@ -272,6 +290,16 @@ public:
   // Events will be dispatched by calling methods of aListener.
   void AddListener(MediaStreamListener* aListener);
   void RemoveListener(MediaStreamListener* aListener);
+  void AddMainThreadListener(MainThreadMediaStreamListener* aListener)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    mMainThreadListeners.AppendElement(aListener);
+  }
+  void RemoveMainThreadListener(MainThreadMediaStreamListener* aListener)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    mMainThreadListeners.RemoveElement(aListener);
+  }
   // Signal that the client is done with this MediaStream. It will be deleted later.
   void Destroy();
   // Returns the main-thread's view of how much data has been processed by
@@ -294,8 +322,10 @@ public:
   }
 
   friend class MediaStreamGraphImpl;
+  friend class MediaInputPort;
 
   virtual SourceMediaStream* AsSourceStream() { return nullptr; }
+  virtual ProcessedMediaStream* AsProcessedStream() { return nullptr; }
 
   // media graph thread only
   void Init();
@@ -330,10 +360,19 @@ public:
   {
     mListeners.RemoveElement(aListener);
   }
-
-#ifdef DEBUG
+  void AddConsumer(MediaInputPort* aPort)
+  {
+    mConsumers.AppendElement(aPort);
+  }
+  void RemoveConsumer(MediaInputPort* aPort)
+  {
+    mConsumers.RemoveElement(aPort);
+  }
   const StreamBuffer& GetStreamBuffer() { return mBuffer; }
-#endif
+  GraphTime GetStreamBufferStartTime() { return mBufferStartTime; }
+  StreamTime GraphTimeToStreamTime(GraphTime aTime);
+  bool IsFinishedOnGraphThread() { return mFinished; }
+  void FinishOnGraphThread();
 
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
@@ -373,6 +412,7 @@ protected:
   // API, minus the number of times it has been explicitly unblocked.
   TimeVarying<GraphTime,PRUint32> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
+  nsTArray<nsRefPtr<MainThreadMediaStreamListener> > mMainThreadListeners;
 
   // Precomputed blocking status (over GraphTime).
   // This is only valid between the graph's mCurrentTime and
@@ -383,6 +423,23 @@ protected:
   TimeVarying<GraphTime,bool> mBlocked;
   // Maps graph time to the graph update that affected this stream at that time
   TimeVarying<GraphTime,PRInt64> mGraphUpdateIndices;
+
+  // MediaInputPorts to which this is connected
+  nsTArray<MediaInputPort*> mConsumers;
+
+  // Where audio output is going. There is one AudioOutputStream per
+  // audio track.
+  struct AudioOutputStream {
+    // When we started audio playback for this track.
+    // Add mStream->GetPosition() to find the current audio playback position.
+    GraphTime mAudioPlaybackStartTime;
+    // Amount of time that we've wanted to play silence because of the stream
+    // blocking.
+    MediaTime mBlockedAudioTime;
+    nsRefPtr<nsAudioStream> mStream;
+    TrackID mTrackID;
+  };
+  nsTArray<AudioOutputStream> mAudioOutputStreams;
 
   /**
    * When true, this means the stream will be finished once all
@@ -395,19 +452,21 @@ protected:
    */
   bool mNotifiedFinished;
 
-  // Where audio output is going
-  nsRefPtr<nsAudioStream> mAudioOutput;
-  // When we started audio playback for this stream.
-  // Add mAudioOutput->GetPosition() to find the current audio playback position.
-  GraphTime mAudioPlaybackStartTime;
-  // Amount of time that we've wanted to play silence because of the stream
-  // blocking.
-  MediaTime mBlockedAudioTime;
-
-  // For each track type, this is the first active track found for that type.
-  // The first active track is the track that started earliest; if multiple
-  // tracks start at the same time, the one with the lowest ID.
-  TrackID mFirstActiveTracks[MediaSegment::TYPE_COUNT];
+  // Temporary data for ordering streams by dependency graph
+  bool mHasBeenOrdered;
+  bool mIsOnOrderingStack;
+  // Temporary data to record if the stream is being consumed
+  // (i.e. has track data being played, or is feeding into some stream
+  // that is being consumed).
+  bool mIsConsumed;
+  // True if the above value is accurate.
+  bool mKnowIsConsumed;
+  // Temporary data for computing blocking status of streams
+  // True if we've added this stream to the set of streams we're computing
+  // blocking for.
+  bool mInBlockingSet;
+  // True if this stream should be blocked in this phase.
+  bool mBlockInThisPhase;
 
   // This state is only used on the main thread.
   nsDOMMediaStream* mWrapper;
@@ -492,7 +551,6 @@ public:
 
   // XXX need a Reset API
 
-  friend class MediaStreamGraph;
   friend class MediaStreamGraphImpl;
 
   struct ThreadAndRunnable {
@@ -553,6 +611,159 @@ protected:
 };
 
 /**
+ * Represents a connection between a ProcessedMediaStream and one of its
+ * input streams.
+ * We make these refcounted so that stream-related messages with MediaInputPort*
+ * pointers can be sent to the main thread safely.
+ *
+ * When a port's source or destination stream dies, the stream's DestroyImpl
+ * calls MediaInputPort::Disconnect to disconnect the port from
+ * the source and destination streams.
+ *
+ * The lifetimes of MediaInputPort are controlled from the main thread.
+ * The media graph adds a reference to the port. When a MediaInputPort is no
+ * longer needed, main-thread code sends a Destroy message for the port and
+ * clears its reference (the last main-thread reference to the object). When
+ * the Destroy message is processed on the graph manager thread we disconnect
+ * the port and drop the graph's reference, destroying the object.
+ */
+class MediaInputPort {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaInputPort)
+
+  /**
+   * The FLAG_BLOCK_INPUT and FLAG_BLOCK_OUTPUT flags can be used to control
+   * exactly how the blocking statuses of the input and output streams affect
+   * each other.
+   */
+  enum {
+    // When set, blocking on the input stream forces blocking on the output
+    // stream.
+    FLAG_BLOCK_INPUT = 0x01,
+    // When set, blocking on the output stream forces blocking on the input
+    // stream.
+    FLAG_BLOCK_OUTPUT = 0x02
+  };
+  // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
+  MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
+                 PRUint32 aFlags)
+    : mSource(aSource)
+    , mDest(aDest)
+    , mFlags(aFlags)
+  {
+    MOZ_COUNT_CTOR(MediaInputPort);
+  }
+  ~MediaInputPort()
+  {
+    MOZ_COUNT_DTOR(MediaInputPort);
+  }
+
+  // Called on graph manager thread
+  // Do not call these from outside MediaStreamGraph.cpp!
+  void Init();
+  // Called during message processing to trigger removal of this stream.
+  void Disconnect();
+
+  // Control API
+  /**
+   * Disconnects and destroys the port. The caller must not reference this
+   * object again.
+   */
+  void Destroy();
+
+  // Any thread
+  MediaStream* GetSource() { return mSource; }
+  ProcessedMediaStream* GetDestination() { return mDest; }
+
+  // Call on graph manager thread
+  struct InputInterval {
+    GraphTime mStart;
+    GraphTime mEnd;
+    bool mInputIsBlocked;
+  };
+  // Find the next time interval starting at or after aTime during which
+  // mDest is not blocked and mSource's blocking status does not change.
+  InputInterval GetNextInputInterval(GraphTime aTime);
+
+protected:
+  friend class MediaStreamGraphImpl;
+  friend class MediaStream;
+  friend class ProcessedMediaStream;
+  // Never modified after Init()
+  MediaStream* mSource;
+  ProcessedMediaStream* mDest;
+  PRUint32 mFlags;
+};
+
+/**
+ * This stream processes zero or more input streams in parallel to produce
+ * its output. The details of how the output is produced are handled by
+ * subclasses overriding the ProduceOutput method.
+ */
+class ProcessedMediaStream : public MediaStream {
+public:
+  ProcessedMediaStream(nsDOMMediaStream* aWrapper)
+    : MediaStream(aWrapper), mAutofinish(false), mInCycle(false)
+  {}
+
+  // Control API.
+  /**
+   * Allocates a new input port attached to source aStream.
+   * This stream can be removed by calling MediaInputPort::Remove().
+   */
+  MediaInputPort* AllocateInputPort(MediaStream* aStream, PRUint32 aFlags = 0);
+  /**
+   * Force this stream into the finished state.
+   */
+  void Finish();
+  /**
+   * Set the autofinish flag on this stream (defaults to false). When this flag
+   * is set, and all input streams are in the finished state (including if there
+   * are no input streams), this stream automatically enters the finished state.
+   */
+  void SetAutofinish(bool aAutofinish);
+
+  virtual ProcessedMediaStream* AsProcessedStream() { return this; }
+
+  friend class MediaStreamGraphImpl;
+
+  // Do not call these from outside MediaStreamGraph.cpp!
+  virtual void AddInput(MediaInputPort* aPort)
+  {
+    mInputs.AppendElement(aPort);
+  }
+  virtual void RemoveInput(MediaInputPort* aPort)
+  {
+    mInputs.RemoveElement(aPort);
+  }
+  bool HasInputPort(MediaInputPort* aPort)
+  {
+    return mInputs.Contains(aPort);
+  }
+  virtual void DestroyImpl();
+  /**
+   * This gets called after we've computed the blocking states for all
+   * streams (mBlocked is up to date up to mStateComputedTime).
+   * Also, we've produced output for all streams up to this one. If this stream
+   * is not in a cycle, then all its source streams have produced data.
+   * Generate output up to mStateComputedTime.
+   * This is called only on streams that have not finished.
+   */
+  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) = 0;
+  void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
+
+protected:
+  // This state is all accessed only on the media graph thread.
+
+  // The list of all inputs that are currently enabled or waiting to be enabled.
+  nsTArray<MediaInputPort*> mInputs;
+  bool mAutofinish;
+  // True if and only if this stream is in a cycle.
+  // Updated by MediaStreamGraphImpl::UpdateStreamOrder.
+  bool mInCycle;
+};
+
+/**
  * Initially, at least, we will have a singleton MediaStreamGraph per
  * process.
  */
@@ -566,6 +777,21 @@ public:
    * media data, such as a camera) can write to.
    */
   SourceMediaStream* CreateInputStream(nsDOMMediaStream* aWrapper);
+  /**
+   * Create a stream that will form the union of the tracks of its input
+   * streams.
+   * A TrackUnionStream contains all the tracks of all its input streams.
+   * Adding a new input stream makes that stream's tracks immediately appear as new
+   * tracks starting at the time the input stream was added.
+   * Removing an input stream makes the output tracks corresponding to the
+   * removed tracks immediately end.
+   * For each added track, the track ID of the output track is the track ID
+   * of the input track or one plus the maximum ID of all previously added
+   * tracks, whichever is greater.
+   * TODO at some point we will probably need to add API to select
+   * particular tracks of each input stream.
+   */
+  ProcessedMediaStream* CreateTrackUnionStream(nsDOMMediaStream* aWrapper);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected

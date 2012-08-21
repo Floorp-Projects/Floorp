@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+function makeEvent() {
+  var evt = new Event("MouseEvents");
+  evt.expando = 42;
+  is(evt.expando, 42, "Expando properly visible in iframe");
+  return evt;
+}
+</script>
+</head>
+<body>
+</body>
+</html>

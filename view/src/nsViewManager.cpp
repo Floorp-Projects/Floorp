@@ -337,6 +337,16 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
     return;
   }
 
+  nsIWidget *widget = aView->GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  if (aView->ForcedRepaint()) {
+    ProcessPendingUpdates();
+    aView->SetForcedRepaint(false);
+  }
+
   NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
   if (IsPainting()) {
     RootViewManager()->mRecursiveRefreshPending = true;
@@ -429,6 +439,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 #ifdef DEBUG_INVALIDATIONS
         printf("---- PAINT END ----\n");
 #endif
+        aView->SetForcedRepaint(false);
         SetPainting(false);
       }
     }

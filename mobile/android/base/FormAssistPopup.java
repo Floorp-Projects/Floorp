@@ -223,7 +223,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         int popupWidth = RelativeLayout.LayoutParams.FILL_PARENT;
         int popupLeft = left < 0 ? 0 : left;
 
-        FloatSize viewport = GeckoApp.mAppContext.getLayerClient().getViewportSize();
+        FloatSize viewport = GeckoApp.mAppContext.getLayerView().getViewportMetrics().getSize();
 
         // For autocomplete suggestions, if the input is smaller than the screen-width,
         // shrink the popup's width. Otherwise, keep it as FILL_PARENT.

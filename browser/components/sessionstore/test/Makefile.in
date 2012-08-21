@@ -60,11 +60,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_463206.js \
 	browser_463206_sample.html \
 	browser_464199.js \
-	browser_464620_a.js \
-	browser_464620_a.html \
-	browser_464620_b.js \
-	browser_464620_b.html \
-	browser_464620_xd.html \
 	browser_465215.js \
 	browser_465223.js \
 	browser_466937.js \
@@ -135,6 +130,20 @@ MOCHITEST_BROWSER_FILES = \
 	browser_739531_sample.html \
 	browser_739805.js \
 	$(NULL)
+
+# Disabled on Windows for frequent intermittent failures
+ifneq ($(OS_ARCH), WINNT)
+MOCHITEST_FILES += \
+	browser_464620_a.js \
+	browser_464620_a.html \
+	browser_464620_b.js \
+	browser_464620_b.html \
+	browser_464620_xd.html \
+	$(NULL)
+else
+$(warning browser_464620_a.js is disabled on Windows for intermittent failures. Bug 552424)
+$(warning browser_464620_b.js is disabled on Windows for intermittent failures. Bug 552424)
+endif
 
 ifneq ($(OS_ARCH),Darwin)
 MOCHITEST_BROWSER_FILES += \

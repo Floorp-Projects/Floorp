@@ -3,7 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CameraPreview.h"
-
+#include "Layers.h"
+#include "ImageContainer.h"
 #define DOM_CAMERA_LOG_LEVEL  3
 #include "CameraCommon.h"
 

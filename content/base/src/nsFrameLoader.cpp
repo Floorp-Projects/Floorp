@@ -86,6 +86,9 @@
 #include "nsIAppsService.h"
 
 #include "jsapi.h"
+#include "nsHTMLIFrameElement.h"
+#include "nsSandboxFlags.h"
+
 #include "mozilla/dom/StructuredCloneUtils.h"
 
 using namespace mozilla;
@@ -288,6 +291,7 @@ NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
+  , mDetachedSubdocViews(nullptr)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
   , mDestroyCalled(false)
@@ -450,6 +454,30 @@ nsFrameLoader::ReallyStartLoadingInternal()
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
+  // Is this an <iframe> with a sandbox attribute or a parent which is
+  // sandboxed ?
+  nsHTMLIFrameElement* iframe =
+    nsHTMLIFrameElement::FromContent(mOwnerContent);
+
+  PRUint32 sandboxFlags = 0;
+
+  if (iframe) {
+    sandboxFlags = iframe->GetSandboxFlags();
+
+    PRUint32 parentSandboxFlags = iframe->OwnerDoc()->GetSandboxFlags();
+
+    if (sandboxFlags || parentSandboxFlags) {
+      // The child can only add restrictions, not remove them.
+      sandboxFlags |= parentSandboxFlags;
+
+      mDocShell->SetSandboxFlags(sandboxFlags);
+    }
+  }
+
+  // If this is an <iframe> and it's sandboxed with respect to origin
+  // we will set it up with a null principal later in nsDocShell::DoURILoad.
+  // We do it there to correctly sandbox content that was loaded into
+  // the iframe via other methods than the src attribute.
   // We'll use our principal, not that of the document loaded inside us.  This
   // is very important; needed to prevent XSS attacks on documents loaded in
   // subframes!
@@ -2372,8 +2400,24 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 {
   MOZ_ASSERT(!mRemoteBrowser);
   MOZ_ASSERT(!mCurrentRemoteFrame);
+  mRemoteFrame = true;
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
 
   ShowRemoteFrame(nsIntSize(0, 0));
+}
+
+void
+nsFrameLoader::SetDetachedSubdocView(nsIView* aDetachedViews,
+                                     nsIDocument* aContainerDoc)
+{
+  mDetachedSubdocViews = aDetachedViews;
+  mContainerDocWhileDetached = aContainerDoc;
+}
+
+nsIView*
+nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
+{
+  NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);
+  return mDetachedSubdocViews;
 }
 

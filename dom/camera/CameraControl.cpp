@@ -10,6 +10,8 @@
 #include "CameraControl.h"
 #include "CameraCapabilities.h"
 #include "CameraControl.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 
 #define DOM_CAMERA_LOG_LEVEL  3
 #include "CameraCommon.h"
@@ -374,6 +376,16 @@ nsCameraControl::StartRecording(const JS::Value& aOptions, nsICameraStartRecordi
   nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, size, onSuccess, onError);
   mCameraThread->Dispatch(startRecordingTask, NS_DISPATCH_NORMAL);
 
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    NS_WARNING("Could not get the Observer service for CameraControl::StartRecording.");
+    return NS_ERROR_FAILURE;
+  }
+
+  obs->NotifyObservers(nullptr,
+                       "recording-device-events",
+                       NS_LITERAL_STRING("starting").get());
+
   return NS_OK;
 }
 
@@ -383,6 +395,16 @@ nsCameraControl::StopRecording()
 {
   nsCOMPtr<nsIRunnable> stopRecordingTask = new StopRecordingTask(this);
   mCameraThread->Dispatch(stopRecordingTask, NS_DISPATCH_NORMAL);
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    NS_WARNING("Could not get the Observer service for CameraControl::StopRecording.");
+    return NS_ERROR_FAILURE;
+  }
+
+  obs->NotifyObservers(nullptr,
+                       "recording-device-events",
+                       NS_LITERAL_STRING("shutdown").get());
 
   return NS_OK;
 }

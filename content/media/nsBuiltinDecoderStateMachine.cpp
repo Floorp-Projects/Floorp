@@ -15,6 +15,7 @@
 #include "nsDeque.h"
 #include "AudioSegment.h"
 #include "VideoSegment.h"
+#include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
@@ -380,7 +381,6 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
                                                            bool aRealTime) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
-  mCbCrSize(0),
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),

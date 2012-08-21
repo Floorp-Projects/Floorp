@@ -126,7 +126,7 @@
        is why it is not localizable. -->
   <string name="toggle_profiling">Toggle Profiling</string>
 
-  <string name="site_settings_title">&site_settings_title;</string>
+  <string name="site_settings_title">&site_settings_title2;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>

@@ -11,7 +11,7 @@
 #include "nsHyphenator.h"
 
 nsLineBreaker::nsLineBreaker()
-  : mCurrentWordLangGroup(nullptr),
+  : mCurrentWordLanguage(nullptr),
     mCurrentWordContainsMixedLang(false),
     mCurrentWordContainsComplexChar(false),
     mAfterBreakableSpace(false), mBreakHere(false),
@@ -77,7 +77,7 @@ nsLineBreaker::FlushCurrentWord()
                         breakState.Elements());
   }
 
-  bool autoHyphenate = mCurrentWordLangGroup &&
+  bool autoHyphenate = mCurrentWordLanguage &&
     !mCurrentWordContainsMixedLang;
   PRUint32 i;
   for (i = 0; autoHyphenate && i < mTextItems.Length(); ++i) {
@@ -88,7 +88,7 @@ nsLineBreaker::FlushCurrentWord()
   }
   if (autoHyphenate) {
     nsRefPtr<nsHyphenator> hyphenator =
-      nsHyphenationManager::Instance()->GetHyphenator(mCurrentWordLangGroup);
+      nsHyphenationManager::Instance()->GetHyphenator(mCurrentWordLanguage);
     if (hyphenator) {
       FindHyphenationPoints(hyphenator,
                             mCurrentWord.Elements(),
@@ -140,12 +140,12 @@ nsLineBreaker::FlushCurrentWord()
   mTextItems.Clear();
   mCurrentWordContainsComplexChar = false;
   mCurrentWordContainsMixedLang = false;
-  mCurrentWordLangGroup = nullptr;
+  mCurrentWordLanguage = nullptr;
   return NS_OK;
 }
 
 nsresult
-nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 aLength,
+nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const PRUnichar* aText, PRUint32 aLength,
                           PRUint32 aFlags, nsILineBreakSink* aSink)
 {
   NS_ASSERTION(aLength > 0, "Appending empty text...");
@@ -161,7 +161,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
       if (!mCurrentWordContainsComplexChar && IsComplexChar(aText[offset])) {
         mCurrentWordContainsComplexChar = true;
       }
-      UpdateCurrentWordLangGroup(aLangGroup);
+      UpdateCurrentWordLanguage(aHyphenationLanguage);
       ++offset;
     }
 
@@ -211,8 +211,10 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   bool wordHasComplexChar = false;
 
   nsRefPtr<nsHyphenator> hyphenator;
-  if ((aFlags & BREAK_USE_AUTO_HYPHENATION) && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
-    hyphenator = nsHyphenationManager::Instance()->GetHyphenator(aLangGroup);
+  if ((aFlags & BREAK_USE_AUTO_HYPHENATION) &&
+      !(aFlags & BREAK_SUPPRESS_INSIDE) &&
+      aHyphenationLanguage) {
+    hyphenator = nsHyphenationManager::Instance()->GetHyphenator(aHyphenationLanguage);
   }
 
   for (;;) {
@@ -275,7 +277,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
         mTextItems.AppendElement(TextItem(aSink, wordStart, len, aFlags));
         // Ensure that the break-before for this word is written out
         offset = wordStart + 1;
-        UpdateCurrentWordLangGroup(aLangGroup);
+        UpdateCurrentWordLanguage(aHyphenationLanguage);
         break;
       }
     }
@@ -311,7 +313,7 @@ nsLineBreaker::FindHyphenationPoints(nsHyphenator *aHyphenator,
 }
 
 nsresult
-nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aLength,
+nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const PRUint8* aText, PRUint32 aLength,
                           PRUint32 aFlags, nsILineBreakSink* aSink)
 {
   NS_ASSERTION(aLength > 0, "Appending empty text...");
@@ -321,7 +323,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     nsAutoString str;
     const char* cp = reinterpret_cast<const char*>(aText);
     CopyASCIItoUTF16(nsDependentCSubstring(cp, cp + aLength), str);
-    return AppendText(aLangGroup, str.get(), aLength, aFlags, aSink);
+    return AppendText(aHyphenationLanguage, str.get(), aLength, aFlags, aSink);
   }
 
   PRUint32 offset = 0;
@@ -446,12 +448,12 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 }
 
 void
-nsLineBreaker::UpdateCurrentWordLangGroup(nsIAtom *aLangGroup)
+nsLineBreaker::UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage)
 {
-  if (mCurrentWordLangGroup && mCurrentWordLangGroup != aLangGroup) {
+  if (mCurrentWordLanguage && mCurrentWordLanguage != aHyphenationLanguage) {
     mCurrentWordContainsMixedLang = true;
   } else {
-    mCurrentWordLangGroup = aLangGroup;
+    mCurrentWordLanguage = aHyphenationLanguage;
   }
 }
 

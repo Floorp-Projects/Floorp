@@ -26,6 +26,16 @@ var gAddonsList;
 
 var TEST_UNPACKED = false;
 
+function isNightlyChannel() {
+  var channel = "default";
+  try {
+    channel = Services.prefs.getCharPref("app.update.channel");
+  }
+  catch (e) { }
+
+  return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
+}
+
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {
     // nsIXULAppInfo
@@ -1160,9 +1170,9 @@ if ("nsIWindowsRegKey" in AM_Ci) {
     },
 
     readStringValue: function(aName) {
-      for (let i = 0; i < this.values.length; i++) {
-        if (this.values[i].name == aName)
-          return this.values[i].value;
+      for (let value of this.values) {
+        if (value.name == aName)
+          return value.value;
       }
     }
   };

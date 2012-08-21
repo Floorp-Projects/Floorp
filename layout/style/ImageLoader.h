@@ -28,7 +28,6 @@ class ImageLoader : public nsStubImageDecoderObserver,
 public:
   ImageLoader(nsIDocument* aDocument)
   : mDocument(aDocument),
-    mHavePainted(false),
     mInClone(false)
   {
     MOZ_ASSERT(mDocument);
@@ -53,11 +52,6 @@ public:
   NS_IMETHOD FrameChanged(imgIRequest* aRequest,
                           imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
-
-  inline void NotifyPaint()
-  {
-    mHavePainted = true;
-  }
 
   void DropDocumentReference();
 
@@ -119,9 +113,6 @@ private:
   // not).  We'll need this when we go away to remove any requests associated
   // with our document from those Images.
   ImageHashSet mImages;
-
-  // Have we painted yet? If not, no need to deliver notifications.
-  bool mHavePainted;
 
   // Are we cloning?  If so, ignore any notifications we get.
   bool mInClone;

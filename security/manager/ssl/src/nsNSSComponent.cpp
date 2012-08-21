@@ -1657,14 +1657,9 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
     else
     {
 
-  // XP_MAC == CFM
   // XP_MACOSX == MachO
 
-  #if defined(XP_MAC) && defined(XP_MACOSX)
-  #error "This code assumes XP_MAC and XP_MACOSX will never be defined at the same time"
-  #endif
-
-  #if defined(XP_MAC) || defined(XP_MACOSX)
+  #if defined(XP_MACOSX)
     // On Mac CFM we place all NSS DBs in the Security
     // Folder in the profile directory.
     nsCOMPtr<nsIFile> cfmSecurityPath;
@@ -1672,11 +1667,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
     cfmSecurityPath->AppendNative(NS_LITERAL_CSTRING("Security"));
   #endif
 
-  #if defined(XP_MAC)
-    // on CFM, cfmSecurityPath and profilePath point to the same oject
-    profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
-                                                     //permissions.
-  #elif defined(XP_MACOSX)
+  #if defined(XP_MACOSX)
     // On MachO, we need to access both directories,
     // and therefore need separate nsIFile instances.
     // Keep cfmSecurityPath instance, obtain new instance for MachO profilePath.

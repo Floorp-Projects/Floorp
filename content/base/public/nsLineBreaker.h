@@ -147,14 +147,14 @@ public:
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 aLength,
+  nsresult AppendText(nsIAtom* aHyphenationLanguage, const PRUnichar* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
   /**
    * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aLength,
+  nsresult AppendText(nsIAtom* aHyphenationLanguage, const PRUint8* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
   /**
    * Reset all state. This means the current run has ended; any outstanding
@@ -198,7 +198,7 @@ private:
   // appropriate sink(s). Then we clear the current word state.
   nsresult FlushCurrentWord();
 
-  void UpdateCurrentWordLangGroup(nsIAtom *aLangGroup);
+  void UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage);
 
   void FindHyphenationPoints(nsHyphenator *aHyphenator,
                              const PRUnichar *aTextStart,
@@ -208,7 +208,7 @@ private:
   nsAutoTArray<PRUnichar,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
-  nsIAtom*                    mCurrentWordLangGroup;
+  nsIAtom*                    mCurrentWordLanguage;
   bool                        mCurrentWordContainsMixedLang;
   bool                        mCurrentWordContainsComplexChar;
 

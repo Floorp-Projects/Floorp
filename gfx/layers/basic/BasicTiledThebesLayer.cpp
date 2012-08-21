@@ -6,6 +6,7 @@
 #include "BasicTiledThebesLayer.h"
 #include "gfxImageSurface.h"
 #include "sampler.h"
+#include "gfxPlatform.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"

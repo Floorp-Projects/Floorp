@@ -15,6 +15,7 @@
  */
 
 #include <string.h>
+#include "base/basictypes.h"
 #include "libcameraservice/CameraHardwareInterface.h"
 #include "camera/CameraParameters.h"
 #include "nsCOMPtr.h"
@@ -567,14 +568,14 @@ nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
 }
 
 void
-nsGonkCameraControl::ReceiveFrame(PRUint8* aData, PRUint32 aLength)
+nsGonkCameraControl::ReceiveFrame(layers::GraphicBufferLocked *aBuffer)
 {
   nsCOMPtr<CameraPreview> preview = mPreview;
 
   if (preview) {
     GonkCameraPreview* p = static_cast<GonkCameraPreview* >(preview.get());
     MOZ_ASSERT(p);
-    p->ReceiveFrame(aData, aLength);
+    p->ReceiveFrame(aBuffer);
   }
 }
 
@@ -594,9 +595,9 @@ AutoFocusComplete(nsGonkCameraControl* gc, bool success)
 }
 
 void
-ReceiveFrame(nsGonkCameraControl* gc, PRUint8* aData, PRUint32 aLength)
+ReceiveFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked *aBuffer)
 {
-  gc->ReceiveFrame(aData, aLength);
+  gc->ReceiveFrame(aBuffer);
 }
 
 } // namespace mozilla

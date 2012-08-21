@@ -155,7 +155,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  bool allowPlugins; 
+  bool allowPlugins = false; 
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
@@ -166,8 +166,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-    rv = docShell->GetAllowPlugins(&allowPlugins);
-    NS_ENSURE_SUCCESS(rv, rv);
+    allowPlugins = docShell->PluginsAllowedInCurrentDoc();
 
     rv = aParams->SetBooleanValue("plugins", allowPlugins);
     NS_ENSURE_SUCCESS(rv, rv);

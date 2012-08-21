@@ -10,10 +10,25 @@
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGEffects.h"
+#include "ImageContainer.h"
 
 using namespace mozilla::layers;
 
 namespace mozilla {
+
+VideoFrameContainer::VideoFrameContainer(nsHTMLMediaElement* aElement,
+                                         already_AddRefed<ImageContainer> aContainer)
+  : mElement(aElement),
+    mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
+    mIntrinsicSizeChanged(false), mImageSizeChanged(false),
+    mNeedInvalidation(true)
+{
+  NS_ASSERTION(aElement, "aElement must not be null");
+  NS_ASSERTION(mImageContainer, "aContainer must not be null");
+}
+
+VideoFrameContainer::~VideoFrameContainer()
+{}
 
 void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
                                           Image* aImage,
@@ -39,6 +54,11 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
 
   mPaintTarget = aTargetTime;
 }
+
+ImageContainer* VideoFrameContainer::GetImageContainer() {
+  return mImageContainer;
+}
+
 
 double VideoFrameContainer::GetFrameDelay()
 {

@@ -797,6 +797,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     bool noScriptRval = false;
     const char *fileName = "@evaluate";
     JSAutoByteString fileNameBytes;
+    jschar *sourceMapURL = NULL;
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
 
@@ -846,6 +847,18 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             fileName = fileNameBytes.encode(cx, s);
             if (!fileName)
                 return false;
+        }
+
+        if (!JS_GetProperty(cx, options, "sourceMapURL", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSString *s = JS_ValueToString(cx, v);
+            if (!s)
+                return false;
+            const jschar* smurl = s->getCharsZ(cx);
+            if (!smurl)
+                return false;
+            sourceMapURL = js_strdup(cx, smurl);
         }
 
         if (!JS_GetProperty(cx, options, "lineNumber", &v))
@@ -902,8 +915,14 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         JS_SetOptions(cx, options);
 
         JSScript *script = JS_CompileUCScript(cx, global, codeChars, codeLength, fileName, lineNumber);
+        if (!script)
+            return false;
+        if (sourceMapURL && !script->scriptSource()->hasSourceMap()) {
+            if (!script->scriptSource()->setSourceMap(cx, sourceMapURL, script->filename))
+                return false;
+        }
         JS_SetOptions(cx, saved);
-        if (!script || !JS_ExecuteScript(cx, global, script, vp))
+        if (!JS_ExecuteScript(cx, global, script, vp))
             return false;
     }
 
@@ -3400,6 +3419,7 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj.isObject() || !proto.isObjectOrNull()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
                              "wrapWithProto");
+        return false;
     }
 
     JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), proto.toObjectOrNull(),

@@ -38,6 +38,10 @@
 // systems, and when the screen resolution changes.
 #define MOZ_WM_ENSUREVISIBLE              (WM_APP + 14159)
 
+#ifndef SM_CXPADDEDBORDER
+#define SM_CXPADDEDBORDER                 92
+#endif
+
 #ifndef WM_THEMECHANGED
 #define WM_THEMECHANGED                   0x031A
 #endif

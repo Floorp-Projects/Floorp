@@ -222,6 +222,7 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsIAppsService.h"
 #include "prrng.h"
+#include "nsSandboxFlags.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -1602,24 +1603,16 @@ public:
   NS_DECL_ISUPPORTS
 
   WindowStateHolder(nsGlobalWindow *aWindow,
-                    nsIXPConnectJSObjectHolder *aHolder,
-                    nsIXPConnectJSObjectHolder *aOuterProto,
-                    nsIXPConnectJSObjectHolder *aOuterRealProto);
+                    nsIXPConnectJSObjectHolder *aHolder);
 
   nsGlobalWindow* GetInnerWindow() { return mInnerWindow; }
   nsIXPConnectJSObjectHolder *GetInnerWindowHolder()
   { return mInnerWindowHolder; }
 
-  nsIXPConnectJSObjectHolder* GetOuterProto() { return mOuterProto; }
-  nsIXPConnectJSObjectHolder* GetOuterRealProto() { return mOuterRealProto; }
-
   void DidRestoreWindow()
   {
     mInnerWindow = nullptr;
-
     mInnerWindowHolder = nullptr;
-    mOuterProto = nullptr;
-    mOuterRealProto = nullptr;
   }
 
 protected:
@@ -1629,19 +1622,13 @@ protected:
   // We hold onto this to make sure the inner window doesn't go away. The outer
   // window ends up recalculating it anyway.
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterProto;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterRealProto;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WindowStateHolder, WINDOWSTATEHOLDER_IID)
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
-                                     nsIXPConnectJSObjectHolder *aHolder,
-                                     nsIXPConnectJSObjectHolder *aOuterProto,
-                                     nsIXPConnectJSObjectHolder *aOuterRealProto)
-  : mInnerWindow(aWindow),
-    mOuterProto(aOuterProto),
-    mOuterRealProto(aOuterRealProto)
+                                     nsIXPConnectJSObjectHolder *aHolder)
+  : mInnerWindow(aWindow)
 {
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
@@ -2047,20 +2034,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // XXX Not sure if this is needed.
-    if (aState) {
-      JSObject *proto;
-      if (nsIXPConnectJSObjectHolder *holder = wsh->GetOuterRealProto()) {
-        holder->GetJSObject(&proto);
-      } else {
-        proto = nullptr;
-      }
-
-      if (!JS_SetPrototype(cx, mJSObject, xpc_UnmarkGrayObject(proto))) {
-        NS_ERROR("can't set prototype");
-        return NS_ERROR_FAILURE;
-      }
-    } else {
+    if (!aState) {
       if (!JS_DefineProperty(cx, newInnerWindow->mJSObject, "window",
                              OBJECT_TO_JSVAL(mJSObject),
                              JS_PropertyStub, JS_StrictPropertyStub,
@@ -8306,6 +8280,16 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
       mDocument->GetDocumentURI(documentURI);
     }
 
+    // If the document has the sandboxed origin flag set
+    // don't allow access to localStorage.
+    if (!mDoc) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
                                                           true,
@@ -8371,6 +8355,12 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       mDocument->GetDocumentURI(documentURI);
     }
 
+    // If the document has the sandboxed origin flag set
+    // don't allow access to localStorage.
+    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
 
@@ -8399,6 +8389,12 @@ nsGlobalWindow::GetIndexedDB(nsIIDBFactory** _retval)
 {
   if (!mIndexedDB) {
     nsresult rv;
+
+    // If the document has the sandboxed origin flag set
+    // don't allow access to indexedDB.
+    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
 
     if (!IsChromeWindow()) {
       nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
@@ -10361,37 +10357,9 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   // to the page.
   inner->Freeze();
 
-  // Remember the outer window's prototype.
-  JSContext *cx = mContext->GetNativeContext();
-  JSAutoRequest req(cx);
-
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
-  nsCOMPtr<nsIClassInfo> ci =
-    do_QueryInterface((nsIScriptGlobalObject *)this);
-  nsCOMPtr<nsIXPConnectJSObjectHolder> proto;
-  nsresult rv = xpc->GetWrappedNativePrototype(cx, mJSObject, ci,
-                                               getter_AddRefs(proto));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject *realProto = JS_GetPrototype(mJSObject);
-  nsCOMPtr<nsIXPConnectJSObjectHolder> realProtoHolder;
-  if (realProto) {
-    rv = xpc->HoldObject(cx, realProto, getter_AddRefs(realProtoHolder));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
-                                                      mInnerWindowHolder,
-                                                      proto,
-                                                      realProtoHolder);
+                                                      mInnerWindowHolder);
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
-
-  JSObject *wnProto;
-  proto->GetJSObject(&wnProto);
-  if (!JS_SetPrototype(cx, mJSObject, wnProto)) {
-    return NS_ERROR_FAILURE;
-  }
 
 #ifdef DEBUG_PAGE_CACHE
   printf("saving window state, state = %p\n", (void*)state);

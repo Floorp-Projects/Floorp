@@ -28,6 +28,8 @@
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "ImageContainer.h"
+#include "ImageLayers.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -192,7 +194,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   container->SetScaleHint(scaleHint);
 
   nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
-    (GetLayerBuilderForManager(aManager)->GetLeafLayerFor(aBuilder, aManager, aItem));
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
   if (!layer) {
     layer = aManager->CreateImageLayer();
     if (!layer)

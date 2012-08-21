@@ -42,6 +42,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsGenericElement.h"
 #include "nsCrossSiteListenerProxy.h"
+#include "nsSandboxFlags.h"
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/CORSMode.h"
@@ -277,6 +278,11 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
   nsIDocShell *docshell = window->GetDocShell();
 
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
+
+  // If this document is sandboxed without 'allow-scripts', abort.
+  if (mDocument->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+    return NS_OK;
+  }
 
   // check for a Content Security Policy to pass down to the channel
   // that will be created to load the script
@@ -591,6 +597,11 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   // inline script
+  // Is this document sandboxed without 'allow-scripts'?
+  if (mDocument->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+    return false;
+  }
+
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, false);
