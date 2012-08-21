@@ -242,7 +242,7 @@ JSObject::finalize(js::FreeOp *fop)
 {
     js::Probes::finalizeObject(this);
 
-    if (!fop->onBackgroundThread()) {
+    if (!IsBackgroundFinalized(getAllocKind())) {
         /*
          * Finalize obj first, in case it needs map and slots. Objects with
          * finalize hooks are not finalized in the background, as the class is
@@ -1420,10 +1420,10 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
      * FINALIZE_OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
-     * IsBackgroundAllocKind is called to prevent recursively incrementing
+     * IsBackgroundFinalized is called to prevent recursively incrementing
      * the finalize kind; kind may already be a background finalize kind.
      */
-    return (!gc::IsBackgroundAllocKind(kind) && !clasp->finalize);
+    return (!gc::IsBackgroundFinalized(kind) && !clasp->finalize);
 }
 
 /*
