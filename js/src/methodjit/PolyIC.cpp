@@ -441,7 +441,7 @@ class SetPropCompiler : public PICStubCompiler
 
         /* lookupProperty can trigger recompilations. */
         RecompilationMonitor monitor(cx);
-        if (!obj->lookupProperty(cx, name, &holder, &shape))
+        if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
             return error();
         if (monitor.recompiled())
             return Lookup_Uncacheable;
@@ -656,7 +656,7 @@ struct GetPropHelper {
     }
 
     LookupStatus lookup() {
-        JSObject *aobj = obj;
+        RootedObject aobj(cx, obj);
         if (obj->isDenseArray())
             aobj = obj->getProto();
         else if (IsCacheableListBase(obj))
@@ -666,7 +666,7 @@ struct GetPropHelper {
             return ic.disable(f, "non-native");
 
         RecompilationMonitor monitor(cx);
-        if (!aobj->lookupProperty(cx, name, &holder, &prop))
+        if (!JSObject::lookupProperty(cx, aobj, name, &holder, &prop))
             return ic.error(cx);
         if (monitor.recompiled())
             return Lookup_Uncacheable;
@@ -1741,8 +1741,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
     bool retrieve(MutableHandleValue vp, PICInfo::Kind kind)
     {
-        JSObject *obj = getprop.obj;
-        Rooted<JSObject*> holder(cx, getprop.holder);
+        RootedObject obj(cx, getprop.obj);
+        RootedObject holder(cx, getprop.holder);
         RootedShape prop(cx, getprop.prop);
 
         if (!prop) {
@@ -1761,7 +1761,7 @@ class ScopeNameCompiler : public PICStubCompiler
         // If the property was found, but we decided not to cache it, then
         // take a slow path and do a full property fetch.
         if (!getprop.shape) {
-            if (!obj->getProperty(cx, name, vp))
+            if (!JSObject::getProperty(cx, obj, obj, name, vp))
                 return false;
             return true;
         }
@@ -1973,10 +1973,11 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             LookupStatus status = cc.generateStringPropertyStub();
             if (status == Lookup_Error)
                 THROW();
-            JSObject *obj = ToObjectFromStack(f.cx, objval);
+            RootedObject obj(f.cx, ToObjectFromStack(f.cx, objval));
             if (!obj)
                 THROW();
-            if (!obj->getProperty(f.cx, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1])))
+            MutableHandleValue vp = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+            if (!JSObject::getProperty(f.cx, obj, obj, name, vp))
                 THROW();
         }
         return;
@@ -1999,7 +2000,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         if (!GetPropertyOperation(f.cx, f.pc(), &objval, &v))
             THROW();
     } else {
-        if (!obj->getProperty(f.cx, name, &v))
+        if (!JSObject::getProperty(f.cx, obj, obj, name, &v))
             THROW();
     }
 
@@ -2520,7 +2521,7 @@ GetElementIC::attachTypedArray(VMFrame &f, HandleObject obj, HandleValue v, Hand
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
     Rooted<jsid> idRoot(cx, id);
-    if (!obj->getGeneric(cx, idRoot, vp))
+    if (!JSObject::getGeneric(cx, obj, obj, idRoot, vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2615,7 +2616,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getGeneric(cx, id, res))
+    if (!JSObject::getGeneric(cx, obj, obj, id, res))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
