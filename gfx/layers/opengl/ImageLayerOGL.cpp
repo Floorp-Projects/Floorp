@@ -253,7 +253,7 @@ ImageLayerOGL::RenderLayer(int,
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
-    if (!yuvImage->IsValid()) {
+    if (!yuvImage->mBufferSize) {
       return;
     }
 
@@ -293,8 +293,8 @@ ImageLayerOGL::RenderLayer(int,
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
-                                        yuvImage->GetSize().width,
-                                        yuvImage->GetSize().height));
+                                        yuvImage->mSize.width,
+                                        yuvImage->mSize.height));
     program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
@@ -302,9 +302,9 @@ ImageLayerOGL::RenderLayer(int,
     program->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuadWithTextureRect(program,
-                                                yuvImage->GetData()->GetPictureRect(),
-                                                nsIntSize(yuvImage->GetData()->mYSize.width,
-                                                          yuvImage->GetData()->mYSize.height));
+                                                yuvImage->mData.GetPictureRect(),
+                                                nsIntSize(yuvImage->mData.mYSize.width,
+                                                          yuvImage->mData.mYSize.height));
 
     // We shouldn't need to do this, but do it anyway just in case
     // someone else forgets.
@@ -532,32 +532,32 @@ ImageLayerOGL::ImageLayerOGL(LayerManagerOGL *aManager)
 void
 ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 {
-  if (!aImage->IsValid())
+  if (!aImage->mBufferSize)
     return;
 
   nsAutoPtr<PlanarYCbCrOGLBackendData> backendData(
     new PlanarYCbCrOGLBackendData);
 
-  const PlanarYCbCrImage::Data *data = aImage->GetData();
+  PlanarYCbCrImage::Data &data = aImage->mData;
 
   gl()->MakeCurrent();
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data->mYSize, gl(), &backendData->mTextures[0]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl(), &backendData->mTextures[0]);
   SetClamping(gl(), backendData->mTextures[0].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data->mCbCrSize, gl(), &backendData->mTextures[1]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[1]);
   SetClamping(gl(), backendData->mTextures[1].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data->mCbCrSize, gl(), &backendData->mTextures[2]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[2]);
   SetClamping(gl(), backendData->mTextures[2].GetTextureID());
 
-  UploadYUVToTexture(gl(), *data,
+  UploadYUVToTexture(gl(), aImage->mData,
                      &backendData->mTextures[0],
                      &backendData->mTextures[1],
                      &backendData->mTextures[2]);
 
-  backendData->mYSize = data->mYSize;
-  backendData->mCbCrSize = data->mCbCrSize;
+  backendData->mYSize = aImage->mData.mYSize;
+  backendData->mCbCrSize = aImage->mData.mCbCrSize;
   backendData->mTextureRecycleBin = mTextureRecycleBin;
 
   aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
