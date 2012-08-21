@@ -77,7 +77,6 @@ static Properties sDeviceProperties[] = {
   {"Icon", DBUS_TYPE_STRING},
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
-  {"Services", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
   {"Connected", DBUS_TYPE_BOOLEAN},
   {"Trusted", DBUS_TYPE_BOOLEAN},
@@ -88,7 +87,9 @@ static Properties sDeviceProperties[] = {
   {"LegacyPairing", DBUS_TYPE_BOOLEAN},
   {"RSSI", DBUS_TYPE_INT16},
   {"TX", DBUS_TYPE_UINT32},
-  {"Broadcaster", DBUS_TYPE_BOOLEAN}
+  {"Type", DBUS_TYPE_STRING},
+  {"Broadcaster", DBUS_TYPE_BOOLEAN},
+  {"Services", DBUS_TYPE_ARRAY}
 };
 
 static Properties sAdapterProperties[] = {
@@ -103,6 +104,7 @@ static Properties sAdapterProperties[] = {
   {"Discovering", DBUS_TYPE_BOOLEAN},
   {"Devices", DBUS_TYPE_ARRAY},
   {"UUIDs", DBUS_TYPE_ARRAY},
+  {"Type", DBUS_TYPE_STRING}
 };
 
 static Properties sManagerProperties[] = {
