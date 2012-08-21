@@ -817,14 +817,10 @@ public class GeckoAppShell
         if (index == -1)
             return null;
 
-        return getWebAppIntent(index, aURI);
-    }
-
-    public static Intent getWebAppIntent(int aIndex, String aURI) {
         Intent intent = new Intent();
-        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
+        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + index);
         intent.setData(Uri.parse(aURI));
-        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + aIndex);
+        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + index);
         return intent;
     }
 
