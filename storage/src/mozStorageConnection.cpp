@@ -774,7 +774,7 @@ Connection::stepStatement(sqlite3_stmt *aStatement)
   if (duration.ToMilliseconds() >= Telemetry::kSlowStatementThreshold) {
     nsDependentCString statementString(::sqlite3_sql(aStatement));
     Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
-                                      duration.ToMilliseconds(), false);
+                                      duration.ToMilliseconds());
   }
 
   (void)::sqlite3_extended_result_codes(mDBConn, 0);
@@ -850,7 +850,7 @@ Connection::executeSql(const char *aSqlString)
   if (duration.ToMilliseconds() >= Telemetry::kSlowStatementThreshold) {
     nsDependentCString statementString(aSqlString);
     Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
-                                      duration.ToMilliseconds(), true);
+                                      duration.ToMilliseconds());
   }
 
   return srv;

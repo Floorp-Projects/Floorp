@@ -513,8 +513,7 @@ TelemetryPing.prototype = {
         Telemetry.histogramFrom("STARTUP_" + name, name);
       }
     }
-    // Bug 777220: Temporarily turn off slowSQL reporting
-    this._slowSQLStartup = {mainThread:{}, otherThreads:{}};
+    this._slowSQLStartup = Telemetry.slowSQL;
   },
 
   getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
@@ -524,8 +523,7 @@ TelemetryPing.prototype = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: getSimpleMeasurements(),
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
-      // Bug 777220: Temporarily turn off slowSQL reporting
-      slowSQL: {mainThread:{}, otherThreads:{}},
+      slowSQL: Telemetry.slowSQL,
       chromeHangs: Telemetry.chromeHangs,
       addonHistograms: this.getAddonHistograms()
     };

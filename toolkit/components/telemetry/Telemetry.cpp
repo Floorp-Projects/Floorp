@@ -99,19 +99,20 @@ public:
   static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
   static void ShutdownTelemetry();
   static void RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
-                                  uint32_t delay, bool isDynamicString);
+                                  uint32_t delay);
 #if defined(MOZ_ENABLE_PROFILER_SPS)
   static void RecordChromeHang(uint32_t duration,
                                const Telemetry::HangStack &callStack,
                                SharedLibraryInfo &moduleMap);
 #endif
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
-  struct StmtStats {
+  struct Stat {
     uint32_t hitCount;
     uint32_t totalTime;
-    bool isDynamicSql;
-    bool isTrackedDb;
-    bool isAggregate;
+  };
+  struct StmtStats {
+    struct Stat mainThread;
+    struct Stat otherThreads;
   };
   typedef nsBaseHashtableET<nsCStringHashKey, StmtStats> SlowSQLEntryType;
   struct HangReport {
@@ -123,17 +124,22 @@ public:
   };
 
 private:
-  static void StoreSlowSQL(const nsACString &offender, uint32_t delay,
-                           bool isDynamicSql, bool isTrackedDB, bool isAggregate);
+  static nsCString SanitizeSQL(const nsACString& sql);
 
-  static bool ReflectPublicSql(SlowSQLEntryType *entry, JSContext *cx,
-                               JSObject *obj);
-  static bool ReflectPrivateSql(SlowSQLEntryType *entry, JSContext *cx,
-                                JSObject *obj);
-  static bool ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj);
+  enum SanitizedState { Sanitized, Unsanitized };
+
+  static void StoreSlowSQL(const nsACString &offender, uint32_t delay,
+                           SanitizedState state);
+
+  static bool ReflectMainThreadSQL(SlowSQLEntryType *entry, JSContext *cx,
+                                   JSObject *obj);
+  static bool ReflectOtherThreadsSQL(SlowSQLEntryType *entry, JSContext *cx,
+                                     JSObject *obj);
+  static bool ReflectSQL(const SlowSQLEntryType *entry, const Stat *stat,
+                         JSContext *cx, JSObject *obj);
 
   bool AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread,
-                  bool includePrivateStrings);
+                  bool privateSQL);
   bool GetSQLStats(JSContext *cx, jsval *ret, bool includePrivateSql);
 
   // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
@@ -166,8 +172,8 @@ private:
   HistogramMapType mHistogramMap;
   bool mCanRecord;
   static TelemetryImpl *sTelemetry;
-  AutoHashtable<SlowSQLEntryType> mSlowSQLOnMainThread;
-  AutoHashtable<SlowSQLEntryType> mSlowSQLOnOtherThread;
+  AutoHashtable<SlowSQLEntryType> mPrivateSQL;
+  AutoHashtable<SlowSQLEntryType> mSanitizedSQL;
   // This gets marked immutable in debug builds, so we can't use
   // AutoHashtable here.
   nsTHashtable<nsCStringHashKey> mTrackedDBs;
@@ -514,11 +520,17 @@ TelemetryImpl::NewHistogram(const nsACString &name, uint32_t min, uint32_t max, 
 }
 
 bool
-TelemetryImpl::ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj)
+TelemetryImpl::ReflectSQL(const SlowSQLEntryType *entry,
+                          const Stat *stat,
+                          JSContext *cx,
+                          JSObject *obj)
 {
+  if (stat->hitCount == 0)
+    return true;
+
   const nsACString &sql = entry->GetKey();
-  jsval hitCount = UINT_TO_JSVAL(entry->mData.hitCount);
-  jsval totalTime = UINT_TO_JSVAL(entry->mData.totalTime);
+  jsval hitCount = UINT_TO_JSVAL(stat->hitCount);
+  jsval totalTime = UINT_TO_JSVAL(stat->totalTime);
 
   JSObject *arrayObj = JS_NewArrayObject(cx, 0, nullptr);
   if (!arrayObj) {
@@ -534,27 +546,22 @@ TelemetryImpl::ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj)
 }
 
 bool
-TelemetryImpl::ReflectPublicSql(SlowSQLEntryType *entry, JSContext *cx,
-                                JSObject *obj)
+TelemetryImpl::ReflectMainThreadSQL(SlowSQLEntryType *entry, JSContext *cx,
+                                    JSObject *obj)
 {
-  bool isPrivateSql = entry->mData.isDynamicSql || (!entry->mData.isTrackedDb);
-  if (!isPrivateSql || entry->mData.isAggregate)
-    return ReflectSql(entry, cx, obj);
-  return true;
+  return ReflectSQL(entry, &entry->mData.mainThread, cx, obj);
 }
 
 bool
-TelemetryImpl::ReflectPrivateSql(SlowSQLEntryType *entry, JSContext *cx,
-                                 JSObject *obj)
+TelemetryImpl::ReflectOtherThreadsSQL(SlowSQLEntryType *entry, JSContext *cx,
+                                      JSObject *obj)
 {
-  if (!entry->mData.isAggregate)
-    return ReflectSql(entry, cx, obj);
-  return true;
+  return ReflectSQL(entry, &entry->mData.otherThreads, cx, obj);
 }
 
 bool
 TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread,
-                          bool includePrivateStrings)
+                          bool privateSQL)
 {
   JSObject *statsObj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!statsObj)
@@ -562,9 +569,9 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread,
   JS::AutoObjectRooter root(cx, statsObj);
 
   AutoHashtable<SlowSQLEntryType> &sqlMap =
-    (mainThread ? mSlowSQLOnMainThread : mSlowSQLOnOtherThread);
+    (privateSQL ? mPrivateSQL : mSanitizedSQL);
   AutoHashtable<SlowSQLEntryType>::ReflectEntryFunc reflectFunction =
-    (includePrivateStrings ? ReflectPrivateSql : ReflectPublicSql);
+    (mainThread ? ReflectMainThreadSQL : ReflectOtherThreadsSQL);
   if(!sqlMap.ReflectIntoJS(reflectFunction, cx, statsObj)) {
     return false;
   }
@@ -1238,13 +1245,13 @@ TelemetryImpl::ShutdownTelemetry()
 
 void
 TelemetryImpl::StoreSlowSQL(const nsACString &sql, uint32_t delay,
-                            bool isDynamicSql, bool isTrackedDB, bool isAggregate)
+                            SanitizedState state)
 {
   AutoHashtable<SlowSQLEntryType> *slowSQLMap = NULL;
-  if (NS_IsMainThread())
-    slowSQLMap = &(sTelemetry->mSlowSQLOnMainThread);
+  if (state == Sanitized)
+    slowSQLMap = &(sTelemetry->mSanitizedSQL);
   else
-    slowSQLMap = &(sTelemetry->mSlowSQLOnOtherThread);
+    slowSQLMap = &(sTelemetry->mPrivateSQL);
 
   MutexAutoLock hashMutex(sTelemetry->mHashMutex);
 
@@ -1253,41 +1260,165 @@ TelemetryImpl::StoreSlowSQL(const nsACString &sql, uint32_t delay,
     entry = slowSQLMap->PutEntry(sql);
     if (NS_UNLIKELY(!entry))
       return;
-    entry->mData.isDynamicSql = isDynamicSql;
-    entry->mData.isTrackedDb = isTrackedDB;
-    entry->mData.isAggregate = isAggregate;
-
-    entry->mData.hitCount = 0;
-    entry->mData.totalTime = 0;
+    entry->mData.mainThread.hitCount = 0;
+    entry->mData.mainThread.totalTime = 0;
+    entry->mData.otherThreads.hitCount = 0;
+    entry->mData.otherThreads.totalTime = 0;
   }
 
-  entry->mData.hitCount++;
-  entry->mData.totalTime += delay;
+  if (NS_IsMainThread()) {
+    entry->mData.mainThread.hitCount++;
+    entry->mData.mainThread.totalTime += delay;
+  } else {
+    entry->mData.otherThreads.hitCount++;
+    entry->mData.otherThreads.totalTime += delay;
+  }
+}
+
+/**
+ * This method replaces string literals in SQL strings with the word :private
+ *
+ * States used in this state machine:
+ *
+ * NORMAL:
+ *  - This is the active state when not iterating over a string literal or
+ *  comment
+ *
+ * SINGLE_QUOTE:
+ *  - Defined here: http://www.sqlite.org/lang_expr.html
+ *  - This state represents iterating over a string literal opened with
+ *  a single quote.
+ *  - A single quote within the string can be encoded by putting 2 single quotes
+ *  in a row, e.g. 'This literal contains an escaped quote '''
+ *  - Any double quotes found within a single-quoted literal are ignored
+ *  - This state covers BLOB literals, e.g. X'ABC123'
+ *  - The string literal and the enclosing quotes will be replaced with
+ *  the text :private
+ *
+ * DOUBLE_QUOTE:
+ *  - Same rules as the SINGLE_QUOTE state.
+ *  - According to http://www.sqlite.org/lang_keywords.html,
+ *  SQLite interprets text in double quotes as an identifier unless it's used in
+ *  a context where it cannot be resolved to an identifier and a string literal
+ *  is allowed. This method removes text in double-quotes for safety.
+ *
+ *  DASH_COMMENT:
+ *  - http://www.sqlite.org/lang_comment.html
+ *  - A dash comment starts with two dashes in a row,
+ *  e.g. DROP TABLE foo -- a comment
+ *  - Any text following two dashes in a row is interpreted as a comment until
+ *  end of input or a newline character
+ *  - Any quotes found within the comment are ignored and no replacements made
+ *
+ *  C_STYLE_COMMENT:
+ *  - http://www.sqlite.org/lang_comment.html
+ *  - A C-style comment starts with a forward slash and an asterisk, and ends
+ *  with an asterisk and a forward slash
+ *  - Any text following comment start is interpreted as a comment up to end of
+ *  input or comment end
+ *  - Any quotes found within the comment are ignored and no replacements made
+ */
+nsCString
+TelemetryImpl::SanitizeSQL(const nsACString &sql) {
+  nsCString output;
+  int length = sql.Length();
+
+  typedef enum {
+    NORMAL,
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE,
+    DASH_COMMENT,
+    C_STYLE_COMMENT,
+  } State;
+
+  State state = NORMAL;
+  int fragmentStart = 0;
+  for (int i = 0; i < length; i++) {
+    char character = sql[i];
+    char nextCharacter = (i + 1 < length) ? sql[i + 1] : '\0';
+
+    switch (character) {
+      case '\'':
+      case '"':
+        if (state == NORMAL) {
+          state = (character == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
+          output += nsDependentCSubstring(sql, fragmentStart, i - fragmentStart);
+          output += ":private";
+          fragmentStart = -1;
+        } else if ((state == SINGLE_QUOTE && character == '\'') ||
+                   (state == DOUBLE_QUOTE && character == '"')) {
+          if (nextCharacter == character) {
+            // Two consecutive quotes within a string literal are a single escaped quote
+            i++;
+          } else {
+            state = NORMAL;
+            fragmentStart = i + 1;
+          }
+        }
+        break;
+      case '-':
+        if (state == NORMAL) {
+          if (nextCharacter == '-') {
+            state = DASH_COMMENT;
+            i++;
+          }
+        }
+        break;
+      case '\n':
+        if (state == DASH_COMMENT) {
+          state = NORMAL;
+        }
+        break;
+      case '/':
+        if (state == NORMAL) {
+          if (nextCharacter == '*') {
+            state = C_STYLE_COMMENT;
+            i++;
+          }
+        }
+        break;
+      case '*':
+        if (state == C_STYLE_COMMENT) {
+          if (nextCharacter == '/') {
+            state = NORMAL;
+          }
+        }
+        break;
+      default:
+        continue;
+    }
+  }
+
+  if ((fragmentStart >= 0) && fragmentStart < length)
+    output += nsDependentCSubstring(sql, fragmentStart, length - fragmentStart);
+
+  return output;
 }
 
 void
-TelemetryImpl::RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
-                                   uint32_t delay, bool isDynamicString)
+TelemetryImpl::RecordSlowStatement(const nsACString &sql,
+                                   const nsACString &dbName,
+                                   uint32_t delay)
 {
   MOZ_ASSERT(sTelemetry);
   if (!sTelemetry->mCanRecord)
     return;
 
-  bool isTrackedDb = sTelemetry->mTrackedDBs.Contains(dbName);
-  bool isPrivate = (!isTrackedDb) || isDynamicString;
-  if (isPrivate) {
-    // Report aggregate DB-level statistics to Telemetry for potentially
-    // sensitive SQL strings
+  nsCAutoString fullSQL(sql);
+  fullSQL.AppendPrintf(" /* %s */", dbName.BeginReading());
+
+  bool isFirefoxDB = sTelemetry->mTrackedDBs.Contains(dbName);
+  if (isFirefoxDB) {
+    nsCAutoString sanitizedSQL(SanitizeSQL(fullSQL));
+    StoreSlowSQL(sanitizedSQL, delay, Sanitized);
+  } else {
+    // Report aggregate DB-level statistics for addon DBs
     nsCAutoString aggregate;
     aggregate.AppendPrintf("Untracked SQL for %s", dbName.BeginReading());
-    StoreSlowSQL(aggregate, delay, isDynamicString, isTrackedDb, true);
+    StoreSlowSQL(aggregate, delay, Sanitized);
   }
 
-  // Record original SQL string
-  nsCAutoString fullSql(sql);
-  if (!isTrackedDb)
-    fullSql.AppendPrintf(" -- Untracked DB %s", dbName.BeginReading());
-  StoreSlowSQL(fullSql, delay, isDynamicString, isTrackedDb, false);
+  StoreSlowSQL(fullSQL, delay, Unsanitized);
 }
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
@@ -1388,10 +1519,9 @@ GetHistogramById(ID id)
 void
 RecordSlowSQLStatement(const nsACString &statement,
                        const nsACString &dbName,
-                       uint32_t delay,
-                       bool isDynamicString)
+                       uint32_t delay)
 {
-  TelemetryImpl::RecordSlowStatement(statement, dbName, delay, isDynamicString);
+  TelemetryImpl::RecordSlowStatement(statement, dbName, delay);
 }
 
 void Init()
