@@ -581,6 +581,11 @@ void nsHTMLMediaElement::AbortExistingLoads()
   if (mSrcStream) {
     EndSrcMediaStreamPlayback();
   }
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+  }
+
   mLoadingSrc = nullptr;
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING ||
