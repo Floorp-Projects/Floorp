@@ -23,13 +23,13 @@ static const float MAX_EVENT_ACCELERATION = 0.5f;
 /**
  * Amount of friction applied during flings.
  */
-static const float FLING_FRICTION = 0.013f;
+static const float FLING_FRICTION = 0.007f;
 
 /**
  * Threshold for velocity beneath which we turn off any acceleration we had
  * during repeated flings.
  */
-static const float VELOCITY_THRESHOLD = 0.1f;
+static const float VELOCITY_THRESHOLD = 0.14f;
 
 /**
  * Amount of acceleration we multiply in each time the user flings in one
