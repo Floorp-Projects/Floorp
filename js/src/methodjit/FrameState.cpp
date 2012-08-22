@@ -29,8 +29,7 @@ FrameState::~FrameState()
 {
     while (a) {
         ActiveFrame *parent = a->parent;
-        if (a->script->hasAnalysis())
-            a->script->analysis()->clearAllocations();
+        a->script->analysis()->clearAllocations();
         cx->free_(a);
         a = parent;
     }
@@ -543,7 +542,7 @@ RegisterAllocation *
 FrameState::computeAllocation(jsbytecode *target)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    RegisterAllocation *alloc = cx->analysisLifoAlloc().new_<RegisterAllocation>(false);
+    RegisterAllocation *alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
     if (!alloc) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -593,8 +592,8 @@ FrameState::computeAllocation(jsbytecode *target)
                     if (newv->value.kind() == SSAValue::PHI &&
                         newv->value.phiOffset() == uint32_t(target - a->script->code) &&
                         newv->slot == entrySlot(fe)) {
-                        types::StackTypeSet *types = a->analysis->getValueTypes(newv->value);
-                        if (types->getKnownTypeTag() != JSVAL_TYPE_DOUBLE)
+                        types::TypeSet *types = a->analysis->getValueTypes(newv->value);
+                        if (types->getKnownTypeTag(cx) != JSVAL_TYPE_DOUBLE)
                             nonDoubleTarget = true;
                     }
                     newv++;
@@ -826,7 +825,7 @@ FrameState::discardForJoin(RegisterAllocation *&alloc, uint32_t stackDepth)
          * This shows up for loop entries which are not reachable from the
          * loop head, and for exception, switch target and trap safe points.
          */
-        alloc = cx->analysisLifoAlloc().new_<RegisterAllocation>(false);
+        alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
         if (!alloc) {
             js_ReportOutOfMemory(cx);
             return false;

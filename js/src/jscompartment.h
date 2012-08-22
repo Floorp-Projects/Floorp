@@ -248,11 +248,13 @@ struct JSCompartment
 
     int64_t                      lastCodeRelease;
 
-    /* Pools for analysis and type information in this compartment. */
-    static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 128 * 1024;
-    js::LifoAlloc                analysisLifoAlloc;
+    /*
+     * Pool for analysis and intermediate type information in this compartment.
+     * Cleared on every GC, unless the GC happens during analysis (indicated
+     * by activeAnalysis, which is implied by activeInference).
+     */
+    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 128 * 1024;
     js::LifoAlloc                typeLifoAlloc;
-
     bool                         activeAnalysis;
     bool                         activeInference;
 
