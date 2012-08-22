@@ -47,7 +47,7 @@ public:
 
   nsTArray<nsString> mValues;
   nsAutoString mSearchString;
-  PRUint16 mSearchResult;
+  uint16_t mSearchResult;
 };
 
 NS_IMPL_ISUPPORTS1(nsFileResult, nsIAutoCompleteResult)
@@ -59,7 +59,7 @@ nsFileResult::nsFileResult(const nsAString& aSearchString,
   if (aSearchString.IsEmpty())
     mSearchResult = RESULT_IGNORED;
   else {
-    PRInt32 slashPos = mSearchString.RFindChar('/');
+    int32_t slashPos = mSearchString.RFindChar('/');
     mSearchResult = RESULT_FAILURE;
     nsCOMPtr<nsIFile> directory;
     nsDependentSubstring parent(Substring(mSearchString, 0, slashPos + 1));
@@ -102,14 +102,14 @@ NS_IMETHODIMP nsFileResult::GetSearchString(nsAString & aSearchString)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetSearchResult(PRUint16 *aSearchResult)
+NS_IMETHODIMP nsFileResult::GetSearchResult(uint16_t *aSearchResult)
 {
   NS_ENSURE_ARG_POINTER(aSearchResult);
   *aSearchResult = mSearchResult;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetDefaultIndex(PRInt32 *aDefaultIndex)
+NS_IMETHODIMP nsFileResult::GetDefaultIndex(int32_t *aDefaultIndex)
 {
   NS_ENSURE_ARG_POINTER(aDefaultIndex);
   *aDefaultIndex = -1;
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsFileResult::GetErrorDescription(nsAString & aErrorDescription)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
+NS_IMETHODIMP nsFileResult::GetMatchCount(uint32_t *aMatchCount)
 {
   NS_ENSURE_ARG_POINTER(aMatchCount);
   *aMatchCount = mValues.Length();
@@ -136,36 +136,36 @@ NS_IMETHODIMP nsFileResult::GetTypeAheadResult(bool *aTypeAheadResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetValueAt(PRInt32 index, nsAString & aValue)
+NS_IMETHODIMP nsFileResult::GetValueAt(int32_t index, nsAString & aValue)
 {
   aValue = mValues[index];
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetLabelAt(PRInt32 index, nsAString & aValue)
+NS_IMETHODIMP nsFileResult::GetLabelAt(int32_t index, nsAString & aValue)
 {
   return GetValueAt(index, aValue);
 }
 
-NS_IMETHODIMP nsFileResult::GetCommentAt(PRInt32 index, nsAString & aComment)
+NS_IMETHODIMP nsFileResult::GetCommentAt(int32_t index, nsAString & aComment)
 {
   aComment.Truncate();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetStyleAt(PRInt32 index, nsAString & aStyle)
+NS_IMETHODIMP nsFileResult::GetStyleAt(int32_t index, nsAString & aStyle)
 {
   aStyle.Truncate();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetImageAt(PRInt32 index, nsAString & aImage)
+NS_IMETHODIMP nsFileResult::GetImageAt(int32_t index, nsAString & aImage)
 {
   aImage.Truncate();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::RemoveValueAt(PRInt32 rowIndex, bool removeFromDb)
+NS_IMETHODIMP nsFileResult::RemoveValueAt(int32_t rowIndex, bool removeFromDb)
 {
   return NS_OK;
 }
@@ -230,8 +230,8 @@ protected:
   nsCOMPtr<nsIAtom> mFileAtom;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
-  PRInt16 mSortType;
-  PRInt32 mTotalRows;
+  int16_t mSortType;
+  int32_t mTotalRows;
 
   nsTArray<PRUnichar*> mCurrentFilters;
 
@@ -277,8 +277,8 @@ nsFileView::nsFileView() :
 
 nsFileView::~nsFileView()
 {
-  PRUint32 count = mCurrentFilters.Length();
-  for (PRUint32 i = 0; i < count; ++i)
+  uint32_t count = mCurrentFilters.Length();
+  for (uint32_t i = 0; i < count; ++i)
     NS_Free(mCurrentFilters[i]);
 }
 
@@ -346,10 +346,10 @@ nsFileView::SetShowOnlyDirectories(bool aOnlyDirs)
     return NS_OK;
 
   mDirectoryFilter = aOnlyDirs;
-  PRUint32 dirCount;
+  uint32_t dirCount;
   mDirList->Count(&dirCount);
   if (mDirectoryFilter) {
-    PRInt32 rowDiff = mTotalRows - dirCount;
+    int32_t rowDiff = mTotalRows - dirCount;
 
     mFilteredFiles->Clear();
     mTotalRows = dirCount;
@@ -378,7 +378,7 @@ nsFileView::GetShowOnlyDirectories(bool* aOnlyDirs)
 }
 
 NS_IMETHODIMP
-nsFileView::GetSortType(PRInt16* aSortType)
+nsFileView::GetSortType(int16_t* aSortType)
 {
   *aSortType = mSortType;
   return NS_OK;
@@ -392,7 +392,7 @@ nsFileView::GetReverseSort(bool* aReverseSort)
 }
 
 NS_IMETHODIMP
-nsFileView::Sort(PRInt16 aSortType, bool aReverseSort)
+nsFileView::Sort(int16_t aSortType, bool aReverseSort)
 {
   if (aSortType == mSortType) {
     if (aReverseSort == mReverseSort)
@@ -474,8 +474,8 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
 NS_IMETHODIMP
 nsFileView::SetFilter(const nsAString& aFilterString)
 {
-  PRUint32 filterCount = mCurrentFilters.Length();
-  for (PRUint32 i = 0; i < filterCount; ++i)
+  uint32_t filterCount = mCurrentFilters.Length();
+  for (uint32_t i = 0; i < filterCount; ++i)
     NS_Free(mCurrentFilters[i]);
   mCurrentFilters.Clear();
 
@@ -517,7 +517,7 @@ nsFileView::SetFilter(const nsAString& aFilterString)
 
   if (mTree) {
     mTree->BeginUpdateBatch();
-    PRUint32 count;
+    uint32_t count;
     mDirList->Count(&count);
     mTree->RowCountChanged(count, count - mTotalRows);
   }
@@ -543,24 +543,24 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
   if (!mSelection)
     return NS_OK;
 
-  PRInt32 numRanges;
+  int32_t numRanges;
   mSelection->GetRangeCount(&numRanges);
 
-  PRUint32 dirCount;
+  uint32_t dirCount;
   mDirList->Count(&dirCount);
 
   nsCOMPtr<nsIMutableArray> fileArray =
     do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_STATE(fileArray);
 
-  for (PRInt32 range = 0; range < numRanges; ++range) {
-    PRInt32 rangeBegin, rangeEnd;
+  for (int32_t range = 0; range < numRanges; ++range) {
+    int32_t rangeBegin, rangeEnd;
     mSelection->GetRangeAt(range, &rangeBegin, &rangeEnd);
 
-    for (PRInt32 itemIndex = rangeBegin; itemIndex <= rangeEnd; ++itemIndex) {
+    for (int32_t itemIndex = rangeBegin; itemIndex <= rangeEnd; ++itemIndex) {
       nsCOMPtr<nsIFile> curFile;
 
-      if (itemIndex < (PRInt32) dirCount)
+      if (itemIndex < (int32_t) dirCount)
         curFile = do_QueryElementAt(mDirList, itemIndex);
       else {
         if (itemIndex < mTotalRows)
@@ -580,7 +580,7 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
 // nsITreeView implementation
 
 NS_IMETHODIMP
-nsFileView::GetRowCount(PRInt32* aRowCount)
+nsFileView::GetRowCount(int32_t* aRowCount)
 {
   *aRowCount = mTotalRows;
   return NS_OK;
@@ -602,20 +602,20 @@ nsFileView::SetSelection(nsITreeSelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsFileView::GetRowProperties(PRInt32 aIndex,
+nsFileView::GetRowProperties(int32_t aIndex,
                              nsISupportsArray* aProperties)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::GetCellProperties(int32_t aRow, nsITreeColumn* aCol,
                               nsISupportsArray* aProperties)
 {
-  PRUint32 dirCount;
+  uint32_t dirCount;
   mDirList->Count(&dirCount);
 
-  if (aRow < (PRInt32) dirCount)
+  if (aRow < (int32_t) dirCount)
     aProperties->AppendElement(mDirectoryAtom);
   else if (aRow < mTotalRows)
     aProperties->AppendElement(mFileAtom);
@@ -631,28 +631,28 @@ nsFileView::GetColumnProperties(nsITreeColumn* aCol,
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainer(PRInt32 aIndex, bool* aIsContainer)
+nsFileView::IsContainer(int32_t aIndex, bool* aIsContainer)
 {
   *aIsContainer = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainerOpen(PRInt32 aIndex, bool* aIsOpen)
+nsFileView::IsContainerOpen(int32_t aIndex, bool* aIsOpen)
 {
   *aIsOpen = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainerEmpty(PRInt32 aIndex, bool* aIsEmpty)
+nsFileView::IsContainerEmpty(int32_t aIndex, bool* aIsEmpty)
 {
   *aIsEmpty = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsSeparator(PRInt32 aIndex, bool* aIsSeparator)
+nsFileView::IsSeparator(int32_t aIndex, bool* aIsSeparator)
 {
   *aIsSeparator = false;
   return NS_OK;
@@ -666,7 +666,7 @@ nsFileView::IsSorted(bool* aIsSorted)
 }
 
 NS_IMETHODIMP
-nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation,
+nsFileView::CanDrop(int32_t aIndex, int32_t aOrientation,
                     nsIDOMDataTransfer* dataTransfer, bool* aCanDrop)
 {
   *aCanDrop = false;
@@ -674,20 +674,20 @@ nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation,
 }
 
 NS_IMETHODIMP
-nsFileView::Drop(PRInt32 aRow, PRInt32 aOrientation, nsIDOMDataTransfer* dataTransfer)
+nsFileView::Drop(int32_t aRow, int32_t aOrientation, nsIDOMDataTransfer* dataTransfer)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetParentIndex(PRInt32 aRowIndex, PRInt32* aParentIndex)
+nsFileView::GetParentIndex(int32_t aRowIndex, int32_t* aParentIndex)
 {
   *aParentIndex = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, 
+nsFileView::HasNextSibling(int32_t aRowIndex, int32_t aAfterIndex, 
                            bool* aHasSibling)
 {
   *aHasSibling = (aAfterIndex < (mTotalRows - 1));
@@ -695,45 +695,45 @@ nsFileView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex,
 }
 
 NS_IMETHODIMP
-nsFileView::GetLevel(PRInt32 aIndex, PRInt32* aLevel)
+nsFileView::GetLevel(int32_t aIndex, int32_t* aLevel)
 {
   *aLevel = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::GetImageSrc(int32_t aRow, nsITreeColumn* aCol,
                         nsAString& aImageSrc)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol,
-                            PRInt32* aProgressMode)
+nsFileView::GetProgressMode(int32_t aRow, nsITreeColumn* aCol,
+                            int32_t* aProgressMode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::GetCellValue(int32_t aRow, nsITreeColumn* aCol,
                          nsAString& aCellValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::GetCellText(int32_t aRow, nsITreeColumn* aCol,
                         nsAString& aCellText)
 {
-  PRUint32 dirCount, fileCount;
+  uint32_t dirCount, fileCount;
   mDirList->Count(&dirCount);
   mFilteredFiles->Count(&fileCount);
 
   bool isDirectory;
   nsCOMPtr<nsIFile> curFile;
 
-  if (aRow < (PRInt32) dirCount) {
+  if (aRow < (int32_t) dirCount) {
     isDirectory = true;
     curFile = do_QueryElementAt(mDirList, aRow);
   } else if (aRow < mTotalRows) {
@@ -750,7 +750,7 @@ nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
   if (NS_LITERAL_STRING("FilenameColumn").Equals(colID)) {
     curFile->GetLeafName(aCellText);
   } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(colID)) {
-    PRInt64 lastModTime;
+    int64_t lastModTime;
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
     nsAutoString temp;
@@ -762,7 +762,7 @@ nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
     if (isDirectory)
       aCellText.SetCapacity(0);
     else {
-      PRInt64 fileSize;
+      int64_t fileSize;
       curFile->GetFileSize(&fileSize);
       CopyUTF8toUTF16(nsPrintfCString("%lld", fileSize), aCellText);
     }
@@ -779,7 +779,7 @@ nsFileView::SetTree(nsITreeBoxObject* aTree)
 }
 
 NS_IMETHODIMP
-nsFileView::ToggleOpenState(PRInt32 aIndex)
+nsFileView::ToggleOpenState(int32_t aIndex)
 {
   return NS_OK;
 }
@@ -797,13 +797,13 @@ nsFileView::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsFileView::CycleCell(PRInt32 aRow, nsITreeColumn* aCol)
+nsFileView::CycleCell(int32_t aRow, nsITreeColumn* aCol)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::IsEditable(int32_t aRow, nsITreeColumn* aCol,
                        bool* aIsEditable)
 {
   *aIsEditable = false;
@@ -811,7 +811,7 @@ nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
 }
 
 NS_IMETHODIMP
-nsFileView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::IsSelectable(int32_t aRow, nsITreeColumn* aCol,
                          bool* aIsSelectable)
 {
   *aIsSelectable = false;
@@ -819,14 +819,14 @@ nsFileView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol,
 }
 
 NS_IMETHODIMP
-nsFileView::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::SetCellValue(int32_t aRow, nsITreeColumn* aCol,
                          const nsAString& aValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::SetCellText(PRInt32 aRow, nsITreeColumn* aCol,
+nsFileView::SetCellText(int32_t aRow, nsITreeColumn* aCol,
                         const nsAString& aValue)
 {
   return NS_OK;
@@ -839,13 +839,13 @@ nsFileView::PerformAction(const PRUnichar* aAction)
 }
 
 NS_IMETHODIMP
-nsFileView::PerformActionOnRow(const PRUnichar* aAction, PRInt32 aRow)
+nsFileView::PerformActionOnRow(const PRUnichar* aAction, int32_t aRow)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow,
+nsFileView::PerformActionOnCell(const PRUnichar* aAction, int32_t aRow,
                                 nsITreeColumn* aCol)
 {
   return NS_OK;
@@ -856,15 +856,15 @@ nsFileView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow,
 void
 nsFileView::FilterFiles()
 {
-  PRUint32 count = 0;
+  uint32_t count = 0;
   mDirList->Count(&count);
   mTotalRows = count;
   mFileList->Count(&count);
   mFilteredFiles->Clear();
-  PRUint32 filterCount = mCurrentFilters.Length();
+  uint32_t filterCount = mCurrentFilters.Length();
 
   nsCOMPtr<nsIFile> file;
-  for (PRUint32 i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < count; ++i) {
     file = do_QueryElementAt(mFileList, i);
     bool isHidden = false;
     if (!mShowHiddenFiles)
@@ -877,7 +877,7 @@ nsFileView::FilterFiles()
     }
     
     if (!isHidden) {
-      for (PRUint32 j = 0; j < filterCount; ++j) {
+      for (uint32_t j = 0; j < filterCount; ++j) {
         bool matched = false;
         if (!nsCRT::strcmp(mCurrentFilters.ElementAt(j),
                            NS_LITERAL_STRING("..apps").get()))
@@ -901,9 +901,9 @@ nsFileView::FilterFiles()
 void
 nsFileView::ReverseArray(nsISupportsArray* aArray)
 {
-  PRUint32 count;
+  uint32_t count;
   aArray->Count(&count);
-  for (PRUint32 i = 0; i < count/2; ++i) {
+  for (uint32_t i = 0; i < count/2; ++i) {
     nsCOMPtr<nsISupports> element = dont_AddRef(aArray->ElementAt(i));
     nsCOMPtr<nsISupports> element2 = dont_AddRef(aArray->ElementAt(count-i-1));
     aArray->ReplaceElementAt(element2, i);
@@ -930,7 +930,7 @@ SortSizeCallback(const void* aElement1, const void* aElement2, void* aContext)
   nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
   nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
 
-  PRInt64 size1, size2;
+  int64_t size1, size2;
   file1->GetFileSize(&size1);
   file2->GetFileSize(&size2);
 
@@ -946,7 +946,7 @@ SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
   nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
   nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
 
-  PRInt64 time1, time2;
+  int64_t time1, time2;
   file1->GetLastModifiedTime(&time1);
   file2->GetLastModifiedTime(&time2);
 
@@ -978,13 +978,13 @@ nsFileView::SortArray(nsISupportsArray* aArray)
     return;
   }
 
-  PRUint32 count;
+  uint32_t count;
   aArray->Count(&count);
 
   // each item will have an additional refcount while
   // the array is alive.
   nsIFile** array = new nsIFile*[count];
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < count; ++i)
     aArray->QueryElementAt(i, NS_GET_IID(nsIFile), (void**)&(array[i]));
 

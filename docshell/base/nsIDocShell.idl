@@ -127,7 +127,7 @@ interface nsIDocShell : nsISupports
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
                               in nsISupports aOwner,
-                              in PRUint32 aFlags,
+                              in uint32_t aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,
                               in nsIInputStream aPostDataStream,
@@ -570,7 +570,7 @@ interface nsIDocShell : nsISupports
    * In a child docshell, this is the source of parentCharset
    * @see nsIParser
    */
-  attribute PRInt32 parentCharsetSource;
+  attribute int32_t parentCharsetSource;
 
   /**
    * Add an observer to the list of parties to be notified when this docshell's

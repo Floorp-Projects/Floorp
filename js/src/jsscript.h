@@ -184,10 +184,6 @@ class Bindings
     /* Return the initial shape of call objects created for this scope. */
     Shape *callObjShape() const { return callObjShape_; }
 
-    /* See Scope::extensibleParents (TODO: remove with bug 774915). */
-    inline bool extensibleParents();
-    bool setExtensibleParents(JSContext *cx);
-
     /* Convenience method to get the var index of 'arguments'. */
     unsigned argumentsVarIndex(JSContext *cx) const;
 

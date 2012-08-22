@@ -22,7 +22,7 @@ template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
 %}
 
-[ref] native nsDocshellIDArray(nsTArray<PRUint64, nsTArrayDefaultAllocator>);
+[ref] native nsDocshellIDArray(nsTArray<uint64_t, nsTArrayDefaultAllocator>);
 
 [scriptable, uuid(e27cf38e-c19f-4294-bd31-d7e0916e7fa2)]
 interface nsISHistoryInternal: nsISupports

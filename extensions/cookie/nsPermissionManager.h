@@ -27,19 +27,19 @@ class mozIStorageStatement;
 class nsPermissionEntry
 {
 public:
-  nsPermissionEntry(PRUint32 aType, PRUint32 aPermission, PRInt64 aID, 
-                    PRUint32 aExpireType, PRInt64 aExpireTime)
+  nsPermissionEntry(uint32_t aType, uint32_t aPermission, int64_t aID, 
+                    uint32_t aExpireType, int64_t aExpireTime)
    : mType(aType)
    , mPermission(aPermission)
    , mID(aID)
    , mExpireType(aExpireType)
    , mExpireTime(aExpireTime) {}
 
-  PRUint32 mType;
-  PRUint32 mPermission;
-  PRInt64  mID;
-  PRUint32 mExpireType;
-  PRInt64  mExpireTime;
+  uint32_t mType;
+  uint32_t mPermission;
+  int64_t  mID;
+  uint32_t mExpireType;
+  int64_t  mExpireTime;
 };
 
 class nsHostEntry : public PLDHashEntryHdr
@@ -93,18 +93,18 @@ public:
     return mPermissions;
   }
 
-  inline PRInt32 GetPermissionIndex(PRUint32 aType) const
+  inline int32_t GetPermissionIndex(uint32_t aType) const
   {
-    for (PRUint32 i = 0; i < mPermissions.Length(); ++i)
+    for (uint32_t i = 0; i < mPermissions.Length(); ++i)
       if (mPermissions[i].mType == aType)
         return i;
 
     return -1;
   }
 
-  inline nsPermissionEntry GetPermission(PRUint32 aType) const
+  inline nsPermissionEntry GetPermission(uint32_t aType) const
   {
-    for (PRUint32 i = 0; i < mPermissions.Length(); ++i)
+    for (uint32_t i = 0; i < mPermissions.Length(); ++i)
       if (mPermissions[i].mType == aType)
         return mPermissions[i];
 
@@ -156,25 +156,25 @@ public:
 
   nsresult AddInternal(const nsAFlatCString &aHost,
                        const nsAFlatCString &aType,
-                       PRUint32 aPermission,
-                       PRInt64 aID,
-                       PRUint32 aExpireType,
-                       PRInt64  aExpireTime,
+                       uint32_t aPermission,
+                       int64_t aID,
+                       uint32_t aExpireType,
+                       int64_t  aExpireTime,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation);
 
 private:
 
-  PRInt32 GetTypeIndex(const char *aTypeString,
+  int32_t GetTypeIndex(const char *aTypeString,
                        bool        aAdd);
 
   nsHostEntry *GetHostEntry(const nsAFlatCString &aHost,
-                            PRUint32              aType,
+                            uint32_t              aType,
                             bool                  aExactHostMatch);
 
   nsresult CommonTestPermission(nsIURI     *aURI,
                                 const char *aType,
-                                PRUint32   *aPermission,
+                                uint32_t   *aPermission,
                                 bool        aExactHostMatch);
 
   nsresult InitDB(bool aRemoveFile);
@@ -183,9 +183,9 @@ private:
   nsresult Read();
   void     NotifyObserversWithPermission(const nsACString &aHost,
                                          const nsCString  &aType,
-                                         PRUint32          aPermission,
-                                         PRUint32          aExpireType,
-                                         PRInt64           aExpireTime,
+                                         uint32_t          aPermission,
+                                         uint32_t          aExpireType,
+                                         int64_t           aExpireTime,
                                          const PRUnichar  *aData);
   void     NotifyObservers(nsIPermission *aPermission, const PRUnichar *aData);
 
@@ -199,12 +199,12 @@ private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   static void UpdateDB(OperationType         aOp,
                        mozIStorageStatement* aStmt,
-                       PRInt64               aID,
+                       int64_t               aID,
                        const nsACString     &aHost,
                        const nsACString     &aType,
-                       PRUint32              aPermission,
-                       PRUint32              aExpireType,
-                       PRInt64               aExpireTime);
+                       uint32_t              aPermission,
+                       uint32_t              aExpireType,
+                       int64_t               aExpireTime);
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIIDNService>      mIDNService;
@@ -216,7 +216,7 @@ private:
 
   nsTHashtable<nsHostEntry>    mHostTable;
   // a unique, monotonically increasing id used to identify each database entry
-  PRInt64                      mLargestID;
+  int64_t                      mLargestID;
 
   // An array to store the strings identifying the different types.
   nsTArray<nsCString>          mTypeArray;

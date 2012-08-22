@@ -86,7 +86,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 {
   // Get the desired action for the scrollbar button.
   LookAndFeel::IntID tmpAction;
-  PRUint16 button = static_cast<nsMouseEvent*>(aEvent)->button;
+  uint16_t button = static_cast<nsMouseEvent*>(aEvent)->button;
   if (button == nsMouseEvent::eLeftButton) {
     tmpAction = LookAndFeel::eIntID_ScrollButtonLeftMouseButtonAction;
   } else if (button == nsMouseEvent::eMiddleButton) {
@@ -98,7 +98,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   }
 
   // Get the button action metric from the pres. shell.
-  PRInt32 pressedButtonAction;
+  int32_t pressedButtonAction;
   if (NS_FAILED(LookAndFeel::GetInt(tmpAction, &pressedButtonAction))) {
     return false;
   }
@@ -116,10 +116,10 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   static nsIContent::AttrValuesArray strings[] = { &nsGkAtoms::increment,
                                                    &nsGkAtoms::decrement,
                                                    nullptr };
-  PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+  int32_t index = mContent->FindAttrValueIn(kNameSpaceID_None,
                                             nsGkAtoms::type,
                                             strings, eCaseMatters);
-  PRInt32 direction;
+  int32_t direction;
   if (index == 0) 
     direction = 1;
   else if (index == 1)
@@ -212,11 +212,11 @@ nsScrollbarButtonFrame::DoButtonAction(bool aSmoothScroll)
   nsCOMPtr<nsIContent> content = scrollbar->GetContent();
 
   // get the current pos
-  PRInt32 curpos = nsSliderFrame::GetCurrentPosition(content);
-  PRInt32 oldpos = curpos;
+  int32_t curpos = nsSliderFrame::GetCurrentPosition(content);
+  int32_t oldpos = curpos;
 
   // get the max pos
-  PRInt32 maxpos = nsSliderFrame::GetMaxPosition(content);
+  int32_t maxpos = nsSliderFrame::GetMaxPosition(content);
 
   // increment the given amount
   if (mIncrement)

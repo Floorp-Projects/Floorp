@@ -16,53 +16,53 @@
  * The off argument, where present, is incremented according to the number of
  * bytes consumed from the buffer.
  */
-inline NS_HIDDEN_(void) WRITE8(PRUint8* buf, PRUint32* off, PRUint8 val)
+inline NS_HIDDEN_(void) WRITE8(uint8_t* buf, uint32_t* off, uint8_t val)
 {
   buf[(*off)++] = val;
 }
 
-inline NS_HIDDEN_(void) WRITE16(PRUint8* buf, PRUint32* off, PRUint16 val)
+inline NS_HIDDEN_(void) WRITE16(uint8_t* buf, uint32_t* off, uint16_t val)
 {
   WRITE8(buf, off, val & 0xff);
   WRITE8(buf, off, (val >> 8) & 0xff);
 }
 
-inline NS_HIDDEN_(void) WRITE32(PRUint8* buf, PRUint32* off, PRUint32 val)
+inline NS_HIDDEN_(void) WRITE32(uint8_t* buf, uint32_t* off, uint32_t val)
 {
   WRITE16(buf, off, val & 0xffff);
   WRITE16(buf, off, (val >> 16) & 0xffff);
 }
 
-inline NS_HIDDEN_(PRUint8) READ8(const PRUint8* buf, PRUint32* off)
+inline NS_HIDDEN_(uint8_t) READ8(const uint8_t* buf, uint32_t* off)
 {
   return buf[(*off)++];
 }
 
-inline NS_HIDDEN_(PRUint16) READ16(const PRUint8* buf, PRUint32* off)
+inline NS_HIDDEN_(uint16_t) READ16(const uint8_t* buf, uint32_t* off)
 {
-  PRUint16 val = READ8(buf, off);
+  uint16_t val = READ8(buf, off);
   val |= READ8(buf, off) << 8;
   return val;
 }
 
-inline NS_HIDDEN_(PRUint32) READ32(const PRUint8* buf, PRUint32* off)
+inline NS_HIDDEN_(uint32_t) READ32(const uint8_t* buf, uint32_t* off)
 {
-  PRUint32 val = READ16(buf, off);
+  uint32_t val = READ16(buf, off);
   val |= READ16(buf, off) << 16;
   return val;
 }
 
-inline NS_HIDDEN_(PRUint32) PEEK32(const PRUint8* buf)
+inline NS_HIDDEN_(uint32_t) PEEK32(const uint8_t* buf)
 {
-  return (PRUint32)( (buf [0]      ) |
+  return (uint32_t)( (buf [0]      ) |
                      (buf [1] <<  8) |
                      (buf [2] << 16) |
                      (buf [3] << 24) );
 }
 
-NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, PRUint32 aCount);
+NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, uint32_t aCount);
 
 NS_HIDDEN_(nsresult) ZW_WriteData(nsIOutputStream *aStream, const char *aBuffer,
-                      PRUint32 aCount);
+                      uint32_t aCount);
 
 #endif

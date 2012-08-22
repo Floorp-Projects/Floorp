@@ -35,15 +35,15 @@ class nsPreloadedStream MOZ_FINAL : public nsIAsyncInputStream
     NS_DECL_NSIASYNCINPUTSTREAM
 
     nsPreloadedStream(nsIAsyncInputStream *aStream, 
-                      const char *data, PRUint32 datalen);
+                      const char *data, uint32_t datalen);
 private:
     ~nsPreloadedStream();
 
     nsCOMPtr<nsIAsyncInputStream> mStream;
 
     char *mBuf;
-    PRUint32 mOffset;
-    PRUint32 mLen;
+    uint32_t mOffset;
+    uint32_t mLen;
 };
         
 } // namespace net

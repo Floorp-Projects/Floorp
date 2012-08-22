@@ -21,9 +21,9 @@ nsBasicUTF7Decoder::nsBasicUTF7Decoder(char aLastChar, char aEscChar)
 
 nsresult nsBasicUTF7Decoder::DecodeDirect(
                              const char * aSrc, 
-                             PRInt32 * aSrcLength, 
+                             int32_t * aSrcLength, 
                              PRUnichar * aDest, 
-                             PRInt32 * aDestLength)
+                             int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
@@ -59,9 +59,9 @@ nsresult nsBasicUTF7Decoder::DecodeDirect(
 
 nsresult nsBasicUTF7Decoder::DecodeBase64(
                              const char * aSrc, 
-                             PRInt32 * aSrcLength, 
+                             int32_t * aSrcLength, 
                              PRUnichar * aDest, 
-                             PRInt32 * aDestLength)
+                             int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
@@ -69,7 +69,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
   PRUnichar * dest = aDest;
   nsresult res = NS_OK;
   char ch;
-  PRUint32 value;
+  uint32_t value;
 
   while (src < srcEnd) {
     ch = *src;
@@ -137,17 +137,17 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
   return res;
 }
 
-PRUint32 nsBasicUTF7Decoder::CharToValue(char aChar) {
+uint32_t nsBasicUTF7Decoder::CharToValue(char aChar) {
   if ((aChar>='A')&&(aChar<='Z'))
-    return (PRUint8)(aChar-'A');
+    return (uint8_t)(aChar-'A');
   else if ((aChar>='a')&&(aChar<='z'))
-    return (PRUint8)(26+aChar-'a');
+    return (uint8_t)(26+aChar-'a');
   else if ((aChar>='0')&&(aChar<='9'))
-    return (PRUint8)(26+26+aChar-'0');
+    return (uint8_t)(26+26+aChar-'0');
   else if (aChar=='+')
-    return (PRUint8)(26+26+10);
+    return (uint8_t)(26+26+10);
   else if (aChar==mLastChar)
-    return (PRUint8)(26+26+10+1);
+    return (uint8_t)(26+26+10+1);
   else
     return 0xffff;
 }
@@ -156,15 +156,15 @@ PRUint32 nsBasicUTF7Decoder::CharToValue(char aChar) {
 // Subclassing of nsBufferDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc, 
-                                                PRInt32 * aSrcLength, 
+                                                int32_t * aSrcLength, 
                                                 PRUnichar * aDest, 
-                                                PRInt32 * aDestLength)
+                                                int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
   PRUnichar * destEnd = aDest + *aDestLength;
   PRUnichar * dest = aDest;
-  PRInt32 bcr,bcw;
+  int32_t bcr,bcw;
   nsresult res = NS_OK;
   char ch;
 

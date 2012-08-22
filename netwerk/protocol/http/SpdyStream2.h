@@ -21,12 +21,12 @@ public:
 
   SpdyStream2(nsAHttpTransaction *,
              SpdySession2 *, nsISocketTransport *,
-             PRUint32, z_stream *, PRInt32);
+             uint32_t, z_stream *, int32_t);
 
-  PRUint32 StreamID() { return mStreamID; }
+  uint32_t StreamID() { return mStreamID; }
 
-  nsresult ReadSegments(nsAHttpSegmentReader *,  PRUint32, PRUint32 *);
-  nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
+  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
+  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
 
   bool RequestBlockedOnRead()
   {
@@ -51,8 +51,8 @@ public:
   void SetRecvdFin(bool aStatus) { mRecvdFin = aStatus ? 1 : 0; }
   bool RecvdFin() { return mRecvdFin; }
 
-  void UpdateTransportSendEvents(PRUint32 count);
-  void UpdateTransportReadEvents(PRUint32 count);
+  void UpdateTransportSendEvents(uint32_t count);
+  void UpdateTransportReadEvents(uint32_t count);
 
   // The zlib header compression dictionary defined by SPDY,
   // and hooks to the mozilla allocator for zlib to use.
@@ -82,16 +82,16 @@ private:
                                           void *);
 
   void     ChangeState(enum stateType);
-  nsresult ParseHttpRequestHeaders(const char *, PRUint32, PRUint32 *);
-  nsresult TransmitFrame(const char *, PRUint32 *);
-  void     GenerateDataFrameHeader(PRUint32, bool);
+  nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
+  nsresult TransmitFrame(const char *, uint32_t *);
+  void     GenerateDataFrameHeader(uint32_t, bool);
 
   void     CompressToFrame(const nsACString &);
   void     CompressToFrame(const nsACString *);
-  void     CompressToFrame(const char *, PRUint32);
-  void     CompressToFrame(PRUint16);
+  void     CompressToFrame(const char *, uint32_t);
+  void     CompressToFrame(uint16_t);
   void     CompressFlushFrame();
-  void     ExecuteCompress(PRUint32);
+  void     ExecuteCompress(uint32_t);
   
   // Each stream goes from syn_stream to upstream_complete, perhaps
   // looping on multiple instances of generating_request_body and
@@ -117,42 +117,42 @@ private:
   nsAHttpSegmentWriter        *mSegmentWriter;
 
   // The 24 bit SPDY stream ID
-  PRUint32                    mStreamID;
+  uint32_t                    mStreamID;
 
   // The quanta upstream data frames are chopped into
-  PRUint32                    mChunkSize;
+  uint32_t                    mChunkSize;
 
   // Flag is set when all http request headers have been read
-  PRUint32                     mSynFrameComplete     : 1;
+  uint32_t                     mSynFrameComplete     : 1;
 
   // Flag is set when the HTTP processor has more data to send
   // but has blocked in doing so.
-  PRUint32                     mRequestBlockedOnRead : 1;
+  uint32_t                     mRequestBlockedOnRead : 1;
 
   // Flag is set when a FIN has been placed on a data or syn packet
   // (i.e after the client has closed)
-  PRUint32                     mSentFinOnData        : 1;
+  uint32_t                     mSentFinOnData        : 1;
 
   // Flag is set after the response frame bearing the fin bit has
   // been processed. (i.e. after the server has closed).
-  PRUint32                     mRecvdFin             : 1;
+  uint32_t                     mRecvdFin             : 1;
 
   // Flag is set after syn reply received
-  PRUint32                     mFullyOpen            : 1;
+  uint32_t                     mFullyOpen            : 1;
 
   // Flag is set after the WAITING_FOR Transport event has been generated
-  PRUint32                     mSentWaitingFor       : 1;
+  uint32_t                     mSentWaitingFor       : 1;
 
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
-  PRUint32                     mTxInlineFrameSize;
-  PRUint32                     mTxInlineFrameUsed;
+  uint32_t                     mTxInlineFrameSize;
+  uint32_t                     mTxInlineFrameUsed;
 
   // mTxStreamFrameSize tracks the progress of
   // transmitting a request body data frame. The data frame itself
   // is never copied into the spdy layer.
-  PRUint32                     mTxStreamFrameSize;
+  uint32_t                     mTxStreamFrameSize;
 
   // Compression context and buffer for request header compression.
   // This is a copy of SpdySession2::mUpstreamZlib because it needs
@@ -165,14 +165,14 @@ private:
   // for a stream closed indication. Relying on stream close results
   // in an extra 0-length runt packet and seems to have some interop
   // problems with the google servers.
-  PRInt64                      mRequestBodyLenRemaining;
+  int64_t                      mRequestBodyLenRemaining;
 
   // based on nsISupportsPriority definitions
-  PRInt32                      mPriority;
+  int32_t                      mPriority;
 
   // For Progress Events
-  PRUint64                     mTotalSent;
-  PRUint64                     mTotalRead;
+  uint64_t                     mTotalSent;
+  uint64_t                     mTotalRead;
 };
 
 }} // namespace mozilla::net

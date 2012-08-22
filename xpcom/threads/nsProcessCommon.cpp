@@ -213,7 +213,7 @@ static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine,
     } 
 
     *p = '\0';
-    PRInt32 numChars = MultiByteToWideChar(codePage, 0, cmdLine, -1, NULL, 0); 
+    int32_t numChars = MultiByteToWideChar(codePage, 0, cmdLine, -1, NULL, 0); 
     *wideCmdLine = (PRUnichar *) PR_MALLOC(numChars*sizeof(PRUnichar));
     MultiByteToWideChar(codePage, 0, cmdLine, -1, *wideCmdLine, numChars); 
     PR_Free(cmdLine);
@@ -260,7 +260,7 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
         }
     }
 #else
-    PRInt32 exitCode = -1;
+    int32_t exitCode = -1;
     if (PR_WaitProcess(process->mProcess, &exitCode) != PR_SUCCESS)
         exitCode = -1;
 #endif
@@ -321,14 +321,14 @@ void nsProcess::ProcessComplete()
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Run(bool blocking, const char **args, PRUint32 count)
+nsProcess::Run(bool blocking, const char **args, uint32_t count)
 {
     return CopyArgsAndRunProcess(blocking, args, count, nullptr, false);
 }
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::RunAsync(const char **args, PRUint32 count,
+nsProcess::RunAsync(const char **args, uint32_t count,
                     nsIObserver* observer, bool holdWeak)
 {
     return CopyArgsAndRunProcess(false, args, count, observer, holdWeak);
@@ -336,7 +336,7 @@ nsProcess::RunAsync(const char **args, PRUint32 count,
 
 nsresult
 nsProcess::CopyArgsAndRunProcess(bool blocking, const char** args,
-                                 PRUint32 count, nsIObserver* observer,
+                                 uint32_t count, nsIObserver* observer,
                                  bool holdWeak)
 {
     // Add one to the count for the program name and one for NULL termination.
@@ -348,7 +348,7 @@ nsProcess::CopyArgsAndRunProcess(bool blocking, const char** args,
 
     my_argv[0] = ToNewUTF8String(mTargetPath);
 
-    for (PRUint32 i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         my_argv[i + 1] = const_cast<char*>(args[i]);
     }
 
@@ -363,14 +363,14 @@ nsProcess::CopyArgsAndRunProcess(bool blocking, const char** args,
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Runw(bool blocking, const PRUnichar **args, PRUint32 count)
+nsProcess::Runw(bool blocking, const PRUnichar **args, uint32_t count)
 {
     return CopyArgsAndRunProcessw(blocking, args, count, nullptr, false);
 }
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::RunwAsync(const PRUnichar **args, PRUint32 count,
+nsProcess::RunwAsync(const PRUnichar **args, uint32_t count,
                     nsIObserver* observer, bool holdWeak)
 {
     return CopyArgsAndRunProcessw(false, args, count, observer, holdWeak);
@@ -378,7 +378,7 @@ nsProcess::RunwAsync(const PRUnichar **args, PRUint32 count,
 
 nsresult
 nsProcess::CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
-                                  PRUint32 count, nsIObserver* observer,
+                                  uint32_t count, nsIObserver* observer,
                                   bool holdWeak)
 {
     // Add one to the count for the program name and one for NULL termination.
@@ -390,7 +390,7 @@ nsProcess::CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
 
     my_argv[0] = ToNewUTF8String(mTargetPath);
 
-    for (PRUint32 i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         my_argv[i + 1] = ToNewUTF8String(nsDependentString(args[i]));
     }
 
@@ -398,7 +398,7 @@ nsProcess::CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
 
     nsresult rv = RunProcess(blocking, my_argv, observer, holdWeak, true);
 
-    for (PRUint32 i = 0; i <= count; i++) {
+    for (uint32_t i = 0; i <= count; i++) {
         NS_Free(my_argv[i]);
     }
     NS_Free(my_argv);
@@ -443,7 +443,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
      */
 
     // The program name in my_argv[0] is always UTF-8
-    PRInt32 numChars = MultiByteToWideChar(CP_UTF8, 0, my_argv[0], -1, NULL, 0); 
+    int32_t numChars = MultiByteToWideChar(CP_UTF8, 0, my_argv[0], -1, NULL, 0); 
     PRUnichar* wideFile = (PRUnichar *) PR_MALLOC(numChars * sizeof(PRUnichar));
     MultiByteToWideChar(CP_UTF8, 0, my_argv[0], -1, wideFile, numChars); 
 
@@ -491,7 +491,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
     // Note that the 'argv' array is already null-terminated, which 'posix_spawnp' requires.
     pid_t newPid = 0;
     int result = posix_spawnp(&newPid, my_argv[0], NULL, &spawnattr, my_argv, *_NSGetEnviron());
-    mPid = static_cast<PRInt32>(newPid);
+    mPid = static_cast<int32_t>(newPid);
 
     posix_spawnattr_destroy(&spawnattr);
 
@@ -503,7 +503,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
     if (!mProcess)
         return NS_ERROR_FAILURE;
     struct MYProcess {
-        PRUint32 pid;
+        uint32_t pid;
     };
     MYProcess* ptrProc = (MYProcess *) mProcess;
     mPid = ptrProc->pid;
@@ -546,7 +546,7 @@ NS_IMETHODIMP nsProcess::GetIsRunning(bool *aIsRunning)
 }
 
 NS_IMETHODIMP
-nsProcess::GetPid(PRUint32 *aPid)
+nsProcess::GetPid(uint32_t *aPid)
 {
     if (!mThread)
         return NS_ERROR_FAILURE;
@@ -588,7 +588,7 @@ nsProcess::Kill()
 }
 
 NS_IMETHODIMP
-nsProcess::GetExitValue(PRInt32 *aExitValue)
+nsProcess::GetExitValue(int32_t *aExitValue)
 {
     MutexAutoLock lock(mLock);
 

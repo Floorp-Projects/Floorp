@@ -25,7 +25,7 @@ class TimeStamp;
  * Instances of this class represent the length of an interval of time.
  * Negative durations are allowed, meaning the end is before the start.
  * 
- * Internally the duration is stored as a PRInt64 in units of
+ * Internally the duration is stored as a int64_t in units of
  * PR_TicksPerSecond() when building with NSPR interval timers, or a
  * system-dependent unit when building with system clocks.  The
  * system-dependent unit must be constant, otherwise the semantics of
@@ -120,14 +120,14 @@ private:
   friend class TimeStamp;
   friend struct IPC::ParamTraits<mozilla::TimeDuration>;
 
-  static TimeDuration FromTicks(PRInt64 aTicks) {
+  static TimeDuration FromTicks(int64_t aTicks) {
     TimeDuration t;
     t.mValue = aTicks;
     return t;
   }
 
   static TimeDuration FromTicks(double aTicks) {
-    // NOTE: this MUST be a >= test, because PRInt64(double(LL_MAXINT))
+    // NOTE: this MUST be a >= test, because int64_t(double(LL_MAXINT))
     // overflows and gives LL_MININT.
     if (aTicks >= double(LL_MAXINT))
       return TimeDuration::FromTicks(LL_MAXINT);
@@ -136,11 +136,11 @@ private:
     if (aTicks <= double(LL_MININT))
       return TimeDuration::FromTicks(LL_MININT);
 
-    return TimeDuration::FromTicks(PRInt64(aTicks));
+    return TimeDuration::FromTicks(int64_t(aTicks));
   }
 
   // Duration in PRIntervalTime units
-  PRInt64 mValue;
+  int64_t mValue;
 };
 
 /**
@@ -199,7 +199,7 @@ public:
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
     MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
     PR_STATIC_ASSERT(-LL_MAXINT > LL_MININT);
-    PRInt64 ticks = PRInt64(mValue - aOther.mValue);
+    int64_t ticks = int64_t(mValue - aOther.mValue);
     // Check for overflow.
     if (mValue > aOther.mValue) {
       if (ticks < 0) {
@@ -275,7 +275,7 @@ public:
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
 
-  TimeStamp(PRUint64 aValue) : mValue(aValue) {}
+  TimeStamp(uint64_t aValue) : mValue(aValue) {}
 
   /**
    * When built with PRIntervalTime, a value of 0 means this instance
@@ -290,7 +290,7 @@ private:
    *
    * When using a system clock, a value is system dependent.
    */
-  PRUint64 mValue;
+  uint64_t mValue;
 };
 
 }

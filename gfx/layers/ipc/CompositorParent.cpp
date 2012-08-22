@@ -616,7 +616,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
   bool activeAnimations = false;
 
-  for (PRUint32 i = animations.Length(); i-- !=0; ) {
+  for (uint32_t i = animations.Length(); i-- !=0; ) {
     Animation& animation = animations[i];
     AnimData& animData = animationData[i];
 
@@ -949,7 +949,7 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
 }
 
 
-typedef map<PRUint64,CompositorParent*> CompositorMap;
+typedef map<uint64_t,CompositorParent*> CompositorMap;
 static CompositorMap* sCompositorMap;
 
 void CompositorParent::CreateCompositorMap()
@@ -969,22 +969,22 @@ void CompositorParent::DestroyCompositorMap()
   }
 }
 
-CompositorParent* CompositorParent::GetCompositor(PRUint64 id)
+CompositorParent* CompositorParent::GetCompositor(uint64_t id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
-void CompositorParent::AddCompositor(CompositorParent* compositor, PRUint64* outID)
+void CompositorParent::AddCompositor(CompositorParent* compositor, uint64_t* outID)
 {
-  static PRUint64 sNextID = 1;
+  static uint64_t sNextID = 1;
   
   ++sNextID;
   (*sCompositorMap)[sNextID] = compositor;
   *outID = sNextID;
 }
 
-CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
+CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {

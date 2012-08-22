@@ -7,8 +7,8 @@
 [scriptable, uuid(0e22289a-469d-42c0-98dd-ae9831bd6a6d)]
 interface nsIDOMDeviceStorageStat : nsISupports
 {
-  readonly attribute PRUint64 totalBytes;
-  readonly attribute PRUint64 freeBytes;
+  readonly attribute uint64_t totalBytes;
+  readonly attribute uint64_t freeBytes;
 
   // "shared", "available", "unavailable"
   readonly attribute DOMString state;

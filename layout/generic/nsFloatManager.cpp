@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-PRInt32 nsFloatManager::sCachedFloatManagerCount = 0;
+int32_t nsFloatManager::sCachedFloatManagerCount = 0;
 void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 
 /////////////////////////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ void nsFloatManager::Shutdown()
   // The layout module is being shut down, clean up the cache and
   // disable further caching.
 
-  PRInt32 i;
+  int32_t i;
 
   for (i = 0; i < sCachedFloatManagerCount; i++) {
     void* floatManager = sCachedFloatManagers[i];
@@ -123,7 +123,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
   }
 
   // Determine the last float that we should consider.
-  PRUint32 floatCount;
+  uint32_t floatCount;
   if (aState) {
     // Use the provided state.
     floatCount = aState->mFloatInfoCount;
@@ -166,7 +166,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
   // Walk backwards through the floats until we either hit the front of
   // the list or we're above |top|.
   bool haveFloats = false;
-  for (PRUint32 i = floatCount; i > 0; --i) {
+  for (uint32_t i = floatCount; i > 0; --i) {
     const FloatInfo &fi = mFloats[i-1];
     if (fi.mLeftYMost <= top && fi.mRightYMost <= top) {
       // There aren't any more floats that could intersect this band.
@@ -244,7 +244,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const nsRect& aMarginRect)
     info.mLeftYMost = nscoord_MIN;
     info.mRightYMost = nscoord_MIN;
   }
-  PRUint8 floatStyle = aFloatFrame->GetStyleDisplay()->mFloats;
+  uint8_t floatStyle = aFloatFrame->GetStyleDisplay()->mFloats;
   NS_ASSERTION(floatStyle == NS_STYLE_FLOAT_LEFT ||
                floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float");
   nscoord& sideYMost = (floatStyle == NS_STYLE_FLOAT_LEFT) ? info.mLeftYMost
@@ -341,7 +341,7 @@ nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList)
     frameSet.PutEntry(f);
   }
 
-  PRUint32 newLength = mFloats.Length();
+  uint32_t newLength = mFloats.Length();
   while (newLength > 0) {
     if (!frameSet.Contains(mFloats[newLength - 1].mFrame)) {
       break;
@@ -351,7 +351,7 @@ nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList)
   mFloats.TruncateLength(newLength);
 
 #ifdef DEBUG
-  for (PRUint32 i = 0; i < mFloats.Length(); ++i) {
+  for (uint32_t i = 0; i < mFloats.Length(); ++i) {
     NS_ASSERTION(!frameSet.Contains(mFloats[i].mFrame),
                  "Frame region deletion was requested but we couldn't delete it");
   }
@@ -433,7 +433,7 @@ nsFloatManager::List(FILE* out) const
   if (!HasAnyFloats())
     return NS_OK;
 
-  for (PRUint32 i = 0; i < mFloats.Length(); ++i) {
+  for (uint32_t i = 0; i < mFloats.Length(); ++i) {
     const FloatInfo &fi = mFloats[i];
     printf("Float %u: frame=%p rect={%d,%d,%d,%d} ymost={l:%d, r:%d}\n",
            i, static_cast<void*>(fi.mFrame),
@@ -445,8 +445,8 @@ nsFloatManager::List(FILE* out) const
 #endif
 
 nscoord
-nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType,
-                            PRUint32 aFlags) const
+nsFloatManager::ClearFloats(nscoord aY, uint8_t aBreakType,
+                            uint32_t aFlags) const
 {
   if (!(aFlags & DONT_CLEAR_PUSHED_FLOATS) && ClearContinues(aBreakType)) {
     return nscoord_MAX;
@@ -480,7 +480,7 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType,
 }
 
 bool
-nsFloatManager::ClearContinues(PRUint8 aBreakType) const
+nsFloatManager::ClearContinues(uint8_t aBreakType) const
 {
   return ((mPushedLeftFloatPastBreak || mSplitLeftFloatAcrossBreak) &&
           (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||

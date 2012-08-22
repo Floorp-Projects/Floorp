@@ -187,6 +187,7 @@ CanvasLayerOGL::UpdateSurface()
 #endif
 
   if (mCanvasGLContext &&
+      !mForceReadback &&
       mCanvasGLContext->GetContextType() == gl()->GetContextType())
   {
     DiscardTempSurface();
@@ -252,7 +253,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   ShaderProgramOGL *program = nullptr;
 
   bool useGLContext = mCanvasGLContext &&
-    mCanvasGLContext->GetContextType() == gl()->GetContextType();
+                      !mForceReadback &&
+                      mCanvasGLContext->GetContextType() == gl()->GetContextType();
 
   nsIntRect drawRect = mBounds;
 

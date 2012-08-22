@@ -155,7 +155,7 @@ interface nsIWindowMediator: nsISupports
     * @param aWindow the window in question
     * @return aWindow's z level
     */
-  [noscript] PRUint32 getZLevel(in nsIXULWindow aWindow);
+  [noscript] uint32_t getZLevel(in nsIXULWindow aWindow);
 
   /** Set the window's Z level (as defined in nsIXULWindow). The implementation
     * will reposition the window as necessary to match its new Z level.
@@ -164,7 +164,7 @@ interface nsIWindowMediator: nsISupports
     * @param aWindow the window in question
     * @param aZLevel the window's new Z level
     */
-  [noscript] void setZLevel(in nsIXULWindow aWindow, in PRUint32 aZLevel);
+  [noscript] void setZLevel(in nsIXULWindow aWindow, in uint32_t aZLevel);
 
   /** Register a listener for window status changes.
     * keeps strong ref? (to be decided)

@@ -198,11 +198,11 @@ nsresult nsDOMStringMap::RemovePropInternal(nsIAtom* aAttr)
  */
 nsresult nsDOMStringMap::GetDataPropList(nsTArray<nsString>& aResult)
 {
-  PRUint32 attrCount = mElement->GetAttrCount();
+  uint32_t attrCount = mElement->GetAttrCount();
 
   // Iterate through all the attributes and add property
   // names corresponding to data attributes to return array.
-  for (PRUint32 i = 0; i < attrCount; ++i) {
+  for (uint32_t i = 0; i < attrCount; ++i) {
     nsAutoString attrString;
     const nsAttrName* attrName = mElement->GetAttrNameAt(i);
     attrName->LocalName()->ToString(attrString);

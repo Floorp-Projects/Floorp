@@ -40,8 +40,8 @@ interface nsIInterfaceInfo : nsISupports
     /**
     * These include counts for parent (and all ancestors).
     */
-    readonly attribute PRUint16 methodCount;
-    readonly attribute PRUint16 constantCount;
+    readonly attribute uint16_t methodCount;
+    readonly attribute uint16_t constantCount;
 
     /**
     * These include methods and constants for parent (and all ancestors).
@@ -49,13 +49,13 @@ interface nsIInterfaceInfo : nsISupports
     * These do *not* make copies ***explicit bending of XPCOM rules***.
     */
     
-    void getMethodInfo(in PRUint16 index, 
+    void getMethodInfo(in uint16_t index, 
                        [shared, retval] out nsXPTMethodInfoPtr info);
 
-    void getMethodInfoForName(in string methodName, out PRUint16 index, 
+    void getMethodInfoForName(in string methodName, out uint16_t index, 
                        [shared, retval] out nsXPTMethodInfoPtr info);
 
-    void getConstant(in PRUint16 index, 
+    void getConstant(in uint16_t index, 
                      [shared, retval] out nsXPTConstantPtr constant);
 
 
@@ -64,10 +64,10 @@ interface nsIInterfaceInfo : nsISupports
     * method in this interface.
     */
 
-    nsIInterfaceInfo getInfoForParam(in PRUint16 methodIndex, 
+    nsIInterfaceInfo getInfoForParam(in uint16_t methodIndex, 
                                      [const] in nsXPTParamInfoPtr param);
 
-    nsIIDPtr getIIDForParam(in PRUint16 methodIndex, 
+    nsIIDPtr getIIDForParam(in uint16_t methodIndex, 
                             [const] in nsXPTParamInfoPtr param);
 
 
@@ -75,15 +75,15 @@ interface nsIInterfaceInfo : nsISupports
     * These do *not* make copies ***explicit bending of XPCOM rules***.
     */
 
-    nsXPTType getTypeForParam(in PRUint16 methodIndex, 
+    nsXPTType getTypeForParam(in uint16_t methodIndex, 
                               [const] in nsXPTParamInfoPtr param,
-                              in PRUint16 dimension);
+                              in uint16_t dimension);
 
-    PRUint8 getSizeIsArgNumberForParam(in PRUint16 methodIndex, 
+    uint8_t getSizeIsArgNumberForParam(in uint16_t methodIndex, 
                                        [const] in nsXPTParamInfoPtr param,
-                                       in PRUint16 dimension);
+                                       in uint16_t dimension);
 
-    PRUint8 getInterfaceIsArgNumberForParam(in PRUint16 methodIndex, 
+    uint8_t getInterfaceIsArgNumberForParam(in uint16_t methodIndex, 
                                             [const] in nsXPTParamInfoPtr param);
 
     boolean isIID(in nsIIDPtr IID);
@@ -95,7 +95,7 @@ interface nsIInterfaceInfo : nsISupports
 
     boolean hasAncestor(in nsIIDPtr iid);
 
-    [notxpcom] nsresult getIIDForParamNoAlloc(in PRUint16 methodIndex, 
+    [notxpcom] nsresult getIIDForParamNoAlloc(in uint16_t methodIndex, 
                                               [const] in nsXPTParamInfoPtr param,
                                               out nsIID iid);
 };

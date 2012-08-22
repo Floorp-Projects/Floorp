@@ -31,7 +31,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return SVGFEContainerFrameBase::IsFrameOfType(
             aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
@@ -58,9 +58,9 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD AttributeChanged(PRInt32  aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t  aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32  aModType);
+                              int32_t  aModType);
 
   virtual bool UpdateOverflow() {
     // We don't maintain a visual overflow rect
@@ -105,9 +105,9 @@ SVGFEContainerFrame::GetType() const
 }
 
 NS_IMETHODIMP
-SVGFEContainerFrame::AttributeChanged(PRInt32  aNameSpaceID,
+SVGFEContainerFrame::AttributeChanged(int32_t  aNameSpaceID,
                                       nsIAtom* aAttribute,
-                                      PRInt32  aModType)
+                                      int32_t  aModType)
 {
   nsSVGFE *element = static_cast<nsSVGFE*>(mContent);
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {

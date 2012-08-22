@@ -1228,15 +1228,19 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
  * DefineArg is called for both the arguments of a regular function definition
  * and the arguments specified by the Function constructor.
  *
- * The 'destructuringArg' bool indicates whether there have been any
- * destructuring arguments up to this point.
+ * The 'disallowDuplicateArgs' bool indicates whether the use of another
+ * feature (destructuring or default arguments) disables duplicate arguments.
+ * (ECMA-262 requires us to support duplicate parameter names, but, for newer
+ * features, we consider the code to have "opted in" to higher standards and
+ * forbid duplicates.)
  *
  * If 'duplicatedArg' is non-null, then DefineArg assigns to it any previous
- * argument with the same name.
+ * argument with the same name. The caller may use this to report an error when
+ * one of the abovementioned features occurs after a duplicate.
  */
 bool
-frontend::DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name, bool destructuringArg,
-                    Definition **duplicatedArg)
+frontend::DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name,
+                    bool disallowDuplicateArgs, Definition **duplicatedArg)
 {
     JSContext *cx = parser->context;
     ParseContext *pc = parser->pc;
@@ -1258,21 +1262,11 @@ frontend::DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name, 
                 return false;
         }
 
-        /*
-         * ECMA-262 requires us to support duplicate parameter names, but if
-         * the parameter list includes destructuring, we consider the code to
-         * have "opted in" to higher standards and forbid duplicates. We may
-         * see a destructuring parameter later, so always note duplicates now.
-         */
-        if (destructuringArg) {
-            parser->reportError(prevDecl, JSMSG_DESTRUCT_DUP_ARG);
+        if (disallowDuplicateArgs) {
+            parser->reportError(prevDecl, JSMSG_BAD_DUP_ARGS);
             return false;
         }
 
-        /*
-         * Remember that duplicate argument is allowed in case we encounter a
-         * destructuring parameter later.
-         */
         if (duplicatedArg)
             *duplicatedArg = prevDecl;
 
@@ -1299,7 +1293,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Par
     JS_ASSERT(pc->sc->inFunction());
 
     if (pc->decls().lookupFirst(name)) {
-        parser->reportError(NULL, JSMSG_DESTRUCT_DUP_ARG);
+        parser->reportError(NULL, JSMSG_BAD_DUP_ARGS);
         return false;
     }
 
@@ -1352,7 +1346,7 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
               {
                 /* See comment below in the TOK_NAME case. */
                 if (duplicatedArg) {
-                    reportError(duplicatedArg, JSMSG_DESTRUCT_DUP_ARG);
+                    reportError(duplicatedArg, JSMSG_BAD_DUP_ARGS);
                     return false;
                 }
 
@@ -1420,12 +1414,17 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
               case TOK_NAME:
               {
                 RootedPropertyName name(context, tokenStream.currentToken().name());
-                if (!DefineArg(this, funcpn, name, destructuringArg, &duplicatedArg))
+                bool disallowDuplicateArgs = destructuringArg || hasDefaults;
+                if (!DefineArg(this, funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
 
                 if (tokenStream.matchToken(TOK_ASSIGN)) {
                     if (hasRest) {
                         reportError(NULL, JSMSG_REST_WITH_DEFAULT);
+                        return false;
+                    }
+                    if (duplicatedArg) {
+                        reportError(duplicatedArg, JSMSG_BAD_DUP_ARGS);
                         return false;
                     }
                     hasDefaults = true;

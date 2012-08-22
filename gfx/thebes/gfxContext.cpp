@@ -495,14 +495,14 @@ gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 }
 
 void
-gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
+gfxContext::Polygon(const gfxPoint *points, uint32_t numPoints)
 {
   if (mCairo) {
     if (numPoints == 0)
         return;
 
     cairo_move_to(mCairo, points[0].x, points[0].y);
-    for (PRUint32 i = 1; i < numPoints; ++i) {
+    for (uint32_t i = 1; i < numPoints; ++i) {
         cairo_line_to(mCairo, points[i].x, points[i].y);
     }
   } else {
@@ -513,7 +513,7 @@ gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
     EnsurePathBuilder();
 
     mPathBuilder->MoveTo(ToPoint(points[0]));
-    for (PRUint32 i = 1; i < numPoints; i++) {
+    for (uint32_t i = 1; i < numPoints; i++) {
       mPathBuilder->LineTo(ToPoint(points[i]));
     }
   }
@@ -1512,7 +1512,7 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
           static_cast<gfxTeeSurface*>(d.get())->GetSurfaces(&ds);
           NS_ASSERTION(ss.Length() == ds.Length(), "Mismatched lengths");
           gfxPoint translation = d->GetDeviceOffset() - s->GetDeviceOffset();
-          for (PRUint32 i = 0; i < ss.Length(); ++i) {
+          for (uint32_t i = 0; i < ss.Length(); ++i) {
               CopySurface(ss[i], ds[i], translation);
           }
         } else {

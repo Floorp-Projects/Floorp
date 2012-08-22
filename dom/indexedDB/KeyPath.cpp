@@ -312,12 +312,12 @@ KeyPath::AppendStringWithValidation(JSContext* aCx, const nsAString& aString)
 nsresult
 KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey) const
 {
-  PRUint32 len = mStrings.Length();
+  uint32_t len = mStrings.Length();
   JS::Value value;
 
   aKey.Unset();
 
-  for (PRUint32 i = 0; i < len; ++i) {
+  for (uint32_t i = 0; i < len; ++i) {
     nsresult rv = GetJSValFromKeyPathString(aCx, aValue, mStrings[i], &value,
                                             DoNotCreateProperties, nullptr,
                                             nullptr);
@@ -347,14 +347,14 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
                                      DoNotCreateProperties, nullptr, nullptr);
   }
  
-  const PRUint32 len = mStrings.Length();
+  const uint32_t len = mStrings.Length();
   JS::RootedObject arrayObj(aCx, JS_NewArrayObject(aCx, len, nullptr));
   if (!arrayObj) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   JS::Value value;
-  for (PRUint32 i = 0; i < len; ++i) {
+  for (uint32_t i = 0; i < len; ++i) {
     nsresult rv = GetJSValFromKeyPathString(aCx, aValue, mStrings[i], &value,
                                             DoNotCreateProperties, nullptr,
                                             nullptr);
@@ -414,8 +414,8 @@ KeyPath::SerializeToString(nsAString& aString) const
     // key paths. This is to be able to tell a string-keypath from an
     // array-keypath which contains only one item.
     // It also makes serializing easier :-)
-    PRUint32 len = mStrings.Length();
-    for (PRUint32 i = 0; i < len; ++i) {
+    uint32_t len = mStrings.Length();
+    for (uint32_t i = 0; i < len; ++i) {
       aString.Append(NS_LITERAL_STRING(",") + mStrings[i]);
     }
 
@@ -456,14 +456,14 @@ nsresult
 KeyPath::ToJSVal(JSContext* aCx, JS::Value* aValue) const
 {
   if (IsArray()) {
-    PRUint32 len = mStrings.Length();
+    uint32_t len = mStrings.Length();
     JSObject* array = JS_NewArrayObject(aCx, len, nullptr);
     if (!array) {
       NS_WARNING("Failed to make array!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (PRUint32 i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       jsval val;
       nsString tmp(mStrings[i]);
       if (!xpc::StringToJsval(aCx, tmp, &val)) {

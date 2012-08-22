@@ -57,11 +57,11 @@ struct NS_GFX nsRect :
 #ifdef NS_COORD_IS_FLOAT
     Inflate(aMargin);
 #else
-    PRInt64 nx = PRInt64(x) - aMargin.left;
-    PRInt64 w = PRInt64(width) + PRInt64(aMargin.left) + aMargin.right;
+    int64_t nx = int64_t(x) - aMargin.left;
+    int64_t w = int64_t(width) + int64_t(aMargin.left) + aMargin.right;
     if (NS_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
-      PRInt64 xdiff = nx - nscoord_MIN / 2;
+      int64_t xdiff = nx - nscoord_MIN / 2;
       if (xdiff < 0) {
         // Clamp huge negative x to nscoord_MIN / 2 and try again.
         nx = nscoord_MIN / 2;
@@ -78,11 +78,11 @@ struct NS_GFX nsRect :
     }
     x = nscoord(nx);
 
-    PRInt64 ny = PRInt64(y) - aMargin.top;
-    PRInt64 h = PRInt64(height) + PRInt64(aMargin.top) + aMargin.bottom;
+    int64_t ny = int64_t(y) - aMargin.top;
+    int64_t h = int64_t(height) + int64_t(aMargin.top) + aMargin.bottom;
     if (NS_UNLIKELY(h > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
-      PRInt64 ydiff = ny - nscoord_MIN / 2;
+      int64_t ydiff = ny - nscoord_MIN / 2;
       if (ydiff < 0) {
         // Clamp huge negative y to nscoord_MIN / 2 and try again.
         ny = nscoord_MIN / 2;
@@ -123,12 +123,12 @@ struct NS_GFX nsRect :
 #else
     nsRect result;
     result.x = NS_MIN(aRect.x, x);
-    PRInt64 w = NS_MAX(PRInt64(aRect.x) + aRect.width, PRInt64(x) + width) - result.x;
+    int64_t w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
     if (NS_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
       // Clamp huge negative x to nscoord_MIN / 2 and try again.
       result.x = NS_MAX(result.x, nscoord_MIN / 2);
-      w = NS_MAX(PRInt64(aRect.x) + aRect.width, PRInt64(x) + width) - result.x;
+      w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
       if (NS_UNLIKELY(w > nscoord_MAX)) {
         w = nscoord_MAX;
       }
@@ -136,12 +136,12 @@ struct NS_GFX nsRect :
     result.width = nscoord(w);
 
     result.y = NS_MIN(aRect.y, y);
-    PRInt64 h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
+    int64_t h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
     if (NS_UNLIKELY(h > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
       // Clamp huge negative y to nscoord_MIN / 2 and try again.
       result.y = NS_MAX(result.y, nscoord_MIN / 2);
-      h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
+      h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
       if (NS_UNLIKELY(h > nscoord_MAX)) {
         h = nscoord_MAX;
       }
@@ -185,8 +185,8 @@ struct NS_GFX nsRect :
   // unrounded result. In the RoundIn version we make the rect the largest rect
   // contained in the unrounded result.
   // Note: this can turn an empty rectangle into a non-empty rectangle
-  inline nsRect ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const;
-  inline nsRect ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  inline nsRect ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
+  inline nsRect ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
 
   inline nsIntRect ScaleToNearestPixels(float aXScale, float aYScale,
                                         nscoord aAppUnitsPerPixel) const;
@@ -208,8 +208,8 @@ struct NS_GFX nsRect :
 };
 
 struct NS_GFX nsIntRect :
-  public mozilla::gfx::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> {
-  typedef mozilla::gfx::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> Super;
+  public mozilla::gfx::BaseRect<int32_t, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> {
+  typedef mozilla::gfx::BaseRect<int32_t, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> Super;
 
   // Constructors
   nsIntRect() : Super()
@@ -221,7 +221,7 @@ struct NS_GFX nsIntRect :
   nsIntRect(const nsIntPoint& aOrigin, const nsIntSize &aSize) : Super(aOrigin, aSize)
   {
   }
-  nsIntRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) :
+  nsIntRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight) :
       Super(aX, aY, aWidth, aHeight)
   {
   }
@@ -247,7 +247,7 @@ protected:
  */
 
 inline nsRect
-nsRect::ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const
+nsRect::ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;
@@ -265,7 +265,7 @@ nsRect::ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const
 }
 
 inline nsRect
-nsRect::ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const
+nsRect::ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;

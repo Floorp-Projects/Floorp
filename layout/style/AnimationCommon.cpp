@@ -14,6 +14,22 @@
 namespace mozilla {
 namespace css {
 
+/* static */ bool
+IsGeometricProperty(nsCSSProperty aProperty)
+{
+  switch (aProperty) {
+    case eCSSProperty_bottom:
+    case eCSSProperty_height:
+    case eCSSProperty_left:
+    case eCSSProperty_right:
+    case eCSSProperty_top:
+    case eCSSProperty_width:
+      return true;
+    default:
+      return false;
+  }
+}
+
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
 {
@@ -147,7 +163,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     return;
   }
 
-  for (PRUint32 i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
+  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
     PropertyValuePair &cv = mPropertyValuePairs[i];
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
                              nsCSSProps::kSIDTable[cv.mProperty]))
@@ -168,7 +184,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 
 #ifdef DEBUG
 /* virtual */ void
-AnimValuesStyleRule::List(FILE* out, PRInt32 aIndent) const
+AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 {
   // WRITE ME?
 }
@@ -187,10 +203,10 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
 }
 
 static inline double
-StepEnd(PRUint32 aSteps, double aPortion)
+StepEnd(uint32_t aSteps, double aPortion)
 {
   NS_ABORT_IF_FALSE(0.0 <= aPortion && aPortion <= 1.0, "out of range");
-  PRUint32 step = PRUint32(aPortion * aSteps); // floor
+  uint32_t step = uint32_t(aPortion * aSteps); // floor
   return double(step) / double(aSteps);
 }
 
@@ -218,12 +234,16 @@ ComputedTimingFunction::GetValue(double aPortion) const
 
 bool
 CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                                           nsCSSProperty aProperty)
+                                                           nsCSSProperty aProperty,
+                                                           bool aHasGeometricProperties)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
   nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (aProperty == eCSSProperty_visibility) {
-    return true;
+  if (IsGeometricProperty(aProperty)) {
+    if (shouldLog) {
+      printf_stderr("Performance warning: Async animation of geometric property '%s' is disabled\n", aProperty);
+    }
+    return false;
   }
   if (aProperty == eCSSProperty_opacity) {
     bool enabled = nsLayoutUtils::AreOpacityAnimationsEnabled();
@@ -233,17 +253,22 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     return enabled;
   }
   if (aProperty == eCSSProperty_transform) {
-    if (frame &&
-        frame->Preserves3D() &&
+    if (frame->Preserves3D() &&
         frame->Preserves3DChildren()) {
       if (shouldLog) {
         printf_stderr("Gecko bug: Async animation of 'preserve-3d' transforms is not supported.  See bug 779598\n");
       }
       return false;
     }
-    if (frame && frame->IsSVGTransformed()) {
+    if (frame->IsSVGTransformed()) {
       if (shouldLog) {
         printf_stderr("Gecko bug: Async 'transform' animations of frames with SVG transforms is not supported.  See bug 779599\n");
+      }
+      return false;
+    }
+    if (aHasGeometricProperties) {
+      if (shouldLog) {
+        printf_stderr("Performance warning: Async animation of 'transform' not possible due to presence of geometric properties\n");
       }
       return false;
     }
@@ -253,11 +278,7 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     }
     return enabled;
   }
-  if (shouldLog) {
-    const nsAFlatCString propName = nsCSSProps::GetStringValue(aProperty);
-    printf_stderr("Performance warning: Async animation cancelled because of unsupported property '%s'\n", propName.get());
-  }
-  return false;
+  return true;
 }
 
 

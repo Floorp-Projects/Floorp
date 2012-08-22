@@ -238,9 +238,9 @@ protected:
   void Execute(nsGUIEvent *aEvent);
 
   // This method can destroy the frame
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
   virtual ~nsMenuFrame() { };
 
   bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
@@ -270,7 +270,7 @@ protected:
   nsCOMPtr<nsITimer> mOpenTimer;
   nsCOMPtr<nsITimer> mBlinkTimer;
 
-  PRUint8 mBlinkState; // 0: not blinking, 1: off, 2: on
+  uint8_t mBlinkState; // 0: not blinking, 1: off, 2: on
   nsRefPtr<nsXULMenuCommandEvent> mDelayedMenuCommandEvent;
 
   nsString mGroupName;

@@ -25,7 +25,7 @@ int main()
   if (NS_FAILED(rv))
     return -1;
 
-  PRUint32 n;
+  uint32_t n;
 
   rv = out->Write(kData, sizeof(kData), &n);
   if (NS_FAILED(rv))

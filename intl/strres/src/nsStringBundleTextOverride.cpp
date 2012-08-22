@@ -19,7 +19,7 @@ static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 class URLPropertyElement : public nsIPropertyElement
 {
 public:
-    URLPropertyElement(nsIPropertyElement *aRealElement, PRUint32 aURLLength) :
+    URLPropertyElement(nsIPropertyElement *aRealElement, uint32_t aURLLength) :
         mRealElement(aRealElement),
         mURLLength(aURLLength)
     { }
@@ -30,7 +30,7 @@ public:
     
 private:
     nsCOMPtr<nsIPropertyElement> mRealElement;
-    PRUint32 mURLLength;
+    uint32_t mURLLength;
 };
 
 NS_IMPL_ISUPPORTS1(URLPropertyElement, nsIPropertyElement)

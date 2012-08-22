@@ -153,12 +153,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONERROR
 
-  nsDOMGeoPositionError(PRInt16 aCode);
+  nsDOMGeoPositionError(int16_t aCode);
   void NotifyCallback(nsIDOMGeoPositionErrorCallback* callback);
 
 private:
   ~nsDOMGeoPositionError();
-  PRInt16 mCode;
+  int16_t mCode;
 };
 
 DOMCI_DATA(GeoPositionError, nsDOMGeoPositionError)
@@ -172,7 +172,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_THREADSAFE_ADDREF(nsDOMGeoPositionError)
 NS_IMPL_THREADSAFE_RELEASE(nsDOMGeoPositionError)
 
-nsDOMGeoPositionError::nsDOMGeoPositionError(PRInt16 aCode)
+nsDOMGeoPositionError::nsDOMGeoPositionError(int16_t aCode)
   : mCode(aCode)
 {
 }
@@ -181,7 +181,7 @@ nsDOMGeoPositionError::~nsDOMGeoPositionError(){}
 
 
 NS_IMETHODIMP
-nsDOMGeoPositionError::GetCode(PRInt16 *aCode)
+nsDOMGeoPositionError::GetCode(int16_t *aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
   *aCode = mCode;
@@ -253,7 +253,7 @@ NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLoc
 
 
 void
-nsGeolocationRequest::NotifyError(PRInt16 errorCode)
+nsGeolocationRequest::NotifyError(int16_t errorCode)
 {
   nsRefPtr<nsDOMGeoPositionError> positionError = new nsDOMGeoPositionError(errorCode);
   if (!positionError) {
@@ -353,7 +353,7 @@ nsGeolocationRequest::Allow()
   // -or-
   // b) the cached position time is some reasonable value to return to the user (<30s)
   
-  PRUint32 maximumAge = 30 * PR_MSEC_PER_SEC;
+  uint32_t maximumAge = 30 * PR_MSEC_PER_SEC;
   if (mOptions) {
     if (mOptions->maximumAge >= 0) {
       maximumAge = mOptions->maximumAge;
@@ -389,7 +389,7 @@ nsGeolocationRequest::SetTimeoutTimer()
     mTimeoutTimer = nullptr;
   }
 
-  PRInt32 timeout;
+  int32_t timeout;
   if (mOptions && (timeout = mOptions->timeout) != 0) {
 
     if (timeout < 0) {
@@ -506,7 +506,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsGeolocationService)
 
 static bool sGeoEnabled = true;
 static bool sGeoIgnoreLocationFilter = false;
-static PRInt32 sProviderTimeout = 6000; // Time, in milliseconds, to wait for the location provider to spin up.
+static int32_t sProviderTimeout = 6000; // Time, in milliseconds, to wait for the location provider to spin up.
 
 nsresult nsGeolocationService::Init()
 {
@@ -639,7 +639,7 @@ nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
 
     if (value.toBoolean() == false) {
       // turn things off
-      for (PRUint32 i = 0; i< mGeolocators.Length(); i++) {
+      for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
         mGeolocators[i]->Shutdown();
       }
       StopDevice();
@@ -663,7 +663,7 @@ nsGeolocationService::Observe(nsISupports* aSubject,
       obs->RemoveObserver(this, "mozsettings-changed");
     }
 
-    for (PRUint32 i = 0; i< mGeolocators.Length(); i++) {
+    for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
       mGeolocators[i]->Shutdown();
     }
     StopDevice();
@@ -678,7 +678,7 @@ nsGeolocationService::Observe(nsISupports* aSubject,
   
   if (!strcmp("timer-callback", aTopic)) {
     // decide if we can close down the service.
-    for (PRUint32 i = 0; i< mGeolocators.Length(); i++)
+    for (uint32_t i = 0; i< mGeolocators.Length(); i++)
       if (mGeolocators[i]->HasActiveCallbacks()) {
         SetDisconnectTimer();
         return NS_OK;
@@ -698,7 +698,7 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
 {
   SetCachedPosition(aSomewhere);
 
-  for (PRUint32 i = 0; i< mGeolocators.Length(); i++) {
+  for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
     mGeolocators[i]->Update(aSomewhere);
   }
   return NS_OK;
@@ -740,7 +740,7 @@ nsGeolocationService::StartDevice()
     return NS_ERROR_FAILURE;
   }
 
-  for (PRInt32 i = 0; i < mProviders.Count(); i++) {
+  for (int32_t i = 0; i < mProviders.Count(); i++) {
     mProviders[i]->Startup();
     mProviders[i]->Watch(this);
     obs->NotifyObservers(mProviders[i],
@@ -769,13 +769,13 @@ void
 nsGeolocationService::SetHigherAccuracy(bool aEnable)
 {
   if (!mHigherAccuracy && aEnable) {
-    for (PRInt32 i = 0; i < mProviders.Count(); i++) {
+    for (int32_t i = 0; i < mProviders.Count(); i++) {
       mProviders[i]->SetHighAccuracy(true);
     }
   }
         
   if (mHigherAccuracy && !aEnable) {
-    for (PRInt32 i = 0; i < mProviders.Count(); i++) {
+    for (int32_t i = 0; i < mProviders.Count(); i++) {
       mProviders[i]->SetHighAccuracy(false);
     }
   }
@@ -802,7 +802,7 @@ nsGeolocationService::StopDevice()
     return;
   }
 
-  for (PRInt32 i = 0; i < mProviders.Count(); i++) {
+  for (int32_t i = 0; i < mProviders.Count(); i++) {
     mProviders[i]->Shutdown();
     obs->NotifyObservers(mProviders[i],
                          "geolocation-device-events",
@@ -871,7 +871,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGeolocation)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGeolocation)
-  PRUint32 i; 
+  uint32_t i; 
   for (i = 0; i < tmp->mPendingCallbacks.Length(); ++i)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingCallbacks[i], nsIContentPermissionRequest)
 
@@ -930,11 +930,11 @@ void
 nsGeolocation::Shutdown()
 {
   // Shutdown and release all callbacks
-  for (PRUint32 i = 0; i< mPendingCallbacks.Length(); i++)
+  for (uint32_t i = 0; i< mPendingCallbacks.Length(); i++)
     mPendingCallbacks[i]->Shutdown();
   mPendingCallbacks.Clear();
 
-  for (PRUint32 i = 0; i< mWatchingCallbacks.Length(); i++)
+  for (uint32_t i = 0; i< mWatchingCallbacks.Length(); i++)
     mWatchingCallbacks[i]->Shutdown();
   mWatchingCallbacks.Clear();
 
@@ -949,7 +949,7 @@ nsGeolocation::Shutdown()
 bool
 nsGeolocation::HasActiveCallbacks()
 {
-  for (PRUint32 i = 0; i < mWatchingCallbacks.Length(); i++) {
+  for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
     if (mWatchingCallbacks[i]->IsActive()) {
       return true;
     }
@@ -979,14 +979,14 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
     return Shutdown();
   }
 
-  for (PRUint32 i = mPendingCallbacks.Length(); i> 0; i--) {
+  for (uint32_t i = mPendingCallbacks.Length(); i> 0; i--) {
     if (mPendingCallbacks[i-1]->Update(aSomewhere)) {
       mPendingCallbacks.RemoveElementAt(i-1);
     }
   }
 
   // notify everyone that is watching
-  for (PRUint32 i = 0; i< mWatchingCallbacks.Length(); i++) {
+  for (uint32_t i = 0; i< mWatchingCallbacks.Length(); i++) {
     mWatchingCallbacks[i]->Update(aSomewhere);
   }
 }
@@ -1046,7 +1046,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
                              const jsval& options,
                              JSContext* cx,
-                             PRInt32 *_retval)
+                             int32_t *_retval)
 {
 
   NS_ENSURE_ARG_POINTER(callback);
@@ -1102,10 +1102,10 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
 }
 
 NS_IMETHODIMP
-nsGeolocation::ClearWatch(PRInt32 aWatchId)
+nsGeolocation::ClearWatch(int32_t aWatchId)
 {
-  PRUint32 count = mWatchingCallbacks.Length();
-  if (aWatchId < 0 || count == 0 || PRUint32(aWatchId) >= count) {
+  uint32_t count = mWatchingCallbacks.Length();
+  if (aWatchId < 0 || count == 0 || uint32_t(aWatchId) >= count) {
     return NS_OK;
   }
 

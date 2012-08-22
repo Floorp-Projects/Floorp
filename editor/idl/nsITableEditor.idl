@@ -288,7 +288,7 @@ interface nsITableEditor : nsISupports
     *     TABLESELECTION_COLUMN    All cells are in 1 or more columns
     *                              and in each column, all cells are selected
     */
-  PRUint32 getSelectedCellsType(in nsIDOMElement aElement);
+  uint32_t getSelectedCellsType(in nsIDOMElement aElement);
 
   /** Get first selected element from first selection range.
     *   (If multiple cells were selected this is the first in the order they were selected)

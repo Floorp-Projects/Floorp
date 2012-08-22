@@ -43,7 +43,7 @@ GfxInfo::GfxInfo()
 }
 
 static OperatingSystem
-OSXVersionToOperatingSystem(PRUint32 aOSXVersion)
+OSXVersionToOperatingSystem(uint32_t aOSXVersion)
 {
   switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
     case MAC_OS_X_VERSION_10_5_HEX:
@@ -68,12 +68,12 @@ static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort,
                                          kIORegistryIterateParents);
 }
 
-static PRUint32 IntValueOfCFData(CFDataRef d)
+static uint32_t IntValueOfCFData(CFDataRef d)
 {
-  PRUint32 value = 0;
+  uint32_t value = 0;
 
   if (d) {
-    const PRUint32 *vp = reinterpret_cast<const PRUint32*>(CFDataGetBytePtr(d));
+    const uint32_t *vp = reinterpret_cast<const uint32_t*>(CFDataGetBytePtr(d));
     if (vp != NULL)
       value = *vp;
   }
@@ -338,8 +338,8 @@ GfxInfo::GetGfxDriverInfo()
 }
 
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
-                              PRInt32* aStatus,
+GfxInfo::GetFeatureStatusImpl(int32_t aFeature, 
+                              int32_t* aStatus,
                               nsAString& aSuggestedDriverVersion,
                               const nsTArray<GfxDriverInfo>& aDriverInfo,
                               OperatingSystem* aOS /* = nullptr */)
@@ -373,7 +373,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
       // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
       // being used.
 
-      for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
+      for (uint32_t i = 0; i < ArrayLength(mRendererIDs); ++i) {
         switch (mRendererIDs[i]) {
           case kCGLRendererATIRage128ID: // non-programmable
           case kCGLRendererATIRadeonID: // non-programmable
@@ -441,7 +441,7 @@ NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
 }
 
 /* void spoofOSVersion (in unsigned long aVersion); */
-NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
 {
   mOSXVersion = aVersion;
   return NS_OK;

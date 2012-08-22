@@ -28,11 +28,11 @@ public:
   virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount);
   virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState);
-  virtual PRInt32 BuildRows(nsIFrame* aBox, nsGridRow* aRows);
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows);
   virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal);
-  virtual PRInt32 GetRowCount() { return mRowCount; }
+  virtual int32_t GetRowCount() { return mRowCount; }
   virtual Type GetType() { return eRowGroup; }
 
 protected:
@@ -44,7 +44,7 @@ protected:
 
 private:
   nsGridRow* mRowColumn;
-  PRInt32 mRowCount;
+  int32_t mRowCount;
 };
 
 #endif

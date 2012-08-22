@@ -22,60 +22,60 @@ public:
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
-                                  nsIFrame* aFrame, PRUint8 aWidgetType,
+                                  nsIFrame* aFrame, uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect);
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                             PRUint8 aWidgetType, nsIntMargin* aResult);
+                             uint8_t aWidgetType, nsIntMargin* aResult);
 
   virtual NS_HIDDEN_(bool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
-                                              PRUint8 aWidgetType,
+                                              uint8_t aWidgetType,
                                               nsIntMargin* aResult);
 
   virtual NS_HIDDEN_(bool) GetWidgetOverflow(nsDeviceContext* aContext,
                                                nsIFrame* aFrame,
-                                               PRUint8 aWidgetType,
+                                               uint8_t aWidgetType,
                                                nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
-                                  nsIFrame* aFrame, PRUint8 aWidgetType,
+                                  nsIFrame* aFrame, uint8_t aWidgetType,
                                   nsIntSize* aResult, bool* aIsOverridable);
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                 nsIAtom* aAttribute, bool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
   NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
-                                          PRUint8 aWidgetType);
+                                          uint8_t aWidgetType);
 
-  NS_IMETHOD_(bool) WidgetIsContainer(PRUint8 aWidgetType);
+  NS_IMETHOD_(bool) WidgetIsContainer(uint8_t aWidgetType);
   
   NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
-                                               nsIFrame* aFrame, PRUint8 aWidgetType);
+                                               nsIFrame* aFrame, uint8_t aWidgetType);
 
   bool ThemeNeedsComboboxDropmarker();
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                             PRUint8 aWidgetType);
+                                             uint8_t aWidgetType);
 
   nsNativeThemeGTK();
   virtual ~nsNativeThemeGTK();
 
 private:
   gint GetTabMarginPixels(nsIFrame* aFrame);
-  bool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
+  bool GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
                               GtkThemeWidgetType& aGtkWidgetType,
                               GtkWidgetState* aState, gint* aWidgetFlags);
-  bool GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
+  bool GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
                                nsIntMargin* aExtra);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
 
-  PRUint8 mDisabledWidgetTypes[32];
-  PRUint8 mSafeWidgetStates[1024];    // 256 widgets * 32 bits per widget
+  uint8_t mDisabledWidgetTypes[32];
+  uint8_t mSafeWidgetStates[1024];    // 256 widgets * 32 bits per widget
   static const char* sDisabledEngines[];
 };

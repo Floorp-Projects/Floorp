@@ -100,17 +100,17 @@ static const char * prefList[] = {
 };
 
 // Cache sizes, in KB
-const PRInt32 DEFAULT_CACHE_SIZE = 250 * 1024;  // 250 MB
-const PRInt32 MIN_CACHE_SIZE = 50 * 1024;       //  50 MB
+const int32_t DEFAULT_CACHE_SIZE = 250 * 1024;  // 250 MB
+const int32_t MIN_CACHE_SIZE = 50 * 1024;       //  50 MB
 #ifdef ANDROID
-const PRInt32 MAX_CACHE_SIZE = 200 * 1024;      // 200 MB
-const PRInt32 OLD_MAX_CACHE_SIZE = 200 * 1024;  // 200 MB
+const int32_t MAX_CACHE_SIZE = 200 * 1024;      // 200 MB
+const int32_t OLD_MAX_CACHE_SIZE = 200 * 1024;  // 200 MB
 #else
-const PRInt32 MAX_CACHE_SIZE = 350 * 1024;      // 350 MB
-const PRInt32 OLD_MAX_CACHE_SIZE = 1024 * 1024; //   1 GB
+const int32_t MAX_CACHE_SIZE = 350 * 1024;      // 350 MB
+const int32_t OLD_MAX_CACHE_SIZE = 1024 * 1024; //   1 GB
 #endif
 // Default cache size was 50 MB for many years until FF 4:
-const PRInt32 PRE_GECKO_2_0_DEFAULT_CACHE_SIZE = 50 * 1024;
+const int32_t PRE_GECKO_2_0_DEFAULT_CACHE_SIZE = 50 * 1024;
 
 class nsCacheProfilePrefObserver : public nsIObserver
 {
@@ -143,9 +143,9 @@ public:
     nsresult        ReadPrefs(nsIPrefBranch* branch);
     
     bool            DiskCacheEnabled();
-    PRInt32         DiskCacheCapacity()         { return mDiskCacheCapacity; }
-    void            SetDiskCacheCapacity(PRInt32);
-    PRInt32         DiskCacheMaxEntrySize()     { return mDiskCacheMaxEntrySize; }
+    int32_t         DiskCacheCapacity()         { return mDiskCacheCapacity; }
+    void            SetDiskCacheCapacity(int32_t);
+    int32_t         DiskCacheMaxEntrySize()     { return mDiskCacheMaxEntrySize; }
     nsIFile *       DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
     bool            SmartSizeEnabled()          { return mSmartSizeEnabled; }
 
@@ -153,19 +153,19 @@ public:
     void            SetUseNewMaxSmartSize()     { mUseOldMaxSmartSize = false; }
 
     bool            OfflineCacheEnabled();
-    PRInt32         OfflineCacheCapacity()         { return mOfflineCacheCapacity; }
+    int32_t         OfflineCacheCapacity()         { return mOfflineCacheCapacity; }
     nsIFile *       OfflineCacheParentDirectory()  { return mOfflineCacheParentDirectory; }
     
     bool            MemoryCacheEnabled();
-    PRInt32         MemoryCacheCapacity();
-    PRInt32         MemoryCacheMaxEntrySize()     { return mMemoryCacheMaxEntrySize; }
+    int32_t         MemoryCacheCapacity();
+    int32_t         MemoryCacheMaxEntrySize()     { return mMemoryCacheMaxEntrySize; }
 
-    PRInt32         CacheCompressionLevel();
+    int32_t         CacheCompressionLevel();
 
     bool            SanitizeAtShutdown() { return mSanitizeOnShutdown && mClearCacheOnShutdown; }
 
-    static PRUint32 GetSmartCacheSize(const nsAString& cachePath,
-                                      PRUint32 currentSize,
+    static uint32_t GetSmartCacheSize(const nsAString& cachePath,
+                                      uint32_t currentSize,
                                       bool useOldMaxSmartSize);
 
 private:
@@ -173,22 +173,22 @@ private:
     bool                    mHaveProfile;
     
     bool                    mDiskCacheEnabled;
-    PRInt32                 mDiskCacheCapacity; // in kilobytes
-    PRInt32                 mDiskCacheMaxEntrySize; // in kilobytes
+    int32_t                 mDiskCacheCapacity; // in kilobytes
+    int32_t                 mDiskCacheMaxEntrySize; // in kilobytes
     nsCOMPtr<nsIFile>       mDiskCacheParentDirectory;
     bool                    mSmartSizeEnabled;
 
     bool                    mUseOldMaxSmartSize;
 
     bool                    mOfflineCacheEnabled;
-    PRInt32                 mOfflineCacheCapacity; // in kilobytes
+    int32_t                 mOfflineCacheCapacity; // in kilobytes
     nsCOMPtr<nsIFile>       mOfflineCacheParentDirectory;
     
     bool                    mMemoryCacheEnabled;
-    PRInt32                 mMemoryCacheCapacity; // in kilobytes
-    PRInt32                 mMemoryCacheMaxEntrySize; // in kilobytes
+    int32_t                 mMemoryCacheCapacity; // in kilobytes
+    int32_t                 mMemoryCacheMaxEntrySize; // in kilobytes
 
-    PRInt32                 mCacheCompressionLevel;
+    int32_t                 mCacheCompressionLevel;
 
     bool                    mSanitizeOnShutdown;
     bool                    mClearCacheOnShutdown;
@@ -218,7 +218,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSetDiskSmartSizeCallback, nsITimerCallback)
 class nsSetSmartSizeEvent: public nsRunnable 
 {
 public:
-    nsSetSmartSizeEvent(PRInt32 smartSize)
+    nsSetSmartSizeEvent(int32_t smartSize)
         : mSmartSize(smartSize) {}
 
     NS_IMETHOD Run() 
@@ -247,7 +247,7 @@ public:
     }
 
 private:
-    PRInt32 mSmartSize;
+    int32_t mSmartSize;
 };
 
 
@@ -255,7 +255,7 @@ private:
 class nsGetSmartSizeEvent: public nsRunnable
 {
 public:
-    nsGetSmartSizeEvent(const nsAString& cachePath, PRUint32 currentSize,
+    nsGetSmartSizeEvent(const nsAString& cachePath, uint32_t currentSize,
                         bool useOldMaxSmartSize)
       : mCachePath(cachePath)
       , mCurrentSize(currentSize)
@@ -266,7 +266,7 @@ public:
     // dispatches this value back to the main thread.
     NS_IMETHOD Run()
     {
-        PRUint32 size;
+        uint32_t size;
         size = nsCacheProfilePrefObserver::GetSmartCacheSize(mCachePath,
                                                              mCurrentSize,
                                                              mUseOldMaxSmartSize);
@@ -276,7 +276,7 @@ public:
 
 private:
     nsString mCachePath;
-    PRUint32 mCurrentSize;
+    uint32_t mCurrentSize;
     bool     mUseOldMaxSmartSize;
 };
 
@@ -365,7 +365,7 @@ nsCacheProfilePrefObserver::Remove()
 }
 
 void
-nsCacheProfilePrefObserver::SetDiskCacheCapacity(PRInt32 capacity)
+nsCacheProfilePrefObserver::SetDiskCacheCapacity(int32_t capacity)
 {
     mDiskCacheCapacity = NS_MAX(0, capacity);
 }
@@ -421,7 +421,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 
         } else if (!strcmp(DISK_CACHE_CAPACITY_PREF, data.get())) {
 
-            PRInt32 capacity = 0;
+            int32_t capacity = 0;
             rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
             if (NS_FAILED(rv))  
                 return rv;
@@ -435,7 +435,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
                                      &mSmartSizeEnabled);
             if (NS_FAILED(rv)) 
                 return rv;
-            PRInt32 newCapacity = 0;
+            int32_t newCapacity = 0;
             if (mSmartSizeEnabled) {
                 nsCacheService::SetDiskSmartSize();
             } else {
@@ -452,7 +452,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             if (NS_FAILED(rv))
                 return rv;
         } else if (!strcmp(DISK_CACHE_MAX_ENTRY_SIZE_PREF, data.get())) {
-            PRInt32 newMaxSize;
+            int32_t newMaxSize;
             rv = branch->GetIntPref(DISK_CACHE_MAX_ENTRY_SIZE_PREF,
                                     &newMaxSize);
             if (NS_FAILED(rv)) 
@@ -480,7 +480,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 
         } else if (!strcmp(OFFLINE_CACHE_CAPACITY_PREF, data.get())) {
 
-            PRInt32 capacity = 0;
+            int32_t capacity = 0;
             rv = branch->GetIntPref(OFFLINE_CACHE_CAPACITY_PREF, &capacity);
             if (NS_FAILED(rv))  return rv;
             mOfflineCacheCapacity = NS_MAX(0, capacity);
@@ -509,7 +509,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
                                       &mMemoryCacheCapacity);
             nsCacheService::SetMemoryCache();
         } else if (!strcmp(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF, data.get())) {
-            PRInt32 newMaxSize;
+            int32_t newMaxSize;
             rv = branch->GetIntPref(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
                                      &newMaxSize);
             if (NS_FAILED(rv)) 
@@ -545,10 +545,10 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 
 // Returns default ("smart") size (in KB) of cache, given available disk space
 // (also in KB)
-static PRUint32
-SmartCacheSize(const PRUint32 availKB, bool useOldMaxSmartSize)
+static uint32_t
+SmartCacheSize(const uint32_t availKB, bool useOldMaxSmartSize)
 {
-    PRUint32 maxSize = useOldMaxSmartSize ? OLD_MAX_CACHE_SIZE : MAX_CACHE_SIZE;
+    uint32_t maxSize = useOldMaxSmartSize ? OLD_MAX_CACHE_SIZE : MAX_CACHE_SIZE;
 
     if (availKB > 100 * 1024 * 1024)
         return maxSize;  // skip computing if we're over 100 GB
@@ -556,8 +556,8 @@ SmartCacheSize(const PRUint32 availKB, bool useOldMaxSmartSize)
     // Grow/shrink in 10 MB units, deliberately, so that in the common case we
     // don't shrink cache and evict items every time we startup (it's important
     // that we don't slow down startup benchmarks).
-    PRUint32 sz10MBs = 0;
-    PRUint32 avail10MBs = availKB / (1024*10);
+    uint32_t sz10MBs = 0;
+    uint32_t avail10MBs = availKB / (1024*10);
 
     // .5% of space above 25 GB
     if (avail10MBs > 2500) {
@@ -581,13 +581,13 @@ SmartCacheSize(const PRUint32 availKB, bool useOldMaxSmartSize)
     // percentage of available space and a smaller minimum.
 
     // 20% of space up to 500 MB (10 MB min)
-    sz10MBs += NS_MAX<PRUint32>(1, avail10MBs * .2);
+    sz10MBs += NS_MAX<uint32_t>(1, avail10MBs * .2);
 #else
     // 40% of space up to 500 MB (50 MB min)
-    sz10MBs += NS_MAX<PRUint32>(5, avail10MBs * .4);
+    sz10MBs += NS_MAX<uint32_t>(5, avail10MBs * .4);
 #endif
 
-    return NS_MIN<PRUint32>(maxSize, sz10MBs * 10 * 1024);
+    return NS_MIN<uint32_t>(maxSize, sz10MBs * 10 * 1024);
 }
 
  /* Computes our best guess for the default size of the user's disk cache, 
@@ -601,9 +601,9 @@ SmartCacheSize(const PRUint32 availKB, bool useOldMaxSmartSize)
   *@param:  None.
   *@return: The size that the user's disk cache should default to, in kBytes.
   */
-PRUint32
+uint32_t
 nsCacheProfilePrefObserver::GetSmartCacheSize(const nsAString& cachePath,
-                                              PRUint32 currentSize,
+                                              uint32_t currentSize,
                                               bool useOldMaxSmartSize)
 {
     // Check for free space on device where cache directory lives
@@ -615,7 +615,7 @@ nsCacheProfilePrefObserver::GetSmartCacheSize(const nsAString& cachePath,
     rv = cacheDirectory->InitWithPath(cachePath);
     if (NS_FAILED(rv))
         return DEFAULT_CACHE_SIZE;
-    PRInt64 bytesAvailable;
+    int64_t bytesAvailable;
     rv = cacheDirectory->GetDiskSpaceAvailable(&bytesAvailable);
     if (NS_FAILED(rv))
         return DEFAULT_CACHE_SIZE;
@@ -639,7 +639,7 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, bool
         rv = branch->PrefHasUserValue(DISK_CACHE_CAPACITY_PREF, &userSet);
         if (NS_FAILED(rv)) userSet = true;
         if (userSet) {
-            PRInt32 oldCapacity;
+            int32_t oldCapacity;
             // If user explicitly set cache size to be smaller than old default
             // of 50 MB, then keep user's value. Otherwise use smart sizing.
             rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
@@ -652,7 +652,7 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, bool
         }
         // Set manual setting to MAX cache size as starting val for any
         // adjustment by user: (bug 559942 comment 65)
-        PRInt32 maxSize = mUseOldMaxSmartSize ? OLD_MAX_CACHE_SIZE : MAX_CACHE_SIZE;
+        int32_t maxSize = mUseOldMaxSmartSize ? OLD_MAX_CACHE_SIZE : MAX_CACHE_SIZE;
         branch->SetIntPref(DISK_CACHE_CAPACITY_PREF, maxSize);
     }
 
@@ -906,16 +906,16 @@ nsCacheProfilePrefObserver::MemoryCacheEnabled()
  *  if (C > 32) C = 32
  */
 
-PRInt32
+int32_t
 nsCacheProfilePrefObserver::MemoryCacheCapacity()
 {
-    PRInt32 capacity = mMemoryCacheCapacity;
+    int32_t capacity = mMemoryCacheCapacity;
     if (capacity >= 0) {
         CACHE_LOG_DEBUG(("Memory cache capacity forced to %d\n", capacity));
         return capacity;
     }
 
-    static PRUint64 bytes = PR_GetPhysicalMemorySize();
+    static uint64_t bytes = PR_GetPhysicalMemorySize();
     CACHE_LOG_DEBUG(("Physical Memory size is %llu\n", bytes));
 
     // If getting the physical memory failed, arbitrarily assume
@@ -930,15 +930,15 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     if (LL_CMP(bytes, >, LL_MAXINT))
         bytes = LL_MAXINT;
 
-    PRUint64 kbytes;
+    uint64_t kbytes;
     LL_SHR(kbytes, bytes, 10);
 
     double kBytesD;
-    LL_L2D(kBytesD, (PRInt64) kbytes);
+    LL_L2D(kBytesD, (int64_t) kbytes);
 
     double x = log(kBytesD)/log(2.0) - 14;
     if (x > 0) {
-        capacity = (PRInt32)(x * x / 3.0 + x + 2.0 / 3 + 0.1); // 0.1 for rounding
+        capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1); // 0.1 for rounding
         if (capacity > 32)
             capacity = 32;
         capacity   *= 1024;
@@ -949,7 +949,7 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     return capacity;
 }
 
-PRInt32
+int32_t
 nsCacheProfilePrefObserver::CacheCompressionLevel()
 {
     return mCacheCompressionLevel;
@@ -1667,7 +1667,7 @@ nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice)
 
 nsresult
 nsCacheService::GetCustomOfflineDevice(nsIFile *aProfileDir,
-                                       PRInt32 aQuota,
+                                       int32_t aQuota,
                                        nsOfflineCacheDevice **aDevice)
 {
     nsresult rv;
@@ -1706,7 +1706,7 @@ nsCacheService::CreateOfflineDevice()
 
 nsresult
 nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
-                                          PRInt32 aQuota,
+                                          int32_t aQuota,
                                           nsOfflineCacheDevice **aDevice)
 {
     NS_ENSURE_ARG(aProfileDir);
@@ -1750,7 +1750,7 @@ nsCacheService::CreateMemoryDevice()
     if (!mMemoryDevice)       return NS_ERROR_OUT_OF_MEMORY;
     
     // set preference
-    PRInt32 capacity = mObserver->MemoryCacheCapacity();
+    int32_t capacity = mObserver->MemoryCacheCapacity();
     CACHE_LOG_DEBUG(("Creating memory device with capacity %d\n", capacity));
     mMemoryDevice->SetCapacity(capacity);
     mMemoryDevice->SetMaxEntrySize(mObserver->MemoryCacheMaxEntrySize());
@@ -2193,7 +2193,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     // doomed entries to bind to a device (see e.g. bugs #548406 and #596443)
     if (device || entry->IsDoomed())  return device;
 
-    PRInt64 predictedDataSize = entry->PredictedDataSize();
+    int64_t predictedDataSize = entry->PredictedDataSize();
     if (entry->IsStreamData() && entry->IsAllowedOnDisk() && mEnableDiskDevice) {
         // this is the default
         if (!mDiskDevice) {
@@ -2264,7 +2264,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     return device;
 }
 
-PRInt64
+int64_t
 nsCacheService::MemoryDeviceSize()
 {
     nsMemoryCacheDevice *memoryDevice = GlobalInstance()->mMemoryDevice;
@@ -2407,7 +2407,7 @@ nsCacheService::OnProfileChanged()
     if (gService->mMemoryDevice) {
         if (gService->mEnableMemoryDevice) {
             // make sure that capacity is reset to the right value
-            PRInt32 capacity = gService->mObserver->MemoryCacheCapacity();
+            int32_t capacity = gService->mObserver->MemoryCacheCapacity();
             CACHE_LOG_DEBUG(("Resetting memory device capacity to %d\n",
                              capacity));
             gService->mMemoryDevice->SetCapacity(capacity);
@@ -2431,7 +2431,7 @@ nsCacheService::SetDiskCacheEnabled(bool    enabled)
 
 
 void
-nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
+nsCacheService::SetDiskCacheCapacity(int32_t  capacity)
 {
     if (!gService)  return;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKCACHECAPACITY));
@@ -2445,7 +2445,7 @@ nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
 }
 
 void
-nsCacheService::SetDiskCacheMaxEntrySize(PRInt32  maxSize)
+nsCacheService::SetDiskCacheMaxEntrySize(int32_t  maxSize)
 {
     if (!gService)  return;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKCACHEMAXENTRYSIZE));
@@ -2456,7 +2456,7 @@ nsCacheService::SetDiskCacheMaxEntrySize(PRInt32  maxSize)
 }
 
 void
-nsCacheService::SetMemoryCacheMaxEntrySize(PRInt32  maxSize)
+nsCacheService::SetMemoryCacheMaxEntrySize(int32_t  maxSize)
 {
     if (!gService)  return;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETMEMORYCACHEMAXENTRYSIZE));
@@ -2475,7 +2475,7 @@ nsCacheService::SetOfflineCacheEnabled(bool    enabled)
 }
 
 void
-nsCacheService::SetOfflineCacheCapacity(PRInt32  capacity)
+nsCacheService::SetOfflineCacheCapacity(int32_t  capacity)
 {
     if (!gService)  return;
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETOFFLINECACHECAPACITY));
@@ -2501,7 +2501,7 @@ nsCacheService::SetMemoryCache()
 
     if (gService->mEnableMemoryDevice) {
         if (gService->mMemoryDevice) {
-            PRInt32 capacity = gService->mObserver->MemoryCacheCapacity();
+            int32_t capacity = gService->mObserver->MemoryCacheCapacity();
             // make sure that capacity is reset to the right value
             CACHE_LOG_DEBUG(("Resetting memory device capacity to %d\n",
                              capacity));
@@ -2553,7 +2553,7 @@ nsCacheService::GetFileForEntry(nsCacheEntry *         entry,
 nsresult
 nsCacheService::OpenInputStreamForEntry(nsCacheEntry *     entry,
                                         nsCacheAccessMode  mode,
-                                        PRUint32           offset,
+                                        uint32_t           offset,
                                         nsIInputStream  ** result)
 {
     nsCacheDevice * device = gService->EnsureEntryHasDevice(entry);
@@ -2565,7 +2565,7 @@ nsCacheService::OpenInputStreamForEntry(nsCacheEntry *     entry,
 nsresult
 nsCacheService::OpenOutputStreamForEntry(nsCacheEntry *     entry,
                                          nsCacheAccessMode  mode,
-                                         PRUint32           offset,
+                                         uint32_t           offset,
                                          nsIOutputStream ** result)
 {
     nsCacheDevice * device = gService->EnsureEntryHasDevice(entry);
@@ -2576,7 +2576,7 @@ nsCacheService::OpenOutputStreamForEntry(nsCacheEntry *     entry,
 
 
 nsresult
-nsCacheService::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
+nsCacheService::OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize)
 {
     nsCacheDevice * device = gService->EnsureEntryHasDevice(entry);
     if (!device)  return  NS_ERROR_UNEXPECTED;
@@ -2622,7 +2622,7 @@ nsCacheService::Unlock()
 
     gService->mLock.Unlock();
 
-    for (PRUint32 i = 0; i < doomed.Length(); ++i)
+    for (uint32_t i = 0; i < doomed.Length(); ++i)
         doomed[i]->Release();
 }
 
@@ -2665,10 +2665,10 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
 }
 
 
-PRInt32
+int32_t
 nsCacheService::CacheCompressionLevel()
 {
-    PRInt32 level = gService->mObserver->CacheCompressionLevel();
+    int32_t level = gService->mObserver->CacheCompressionLevel();
     return level;
 }
 
@@ -2885,7 +2885,7 @@ nsCacheService::ClearActiveEntries()
 PLDHashOperator
 nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
                                         PLDHashEntryHdr * hdr,
-                                        PRUint32          number,
+                                        uint32_t          number,
                                         void *            arg)
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
@@ -2914,15 +2914,15 @@ nsCacheService::DoomActiveEntries(DoomCheckFn check)
 
     mActiveEntries.VisitEntries(RemoveActiveEntry, &args);
 
-    PRUint32 count = array.Length();
-    for (PRUint32 i=0; i < count; ++i)
+    uint32_t count = array.Length();
+    for (uint32_t i=0; i < count; ++i)
         DoomEntry_Internal(array[i], true);
 }
 
 PLDHashOperator
 nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
                                   PLDHashEntryHdr * hdr,
-                                  PRUint32          number,
+                                  uint32_t          number,
                                   void *            arg)
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
@@ -2945,7 +2945,7 @@ nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
 void
 nsCacheService::LogCacheStatistics()
 {
-    PRUint32 hitPercentage = (PRUint32)((((double)mCacheHits) /
+    uint32_t hitPercentage = (uint32_t)((((double)mCacheHits) /
         ((double)(mCacheHits + mCacheMisses))) * 100);
     CACHE_LOG_ALWAYS(("\nCache Service Statistics:\n\n"));
     CACHE_LOG_ALWAYS(("    TotalEntries   = %d\n", mTotalEntries));

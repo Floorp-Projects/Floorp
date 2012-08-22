@@ -59,7 +59,7 @@ protected:
   virtual nsSMILCalcMode GetCalcMode() const MOZ_OVERRIDE;
   virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
                              nsSMILValueArray& aResult) MOZ_OVERRIDE;
-  virtual void CheckValueListDependentAttrs(PRUint32 aNumValues) MOZ_OVERRIDE;
+  virtual void CheckValueListDependentAttrs(uint32_t aNumValues) MOZ_OVERRIDE;
 
   virtual bool IsToAnimation() const MOZ_OVERRIDE;
 

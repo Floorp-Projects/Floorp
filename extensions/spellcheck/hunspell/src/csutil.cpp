@@ -5564,7 +5564,7 @@ struct cs_info * get_current_cs(const char * es) {
         break;
       const char source = char(i);
       PRUnichar uni, uniCased;
-      PRInt32 charLength = 1, uniLength = 1;
+      int32_t charLength = 1, uniLength = 1;
 
       rv = decoder->Convert(&source, &charLength, &uni, &uniLength);
       // Explicitly check NS_OK because we don't want to allow

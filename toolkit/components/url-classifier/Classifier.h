@@ -58,8 +58,8 @@ public:
    */
   nsresult MarkSpoiled(nsTArray<nsCString>& aTables);
   nsresult CacheCompletions(const CacheResultArray& aResults);
-  PRUint32 GetHashKey(void) { return mHashKey; };
-  void SetFreshTime(PRUint32 aTime) { mFreshTime = aTime; };
+  uint32_t GetHashKey(void) { return mHashKey; };
+  void SetFreshTime(uint32_t aTime) { mFreshTime = aTime; };
   void SetPerClientRandomize(bool aRandomize) { mPerClientRandomize = aRandomize; };
   /*
    * Get a bunch of extra prefixes to query for completion
@@ -67,7 +67,7 @@ public:
    */
   nsresult ReadNoiseEntries(const Prefix& aPrefix,
                             const nsACString& aTableName,
-                            PRInt32 aCount,
+                            int32_t aCount,
                             PrefixArray* aNoiseEntries);
 private:
   void DropStores();
@@ -85,10 +85,10 @@ private:
   nsTArray<HashStore*> mHashStores;
   nsTArray<LookupCache*> mLookupCaches;
   nsTArray<nsCString> mActiveTablesCache;
-  PRUint32 mHashKey;
+  uint32_t mHashKey;
   // Stores the last time a given table was updated (seconds).
-  nsDataHashtable<nsCStringHashKey, PRInt64> mTableFreshness;
-  PRUint32 mFreshTime;
+  nsDataHashtable<nsCStringHashKey, int64_t> mTableFreshness;
+  uint32_t mFreshTime;
   bool mPerClientRandomize;
 };
 

@@ -58,11 +58,11 @@ using namespace JSC;
 void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name_)
 {
-    Rooted<PropertyName*> name(f.cx, name_);
-    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(), name);
-    if (!obj)
+    RootedPropertyName name(f.cx, name_);
+    RootedObject scope(f.cx);
+    if (!LookupNameForSet(f.cx, name, f.fp()->scopeChain(), &scope))
         THROW();
-    f.regs.sp[0].setObject(*obj);
+    f.regs.sp[0].setObject(*scope);
 }
 
 JSObject * JS_FASTCALL
@@ -71,32 +71,18 @@ stubs::BindGlobalName(VMFrame &f)
     return &f.fp()->global();
 }
 
-template<JSBool strict>
 void JS_FASTCALL
 stubs::SetName(VMFrame &f, PropertyName *name)
 {
     JSContext *cx = f.cx;
-    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
-    HandleValue lval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+    RootedObject scope(cx, &f.regs.sp[-2].toObject());
+    HandleValue value = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    if (!SetPropertyOperation(cx, f.pc(), lval, rval))
+    if (!SetNameOperation(cx, f.pc(), scope, value))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
 }
-
-template void JS_FASTCALL stubs::SetName<true>(VMFrame &f, PropertyName *origName);
-template void JS_FASTCALL stubs::SetName<false>(VMFrame &f, PropertyName *origName);
-
-template<JSBool strict>
-void JS_FASTCALL
-stubs::SetGlobalName(VMFrame &f, PropertyName *name)
-{
-    SetName<strict>(f, name);
-}
-
-template void JS_FASTCALL stubs::SetGlobalName<true>(VMFrame &f, PropertyName *name);
-template void JS_FASTCALL stubs::SetGlobalName<false>(VMFrame &f, PropertyName *name);
 
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
@@ -162,7 +148,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setGeneric(cx, obj, id, &rval, strict))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -201,7 +187,7 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
 
     RootedObject obj(f.cx), obj2(f.cx);
     RootedShape prop(f.cx);
-    if (!FindPropertyHelper(f.cx, name, false, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -347,7 +333,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     RootedPropertyName name(cx, fun->atom->asPropertyName());
     RootedShape shape(cx);
     RootedObject pobj(cx);
-    if (!parent->lookupProperty(cx, name, &pobj, &shape))
+    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
         THROW();
 
     RootedValue rval(cx, ObjectValue(*fun));
@@ -355,8 +341,8 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     do {
         /* Steps 5d, 5f. */
         if (!shape || pobj != parent) {
-            if (!parent->defineProperty(cx, name, rval,
-                                        JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            if (!JSObject::defineProperty(cx, parent, name, rval,
+                                          JS_PropertyStub, JS_StrictPropertyStub, attrs))
             {
                 THROW();
             }
@@ -367,8 +353,8 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
         JS_ASSERT(parent->isNative());
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, name, rval,
-                                            JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                if (!JSObject::defineProperty(cx, parent, name, rval,
+                                              JS_PropertyStub, JS_StrictPropertyStub, attrs))
                 {
                     THROW();
                 }
@@ -393,7 +379,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, &rval, strict))
+        if (!JSObject::setProperty(cx, parent, parent, name, &rval, strict))
             THROW();
     } while (false);
 }
@@ -962,10 +948,10 @@ stubs::InitElem(VMFrame &f, uint32_t last)
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (last && !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
+        if (last && !SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
-        if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             THROW();
     }
 }
@@ -1025,13 +1011,25 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
     JS_ASSERT(lval.isObject());
     JS_ASSERT(name == cx->runtime->atomState.classPrototypeAtom);
 
-    JSObject *obj = &lval.toObject();
-
+    RootedObject obj(cx, &lval.toObject());
     RootedValue rval(cx);
-    if (!obj->getProperty(cx, name, &rval))
+    if (!JSObject::getProperty(cx, obj, obj, name, &rval))
         THROW();
 
     regs.sp[-1] = rval;
+}
+
+void JS_FASTCALL
+stubs::SetProp(VMFrame &f, PropertyName *name)
+{
+    JSContext *cx = f.cx;
+    HandleValue rval = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+    HandleValue lval = HandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+
+    if (!SetPropertyOperation(cx, f.pc(), lval, rval))
+        THROW();
+
+    f.regs.sp[-2] = f.regs.sp[-1];
 }
 
 void JS_FASTCALL
@@ -1367,7 +1365,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
 
     RootedObject obj(f.cx), obj2(f.cx);
     RootedShape prop(f.cx);
-    if (!FindProperty(f.cx, name, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -1377,7 +1375,7 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!obj->deleteProperty(f.cx, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
+        if (!JSObject::deleteProperty(f.cx, obj, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
             THROW();
     }
 }
@@ -1390,12 +1388,12 @@ stubs::DelProp(VMFrame &f, PropertyName *name_)
     RootedPropertyName name(cx, name_);
 
     RootedValue objval(cx, f.regs.sp[-1]);
-    JSObject *obj = ToObjectFromStack(cx, objval);
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
     RootedValue rval(cx);
-    if (!obj->deleteProperty(cx, name, &rval, strict))
+    if (!JSObject::deleteProperty(cx, obj, name, &rval, strict))
         THROW();
 
     f.regs.sp[-1] = rval;
@@ -1411,14 +1409,14 @@ stubs::DelElem(VMFrame &f)
     JSContext *cx = f.cx;
 
     RootedValue objval(cx, f.regs.sp[-2]);
-    JSObject *obj = ToObjectFromStack(cx, objval);
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
     const Value &propval = f.regs.sp[-1];
     MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 
-    if (!obj->deleteByValue(cx, propval, rval, strict))
+    if (!JSObject::deleteByValue(cx, obj, propval, rval, strict))
         THROW();
 }
 
@@ -1443,11 +1441,11 @@ stubs::SetConst(VMFrame &f, PropertyName *name)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = &f.fp()->varObj();
+    RootedObject obj(cx, &f.fp()->varObj());
     HandleValue ref = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    if (!obj->defineProperty(cx, name, ref, JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, obj, name, ref, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY))
     {
         THROW();
     }
@@ -1475,7 +1473,7 @@ stubs::In(VMFrame &f)
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
+    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
         THROWV(JS_FALSE);
 
     return !!prop;

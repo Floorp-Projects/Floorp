@@ -41,7 +41,7 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
 
 // First 8 bytes of a PNG file
-const PRUint8 
+const uint8_t 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
@@ -76,10 +76,10 @@ nsPNGDecoder::~nsPNGDecoder()
 
 // CreateFrame() is used for both simple and animated images
 void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
-                               PRInt32 width, PRInt32 height,
+                               int32_t width, int32_t height,
                                gfxASurface::gfxImageFormat format)
 {
-  PRUint32 imageDataLength;
+  uint32_t imageDataLength;
   nsresult rv = mImage.EnsureFrame(GetFrameCount(), x_offset, y_offset,
                                    width, height, format,
                                    &mImageData, &imageDataLength);
@@ -116,7 +116,7 @@ void nsPNGDecoder::SetAnimFrameInfo()
   /* delay, in seconds is delay_num/delay_den */
   png_byte dispose_op;
   png_byte blend_op;
-  PRInt32 timeout; /* in milliseconds */
+  int32_t timeout; /* in milliseconds */
 
   delay_num = png_get_next_frame_delay_num(mPNG, mInfo);
   delay_den = png_get_next_frame_delay_den(mPNG, mInfo);
@@ -131,11 +131,11 @@ void nsPNGDecoder::SetAnimFrameInfo()
 
     // Need to cast delay_num to float to have a proper division and
     // the result to int to avoid compiler warning
-    timeout = static_cast<PRInt32>
+    timeout = static_cast<int32_t>
               (static_cast<double>(delay_num) * 1000 / delay_den);
   }
 
-  PRUint32 numFrames = mImage.GetNumFrames();
+  uint32_t numFrames = mImage.GetNumFrames();
 
   mImage.SetFrameTimeout(numFrames - 1, timeout);
 
@@ -162,7 +162,7 @@ void nsPNGDecoder::EndImageFrame()
   if (mFrameIsHidden)
     return;
 
-  PRUint32 numFrames = 1;
+  uint32_t numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
   numFrames = mImage.GetNumFrames();
 
@@ -211,7 +211,7 @@ nsPNGDecoder::InitInternal()
 
   // For size decodes, we only need a small buffer
   if (IsSizeDecode()) {
-    mHeaderBuf = (PRUint8 *)moz_xmalloc(BYTES_NEEDED_FOR_DIMENSIONS);
+    mHeaderBuf = (uint8_t *)moz_xmalloc(BYTES_NEEDED_FOR_DIMENSIONS);
     return;
   }
 
@@ -270,11 +270,11 @@ nsPNGDecoder::InitInternal()
 }
 
 void
-nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
 {
   // We use gotos, so we need to declare variables here
-  PRUint32 width = 0;
-  PRUint32 height = 0;
+  uint32_t width = 0;
+  uint32_t height = 0;
 
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
@@ -286,7 +286,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       return;
 
     // Read data into our header buffer
-    PRUint32 bytesToRead = NS_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS -
+    uint32_t bytesToRead = NS_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS -
                                   mHeaderBytesRead);
     memcpy(mHeaderBuf + mHeaderBytesRead, aBuffer, bytesToRead);
     mHeaderBytesRead += bytesToRead;
@@ -359,7 +359,7 @@ PNGDoGammaCorrection(png_structp png_ptr, png_infop info_ptr)
 // Adapted from http://www.littlecms.com/pngchrm.c example code
 static qcms_profile *
 PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
-                   int color_type, qcms_data_type *inType, PRUint32 *intent)
+                   int color_type, qcms_data_type *inType, uint32_t *intent)
 {
   qcms_profile *profile = nullptr;
   *intent = QCMS_INTENT_PERCEPTUAL; // Our default
@@ -386,7 +386,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 #endif
                                        profileLen);
     if (profile) {
-      PRUint32 profileSpace = qcms_profile_get_color_space(profile);
+      uint32_t profileSpace = qcms_profile_get_color_space(profile);
 
       bool mismatch = false;
       if (color_type & PNG_COLOR_MASK_COLOR) {
@@ -416,7 +416,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
       int fileIntent;
       png_set_gray_to_rgb(png_ptr);
       png_get_sRGB(png_ptr, info_ptr, &fileIntent);
-      PRUint32 map[] = { QCMS_INTENT_PERCEPTUAL,
+      uint32_t map[] = { QCMS_INTENT_PERCEPTUAL,
                          QCMS_INTENT_RELATIVE_COLORIMETRIC,
                          QCMS_INTENT_SATURATION,
                          QCMS_INTENT_ABSOLUTE_COLORIMETRIC };
@@ -451,7 +451,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
   }
 
   if (profile) {
-    PRUint32 profileSpace = qcms_profile_get_color_space(profile);
+    uint32_t profileSpace = qcms_profile_get_color_space(profile);
     if (profileSpace == icSigGrayData) {
       if (color_type & PNG_COLOR_MASK_ALPHA)
         *inType = QCMS_DATA_GRAYA_8;
@@ -530,14 +530,14 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_scale_16(png_ptr);
 
   qcms_data_type inType;
-  PRUint32 intent = -1;
-  PRUint32 pIntent;
+  uint32_t intent = -1;
+  uint32_t pIntent;
   if (decoder->mCMSMode != eCMSMode_Off) {
     intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
                                              color_type, &inType, &pIntent);
     /* If we're not mandating an intent, use the one from the image. */
-    if (intent == PRUint32(-1))
+    if (intent == uint32_t(-1))
       intent = pIntent;
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
@@ -583,7 +583,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   /* copy PNG info into imagelib structs (formerly png_set_dims()) */
   /*---------------------------------------------------------------*/
 
-  PRInt32 alpha_bits = 1;
+  int32_t alpha_bits = 1;
 
   if (channels == 2 || channels == 4) {
     /* check if alpha is coming from a tRNS chunk and is binary */
@@ -622,9 +622,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   if (decoder->mTransform &&
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
-    PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
+    uint32_t bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
-      (PRUint8 *)moz_malloc(bpp[channels] * width);
+      (uint8_t *)moz_malloc(bpp[channels] * width);
     if (!decoder->mCMSLine) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -632,7 +632,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (height < PR_INT32_MAX / (width * channels))
-      decoder->interlacebuf = (PRUint8 *)moz_malloc(channels * width * height);
+      decoder->interlacebuf = (uint8_t *)moz_malloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -690,8 +690,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;
 
   if (new_row) {
-    PRInt32 width = decoder->mFrameRect.width;
-    PRUint32 iwidth = decoder->mFrameRect.width;
+    int32_t width = decoder->mFrameRect.width;
+    uint32_t iwidth = decoder->mFrameRect.width;
 
     png_bytep line = new_row;
     if (decoder->interlacebuf) {
@@ -699,8 +699,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       png_progressive_combine_row(png_ptr, line, new_row);
     }
 
-    PRUint32 bpr = width * sizeof(PRUint32);
-    PRUint32 *cptr32 = (PRUint32*)(decoder->mImageData + (row_num*bpr));
+    uint32_t bpr = width * sizeof(uint32_t);
+    uint32_t *cptr32 = (uint32_t*)(decoder->mImageData + (row_num*bpr));
     bool rowHasNoAlpha = true;
 
     if (decoder->mTransform) {
@@ -708,9 +708,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         qcms_transform_data(decoder->mTransform, line, decoder->mCMSLine,
                             iwidth);
         /* copy alpha over */
-        PRUint32 channels = decoder->mChannels;
+        uint32_t channels = decoder->mChannels;
         if (channels == 2 || channels == 4) {
-          for (PRUint32 i = 0; i < iwidth; i++)
+          for (uint32_t i = 0; i < iwidth; i++)
             decoder->mCMSLine[4 * i + 3] = line[channels * i + channels - 1];
         }
         line = decoder->mCMSLine;
@@ -723,7 +723,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       case gfxASurface::ImageFormatRGB24:
       {
         // counter for while() loops below
-        PRUint32 idx = iwidth;
+        uint32_t idx = iwidth;
 
         // copy as bytes until source pointer is 32-bit-aligned
         for (; (NS_PTR_TO_UINT32(line) & 0x3) && idx; --idx) {
@@ -750,14 +750,14 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       case gfxASurface::ImageFormatARGB32:
       {
         if (!decoder->mDisablePremultipliedAlpha) {
-          for (PRUint32 x=width; x>0; --x) {
+          for (uint32_t x=width; x>0; --x) {
             *cptr32++ = GFX_PACKED_PIXEL(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
               rowHasNoAlpha = false;
             line += 4;
           }
         } else {
-          for (PRUint32 x=width; x>0; --x) {
+          for (uint32_t x=width; x>0; --x) {
             *cptr32++ = GFX_PACKED_PIXEL_NO_PREMULTIPLY(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
               rowHasNoAlpha = false;
@@ -773,7 +773,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = false;
 
-    PRUint32 numFrames = decoder->mImage.GetNumFrames();
+    uint32_t numFrames = decoder->mImage.GetNumFrames();
     if (numFrames <= 1) {
       // Only do incremental image display for the first frame
       // XXXbholley - this check should be handled in the superclass
@@ -789,7 +789,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 {
 #ifdef PNG_APNG_SUPPORTED
   png_uint_32 x_offset, y_offset;
-  PRInt32 width, height;
+  int32_t width, height;
 
   nsPNGDecoder *decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
@@ -832,7 +832,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
-    PRInt32 num_plays = png_get_num_plays(png_ptr, info_ptr);
+    int32_t num_plays = png_get_num_plays(png_ptr, info_ptr);
     decoder->mImage.SetLoopCount(num_plays - 1);
   }
 #endif

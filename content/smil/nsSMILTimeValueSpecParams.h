@@ -62,7 +62,7 @@ public:
 
   // The repeat iteration (type=REPEAT) or access key (type=ACCESSKEY) to
   // respond to.
-  PRUint32          mRepeatIterationOrAccessKey;
+  uint32_t          mRepeatIterationOrAccessKey;
 };
 
 #endif // NS_SMILTIMEVALUESPECPARAMS_H_

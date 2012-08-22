@@ -35,7 +35,7 @@ interface nsIDNSRecord : nsISupports
      * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
      * the record.
      */
-    [noscript] PRNetAddr getNextAddr(in PRUint16 aPort);
+    [noscript] PRNetAddr getNextAddr(in uint16_t aPort);
 
     /**
      * this function returns the value of the next IP address as a
@@ -65,5 +65,5 @@ interface nsIDNSRecord : nsISupports
      * @param aPort is the port number associated with the failure, if any.
      *        It may be zero if not applicable.
      */
-    void reportUnusable(in PRUint16 aPort);
+    void reportUnusable(in uint16_t aPort);
 };

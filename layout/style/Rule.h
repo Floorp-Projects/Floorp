@@ -73,7 +73,7 @@ public:
     SUPPORTS_RULE
   };
 
-  virtual PRInt32 GetType() const = 0;
+  virtual int32_t GetType() const = 0;
 
   nsCSSStyleSheet* GetStyleSheet() const { return mSheet; }
 

@@ -570,7 +570,7 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetLastShutdownDuration(PRUint32 *aResult)
+nsAppStartup::GetLastShutdownDuration(uint32_t *aResult)
 {
   // We make this check so that GetShutdownTimeFileName() doesn't get
   // called; calling that function without telemetry enabled violates
@@ -957,7 +957,7 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 
   xr->GetInSafeMode(&inSafeMode);
 
-  PRInt64 replacedLockTime;
+  int64_t replacedLockTime;
   rv = xr->GetReplacedLockTime(&replacedLockTime);
 
   if (NS_FAILED(rv) || !replacedLockTime) {

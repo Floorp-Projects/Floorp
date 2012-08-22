@@ -18,9 +18,9 @@ interface nsIStartupCache : nsISupports
    *  GetBuffer, PutBuffer, and InvalidateCache act as described 
    *  in that file. */
 
-  PRUint32 getBuffer(in string aID, out charPtr aBuffer);
+  uint32_t getBuffer(in string aID, out charPtr aBuffer);
   void putBuffer(in string aID, in string aBuffer, 
-                            in PRUint32 aLength);
+                            in uint32_t aLength);
  
   void invalidateCache();
   

@@ -215,7 +215,7 @@ public:
     return mRect;
   }
 
-  virtual PRUint32 GetPerFrameKey()
+  virtual uint32_t GetPerFrameKey()
   {
     NS_ABORT();
     return 0;

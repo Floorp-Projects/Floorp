@@ -48,7 +48,7 @@ nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
 }
 
 NS_IMETHODIMP 
-nsDOMWindowList::GetLength(PRUint32* aLength)
+nsDOMWindowList::GetLength(uint32_t* aLength)
 {
   nsresult rv = NS_OK;
 
@@ -71,7 +71,7 @@ nsDOMWindowList::GetLength(PRUint32* aLength)
   // need to check that it's still non-null here.
 
   if (mDocShellNode) {
-    PRInt32 length;
+    int32_t length;
     rv = mDocShellNode->GetChildCount(&length);
 
     *aLength = length;
@@ -81,7 +81,7 @@ nsDOMWindowList::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP 
-nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
+nsDOMWindowList::Item(uint32_t aIndex, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 

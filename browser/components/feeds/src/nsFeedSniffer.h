@@ -21,13 +21,13 @@ public:
   static NS_METHOD AppendSegmentToString(nsIInputStream* inputStream,
                                          void* closure,
                                          const char* rawSegment,
-                                         PRUint32 toOffset,
-                                         PRUint32 count,
-                                         PRUint32* writeCount);
+                                         uint32_t toOffset,
+                                         uint32_t count,
+                                         uint32_t* writeCount);
 
 protected:
-  nsresult ConvertEncodedData(nsIRequest* request, const PRUint8* data,
-                              PRUint32 length);
+  nsresult ConvertEncodedData(nsIRequest* request, const uint8_t* data,
+                              uint32_t length);
 
 private:
   nsCString mDecodedData;

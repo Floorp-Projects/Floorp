@@ -43,7 +43,7 @@ protected:
 
 private:
   nsRefPtr<ICustomDestinationList> mJumpListMgr;
-  PRUint32 mMaxItems;
+  uint32_t mMaxItems;
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
 

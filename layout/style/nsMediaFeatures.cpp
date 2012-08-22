@@ -20,13 +20,13 @@
 
 using namespace mozilla;
 
-static const PRInt32 kOrientationKeywords[] = {
+static const int32_t kOrientationKeywords[] = {
   eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT,
   eCSSKeyword_landscape,                NS_STYLE_ORIENTATION_LANDSCAPE,
   eCSSKeyword_UNKNOWN,                  -1
 };
 
-static const PRInt32 kScanKeywords[] = {
+static const int32_t kScanKeywords[] = {
   eCSSKeyword_progressive,              NS_STYLE_SCAN_PROGRESSIVE,
   eCSSKeyword_interlace,                NS_STYLE_SCAN_INTERLACE,
   eCSSKeyword_UNKNOWN,                  -1
@@ -135,7 +135,7 @@ GetOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
                nsCSSValue& aResult)
 {
     nsSize size = GetSize(aPresContext);
-    PRInt32 orientation;
+    int32_t orientation;
     if (size.width > size.height) {
         orientation = NS_STYLE_ORIENTATION_LANDSCAPE;
     } else {
@@ -152,7 +152,7 @@ GetDeviceOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
                      nsCSSValue& aResult)
 {
     nsSize size = GetDeviceSize(aPresContext);
-    PRInt32 orientation;
+    int32_t orientation;
     if (size.width > size.height) {
         orientation = NS_STYLE_ORIENTATION_LANDSCAPE;
     } else {
@@ -209,13 +209,13 @@ GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
     // 424386).
     // FIXME: On a monochrome device, return 0!
     nsDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    PRUint32 depth;
+    uint32_t depth;
     dx->GetDepth(depth);
     // The spec says to use bits *per color component*, so divide by 3,
     // and round down, since the spec says to use the smallest when the
     // color components differ.
     depth /= 3;
-    aResult.SetIntValue(PRInt32(depth), eCSSUnit_Integer);
+    aResult.SetIntValue(int32_t(depth), eCSSUnit_Integer);
     return NS_OK;
 }
 
@@ -303,7 +303,7 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
 {
     aResult.Reset();
 #ifdef XP_WIN
-    PRUint8 windowsThemeId =
+    uint8_t windowsThemeId =
         nsCSSRuleProcessor::GetWindowsThemeIdentifier();
 
     // Classic mode should fail to match.

@@ -305,9 +305,9 @@ def write_getter(a, iface, fd):
         fd.write("    JSBool b;\n")
         fd.write("    MOZ_ALWAYS_TRUE(JS_ValueToBoolean(aCx, v, &b));\n")
         fd.write("    aDict.%s = b;\n" % a.name)
-    elif realtype.count("PRUint32"):
+    elif realtype.count("uint32_t"):
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &aDict.%s));\n" % a.name)
-    elif realtype.count("PRInt32"):
+    elif realtype.count("int32_t"):
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAInt32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("double"):
         fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &aDict.%s));\n" % a.name)
@@ -315,11 +315,11 @@ def write_getter(a, iface, fd):
         fd.write("    double d;\n")
         fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &d));")
         fd.write("    aDict.%s = (float) d;\n" % a.name)
-    elif realtype.count("PRUint16"):
+    elif realtype.count("uint16_t"):
         fd.write("    uint32_t u;\n")
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &u));\n")
         fd.write("    aDict.%s = u;\n" % a.name)
-    elif realtype.count("PRInt16"):
+    elif realtype.count("int16_t"):
         fd.write("    int32_t i;\n")
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAInt32(aCx, v, &i));\n")
         fd.write("    aDict.%s = i;\n" % a.name)

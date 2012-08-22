@@ -13,7 +13,7 @@ class nsIAtom;
 
 #define NS_DECL_CHANGEOBSERVER \
 void ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute); \
-void ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer); \
+void ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, int32_t aIndexInContainer); \
 void ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsIContent *aChild);
 
 // Something that wants to be alerted to changes in attributes or changes in
@@ -34,7 +34,7 @@ public:
 
   virtual void ObserveContentRemoved(nsIDocument* aDocument,
                                      nsIContent* aChild, 
-                                     PRInt32 aIndexInContainer)=0;
+                                     int32_t aIndexInContainer)=0;
 
   virtual void ObserveContentInserted(nsIDocument* aDocument,
                                       nsIContent* aContainer,

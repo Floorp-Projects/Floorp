@@ -95,7 +95,7 @@ public:
 
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-        PRUint32 hash;
+        uint32_t hash;
         const_cast<nsIPrincipal*>(aKey)->GetHashValue(&hash);
         return PLDHashNumber(hash);
     }
@@ -298,12 +298,12 @@ public:
     ClassPolicy* mWildcardPolicy;
 
 private:
-    PRUint32 mRefCount;
-    PRUint32 mGeneration;
-    static PRUint32 sGeneration;
+    uint32_t mRefCount;
+    uint32_t mGeneration;
+    static uint32_t sGeneration;
     
 #ifdef DEBUG_CAPS_DomainPolicyLifeCycle
-    static PRUint32 sObjects;
+    static uint32_t sObjects;
     static void _printPopulationInfo();
 #endif
 
@@ -365,7 +365,7 @@ public:
      * false otherwise.
      */
     static bool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
-    static PRUint32 SecurityHashURI(nsIURI* aURI);
+    static uint32_t SecurityHashURI(nsIURI* aURI);
 
     static nsresult 
     ReportError(JSContext* cx, const nsAString& messageTag,
@@ -374,7 +374,7 @@ public:
     static nsresult
     CheckSameOriginPrincipal(nsIPrincipal* aSubject,
                              nsIPrincipal* aObject);
-    static PRUint32
+    static uint32_t
     HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
 
     static bool
@@ -415,7 +415,7 @@ private:
     doGetSubjectPrincipal(nsresult* rv);
     
     nsresult
-    CheckPropertyAccessImpl(PRUint32 aAction,
+    CheckPropertyAccessImpl(uint32_t aAction,
                             nsAXPCNativeCallContext* aCallContext,
                             JSContext* cx, JSObject* aJSObject,
                             nsISupports* aObj,
@@ -426,22 +426,22 @@ private:
     nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
                            nsIPrincipal* aObject,
-                           PRUint32 aAction);
+                           uint32_t aAction);
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,
                  ClassInfoData& aClassData, jsid aProperty,
-                 PRUint32 aAction,
+                 uint32_t aAction,
                  ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);
 
     nsresult
-    GetCodebasePrincipalInternal(nsIURI* aURI, PRUint32 aAppId,
+    GetCodebasePrincipalInternal(nsIURI* aURI, uint32_t aAppId,
                                  bool aInMozBrowser,
                                  nsIPrincipal** result);
 
     nsresult
-    CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
+    CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId, bool aInMozBrowser,
                             nsIPrincipal** result);
 
     // This is just like the API method, but it doesn't check that the subject
@@ -552,7 +552,7 @@ private:
                      DomainPolicy* aDomainPolicy);
 
     nsresult
-    InitPrincipals(PRUint32 prefCount, const char** prefNames);
+    InitPrincipals(uint32_t prefCount, const char** prefNames);
 
 #ifdef DEBUG_CAPS_HACKER
     void
@@ -605,7 +605,7 @@ public:
 namespace mozilla {
 
 void
-GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppid,
+GetExtendedOrigin(nsIURI* aURI, uint32_t aAppid,
                   bool aInMozBrowser,
                   nsACString& aExtendedOrigin);
 

@@ -224,11 +224,11 @@ static bool IsFixedData(const nsStyleSides& aSides, bool aEnumOK)
 
 static nscoord CalcCoord(const nsStyleCoord& aCoord, 
                          const nscoord* aEnumTable, 
-                         PRInt32 aNumEnums)
+                         int32_t aNumEnums)
 {
   if (aCoord.GetUnit() == eStyleUnit_Enumerated) {
     NS_ABORT_IF_FALSE(aEnumTable, "must have enum table");
-    PRInt32 value = aCoord.GetIntValue();
+    int32_t value = aCoord.GetIntValue();
     if (0 <= value && value < aNumEnums) {
       return aEnumTable[aCoord.GetIntValue()];
     }
@@ -440,7 +440,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   MOZ_COUNT_CTOR(nsStyleBorder);
   if (aSrc.mBorderColors) {
     EnsureBorderColors();
-    for (PRInt32 i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
       if (aSrc.mBorderColors[i])
         mBorderColors[i] = aSrc.mBorderColors[i]->Clone();
       else
@@ -459,7 +459,7 @@ nsStyleBorder::~nsStyleBorder()
                     "nsStyleBorder being destroyed while still tracking image!");
   MOZ_COUNT_DTOR(nsStyleBorder);
   if (mBorderColors) {
-    for (PRInt32 i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
       delete mBorderColors[i];
     delete [] mBorderColors;
   }
@@ -978,7 +978,7 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   }
 
   // length of stroke dasharrays are the same (tested above) - check entries
-  for (PRUint32 i=0; i<mStrokeDasharrayLength; i++)
+  for (uint32_t i=0; i<mStrokeDasharrayLength; i++)
     if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i]) {
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
       return hint;
@@ -1421,7 +1421,7 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
   if (mStops.Length() != aOther.mStops.Length())
     return false;
 
-  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+  for (uint32_t i = 0; i < mStops.Length(); i++) {
     if (mStops[i].mLocation != aOther.mStops[i].mLocation ||
         mStops[i].mColor != aOther.mStops[i].mColor)
       return false;
@@ -1441,7 +1441,7 @@ nsStyleGradient::nsStyleGradient(void)
 bool
 nsStyleGradient::IsOpaque()
 {
-  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+  for (uint32_t i = 0; i < mStops.Length(); i++) {
     if (NS_GET_A(mStops[i].mColor) < 255)
       return false;
   }
@@ -1616,8 +1616,8 @@ nsStyleImage::SetCropRect(nsStyleSides* aCropRect)
   }
 }
 
-static PRInt32
-ConvertToPixelCoord(const nsStyleCoord& aCoord, PRInt32 aPercentScale)
+static int32_t
+ConvertToPixelCoord(const nsStyleCoord& aCoord, int32_t aPercentScale)
 {
   double pixelValue;
   switch (aCoord.GetUnit()) {
@@ -1654,10 +1654,10 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   if (imageSize.width <= 0 || imageSize.height <= 0)
     return false;
 
-  PRInt32 left   = ConvertToPixelCoord(mCropRect->GetLeft(),   imageSize.width);
-  PRInt32 top    = ConvertToPixelCoord(mCropRect->GetTop(),    imageSize.height);
-  PRInt32 right  = ConvertToPixelCoord(mCropRect->GetRight(),  imageSize.width);
-  PRInt32 bottom = ConvertToPixelCoord(mCropRect->GetBottom(), imageSize.height);
+  int32_t left   = ConvertToPixelCoord(mCropRect->GetLeft(),   imageSize.width);
+  int32_t top    = ConvertToPixelCoord(mCropRect->GetTop(),    imageSize.height);
+  int32_t right  = ConvertToPixelCoord(mCropRect->GetRight(),  imageSize.width);
+  int32_t bottom = ConvertToPixelCoord(mCropRect->GetBottom(), imageSize.height);
 
   // IntersectRect() returns an empty rect if we get negative width or height
   nsIntRect cropRect(left, top, right - left, bottom - top);
@@ -1724,7 +1724,7 @@ nsStyleImage::IsComplete() const
       return true;
     case eStyleImageType_Image:
     {
-      PRUint32 status = imgIRequest::STATUS_ERROR;
+      uint32_t status = imgIRequest::STATUS_ERROR;
       return NS_SUCCEEDED(mImage->GetImageStatus(&status)) &&
              (status & imgIRequest::STATUS_SIZE_AVAILABLE) &&
              (status & imgIRequest::STATUS_FRAME_COMPLETE);
@@ -1798,7 +1798,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
   // If the deep copy of mLayers failed, truncate the counts.
-  PRUint32 count = mLayers.Length();
+  uint32_t count = mLayers.Length();
   if (count != aSource.mLayers.Length()) {
     NS_WARNING("truncating counts due to out-of-memory");
     mAttachmentCount = NS_MAX(mAttachmentCount, count);
@@ -1820,7 +1820,7 @@ void
 nsStyleBackground::Destroy(nsPresContext* aContext)
 {
   // Untrack all the images stored in our layers
-  for (PRUint32 i = 0; i < mImageCount; ++i)
+  for (uint32_t i = 0; i < mImageCount; ++i)
     mLayers[i].UntrackImages(aContext);
 
   this->~nsStyleBackground();
@@ -2054,7 +2054,7 @@ nsStyleBackground::Layer::operator==(const Layer& aOther) const
 // --------------------
 // nsStyleDisplay
 //
-void nsTimingFunction::AssignFromKeyword(PRInt32 aTimingFunctionType)
+void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
 {
   switch (aTimingFunctionType) {
     case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START:
@@ -2306,13 +2306,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
     const nsChangeHint kUpdateOverflowAndRepaintHint =
       NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
-    for (PRUint8 index = 0; index < 3; ++index)
+    for (uint8_t index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
         NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
         break;
       }
     
-    for (PRUint8 index = 0; index < 2; ++index)
+    for (uint8_t index = 0; index < 2; ++index)
       if (mPerspectiveOrigin[index] != aOther.mPerspectiveOrigin[index]) {
         NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
         break;
@@ -2363,7 +2363,7 @@ nsChangeHint nsStyleDisplay::MaxDifference()
 nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
-  PRUint32 bidiOptions = aPresContext->GetBidi();
+  uint32_t bidiOptions = aPresContext->GetBidi();
   if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
     mDirection = NS_STYLE_DIRECTION_RTL;
   else
@@ -2537,7 +2537,7 @@ void
 nsStyleContent::Destroy(nsPresContext* aContext)
 {
   // Unregister any images we might have with the document.
-  for (PRUint32 i = 0; i < mContentCount; ++i) {
+  for (uint32_t i = 0; i < mContentCount; ++i) {
     if ((mContents[i].mType == eStyleContentType_Image) &&
         mContents[i].mContent.mImage) {
       mContents[i].UntrackImage(aContext);
@@ -2561,7 +2561,7 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
   MOZ_COUNT_CTOR(nsStyleContent);
   mMarkerOffset = aSource.mMarkerOffset;
 
-  PRUint32 index;
+  uint32_t index;
   if (NS_SUCCEEDED(AllocateContents(aSource.ContentCount()))) {
     for (index = 0; index < mContentCount; index++) {
       ContentAt(index) = aSource.ContentAt(index);
@@ -2605,7 +2605,7 @@ nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
     return NS_STYLE_HINT_FRAMECHANGE;
   }
 
-  PRUint32 ix = mContentCount;
+  uint32_t ix = mContentCount;
   while (0 < ix--) {
     if (mContents[ix] != aOther.mContents[ix]) {
       // Unfortunately we need to reframe here; a simple reflow
@@ -2642,7 +2642,7 @@ nsChangeHint nsStyleContent::MaxDifference()
 }
 #endif
 
-nsresult nsStyleContent::AllocateContents(PRUint32 aCount)
+nsresult nsStyleContent::AllocateContents(uint32_t aCount)
 {
   // We need to run the destructors of the elements of mContents, so we
   // delete and reallocate even if aCount == mContentCount.  (If
@@ -2711,8 +2711,8 @@ void
 nsStyleQuotes::CopyFrom(const nsStyleQuotes& aSource)
 {
   if (NS_SUCCEEDED(AllocateQuotes(aSource.QuotesCount()))) {
-    PRUint32 count = (mQuotesCount * 2);
-    for (PRUint32 index = 0; index < count; index += 2) {
+    uint32_t count = (mQuotesCount * 2);
+    for (uint32_t index = 0; index < count; index += 2) {
       aSource.GetQuotesAt(index, mQuotes[index], mQuotes[index + 1]);
     }
   }
@@ -2723,7 +2723,7 @@ nsChangeHint nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
   if (mQuotesCount == aOther.mQuotesCount) {
-    PRUint32 ix = (mQuotesCount * 2);
+    uint32_t ix = (mQuotesCount * 2);
     while (0 < ix--) {
       if (mQuotes[ix] != aOther.mQuotes[ix]) {
         return NS_STYLE_HINT_FRAMECHANGE;
@@ -2779,8 +2779,8 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
       return NS_STYLE_HINT_REFLOW;
     }
 
-    PRUint8 lineStyle = GetDecorationStyle();
-    PRUint8 otherLineStyle = aOther.GetDecorationStyle();
+    uint8_t lineStyle = GetDecorationStyle();
+    uint8_t otherLineStyle = aOther.GetDecorationStyle();
     if (mTextDecorationLine != aOther.mTextDecorationLine ||
         lineStyle != otherLineStyle) {
       // Reflow for decoration line style changes only to or from double or
@@ -2835,7 +2835,7 @@ CalcShadowDifference(nsCSSShadowArray* lhs,
   if (!lhs || !rhs || lhs->Length() != rhs->Length())
     return NS_STYLE_HINT_REFLOW;
 
-  for (PRUint32 i = 0; i < lhs->Length(); ++i) {
+  for (uint32_t i = 0; i < lhs->Length(); ++i) {
     if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i))
       return NS_STYLE_HINT_REFLOW;
   }
@@ -3032,7 +3032,7 @@ nsStyleUserInterface::CopyCursorArrayFrom(const nsStyleUserInterface& aSource)
     mCursorArray = new nsCursorImage[aSource.mCursorArrayLength];
     if (mCursorArray) {
       mCursorArrayLength = aSource.mCursorArrayLength;
-      for (PRUint32 i = 0; i < mCursorArrayLength; ++i)
+      for (uint32_t i = 0; i < mCursorArrayLength; ++i)
         mCursorArray[i] = aSource.mCursorArray[i];
     }
   }

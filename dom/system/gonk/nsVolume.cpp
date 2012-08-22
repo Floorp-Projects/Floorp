@@ -12,7 +12,7 @@ namespace mozilla {
 namespace system {
 
 const char *
-NS_VolumeStateStr(PRInt32 aState)
+NS_VolumeStateStr(int32_t aState)
 {
   switch (aState) {
     case nsIVolume::STATE_INIT:       return "Init";
@@ -50,7 +50,7 @@ NS_IMETHODIMP nsVolume::GetMountPoint(nsAString &aMountPoint)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolume::GetState(PRInt32 *aState)
+NS_IMETHODIMP nsVolume::GetState(int32_t *aState)
 {
   *aState = mState;
   return NS_OK;

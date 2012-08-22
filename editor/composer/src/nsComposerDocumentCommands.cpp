@@ -27,7 +27,7 @@
 #include "nsIURI.h"                     // for nsIURI
 #include "nsPresContext.h"              // for nsPresContext
 #include "nscore.h"                     // for NS_IMETHODIMP, nsresult, etc
-#include "prtypes.h"                    // for PRUint32, PRInt32
+#include "prtypes.h"                    // for uint32_t, int32_t
 
 class nsISupports;
 
@@ -93,7 +93,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  PRInt32 animationMode; 
+  int32_t animationMode; 
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
   if (NS_SUCCEEDED(rv))
   {
@@ -144,7 +144,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  PRInt32 animationMode;
+  int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
   if (NS_SUCCEEDED(rv))
   {
@@ -234,7 +234,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
     NS_ENSURE_SUCCESS(rvRO, rvRO);
 
-    PRUint32 flags;
+    uint32_t flags;
     editor->GetFlags(&flags);
     if (isReadOnly)
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
@@ -331,7 +331,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
 
-    PRUint32 flags;
+    uint32_t flags;
     editor->GetFlags(&flags);
     bool isReadOnly = flags & nsIPlaintextEditor::eEditorReadonlyMask;
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, isReadOnly);
@@ -458,7 +458,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
   if (!nsCRT::strcmp(aCommandName, "obs_documentCreated"))
   {
-    PRUint32 editorStatus = nsIEditingSession::eEditorErrorUnknown;
+    uint32_t editorStatus = nsIEditingSession::eEditorErrorUnknown;
 
     nsCOMPtr<nsIEditingSession> editingSession = do_QueryInterface(refCon);
     if (editingSession)

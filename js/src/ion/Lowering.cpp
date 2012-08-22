@@ -122,30 +122,19 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
-    bool isCall = ins->templateObj()->lastProperty()->extensibleParents();
-
     LAllocation slots;
-    if (ins->slots()->type() == MIRType_Slots) {
-        if (isCall)
-            slots = useFixed(ins->slots(), CallTempReg2);
-        else
-            slots = useRegister(ins->slots());
-    } else {
+    if (ins->slots()->type() == MIRType_Slots)
+        slots = useRegister(ins->slots());
+    else
         slots = LConstantIndex::Bogus();
-    }
 
     LNewCallObject *lir = new LNewCallObject(slots);
-    if (isCall) {
-        if (!defineVMReturn(lir, ins))
-            return false;
-    } else {
-        if (!define(lir, ins))
-            return false;
-    }
+    if (!define(lir, ins))
+        return false;
+
     if (!assignSafepoint(lir, ins))
         return false;
 
-    JS_ASSERT(isCall == lir->isCall());
     return true;
 }
 

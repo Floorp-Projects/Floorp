@@ -129,8 +129,8 @@ struct OutputData
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mOriginalLocation;
     nsCOMPtr<nsIOutputStream> mStream;
-    PRInt64 mSelfProgress;
-    PRInt64 mSelfProgressMax;
+    int64_t mSelfProgress;
+    int64_t mSelfProgressMax;
     bool mCalcFileExt;
 
     OutputData(nsIURI *aFile, nsIURI *aOriginalLocation, bool aCalcFileExt) :
@@ -153,8 +153,8 @@ struct OutputData
 struct UploadData
 {
     nsCOMPtr<nsIURI> mFile;
-    PRInt64 mSelfProgress;
-    PRInt64 mSelfProgressMax;
+    int64_t mSelfProgress;
+    int64_t mSelfProgressMax;
 
     UploadData(nsIURI *aFile) :
         mFile(aFile),
@@ -177,10 +177,10 @@ struct CleanupData
 // volume / server dependent but it is difficult to obtain
 // that information. Instead this constant is a reasonable value that
 // modern systems should able to cope with.
-const PRUint32 kDefaultMaxFilenameLength = 64;
+const uint32_t kDefaultMaxFilenameLength = 64;
 
 // Default flags for persistence
-const PRUint32 kDefaultPersistFlags = 
+const uint32_t kDefaultPersistFlags = 
     nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION |
     nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;
 
@@ -269,13 +269,13 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
 //*****************************************************************************
 
 /* attribute unsigned long persistFlags; */
-NS_IMETHODIMP nsWebBrowserPersist::GetPersistFlags(PRUint32 *aPersistFlags)
+NS_IMETHODIMP nsWebBrowserPersist::GetPersistFlags(uint32_t *aPersistFlags)
 {
     NS_ENSURE_ARG_POINTER(aPersistFlags);
     *aPersistFlags = mPersistFlags;
     return NS_OK;
 }
-NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(PRUint32 aPersistFlags)
+NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(uint32_t aPersistFlags)
 {
     mPersistFlags = aPersistFlags;
     mReplaceExisting = (mPersistFlags & PERSIST_FLAGS_REPLACE_EXISTING_FILES) ? true : false;
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(PRUint32 aPersistFlags)
 }
 
 /* readonly attribute unsigned long currentState; */
-NS_IMETHODIMP nsWebBrowserPersist::GetCurrentState(PRUint32 *aCurrentState)
+NS_IMETHODIMP nsWebBrowserPersist::GetCurrentState(uint32_t *aCurrentState)
 {
     NS_ENSURE_ARG_POINTER(aCurrentState);
     if (mCompleted)
@@ -376,7 +376,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveChannel(
    in unsigned long aEncodingFlags, in unsigned long aWrapColumn); */
 NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
     nsIDOMDocument *aDocument, nsISupports *aFile, nsISupports *aDataPath,
-    const char *aOutputContentType, PRUint32 aEncodingFlags, PRUint32 aWrapColumn)
+    const char *aOutputContentType, uint32_t aEncodingFlags, uint32_t aWrapColumn)
 {
     NS_ENSURE_TRUE(mFirstAndOnlyUse, NS_ERROR_FAILURE);
     mFirstAndOnlyUse = false; // Stop people from reusing this object!
@@ -517,7 +517,7 @@ nsWebBrowserPersist::SaveGatheredURIs(nsIURI *aFileAsURI)
     nsresult rv = NS_OK;
 
     // Count how many URIs in the URI map require persisting
-    PRUint32 urisToPersist = 0;
+    uint32_t urisToPersist = 0;
     if (mURIMap.Count() > 0)
     {
         mURIMap.Enumerate(EnumCountURIsToPersist, &urisToPersist);
@@ -537,7 +537,7 @@ nsWebBrowserPersist::SaveGatheredURIs(nsIURI *aFileAsURI)
         // There are no URIs to save, so just save the document(s)
 
         // State start notification
-        PRUint32 addToStateFlags = 0;
+        uint32_t addToStateFlags = 0;
         if (mProgressListener)
         {
             if (mJustStartedLoading)
@@ -602,7 +602,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 {
     if (mProgressListener)
     {
-        PRUint32 stateFlags = nsIWebProgressListener::STATE_START |
+        uint32_t stateFlags = nsIWebProgressListener::STATE_START |
                               nsIWebProgressListener::STATE_IS_REQUEST;
         if (mJustStartedLoading)
         {
@@ -757,7 +757,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
 
     if (mProgressListener)
     {
-        PRUint32 stateFlags = nsIWebProgressListener::STATE_STOP |
+        uint32_t stateFlags = nsIWebProgressListener::STATE_STOP |
                               nsIWebProgressListener::STATE_IS_REQUEST;
         if (completed)
         {
@@ -781,13 +781,13 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
 
 NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
     nsIRequest* request, nsISupports *aContext, nsIInputStream *aIStream,
-    PRUint32 aOffset, PRUint32 aLength)
+    uint32_t aOffset, uint32_t aLength)
 {
     bool cancel = mCancel;
     if (!cancel)
     {
         nsresult rv = NS_OK;
-        PRUint32 bytesRemaining = aLength;
+        uint32_t bytesRemaining = aLength;
 
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
         NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
@@ -797,7 +797,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         OutputData *data = (OutputData *) mOutputMap.Get(&key);
         if (!data) {
             // might be uploadData; consume necko's buffer and bail...
-            PRUint32 n;
+            uint32_t n;
             return aIStream->ReadSegments(NS_DiscardSegment, nullptr, aLength, &n);
         }
 
@@ -816,12 +816,12 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 
         // Read data from the input and write to the output
         char buffer[8192];
-        PRUint32 bytesRead;
+        uint32_t bytesRead;
         while (!cancel && bytesRemaining)
         {
             readError = true;
             rv = aIStream->Read(buffer,
-                                NS_MIN(PRUint32(sizeof(buffer)), bytesRemaining),
+                                NS_MIN(uint32_t(sizeof(buffer)), bytesRemaining),
                                 &bytesRead);
             if (NS_SUCCEEDED(rv))
             {
@@ -834,7 +834,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
                 const char *bufPtr = buffer; // Where to write from.
                 while (NS_SUCCEEDED(rv) && bytesRead)
                 {
-                    PRUint32 bytesWritten = 0;
+                    uint32_t bytesWritten = 0;
                     rv = data->mStream->Write(bufPtr, bytesRead, &bytesWritten);
                     if (NS_SUCCEEDED(rv))
                     {
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             }
         }
 
-        PRInt32 channelContentLength = -1;
+        int32_t channelContentLength = -1;
         if (!cancel &&
             NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)))
         {
@@ -920,8 +920,8 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 /* void onProgress (in nsIRequest request, in nsISupports ctxt,
     in unsigned long long aProgress, in unsigned long long aProgressMax); */
 NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
-    nsIRequest *request, nsISupports *ctxt, PRUint64 aProgress,
-    PRUint64 aProgressMax)
+    nsIRequest *request, nsISupports *ctxt, uint64_t aProgress,
+    uint64_t aProgressMax)
 {
     if (!mProgressListener)
     {
@@ -934,16 +934,16 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     OutputData *data = (OutputData *) mOutputMap.Get(&key);
     if (data)
     {
-        data->mSelfProgress = PRInt64(aProgress);
-        data->mSelfProgressMax = PRInt64(aProgressMax);
+        data->mSelfProgress = int64_t(aProgress);
+        data->mSelfProgressMax = int64_t(aProgressMax);
     }
     else
     {
         UploadData *upData = (UploadData *) mUploadList.Get(&key);
         if (upData)
         {
-            upData->mSelfProgress = PRInt64(aProgress);
-            upData->mSelfProgressMax = PRInt64(aProgressMax);
+            upData->mSelfProgress = int64_t(aProgress);
+            upData->mSelfProgressMax = int64_t(aProgressMax);
         }
     }
 
@@ -957,8 +957,8 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     else
     {
       // have to truncate 64-bit to 32bit
-      mProgressListener->OnProgressChange(nullptr, request, PRUint64(aProgress),
-              PRUint64(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
+      mProgressListener->OnProgressChange(nullptr, request, uint64_t(aProgress),
+              uint64_t(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
     }
 
     // If our progress listener implements nsIProgressEventSink,
@@ -1148,7 +1148,7 @@ nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aP
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Append a forward slash if necessary
-    PRInt32 len = newPath.Length();
+    int32_t len = newPath.Length();
     if (len > 0 && newPath.CharAt(len - 1) != '/')
     {
         newPath.Append('/');
@@ -1281,8 +1281,8 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
             nsCAutoString oneHeader;
             nsCAutoString headerName;
             nsCAutoString headerValue;
-            PRInt32 crlf = 0;
-            PRInt32 colon = 0;
+            int32_t crlf = 0;
+            int32_t colon = 0;
             const char *kWhitespace = "\b\t\r\n ";
             nsCAutoString extraHeaders(aExtraHeaders);
             while (true)
@@ -1524,7 +1524,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         nsCOMPtr<nsIURI> oldDataPath = mCurrentDataPath;
         bool oldDataPathIsRelative = mCurrentDataPathIsRelative;
         nsCString oldCurrentRelativePathToData = mCurrentRelativePathToData;
-        PRUint32 oldThingsToPersist = mCurrentThingsToPersist;
+        uint32_t oldThingsToPersist = mCurrentThingsToPersist;
 
         mCurrentDataPathIsRelative = false;
         mCurrentDataPath = aDataPath;
@@ -1713,7 +1713,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     // Iterate through all queued documents, saving them to file and fixing
     // them up on the way.
 
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < mDocList.Length(); i++)
     {
         DocData *docData = mDocList.ElementAt(i);
@@ -1788,7 +1788,7 @@ void nsWebBrowserPersist::Cleanup()
     mOutputMap.Reset();
     mUploadList.Enumerate(EnumCleanupUploadList, this);
     mUploadList.Reset();
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < mDocList.Length(); i++)
     {
         DocData *docData = mDocList.ElementAt(i);
@@ -1813,7 +1813,7 @@ void nsWebBrowserPersist::CleanupLocalFiles()
     int pass;
     for (pass = 0; pass < 2; pass++)
     {
-        PRUint32 i;
+        uint32_t i;
         for (i = 0; i < mCleanupList.Length(); i++)
         {
             CleanupData *cleanupData = mCleanupList.ElementAt(i);
@@ -1849,7 +1849,7 @@ void nsWebBrowserPersist::CleanupLocalFiles()
 
                 bool isEmptyDirectory = true;
                 nsCOMArray<nsISimpleEnumerator> dirStack;
-                PRInt32 stackSize = 0;
+                int32_t stackSize = 0;
 
                 // Push the top level enum onto the stack
                 nsCOMPtr<nsISimpleEnumerator> pos;
@@ -1935,7 +1935,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
     // The nsIURL methods GetFileBaseName & GetFileExtension don't
     // preserve the dot whereas this code does to save some effort
     // later when everything is put back together.
-    PRInt32 lastDot = filename.RFind(".");
+    int32_t lastDot = filename.RFind(".");
     nsCAutoString base;
     nsCAutoString ext;
     if (lastDot >= 0)
@@ -1950,11 +1950,11 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
     }
 
     // Test if the filename is longer than allowed by the OS
-    PRInt32 needToChop = filename.Length() - kDefaultMaxFilenameLength;
+    int32_t needToChop = filename.Length() - kDefaultMaxFilenameLength;
     if (needToChop > 0)
     {
         // Truncate the base first and then the ext if necessary
-        if (base.Length() > (PRUint32) needToChop)
+        if (base.Length() > (uint32_t) needToChop)
         {
             base.Truncate(base.Length() - needToChop);
         }
@@ -1962,7 +1962,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
         {
             needToChop -= base.Length() - 1;
             base.Truncate(1);
-            if (ext.Length() > (PRUint32) needToChop)
+            if (ext.Length() > (uint32_t) needToChop)
             {
                 ext.Truncate(ext.Length() - needToChop);
             }
@@ -1988,7 +1988,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
     {
         nsCAutoString tmpPath;
         nsCAutoString tmpBase;
-        PRUint32 duplicateCounter = 1;
+        uint32_t duplicateCounter = 1;
         while (1)
         {
             // Make a file name,
@@ -2097,7 +2097,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
         {
             // Unescape the file name (GetFileName escapes it)
             NS_UnescapeURL(nameFromURL);
-            PRUint32 nameLength = 0;
+            uint32_t nameLength = 0;
             const char *p = nameFromURL.get();
             for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.'
                  ;p++)
@@ -2181,7 +2181,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
             // Test if the current extension is current for the mime type
             bool hasExtension = false;
-            PRInt32 ext = newFileName.RFind(".");
+            int32_t ext = newFileName.RFind(".");
             if (ext != -1)
             {
                 mimeInfo->ExtensionExists(Substring(newFileName, ext + 1), &hasExtension);
@@ -2209,7 +2209,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
                 if (!fileExt.IsEmpty())
                 {
-                    PRUint32 newLength = newFileName.Length() + fileExt.Length() + 1;
+                    uint32_t newLength = newFileName.Length() + fileExt.Length() + 1;
                     if (newLength > kDefaultMaxFilenameLength)
                     {
                         newFileName.Truncate(newFileName.Length() - (newLength - kDefaultMaxFilenameLength));
@@ -2266,7 +2266,7 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // XXX brade:  get the right flags here!
-    PRInt32 ioFlags = -1;
+    int32_t ioFlags = -1;
     if (mPersistFlags & nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE)
       ioFlags = PR_APPEND | PR_CREATE_FILE | PR_WRONLY; 
     rv = fileOutputStream->Init(aFile, ioFlags, -1, 0);
@@ -2295,8 +2295,8 @@ nsresult
 nsWebBrowserPersist::MakeOutputStreamFromURI(
     nsIURI *aURI, nsIOutputStream  **aOutputStream)
 {
-    PRUint32 segsize = 8192;
-    PRUint32 maxsize = PRUint32(-1);
+    uint32_t segsize = 8192;
+    uint32_t maxsize = uint32_t(-1);
     nsCOMPtr<nsIStorageStream> storStream;
     nsresult rv = NS_NewStorageStream(segsize, maxsize, getter_AddRefs(storStream));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2469,7 +2469,7 @@ bool
 nsWebBrowserPersist::EnumCountURIsToPersist(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
-    PRUint32 *count = (PRUint32 *) closure;
+    uint32_t *count = (uint32_t *) closure;
     if (data->mNeedsPersisting && !data->mSaved)
     {
         (*count)++;
@@ -3685,7 +3685,7 @@ nsresult
 nsWebBrowserPersist::SaveDocumentWithFixup(
     nsIDOMDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
     nsIURI *aFile, bool aReplaceExisting, const nsACString &aFormatType,
-    const nsCString &aSaveCharset, PRUint32 aFlags)
+    const nsCString &aSaveCharset, uint32_t aFlags)
 {
     NS_ENSURE_ARG_POINTER(aFile);
     
@@ -3864,7 +3864,7 @@ static bool IsSpecialXHTMLTag(nsIDOMNode *aNode)
         return false;
 
     aNode->GetLocalName(tmp);
-    for (PRUint32 i = 0; i < ArrayLength(kSpecialXHTMLTags); i++) {
+    for (uint32_t i = 0; i < ArrayLength(kSpecialXHTMLTags); i++) {
         if (tmp.EqualsASCII(kSpecialXHTMLTags[i]))
         {
             // XXX This element MAY have URI attributes, but
@@ -3887,15 +3887,15 @@ static bool HasSpecialXHTMLTags(nsIDOMNode *aParent)
     aParent->GetChildNodes(getter_AddRefs(list));
     if (list)
     {
-        PRUint32 count;
+        uint32_t count;
         list->GetLength(&count);
-        PRUint32 i;
+        uint32_t i;
         for (i = 0; i < count; i++) {
             nsCOMPtr<nsIDOMNode> node;
             list->Item(i, getter_AddRefs(node));
             if (!node)
                 break;
-            PRUint16 nodeType;
+            uint16_t nodeType;
             node->GetNodeType(&nodeType);
             if (nodeType == nsIDOMNode::ELEMENT_NODE) {
                 return HasSpecialXHTMLTags(node);
@@ -4128,7 +4128,7 @@ NS_IMETHODIMP nsEncoderNodeFixup::FixupNode(
     *aOutNode = nullptr;
     
     // Test whether we need to fixup the node
-    PRUint16 type = 0;
+    uint16_t type = 0;
     aNode->GetNodeType(&type);
     if (type == nsIDOMNode::ELEMENT_NODE ||
         type == nsIDOMNode::PROCESSING_INSTRUCTION_NODE)

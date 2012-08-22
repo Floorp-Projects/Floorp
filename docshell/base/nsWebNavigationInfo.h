@@ -34,7 +34,7 @@ private:
   // Check whether aType is supported.  If this method throws, the
   // value of aIsSupported is not changed.
   nsresult IsTypeSupportedInternal(const nsCString& aType,
-                                   PRUint32* aIsSupported);
+                                   uint32_t* aIsSupported);
   
   nsCOMPtr<nsICategoryManager> mCategoryManager;
   // XXXbz we only need this because images register for the same

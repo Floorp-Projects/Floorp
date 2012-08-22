@@ -100,7 +100,7 @@ public:
    * This will normally be the same as InternalList().CountItems(), except if
    * we've hit OOM, in which case our length will be zero.
    */
-  PRUint32 Length() const {
+  uint32_t Length() const {
     NS_ABORT_IF_FALSE(mItems.Length() == 0 ||
                       mItems.Length() == InternalList().CountItems(),
                       "DOM wrapper's list length is out of sync");
@@ -171,21 +171,21 @@ private:
 
   /// Creates an instance of the appropriate DOMSVGPathSeg sub-class for
   // aIndex, if it doesn't already exist.
-  void EnsureItemAt(PRUint32 aIndex);
+  void EnsureItemAt(uint32_t aIndex);
 
-  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex,
-                                      PRUint32 aInternalIndex,
-                                      PRUint32 aArgCountForItem);
-  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex,
-                                        PRUint32 aArgCountForItem);
+  void MaybeInsertNullInAnimValListAt(uint32_t aIndex,
+                                      uint32_t aInternalIndex,
+                                      uint32_t aArgCountForItem);
+  void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex,
+                                        uint32_t aArgCountForItem);
 
   // Calls UpdateListIndex on all elements in |mItems| that satisfy ItemAt(),
   // from |aStartingIndex| to the end of |mItems|.  Also adjusts
   // |mItems.mInternalDataIndex| by the requested amount.
-  void UpdateListIndicesFromIndex(PRUint32 aStartingIndex,
-                                  PRInt32  aInternalDataIndexDelta);
+  void UpdateListIndicesFromIndex(uint32_t aStartingIndex,
+                                  int32_t  aInternalDataIndexDelta);
 
-  DOMSVGPathSeg*& ItemAt(PRUint32 aIndex) {
+  DOMSVGPathSeg*& ItemAt(uint32_t aIndex) {
     return mItems[aIndex].mItem;
   }
 
@@ -200,13 +200,13 @@ private:
    */
   struct ItemProxy {
     ItemProxy(){}
-    ItemProxy(DOMSVGPathSeg *aItem, PRUint32 aInternalDataIndex)
+    ItemProxy(DOMSVGPathSeg *aItem, uint32_t aInternalDataIndex)
       : mItem(aItem)
       , mInternalDataIndex(aInternalDataIndex)
     {}
 
     DOMSVGPathSeg *mItem;
-    PRUint32 mInternalDataIndex;
+    uint32_t mInternalDataIndex;
   };
 
   // Weak refs to our DOMSVGPathSeg items. The items are friends and take care

@@ -92,7 +92,7 @@ nsCameraCapabilities::GetFocusModes(JSContext* cx, JS::Value* aFocusModes)
 
 /* [implicit_jscontext] readonly attribute long maxFocusAreas; */
 NS_IMETHODIMP
-nsCameraCapabilities::GetMaxFocusAreas(JSContext* cx, PRInt32* aMaxFocusAreas)
+nsCameraCapabilities::GetMaxFocusAreas(JSContext* cx, int32_t* aMaxFocusAreas)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -120,7 +120,7 @@ nsCameraCapabilities::GetStepExposureCompensation(JSContext* cx, double* aStepEx
 
 /* [implicit_jscontext] readonly attribute long maxMeteringAreas; */
 NS_IMETHODIMP
-nsCameraCapabilities::GetMaxMeteringAreas(JSContext* cx, PRInt32* aMaxMeteringAreas)
+nsCameraCapabilities::GetMaxMeteringAreas(JSContext* cx, int32_t* aMaxMeteringAreas)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

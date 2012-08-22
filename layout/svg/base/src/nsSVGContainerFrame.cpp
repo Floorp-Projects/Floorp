@@ -319,7 +319,7 @@ nsSVGDisplayContainerFrame::ReflowSVG()
 }  
 
 void
-nsSVGDisplayContainerFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGDisplayContainerFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -330,7 +330,7 @@ nsSVGDisplayContainerFrame::NotifySVGChanged(PRUint32 aFlags)
 SVGBBox
 nsSVGDisplayContainerFrame::GetBBoxContribution(
   const gfxMatrix &aToBBoxUserspace,
-  PRUint32 aFlags)
+  uint32_t aFlags)
 {
   SVGBBox bboxUnion;
 

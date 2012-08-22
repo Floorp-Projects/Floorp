@@ -72,7 +72,7 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   // wrapping inside of us should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
 
-  PRUint8 captionSide = GetStyleTableBorder()->mCaptionSide;
+  uint8_t captionSide = GetStyleTableBorder()->mCaptionSide;
   if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
       captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     result.width = GetMinWidth(aRenderingContext);
@@ -453,7 +453,7 @@ nsTableOuterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   maxWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                InnerTableFrame(), nsLayoutUtils::PREF_WIDTH);
   if (mCaptionFrames.NotEmpty()) {
-    PRUint8 captionSide = GetCaptionSide();
+    uint8_t captionSide = GetCaptionSide();
     switch(captionSide) {
     case NS_STYLE_CAPTION_SIDE_LEFT:
     case NS_STYLE_CAPTION_SIDE_RIGHT:
@@ -537,7 +537,7 @@ nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   // GetPrefWidth.  See bug 349457 for an example.
 
   // Match the availableWidth logic in Reflow.
-  PRUint8 captionSide = GetCaptionSide();
+  uint8_t captionSide = GetCaptionSide();
   nscoord width;
   if (captionSide == NO_SIDE) {
     width = ChildShrinkWrapWidth(aRenderingContext, InnerTableFrame(),
@@ -576,7 +576,7 @@ nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   return nsSize(width, NS_UNCONSTRAINEDSIZE);
 }
 
-PRUint8
+uint8_t
 nsTableOuterFrame::GetCaptionSide()
 {
   if (mCaptionFrames.NotEmpty()) {
@@ -587,7 +587,7 @@ nsTableOuterFrame::GetCaptionSide()
   }
 }
 
-PRUint8
+uint8_t
 nsTableOuterFrame::GetCaptionVerticalAlign()
 {
   const nsStyleCoord& va =
@@ -598,7 +598,7 @@ nsTableOuterFrame::GetCaptionVerticalAlign()
 }
 
 void
-nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
+nsTableOuterFrame::SetDesiredSize(uint8_t         aCaptionSide,
                                   const nsMargin& aInnerMargin,
                                   const nsMargin& aCaptionMargin,
                                   nscoord&        aWidth,
@@ -640,7 +640,7 @@ nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
 }
 
 nsresult 
-nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
+nsTableOuterFrame::GetCaptionOrigin(uint32_t         aCaptionSide,
                                     const nsSize&    aContainBlockSize,
                                     const nsSize&    aInnerSize, 
                                     const nsMargin&  aInnerMargin,
@@ -725,7 +725,7 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
 }
 
 nsresult 
-nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
+nsTableOuterFrame::GetInnerOrigin(uint32_t         aCaptionSide,
                                   const nsSize&    aContainBlockSize,
                                   const nsSize&    aCaptionSize, 
                                   const nsMargin&  aCaptionMargin,
@@ -843,7 +843,7 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
 
   // see if we need to reset top of page due to a caption
   if (mCaptionFrames.NotEmpty()) {
-    PRUint8 captionSide = GetCaptionSide();
+    uint8_t captionSide = GetCaptionSide();
     if (((captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
           captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) &&
          mCaptionFrames.FirstChild() == aChildFrame) || 
@@ -870,7 +870,7 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
 }
 
 void 
-nsTableOuterFrame::UpdateReflowMetrics(PRUint8              aCaptionSide,
+nsTableOuterFrame::UpdateReflowMetrics(uint8_t              aCaptionSide,
                                        nsHTMLReflowMetrics& aMet,
                                        const nsMargin&      aInnerMargin,
                                        const nsMargin&      aCaptionMargin)
@@ -894,7 +894,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aOuterRS, aDesiredSize, aStatus);
 
   nsresult rv = NS_OK;
-  PRUint8 captionSide = GetCaptionSide();
+  uint8_t captionSide = GetCaptionSide();
 
   // Initialize out parameters
   aDesiredSize.width = aDesiredSize.height = 0;
@@ -1079,11 +1079,11 @@ nsTableOuterFrame::GetType() const
 
 /*------------------ nsITableLayout methods ------------------------------*/
 NS_IMETHODIMP 
-nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+nsTableOuterFrame::GetCellDataAt(int32_t aRowIndex, int32_t aColIndex, 
                                  nsIDOMElement* &aCell,   //out params
-                                 PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
-                                 PRInt32& aRowSpan, PRInt32& aColSpan,
-                                 PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
+                                 int32_t& aStartRowIndex, int32_t& aStartColIndex, 
+                                 int32_t& aRowSpan, int32_t& aColSpan,
+                                 int32_t& aActualRowSpan, int32_t& aActualColSpan,
                                  bool& aIsSelected)
 {
   return InnerTableFrame()->GetCellDataAt(aRowIndex, aColIndex, aCell,
@@ -1093,22 +1093,22 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
+nsTableOuterFrame::GetTableSize(int32_t& aRowCount, int32_t& aColCount)
 {
   return InnerTableFrame()->GetTableSize(aRowCount, aColCount);
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
-                                          PRInt32 *aIndex)
+nsTableOuterFrame::GetIndexByRowAndColumn(int32_t aRow, int32_t aColumn,
+                                          int32_t *aIndex)
 {
   NS_ENSURE_ARG_POINTER(aIndex);
   return InnerTableFrame()->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::GetRowAndColumnByIndex(PRInt32 aIndex,
-                                          PRInt32 *aRow, PRInt32 *aColumn)
+nsTableOuterFrame::GetRowAndColumnByIndex(int32_t aIndex,
+                                          int32_t *aRow, int32_t *aColumn)
 {
   NS_ENSURE_ARG_POINTER(aRow);
   NS_ENSURE_ARG_POINTER(aColumn);

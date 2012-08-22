@@ -165,7 +165,7 @@ TextureRecycleBin::GetTexture(TextureType aType, const gfxIntSize& aSize,
     aOutTexture->Allocate(aContext);
     return;
   }
-  PRUint32 last = mRecycledTextures[aType].Length() - 1;
+  uint32_t last = mRecycledTextures[aType].Length() - 1;
   aOutTexture->TakeFrom(&mRecycledTextures[aType].ElementAt(last));
   mRecycledTextures[aType].RemoveElementAt(last);
 }
@@ -253,7 +253,7 @@ ImageLayerOGL::RenderLayer(int,
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
-    if (!yuvImage->mBufferSize) {
+    if (!yuvImage->IsValid()) {
       return;
     }
 
@@ -293,8 +293,8 @@ ImageLayerOGL::RenderLayer(int,
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
-                                        yuvImage->mSize.width,
-                                        yuvImage->mSize.height));
+                                        yuvImage->GetSize().width,
+                                        yuvImage->GetSize().height));
     program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
@@ -302,9 +302,9 @@ ImageLayerOGL::RenderLayer(int,
     program->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuadWithTextureRect(program,
-                                                yuvImage->mData.GetPictureRect(),
-                                                nsIntSize(yuvImage->mData.mYSize.width,
-                                                          yuvImage->mData.mYSize.height));
+                                                yuvImage->GetData()->GetPictureRect(),
+                                                nsIntSize(yuvImage->GetData()->mYSize.width,
+                                                          yuvImage->GetData()->mYSize.height));
 
     // We shouldn't need to do this, but do it anyway just in case
     // someone else forgets.
@@ -532,32 +532,32 @@ ImageLayerOGL::ImageLayerOGL(LayerManagerOGL *aManager)
 void
 ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 {
-  if (!aImage->mBufferSize)
+  if (!aImage->IsValid())
     return;
 
   nsAutoPtr<PlanarYCbCrOGLBackendData> backendData(
     new PlanarYCbCrOGLBackendData);
 
-  PlanarYCbCrImage::Data &data = aImage->mData;
+  const PlanarYCbCrImage::Data *data = aImage->GetData();
 
   gl()->MakeCurrent();
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data.mYSize, gl(), &backendData->mTextures[0]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_Y, data->mYSize, gl(), &backendData->mTextures[0]);
   SetClamping(gl(), backendData->mTextures[0].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[1]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data->mCbCrSize, gl(), &backendData->mTextures[1]);
   SetClamping(gl(), backendData->mTextures[1].GetTextureID());
 
-  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data.mCbCrSize, gl(), &backendData->mTextures[2]);
+  mTextureRecycleBin->GetTexture(TextureRecycleBin::TEXTURE_C, data->mCbCrSize, gl(), &backendData->mTextures[2]);
   SetClamping(gl(), backendData->mTextures[2].GetTextureID());
 
-  UploadYUVToTexture(gl(), aImage->mData,
+  UploadYUVToTexture(gl(), *data,
                      &backendData->mTextures[0],
                      &backendData->mTextures[1],
                      &backendData->mTextures[2]);
 
-  backendData->mYSize = aImage->mData.mYSize;
-  backendData->mCbCrSize = aImage->mData.mCbCrSize;
+  backendData->mYSize = data->mYSize;
+  backendData->mCbCrSize = data->mCbCrSize;
   backendData->mTextureRecycleBin = mTextureRecycleBin;
 
   aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
@@ -770,7 +770,7 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
     if (aNewFront.type() == SharedImage::TSharedImageID) {
       // We are using ImageBridge protocol. The image data will be queried at render
       // time in the parent side.
-      PRUint64 newID = aNewFront.get_SharedImageID().id();
+      uint64_t newID = aNewFront.get_SharedImageID().id();
       if (newID != mImageContainerID) {
         mImageContainerID = newID;
         mImageVersion = 0;
@@ -889,7 +889,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   if (mImageContainerID) {
     ImageContainerParent::SetCompositorIDForImage(mImageContainerID,
                                                   mOGLManager->GetCompositorID());
-    PRUint32 imgVersion = ImageContainerParent::GetSharedImageVersion(mImageContainerID);
+    uint32_t imgVersion = ImageContainerParent::GetSharedImageVersion(mImageContainerID);
     if (imgVersion != mImageVersion) {
       SharedImage* img = ImageContainerParent::GetSharedImage(mImageContainerID);
       if (img && (img->type() == SharedImage::TYUVImage)) {

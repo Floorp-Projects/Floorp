@@ -34,7 +34,7 @@ nsHttpResponseHead::SetHeader(nsHttpAtom hdr,
 }
 
 void
-nsHttpResponseHead::SetContentLength(PRInt64 len)
+nsHttpResponseHead::SetContentLength(int64_t len)
 {
     mContentLength = len;
     if (!LL_GE_ZERO(len)) // < 0
@@ -55,7 +55,7 @@ nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
     else
         buf.AppendLiteral("1.0 ");
 
-    buf.Append(nsPrintfCString("%u", PRUintn(mStatus)) +
+    buf.Append(nsPrintfCString("%u", unsigned(mStatus)) +
                NS_LITERAL_CSTRING(" ") +
                mStatusText +
                NS_LITERAL_CSTRING("\r\n"));
@@ -67,7 +67,7 @@ nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
 
     // otherwise, we need to iterate over the headers and only flatten
     // those that are appropriate.
-    PRUint32 i, count = mHeaders.Count();
+    uint32_t i, count = mHeaders.Count();
     for (i=0; i<count; ++i) {
         nsHttpAtom header;
         const char *value = mHeaders.PeekHeaderAt(i, header);
@@ -143,7 +143,7 @@ nsHttpResponseHead::ParseStatusLine(const char *line)
     }
     else {
         // Status-Code
-        mStatus = (PRUint16) atoi(++line);
+        mStatus = (uint16_t) atoi(++line);
         if (mStatus == 0) {
             LOG(("mal-formed response status; assuming status = 200\n"));
             mStatus = 200;
@@ -159,7 +159,7 @@ nsHttpResponseHead::ParseStatusLine(const char *line)
     }
 
     LOG(("Have status line [version=%u status=%u statusText=%s]\n",
-        PRUintn(mVersion), PRUintn(mStatus), mStatusText.get()));
+        unsigned(mVersion), unsigned(mStatus), mStatusText.get()));
 }
 
 nsresult
@@ -177,7 +177,7 @@ nsHttpResponseHead::ParseHeaderLine(const char *line)
 
     // handle some special case headers...
     if (hdr == nsHttp::Content_Length) {
-        PRInt64 len;
+        int64_t len;
         const char *ignored;
         // permit only a single value here.
         if (nsHttp::ParseInt64(val, &ignored, &len)) {
@@ -212,12 +212,12 @@ nsHttpResponseHead::ParseHeaderLine(const char *line)
 // This is typically a very small number.
 //
 nsresult
-nsHttpResponseHead::ComputeCurrentAge(PRUint32 now,
-                                      PRUint32 requestTime,
-                                      PRUint32 *result) const
+nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
+                                      uint32_t requestTime,
+                                      uint32_t *result) const
 {
-    PRUint32 dateValue;
-    PRUint32 ageValue;
+    uint32_t dateValue;
+    uint32_t ageValue;
 
     *result = 0;
 
@@ -256,7 +256,7 @@ nsHttpResponseHead::ComputeCurrentAge(PRUint32 now,
 //     freshnessLifetime = 0
 //
 nsresult
-nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result) const
+nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
 {
     *result = 0;
 
@@ -266,7 +266,7 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result) const
 
     *result = 0;
 
-    PRUint32 date = 0, date2 = 0;
+    uint32_t date = 0, date2 = 0;
     if (NS_FAILED(GetDateValue(&date)))
         date = NowInSeconds(); // synthesize a date header if none exists
 
@@ -291,7 +291,7 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result) const
 
     // These responses can be cached indefinitely.
     if ((mStatus == 300) || (mStatus == 301)) {
-        *result = PRUint32(-1);
+        *result = uint32_t(-1);
         return NS_OK;
     }
 
@@ -393,7 +393,7 @@ nsHttpResponseHead::IsResumable() const
 bool
 nsHttpResponseHead::ExpiresInPast() const
 {
-    PRUint32 maxAgeVal, expiresVal, dateVal;
+    uint32_t maxAgeVal, expiresVal, dateVal;
     
     // Bug #203271. Ensure max-age directive takes precedence over Expires
     if (NS_SUCCEEDED(GetMaxAgeValue(&maxAgeVal))) {
@@ -410,7 +410,7 @@ nsHttpResponseHead::UpdateHeaders(const nsHttpHeaderArray &headers)
 {
     LOG(("nsHttpResponseHead::UpdateHeaders [this=%x]\n", this));
 
-    PRUint32 i, count = headers.Count();
+    uint32_t i, count = headers.Count();
     for (i=0; i<count; ++i) {
         nsHttpAtom header;
         const char *val = headers.PeekHeaderAt(i, header);
@@ -473,7 +473,7 @@ nsHttpResponseHead::Reset()
 }
 
 nsresult
-nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, PRUint32 *result) const
+nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, uint32_t *result) const
 {
     const char *val = PeekHeader(header);
     if (!val)
@@ -489,20 +489,20 @@ nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, PRUint32 *result) const
 }
 
 nsresult
-nsHttpResponseHead::GetAgeValue(PRUint32 *result) const
+nsHttpResponseHead::GetAgeValue(uint32_t *result) const
 {
     const char *val = PeekHeader(nsHttp::Age);
     if (!val)
         return NS_ERROR_NOT_AVAILABLE;
 
-    *result = (PRUint32) atoi(val);
+    *result = (uint32_t) atoi(val);
     return NS_OK;
 }
 
 // Return the value of the (HTTP 1.1) max-age directive, which itself is a
 // component of the Cache-Control response header
 nsresult
-nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result) const
+nsHttpResponseHead::GetMaxAgeValue(uint32_t *result) const
 {
     const char *val = PeekHeader(nsHttp::Cache_Control);
     if (!val)
@@ -515,12 +515,12 @@ nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result) const
     int maxAgeValue = atoi(p + 8);
     if (maxAgeValue < 0)
         maxAgeValue = 0;
-    *result = PRUint32(maxAgeValue);
+    *result = uint32_t(maxAgeValue);
     return NS_OK;
 }
 
 nsresult
-nsHttpResponseHead::GetExpiresValue(PRUint32 *result) const
+nsHttpResponseHead::GetExpiresValue(uint32_t *result) const
 {
     const char *val = PeekHeader(nsHttp::Expires);
     if (!val)
@@ -542,7 +542,7 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result) const
     return NS_OK;
 }
 
-PRInt64
+int64_t
 nsHttpResponseHead::TotalEntitySize() const
 {
     const char* contentRange = PeekHeader(nsHttp::Content_Range);
@@ -558,7 +558,7 @@ nsHttpResponseHead::TotalEntitySize() const
     if (*slash == '*') // Server doesn't know the length
         return -1;
 
-    PRInt64 size;
+    int64_t size;
     if (!nsHttp::ParseInt64(slash, &size))
         size = LL_MAXUINT;
     return size;

@@ -127,8 +127,8 @@ NS_IMPL_THREADSAFE_RELEASE(DeviceStorageRequestParent);
 void
 DeviceStorageRequestParent::ActorDestroy(ActorDestroyReason)
 {
-  PRInt32 count = mRunnables.Length();
-  for (PRInt32 index = 0; index < count; index++) {
+  int32_t count = mRunnables.Length();
+  for (int32_t index = 0; index < count; index++) {
     mRunnables[index]->Cancel();
   }
 }
@@ -170,7 +170,7 @@ DeviceStorageRequestParent::PostSuccessEvent::CancelableRun() {
 
 DeviceStorageRequestParent::PostBlobSuccessEvent::PostBlobSuccessEvent(DeviceStorageRequestParent* aParent,
                                                                        DeviceStorageFile* aFile,
-                                                                       PRUint32 aLength,
+                                                                       uint32_t aLength,
                                                                        nsACString& aMimeType)
   : CancelableRunnable(aParent)
   , mLength(aLength)
@@ -308,8 +308,8 @@ DeviceStorageRequestParent::StatFileEvent::CancelableRun()
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   nsCOMPtr<nsIRunnable> r;
-  PRUint64 diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
-  PRInt64 freeSpace = 0;
+  uint64_t diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
+  int64_t freeSpace = 0;
   nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
   if (NS_FAILED(rv)) {
     r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
@@ -355,7 +355,7 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
     return NS_OK;
   }
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   nsresult rv = mFile->mFile->GetFileSize(&fileSize);
   if (NS_FAILED(rv)) {
     r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
@@ -370,7 +370,7 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
 
 DeviceStorageRequestParent::EnumerateFileEvent::EnumerateFileEvent(DeviceStorageRequestParent* aParent,
                                                                    DeviceStorageFile* aFile,
-                                                                   PRUint64 aSince)
+                                                                   uint64_t aSince)
   : CancelableRunnable(aParent)
   , mFile(aFile)
   , mSince(aSince)
@@ -400,8 +400,8 @@ DeviceStorageRequestParent::EnumerateFileEvent::CancelableRun()
 
   InfallibleTArray<DeviceStorageFileValue> values;
 
-  PRUint32 count = files.Length();
-  for (PRUint32 i = 0; i < count; i++) {
+  uint32_t count = files.Length();
+  for (uint32_t i = 0; i < count; i++) {
     nsString fullpath;
     files[i]->mFile->GetPath(fullpath);
     DeviceStorageFileValue dsvf(files[i]->mPath, fullpath);
@@ -436,8 +436,8 @@ DeviceStorageRequestParent::PostPathResultEvent::CancelableRun()
 }
 
 DeviceStorageRequestParent::PostStatResultEvent::PostStatResultEvent(DeviceStorageRequestParent* aParent,
-                                                                     PRInt64 aFreeBytes,
-                                                                     PRInt64 aTotalBytes)
+                                                                     int64_t aFreeBytes,
+                                                                     int64_t aTotalBytes)
   : CancelableRunnable(aParent)
   , mFreeBytes(aFreeBytes)
   , mTotalBytes(aTotalBytes)

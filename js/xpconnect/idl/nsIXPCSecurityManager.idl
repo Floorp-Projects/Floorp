@@ -27,14 +27,14 @@ interface nsIXPCSecurityManager : nsISupports
     * These flags are used when calling nsIXPConnect::SetSecurityManager
     */
 
-    const PRUint32 HOOK_CREATE_WRAPPER  = 1 << 0;
-    const PRUint32 HOOK_CREATE_INSTANCE = 1 << 1;
-    const PRUint32 HOOK_GET_SERVICE     = 1 << 2;
-    const PRUint32 HOOK_CALL_METHOD     = 1 << 3;
-    const PRUint32 HOOK_GET_PROPERTY    = 1 << 4;
-    const PRUint32 HOOK_SET_PROPERTY    = 1 << 5;
+    const uint32_t HOOK_CREATE_WRAPPER  = 1 << 0;
+    const uint32_t HOOK_CREATE_INSTANCE = 1 << 1;
+    const uint32_t HOOK_GET_SERVICE     = 1 << 2;
+    const uint32_t HOOK_CALL_METHOD     = 1 << 3;
+    const uint32_t HOOK_GET_PROPERTY    = 1 << 4;
+    const uint32_t HOOK_SET_PROPERTY    = 1 << 5;
 
-    const PRUint32 HOOK_ALL             = HOOK_CREATE_WRAPPER  |
+    const uint32_t HOOK_ALL             = HOOK_CREATE_WRAPPER  |
                                           HOOK_CREATE_INSTANCE |
                                           HOOK_GET_SERVICE     |
                                           HOOK_CALL_METHOD     |
@@ -64,11 +64,11 @@ interface nsIXPCSecurityManager : nsISupports
     /*
      * Used for aAction below
      */
-    const PRUint32 ACCESS_CALL_METHOD  = 0;
-    const PRUint32 ACCESS_GET_PROPERTY = 1;
-    const PRUint32 ACCESS_SET_PROPERTY = 2;
+    const uint32_t ACCESS_CALL_METHOD  = 0;
+    const uint32_t ACCESS_GET_PROPERTY = 1;
+    const uint32_t ACCESS_SET_PROPERTY = 2;
 
-    void CanAccess(in PRUint32 aAction,
+    void CanAccess(in uint32_t aAction,
                    in nsAXPCNativeCallContextPtr aCallContext,
                    in JSContextPtr aJSContext,
                    in JSObjectPtr aJSObject,

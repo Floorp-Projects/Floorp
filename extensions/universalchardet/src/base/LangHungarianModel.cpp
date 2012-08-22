@@ -59,7 +59,7 @@ static const unsigned char win1250HungarianCharToOrderMap[] =
 //first 1024 sequences:5.2623%
 //rest  sequences:     0.8894%
 //negative sequences:  0.0009% 
-static const PRUint8 HungarianLangModel[] = 
+static const uint8_t HungarianLangModel[] = 
 {
 0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
 3,3,3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,2,2,3,3,1,1,2,2,2,2,2,1,2,

@@ -65,7 +65,7 @@ public:
   virtual nsIPrincipal* GetPrincipal();
 
   static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsid id,
-                              PRUint32 accessType);
+                              uint32_t accessType);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
                                            nsIScriptGlobalObject)
@@ -87,7 +87,7 @@ protected:
 };
 
 JSBool
-nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUint32 accessType)
+nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, uint32_t accessType)
 {
   nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
@@ -130,7 +130,7 @@ static JSBool
 nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                  JSAccessMode mode, jsval *vp)
 {
-  PRUint32 translated;
+  uint32_t translated;
   if (mode & JSACC_WRITE) {
     translated = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
   } else {
@@ -216,7 +216,7 @@ XBL_ProtoErrorReporter(JSContext *cx,
     consoleService(do_GetService("@mozilla.org/consoleservice;1"));
 
   if (errorObject && consoleService) {
-    PRUint32 column = report->uctokenptr - report->uclinebuf;
+    uint32_t column = report->uctokenptr - report->uclinebuf;
 
     errorObject->Init
          (reinterpret_cast<const PRUnichar*>(report->ucmessage),
@@ -466,7 +466,7 @@ UnmarkProtos(nsHashKey* aKey, void* aData, void* aClosure)
 }
 
 void
-nsXBLDocumentInfo::MarkInCCGeneration(PRUint32 aGeneration)
+nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
 {
   if (mDocument) {
     mDocument->MarkUncollectableForCCGeneration(aGeneration);
@@ -601,7 +601,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   NS_ENSURE_TRUE(startupCache, NS_ERROR_FAILURE);
 
   nsAutoArrayPtr<char> buf;
-  PRUint32 len;
+  uint32_t len;
   rv = startupCache->GetBuffer(spec.get(), getter_Transfers(buf), &len);
   // GetBuffer will fail if the binding is not in the cache.
   if (NS_FAILED(rv))
@@ -615,7 +615,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   // The file compatibility.ini stores the build id. This is checked in
   // nsAppRunner.cpp and will delete the cache if a different build is
   // present. However, we check that the version matches here to be safe. 
-  PRUint32 version;
+  uint32_t version;
   rv = stream->Read32(&version);
   NS_ENSURE_SUCCESS(rv, rv);
   if (version != XBLBinding_Serialize_Version) {
@@ -638,7 +638,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   nsRefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
 
   while (1) {
-    PRUint8 flags;
+    uint8_t flags;
     nsresult rv = stream->Read8(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
     if (flags == XBLBinding_Serialize_NoMoreBindings)
@@ -690,7 +690,7 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   stream->Close();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 len;
+  uint32_t len;
   nsAutoArrayPtr<char> buf;
   rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf), &len);
   NS_ENSURE_SUCCESS(rv, rv);

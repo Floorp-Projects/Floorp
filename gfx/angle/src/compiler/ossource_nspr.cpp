@@ -14,7 +14,7 @@
 //
 OS_TLSIndex OS_AllocTLSIndex()
 {
-    PRUintn index;
+    unsigned index;
     PRStatus status = PR_NewThreadPrivateIndex(&index, NULL);
 
     if (status) {

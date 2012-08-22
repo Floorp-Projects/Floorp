@@ -66,21 +66,21 @@ public:
   { return mVisible; }
 
   NS_IMETHOD ConstrainPosition(bool     /*ignored aAllowSlop*/,
-                               PRInt32* aX,
-                               PRInt32* aY)
+                               int32_t* aX,
+                               int32_t* aY)
   { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
 
   // We're always at <0, 0>, and so ignore move requests.
-  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY)
+  NS_IMETHOD Move(int32_t aX, int32_t aY)
   { return NS_OK; }
 
-  NS_IMETHOD Resize(PRInt32 aWidth,
-                    PRInt32 aHeight,
+  NS_IMETHOD Resize(int32_t aWidth,
+                    int32_t aHeight,
                     bool    aRepaint);
-  NS_IMETHOD Resize(PRInt32 aX,
-                    PRInt32 aY,
-                    PRInt32 aWidth,
-                    PRInt32 aHeight,
+  NS_IMETHOD Resize(int32_t aX,
+                    int32_t aY,
+                    int32_t aWidth,
+                    int32_t aHeight,
                     bool    aRepaint)
   // (we're always at <0, 0>)
   { return Resize(aWidth, aHeight, aRepaint); }
@@ -107,7 +107,7 @@ public:
   { /* dead man walking */ }
 
   // PuppetWidgets don't have native data, as they're purely nonnative.
-  virtual void* GetNativeData(PRUint32 aDataType);
+  virtual void* GetNativeData(uint32_t aDataType);
   NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent)
   { return NS_ERROR_UNEXPECTED; }
 
@@ -146,13 +146,13 @@ public:
   NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD CancelComposition();
   NS_IMETHOD OnIMEFocusChange(bool aFocus);
-  NS_IMETHOD OnIMETextChange(PRUint32 aOffset, PRUint32 aEnd,
-                             PRUint32 aNewEnd);
+  NS_IMETHOD OnIMETextChange(uint32_t aOffset, uint32_t aEnd,
+                             uint32_t aNewEnd);
   NS_IMETHOD OnIMESelectionChange(void);
 
   NS_IMETHOD SetCursor(nsCursor aCursor);
   NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                       PRUint32 aHotspotX, PRUint32 aHotspotY)
+                       uint32_t aHotspotX, uint32_t aHotspotY)
   {
     return nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
   }
@@ -200,12 +200,12 @@ private:
   nsIMEUpdatePreference mIMEPreference;
   bool mIMEComposing;
   // Latest seqno received through events
-  PRUint32 mIMELastReceivedSeqno;
+  uint32_t mIMELastReceivedSeqno;
   // Chrome's seqno value when last blur occurred
   // arriving events with seqno up to this should be discarded
   // Note that if seqno overflows (~50 days at 1 ms increment rate),
   // events will be discarded until new focus/blur occurs
-  PRUint32 mIMELastBlurSeqno;
+  uint32_t mIMELastBlurSeqno;
 
   // The DPI of the screen corresponding to this widget
   float mDPI;
@@ -217,12 +217,12 @@ public:
     PuppetScreen(void* nativeScreen);
     ~PuppetScreen();
 
-    NS_IMETHOD GetRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight) MOZ_OVERRIDE;
-    NS_IMETHOD GetAvailRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight) MOZ_OVERRIDE;
-    NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth) MOZ_OVERRIDE;
-    NS_IMETHOD GetColorDepth(PRInt32* aColorDepth) MOZ_OVERRIDE;
-    NS_IMETHOD GetRotation(PRUint32* aRotation) MOZ_OVERRIDE;
-    NS_IMETHOD SetRotation(PRUint32  aRotation) MOZ_OVERRIDE;
+    NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE;
+    NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE;
+    NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) MOZ_OVERRIDE;
+    NS_IMETHOD GetColorDepth(int32_t* aColorDepth) MOZ_OVERRIDE;
+    NS_IMETHOD GetRotation(uint32_t* aRotation) MOZ_OVERRIDE;
+    NS_IMETHOD SetRotation(uint32_t  aRotation) MOZ_OVERRIDE;
 };
 
 class PuppetScreenManager MOZ_FINAL : public nsIScreenManager

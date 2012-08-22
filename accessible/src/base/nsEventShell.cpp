@@ -32,7 +32,7 @@ nsEventShell::FireEvent(AccEvent* aEvent)
 }
 
 void
-nsEventShell::FireEvent(PRUint32 aEventType, Accessible* aAccessible,
+nsEventShell::FireEvent(uint32_t aEventType, Accessible* aAccessible,
                         EIsFromUserInput aIsFromUserInput)
 {
   NS_ENSURE_TRUE(aAccessible,);

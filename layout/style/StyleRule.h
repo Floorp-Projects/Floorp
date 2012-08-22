@@ -51,7 +51,7 @@ struct nsPseudoClassList {
 public:
   nsPseudoClassList(nsCSSPseudoClasses::Type aType);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType, const PRUnichar *aString);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const PRInt32 *aIntPair);
+  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const int32_t *aIntPair);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                     nsCSSSelectorList *aSelectorList /* takes ownership */);
   ~nsPseudoClassList(void);
@@ -73,7 +73,7 @@ public:
     //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
     void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
     PRUnichar*      mString;
-    PRInt32*        mNumbers;
+    int32_t*        mNumbers;
     nsCSSSelectorList* mSelectors;
   } u;
   nsCSSPseudoClasses::Type mType;
@@ -95,11 +95,11 @@ private:
 
 struct nsAttrSelector {
 public:
-  nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr);
-  nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
+  nsAttrSelector(int32_t aNameSpace, const nsString& aAttr);
+  nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction, 
                  const nsString& aValue, bool aCaseSensitive);
-  nsAttrSelector(PRInt32 aNameSpace, nsIAtom* aLowercaseAttr, 
-                 nsIAtom* aCasedAttr, PRUint8 aFunction, 
+  nsAttrSelector(int32_t aNameSpace, nsIAtom* aLowercaseAttr, 
+                 nsIAtom* aCasedAttr, uint8_t aFunction, 
                  const nsString& aValue, bool aCaseSensitive);
   ~nsAttrSelector(void);
 
@@ -110,8 +110,8 @@ public:
   nsAttrSelector* mNext;
   nsCOMPtr<nsIAtom> mLowercaseAttr;
   nsCOMPtr<nsIAtom> mCasedAttr;
-  PRInt32         mNameSpace;
-  PRUint8         mFunction;
+  int32_t         mNameSpace;
+  uint8_t         mFunction;
   bool            mCaseSensitive; // If we are in an HTML document,
                                   // is the value case sensitive?
 private: 
@@ -130,18 +130,18 @@ public:
   nsCSSSelector* Clone() const { return Clone(true, true); }
 
   void Reset(void);
-  void SetNameSpace(PRInt32 aNameSpace);
+  void SetNameSpace(int32_t aNameSpace);
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRUnichar* aString);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRInt32* aIntPair);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const int32_t* aIntPair);
   // takes ownership of aSelectorList
   void AddPseudoClass(nsCSSPseudoClasses::Type aType,
                       nsCSSSelectorList* aSelectorList);
-  void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
-  void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
+  void AddAttribute(int32_t aNameSpace, const nsString& aAttr);
+  void AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
                     const nsString& aValue, bool aCaseSensitive);
   void SetOperator(PRUnichar aOperator);
 
@@ -154,7 +154,7 @@ public:
   }
 
   // Calculate the specificity of this selector (not including its mNext!).
-  PRInt32 CalcWeight() const;
+  int32_t CalcWeight() const;
 
   void ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
                 bool aAppend = false) const;
@@ -175,7 +175,7 @@ private:
   bool CanBeNamespaced(bool aIsNegated) const;
   // Calculate the specificity of this selector (not including its mNext
   // or its mNegations).
-  PRInt32 CalcWeightWithoutNegations() const;
+  int32_t CalcWeightWithoutNegations() const;
 
 public:
   // Get and set the selector's pseudo type
@@ -184,7 +184,7 @@ public:
   }
   void SetPseudoType(nsCSSPseudoElements::Type aType) {
     NS_ASSERTION(aType > PR_INT16_MIN && aType < PR_INT16_MAX, "Out of bounds");
-    mPseudoType = static_cast<PRInt16>(aType);
+    mPseudoType = static_cast<int16_t>(aType);
   }
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -202,11 +202,11 @@ public:
   nsAttrSelector* mAttrList;
   nsCSSSelector*  mNegations;
   nsCSSSelector*  mNext;
-  PRInt32         mNameSpace;
+  int32_t         mNameSpace;
   PRUnichar       mOperator;
 private:
-  // PRInt16 to make sure it packs well with mOperator
-  PRInt16        mPseudoType;
+  // int16_t to make sure it packs well with mOperator
+  int16_t        mPseudoType;
 
   nsCSSSelector(const nsCSSSelector& aCopy) MOZ_DELETE;
   nsCSSSelector& operator=(const nsCSSSelector& aCopy) MOZ_DELETE;
@@ -246,7 +246,7 @@ struct nsCSSSelectorList {
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   nsCSSSelector*     mSelectors;
-  PRInt32            mWeight;
+  int32_t            mWeight;
   nsCSSSelectorList* mNext;
 private: 
   nsCSSSelectorList* Clone(bool aDeep) const;
@@ -277,7 +277,7 @@ public:
   // nsIStyleRule interface
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
 protected:
@@ -310,8 +310,8 @@ public:
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
 
-  PRUint32 GetLineNumber() const { return mLineNumber; }
-  void SetLineNumber(PRUint32 aLineNumber) { mLineNumber = aLineNumber; }
+  uint32_t GetLineNumber() const { return mLineNumber; }
+  void SetLineNumber(uint32_t aLineNumber) { mLineNumber = aLineNumber; }
 
   Declaration* GetDeclaration() const { return mDeclaration; }
 
@@ -341,7 +341,7 @@ public:
   void GetSelectorText(nsAString& aSelectorText);
   void SetSelectorText(const nsAString& aSelectorText);
 
-  virtual PRInt32 GetType() const;
+  virtual int32_t GetType() const;
 
   virtual already_AddRefed<Rule> Clone() const;
 
@@ -351,7 +351,7 @@ public:
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -365,8 +365,8 @@ private:
   ImportantRule*          mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRule*        mDOMRule;
   // Keep the same type so that MSVC packs them.
-  PRUint32                mLineNumber : 31;
-  PRUint32                mWasMatched : 1;
+  uint32_t                mLineNumber : 31;
+  uint32_t                mWasMatched : 1;
 
 private:
   StyleRule& operator=(const StyleRule& aCopy) MOZ_DELETE;

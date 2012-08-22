@@ -172,7 +172,10 @@ endif
 # has full system permissions there.
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 EXPORTS_mozilla/layers += ShadowLayerUtilsGralloc.h
-CPPSRCS += ShadowLayerUtilsGralloc.cpp
+CPPSRCS += \
+        ShadowLayerUtilsGralloc.cpp \
+        GrallocImages.cpp \
+        $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

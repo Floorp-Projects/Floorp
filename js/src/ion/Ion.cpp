@@ -326,8 +326,6 @@ IonCode::trace(JSTracer *trc)
 void
 IonCode::finalize(FreeOp *fop)
 {
-    JS_ASSERT(!fop->onBackgroundThread());
-
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     JS_POISON(code_, JS_FREE_PATTERN, bufferSize_);
 
@@ -1525,6 +1523,7 @@ ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
     // Note that we use +1 to prefer non-OSR over OSR.
     return minUses + (loop->depth + 1) * 100;
 }
+
 void
 AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
@@ -1532,7 +1531,10 @@ AutoFlushCache::updateTop(uintptr_t p, size_t len)
 }
 
 AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
- : start_(NULL), stop_(NULL), name_(nonce), used_(false)
+  : start_(0),
+    stop_(0),
+    name_(nonce),
+    used_(false)
 {
     if (comp == NULL) {
         if (CurrentIonContext() != NULL)

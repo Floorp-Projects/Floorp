@@ -51,17 +51,17 @@ private:
   nsCSSValue mLeadingSpace;
   nsCSSValue mVerticalOffset;
 
-  PRInt32    mWidthSign;
-  PRInt32    mHeightSign;
-  PRInt32    mDepthSign;
-  PRInt32    mLeadingSpaceSign;
-  PRInt32    mVerticalOffsetSign;
+  int32_t    mWidthSign;
+  int32_t    mHeightSign;
+  int32_t    mDepthSign;
+  int32_t    mLeadingSpaceSign;
+  int32_t    mVerticalOffsetSign;
 
-  PRInt32    mWidthPseudoUnit;
-  PRInt32    mHeightPseudoUnit;
-  PRInt32    mDepthPseudoUnit;
-  PRInt32    mLeadingSpacePseudoUnit;
-  PRInt32    mVerticalOffsetPseudoUnit;
+  int32_t    mWidthPseudoUnit;
+  int32_t    mHeightPseudoUnit;
+  int32_t    mDepthPseudoUnit;
+  int32_t    mLeadingSpacePseudoUnit;
+  int32_t    mVerticalOffsetPseudoUnit;
 
   // helpers to process the attributes
   void
@@ -69,13 +69,13 @@ private:
 
   static bool
   ParseAttribute(nsString&   aString,
-                 PRInt32&    aSign,
+                 int32_t&    aSign,
                  nsCSSValue& aCSSValue,
-                 PRInt32&    aPseudoUnit);
+                 int32_t&    aPseudoUnit);
 
   void
-  UpdateValue(PRInt32                  aSign,
-              PRInt32                  aPseudoUnit,
+  UpdateValue(int32_t                  aSign,
+              int32_t                  aPseudoUnit,
               const nsCSSValue&        aCSSValue,
               const nsBoundingMetrics& aBoundingMetrics,
               nscoord&                 aValueToUpdate) const;

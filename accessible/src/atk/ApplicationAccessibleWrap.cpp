@@ -690,7 +690,7 @@ ApplicationAccessibleWrap::GetNativeInterface(void** aOutAccessible)
 struct AtkRootAccessibleAddedEvent {
   AtkObject *app_accessible;
   AtkObject *root_accessible;
-  PRUint32 index;
+  uint32_t index;
 };
 
 gboolean fireRootAccessibleAddedCB(gpointer data)
@@ -714,7 +714,7 @@ ApplicationAccessibleWrap::AppendChild(Accessible* aChild)
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
   atk_object_set_parent(atkAccessible, mAtkObject);
 
-    PRUint32 count = mChildren.Length();
+    uint32_t count = mChildren.Length();
 
     // Emit children_changed::add in a timeout
     // to make sure aRootAccWrap is fully initialized.
@@ -735,7 +735,7 @@ ApplicationAccessibleWrap::AppendChild(Accessible* aChild)
 bool
 ApplicationAccessibleWrap::RemoveChild(Accessible* aChild)
 {
-  PRInt32 index = aChild->IndexInParent();
+  int32_t index = aChild->IndexInParent();
 
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
   atk_object_set_parent(atkAccessible, NULL);
@@ -795,8 +795,8 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
         MAI_LOG_DEBUG(("Current Lib path=%s\n", libPath.get()));
         PR_FreeLibraryName(curLibPath);
 
-        PRInt16 loc1 = 0, loc2 = 0;
-        PRInt16 subLen = 0;
+        int16_t loc1 = 0, loc2 = 0;
+        int16_t subLen = 0;
         while (loc2 >= 0) {
             loc2 = libPath.FindChar(':', loc1);
             if (loc2 < 0)

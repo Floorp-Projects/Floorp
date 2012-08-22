@@ -28,12 +28,12 @@ public:
   /**
    * Create this image surface backed by shared memory.
    */
-  bool Create(HDC adc, PRUint32 aWidth, PRUint32 aHeight, bool aTransparent);
+  bool Create(HDC adc, uint32_t aWidth, uint32_t aHeight, bool aTransparent);
 
   /**
    * Attach this surface to shared memory from another process.
    */
-  bool Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight,
+  bool Attach(Handle aHandle, uint32_t aWidth, uint32_t aHeight,
               bool aTransparent);
 
   /**
@@ -53,7 +53,7 @@ public:
 private:
   SharedDIBWin mSharedDIB;
 
-  void InitSurface(PRUint32 aWidth, PRUint32 aHeight, bool aTransparent);
+  void InitSurface(uint32_t aWidth, uint32_t aHeight, bool aTransparent);
 };
 
 } // namespace gfx

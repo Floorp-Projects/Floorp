@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothPairingEvent, nsDOMEvent)
 
   static already_AddRefed<BluetoothPairingEvent>
-  Create(const nsAString& aDeviceAddress, const PRUint32& aPasskey);
+  Create(const nsAString& aDeviceAddress, const uint32_t& aPasskey);
   
   static already_AddRefed<BluetoothPairingEvent>
   Create(const nsAString& aDeviceAddress, const nsAString& aUuid);
@@ -60,7 +60,7 @@ private:
   ~BluetoothPairingEvent()
   { }
 
-  PRUint32 mPasskey;
+  uint32_t mPasskey;
   nsString mUuid;
   nsString mDeviceAddress;
 };

@@ -27,10 +27,10 @@ interface nsIBinaryOutputStream : nsIOutputStream {
      */
     void writeBoolean(in boolean aBoolean);
 
-    void write8(in PRUint8 aByte);
-    void write16(in PRUint16 a16);
-    void write32(in PRUint32 a32);
-    void write64(in PRUint64 a64);
+    void write8(in uint8_t aByte);
+    void write16(in uint16_t a16);
+    void write32(in uint32_t a32);
+    void write64(in uint64_t a64);
 
     void writeFloat(in float aFloat);
     void writeDouble(in double aDouble);
@@ -56,13 +56,13 @@ interface nsIBinaryOutputStream : nsIOutputStream {
     /**
      * Write an opaque byte array to the stream.
      */
-    void writeBytes([size_is(aLength)] in string aString, in PRUint32 aLength);
+    void writeBytes([size_is(aLength)] in string aString, in uint32_t aLength);
 
     /**
      * Write an opaque byte array to the stream.
      */
-    void writeByteArray([array, size_is(aLength)] in PRUint8 aBytes,
-                        in PRUint32 aLength);
+    void writeByteArray([array, size_is(aLength)] in uint8_t aBytes,
+                        in uint32_t aLength);
 
 };
 

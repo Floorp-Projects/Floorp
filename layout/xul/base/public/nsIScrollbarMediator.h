@@ -16,8 +16,8 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsIScrollbarMediator)
 
   // The aScrollbar argument denotes the scrollbar that's firing the notification.
-  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
-  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex) = 0;
+  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex) = 0;
 
   NS_IMETHOD VisibilityChanged(bool aVisible) = 0;
 };

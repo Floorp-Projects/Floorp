@@ -74,7 +74,7 @@ public:
 // non-null.
 
 #define ENUMERATE_WEAKARRAY(array, type, method)                           \
-  for (PRUint32 array_idx = 0; array_idx < array.Length(); ++array_idx) {  \
+  for (uint32_t array_idx = 0; array_idx < array.Length(); ++array_idx) {  \
     const nsCOMPtr<type> &e = array.ElementAt(array_idx);                  \
     if (e)                                                                 \
       e->method;                                                           \

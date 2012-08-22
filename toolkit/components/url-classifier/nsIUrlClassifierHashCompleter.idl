@@ -26,7 +26,7 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
    */
   void completion(in ACString hash,
                   in ACString table,
-                  in PRUint32 chunkId,
+                  in uint32_t chunkId,
                   in boolean trusted);
 
   /**

@@ -34,7 +34,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 static nsresult
-RunBlockingTest(const nsACString &host, PRInt32 port, nsIFile *file)
+RunBlockingTest(const nsACString &host, int32_t port, nsIFile *file)
 {
     nsresult rv;
 
@@ -57,7 +57,7 @@ RunBlockingTest(const nsACString &host, PRInt32 port, nsIFile *file)
     if (NS_FAILED(rv)) return rv;
 
     char buf[120];
-    PRUint32 nr, nw;
+    uint32_t nr, nw;
     for (;;) {
         rv = input->Read(buf, sizeof(buf), &nr);
         if (NS_FAILED(rv) || (nr == 0)) return rv;
@@ -98,7 +98,7 @@ main(int argc, char* argv[])
         return -1;
     }
     char* hostName = argv[1];
-    PRInt32 port = atoi(argv[2]);
+    int32_t port = atoi(argv[2]);
     char* fileName = argv[3];
     {
         nsCOMPtr<nsIServiceManager> servMan;

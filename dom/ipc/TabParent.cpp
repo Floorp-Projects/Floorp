@@ -143,8 +143,8 @@ TabParent::RecvMoveFocus(const bool& aForward)
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
     nsCOMPtr<nsIDOMElement> dummy;
-    PRUint32 type = aForward ? PRUint32(nsIFocusManager::MOVEFOCUS_FORWARD)
-                             : PRUint32(nsIFocusManager::MOVEFOCUS_BACKWARD);
+    uint32_t type = aForward ? uint32_t(nsIFocusManager::MOVEFOCUS_FORWARD)
+                             : uint32_t(nsIFocusManager::MOVEFOCUS_BACKWARD);
     fm->MoveFocus(nullptr, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
                   getter_AddRefs(dummy));
   }
@@ -266,7 +266,7 @@ TabParent::Init(nsIDOMWindow *window)
 }
 
 NS_IMETHODIMP
-TabParent::GetState(PRUint32 *aState)
+TabParent::GetState(uint32_t *aState)
 {
   NS_ENSURE_ARG(aState);
   NS_WARNING("SecurityState not valid here");
@@ -285,7 +285,7 @@ PDocumentRendererParent*
 TabParent::AllocPDocumentRenderer(const nsRect& documentRect,
                                   const gfxMatrix& transform,
                                   const nsString& bgcolor,
-                                  const PRUint32& renderFlags,
+                                  const uint32_t& renderFlags,
                                   const bool& flushLayout,
                                   const nsIntSize& renderSize)
 {
@@ -314,8 +314,8 @@ TabParent::DeallocPContentPermissionRequest(PContentPermissionRequestParent* act
 
 void
 TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
-                          PRInt32 aButton, PRInt32 aClickCount,
-                          PRInt32 aModifiers, bool aIgnoreRootScrollFrame)
+                          int32_t aButton, int32_t aClickCount,
+                          int32_t aModifiers, bool aIgnoreRootScrollFrame)
 {
   unused << PBrowserParent::SendMouseEvent(nsString(aType), aX, aY,
                                            aButton, aClickCount,
@@ -324,9 +324,9 @@ TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
 
 void
 TabParent::SendKeyEvent(const nsAString& aType,
-                        PRInt32 aKeyCode,
-                        PRInt32 aCharCode,
-                        PRInt32 aModifiers,
+                        int32_t aKeyCode,
+                        int32_t aCharCode,
+                        int32_t aModifiers,
                         bool aPreventDefault)
 {
   unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
@@ -372,9 +372,9 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
   cloneData.mData = buffer.data;
   cloneData.mDataLength = buffer.dataLength;
   if (!blobParents.IsEmpty()) {
-    PRUint32 length = blobParents.Length();
+    uint32_t length = blobParents.Length();
     cloneData.mClosure.mBlobs.SetCapacity(length);
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       BlobParent* blobParent = static_cast<BlobParent*>(blobParents[i]);
       MOZ_ASSERT(blobParent);
       nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
@@ -397,9 +397,9 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
     cloneData.mDataLength = buffer.dataLength;
 
   if (!blobParents.IsEmpty()) {
-    PRUint32 length = blobParents.Length();
+    uint32_t length = blobParents.Length();
       cloneData.mClosure.mBlobs.SetCapacity(length);
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       BlobParent* blobParent = static_cast<BlobParent*>(blobParents[i]);
       MOZ_ASSERT(blobParent);
       nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
@@ -411,7 +411,7 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 bool
-TabParent::RecvSetCursor(const PRUint32& aCursor)
+TabParent::RecvSetCursor(const uint32_t& aCursor)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
@@ -432,7 +432,7 @@ TabParent::RecvSetBackgroundColor(const nscolor& aColor)
 bool
 TabParent::RecvNotifyIMEFocus(const bool& aFocus,
                               nsIMEUpdatePreference* aPreference,
-                              PRUint32* aSeqno)
+                              uint32_t* aSeqno)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -458,9 +458,9 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 }
 
 bool
-TabParent::RecvNotifyIMETextChange(const PRUint32& aStart,
-                                   const PRUint32& aEnd,
-                                   const PRUint32& aNewEnd)
+TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
+                                   const uint32_t& aEnd,
+                                   const uint32_t& aNewEnd)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -471,9 +471,9 @@ TabParent::RecvNotifyIMETextChange(const PRUint32& aStart,
 }
 
 bool
-TabParent::RecvNotifyIMESelection(const PRUint32& aSeqno,
-                                  const PRUint32& aAnchor,
-                                  const PRUint32& aFocus)
+TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
+                                  const uint32_t& aAnchor,
+                                  const uint32_t& aFocus)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -528,7 +528,7 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
             mIMESelectionFocus > mIMECacheText.Length()) {
           break;
         }
-        PRUint32 selLen = mIMESelectionAnchor > mIMESelectionFocus ?
+        uint32_t selLen = mIMESelectionAnchor > mIMESelectionFocus ?
                           mIMESelectionAnchor - mIMESelectionFocus :
                           mIMESelectionFocus - mIMESelectionAnchor;
         aEvent.mReply.mString = Substring(mIMECacheText,
@@ -542,7 +542,7 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
-      PRUint32 inputOffset = aEvent.mInput.mOffset,
+      uint32_t inputOffset = aEvent.mInput.mOffset,
                inputEnd = inputOffset + aEvent.mInput.mLength;
 
       if (inputEnd > mIMECacheText.Length()) {
@@ -662,8 +662,8 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
 }
 
 bool
-TabParent::RecvGetInputContext(PRInt32* aIMEEnabled,
-                               PRInt32* aIMEOpen)
+TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
+                               int32_t* aIMEOpen)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -673,24 +673,24 @@ TabParent::RecvGetInputContext(PRInt32* aIMEEnabled,
   }
 
   InputContext context = widget->GetInputContext();
-  *aIMEEnabled = static_cast<PRInt32>(context.mIMEState.mEnabled);
-  *aIMEOpen = static_cast<PRInt32>(context.mIMEState.mOpen);
+  *aIMEEnabled = static_cast<int32_t>(context.mIMEState.mEnabled);
+  *aIMEOpen = static_cast<int32_t>(context.mIMEState.mOpen);
   return true;
 }
 
 bool
-TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
-                               const PRInt32& aIMEOpen,
+TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
+                               const int32_t& aIMEOpen,
                                const nsString& aType,
                                const nsString& aActionHint,
-                               const PRInt32& aCause,
-                               const PRInt32& aFocusChange)
+                               const int32_t& aCause,
+                               const int32_t& aFocusChange)
 {
   // mIMETabParent (which is actually static) tracks which if any TabParent has IMEFocus
   // When the input mode is set to anything but IMEState::DISABLED,
   // mIMETabParent should be set to this
   mIMETabParent =
-    aIMEEnabled != static_cast<PRInt32>(IMEState::DISABLED) ? this : nullptr;
+    aIMEEnabled != static_cast<int32_t>(IMEState::DISABLED) ? this : nullptr;
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget || !AllowContentIME())
     return true;
@@ -759,7 +759,7 @@ TabParent::ReceiveMessage(const nsString& aMessage,
       frameLoader->GetFrameMessageManager();
     JSContext* ctx = manager->GetJSContext();
     JSAutoRequest ar(ctx);
-    PRUint32 len = 0; //TODO: obtain a real value in bug 572685
+    uint32_t len = 0; //TODO: obtain a real value in bug 572685
     // Because we want JS messages to have always the same properties,
     // create array even if len == 0.
     JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
@@ -837,7 +837,7 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
 
 // This method is largely copied from nsDocShell::GetAuthPrompt
 NS_IMETHODIMP
-TabParent::GetAuthPrompt(PRUint32 aPromptReason, const nsIID& iid,
+TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
                           void** aResult)
 {
   // we're either allowing auth, or it's a proxy request
@@ -858,7 +858,7 @@ TabParent::GetAuthPrompt(PRUint32 aPromptReason, const nsIID& iid,
 }
 
 PContentDialogParent*
-TabParent::AllocPContentDialog(const PRUint32& aType,
+TabParent::AllocPContentDialog(const uint32_t& aType,
                                const nsCString& aName,
                                const nsCString& aFeatures,
                                const InfallibleTArray<int>& aIntParams,
@@ -887,7 +887,7 @@ TabParent::HandleDelayedDialogs()
   }
   nsCOMPtr<nsIDialogCreator> dialogCreator = do_QueryInterface(mBrowserDOMWindow);
   while (!ShouldDelayDialogs() && mDelayedDialogs.Length()) {
-    PRUint32 index = mDelayedDialogs.Length() - 1;
+    uint32_t index = mDelayedDialogs.Length() - 1;
     DelayedDialogData* data = mDelayedDialogs[index];
     mDelayedDialogs.RemoveElementAt(index);
     nsCOMPtr<nsIDialogParamBlock> params;
@@ -917,7 +917,7 @@ TabParent::HandleDelayedDialogs()
 
     delete data;
     if (dialog) {
-      InfallibleTArray<PRInt32> intParams;
+      InfallibleTArray<int32_t> intParams;
       InfallibleTArray<nsString> stringParams;
       TabChild::ParamsToArrays(params, intParams, stringParams);
       unused << PContentDialogParent::Send__delete__(dialog,

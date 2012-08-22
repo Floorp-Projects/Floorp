@@ -407,8 +407,9 @@ class NodeBuilder
         return newNode(type, pos, propName, array, dst);
     }
 
-    bool setProperty(JSObject *obj, const char *name, Value val_) {
-        RootedValue val(cx, val_);
+    bool setProperty(JSObject *objArg, const char *name, Value valArg) {
+        RootedObject obj(cx, objArg);
+        RootedValue val(cx, valArg);
         JS_ASSERT_IF(val.isMagic(), val.whyMagic() == JS_SERIALIZE_NO_NODE);
 
         /* Represent "no node" as null and ensure users are not exposed to magic values. */
@@ -422,7 +423,7 @@ class NodeBuilder
         if (!atom)
             return false;
 
-        return obj->defineProperty(cx, atom->asPropertyName(), val);
+        return JSObject::defineProperty(cx, obj, atom->asPropertyName(), val);
     }
 
     bool newNodeLoc(TokenPos *pos, Value *dst);
@@ -658,7 +659,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!array->setElement(cx, array, i, &val, false))
+        if (!JSObject::setElement(cx, array, array, i, &val, false))
             return false;
     }
 
@@ -3296,7 +3297,7 @@ JS_InitReflect(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
     RootedObject Reflect(cx, NewObjectWithClassProto(cx, &ObjectClass, NULL, obj));
-    if (!Reflect || !Reflect->setSingletonType(cx))
+    if (!Reflect || !JSObject::setSingletonType(cx, Reflect))
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, "Reflect", OBJECT_TO_JSVAL(Reflect),

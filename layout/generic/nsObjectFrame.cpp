@@ -203,7 +203,7 @@ using namespace mozilla::layers;
 
 class PluginBackgroundSink : public ReadbackSink {
 public:
-  PluginBackgroundSink(nsObjectFrame* aFrame, PRUint64 aStartSequenceNumber)
+  PluginBackgroundSink(nsObjectFrame* aFrame, uint64_t aStartSequenceNumber)
     : mLastSequenceNumber(aStartSequenceNumber), mFrame(aFrame) {}
   ~PluginBackgroundSink()
   {
@@ -212,7 +212,7 @@ public:
     }
   }
 
-  virtual void SetUnknown(PRUint64 aSequenceNumber)
+  virtual void SetUnknown(uint64_t aSequenceNumber)
   {
     if (!AcceptUpdate(aSequenceNumber))
       return;
@@ -220,7 +220,7 @@ public:
   }
 
   virtual already_AddRefed<gfxContext>
-      BeginUpdate(const nsIntRect& aRect, PRUint64 aSequenceNumber)
+      BeginUpdate(const nsIntRect& aRect, uint64_t aSequenceNumber)
   {
     if (!AcceptUpdate(aSequenceNumber))
       return nullptr;
@@ -235,7 +235,7 @@ public:
   void Destroy() { mFrame = nullptr; }
 
 protected:
-  bool AcceptUpdate(PRUint64 aSequenceNumber) {
+  bool AcceptUpdate(uint64_t aSequenceNumber) {
     if (aSequenceNumber > mLastSequenceNumber && mFrame &&
         mFrame->mInstanceOwner) {
       mLastSequenceNumber = aSequenceNumber;
@@ -244,7 +244,7 @@ protected:
     return false;
   }
 
-  PRUint64 mLastSequenceNumber;
+  uint64_t mLastSequenceNumber;
   nsObjectFrame* mFrame;
 };
 
@@ -705,7 +705,7 @@ nsObjectFrame::CallSetWindow(bool aCheckIsHidden)
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
   if (!rootPC)
     return NS_ERROR_FAILURE;
-  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
   nsRect bounds = GetContentRectRelativeToSelf() + GetOffsetToCrossDoc(rootFrame);
   nsIntRect intBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
@@ -790,7 +790,7 @@ nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 }
 
 bool
-nsObjectFrame::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
+nsObjectFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 {
   if (aTabIndex)
     *aTabIndex = -1;
@@ -1117,7 +1117,7 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
     return;
   configuration->mChild = mWidget;
 
-  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
   nsRect bounds = GetContentRectRelativeToSelf() + GetOffsetToCrossDoc(rootFrame);
   configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
@@ -1774,7 +1774,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
         mInstanceOwner->GetDrawingModel() == 
                                   NPDrawingModelInvalidatingCoreAnimation) {
-      PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+      int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
       // Clip to the content area where the plugin should be drawn. If
       // we don't do this, the plugin can draw outside its bounds.
       nsIntRect contentPixels = aPluginRect.ToNearestPixels(appUnitsPerDevPixel);

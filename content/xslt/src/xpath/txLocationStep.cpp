@@ -254,13 +254,13 @@ LocationStep::getType()
 TX_IMPL_EXPR_STUBS_BASE(LocationStep, NODESET_RESULT)
 
 Expr*
-LocationStep::getSubExprAt(PRUint32 aPos)
+LocationStep::getSubExprAt(uint32_t aPos)
 {
     return PredicateList::getSubExprAt(aPos);
 }
 
 void
-LocationStep::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+LocationStep::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     PredicateList::setSubExprAt(aPos, aExpr);
 }

@@ -40,7 +40,7 @@ nsMaemoNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
 }
 
 NS_IMETHODIMP
-nsMaemoNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
+nsMaemoNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 

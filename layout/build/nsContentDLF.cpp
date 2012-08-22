@@ -172,7 +172,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     // text/plain.
     viewSourceChannel->GetOriginalContentType(type);
     bool knownType = false;
-    PRInt32 typeIndex;
+    int32_t typeIndex;
     for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gHTMLTypes[typeIndex]) &&
           !type.EqualsLiteral(VIEWSOURCE_CONTENT_TYPE)) {

@@ -27,7 +27,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Logging helpers
 
-static PRUint32 sModules = 0;
+static uint32_t sModules = 0;
 
 struct ModuleRep {
   const char* mStr;
@@ -94,7 +94,7 @@ LogDocShellState(nsIDocument* aDocumentNode)
   nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
   if (container) {
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+    uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
     docShell->GetBusyFlags(&busyFlags);
     if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)
       printf("'none'");
@@ -224,7 +224,7 @@ LogShellLoadType(nsIDocShell* aDocShell)
 {
   printf("load type: ");
 
-  PRUint32 loadType = 0;
+  uint32_t loadType = 0;
   aDocShell->GetLoadType(&loadType);
   switch (loadType) {
     case LOAD_NORMAL:
@@ -299,7 +299,7 @@ LogRequest(nsIRequest* aRequest)
     nsCAutoString name;
     aRequest->GetName(name);
     printf("    request spec: %s\n", name.get());
-    PRUint32 loadFlags = 0;
+    uint32_t loadFlags = 0;
     aRequest->GetLoadFlags(&loadFlags);
     printf("    request load flags: %x; ", loadFlags);
     if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
@@ -324,7 +324,7 @@ LogRequest(nsIRequest* aRequest)
 static void
 GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType)
 {
-  PRUint32 type = aEvent->GetEventType();
+  uint32_t type = aEvent->GetEventType();
   if (type == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED) {
     aEventType.AssignLiteral("load stopped");
   } else if (type == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE) {
@@ -353,7 +353,7 @@ static const char* sDocEventTitle = "DOCEVENT";
 
 void
 logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
-                 nsIRequest* aRequest, PRUint32 aStateFlags)
+                 nsIRequest* aRequest, uint32_t aStateFlags)
 {
   MsgBegin(sDocLoadTitle, aMsg);
 
@@ -470,7 +470,7 @@ logging::SelChange(nsISelection* aSelection, DocAccessible* aDocument)
 {
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
 
-  PRInt16 type = 0;
+  int16_t type = 0;
   privSel->GetType(&type);
 
   const char* strType = 0;
@@ -558,7 +558,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
   }
 
   nsINode* parentNode = aNode->GetNodeParent();
-  PRInt32 idxInParent = parentNode ? parentNode->IndexOf(aNode) : - 1;
+  int32_t idxInParent = parentNode ? parentNode->IndexOf(aNode) : - 1;
 
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
     printf("%s: %p, text node, idx in parent: %d\n",
@@ -599,7 +599,7 @@ logging::Stack()
 // namespace logging:: initialization
 
 bool
-logging::IsEnabled(PRUint32 aModules)
+logging::IsEnabled(uint32_t aModules)
 {
   return sModules & aModules;
 }

@@ -86,11 +86,11 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   Push(nsGkAtoms::title, nullptr);
   // XUL will add the "Source of: " prefix.
-  PRUint32 length = aTitle.Length();
+  uint32_t length = aTitle.Length();
   if (length > PR_INT32_MAX) {
     length = PR_INT32_MAX;
   }
-  AppendCharacters(aTitle.get(), 0, (PRInt32)length);
+  AppendCharacters(aTitle.get(), 0, (int32_t)length);
   Pop(); // title
 
   Push(nsGkAtoms::link, nsHtml5ViewSourceUtils::NewLinkAttributes());
@@ -113,8 +113,8 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   mOpQueue.AppendElement()->Init(eTreeOpStartLayout);
 }
 
-PRInt32
-nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
+int32_t
+nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
 {
   mPos = aPos;
   switch (mState) {
@@ -479,7 +479,7 @@ nsHtml5Highlighter::SetBuffer(nsHtml5UTF16Buffer* aBuffer)
 }
 
 void
-nsHtml5Highlighter::DropBuffer(PRInt32 aPos)
+nsHtml5Highlighter::DropBuffer(int32_t aPos)
 {
   NS_PRECONDITION(mBuffer, "No buffer to drop!");
   mPos = aPos;
@@ -558,7 +558,7 @@ nsHtml5Highlighter::FlushChars()
 {
   if (mCStart < mPos) {
     PRUnichar* buf = mBuffer->getBuffer();
-    PRInt32 i = mCStart;
+    int32_t i = mCStart;
     while (i < mPos) {
       PRUnichar c = buf[i];
       switch (c) {
@@ -573,7 +573,7 @@ nsHtml5Highlighter::FlushChars()
         case '\n': {
           ++i;
           if (mCStart < i) {
-            PRInt32 len = i - mCStart;
+            int32_t len = i - mCStart;
             AppendCharacters(buf, mCStart, len);
             mCStart = i;
           }
@@ -591,7 +591,7 @@ nsHtml5Highlighter::FlushChars()
       }
     }
     if (mCStart < mPos) {
-      PRInt32 len = mPos - mCStart;
+      int32_t len = mPos - mCStart;
       AppendCharacters(buf, mCStart, len);
       mCStart = mPos;
     }
@@ -692,8 +692,8 @@ nsHtml5Highlighter::Pop()
 
 void
 nsHtml5Highlighter::AppendCharacters(const PRUnichar* aBuffer,
-                                     PRInt32 aStart,
-                                     PRInt32 aLength)
+                                     int32_t aStart,
+                                     int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
 

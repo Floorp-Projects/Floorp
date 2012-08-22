@@ -47,15 +47,15 @@ public:
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
-  virtual nsresult InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
+  virtual nsresult InsertChildAt(nsIContent* aChild, uint32_t aIndex,
                                      bool aNotify);
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
 
   // nsIFormControl
-  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
+  NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_FIELDSET; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -83,7 +83,7 @@ private:
   void NotifyElementsForFirstLegendChange(bool aNotify);
 
   // This function is used to generate the nsContentList (listed form elements).
-  static bool MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
+  static bool MatchListedElements(nsIContent* aContent, int32_t aNamespaceID,
                                     nsIAtom* aAtom, void* aData);
 
   // listed form controls elements.

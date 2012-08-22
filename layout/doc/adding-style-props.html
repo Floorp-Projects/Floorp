@@ -221,9 +221,9 @@ The GetValue method must be similarly <a href="#GetValueCase">modified</a>
 </pre>
 Finally <a href="#ListCase">modify </a>
 the 'List' method to output the property value.<br>
-  <pre>void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
+  <pre>void nsCSSUserInterface::List(FILE* out, int32_t aIndent) const
 {
-  for (PRInt32 index = aIndent; --index &gt;= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index &gt;= 0; ) fputs("  ", out);
 
   nsAutoString buffer;
 
@@ -307,12 +307,12 @@ Add a <a href="#StyleContextMember">data member</a>
     aContext-&gt;FreeToShell(sizeof(nsStyleUIReset), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleUIReset&amp; aOther) const;
+  int32_t CalcDifference(const nsStyleUIReset&amp; aOther) const;
 
-  PRUint8   mUserSelect;      // [reset] (selection-style)
+  uint8_t   mUserSelect;      // [reset] (selection-style)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
-  PRUint8   mResizer;         // [reset]
-  <b><a name="StyleContextMember"></a>PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)</b>
+  uint8_t   mResizer;         // [reset]
+  <b><a name="StyleContextMember"></a>uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)</b>
 };
 </pre>
 In the implementation file <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/src/nsStyleStruct.cpp">
@@ -321,7 +321,7 @@ add the new data member to the constructors of the style struct and the CalcDiff
 method, which must return the correct style-change hint when a change to
 your new property is detected. The constructor changes are obvious, but here
 is the CalcDifference change for our example:<br>
-  <pre>PRInt32 nsStyleUIReset::CalcDifference(const nsStyleUIReset&amp; aOther) const
+  <pre>int32_t nsStyleUIReset::CalcDifference(const nsStyleUIReset&amp; aOther) const
 {
  <b> if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {</b>
     if (mResizer == aOther.mResizer) {

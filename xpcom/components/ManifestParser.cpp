@@ -143,7 +143,7 @@ void LogMessage(const char* aMsg, ...)
 }
 
 void LogMessageWithContext(FileLocation &aFile,
-                           PRUint32 aLineNumber, const char* aMsg, ...)
+                           uint32_t aLineNumber, const char* aMsg, ...)
 {
   va_list args;
   va_start(args, aMsg);
@@ -316,7 +316,7 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
     return true;
   }
 
-  PRUint32 comparison;
+  uint32_t comparison;
   nsAutoString testdata;
 
   switch (aData[aFlag.Length()]) {
@@ -355,7 +355,7 @@ CheckVersionFlag(const nsString& aFlag, const nsString& aData,
     return false;
 
   if (aResult != eOK) {
-    PRInt32 c = mozilla::CompareVersions(NS_ConvertUTF16toUTF8(aValue).get(),
+    int32_t c = mozilla::CompareVersions(NS_ConvertUTF16toUTF8(aValue).get(),
                                          NS_ConvertUTF16toUTF8(testdata).get());
     if ((c == 0 && comparison & COMPARE_EQ) ||
 	(c < 0 && comparison & COMPARE_LT) ||
@@ -482,7 +482,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
 
   char *token;
   char *newline = buf;
-  PRUint32 line = 0;
+  uint32_t line = 0;
 
   // outer loop tokenizes by newline
   while (*newline) {
@@ -647,7 +647,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
     }
   }
 
-  for (PRUint32 i = 0; i < contracts.Length(); ++i) {
+  for (uint32_t i = 0; i < contracts.Length(); ++i) {
     CachedDirective& d = contracts[i];
     nsComponentManagerImpl::gComponentManager->ManifestContract
       (mgrcx, d.lineno, d.argv);

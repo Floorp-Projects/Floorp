@@ -30,8 +30,8 @@ public:
 
 protected:
     nsIRDFResource** mResources;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
+    int32_t mCount;
+    int32_t mCapacity;
 
 public:
     class ConstIterator {

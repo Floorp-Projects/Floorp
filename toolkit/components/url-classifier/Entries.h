@@ -93,17 +93,17 @@ struct SafebrowsingHash
     aStr.BeginWriting()[len] = '\0';
   }
 #endif
-  PRUint32 ToUint32() const {
+  uint32_t ToUint32() const {
       return *((uint32*)buf);
   }
-  void FromUint32(PRUint32 aHash) {
+  void FromUint32(uint32_t aHash) {
       *((uint32*)buf) = aHash;
   }
 };
 
 class PrefixComparator {
 public:
-  static int Compare(const PRUint8* a, const PRUint8* b) {
+  static int Compare(const uint8_t* a, const uint8_t* b) {
       uint32 first = *((uint32*)a);
       uint32 second = *((uint32*)b);
       if (first > second) {
@@ -120,7 +120,7 @@ typedef nsTArray<Prefix> PrefixArray;
 
 class CompletionComparator {
 public:
-  static int Compare(const PRUint8* a, const PRUint8* b) {
+  static int Compare(const uint8_t* a, const uint8_t* b) {
     return memcmp(a, b, COMPLETE_SIZE);
   }
 };
@@ -258,7 +258,7 @@ EntrySort(nsTArray<T>& aArray)
 
 template<class T>
 nsresult
-ReadTArray(nsIInputStream* aStream, nsTArray<T>* aArray, PRUint32 aNumElements)
+ReadTArray(nsIInputStream* aStream, nsTArray<T>* aArray, uint32_t aNumElements)
 {
   if (!aArray->SetLength(aNumElements))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -274,7 +274,7 @@ template<class T>
 nsresult
 WriteTArray(nsIOutputStream* aStream, nsTArray<T>& aArray)
 {
-  PRUint32 written;
+  uint32_t written;
   return aStream->Write(reinterpret_cast<char*>(aArray.Elements()),
                         aArray.Length() * sizeof(T),
                         &written);

@@ -431,7 +431,7 @@ AsyncExecuteStatements::notifyComplete()
   // Finalize our statements before we try to commit or rollback.  If we are
   // canceling and have statements that think they have pending work, the
   // rollback will fail.
-  for (PRUint32 i = 0; i < mStatements.Length(); i++)
+  for (uint32_t i = 0; i < mStatements.Length(); i++)
     mStatements[i].finalize();
 
   // Handle our transaction, if we have one
@@ -467,7 +467,7 @@ AsyncExecuteStatements::notifyComplete()
 }
 
 nsresult
-AsyncExecuteStatements::notifyError(PRInt32 aErrorCode,
+AsyncExecuteStatements::notifyError(int32_t aErrorCode,
                                     const char *aMessage)
 {
   mMutex.AssertNotCurrentThreadOwns();
@@ -526,7 +526,7 @@ AsyncExecuteStatements::statementsNeedTransaction()
   // If there is more than one write statement, run in a transaction.
   // Additionally, if we have only one statement but it needs a transaction, due
   // to multiple BindingParams, we will wrap it in one.
-  for (PRUint32 i = 0, transactionsCount = 0; i < mStatements.Length(); ++i) {
+  for (uint32_t i = 0, transactionsCount = 0; i < mStatements.Length(); ++i) {
     transactionsCount += mStatements[i].needsTransaction();
     if (transactionsCount > 1) {
       return true;
@@ -582,7 +582,7 @@ AsyncExecuteStatements::Run()
   }
 
   // Execute each statement, giving the callback results if it returns any.
-  for (PRUint32 i = 0; i < mStatements.Length(); i++) {
+  for (uint32_t i = 0; i < mStatements.Length(); i++) {
     bool finished = (i == (mStatements.Length() - 1));
 
     sqlite3_stmt *stmt;

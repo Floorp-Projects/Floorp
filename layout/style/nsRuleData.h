@@ -22,10 +22,10 @@ typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
 struct nsRuleData
 {
-  const PRUint32 mSIDs;
+  const uint32_t mSIDs;
   bool mCanStoreInRuleTree;
   bool mIsImportantRule;
-  PRUint8 mLevel; // an nsStyleSet::sheetType
+  uint8_t mLevel; // an nsStyleSet::sheetType
   nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;
   const nsPostResolveFunc mPostResolveCallback;
@@ -44,7 +44,7 @@ struct nsRuleData
   nsCSSValue* const mValueStorage; // our user owns this array
   size_t mValueOffsets[nsStyleStructID_Length];
 
-  nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
+  nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
              nsPresContext* aContext, nsStyleContext* aStyleContext);
 
 #ifdef DEBUG

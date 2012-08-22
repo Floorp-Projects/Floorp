@@ -47,11 +47,11 @@ private:
   nsresult EnumerateInternal(const JS::Value & aName,
                              const JS::Value & aOptions,
                              JSContext* aCx,
-                             PRUint8 aArgc, 
+                             uint8_t aArgc, 
                              bool aEditable, 
                              nsIDOMDeviceStorageCursor** aRetval);
 
-  PRInt32 mStorageType;
+  int32_t mStorageType;
   nsCOMPtr<nsIFile> mFile;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;

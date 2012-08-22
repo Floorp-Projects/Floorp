@@ -32,7 +32,7 @@ nsresult
 nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
                                    nsIContent* aTargetNode,
                                    nsIAtom* aContextLocalName,
-                                   PRInt32 aContextNamespace,
+                                   int32_t aContextNamespace,
                                    bool aQuirks,
                                    bool aPreventScriptExecution)
 {

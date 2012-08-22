@@ -53,7 +53,7 @@ private:
 
   nsCOMPtr<nsIAppShell> mAppShell;
 
-  PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
+  int32_t      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
   bool mRunning;        // Have we started the main event loop?
   bool mShuttingDown;   // Quit method reentrancy check
   bool mAttemptingQuit; // Quit(eAttemptQuit) still trying
@@ -62,7 +62,7 @@ private:
   bool mIsSafeModeNecessary;       // Whether safe mode is necessary
   bool mStartupCrashTrackingEnded; // Whether startup crash tracking has already ended
   bool mCachedShutdownTime;
-  PRUint32 mLastShutdownTime;
+  uint32_t mLastShutdownTime;
 
 #if defined(XP_WIN)
   //Interaction with OS-provided profiling probes

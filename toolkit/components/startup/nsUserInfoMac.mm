@@ -74,7 +74,7 @@ nsUserInfo::GetDomain(char **aDomain)
 {
   nsCAutoString email;
   if (NS_SUCCEEDED(GetPrimaryEmailAddress(email))) {
-    PRInt32 index = email.FindChar('@');
+    int32_t index = email.FindChar('@');
     if (index != -1) {
       // chop off everything before, and including the '@'
       *aDomain = ToNewCString(Substring(email, index + 1));

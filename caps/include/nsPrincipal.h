@@ -35,7 +35,7 @@ public:
   NS_IMETHOD GetPreferences(char** prefBranch, char** id, char** subjectName, char** grantedList, char** deniedList, bool* isTrusted);
   NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
   NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
-  NS_IMETHOD CanEnableCapability(const char* capability, PRInt16* _retval);
+  NS_IMETHOD CanEnableCapability(const char* capability, int16_t* _retval);
   NS_IMETHOD IsCapabilityEnabled(const char* capability, void* annotation, bool* _retval);
   NS_IMETHOD EnableCapability(const char* capability, void** annotation);
   NS_IMETHOD GetHasCertificate(bool* aHasCertificate);
@@ -63,12 +63,12 @@ public:
 
 protected:
   // Formerly an IDL method. Now just a protected helper.
-  nsresult SetCanEnableCapability(const char* capability, PRInt16 canEnable);
+  nsresult SetCanEnableCapability(const char* capability, int16_t canEnable);
 
   nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
   nsHashtable* mCapabilities;
   nsCString mPrefName;
-  static PRInt32 sCapabilitiesOrdinal;
+  static int32_t sCapabilitiesOrdinal;
 
   // XXXcaa This is a semi-hack.  The best solution here is to keep
   // a reference to an interface here, except there is no interface
@@ -119,7 +119,7 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD GetHashValue(PRUint32* aHashValue);
+  NS_IMETHOD GetHashValue(uint32_t* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
   NS_IMETHOD GetDomain(nsIURI** aDomain);
   NS_IMETHOD SetDomain(nsIURI* aDomain);
@@ -128,8 +128,8 @@ public:
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
-  NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);
-  NS_IMETHOD GetAppId(PRUint32* aAppStatus);
+  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus);
+  NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);
 #ifdef DEBUG
   virtual void dumpImpl();
@@ -144,7 +144,7 @@ public:
                 const nsACString& aPrettyName,
                 nsISupports* aCert,
                 nsIURI* aCodebase,
-                PRUint32 aAppId,
+                uint32_t aAppId,
                 bool aInMozBrowser);
   nsresult InitFromPersistent(const char* aPrefName,
                               const nsCString& aFingerprint,
@@ -155,7 +155,7 @@ public:
                               nsISupports* aCert,
                               bool aIsCert,
                               bool aTrusted,
-                              PRUint32 aAppId,
+                              uint32_t aAppId,
                               bool aInMozBrowser);
 
   virtual void GetScriptLocation(nsACString& aStr) MOZ_OVERRIDE;
@@ -185,7 +185,7 @@ public:
 
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
-  PRUint32 mAppId;
+  uint32_t mAppId;
   bool mInMozBrowser;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
   bool mCodebaseImmutable;
@@ -198,7 +198,7 @@ protected:
   /**
    * Returns the app status of the principal based on mAppId and mInMozBrowser.
    */
-  PRUint16 GetAppStatus();
+  uint16_t GetAppStatus();
 };
 
 class nsExpandedPrincipal : public nsIExpandedPrincipal, public nsBasePrincipal
@@ -215,7 +215,7 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD GetHashValue(PRUint32* aHashValue);
+  NS_IMETHOD GetHashValue(uint32_t* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
   NS_IMETHOD GetDomain(nsIURI** aDomain);
   NS_IMETHOD SetDomain(nsIURI* aDomain);
@@ -224,8 +224,8 @@ public:
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
-  NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);
-  NS_IMETHOD GetAppId(PRUint32* aAppStatus);
+  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus);
+  NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);
 #ifdef DEBUG
   virtual void dumpImpl();

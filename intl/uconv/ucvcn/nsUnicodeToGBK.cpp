@@ -27,7 +27,7 @@
 //  Private class used by nsUnicodeToGB18030 and nsUnicodeToGB18030Font0
 //    nsUnicodeToGB18030Uniq2Bytes
 //-----------------------------------------------------------------------
-static const PRUint16 g_uf_gb18030_2bytes[] = {
+static const uint16_t g_uf_gb18030_2bytes[] = {
 #include "gb18030uniq2b.uf"
 };
 class nsUnicodeToGB18030Uniq2Bytes : public nsTableEncoderSupport
@@ -42,7 +42,7 @@ protected:
 //  Private class used by nsUnicodeToGB18030
 //    nsUnicodeTo4BytesGB18030
 //-----------------------------------------------------------------------
-static const PRUint16 g_uf_gb18030_4bytes[] = {
+static const uint16_t g_uf_gb18030_4bytes[] = {
 #include "gb180304bytes.uf"
 };
 class nsUnicodeTo4BytesGB18030 : public nsTableEncoderSupport
@@ -57,7 +57,7 @@ protected:
 //  Private class used by nsUnicodeToGBK
 //    nsUnicodeToGBKUniq2Bytes
 //-----------------------------------------------------------------------
-static const PRUint16 g_uf_gbk_2bytes[] = {
+static const uint16_t g_uf_gbk_2bytes[] = {
 #include "gbkuniq2b.uf"
 };
 class nsUnicodeToGBKUniq2Bytes : public nsTableEncoderSupport
@@ -89,7 +89,7 @@ bool nsUnicodeToGB18030::EncodeSurrogate(
       NS_IS_LOW_SURROGATE(aSurrogateLow) )
   {
     // notice that idx does not include the 0x10000 
-    PRUint32 idx = ((aSurrogateHigh - (PRUnichar)0xD800) << 10 ) |
+    uint32_t idx = ((aSurrogateHigh - (PRUnichar)0xD800) << 10 ) |
                    (aSurrogateLow - (PRUnichar) 0xDC00);
 
     unsigned char *out = (unsigned char*) aOut;
@@ -108,7 +108,7 @@ bool nsUnicodeToGB18030::EncodeSurrogate(
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
 
-nsUnicodeToGBK::nsUnicodeToGBK(PRUint32 aMaxLength) :
+nsUnicodeToGBK::nsUnicodeToGBK(uint32_t aMaxLength) :
   nsEncoderSupport(aMaxLength)
 {
   mExtensionEncoder = nullptr;
@@ -127,7 +127,7 @@ void nsUnicodeToGBK::Create4BytesEncoder()
 bool nsUnicodeToGBK::TryExtensionEncoder(
   PRUnichar aChar,
   char* aOut,
-  PRInt32 *aOutLen
+  int32_t *aOutLen
 )
 {
   if( NS_IS_HIGH_SURROGATE(aChar) || 
@@ -140,7 +140,7 @@ bool nsUnicodeToGBK::TryExtensionEncoder(
     CreateExtensionEncoder();
   if(mExtensionEncoder) 
   {
-    PRInt32 len = 1;
+    int32_t len = 1;
     nsresult res = NS_OK;
     res = mExtensionEncoder->Convert(&aChar, &len, aOut, aOutLen);
     if(NS_SUCCEEDED(res) && (*aOutLen > 0))
@@ -152,7 +152,7 @@ bool nsUnicodeToGBK::TryExtensionEncoder(
 bool nsUnicodeToGBK::Try4BytesEncoder(
   PRUnichar aChar,
   char* aOut,
-  PRInt32 *aOutLen
+  int32_t *aOutLen
 )
 {
   if( NS_IS_HIGH_SURROGATE(aChar) || 
@@ -165,7 +165,7 @@ bool nsUnicodeToGBK::Try4BytesEncoder(
     Create4BytesEncoder();
   if(m4BytesEncoder) 
   {
-    PRInt32 len = 1;
+    int32_t len = 1;
     nsresult res = NS_OK;
     res = m4BytesEncoder->Convert(&aChar, &len, aOut, aOutLen);
     NS_ASSERTION(NS_FAILED(res) || ((1 == len) && (4 == *aOutLen)),
@@ -185,12 +185,12 @@ bool nsUnicodeToGBK::EncodeSurrogate(
 
 NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
   const PRUnichar * aSrc, 
-  PRInt32 * aSrcLength, 
+  int32_t * aSrcLength, 
   char * aDest, 
-  PRInt32 * aDestLength)
+  int32_t * aDestLength)
 {
-  PRInt32 iSrcLength = 0;
-  PRInt32 iDestLength = 0;
+  int32_t iSrcLength = 0;
+  int32_t iDestLength = 0;
   PRUnichar unicode;
   nsresult res = NS_OK;
   while (iSrcLength < *aSrcLength )
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
         aDest += 2;	// increment 2 bytes
         iDestLength +=2;
       } else {
-        PRInt32 aOutLen = 2;
+        int32_t aOutLen = 2;
         // make sure we still have 2 bytes for output first
         if(iDestLength+2 > *aDestLength)
         {

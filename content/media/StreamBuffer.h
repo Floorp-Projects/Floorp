@@ -22,7 +22,7 @@ const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
  * Track rate in Hz. Maximum 1 << MEDIA_TIME_FRAC_BITS Hz. This ensures
  * calculations below don't overflow.
  */
-typedef PRInt32 TrackRate;
+typedef int32_t TrackRate;
 const TrackRate TRACK_RATE_MAX = 1 << MEDIA_TIME_FRAC_BITS;
 
 /**
@@ -30,7 +30,7 @@ const TrackRate TRACK_RATE_MAX = 1 << MEDIA_TIME_FRAC_BITS;
  * StreamBuffers may have the same ID; this matters when appending StreamBuffers,
  * since tracks with the same ID are matched. Only IDs greater than 0 are allowed.
  */
-typedef PRInt32 TrackID;
+typedef int32_t TrackID;
 const TrackID TRACK_NONE = 0;
 
 inline TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aMicroseconds)
@@ -267,7 +267,7 @@ public:
     }
 
     const nsTArray<nsAutoPtr<Track> >* mBuffer;
-    PRUint32 mIndex;
+    uint32_t mIndex;
     MediaSegment::Type mType;
     bool mMatchType;
   };

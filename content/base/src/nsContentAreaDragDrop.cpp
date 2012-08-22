@@ -175,7 +175,7 @@ NS_IMETHODIMP
 nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
                                                  const char *aFlavor,
                                                  nsISupports **aData,
-                                                 PRUint32 *aDataLen)
+                                                 uint32_t *aDataLen)
 {
   NS_ENSURE_ARG_POINTER(aData && aDataLen);
   *aData = nullptr;
@@ -187,7 +187,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // get the URI from the kFilePromiseURLMime flavor
     NS_ENSURE_ARG(aTransferable);
     nsCOMPtr<nsISupports> tmp;
-    PRUint32 dataSize = 0;
+    uint32_t dataSize = 0;
     aTransferable->GetTransferData(kFilePromiseURLMime,
                                    getter_AddRefs(tmp), &dataSize);
     nsCOMPtr<nsISupportsString> supportsString =
@@ -406,7 +406,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
   nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mWindow);
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
   if (dsti) {
-    PRInt32 type = -1;
+    int32_t type = -1;
     if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
         type == nsIDocShellTreeItem::typeChrome) {
       isChromeShell = true;
@@ -664,7 +664,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupportsString> data;
-    PRUint32 dataSize;
+    uint32_t dataSize;
     rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(data), &dataSize);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mHtmlString);
@@ -836,7 +836,7 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
         selectionStart->HasChildNodes(&hasChildren);
         if (hasChildren) {
           // see if just one node is selected
-          PRInt32 anchorOffset, focusOffset;
+          int32_t anchorOffset, focusOffset;
           inSelection->GetAnchorOffset(&anchorOffset);
           inSelection->GetFocusOffset(&focusOffset);
           if (abs(anchorOffset - focusOffset) == 1) {
@@ -844,7 +844,7 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
               do_QueryInterface(selectionStart);
 
             if (selStartContent) {
-              PRInt32 childOffset =
+              int32_t childOffset =
                 (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
               nsIContent *childContent =
                 selStartContent->GetChildAt(childOffset);
@@ -905,7 +905,7 @@ DragDataProducer::GetSelectedLink(nsISelection* inSelection,
   // first, use a range determine if the selection was marked LTR or RTL;
   // if the latter, swap endpoints so we trim in the right direction
 
-  PRInt32 startOffset, endOffset;
+  int32_t startOffset, endOffset;
   {
     nsCOMPtr<nsIDOMRange> range;
     inSelection->GetRangeAt(0, getter_AddRefs(range));
@@ -932,7 +932,7 @@ DragDataProducer::GetSelectedLink(nsISelection* inSelection,
   nsAutoString nodeStr;
   selectionStartNode->GetNodeValue(nodeStr);
   if (nodeStr.IsEmpty() ||
-      startOffset+1 >= static_cast<PRInt32>(nodeStr.Length())) {
+      startOffset+1 >= static_cast<int32_t>(nodeStr.Length())) {
     nsCOMPtr<nsIDOMNode> curr = selectionStartNode;
     nsIDOMNode* next;
 

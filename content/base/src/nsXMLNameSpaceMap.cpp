@@ -21,9 +21,9 @@ class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {
 };
 
 template <>
-class nsDefaultComparator <nsNameSpaceEntry, PRInt32> {
+class nsDefaultComparator <nsNameSpaceEntry, int32_t> {
   public:
-    bool Equals(const nsNameSpaceEntry& aEntry, const PRInt32& aNameSpace) const {
+    bool Equals(const nsNameSpaceEntry& aEntry, const int32_t& aNameSpace) const {
       return aEntry.nameSpaceID == aNameSpace;
     }
 };
@@ -55,7 +55,7 @@ nsXMLNameSpaceMap::nsXMLNameSpaceMap()
 }
 
 nsresult
-nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
+nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, int32_t aNameSpaceID)
 {
   if (!mNameSpaces.Contains(aPrefix) && !mNameSpaces.AppendElement(aPrefix)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -67,7 +67,7 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
 nsresult
 nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 {
-  PRInt32 id;
+  int32_t id;
   nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(aURI,
                                                                       id);
 
@@ -76,10 +76,10 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
   return AddPrefix(aPrefix, id);
 }
 
-PRInt32
+int32_t
 nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 {
-  PRUint32 index = mNameSpaces.IndexOf(aPrefix);
+  uint32_t index = mNameSpaces.IndexOf(aPrefix);
   if (index != mNameSpaces.NoIndex) {
     return mNameSpaces[index].nameSpaceID;
   }
@@ -91,9 +91,9 @@ nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 }
 
 nsIAtom*
-nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
+nsXMLNameSpaceMap::FindPrefix(int32_t aNameSpaceID) const
 {
-  PRUint32 index = mNameSpaces.IndexOf(aNameSpaceID);
+  uint32_t index = mNameSpaces.IndexOf(aNameSpaceID);
   if (index != mNameSpaces.NoIndex) {
     return mNameSpaces[index].prefix;
   }

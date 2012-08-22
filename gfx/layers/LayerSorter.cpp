@@ -83,7 +83,7 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   // for layers to overlap without intersections (in 2d space) and yet still
   // have their bounds rects not completely enclose each other?
   nsTArray<gfxPoint> points;
-  for (PRUint32 i = 0; i < 4; i++) {
+  for (uint32_t i = 0; i < 4; i++) {
     if (ourTransformedRect.Contains(otherTransformedRect.mPoints[i])) {
       points.AppendElement(otherTransformedRect.mPoints[i]);
     }
@@ -94,8 +94,8 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   
   // Look for intersections between lines (in 2d space) and use these as
   // depth testing points.
-  for (PRUint32 i = 0; i < 4; i++) {
-    for (PRUint32 j = 0; j < 4; j++) {
+  for (uint32_t i = 0; i < 4; i++) {
+    for (uint32_t j = 0; j < 4; j++) {
       gfxPoint intersection;
       gfxLineSegment one(ourTransformedRect.mPoints[i],
                          ourTransformedRect.mPoints[(i + 1) % 4]);
@@ -114,7 +114,7 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
 
   // Find the relative Z depths of each intersection point and check that the layers are in the same order.
   gfxFloat highest = 0;
-  for (PRUint32 i = 0; i < points.Length(); i++) {
+  for (uint32_t i = 0; i < points.Length(); i++) {
     gfxFloat ourDepth = RecoverZDepth(ourTransform, points.ElementAt(i));
     gfxFloat otherDepth = RecoverZDepth(otherTransform, points.ElementAt(i));
 
@@ -155,7 +155,7 @@ static bool gDumpLayerSortList = getenv("MOZ_DUMP_LAYER_SORT_LIST") != 0;
 #define REVERSE     7
 #define HIDDEN      8
 
-static void SetTextColor(PRUint32 aColor)
+static void SetTextColor(uint32_t aColor)
 {
   char command[13];
 
@@ -164,7 +164,7 @@ static void SetTextColor(PRUint32 aColor)
   printf("%s", command);
 }
 
-static void print_layer_internal(FILE* aFile, Layer* aLayer, PRUint32 aColor)
+static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor)
 {
   SetTextColor(aColor);
   fprintf(aFile, "%p", aLayer);
@@ -174,7 +174,7 @@ static void print_layer_internal(FILE* aFile, Layer* aLayer, PRUint32 aColor)
 
 const char *colors[] = { "Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White" };
 
-static void print_layer_internal(FILE* aFile, Layer* aLayer, PRUint32 aColor)
+static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor)
 {
   fprintf(aFile, "%p(%s)", aLayer, colors[aColor]);
 }
@@ -187,7 +187,7 @@ static void print_layer(FILE* aFile, Layer* aLayer)
 
 static void DumpLayerList(nsTArray<Layer*>& aLayers)
 {
-  for (PRUint32 i = 0; i < aLayers.Length(); i++) {
+  for (uint32_t i = 0; i < aLayers.Length(); i++) {
     print_layer(stderr, aLayers.ElementAt(i));
     fprintf(stderr, " ");
   }
@@ -198,7 +198,7 @@ static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
 {
   nsTArray<DirectedGraph<Layer*>::Edge> edges = aGraph.GetEdgeList();
   
-  for (PRUint32 i = 0; i < edges.Length(); i++) {
+  for (uint32_t i = 0; i < edges.Length(); i++) {
     fprintf(stderr, "From: ");
     print_layer(stderr, edges.ElementAt(i).mFrom);
     fprintf(stderr, ", To: ");
@@ -214,11 +214,11 @@ static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
 #define MAX_SORTABLE_LAYERS 100
 
 
-PRUint32 gColorIndex = 1;
+uint32_t gColorIndex = 1;
 
 void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 {
-  PRUint32 nodeCount = aLayers.Length();
+  uint32_t nodeCount = aLayers.Length();
   if (nodeCount > MAX_SORTABLE_LAYERS) {
     return;
   }
@@ -226,7 +226,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 
 #ifdef DEBUG
   if (gDumpLayerSortList) {
-    for (PRUint32 i = 0; i < nodeCount; i++) {
+    for (uint32_t i = 0; i < nodeCount; i++) {
       if (aLayers.ElementAt(i)->GetDebugColorIndex() == 0) {
         aLayers.ElementAt(i)->SetDebugColorIndex(gColorIndex++);
         if (gColorIndex > 7) {
@@ -240,8 +240,8 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 #endif
 
   // Iterate layers and determine edges.
-  for (PRUint32 i = 0; i < nodeCount; i++) {
-    for (PRUint32 j = i + 1; j < nodeCount; j++) {
+  for (uint32_t i = 0; i < nodeCount; i++) {
+    for (uint32_t j = i + 1; j < nodeCount; j++) {
       Layer* a = aLayers.ElementAt(i);
       Layer* b = aLayers.ElementAt(j);
       LayerSortOrder order = CompareDepth(a, b);
@@ -267,7 +267,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   // Make a list of all layers with no incoming edges.
   noIncoming.AppendElements(aLayers);
   const nsTArray<DirectedGraph<Layer*>::Edge>& edges = graph.GetEdgeList();
-  for (PRUint32 i = 0; i < edges.Length(); i++) {
+  for (uint32_t i = 0; i < edges.Length(); i++) {
     noIncoming.RemoveElement(edges.ElementAt(i).mTo);
   }
 
@@ -275,7 +275,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   // and remove edges from it.
   do {
     if (!noIncoming.IsEmpty()) {
-      PRUint32 last = noIncoming.Length() - 1;
+      uint32_t last = noIncoming.Length() - 1;
 
       Layer* layer = noIncoming.ElementAt(last);
 
@@ -284,7 +284,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 
       nsTArray<DirectedGraph<Layer*>::Edge> outgoing;
       graph.GetEdgesFrom(layer, outgoing);
-      for (PRUint32 i = 0; i < outgoing.Length(); i++) {
+      for (uint32_t i = 0; i < outgoing.Length(); i++) {
         DirectedGraph<Layer*>::Edge edge = outgoing.ElementAt(i);
         graph.RemoveEdge(edge);
         if (!graph.NumEdgesTo(edge.mTo)) {
@@ -298,10 +298,10 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
     // are still edges, then we have a cycle.
     if (noIncoming.IsEmpty() && graph.GetEdgeCount()) {
       // Find the node with the least incoming edges.
-      PRUint32 minEdges = UINT_MAX;
+      uint32_t minEdges = UINT_MAX;
       Layer* minNode = nullptr;
-      for (PRUint32 i = 0; i < aLayers.Length(); i++) {
-        PRUint32 edgeCount = graph.NumEdgesTo(aLayers.ElementAt(i));
+      for (uint32_t i = 0; i < aLayers.Length(); i++) {
+        uint32_t edgeCount = graph.NumEdgesTo(aLayers.ElementAt(i));
         if (edgeCount && edgeCount < minEdges) {
           minEdges = edgeCount;
           minNode = aLayers.ElementAt(i);

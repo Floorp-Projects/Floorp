@@ -19,7 +19,7 @@ public:
     nsString mValue;
 
 private:
-    PRUint32 mLevel;
+    uint32_t mLevel;
     bool mOnlyText;
 };
 

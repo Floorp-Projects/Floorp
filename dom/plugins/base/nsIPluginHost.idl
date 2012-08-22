@@ -35,8 +35,8 @@ interface nsIPluginHost : nsISupports
    *                   loss of functionality. To be used out of concern for
    *                   space and not necessarily privacy.
    */
-  const PRUint32 FLAG_CLEAR_ALL = 0;
-  const PRUint32 FLAG_CLEAR_CACHE = 1;
+  const uint32_t FLAG_CLEAR_ALL = 0;
+  const uint32_t FLAG_CLEAR_CACHE = 1;
 
   /*
    * Clear site data for a given plugin.
@@ -59,7 +59,7 @@ interface nsIPluginHost : nsISupports
    *         general or for that particular site and/or flag combination.
    */
   void clearSiteData(in nsIPluginTag plugin, in AUTF8String domain,
-                     in PRUint64 flags, in PRInt64 maxAge);
+                     in uint64_t flags, in int64_t maxAge);
 
   /*
    * Determine if a plugin has stored data for a given site.

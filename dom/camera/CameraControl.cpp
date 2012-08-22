@@ -32,14 +32,14 @@ NS_IMPL_THREADSAFE_RELEASE(nsCameraControl)
 
 // Helpers for string properties.
 nsresult
-nsCameraControl::SetHelper(PRUint32 aKey, const nsAString& aValue)
+nsCameraControl::SetHelper(uint32_t aKey, const nsAString& aValue)
 {
   SetParameter(aKey, NS_ConvertUTF16toUTF8(aValue).get());
   return NS_OK;
 }
 
 nsresult
-nsCameraControl::GetHelper(PRUint32 aKey, nsAString& aValue)
+nsCameraControl::GetHelper(uint32_t aKey, nsAString& aValue)
 {
   const char* value = GetParameterConstChar(aKey);
   if (!value) {
@@ -52,14 +52,14 @@ nsCameraControl::GetHelper(PRUint32 aKey, nsAString& aValue)
 
 // Helpers for doubles.
 nsresult
-nsCameraControl::SetHelper(PRUint32 aKey, double aValue)
+nsCameraControl::SetHelper(uint32_t aKey, double aValue)
 {
   SetParameter(aKey, aValue);
   return NS_OK;
 }
 
 nsresult
-nsCameraControl::GetHelper(PRUint32 aKey, double* aValue)
+nsCameraControl::GetHelper(uint32_t aKey, double* aValue)
 {
   MOZ_ASSERT(aValue);
   *aValue = GetParameterDouble(aKey);
@@ -68,7 +68,7 @@ nsCameraControl::GetHelper(PRUint32 aKey, double* aValue)
 
 // Helper for weighted regions.
 nsresult
-nsCameraControl::SetHelper(JSContext* aCx, PRUint32 aKey, const JS::Value& aValue, PRUint32 aLimit)
+nsCameraControl::SetHelper(JSContext* aCx, uint32_t aKey, const JS::Value& aValue, uint32_t aLimit)
 {
   if (aLimit == 0) {
     DOM_CAMERA_LOGI("%s:%d : aLimit = 0, nothing to do\n", __func__, __LINE__);
@@ -94,7 +94,7 @@ nsCameraControl::SetHelper(JSContext* aCx, PRUint32 aKey, const JS::Value& aValu
   nsTArray<CameraRegion> regionArray;
   regionArray.SetCapacity(length);
 
-  for (PRUint32 i = 0; i < length; ++i) {
+  for (uint32_t i = 0; i < length; ++i) {
     JS::Value v;
 
     if (!JS_GetElement(aCx, regions, i, &v)) {
@@ -129,7 +129,7 @@ nsCameraControl::SetHelper(JSContext* aCx, PRUint32 aKey, const JS::Value& aValu
 }
 
 nsresult
-nsCameraControl::GetHelper(JSContext* aCx, PRUint32 aKey, JS::Value* aValue)
+nsCameraControl::GetHelper(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
 {
   nsTArray<CameraRegion> regionArray;
 
@@ -140,10 +140,10 @@ nsCameraControl::GetHelper(JSContext* aCx, PRUint32 aKey, JS::Value* aValue)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRUint32 length = regionArray.Length();
+  uint32_t length = regionArray.Length();
   DOM_CAMERA_LOGI("%s:%d : got %d regions\n", __func__, __LINE__, length);
 
-  for (PRUint32 i = 0; i < length; ++i) {
+  for (uint32_t i = 0; i < length; ++i) {
     CameraRegion* r = &regionArray[i];
     JS::Value v;
 
@@ -486,9 +486,9 @@ nsCameraControl::AutoFocusComplete(bool aSuccess)
 }
 
 void
-nsCameraControl::TakePictureComplete(PRUint8* aData, PRUint32 aLength)
+nsCameraControl::TakePictureComplete(uint8_t* aData, uint32_t aLength)
 {
-  PRUint8* data = new PRUint8[aLength];
+  uint8_t* data = new uint8_t[aLength];
 
   memcpy(data, aData, aLength);
 
@@ -496,7 +496,7 @@ nsCameraControl::TakePictureComplete(PRUint8* aData, PRUint32 aLength)
    * TODO: pick up the actual specified picture format for the MIME type;
    * for now, assume we'll be using JPEGs.
    */
-  nsIDOMBlob* blob = new nsDOMMemoryFile(static_cast<void*>(data), static_cast<PRUint64>(aLength), NS_LITERAL_STRING("image/jpeg"));
+  nsIDOMBlob* blob = new nsDOMMemoryFile(static_cast<void*>(data), static_cast<uint64_t>(aLength), NS_LITERAL_STRING("image/jpeg"));
   nsCOMPtr<nsIRunnable> takePictureResult = new TakePictureResult(blob, mTakePictureOnSuccessCb);
 
   nsresult rv = NS_DispatchToMainThread(takePictureResult);

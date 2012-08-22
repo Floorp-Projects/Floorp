@@ -38,7 +38,7 @@ public:
 
     nsXULTemplateResultSetStorage(mozIStorageStatement* aStatement);
 
-    PRInt32 GetColumnIndex(nsIAtom* aColumnName);
+    int32_t GetColumnIndex(nsIAtom* aColumnName);
 
     void FillColumnValues(nsCOMArray<nsIVariant>& aArray);
 

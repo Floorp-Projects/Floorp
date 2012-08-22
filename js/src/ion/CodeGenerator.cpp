@@ -1444,17 +1444,6 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     JSObject *templateObj = lir->mir()->templateObj();
     JSObject *global = &templateObj->global();
 
-    if (lir->isCall()) {
-        pushArg(ImmGCPtr(global));
-        if (lir->slots()->isRegister())
-            pushArg(ToRegister(lir->slots()));
-        else
-            pushArg(ImmWord((void *)NULL));
-        pushArg(ImmGCPtr(templateObj->type()));
-        pushArg(ImmGCPtr(templateObj->lastProperty()));
-        return callVM(NewCallObjectInfo, lir);
-    }
-
     // If we have a template object, we can inline call object creation.
     OutOfLineCode *ool;
     if (lir->slots()->isRegister()) {
@@ -3208,7 +3197,7 @@ CodeGenerator::visitOutOfLineGetElementCache(OutOfLineCache *ool)
 
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, HandleValue, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, HandleValue, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetElementCache);
 
     pushArg(index);

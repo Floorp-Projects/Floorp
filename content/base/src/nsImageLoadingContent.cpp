@@ -172,7 +172,7 @@ nsImageLoadingContent::OnStartContainer(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
-                                    PRUint32 aFrame)
+                                    uint32_t aFrame)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -193,7 +193,7 @@ nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnStopFrame(imgIRequest* aRequest,
-                                   PRUint32 aFrame)
+                                   uint32_t aFrame)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -341,7 +341,7 @@ nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetImageBlockingStatus(PRInt16* aStatus)
+nsImageLoadingContent::GetImageBlockingStatus(int16_t* aStatus)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -415,7 +415,7 @@ nsImageLoadingContent::RemoveObserver(imgIDecoderObserver* aObserver)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetRequest(PRInt32 aRequestType,
+nsImageLoadingContent::GetRequest(int32_t aRequestType,
                                   imgIRequest** aRequest)
 {
   switch(aRequestType) {
@@ -476,7 +476,7 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 
 NS_IMETHODIMP
 nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
-                                      PRInt32* aRequestType)
+                                      int32_t* aRequestType)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -697,7 +697,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 #endif
 
   // Are we blocked?
-  PRInt16 cpDecision = nsIContentPolicy::REJECT_REQUEST;
+  int16_t cpDecision = nsIContentPolicy::REJECT_REQUEST;
   nsContentUtils::CanLoadImage(aNewURI,
                                static_cast<nsIImageLoadingContent*>(this),
                                aDocument,
@@ -710,7 +710,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   }
 
   nsLoadFlags loadFlags = aLoadFlags;
-  PRInt32 corsmode = GetCORSMode();
+  int32_t corsmode = GetCORSMode();
   if (corsmode == CORS_ANONYMOUS) {
     loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
   } else if (corsmode == CORS_USE_CREDENTIALS) {
@@ -734,7 +734,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     // request to being the current request, because websites depend on that
     // behavior.
     if (req == mPendingRequest) {
-      PRUint32 pendingLoadStatus;
+      uint32_t pendingLoadStatus;
       rv = req->GetImageStatus(&pendingLoadStatus);
       if (NS_SUCCEEDED(rv) &&
           (pendingLoadStatus & imgIRequest::STATUS_LOAD_COMPLETE)) {
@@ -826,7 +826,7 @@ nsImageLoadingContent::UpdateImageState(bool aNotify)
     // No current request means error, since we weren't disabled or suppressed
     mBroken = true;
   } else {
-    PRUint32 currentLoadStatus;
+    uint32_t currentLoadStatus;
     nsresult rv = mCurrentRequest->GetImageStatus(&currentLoadStatus);
     if (NS_FAILED(rv) || (currentLoadStatus & imgIRequest::STATUS_ERROR)) {
       mBroken = true;
@@ -960,7 +960,7 @@ nsImageLoadingContent::PrepareNextRequest()
 }
 
 void
-nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, PRInt16 aContentDecision)
+nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision)
 {
   // Sanity
   NS_ABORT_IF_FALSE(!NS_CP_ACCEPTED(aContentDecision), "Blocked but not?");
@@ -1143,7 +1143,7 @@ nsImageLoadingContent::HaveSize(imgIRequest *aImage)
     return false;
 
   // Query the image
-  PRUint32 status;
+  uint32_t status;
   nsresult rv = aImage->GetImageStatus(&status);
   return (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_SIZE_AVAILABLE));
 }

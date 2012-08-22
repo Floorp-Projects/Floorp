@@ -87,7 +87,7 @@ AddChild(STCategoryNode * parent, STCategoryNode * child)
 int
 Reparent(STCategoryNode * parent, STCategoryNode * child)
 {
-    PRUint32 i;
+    uint32_t i;
 
     if (child->parent == parent)
         return 0;
@@ -122,7 +122,7 @@ Reparent(STCategoryNode * parent, STCategoryNode * child)
 STCategoryNode *
 findCategoryNode(const char *catName, STGlobals * g)
 {
-    PRUint32 i;
+    uint32_t i;
 
     for (i = 0; i < g->mNCategoryMap; i++) {
         if (!strcmp(g->mCategoryMap[i]->categoryName, catName))
@@ -252,7 +252,7 @@ ProcessCategoryParentRule(STCategoryRule * parentRule, STCategoryNode * root,
 {
     STCategoryNode *node;
     STCategoryNode *child;
-    PRUint32 i;
+    uint32_t i;
 
     /* Find the parent node in the tree. If not make one and add it into the tree */
     node = findCategoryNode(parentRule->categoryName, g);
@@ -398,7 +398,7 @@ initCategories(STGlobals * g)
 int
 callsiteMatchesRule(tmcallsite * aCallsite, STCategoryRule * aRule)
 {
-    PRUint32 patnum = 0;
+    uint32_t patnum = 0;
     const char *methodName = NULL;
 
     while (patnum < aRule->npats && aCallsite && aCallsite->method) {
@@ -438,8 +438,8 @@ callsiteMatchesRule(tmcallsite * aCallsite, STCategoryRule * aRule)
 
 #ifdef DEBUG_dp
 PRIntervalTime _gMatchTime = 0;
-PRUint32 _gMatchCount = 0;
-PRUint32 _gMatchRules = 0;
+uint32_t _gMatchCount = 0;
+uint32_t _gMatchRules = 0;
 #endif
 
 /*
@@ -454,7 +454,7 @@ matchAllocation(STGlobals * g, STAllocation * aAllocation)
 #ifdef DEBUG_dp
     PRIntervalTime start = PR_IntervalNow();
 #endif
-    PRUint32 rulenum;
+    uint32_t rulenum;
     STCategoryNode *node = NULL;
     STCategoryRule *rule;
 
@@ -579,7 +579,7 @@ freeNodeRunsProcessor(STRequest * inRequest, STOptions * inOptions,
                       STCategoryNode * node)
 {
     if (node->runs) {
-        PRUint32 loop = 0;
+        uint32_t loop = 0;
 
         for (loop = 0; loop < globals.mCommandLineOptions.mContexts; loop++) {
             if (node->runs[loop]) {
@@ -636,7 +636,7 @@ compareNode(const void *aNode1, const void *aNode2, void *aContext)
 {
     int retval = 0;
     STCategoryNode *node1, *node2;
-    PRUint32 a, b;
+    uint32_t a, b;
     optcon *oc = (optcon *) aContext;
 
     if (!aNode1 || !aNode2 || !oc->mOptions || !oc->mContext)
@@ -709,7 +709,7 @@ walkTree(STCategoryNode * root, STCategoryNodeProcessor func,
          void *clientData, int maxdepth)
 {
     STCategoryNode *nodes[1024], *node;
-    PRUint32 begin, end, i;
+    uint32_t begin, end, i;
     int ret = 0;
     int curdepth = 0, ncurdepth = 0;
 
@@ -750,7 +750,7 @@ walkTree(STCategoryNode * root, STCategoryNodeProcessor func,
 int
 freeRule(STCategoryRule * rule)
 {
-    PRUint32 i;
+    uint32_t i;
     char *p = (char *) rule->categoryName;
 
     PR_FREEIF(p);
@@ -771,7 +771,7 @@ freeNodeRuns(STCategoryNode * root)
 void
 freeNodeMap(STGlobals * g)
 {
-    PRUint32 i;
+    uint32_t i;
 
     /* all nodes are in the map table. Just delete all of those. */
     for (i = 0; i < g->mNCategoryMap; i++) {
@@ -784,7 +784,7 @@ freeNodeMap(STGlobals * g)
 int
 freeCategories(STGlobals * g)
 {
-    PRUint32 i;
+    uint32_t i;
 
     /*
      ** walk the tree and free runs held in nodes
@@ -818,7 +818,7 @@ int
 categorizeRun(STOptions * inOptions, STContext * inContext,
               const STRun * aRun, STGlobals * g)
 {
-    PRUint32 i;
+    uint32_t i;
 
 #if defined(DEBUG_dp)
     PRIntervalTime start = PR_IntervalNow();
@@ -882,7 +882,7 @@ displayCategoryNodeProcessor(STRequest * inRequest, STOptions * inOptions,
                              STCategoryNode * node)
 {
     STCategoryNode *root = (STCategoryNode *) clientData;
-    PRUint32 byteSize = 0, heapCost = 0, count = 0;
+    uint32_t byteSize = 0, heapCost = 0, count = 0;
     double percent = 0;
     STOptions customOps;
 

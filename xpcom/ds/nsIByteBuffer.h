@@ -25,24 +25,24 @@ class nsIByteBuffer : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFER_IID)
 
-  NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
+  NS_IMETHOD Init(uint32_t aBufferSize) = 0;
 
   /** @return length of buffer, i.e. how many bytes are currently in it. */
-  NS_IMETHOD_(PRUint32) GetLength(void) const = 0;
+  NS_IMETHOD_(uint32_t) GetLength(void) const = 0;
 
   /** @return number of bytes allocated in the buffer */
-  NS_IMETHOD_(PRUint32) GetBufferSize(void) const = 0;
+  NS_IMETHOD_(uint32_t) GetBufferSize(void) const = 0;
 
   /** @return the buffer */
   NS_IMETHOD_(char*) GetBuffer(void) const = 0;
 
   /** Grow buffer to aNewSize bytes. */
-  NS_IMETHOD_(bool) Grow(PRUint32 aNewSize) = 0;
+  NS_IMETHOD_(bool) Grow(uint32_t aNewSize) = 0;
 
   /** Fill the buffer with data from aStream.  Don't grow the buffer, only
    *  read until length of buffer equals buffer size. */
-  NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                            PRUint32 aKeep) = 0;
+  NS_IMETHOD_(int32_t) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
+                            uint32_t aKeep) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIByteBuffer, NS_IBYTEBUFFER_IID)
@@ -59,7 +59,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIByteBuffer, NS_IBYTEBUFFER_IID)
 extern nsresult 
 NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
                  nsISupports* aOuter,
-                 PRUint32 aBufferSize = 0);
+                 uint32_t aBufferSize = 0);
 
 #endif /* nsIByteBuffer_h___ */
 

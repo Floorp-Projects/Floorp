@@ -41,9 +41,9 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   /**
    * Get the "type" of the frame
@@ -52,7 +52,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsSVGStopFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
@@ -100,9 +100,9 @@ nsSVGStopFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGStopFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGStopFrame::AttributeChanged(int32_t         aNameSpaceID,
                                  nsIAtom*        aAttribute,
-                                 PRInt32         aModType)
+                                 int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::offset) {

@@ -34,7 +34,7 @@ public:
                                    nsIDOMBlob* aBlob);
 
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        PRUint32 aArgc, jsval* aArgv);
+                        uint32_t aArgc, jsval* aArgv);
 private:
   struct FormDataTuple
   {

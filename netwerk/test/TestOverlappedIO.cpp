@@ -74,13 +74,13 @@ NS_IMETHODIMP
 TestListener::OnDataAvailable(nsIRequest* request,
                               nsISupports* context,
                               nsIInputStream *aIStream, 
-                              PRUint32 aSourceOffset,
-                              PRUint32 aLength)
+                              uint32_t aSourceOffset,
+                              uint32_t aLength)
 {
     LOG(("TestListener::OnDataAvailable [offset=%u length=%u]\n",
         aSourceOffset, aLength));
     char buf[1025];
-    PRUint32 amt;
+    uint32_t amt;
     while (1) {
         aIStream->Read(buf, 1024, &amt);
         if (amt == 0)
@@ -119,9 +119,9 @@ public:
 
 protected:
     char    *mData;
-    PRUint32 mOffset;
-    PRUint32 mDataLen;   
-    PRUint32 mRequestCount;
+    uint32_t mOffset;
+    uint32_t mDataLen;   
+    uint32_t mRequestCount;
 };
 
 NS_IMPL_ISUPPORTS2(TestProvider,
@@ -159,7 +159,7 @@ TestProvider::OnStopRequest(nsIRequest* request, nsISupports* context,
 
 NS_IMETHODIMP
 TestProvider::OnDataWritable(nsIRequest *request, nsISupports *context,
-                             nsIOutputStream *output, PRUint32 offset, PRUint32 count)
+                             nsIOutputStream *output, uint32_t offset, uint32_t count)
 {
     LOG(("TestProvider::OnDataWritable [offset=%u, count=%u]\n", offset, count));
 
@@ -167,7 +167,7 @@ TestProvider::OnDataWritable(nsIRequest *request, nsISupports *context,
     if (mRequestCount == 5)
         return NS_BASE_STREAM_CLOSED;
 
-    PRUint32 writeCount, amount;
+    uint32_t writeCount, amount;
     amount = NS_MIN(count, mDataLen - mOffset);
     nsresult rv = output->Write(mData + mOffset, amount, &writeCount);
     if (NS_SUCCEEDED(rv)) {
@@ -191,14 +191,14 @@ nsresult
 WriteRequest(nsIOutputStream *os, const char *request)
 {
     LOG(("WriteRequest [request=%s]\n", request));
-    PRUint32 n;
+    uint32_t n;
     return os->Write(request, strlen(request), &n);
 }
 
 nsresult
 ReadResponse(nsIInputStream *is)
 {
-    PRUint32 bytesRead;
+    uint32_t bytesRead;
     char buf[2048];
     do {
         is->Read(buf, sizeof(buf), &bytesRead);
@@ -314,7 +314,7 @@ main(int argc, char* argv[])
 
     PRTime endTime; 
     endTime = PR_Now();
-    LOG(("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL)));
+    LOG(("Elapsed time: %d\n", (int32_t)(endTime/1000UL - gElapsedTime/1000UL)));
 
     sts->Shutdown();
     return 0;

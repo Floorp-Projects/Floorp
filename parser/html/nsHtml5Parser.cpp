@@ -92,7 +92,7 @@ nsHtml5Parser::SetCommand(eParserCommands aParserCommand)
 
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetDocumentCharset(const nsACString& aCharset,
-                                  PRInt32 aCharsetSource)
+                                  int32_t aCharsetSource)
 {
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Document charset set too late.");
@@ -349,7 +349,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     stackBuffer.adjust(mLastWasCR);
     mLastWasCR = false;
     if (stackBuffer.hasMore()) {
-      PRInt32 lineNumberSave;
+      int32_t lineNumberSave;
       bool inRootContext = (!mStreamParser && !aKey);
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
@@ -685,7 +685,7 @@ nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
 
 void
 nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState,
-                                             PRInt32 aLine)
+                                             int32_t aLine)
 {
   mTokenizer->resetToDataState();
   mTokenizer->setLineNumber(aLine);
