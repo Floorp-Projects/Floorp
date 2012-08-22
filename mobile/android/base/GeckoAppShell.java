@@ -131,6 +131,8 @@ public class GeckoAppShell
     public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
 
+    static private final boolean LOGGING = false;
+
     static public final int RESTORE_NONE = 0;
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
@@ -1328,8 +1330,15 @@ public class GeckoAppShell
         notificationIntent.setClassName(GeckoApp.mAppContext,
             GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
 
-        // Put the strings into the intent as an URI "alert:<name>#<cookie>"
-        Uri dataUri = Uri.fromParts("alert", aAlertName, aAlertCookie);
+        // Put the strings into the intent as an URI "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
+        Uri.Builder b = new Uri.Builder();
+        String app = GeckoApp.mAppContext.getClass().getName();
+        Uri dataUri = b.scheme("alert")
+                                 .path(Integer.toString(notificationID))
+                                 .appendQueryParameter("name", aAlertName)
+                                 .appendQueryParameter("app", app)
+                                 .appendQueryParameter("cookie", aAlertCookie)
+                                 .build();
         notificationIntent.setData(dataUri);
 
         PendingIntent contentIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, notificationIntent, 0);
@@ -1376,10 +1385,11 @@ public class GeckoAppShell
     }
 
     public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
+        if (LOGGING) Log.i(LOGTAG, "handleNotification " + aAction + " " + aAlertName + " " + aAlertCookie);
         int notificationID = aAlertName.hashCode();
 
-        if (GeckoApp.ACTION_ALERT_CLICK.equals(aAction)) {
-            Log.i(LOGTAG, "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
+        if (GeckoApp.ACTION_ALERT_CALLBACK.equals(aAction)) {
+            if (LOGGING) Log.i(LOGTAG, "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
             callObserver(aAlertName, "alertclickcallback", aAlertCookie);
 
             AlertNotification notification = mAlertNotifications.get(notificationID);
@@ -1390,7 +1400,11 @@ public class GeckoAppShell
         }
 
         callObserver(aAlertName, "alertfinished", aAlertCookie);
-
+        // Also send a notification to the observer service
+        // New listeners should register for these notifications since they will be called even if
+        // Gecko has been killed and restared between when your notification was shown and when the
+        // user clicked on it.
+        sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Clicked", aAlertCookie));
         removeObserver(aAlertName);
 
         removeNotification(notificationID);

@@ -6,13 +6,21 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
+
+import java.util.List;
+
+import org.mozilla.gecko.GeckoAppShell;
 
 public class NotificationHandler extends BroadcastReceiver {
     private static final String LOGTAG = "GeckoNotificationHandler";
@@ -24,50 +32,38 @@ public class NotificationHandler extends BroadcastReceiver {
     }
 
     protected void handleIntent(Context context, Intent notificationIntent) {
-        String action = notificationIntent.getAction();
-        String alertName = "";
-        String alertCookie = "";
+        String appName = "";
         Uri data = notificationIntent.getData();
         if (data != null) {
-            alertName = data.getSchemeSpecificPart();
-            alertCookie = data.getFragment();
-            if (alertCookie == null)
-                alertCookie = "";
+            appName = data.getQueryParameter("app");
+            if (appName == null)
+              appName = "@ANDROID_PACKAGE_NAME@.App";
         }
 
-        Log.i(LOGTAG, "NotificationHandler.handleIntent\n" +
-              "- action = '" + action + "'\n" +
-              "- alertName = '" + alertName + "'\n" +
-              "- alertCookie = '" + alertCookie + "'");
+        sendIntent(context, App.ACTION_ALERT_CALLBACK,
+                            appName,
+                            data);
+    }
 
-        int notificationID = alertName.hashCode();
+    private void sendIntent(Context context, String action, String className, Uri data) {
+        Intent appIntent = new Intent(action);
 
-        Log.i(LOGTAG, "Handle notification ID " + notificationID);
+        if (TextUtils.isEmpty(className))
+          appIntent.setClassName(context, "@ANDROID_PACKAGE_NAME@.App");
+        else
+          appIntent.setClassName(context, className);
 
-        if (App.ACTION_ALERT_CLICK.equals(action)) {
-            // Start or bring to front the main activity
-            Intent appIntent = new Intent(Intent.ACTION_MAIN);
-            appIntent.setClassName(context, "@ANDROID_PACKAGE_NAME@.App");
-            appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            appIntent.putExtra("args", "-alert " + alertName + (alertCookie.length() > 0 ? "#" + alertCookie : ""));
-            try {
-                Log.i(LOGTAG, "startActivity with intent: Action='" + appIntent.getAction() + "'" +
-                      ", args='" + appIntent.getStringExtra("args") + "'" );
-                context.startActivity(appIntent);
-            } catch (ActivityNotFoundException e) {
-                Log.e(LOGTAG, "NotificationHandler Exception: ", e);
-            }
-        }
+        appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        // Call observers after we open the app in order to avoid race conditions with
-        // notification handlers that launch third party apps or webapps
-        if (App.mAppContext != null) {
-            // This should call the observer, if any
-            App.mAppContext.handleNotification(action, alertName, alertCookie);
-        } else {
-            // The app is not running, just cancel this notification
-            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(notificationID);
+        if (data != null)
+            appIntent.setData(data);
+
+        try {
+            Log.i(LOGTAG, "startActivity with intent: Action='" + appIntent.getAction() +
+                          " appName='" + className + "'");
+            context.startActivity(appIntent);
+        } catch (ActivityNotFoundException e) {
+            Log.e(LOGTAG, "NotificationHandler Exception: ", e);
         }
     }
 }
