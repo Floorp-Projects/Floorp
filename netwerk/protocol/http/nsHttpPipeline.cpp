@@ -238,8 +238,7 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     }
 
     // Marking this connection as non-reusable prevents other items from being
-    // added to it and causes it to be torn down soon. Don't tear it down yet
-    // as that would prevent Response(0) from being processed.
+    // added to it and causes it to be torn down soon.
     DontReuse();
 
     trans->Close(reason);
@@ -249,6 +248,11 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         // reschedule anything from this pipeline onto a different connection
         CancelPipeline(reason);
     }
+
+    // If all the transactions have been removed then we can close the connection
+    // right away.
+    if (!mRequestQ.Length() && !mResponseQ.Length() && mConnection)
+        mConnection->CloseTransaction(this, reason);
 }
 
 nsresult

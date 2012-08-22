@@ -57,6 +57,7 @@ static const struct PropItems {
     // ARM-specific bits.
     { "hasEDSP", mozilla::supports_edsp },
     { "hasARMv6", mozilla::supports_armv6 },
+    { "hasARMv7", mozilla::supports_armv7 },
     { "hasNEON", mozilla::supports_neon }
 };
 

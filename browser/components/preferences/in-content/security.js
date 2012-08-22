@@ -82,17 +82,27 @@ var gSecurityPane = {
 
   /**
    * Enables/disables the Exceptions button used to configure sites where
-   * passwords are never saved.
+   * passwords are never saved. When browser is set to start in Private
+   * Browsing mode, the "Remember passwords" UI is useless, so we disable it.
    */
   readSavePasswords: function ()
   {
     var pref = document.getElementById("signon.rememberSignons");
     var excepts = document.getElementById("passwordExceptions");
 
-    excepts.disabled = !pref.value;
+    const Cc = Components.classes, Ci = Components.interfaces;
+    var pbs = Cc["@mozilla.org/privatebrowsing;1"].
+              getService(Ci.nsIPrivateBrowsingService);
 
-    // don't override pref value in UI
-    return undefined;
+    if (pbs.autoStarted) {
+      document.getElementById("savePasswords").disabled = true;
+      excepts.disabled = true;
+      return false;
+    } else {
+      excepts.disabled = !pref.value;
+      // don't override pref value in UI
+      return undefined;
+    }
   },
 
   /**
