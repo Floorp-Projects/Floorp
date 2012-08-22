@@ -1,8 +1,8 @@
   .LEVEL  1.1
 framesz .EQU 128
 
-; XPTC_InvokeByIndex(nsISuppots* that, PRUint32 methodIndex,
-;   PRUint32 paramCount, nsXPTCVariant* params);
+; XPTC_InvokeByIndex(nsISuppots* that, uint32_t methodIndex,
+;   uint32_t paramCount, nsXPTCVariant* params);
 
 ; g++ need to compile everything with -fvtable-thunks !
 

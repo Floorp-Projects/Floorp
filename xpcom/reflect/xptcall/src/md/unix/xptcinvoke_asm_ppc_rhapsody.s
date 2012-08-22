@@ -14,8 +14,8 @@
 .text
 	.align 2
 #
-#   NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-#                    PRUint32 paramCount, nsXPTCVariant* params)
+#   NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+#                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
 .globl __NS_InvokeByIndex_P	
