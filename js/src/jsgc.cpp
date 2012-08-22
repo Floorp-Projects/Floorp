@@ -3242,7 +3242,7 @@ BeginMarkPhase(JSRuntime *rt)
         if (c->isGCScheduled()) {
             any = true;
             if (c.get() != rt->atomsCompartment)
-                c->setCollecting(true);
+                c->setGCState(JSCompartment::Mark);
         } else {
             rt->gcIsFull = false;
         }
@@ -3260,7 +3260,7 @@ BeginMarkPhase(JSRuntime *rt)
      * to atoms that we would miss.
      */
     if (rt->atomsCompartment->isGCScheduled() && rt->gcIsFull && !rt->gcKeepAtoms)
-        rt->atomsCompartment->setCollecting(true);
+        rt->atomsCompartment->setGCState(JSCompartment::Mark);
 
     /*
      * At the end of each incremental slice, we call prepareForIncrementalGC,
@@ -3678,7 +3678,9 @@ BeginSweepPhase(JSRuntime *rt)
      */
     bool isFull = true;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (!c->isCollecting())
+        if (c->isCollecting())
+            c->setGCState(JSCompartment::Sweep);
+        else
             isFull = false;
     }
     JS_ASSERT_IF(isFull, rt->gcIsFull);
@@ -3876,7 +3878,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReaso
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->setGCLastBytes(c->gcBytes, c->gcMallocAndFreeBytes, gckind);
         if (c->wasGCStarted())
-            c->setCollecting(false);
+            c->setGCState(JSCompartment::NoGC);
 
         JS_ASSERT(!c->isCollecting());
         JS_ASSERT(!c->wasGCStarted());
@@ -3985,7 +3987,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->setNeedsBarrier(false);
-        c->setCollecting(false);
+        c->setGCState(JSCompartment::NoGC);
         JS_ASSERT(!c->gcNextCompartment);
         for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i)
             JS_ASSERT(!c->arenas.arenaListsToSweep[i]);
@@ -4023,7 +4025,7 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
 
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         /* Clear this early so we don't do any write barriers during GC. */
-        if (rt->gcIncrementalState == MARK) {
+        if (c->isGCMarking()) {
             JS_ASSERT(c->needsBarrier());
             c->setNeedsBarrier(false);
         } else {
@@ -4035,12 +4037,11 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
 AutoGCSlice::~AutoGCSlice()
 {
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        if (runtime->gcIncrementalState == MARK) {
+        if (c->isGCMarking()) {
             c->setNeedsBarrier(true);
             c->arenas.prepareForIncrementalGC(runtime);
         } else {
-            JS_ASSERT(runtime->gcIncrementalState == NO_INCREMENTAL ||
-                      runtime->gcIncrementalState == SWEEP);
+            JS_ASSERT(c->isGCSweeping());
             c->setNeedsBarrier(false);
         }
     }
