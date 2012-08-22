@@ -1329,7 +1329,8 @@ function WifiWorker() {
   this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
   const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
                     "WifiManager:associate", "WifiManager:forget",
-                    "WifiManager:wps", "WifiManager:getState"];
+                    "WifiManager:wps", "WifiManager:getState",
+                    "WifiManager:managerFinished"];
 
   messages.forEach((function(msgName) {
     this._mm.addMessageListener(msgName, this);
@@ -1874,8 +1875,11 @@ WifiWorker.prototype = {
 
   // nsIWifi
 
+  _domManagers: [],
   _fireEvent: function(message, data) {
-    this._mm.sendAsyncMessage("WifiManager:" + message, data);
+    this._domManagers.forEach(function(obj) {
+      obj.manager.sendAsyncMessage("WifiManager:" + message, data);
+    });
   },
 
   _sendMessage: function(message, success, data, msg) {
@@ -1904,12 +1908,37 @@ WifiWorker.prototype = {
         this.wps(msg);
         break;
       case "WifiManager:getState": {
-        // TODO add aMessage.target to our map of targets.
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
+        let i;
+        for (i = 0; i < this._domManagers.length; ++i) {
+          let obj = this._domManagers[i];
+          if (obj.manager === msg.manager) {
+            obj.count++;
+            break;
+          }
+        }
+
+        if (i === this._domManagers.length) {
+          this._domManagers.push({ manager: msg.manager, count: 1 });
+        }
+
         return { network: net,
                  connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.enabled,
                  status: translateState(WifiManager.state) };
+      }
+      case "WifiManager:managerFinished": {
+        for (let i = 0; i < this._domManagers.length; ++i) {
+          let obj = this._domManagers[i];
+          if (obj.manager === msg.manager) {
+            if (--obj.count === 0) {
+              this._domManagers.splice(i, 1);
+            }
+            break;
+          }
+        }
+
+        break;
       }
     }
   },
