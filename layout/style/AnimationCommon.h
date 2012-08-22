@@ -164,6 +164,17 @@ struct CommonElementAnimationData : public PRCList
 
   CommonAnimationManager *mManager;
 
+  // This style rule contains the style data for currently animating
+  // values.  It only matches when styling with animation.  When we
+  // style without animation, we need to not use it so that we can
+  // detect any new changes; if necessary we restyle immediately
+  // afterwards with animation.
+  // NOTE: If we don't need to apply any styles, mStyleRule will be
+  // null, but mStyleRuleRefreshTime will still be valid.
+  nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
+  // The refresh time associated with mStyleRule.
+  TimeStamp mStyleRuleRefreshTime;
+
 #ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif

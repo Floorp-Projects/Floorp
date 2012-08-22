@@ -153,16 +153,6 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
   // True if this animation can be performed on the compositor thread.
   bool CanPerformOnCompositorThread() const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
-  // This style rule contains the style data for currently animating
-  // values.  It only matches when styling with animation.  When we
-  // style without animation, we need to not use it so that we can
-  // detect any new changes; if necessary we restyle immediately
-  // afterwards with animation.
-  // NOTE: If we don't need to apply any styles, mStyleRule will be
-  // null, but mStyleRuleRefreshTime will still be valid.
-  nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
-  // The refresh time associated with mStyleRule.
-  TimeStamp mStyleRuleRefreshTime;
 
   // False when we know that our current style rule is valid
   // indefinitely into the future (because all of our animations are
