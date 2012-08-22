@@ -151,6 +151,10 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  if (!data) {
+    return nullptr;
+  }
+
   cairo_surface_t* surf =
     cairo_image_surface_create_for_data(data->GetData(),
                                         GfxFormatToCairoFormat(data->GetFormat()),
