@@ -16,6 +16,9 @@
 #include "nsILoadContext.h"
 #include "nsCDefaultURIFixup.h"
 #include "base/compiler_specific.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 #undef LOG
 #define LOG(args) PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
@@ -160,8 +163,11 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
 
-  SendAsyncOpen(nsBaseChannel::URI(), mStartPos, mEntityID,
-                IPC::InputStream(mUploadStream), IPC::SerializedLoadContext(this));
+  OptionalInputStreamParams uploadStream;
+  SerializeInputStream(mUploadStream, uploadStream);
+
+  SendAsyncOpen(nsBaseChannel::URI(), mStartPos, mEntityID, uploadStream,
+                IPC::SerializedLoadContext(this));
 
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.

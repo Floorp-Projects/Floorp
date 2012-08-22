@@ -9,9 +9,9 @@ include protocol PNecko;
 include protocol PBrowser;
 
 include "mozilla/net/NeckoMessageUtils.h";
+include IPCSerializableParams;
 
 using IPC::URI;
-using IPC::InputStream;
 using IPC::SerializedLoadContext;
 
 namespace mozilla {
@@ -31,7 +31,7 @@ parent:
   Close(uint16_t code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);
-  SendBinaryStream(InputStream aStream, uint32_t aLength);
+  SendBinaryStream(InputStreamParams aStream, uint32_t aLength);
 
   DeleteSelf();
 
