@@ -394,12 +394,6 @@ var SocialToolbar = {
     }
     notifBox.appendChild(notifBrowsers);
     iconBox.appendChild(iconContainers);
-
-    let browserIter = notifBox.firstElementChild;
-    while (browserIter) {
-      browserIter.docShell.isAppTab = true;
-      browserIter = browserIter.nextElementSibling;
-    }
   },
 
   showAmbientPopup: function SocialToolbar_showAmbientPopup(iconContainer) {
@@ -454,6 +448,7 @@ var SocialToolbar = {
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
       SocialToolbar.button.setAttribute("open", "true");
+      notifBrowser.docShell.isAppTab = true;
       if (notifBrowser.contentDocument.readyState == "complete") {
         dispatchPanelEvent("socialFrameShow");
       } else {
