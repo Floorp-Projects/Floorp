@@ -344,23 +344,24 @@ var SocialToolbar = {
     let iconNames = Object.keys(provider.ambientNotificationIcons);
     let iconBox = document.getElementById("social-status-iconbox");
     let notifBox = document.getElementById("social-notification-box");
-    let notifBrowsers = document.createDocumentFragment();
+    let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
     for each(let name in iconNames) {
       let icon = provider.ambientNotificationIcons[name];
 
-      let notifBrowserId = "social-status-" + icon.name;
-      let notifBrowser = document.getElementById(notifBrowserId);
-      if (!notifBrowser) {
-        notifBrowser = document.createElement("iframe");
-        notifBrowser.setAttribute("type", "content");
-        notifBrowser.setAttribute("id", notifBrowserId);
-        notifBrowsers.appendChild(notifBrowser);
+      let notificationFrameId = "social-status-" + icon.name;
+      let notificationFrame = document.getElementById(notificationFrameId);
+      if (!notificationFrame) {
+        notificationFrame = document.createElement("iframe");
+        notificationFrame.setAttribute("type", "content");
+        notificationFrame.setAttribute("id", notificationFrameId);
+        notificationFrame.setAttribute("mozbrowser", "true");
+        notificationFrames.appendChild(notificationFrame);
       }
-      notifBrowser.setAttribute("origin", provider.origin);
-      if (notifBrowser.getAttribute("src") != icon.contentPanel)
-        notifBrowser.setAttribute("src", icon.contentPanel);
+      notificationFrame.setAttribute("origin", provider.origin);
+      if (notificationFrame.getAttribute("src") != icon.contentPanel)
+        notificationFrame.setAttribute("src", icon.contentPanel);
 
       let iconId = "social-notification-icon-" + icon.name;
       let iconContainer = document.getElementById(iconId);
@@ -387,12 +388,12 @@ var SocialToolbar = {
       }
       if (iconImage.getAttribute("src") != icon.iconURL)
         iconImage.setAttribute("src", icon.iconURL);
-      iconImage.setAttribute("notifBrowserId", notifBrowserId);
+      iconImage.setAttribute("notificationFrameId", notificationFrameId);
 
       iconCounter.collapsed = !icon.counter;
       iconCounter.firstChild.textContent = icon.counter || "";
     }
-    notifBox.appendChild(notifBrowsers);
+    notifBox.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);
   },
 
@@ -400,14 +401,14 @@ var SocialToolbar = {
     let iconImage = iconContainer.firstChild;
     let panel = document.getElementById("social-notification-panel");
     let notifBox = document.getElementById("social-notification-box");
-    let notifBrowser = document.getElementById(iconImage.getAttribute("notifBrowserId"));
+    let notificationFrame = document.getElementById(iconImage.getAttribute("notificationFrameId"));
 
     panel.hidden = false;
 
     function sizePanelToContent() {
       // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
       // Need to handle dynamic sizing
-      let doc = notifBrowser.contentDocument;
+      let doc = notificationFrame.contentDocument;
       if (!doc) {
         return;
       }
@@ -420,23 +421,23 @@ var SocialToolbar = {
 
       // Clear dimensions on all browsers so the panel size will
       // only use the selected browser.
-      let browserIter = notifBox.firstElementChild;
-      while (browserIter) {
-        browserIter.hidden = (browserIter != notifBrowser);
-        browserIter = browserIter.nextElementSibling;
+      let frameIter = notifBox.firstElementChild;
+      while (frameIter) {
+        frameIter.hidden = (frameIter != notificationFrame);
+        frameIter = frameIter.nextElementSibling;
       }
 
       let [height, width] = [body.firstChild.offsetHeight || 300, 330];
-      notifBrowser.style.width = width + "px";
-      notifBrowser.style.height = height + "px";
+      notificationFrame.style.width = width + "px";
+      notificationFrame.style.height = height + "px";
     }
 
     sizePanelToContent();
 
     function dispatchPanelEvent(name) {
-      let evt = notifBrowser.contentDocument.createEvent("CustomEvent");
+      let evt = notificationFrame.contentDocument.createEvent("CustomEvent");
       evt.initCustomEvent(name, true, true, {});
-      notifBrowser.contentDocument.documentElement.dispatchEvent(evt);
+      notificationFrame.contentDocument.documentElement.dispatchEvent(evt);
     }
 
     panel.addEventListener("popuphiding", function onpopuphiding() {
@@ -448,13 +449,13 @@ var SocialToolbar = {
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
       SocialToolbar.button.setAttribute("open", "true");
-      notifBrowser.docShell.isAppTab = true;
-      if (notifBrowser.contentDocument.readyState == "complete") {
+      notificationFrame.docShell.isAppTab = true;
+      if (notificationFrame.contentDocument.readyState == "complete") {
         dispatchPanelEvent("socialFrameShow");
       } else {
         // first time load, wait for load and dispatch after load
-        notifBrowser.addEventListener("load", function panelBrowserOnload(e) {
-          notifBrowser.removeEventListener("load", panelBrowserOnload, true);
+        notificationFrame.addEventListener("load", function panelBrowserOnload(e) {
+          notificationFrame.removeEventListener("load", panelBrowserOnload, true);
           setTimeout(function() {
             dispatchPanelEvent("socialFrameShow");
           }, 0);
