@@ -71,7 +71,7 @@ public:
   // These are all in layer coordinate space.
   nsIntRect mViewport;
   nsIntRect mContentRect;
-  nsIntPoint mViewportScrollOffset;
+  gfx::Point mViewportScrollOffset;
   nsIntRect mDisplayPort;
   ViewID mScrollId;
 
