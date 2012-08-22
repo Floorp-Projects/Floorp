@@ -8,6 +8,7 @@
 #include "GLContext.h"
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
+#include "mozilla/Preferences.h"
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"
@@ -25,6 +26,7 @@ public:
     CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
   {
     MOZ_COUNT_CTOR(BasicCanvasLayer);
+    mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
   }
   virtual ~BasicCanvasLayer()
   {
@@ -60,6 +62,7 @@ protected:
 
   bool mGLBufferIsPremultiplied;
   bool mNeedsYFlip;
+  bool mForceReadback;
 
   nsRefPtr<gfxImageSurface> mCachedTempSurface;
   gfxIntSize mCachedSize;
@@ -145,15 +148,17 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
     mGLContext->MakeCurrent();
 
 #if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
-    mGLContext->GuaranteeResolve();
-    gfxASurface* offscreenSurface = mGLContext->GetOffscreenPixmapSurface();
+    if (!mForceReadback) {
+      mGLContext->GuaranteeResolve();
+      gfxASurface* offscreenSurface = mGLContext->GetOffscreenPixmapSurface();
 
-    // XRender can only blend premuliplied alpha, so only allow xrender
-    // path if we have premultiplied alpha or opaque content.
-    if (offscreenSurface && (mGLBufferIsPremultiplied || (GetContentFlags() & CONTENT_OPAQUE))) {  
+      // XRender can only blend premuliplied alpha, so only allow xrender
+      // path if we have premultiplied alpha or opaque content.
+      if (offscreenSurface && (mGLBufferIsPremultiplied || (GetContentFlags() & CONTENT_OPAQUE))) {  
         mSurface = offscreenSurface;
         mNeedsYFlip = false;
         return;
+      }
     }
 #endif
 
@@ -274,7 +279,7 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
   FillWithMask(aContext, aOpacity, aMaskLayer);
 
 #if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
-  if (mGLContext) {
+  if (mGLContext && !mForceReadback) {
     // Wait for X to complete all operations before continuing
     // Otherwise gl context could get cleared before X is done.
     mGLContext->WaitNative();
@@ -389,6 +394,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   }
 
   if (mGLContext &&
+      !mForceReadback &&
       BasicManager()->GetParentBackendType() == mozilla::layers::LAYERS_OPENGL) {
     TextureImage::TextureShareType flags;
     // if process type is default, then it is single-process (non-e10s)
@@ -422,12 +428,14 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
       isOpaque != mBufferIsOpaque) {
     DestroyBackBuffer();
     mBufferIsOpaque = isOpaque;
-    if (!BasicManager()->AllocBuffer(
-        gfxIntSize(mBounds.width, mBounds.height),
-        isOpaque ?
-          gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
-        &mBackBuffer))
-    NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
+
+    gfxIntSize size(mBounds.width, mBounds.height);
+    gfxASurface::gfxContentType type = isOpaque ?
+        gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
+
+    if (!BasicManager()->AllocBuffer(size, type, &mBackBuffer)) {
+      NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
+    }
   }
 
   AutoOpenSurface autoBackSurface(OPEN_READ_WRITE, mBackBuffer);
