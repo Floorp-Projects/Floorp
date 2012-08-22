@@ -84,7 +84,7 @@ public:
    * apply a displacement that takes you to the boundary of the page, then call
    * it again. The result will be different in this case.
    */
-  PRInt32 GetDisplacementForDuration(float aScale, const TimeDuration& aDelta);
+  float GetDisplacementForDuration(float aScale, const TimeDuration& aDelta);
 
   /**
    * Gets the distance between the starting position of the touch supplied in
@@ -114,7 +114,7 @@ public:
    * in both directions, this returns 0; it assumes that you check
    * GetOverscroll() first.
    */
-  PRInt32 GetExcess();
+  float GetExcess();
 
   /**
    * Gets the raw velocity of this axis at this moment.
@@ -132,7 +132,7 @@ public:
    * If a displacement will overscroll the axis, this returns the amount and in
    * what direction. Similar to getExcess() but takes a displacement to apply.
    */
-  PRInt32 DisplacementWillOverscrollAmount(PRInt32 aDisplacement);
+  float DisplacementWillOverscrollAmount(PRInt32 aDisplacement);
 
   /**
    * Gets the overscroll state of the axis given a scaling of the page. That is
@@ -153,7 +153,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  PRInt32 ScaleWillOverscrollAmount(float aScale, PRInt32 aFocus);
+  float ScaleWillOverscrollAmount(float aScale, PRInt32 aFocus);
 
   /**
    * Checks if an axis will overscroll in both directions by computing the
@@ -164,16 +164,16 @@ public:
    */
   bool ScaleWillOverscrollBothSides(float aScale);
 
-  PRInt32 GetOrigin();
-  PRInt32 GetViewportLength();
-  PRInt32 GetPageStart();
-  PRInt32 GetPageLength();
-  PRInt32 GetViewportEnd();
-  PRInt32 GetPageEnd();
+  float GetOrigin();
+  float GetViewportLength();
+  float GetPageStart();
+  float GetPageLength();
+  float GetViewportEnd();
+  float GetPageEnd();
 
-  virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint) = 0;
-  virtual PRInt32 GetRectLength(const gfx::Rect& aRect) = 0;
-  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect) = 0;
+  virtual float GetPointOffset(const gfx::Point& aPoint) = 0;
+  virtual float GetRectLength(const gfx::Rect& aRect) = 0;
+  virtual float GetRectOffset(const gfx::Rect& aRect) = 0;
 
 protected:
   PRInt32 mPos;
@@ -192,17 +192,17 @@ protected:
 class AxisX : public Axis {
 public:
   AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint);
-  virtual PRInt32 GetRectLength(const gfx::Rect& aRect);
-  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect);
+  virtual float GetPointOffset(const gfx::Point& aPoint);
+  virtual float GetRectLength(const gfx::Rect& aRect);
+  virtual float GetRectOffset(const gfx::Rect& aRect);
 };
 
 class AxisY : public Axis {
 public:
   AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint);
-  virtual PRInt32 GetRectLength(const gfx::Rect& aRect);
-  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect);
+  virtual float GetPointOffset(const gfx::Point& aPoint);
+  virtual float GetRectLength(const gfx::Rect& aRect);
+  virtual float GetRectOffset(const gfx::Rect& aRect);
 };
 
 }

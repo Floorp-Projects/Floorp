@@ -591,8 +591,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
-    metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
-      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
+    metrics.mViewportScrollOffset = mozilla::gfx::Point(
+      NSAppUnitsToDoublePixels(scrollPosition.x, auPerDevPixel) * aContainerParameters.mXScale,
+      NSAppUnitsToDoublePixels(scrollPosition.y, auPerDevPixel) * aContainerParameters.mYScale);
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();

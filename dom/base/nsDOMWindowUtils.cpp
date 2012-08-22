@@ -328,12 +328,6 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRect lastDisplayPort;
-  if (nsLayoutUtils::GetDisplayPort(content, &lastDisplayPort) &&
-      displayport.IsEqualInterior(lastDisplayPort)) {
-    return NS_OK;
-  }
-
   content->SetProperty(nsGkAtoms::DisplayPort, new nsRect(displayport),
                        DestroyNsRect);
 
