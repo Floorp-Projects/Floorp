@@ -2090,18 +2090,19 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         AddDependencyOnSource(surf);
       }
       break;
-    case SURFACE_DATA:
+    default:
       {
-        DataSourceSurface *dataSurf =
-          static_cast<DataSourceSurface*>(pat->mSurface.get());
-        bitmap = CreatePartialBitmapForSurface(dataSurf, mat, pat->mExtendMode);
-        
+        RefPtr<DataSourceSurface> dataSurf = pat->mSurface->GetDataSurface();
+        if (!dataSurf) {
+          gfxWarning() << "Invalid surface type.";
+          return nullptr;
+        }
+
+        bitmap = CreatePartialBitmapForSurface(dataSurf, mat, pat->mExtendMode); 
         if (!bitmap) {
           return nullptr;
         }
       }
-      break;
-    default:
       break;
     }
     
