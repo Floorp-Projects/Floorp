@@ -90,8 +90,7 @@ struct ElementAnimation
   }
 
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
-  bool CanPerformOnCompositor(mozilla::dom::Element* aElement,
-                              mozilla::TimeStamp aTime) const;
+  bool IsRunningAt(mozilla::TimeStamp aTime) const;
 
   mozilla::TimeStamp mStartTime; // with delay taken into account
   mozilla::TimeStamp mPauseStart;
