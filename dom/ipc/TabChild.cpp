@@ -836,6 +836,13 @@ TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
 {
     nsTouchEvent localEvent(aEvent);
     nsEventStatus status = DispatchWidgetEvent(localEvent);
+
+    nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(mWebNav);
+    nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
+    if (innerWindow && innerWindow->HasTouchEventListeners()) {
+      SendContentReceivedTouch(nsIPresShell::gPreventMouseEvents);
+    }
+
     if (status == nsEventStatus_eConsumeNoDefault) {
         return true;
     }

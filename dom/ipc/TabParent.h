@@ -107,6 +107,7 @@ public:
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual bool RecvNotifyDOMTouchListenerAdded();
     virtual bool RecvZoomToRect(const gfxRect& aRect);
+    virtual bool RecvContentReceivedTouch(const bool& aPreventDefault);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
