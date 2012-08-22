@@ -50,6 +50,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
+    SWEEP_END,
     INVALID
 };
 
