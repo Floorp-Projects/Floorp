@@ -602,18 +602,16 @@ TypeScript::NumTypeSets(JSScript *script)
     return script->nTypeSets + analyze::TotalSlots(script);
 }
 
-/* static */ inline HeapTypeSet *
+/* static */ inline TypeSet *
 TypeScript::ReturnTypes(JSScript *script)
 {
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::CalleeSlot();
-    return types->toHeapTypeSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::CalleeSlot();
 }
 
-/* static */ inline StackTypeSet *
+/* static */ inline TypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
-    return types->toStackTypeSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
 }
 
 /*
@@ -622,28 +620,25 @@ TypeScript::ThisTypes(JSScript *script)
  * or undefined for localTypes) and not types from subsequent assignments.
  */
 
-/* static */ inline StackTypeSet *
+/* static */ inline TypeSet *
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->function()->nargs);
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
-    return types->toStackTypeSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
 }
 
-/* static */ inline StackTypeSet *
+/* static */ inline TypeSet *
 TypeScript::LocalTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->nfixed);
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
-    return types->toStackTypeSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
 }
 
-/* static */ inline StackTypeSet *
+/* static */ inline TypeSet *
 TypeScript::SlotTypes(JSScript *script, unsigned slot)
 {
     JS_ASSERT(slot < js::analyze::TotalSlots(script));
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + slot;
-    return types->toStackTypeSet();
+    return script->types->typeArray() + script->nTypeSets + slot;
 }
 
 /* static */ inline TypeObject *
@@ -1002,7 +997,7 @@ HashKey(T v)
  */
 template <class T, class U, class KEY>
 static U **
-HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
+HashSetInsertTry(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     unsigned capacity = HashSetCapacity(count);
     unsigned insertpos = HashKey<T,KEY>(key) & (capacity - 1);
@@ -1026,7 +1021,7 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
         return &values[insertpos];
     }
 
-    U **newValues = alloc.newArray<U*>(newCapacity);
+    U **newValues = compartment->typeLifoAlloc.newArray<U*>(newCapacity);
     if (!newValues)
         return NULL;
     PodZero(newValues, newCapacity);
@@ -1054,7 +1049,7 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
  */
 template <class T, class U, class KEY>
 static inline U **
-HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
+HashSetInsert(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     if (count == 0) {
         JS_ASSERT(values == NULL);
@@ -1067,7 +1062,7 @@ HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
         if (KEY::getKey(oldData) == key)
             return (U **) &values;
 
-        values = alloc.newArray<U*>(SET_ARRAY_SIZE);
+        values = compartment->typeLifoAlloc.newArray<U*>(SET_ARRAY_SIZE);
         if (!values) {
             values = (U **) oldData;
             return NULL;
@@ -1091,7 +1086,7 @@ HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
         }
     }
 
-    return HashSetInsertTry<T,U,KEY>(alloc, values, count, key);
+    return HashSetInsertTry<T,U,KEY>(compartment, values, count, key);
 }
 
 /* Lookup an entry in a hash set, return NULL if it does not exist. */
@@ -1213,14 +1208,10 @@ TypeSet::addType(JSContext *cx, Type type)
             return;
         if (type.isAnyObject())
             goto unknownObject;
-
-        LifoAlloc &alloc =
-            purged() ? cx->compartment->analysisLifoAlloc : cx->compartment->typeLifoAlloc;
-
         uint32_t objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                     (alloc, objectSet, objectCount, object);
+                                     (cx->compartment, objectSet, objectCount, object);
         if (!pentry) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -1335,7 +1326,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
       thisTypes(NULL), returnTypes(NULL)
 {
     /* Caller must check for failure. */
-    argumentTypes = cx->analysisLifoAlloc().newArray<StackTypeSet*>(argumentCount);
+    argumentTypes = cx->typeLifoAlloc().newArray<TypeSet*>(argumentCount);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1373,7 +1364,7 @@ TypeObject::setBasePropertyCount(uint32_t count)
           | (count << OBJECT_FLAG_PROPERTY_COUNT_SHIFT);
 }
 
-inline HeapTypeSet *
+inline TypeSet *
 TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 {
     JS_ASSERT(cx->compartment->activeInference);
@@ -1383,7 +1374,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 
     uint32_t propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
-                           (cx->compartment->typeLifoAlloc, propertySet, propertyCount, id);
+                           (cx->compartment, propertySet, propertyCount, id);
     if (!pprop) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -1398,25 +1389,15 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
         }
         if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
             markUnknown(cx);
-
-            /*
-             * Return an arbitrary property in the object, as all have unknown
-             * type and are treated as configured.
-             */
-            unsigned count = getPropertyCount();
-            for (unsigned i = 0; i < count; i++) {
-                if (Property *prop = getProperty(i))
-                    return &prop->types;
-            }
-
-            JS_NOT_REACHED("Missing property");
-            return NULL;
+            TypeSet *types = TypeSet::make(cx, "propertyOverflow");
+            types->addType(cx, Type::UnknownType());
+            return types;
         }
     }
 
-    HeapTypeSet *types = &(*pprop)->types;
+    TypeSet *types = &(*pprop)->types;
 
-    if (assign && !types->ownProperty(false)) {
+    if (assign && !types->isOwnProperty(false)) {
         /*
          * Normally, we just want to set the property as being an own property
          * when we got a set to it. The exception is when the set is actually
@@ -1450,7 +1431,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     return types;
 }
 
-inline HeapTypeSet *
+inline TypeSet *
 TypeObject::maybeGetProperty(JSContext *cx, jsid id)
 {
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
@@ -1641,13 +1622,6 @@ JSScript::clearAnalysis()
 {
     if (types)
         types->analysis = NULL;
-}
-
-inline void
-JSScript::clearPropertyReadTypes()
-{
-    if (types && types->propertyReadTypes)
-        types->propertyReadTypes = NULL;
 }
 
 inline void
