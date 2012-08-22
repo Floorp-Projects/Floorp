@@ -439,33 +439,31 @@ class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
     }
 };
 
-// Generates a polymorphic callsite, wherein the function being called is
-// unknown and anticipated to vary.
-class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
+// Common code for LIR descended from MCall.
+template <size_t Defs, size_t Operands, size_t Temps>
+class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
 {
     // Slot below which %esp should be adjusted to make the call.
     // Zero for a function without arguments.
     uint32 argslot_;
 
   public:
-    LIR_HEADER(CallGeneric);
-
-    LCallGeneric(const LAllocation &func,
-                 uint32 argslot,
-                 const LDefinition &nargsreg,
-                 const LDefinition &tmpobjreg)
+    LJSCallInstructionHelper(uint32 argslot)
       : argslot_(argslot)
-    {
-        setOperand(0, func);
-        setTemp(0, nargsreg);
-        setTemp(1, tmpobjreg);
-    }
+    { }
 
     uint32 argslot() const {
         return argslot_;
     }
     MCall *mir() const {
-        return mir_->toCall();
+        return this->mir_->toCall();
+    }
+
+    bool hasSingleTarget() const {
+        return getSingleTarget() != NULL;
+    }
+    JSFunction *getSingleTarget() const {
+        return mir()->getSingleTarget();
     }
 
     // The number of stack arguments is the max between the number of formal
@@ -480,12 +478,22 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     uint32 numActualArgs() const {
         return mir()->numActualArgs();
     }
+};
 
-    bool hasSingleTarget() const {
-        return getSingleTarget() != NULL;
-    }
-    JSFunction *getSingleTarget() const {
-        return mir()->getSingleTarget();
+// Generates a polymorphic callsite, wherein the function being called is
+// unknown and anticipated to vary.
+class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 2>
+{
+  public:
+    LIR_HEADER(CallGeneric);
+
+    LCallGeneric(const LAllocation &func, uint32 argslot,
+                 const LDefinition &nargsreg, const LDefinition &tmpobjreg)
+      : LJSCallInstructionHelper(argslot)
+    {
+        setOperand(0, func);
+        setTemp(0, nargsreg);
+        setTemp(1, tmpobjreg);
     }
 
     const LAllocation *getFunction() {
@@ -499,89 +507,37 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     }
 };
 
-template <size_t defs, size_t ops>
-class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
+// Generates a hardcoded callsite for a known, non-native target.
+class LCallKnown : public LJSCallInstructionHelper<BOX_PIECES, 1, 1>
 {
-  protected:
-    LDOMPropertyInstructionHelper(const LDefinition &JSContextReg,
-                                  const LAllocation &ObjectReg,
-                                  const LDefinition &PrivReg,
-                                  const LDefinition &ValueReg)
+  public:
+    LIR_HEADER(CallKnown);
+
+    LCallKnown(const LAllocation &func, uint32 argslot, const LDefinition &tmpobjreg)
+      : LJSCallInstructionHelper(argslot)
     {
-        this->setTemp(0, JSContextReg);
-        this->setTemp(1, PrivReg);
-        this->setTemp(2, ValueReg);
-
-        this->setOperand(0, ObjectReg);
+        setOperand(0, func);
+        setTemp(0, tmpobjreg);
     }
 
-  public:
-
-    const LAllocation *getJSContextReg() {
-        return this->getTemp(0)->output();
+    const LAllocation *getFunction() {
+        return getOperand(0);
     }
-    const LAllocation *getObjectReg() {
-        return this->getOperand(0);
-    }
-    const LAllocation *getPrivReg() {
-        return this->getTemp(1)->output();
-    }
-    const LAllocation *getValueReg() {
-        return this->getTemp(2)->output();
+    const LAllocation *getTempObject() {
+        return getTemp(0)->output();
     }
 };
 
-
-class LGetDOMProperty : public LDOMPropertyInstructionHelper<BOX_PIECES, 0>
+// Generates a hardcoded callsite for a known, native target.
+class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
 {
-  public:
-    LIR_HEADER(GetDOMProperty);
-
-    LGetDOMProperty(const LDefinition &JSContextReg,
-                    const LAllocation &ObjectReg,
-                    const LDefinition &PrivReg,
-                    const LDefinition &ValueReg)
-      : LDOMPropertyInstructionHelper<BOX_PIECES, 0>(JSContextReg, ObjectReg,
-                                                     PrivReg, ValueReg)
-    { }
-
-    MGetDOMProperty *mir() const {
-        return mir_->toGetDOMProperty();
-    }
-};
-
-class LSetDOMProperty : public LDOMPropertyInstructionHelper<0, BOX_PIECES>
-{
-  public:
-    LIR_HEADER(SetDOMProperty);
-
-    LSetDOMProperty(const LDefinition &JSContextReg,
-                    const LAllocation &ObjectReg,
-                    const LDefinition &PrivReg,
-                    const LDefinition &ValueReg)
-      : LDOMPropertyInstructionHelper<0, BOX_PIECES>(JSContextReg, ObjectReg,
-                                                     PrivReg, ValueReg)
-    { }
-
-    static const size_t Value = 1;
-
-    MSetDOMProperty *mir() const {
-        return mir_->toSetDOMProperty();
-    }
-};
-
-// Generates a monomorphic callsite for a known, native target.
-class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
-{
-    uint32 argslot_;
-
   public:
     LIR_HEADER(CallNative);
 
     LCallNative(uint32 argslot,
                 const LDefinition &argJSContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
-      : argslot_(argslot)
+      : LJSCallInstructionHelper(argslot)
     {
         // Registers used for callWithABI().
         setTemp(0, argJSContext);
@@ -590,25 +546,6 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
 
         // Temporary registers.
         setTemp(3, tmpreg);
-    }
-
-    JSFunction *function() const {
-        return mir()->getSingleTarget();
-    }
-    uint32 argslot() const {
-        return argslot_;
-    }
-    MCall *mir() const {
-        return mir_->toCall();
-    }
-
-    // :TODO: Common this out with LCallGeneric.
-    uint32 numStackArgs() const {
-        JS_ASSERT(mir()->numStackArgs() >= 1);
-        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
-    }
-    uint32 numActualArgs() const {
-        return mir()->numActualArgs();
     }
 
     const LAllocation *getArgJSContextReg() {
@@ -620,16 +557,14 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
     const LAllocation *getArgVpReg() {
         return getTemp(2)->output();
     }
-
     const LAllocation *getTempReg() {
         return getTemp(3)->output();
     }
 };
 
-class LCallDOMNative : public LCallInstructionHelper<BOX_PIECES, 0, 5>
+// Generates a hardcoded callsite for a known, DOM-native target.
+class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
 {
-    uint32 argslot_;
-
   public:
     LIR_HEADER(CallDOMNative);
 
@@ -637,29 +572,13 @@ class LCallDOMNative : public LCallInstructionHelper<BOX_PIECES, 0, 5>
                    const LDefinition &argJSContext, const LDefinition &argObj,
                    const LDefinition &argPrivate, const LDefinition &argArgc,
                    const LDefinition &argVp)
-      : argslot_(argslot)
+      : LJSCallInstructionHelper(argslot)
     {
         setTemp(0, argJSContext);
         setTemp(1, argObj);
         setTemp(2, argPrivate);
         setTemp(3, argArgc);
         setTemp(4, argVp);
-    }
-
-    JSFunction *func() const {
-        return mir()->getSingleTarget();
-    }
-    uint32 argslot() const {
-        return argslot_;
-    }
-    MCall *mir() const {
-        return mir_->toCall();
-    }
-
-    // Named for consistency with LCallNative. Actually should be argc().
-    uint32 numStackArgs() const {
-        JS_ASSERT(mir()->numStackArgs() >= 1);
-        return mir()->numStackArgs() - 1;
     }
 
     const LAllocation *getArgJSContext() {
@@ -681,36 +600,82 @@ class LCallDOMNative : public LCallInstructionHelper<BOX_PIECES, 0, 5>
 
 // Generates a polymorphic callsite for |new|, where |this| has not been
 // pre-allocated by the caller.
-class LCallConstructor : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+class LCallConstructor : public LJSCallInstructionHelper<BOX_PIECES, 1, 0>
 {
-    uint32 argslot_;
-
   public:
     LIR_HEADER(CallConstructor);
 
     LCallConstructor(const LAllocation &func, uint32 argslot)
-      : argslot_(argslot)
+      : LJSCallInstructionHelper(argslot)
     {
         setOperand(0, func);
     }
 
-    uint32 argslot() const {
-        return argslot_;
-    }
-    MCall *mir() const {
-        return mir_->toCall();
-    }
-
-    uint32 numStackArgs() const {
-        JS_ASSERT(mir()->numStackArgs() >= 1);
-        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
-    }
-    uint32 numActualArgs() const {
-        return mir()->numActualArgs();
-    }
-
     const LAllocation *getFunction() {
         return getOperand(0);
+    }
+};
+
+template <size_t defs, size_t ops>
+class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
+{
+  protected:
+    LDOMPropertyInstructionHelper(const LDefinition &JSContextReg, const LAllocation &ObjectReg,
+                                  const LDefinition &PrivReg, const LDefinition &ValueReg)
+    {
+        this->setOperand(0, ObjectReg);
+        this->setTemp(0, JSContextReg);
+        this->setTemp(1, PrivReg);
+        this->setTemp(2, ValueReg);
+    }
+
+  public:
+    const LAllocation *getJSContextReg() {
+        return this->getTemp(0)->output();
+    }
+    const LAllocation *getObjectReg() {
+        return this->getOperand(0);
+    }
+    const LAllocation *getPrivReg() {
+        return this->getTemp(1)->output();
+    }
+    const LAllocation *getValueReg() {
+        return this->getTemp(2)->output();
+    }
+};
+
+
+class LGetDOMProperty : public LDOMPropertyInstructionHelper<BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(GetDOMProperty);
+
+    LGetDOMProperty(const LDefinition &JSContextReg, const LAllocation &ObjectReg,
+                    const LDefinition &PrivReg, const LDefinition &ValueReg)
+      : LDOMPropertyInstructionHelper<BOX_PIECES, 0>(JSContextReg, ObjectReg,
+                                                     PrivReg, ValueReg)
+    { }
+
+    MGetDOMProperty *mir() const {
+        return mir_->toGetDOMProperty();
+    }
+};
+
+class LSetDOMProperty : public LDOMPropertyInstructionHelper<0, BOX_PIECES>
+{
+  public:
+    LIR_HEADER(SetDOMProperty);
+
+    LSetDOMProperty(const LDefinition &JSContextReg, const LAllocation &ObjectReg,
+                    const LDefinition &PrivReg, const LDefinition &ValueReg)
+      : LDOMPropertyInstructionHelper<0, BOX_PIECES>(JSContextReg, ObjectReg,
+                                                     PrivReg, ValueReg)
+    { }
+
+    static const size_t Value = 1;
+
+    MSetDOMProperty *mir() const {
+        return mir_->toSetDOMProperty();
     }
 };
 
@@ -721,10 +686,8 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
   public:
     LIR_HEADER(ApplyArgsGeneric);
 
-    LApplyArgsGeneric(const LAllocation &func,
-                      const LAllocation &argc,
-                      const LDefinition &tmpobjreg,
-                      const LDefinition &tmpcopy)
+    LApplyArgsGeneric(const LAllocation &func, const LAllocation &argc,
+                      const LDefinition &tmpobjreg, const LDefinition &tmpcopy)
     {
         setOperand(0, func);
         setOperand(1, argc);
