@@ -67,6 +67,14 @@ function ContactAddress(aType, aStreetAddress, aLocality, aRegion, aPostalCode, 
 };
 
 ContactAddress.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      streetAddress: 'rw',
+                      locality: 'rw',
+                      region: 'rw',
+                      postalCode: 'rw',
+                      countryName: 'rw'
+                     },
 
   classID : CONTACTADDRESS_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTADDRESS_CID,
@@ -90,6 +98,10 @@ function ContactField(aType, aValue) {
 };
 
 ContactField.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      value: 'rw'
+                     },
 
   classID : CONTACTFIELD_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTFIELD_CID,
@@ -114,6 +126,11 @@ function ContactTelField(aType, aValue, aCarrier) {
 };
 
 ContactTelField.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      value: 'rw',
+                      carrier: 'rw'
+                     },
 
   classID : CONTACTTELFIELD_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTTELFIELD_CID,
@@ -157,7 +174,33 @@ const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 function Contact() { debug("Contact constr: "); this.wrappedJSObject = this; };
 
 Contact.prototype = {
-  
+  __exposedProps__: {
+                      id: 'rw',
+                      updated: 'rw',
+                      published:  'rw',
+                      name: 'rw',
+                      honorificPrefix: 'rw',
+                      givenName: 'rw',
+                      additionalName: 'rw',
+                      familyName: 'rw',
+                      honorificSuffix: 'rw',
+                      nickname: 'rw',
+                      email: 'rw',
+                      photo: 'rw',
+                      url: 'rw',
+                      category: 'rw',
+                      adr: 'rw',
+                      tel: 'rw',
+                      org: 'rw',
+                      jobTitle: 'rw',
+                      bday: 'rw',
+                      note: 'rw',
+                      impp: 'rw',
+                      anniversary: 'rw',
+                      sex: 'rw',
+                      genderIdentity: 'rw'
+                     },
+
   init: function init(aProp) {
     // Accept non-array strings for DOMString[] properties and convert them.
     function _create(aField) {   
@@ -321,9 +364,9 @@ ContactManager.prototype = {
   _convertContactsArray: function(aContacts) {
     let contacts = new Array();
     for (let i in aContacts) {
-      let newContact = Components.classes['@mozilla.org/contact;1'].createInstance();
+      let newContact = new Contact();
       newContact.init(aContacts[i].properties);
-      this._setMetaData(newContact.wrappedJSObject, aContacts[i]);
+      this._setMetaData(newContact, aContacts[i]);
       contacts.push(newContact);
     }
     return contacts;
@@ -339,7 +382,6 @@ ContactManager.prototype = {
         let req = this.getRequest(msg.requestID);
         if (req) {
           let result = this._convertContactsArray(contacts);
-          debug("result: " + JSON.stringify(result));
           Services.DOMRequest.fireSuccess(req.request, result);
         } else {
           debug("no request stored!" + msg.requestID);
