@@ -30,7 +30,7 @@ class nsWebMBufferedState;
 // to stop to buffer, given the current download rate.
 class NesteggPacketHolder {
 public:
-  NesteggPacketHolder(nestegg_packet* aPacket, PRInt64 aOffset)
+  NesteggPacketHolder(nestegg_packet* aPacket, int64_t aOffset)
     : mPacket(aPacket), mOffset(aOffset)
   {
     MOZ_COUNT_CTOR(NesteggPacketHolder);
@@ -42,7 +42,7 @@ public:
   nestegg_packet* mPacket;
   // Offset in bytes. This is the offset of the end of the Block
   // which contains the packet.
-  PRInt64 mOffset;
+  int64_t mOffset;
 private:
   // Copy constructor and assignment operator not implemented. Don't use them!
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
@@ -70,7 +70,7 @@ class PacketQueue : private nsDeque {
     Reset();
   }
 
-  inline PRInt32 GetSize() { 
+  inline int32_t GetSize() { 
     return nsDeque::GetSize();
   }
   
@@ -109,7 +109,7 @@ public:
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.  
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  PRInt64 aTimeThreshold);
+                                  int64_t aTimeThreshold);
 
   virtual bool HasAudio()
   {
@@ -130,9 +130,9 @@ public:
 
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
                                 nsHTMLMediaElement::MetadataTags** aTags);
-  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset);
+  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
 private:
   // Value passed to NextPacket to determine if we are reading a video or an
@@ -152,7 +152,7 @@ private:
                            size_t aLength,
                            bool aBOS,
                            bool aEOS,
-                           PRInt64 aGranulepos);
+                           int64_t aGranulepos);
 
   // Decode a nestegg packet of audio data. Push the audio data on the
   // audio queue. Returns true when there's more audio to decode,
@@ -160,7 +160,7 @@ private:
   // or an un-recoverable read error has occured. The reader's monitor
   // must be held during this call. This function will free the packet
   // so the caller must not use the packet after calling.
-  bool DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset);
+  bool DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset);
 
   // Release context and set to null. Called when an error occurs during
   // reading metadata or destruction of the reader itself.
@@ -179,8 +179,8 @@ private:
   vorbis_comment mVorbisComment;
   vorbis_dsp_state mVorbisDsp;
   vorbis_block mVorbisBlock;
-  PRUint32 mPacketCount;
-  PRUint32 mChannels;
+  uint32_t mPacketCount;
+  uint32_t mChannels;
 
   // Queue of video and audio packets that have been read but not decoded. These
   // must only be accessed from the state machine thread.
@@ -188,14 +188,14 @@ private:
   PacketQueue mAudioPackets;
 
   // Index of video and audio track to play
-  PRUint32 mVideoTrack;
-  PRUint32 mAudioTrack;
+  uint32_t mVideoTrack;
+  uint32_t mAudioTrack;
 
   // Time in microseconds of the start of the first audio frame we've decoded.
-  PRInt64 mAudioStartUsec;
+  int64_t mAudioStartUsec;
 
   // Number of audio frames we've decoded since decoding began at mAudioStartMs.
-  PRUint64 mAudioFrames;
+  uint64_t mAudioFrames;
 
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.

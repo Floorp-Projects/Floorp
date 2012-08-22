@@ -194,7 +194,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   gtk_container_set_border_width(GTK_CONTAINER(custom_options_tab), 12);
   GtkWidget* tab_label = gtk_label_new(GetUTF8FromBundle("optionsTabLabelGTK").get());
 
-  PRInt16 frameUIFlag;
+  int16_t frameUIFlag;
   aSettings->GetHowToEnableFrameUI(&frameUIFlag);
   radio_as_laid_out = gtk_radio_button_new_with_mnemonic(NULL, GetUTF8FromBundle("asLaidOut").get());
   if (frameUIFlag == nsIPrintSettings::kFrameEnableNone)

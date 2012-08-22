@@ -111,7 +111,7 @@ public:
 
     virtual bool IsSymbolFont();
 
-    void FillLogFont(LOGFONTW *aLogFont, PRUint16 aWeight, gfxFloat aSize,
+    void FillLogFont(LOGFONTW *aLogFont, uint16_t aWeight, gfxFloat aSize,
                      bool aUseCleartype);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
@@ -187,7 +187,7 @@ public:
             return true;
         }
 
-        PRInt16 bit = -1;
+        int16_t bit = -1;
 
         /* map our langgroup names in to Windows charset bits */
         if (aLangGroup == nsGkAtoms::x_western) {
@@ -229,7 +229,7 @@ public:
         return false;
     }
 
-    virtual bool SupportsRange(PRUint8 range) {
+    virtual bool SupportsRange(uint8_t range) {
         return mUnicodeRanges.test(range);
     }
 
@@ -237,7 +237,7 @@ public:
         return !HasCmapTable(); // explicitly skip non-SFNT fonts
     }
 
-    virtual bool TestCharacterMap(PRUint32 aCh);
+    virtual bool TestCharacterMap(uint32_t aCh);
 
     virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontListSizes*    aSizes) const;
@@ -246,7 +246,7 @@ public:
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
                                          bool aItalic,
-                                         PRUint16 aWeight, PRInt16 aStretch,
+                                         uint16_t aWeight, int16_t aStretch,
                                          gfxUserFontData* aUserFontData,
                                          bool aFamilyHasItalicFace);
 
@@ -254,8 +254,8 @@ public:
     static GDIFontEntry* LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
                                        const nsAString& aFullname);
 
-    PRUint8 mWindowsFamily;
-    PRUint8 mWindowsPitch;
+    uint8_t mWindowsFamily;
+    uint8_t mWindowsPitch;
 
     gfxWindowsFontType mFontType;
     bool mForceGDI    : 1;
@@ -273,15 +273,15 @@ protected:
     friend class gfxWindowsFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 bool aItalic, PRUint16 aWeight, PRInt16 aStretch,
+                 bool aItalic, uint16_t aWeight, int16_t aStretch,
                  gfxUserFontData *aUserFontData, bool aFamilyHasItalicFace);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
 
-    virtual nsresult GetFontTable(PRUint32 aTableTag,
-                                  FallibleTArray<PRUint8>& aBuffer);
+    virtual nsresult GetFontTable(uint32_t aTableTag,
+                                  FallibleTArray<uint8_t>& aBuffer);
 
     LOGFONTW mLogFont;
 };
@@ -316,7 +316,7 @@ public:
                                           const nsAString& aFontName);
 
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const PRUint8 *aFontData, PRUint32 aLength);
+                                           const uint8_t *aFontData, uint32_t aLength);
 
     virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);

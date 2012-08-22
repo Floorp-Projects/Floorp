@@ -35,7 +35,7 @@ public:
      * @param aValue the value of the attribute
      */
     virtual nsresult attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                               nsIAtom* aLowercaseLocalName, PRInt32 aNsID,
+                               nsIAtom* aLowercaseLocalName, int32_t aNsID,
                                const nsString& aValue) = 0;
 
     /**
@@ -48,7 +48,7 @@ public:
      */
     virtual nsresult attribute(nsIAtom* aPrefix,
                                const nsSubstring& aLocalName,
-                               const PRInt32 aNsID,
+                               const int32_t aNsID,
                                const nsString& aValue) = 0;
 
     /**
@@ -102,7 +102,7 @@ public:
     virtual nsresult startElement(nsIAtom* aPrefix,
                                   nsIAtom* aLocalName,
                                   nsIAtom* aLowercaseLocalName,
-                                  PRInt32 aNsID) = 0;
+                                  int32_t aNsID) = 0;
 
     /**
      * Signals to receive the start of an element. Can throw
@@ -114,16 +114,16 @@ public:
      */
     virtual nsresult startElement(nsIAtom* aPrefix,
                                   const nsSubstring& aLocalName,
-                                  const PRInt32 aNsID) = 0;
+                                  const int32_t aNsID) = 0;
 };
 
 #define TX_DECL_TXAXMLEVENTHANDLER                                           \
     virtual nsresult attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,        \
-                               nsIAtom* aLowercaseLocalName, PRInt32 aNsID,  \
+                               nsIAtom* aLowercaseLocalName, int32_t aNsID,  \
                                const nsString& aValue);                      \
     virtual nsresult attribute(nsIAtom* aPrefix,                             \
                                const nsSubstring& aLocalName,                \
-                               const PRInt32 aNsID,                          \
+                               const int32_t aNsID,                          \
                                const nsString& aValue);                      \
     virtual nsresult characters(const nsSubstring& aData, bool aDOE);      \
     virtual nsresult comment(const nsString& aData);                         \
@@ -135,10 +135,10 @@ public:
     virtual nsresult startElement(nsIAtom* aPrefix,                          \
                                   nsIAtom* aLocalName,                       \
                                   nsIAtom* aLowercaseLocalName,              \
-                                  PRInt32 aNsID);                            \
+                                  int32_t aNsID);                            \
     virtual nsresult startElement(nsIAtom* aPrefix,                          \
                                   const nsSubstring& aName,                  \
-                                  const PRInt32 aNsID);
+                                  const int32_t aNsID);
 
 
 class txAOutputXMLEventHandler : public txAXMLEventHandler
@@ -183,7 +183,7 @@ public:
     virtual nsresult
     createHandlerWith(txOutputFormat* aFormat,
                       const nsSubstring& aName,
-                      PRInt32 aNsID,
+                      int32_t aNsID,
                       txAXMLEventHandler** aHandler) = 0;
 };
 
@@ -192,7 +192,7 @@ public:
                                txAXMLEventHandler** aHandler); \
     nsresult createHandlerWith(txOutputFormat* aFormat,        \
                                const nsSubstring& aName,       \
-                               PRInt32 aNsID,                  \
+                               int32_t aNsID,                  \
                                txAXMLEventHandler** aHandler);
 
 #endif

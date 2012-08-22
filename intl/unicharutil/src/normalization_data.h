@@ -640,7 +640,7 @@ static const PRUnichar compose_imap[] = {
 };
 
 static const struct {
-	PRUint32 tbl[32];
+	uint32_t tbl[32];
 } compose_table[] = {
 	{{
 	       0,        0,        0,        0,        0,        0,        0, 
@@ -3226,7 +3226,7 @@ static const struct {
 	  8058,   8059,   8060,   8061,   8062,   8063,      0,      0, 
 	}},
 };
-static const PRUint32 decompose_seq[] = {
+static const uint32_t decompose_seq[] = {
 	0x00000000, 0x80000020, 0x00000020, 0x80000308, 
 	0x80000061, 0x00000020, 0x80000304, 0x80000032, 
 	0x80000033, 0x00000020, 0x80000301, 0x800003bc, 

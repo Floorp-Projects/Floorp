@@ -22,7 +22,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * Set the time at which the cache entry should be considered invalid (in
      * seconds since the Epoch).
      */
-    void setExpirationTime(in PRUint32 expirationTime);
+    void setExpirationTime(in uint32_t expirationTime);
 
     /**
      * Set the cache entry data size.  This will fail if the cache entry
@@ -74,7 +74,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
       * taking up space in the cache for an entry that we know up front 
       * is going to have to be evicted anyway. See bug 588507.
       */
-    attribute PRInt64    predictedDataSize;
+    attribute int64_t    predictedDataSize;
 
     /**
      * Get the access granted to this descriptor.  See nsICache.idl for the

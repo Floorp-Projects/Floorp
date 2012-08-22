@@ -66,37 +66,37 @@ public:
   nsresult GetFocused(bool *aFocused);
   nsresult SetFocused(bool aFocused);
   nsresult GetTreeBody(nsIDOMElement **aElement);
-  nsresult GetRowHeight(PRInt32 *aValue);
-  nsresult GetRowWidth(PRInt32 *aValue);
-  nsresult GetHorizontalPosition(PRInt32 *aValue);
+  nsresult GetRowHeight(int32_t *aValue);
+  nsresult GetRowWidth(int32_t *aValue);
+  nsresult GetHorizontalPosition(int32_t *aValue);
   nsresult GetSelectionRegion(nsIScriptableRegion **aRegion);
-  nsresult GetFirstVisibleRow(PRInt32 *aValue);
-  nsresult GetLastVisibleRow(PRInt32 *aValue);
-  nsresult GetPageLength(PRInt32 *aValue);
-  nsresult EnsureRowIsVisible(PRInt32 aRow);
-  nsresult EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn *aCol);
-  nsresult ScrollToRow(PRInt32 aRow);
-  nsresult ScrollByLines(PRInt32 aNumLines);
-  nsresult ScrollByPages(PRInt32 aNumPages);
-  nsresult ScrollToCell(PRInt32 aRow, nsITreeColumn *aCol);
+  nsresult GetFirstVisibleRow(int32_t *aValue);
+  nsresult GetLastVisibleRow(int32_t *aValue);
+  nsresult GetPageLength(int32_t *aValue);
+  nsresult EnsureRowIsVisible(int32_t aRow);
+  nsresult EnsureCellIsVisible(int32_t aRow, nsITreeColumn *aCol);
+  nsresult ScrollToRow(int32_t aRow);
+  nsresult ScrollByLines(int32_t aNumLines);
+  nsresult ScrollByPages(int32_t aNumPages);
+  nsresult ScrollToCell(int32_t aRow, nsITreeColumn *aCol);
   nsresult ScrollToColumn(nsITreeColumn *aCol);
-  nsresult ScrollToHorizontalPosition(PRInt32 aValue);
+  nsresult ScrollToHorizontalPosition(int32_t aValue);
   nsresult Invalidate();
   nsresult InvalidateColumn(nsITreeColumn *aCol);
-  nsresult InvalidateRow(PRInt32 aRow);
-  nsresult InvalidateCell(PRInt32 aRow, nsITreeColumn *aCol);
-  nsresult InvalidateRange(PRInt32 aStart, PRInt32 aEnd);
-  nsresult InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd,
+  nsresult InvalidateRow(int32_t aRow);
+  nsresult InvalidateCell(int32_t aRow, nsITreeColumn *aCol);
+  nsresult InvalidateRange(int32_t aStart, int32_t aEnd);
+  nsresult InvalidateColumnRange(int32_t aStart, int32_t aEnd,
                                  nsITreeColumn *aCol);
-  nsresult GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32 *aValue);
-  nsresult GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32 *aRow,
+  nsresult GetRowAt(int32_t aX, int32_t aY, int32_t *aValue);
+  nsresult GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
                      nsITreeColumn **aCol, nsACString &aChildElt);
-  nsresult GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn *aCol,
+  nsresult GetCoordsForCellItem(int32_t aRow, nsITreeColumn *aCol,
                                 const nsACString &aElt,
-                                PRInt32 *aX, PRInt32 *aY,
-                                PRInt32 *aWidth, PRInt32 *aHeight);
-  nsresult IsCellCropped(PRInt32 aRow, nsITreeColumn *aCol, bool *aResult);
-  nsresult RowCountChanged(PRInt32 aIndex, PRInt32 aCount);
+                                int32_t *aX, int32_t *aY,
+                                int32_t *aWidth, int32_t *aHeight);
+  nsresult IsCellCropped(int32_t aRow, nsITreeColumn *aCol, bool *aResult);
+  nsresult RowCountChanged(int32_t aIndex, int32_t aCount);
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
@@ -113,8 +113,8 @@ public:
   virtual bool PseudoMatches(nsCSSSelector* aSelector);
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
-  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex);
   NS_IMETHOD VisibilityChanged(bool aVisible) { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
@@ -167,7 +167,7 @@ protected:
                    const nsRect&        aDirtyRect);
 
   // This method paints a single row in the tree.
-  void PaintRow(PRInt32              aRowIndex,
+  void PaintRow(int32_t              aRowIndex,
                 const nsRect&        aRowRect,
                 nsPresContext*       aPresContext,
                 nsRenderingContext& aRenderingContext,
@@ -175,14 +175,14 @@ protected:
                 nsPoint              aPt);
 
   // This method paints a single separator in the tree.
-  void PaintSeparator(PRInt32              aRowIndex,
+  void PaintSeparator(int32_t              aRowIndex,
                       const nsRect&        aSeparatorRect,
                       nsPresContext*      aPresContext,
                       nsRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
 
   // This method paints a specific cell in a given row of the tree.
-  void PaintCell(PRInt32              aRowIndex, 
+  void PaintCell(int32_t              aRowIndex, 
                  nsTreeColumn*        aColumn,
                  const nsRect&        aCellRect,
                  nsPresContext*       aPresContext,
@@ -192,7 +192,7 @@ protected:
                  nsPoint              aPt);
 
   // This method paints the twisty inside a cell in the primary column of an tree.
-  void PaintTwisty(PRInt32              aRowIndex,
+  void PaintTwisty(int32_t              aRowIndex,
                    nsTreeColumn*        aColumn,
                    const nsRect&        aTwistyRect,
                    nsPresContext*      aPresContext,
@@ -202,7 +202,7 @@ protected:
                    nscoord&             aCurrX);
 
   // This method paints the image inside the cell of an tree.
-  void PaintImage(PRInt32              aRowIndex,
+  void PaintImage(int32_t              aRowIndex,
                   nsTreeColumn*        aColumn,
                   const nsRect&        aImageRect,
                   nsPresContext*      aPresContext,
@@ -212,7 +212,7 @@ protected:
                   nscoord&             aCurrX);
 
   // This method paints the text string inside a particular cell of the tree.
-  void PaintText(PRInt32              aRowIndex, 
+  void PaintText(int32_t              aRowIndex, 
                  nsTreeColumn*        aColumn,
                  const nsRect&        aTextRect,
                  nsPresContext*      aPresContext,
@@ -222,7 +222,7 @@ protected:
                  bool                 aTextRTL);
 
   // This method paints the checkbox inside a particular cell of the tree.
-  void PaintCheckbox(PRInt32              aRowIndex, 
+  void PaintCheckbox(int32_t              aRowIndex, 
                      nsTreeColumn*        aColumn,
                      const nsRect&        aCheckboxRect,
                      nsPresContext*      aPresContext,
@@ -230,7 +230,7 @@ protected:
                      const nsRect&        aDirtyRect);
 
   // This method paints the progress meter inside a particular cell of the tree.
-  void PaintProgressMeter(PRInt32              aRowIndex, 
+  void PaintProgressMeter(int32_t              aRowIndex, 
                           nsTreeColumn*        aColumn,
                           const nsRect&        aProgressMeterRect,
                           nsPresContext*      aPresContext,
@@ -253,34 +253,34 @@ protected:
                             const nsRect&        aDirtyRect);
 
 
-  PRInt32 GetLastVisibleRow() {
+  int32_t GetLastVisibleRow() {
     return mTopRowIndex + mPageLength;
   }
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.
-  PRInt32 GetRowAt(nscoord aX, nscoord aY);
+  int32_t GetRowAt(nscoord aX, nscoord aY);
 
   // Check for bidi characters in the text, and if there are any, ensure
   // that the prescontext is in bidi mode.
   void CheckTextForBidi(nsAutoString& aText);
 
   void AdjustForCellText(nsAutoString& aText,
-                         PRInt32 aRowIndex,  nsTreeColumn* aColumn,
+                         int32_t aRowIndex,  nsTreeColumn* aColumn,
                          nsRenderingContext& aRenderingContext,
                          nsRect& aTextRect);
 
   // A helper used when hit testing.
   nsIAtom* GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
-                               PRInt32 aRowIndex, nsTreeColumn* aColumn);
+                               int32_t aRowIndex, nsTreeColumn* aColumn);
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.
-  void GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow, nsTreeColumn** aCol,
+  void GetCellAt(nscoord aX, nscoord aY, int32_t* aRow, nsTreeColumn** aCol,
                  nsIAtom** aChildElt);
 
   // Retrieve the area for the twisty for a cell.
-  nsITheme* GetTwistyRect(PRInt32 aRowIndex,
+  nsITheme* GetTwistyRect(int32_t aRowIndex,
                           nsTreeColumn* aColumn,
                           nsRect& aImageRect,
                           nsRect& aTwistyRect,
@@ -289,12 +289,12 @@ protected:
                           nsStyleContext* aTwistyContext);
 
   // Fetch an image from the image cache.
-  nsresult GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, bool aUseContext,
+  nsresult GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext,
                     nsStyleContext* aStyleContext, bool& aAllowImageRegions, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(PRInt32 aRowIndex, nsTreeColumn* aCol, bool aUseContext, nsStyleContext* aStyleContext);
+  nsRect GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext, nsStyleContext* aStyleContext);
 
   // Returns the destination size of the image, not including borders and padding.
   nsSize GetImageDestSize(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
@@ -303,10 +303,10 @@ protected:
   nsRect GetImageSourceRect(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
 
   // Returns the height of rows in the tree.
-  PRInt32 GetRowHeight();
+  int32_t GetRowHeight();
 
   // Returns our indentation width.
-  PRInt32 GetIndentation();
+  int32_t GetIndentation();
 
   // Calculates our width/height once border and padding have been removed.
   void CalcInnerBox();
@@ -341,17 +341,17 @@ protected:
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
-  void PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol);
+  void PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol);
 
   // Our internal scroll method, used by all the public scroll methods.
-  nsresult ScrollInternal(const ScrollParts& aParts, PRInt32 aRow);
-  nsresult ScrollToRowInternal(const ScrollParts& aParts, PRInt32 aRow);
+  nsresult ScrollInternal(const ScrollParts& aParts, int32_t aRow);
+  nsresult ScrollToRowInternal(const ScrollParts& aParts, int32_t aRow);
   nsresult ScrollToColumnInternal(const ScrollParts& aParts, nsITreeColumn* aCol);
-  nsresult ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition);
-  nsresult EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow);
+  nsresult ScrollHorzInternal(const ScrollParts& aParts, int32_t aPosition);
+  nsresult EnsureRowIsVisibleInternal(const ScrollParts& aParts, int32_t aRow);
 
   // Convert client pixels into appunits in our coordinate space.
-  nsPoint AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY);
+  nsPoint AdjustClientCoordsToBoxCoordSpace(int32_t aX, int32_t aY);
 
   // Cache the box object
   void EnsureBoxObject();
@@ -361,7 +361,7 @@ protected:
   // Get the base element, <tree> or <select>
   nsIContent* GetBaseElement();
 
-  nsresult GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
+  nsresult GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
                         nsRenderingContext* aRenderingContext,
                         nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth();
@@ -373,19 +373,19 @@ protected:
   // after projecting both onto the horizontal coordinate axis.
   bool OffsetForHorzScroll(nsRect& rect, bool clip);
 
-  bool CanAutoScroll(PRInt32 aRowIndex);
+  bool CanAutoScroll(int32_t aRowIndex);
 
   // Calc the row and above/below/on status given where the mouse currently is hovering.
   // Also calc if we're in the region in which we want to auto-scroll the tree.
   // A positive value of |aScrollLines| means scroll down, a negative value
   // means scroll up, a zero value means that we aren't in drag scroll region.
-  void ComputeDropPosition(nsGUIEvent* aEvent, PRInt32* aRow, PRInt16* aOrient,
-                           PRInt16* aScrollLines);
+  void ComputeDropPosition(nsGUIEvent* aEvent, int32_t* aRow, int16_t* aOrient,
+                           int16_t* aScrollLines);
 
   // Mark ourselves dirty if we're a select widget
   void MarkDirtyIfSelect();
 
-  void InvalidateDropFeedback(PRInt32 aRow, PRInt16 aOrientation) {
+  void InvalidateDropFeedback(int32_t aRow, int16_t aOrientation) {
     InvalidateRow(aRow);
     if (aOrientation != nsITreeView::DROP_ON)
       InvalidateRow(aRow + aOrientation);
@@ -418,7 +418,7 @@ protected:
   // aID is type of the action, aFunc is the function to be called when
   // the timer fires and aType is type of timer - one shot or repeating.
   nsresult CreateTimer(const mozilla::LookAndFeel::IntID aID,
-                       nsTimerCallbackFunc aFunc, PRInt32 aType,
+                       nsTimerCallbackFunc aFunc, int32_t aType,
                        nsITimer** aTimer);
 
   static void OpenCallback(nsITimer *aTimer, void *aClosure);
@@ -457,7 +457,7 @@ protected:
    * @param aCount  the number of added/removed rows (the sign points to
    *                an operation, plus - addition, minus - removing)
    */
-  void FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount);
+  void FireRowCountChangedEvent(int32_t aIndex, int32_t aCount);
 
   /**
    * Fires 'treeInvalidated' event asynchronously. The event supports
@@ -473,7 +473,7 @@ protected:
    * @param aEndCol    the end invalidated column, nullptr means that rows have
    *                   been invalidated only
    */
-  void FireInvalidateEvent(PRInt32 aStartRow, PRInt32 aEndRow,
+  void FireInvalidateEvent(int32_t aStartRow, int32_t aEndRow,
                            nsITreeColumn *aStartCol, nsITreeColumn *aEndCol);
 #endif
 
@@ -499,22 +499,22 @@ protected: // Data Members
       bool mIsDragging;
 
       // The row the mouse is hovering over during a drop.
-      PRInt32                  mDropRow;
+      int32_t                  mDropRow;
 
       // Where we want to draw feedback (above/on this row/below) if allowed.
-      PRInt16                  mDropOrient;
+      int16_t                  mDropOrient;
 
       // Number of lines to be scrolled.
-      PRInt16                  mScrollLines;
+      int16_t                  mScrollLines;
 
       // The drag action that was received for this slot
-      PRUint32                 mDragAction;
+      uint32_t                 mDragAction;
 
       // Timer for opening/closing spring loaded folders or scrolling the tree.
       nsCOMPtr<nsITimer>       mTimer;
 
       // An array used to keep track of all spring loaded folders.
-      nsTArray<PRInt32>        mArray;
+      nsTArray<int32_t>        mArray;
   };
 
   Slots* mSlots;
@@ -549,8 +549,8 @@ protected: // Data Members
   // The index of the first visible row and the # of rows visible onscreen.  
   // The tree only examines onscreen rows, starting from
   // this index and going up to index+pageLength.
-  PRInt32 mTopRowIndex;
-  PRInt32 mPageLength;
+  int32_t mTopRowIndex;
+  int32_t mPageLength;
 
   // The horizontal scroll position
   nscoord mHorzPosition;
@@ -563,17 +563,17 @@ protected: // Data Members
 
   // Cached heights and indent info.
   nsRect mInnerBox; // 4-byte aligned
-  PRInt32 mRowHeight;
-  PRInt32 mIndentation;
+  int32_t mRowHeight;
+  int32_t mIndentation;
   nscoord mStringWidth;
 
-  PRInt32 mUpdateBatchNest;
+  int32_t mUpdateBatchNest;
 
   // Cached row count.
-  PRInt32 mRowCount;
+  int32_t mRowCount;
 
   // The row the mouse is hovering over.
-  PRInt32 mMouseOverRow;
+  int32_t mMouseOverRow;
 
   // Whether or not we're currently focused.
   bool mFocused;

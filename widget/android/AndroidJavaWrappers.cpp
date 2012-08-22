@@ -355,10 +355,10 @@ void
 AndroidGeckoEvent::ReadPointArray(nsTArray<nsIntPoint> &points,
                                   JNIEnv *jenv,
                                   jfieldID field,
-                                  PRInt32 count)
+                                  int32_t count)
 {
     jobjectArray jObjArray = (jobjectArray)jenv->GetObjectField(wrapped_obj, field);
-    for (PRInt32 i = 0; i < count; i++) {
+    for (int32_t i = 0; i < count; i++) {
         jobject jObj = jenv->GetObjectArrayElement(jObjArray, i);
         AndroidPoint jpoint(jenv, jObj);
 
@@ -371,11 +371,11 @@ void
 AndroidGeckoEvent::ReadIntArray(nsTArray<int> &aVals,
                                 JNIEnv *jenv,
                                 jfieldID field,
-                                PRInt32 count)
+                                int32_t count)
 {
     jintArray jIntArray = (jintArray)jenv->GetObjectField(wrapped_obj, field);
     jint *vals = jenv->GetIntArrayElements(jIntArray, false);
-    for (PRInt32 i = 0; i < count; i++) {
+    for (int32_t i = 0; i < count; i++) {
         aVals.AppendElement(vals[i]);
     }
     jenv->ReleaseIntArrayElements(jIntArray, vals, JNI_ABORT);
@@ -385,11 +385,11 @@ void
 AndroidGeckoEvent::ReadFloatArray(nsTArray<float> &aVals,
                                   JNIEnv *jenv,
                                   jfieldID field,
-                                  PRInt32 count)
+                                  int32_t count)
 {
     jfloatArray jFloatArray = (jfloatArray)jenv->GetObjectField(wrapped_obj, field);
     jfloat *vals = jenv->GetFloatArrayElements(jFloatArray, false);
-    for (PRInt32 i = 0; i < count; i++) {
+    for (int32_t i = 0; i < count; i++) {
         aVals.AppendElement(vals[i]);
     }
     jenv->ReleaseFloatArrayElements(jFloatArray, vals, JNI_ABORT);

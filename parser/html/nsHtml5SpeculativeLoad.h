@@ -92,7 +92,7 @@ class nsHtml5SpeculativeLoad {
      * the queue order relative to true speculative loads. See bug 675499.
      */
     inline void InitSetDocumentCharset(nsACString& aCharset,
-                                       PRInt32 aCharsetSource) {
+                                       int32_t aCharsetSource) {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadSetDocumentCharset;

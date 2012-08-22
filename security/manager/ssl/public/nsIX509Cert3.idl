@@ -80,8 +80,8 @@ interface nsICertVerificationResult : nsISupports {
    *  @param count The number of human readable usages returned.
    *  @param usages The array of human readable usages.
    */ 
-  void getUsagesArrayResult(out PRUint32 verified,
-                            out PRUint32 count, 
+  void getUsagesArrayResult(out uint32_t verified,
+                            out uint32_t count, 
                             [array, size_is(count)] out wstring usages);
 };
 

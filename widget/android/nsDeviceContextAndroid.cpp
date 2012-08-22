@@ -54,8 +54,8 @@ nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget,
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::BeginDocument(PRUnichar* aTitle,
                                       PRUnichar* aPrintToFileName,
-                                      PRInt32 aStartPage,
-                                      PRInt32 aEndPage)
+                                      int32_t aStartPage,
+                                      int32_t aEndPage)
 {
   return NS_OK;
 }

@@ -13,9 +13,9 @@ namespace mozilla {
 namespace net {
 
 // Behavior pref constants
-static const PRInt32 BEHAVIOR_ACCEPT = 0;
-static const PRInt32 BEHAVIOR_REJECTFOREIGN = 1;
-static const PRInt32 BEHAVIOR_REJECT = 2;
+static const int32_t BEHAVIOR_ACCEPT = 0;
+static const int32_t BEHAVIOR_REJECTFOREIGN = 1;
+static const int32_t BEHAVIOR_REJECT = 2;
 
 // Pref string constants
 static const char kPrefCookieBehavior[] = "network.cookie.cookieBehavior";
@@ -71,7 +71,7 @@ CookieServiceChild::~CookieServiceChild()
 void
 CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
-  PRInt32 val;
+  int32_t val;
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieBehavior, &val)))
     mCookieBehavior =
       val >= BEHAVIOR_ACCEPT && val <= BEHAVIOR_REJECT ? val : BEHAVIOR_ACCEPT;

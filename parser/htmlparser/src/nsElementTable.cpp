@@ -1391,8 +1391,8 @@ void CheckElementTable() {
  *  @param   aTag -- tag to test for containership
  *  @return  index of kNotFound
  */
-PRInt32 nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
-  PRInt32 theChildIndex=aContext.LastOf(aChildTag);
+int32_t nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
+  int32_t theChildIndex=aContext.LastOf(aChildTag);
   if(kNotFound==theChildIndex) {
     const TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
     if(theSynTags) {
@@ -1408,7 +1408,7 @@ PRInt32 nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags
  * @param 
  * @return
  */
-bool nsHTMLElement::HasSpecialProperty(PRInt32 aProperty) const{
+bool nsHTMLElement::HasSpecialProperty(int32_t aProperty) const{
   bool result=TestBits(mSpecialProperties,aProperty);
   return result;
 }
@@ -1437,7 +1437,7 @@ bool nsHTMLElement::IsContainer(eHTMLTags aChild) {
  * @param 
  * @return
  */
-bool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
+bool nsHTMLElement::IsMemberOf(int32_t aSet) const{
   return TestBits(aSet,mParentBits);
 }
 
@@ -1450,7 +1450,7 @@ bool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
  * @param 
  * @return
  */
-bool nsHTMLElement::ContainsSet(PRInt32 aSet) const{
+bool nsHTMLElement::ContainsSet(int32_t aSet) const{
   return TestBits(mParentBits,aSet);
 }
 
@@ -1823,8 +1823,8 @@ bool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
  * @param 
  * @return
  */
-bool nsHTMLElement::CanContainType(PRInt32 aType) const{
-  PRInt32 answer=mInclusionBits & aType;
+bool nsHTMLElement::CanContainType(int32_t aType) const{
+  int32_t answer=mInclusionBits & aType;
   bool    result=bool(0!=answer);
   return result;
 }
@@ -1893,10 +1893,10 @@ bool nsHTMLElement::CanContainSelf(void) const {
  * @param   aChildTag is the child we're trying to close
  * @return  TRUE if we can autoclose the start tag; FALSE otherwise
  */
-bool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,
+bool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,int32_t aIndex,
                                       eHTMLTags aChildTag) const{
 
-  PRInt32 thePos;
+  int32_t thePos;
   bool    result = true;
   eHTMLTags thePrevTag;
 
@@ -1919,7 +1919,7 @@ bool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,
  * @param 
  * @return  
  */
-eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex,nsDTDMode aMode) const{
+eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,int32_t anIndex,nsDTDMode aMode) const{
   eHTMLTags result=eHTMLTag_unknown;
 
   int theCount=aContext.GetCount();
@@ -2039,7 +2039,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     // The first pass tries to exactly match, the 2nd pass matches the group.
 
     const TagList* theRootTags=gHTMLElements[mTagID].GetEndRootTags();
-    PRInt32 theIndexCopy=theIndex;
+    int32_t theIndexCopy=theIndex;
     while(--theIndex>=anIndex){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag == mTagID) {
@@ -2072,8 +2072,8 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       //This fixes 57378...
       //example: <TABLE><THEAD><TR><TH></THEAD> which didn't close the <THEAD>
 
-    PRInt32 theLastTable=aContext.LastOf(eHTMLTag_table);
-    PRInt32 theLastOfMe=aContext.LastOf(mTagID);
+    int32_t theLastTable=aContext.LastOf(eHTMLTag_table);
+    int32_t theLastOfMe=aContext.LastOf(mTagID);
     if(theLastTable<theLastOfMe) {
       return mTagID;
     }

@@ -124,9 +124,9 @@ public:
   virtual void SetVolume(double aVolume);
   virtual void SetAudioCaptured(bool aCapture);
   virtual void Shutdown();
-  virtual PRInt64 GetDuration();
-  virtual void SetDuration(PRInt64 aDuration);
-  void SetEndTime(PRInt64 aEndTime);
+  virtual int64_t GetDuration();
+  virtual void SetDuration(int64_t aDuration);
+  void SetEndTime(int64_t aEndTime);
   virtual bool OnDecodeThread() const {
     return IsCurrentThread(mDecodeThread);
   }
@@ -137,7 +137,7 @@ public:
   virtual double GetCurrentTime() const;
   virtual void ClearPositionChangeFlag();
   virtual void SetSeekable(bool aSeekable);
-  virtual void UpdatePlaybackPosition(PRInt64 aTime);
+  virtual void UpdatePlaybackPosition(int64_t aTime);
   virtual void StartBuffering();
 
   // State machine thread run function. Defers to RunStateMachine().
@@ -184,23 +184,23 @@ public:
  
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 
-  PRInt64 VideoQueueMemoryInUse() {
+  int64_t VideoQueueMemoryInUse() {
     if (mReader) {
       return mReader->VideoQueueMemoryInUse();
     }
     return 0;
   }
 
-  PRInt64 AudioQueueMemoryInUse() {
+  int64_t AudioQueueMemoryInUse() {
     if (mReader) {
       return mReader->AudioQueueMemoryInUse();
     }
     return 0;
   }
 
-  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset);
+  void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
-  PRInt64 GetEndMediaTime() const {
+  int64_t GetEndMediaTime() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mEndTime;
   }
@@ -219,7 +219,7 @@ public:
 
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
-  virtual void SetFrameBufferLength(PRUint32 aLength);
+  virtual void SetFrameBufferLength(uint32_t aLength);
 
   // Returns the shared state machine thread.
   static nsIThread* GetStateMachineThread();
@@ -237,7 +237,7 @@ public:
   // Schedules the shared state machine thread to run the state machine
   // in aUsecs microseconds from now, if it's not already scheduled to run
   // earlier, in which case the request is discarded.
-  nsresult ScheduleStateMachine(PRInt64 aUsecs);
+  nsresult ScheduleStateMachine(int64_t aUsecs);
 
   // Creates and starts a new decode thread. Don't call this directly,
   // request a new decode thread by calling
@@ -249,7 +249,7 @@ public:
   void TimeoutExpired();
 
   // Set the media fragment end time. aEndTime is in microseconds.
-  void SetFragmentEndTime(PRInt64 aEndTime);
+  void SetFragmentEndTime(int64_t aEndTime);
 
   // Drop reference to decoder.  Only called during shutdown dance.
   void ReleaseDecoder() { mDecoder = nullptr; }
@@ -262,14 +262,14 @@ public:
   // need it.
   void SendOutputStreamData();
   void FinishOutputStreams();
-  bool HaveEnoughDecodedAudio(PRInt64 aAmpleAudioUSecs);
+  bool HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
 
 protected:
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
-  bool HasLowDecodedData(PRInt64 aAudioUsecs) const;
+  bool HasLowDecodedData(int64_t aAudioUsecs) const;
 
   // Returns true if we're running low on data which is not yet decoded.
   // The decoder monitor must be held.
@@ -277,13 +277,13 @@ protected:
 
   // Returns the number of microseconds of undecoded data available for
   // decoding. The decoder monitor must be held.
-  PRInt64 GetUndecodedData() const;
+  int64_t GetUndecodedData() const;
 
   // Returns the number of unplayed usecs of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can
   // play without having to run the audio decoder. The decoder monitor
   // must be held.
-  PRInt64 AudioDecodedUsecs() const;
+  int64_t AudioDecodedUsecs() const;
 
   // Returns true when there's decoded audio waiting to play.
   // The decoder monitor must be held.
@@ -300,7 +300,7 @@ protected:
   // values of less than 1 millisecond are rounded up to 1 millisecond
   // (see bug 651023). The decoder monitor must be held. Called only on the
   // audio thread.
-  void Wait(PRInt64 aUsecs);
+  void Wait(int64_t aUsecs);
 
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
@@ -310,7 +310,7 @@ protected:
 
   // Returns the audio clock, if we have audio, or -1 if we don't.
   // Called on the state machine thread.
-  PRInt64 GetAudioClock();
+  int64_t GetAudioClock();
 
   // Returns the presentation time of the first audio or video frame in the
   // media.  If the media has video, it returns the first video frame. The
@@ -322,7 +322,7 @@ protected:
   // if unknown).  Does not update the playback position on the decoder or
   // media element -- use UpdatePlaybackPosition for that.  Called on the state
   // machine thread, caller must hold the decoder lock.
-  void UpdatePlaybackPositionInternal(PRInt64 aTime);
+  void UpdatePlaybackPositionInternal(int64_t aTime);
 
   // Pushes the image down the rendering pipeline. Called on the shared state
   // machine thread. The decoder monitor must *not* be held when calling this.
@@ -342,14 +342,14 @@ protected:
   // advances smoothly, and guarantees that we don't try to allocate an
   // impossibly large chunk of memory in order to play back silence. Called
   // on the audio thread.
-  PRUint32 PlaySilence(PRUint32 aFrames,
-                       PRUint32 aChannels,
-                       PRUint64 aFrameOffset);
+  uint32_t PlaySilence(uint32_t aFrames,
+                       uint32_t aChannels,
+                       uint64_t aFrameOffset);
 
   // Pops an audio chunk from the front of the audio queue, and pushes its
   // audio data to the audio hardware. MozAudioAvailable data is also queued
   // here. Called on the audio thread.
-  PRUint32 PlayFromAudioQueue(PRUint64 aFrameOffset, PRUint32 aChannels);
+  uint32_t PlayFromAudioQueue(uint64_t aFrameOffset, uint32_t aChannels);
 
   // Stops the decode thread, and if we have a pending request for a new
   // decode thread it is canceled. The decoder monitor must be held with exactly
@@ -398,7 +398,7 @@ protected:
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
   // not start at 0. Note this is different to the value returned
   // by GetCurrentTime(), which is in the range [0,duration].
-  PRInt64 GetMediaTime() const {
+  int64_t GetMediaTime() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mStartTime + mCurrentFrameTime;
   }
@@ -410,7 +410,7 @@ protected:
   // calling this, the audio hardware may play some of the audio pushed to
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decode thread.
-  PRInt64 GetDecodedAudioDuration();
+  int64_t GetDecodedAudioDuration();
 
   // Load metadata. Called on the decode thread. The decoder monitor
   // must be held with exactly one lock count.
@@ -493,7 +493,7 @@ protected:
   // playback position is therefore |Now() - mPlayStartTime +
   // mPlayDuration|, which must be adjusted by mStartTime if used with media
   // timestamps.  Accessed only via the state machine thread.
-  PRInt64 mPlayDuration;
+  int64_t mPlayDuration;
 
   // Time that buffering started. Used for buffering timeout and only
   // accessed on the state machine thread. This is null while we're not
@@ -504,20 +504,20 @@ protected:
   // time of the first frame decoded from the media, and is used to calculate
   // duration and as a bounds for seeking. Accessed on state machine, decode,
   // and main threads. Access controlled by decoder monitor.
-  PRInt64 mStartTime;
+  int64_t mStartTime;
 
   // Time of the last frame in the media, in microseconds. This is the
   // end time of the last frame in the media. Accessed on state
   // machine, decode, and main threads. Access controlled by decoder monitor.
-  PRInt64 mEndTime;
+  int64_t mEndTime;
 
   // Position to seek to in microseconds when the seek state transition occurs.
   // The decoder monitor lock must be obtained before reading or writing
   // this value. Accessed on main and decode thread.
-  PRInt64 mSeekTime;
+  int64_t mSeekTime;
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
-  PRInt64 mFragmentEndTime;
+  int64_t mFragmentEndTime;
 
   // The audio stream resource. Used on the state machine, and audio threads.
   // This is created and destroyed on the audio thread, while holding the
@@ -534,22 +534,22 @@ protected:
   // 0 which is the initial playback position. Set by the state machine
   // thread, and read-only from the main thread to get the current
   // time value. Synchronised via decoder monitor.
-  PRInt64 mCurrentFrameTime;
+  int64_t mCurrentFrameTime;
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine
   // the current audio time. Accessed on audio and state machine thread.
   // Synchronized by decoder monitor.
-  PRInt64 mAudioStartTime;
+  int64_t mAudioStartTime;
 
   // The end time of the last audio frame that's been pushed onto the audio
   // hardware in microseconds. This will approximately be the end time of the
   // audio stream, unless another frame is pushed to the hardware.
-  PRInt64 mAudioEndTime;
+  int64_t mAudioEndTime;
 
   // The presentation end time of the last video frame which has been displayed
   // in microseconds. Accessed from the state machine thread.
-  PRInt64 mVideoFrameEndTime;
+  int64_t mVideoFrameEndTime;
   
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder
@@ -561,8 +561,8 @@ protected:
 
   // The maximum number of second we spend buffering when we are short on
   // unbuffered data.
-  PRUint32 mBufferingWait;
-  PRInt64  mLowDataThresholdUsecs;
+  uint32_t mBufferingWait;
+  int64_t  mLowDataThresholdUsecs;
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams).

@@ -43,7 +43,7 @@ NS_IMPL_RELEASE(nsMimeTypeArray)
 
 
 NS_IMETHODIMP
-nsMimeTypeArray::GetLength(PRUint32* aLength)
+nsMimeTypeArray::GetLength(uint32_t* aLength)
 {
   if (!mInited) {
     nsresult rv = GetMimeTypes();
@@ -51,7 +51,7 @@ nsMimeTypeArray::GetLength(PRUint32* aLength)
       return rv;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (uint32_t)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
  
@@ -60,7 +60,7 @@ nsMimeTypeArray::GetLength(PRUint32* aLength)
 }
 
 nsIDOMMimeType*
-nsMimeTypeArray::GetItemAt(PRUint32 aIndex, nsresult *aResult)
+nsMimeTypeArray::GetItemAt(uint32_t aIndex, nsresult *aResult)
 {
   if (!mInited) {
     *aResult = GetMimeTypes();
@@ -68,7 +68,7 @@ nsMimeTypeArray::GetItemAt(PRUint32 aIndex, nsresult *aResult)
       return nullptr;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (uint32_t)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
 
@@ -84,7 +84,7 @@ nsMimeTypeArray::GetItemAt(PRUint32 aIndex, nsresult *aResult)
 }
 
 NS_IMETHODIMP
-nsMimeTypeArray::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
+nsMimeTypeArray::Item(uint32_t aIndex, nsIDOMMimeType** aReturn)
 {
   nsresult rv;
 
@@ -102,7 +102,7 @@ nsMimeTypeArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
       return nullptr;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (uint32_t)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
 
@@ -110,7 +110,7 @@ nsMimeTypeArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
 
   nsAutoString type;
 
-  for (PRInt32 i = 0; i < mMimeTypeArray.Count(); i++) {
+  for (int32_t i = 0; i < mMimeTypeArray.Count(); i++) {
     nsIDOMMimeType *mtype = mMimeTypeArray[i];
 
     mtype->GetType(type);
@@ -206,16 +206,16 @@ nsMimeTypeArray::GetMimeTypes()
   if (rv == NS_OK) {
     // count up all possible MimeTypes, and collect them here. Later,
     // we'll remove duplicates.
-    PRUint32 pluginMimeTypeCount = 0;
-    PRUint32 pluginCount = 0;
+    uint32_t pluginMimeTypeCount = 0;
+    uint32_t pluginCount = 0;
     rv = pluginArray->GetLength(&pluginCount);
     if (rv == NS_OK) {
-      PRUint32 i;
+      uint32_t i;
       for (i = 0; i < pluginCount; i++) {
         nsCOMPtr<nsIDOMPlugin> plugin;
         if (NS_SUCCEEDED(pluginArray->Item(i, getter_AddRefs(plugin))) &&
             plugin) {
-          PRUint32 mimeTypeCount = 0;
+          uint32_t mimeTypeCount = 0;
           if (plugin->GetLength(&mimeTypeCount) == NS_OK)
             pluginMimeTypeCount += mimeTypeCount;
         }
@@ -227,15 +227,15 @@ nsMimeTypeArray::GetMimeTypes()
       mPluginMimeTypeCount = pluginMimeTypeCount;
       mInited = true;
 
-      PRUint32 k;
+      uint32_t k;
       for (k = 0; k < pluginCount; k++) {
         nsCOMPtr<nsIDOMPlugin> plugin;
         if (NS_SUCCEEDED(pluginArray->Item(k, getter_AddRefs(plugin))) &&
             plugin) {
-          PRUint32 mimeTypeCount = 0;
+          uint32_t mimeTypeCount = 0;
           if (plugin->GetLength(&mimeTypeCount) == NS_OK) {
             nsCOMPtr<nsIDOMMimeType> item;
-            for (PRUint32 j = 0; j < mimeTypeCount; j++) {
+            for (uint32_t j = 0; j < mimeTypeCount; j++) {
               plugin->Item(j, getter_AddRefs(item));
               mMimeTypeArray.AppendObject(item);
             }

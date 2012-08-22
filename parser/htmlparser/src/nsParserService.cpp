@@ -22,39 +22,39 @@ nsParserService::~nsParserService()
 
 NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
 
-PRInt32
+int32_t
 nsParserService::HTMLAtomTagToId(nsIAtom* aAtom) const
 {
   return nsHTMLTags::LookupTag(nsDependentAtomString(aAtom));
 }
 
-PRInt32
+int32_t
 nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const
 {
   return nsHTMLTags::CaseSensitiveLookupTag(aAtom);
 }
 
-PRInt32
+int32_t
 nsParserService::HTMLStringTagToId(const nsAString& aTag) const
 {
   return nsHTMLTags::LookupTag(aTag);
 }
 
 const PRUnichar*
-nsParserService::HTMLIdToStringTag(PRInt32 aId) const
+nsParserService::HTMLIdToStringTag(int32_t aId) const
 {
   return nsHTMLTags::GetStringValue((nsHTMLTag)aId);
 }
   
 nsIAtom*
-nsParserService::HTMLIdToAtomTag(PRInt32 aId) const
+nsParserService::HTMLIdToAtomTag(int32_t aId) const
 {
   return nsHTMLTags::GetAtom((nsHTMLTag)aId);
 }
 
 NS_IMETHODIMP
 nsParserService::HTMLConvertEntityToUnicode(const nsAString& aEntity,
-                                            PRInt32* aUnicode) const
+                                            int32_t* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
 
@@ -62,7 +62,7 @@ nsParserService::HTMLConvertEntityToUnicode(const nsAString& aEntity,
 }
 
 NS_IMETHODIMP
-nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
+nsParserService::HTMLConvertUnicodeToEntity(int32_t aUnicode,
                                             nsCString& aEntity) const
 {
   const char* str = nsHTMLEntities::UnicodeToEntity(aUnicode);
@@ -74,7 +74,7 @@ nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
 }
 
 NS_IMETHODIMP
-nsParserService::IsContainer(PRInt32 aId, bool& aIsContainer) const
+nsParserService::IsContainer(int32_t aId, bool& aIsContainer) const
 {
   aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)aId);
 
@@ -82,7 +82,7 @@ nsParserService::IsContainer(PRInt32 aId, bool& aIsContainer) const
 }
 
 NS_IMETHODIMP
-nsParserService::IsBlock(PRInt32 aId, bool& aIsBlock) const
+nsParserService::IsBlock(int32_t aId, bool& aIsBlock) const
 {
   if((aId>eHTMLTag_unknown) && (aId<eHTMLTag_userdefined)) {
     aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       ||

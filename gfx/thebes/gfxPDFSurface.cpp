@@ -13,7 +13,7 @@ write_func(void *closure, const unsigned char *data, unsigned int length)
 {
     nsCOMPtr<nsIOutputStream> out = reinterpret_cast<nsIOutputStream*>(closure);
     do {
-        PRUint32 wrote = 0;
+        uint32_t wrote = 0;
         if (NS_FAILED(out->Write((const char*)data, length, &wrote)))
             break;
         data += wrote; length -= wrote;

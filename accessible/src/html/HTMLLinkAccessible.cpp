@@ -39,13 +39,13 @@ HTMLLinkAccessible::NativeRole()
   return roles::LINK;
 }
 
-PRUint64
+uint64_t
 HTMLLinkAccessible::NativeState()
 {
   return HyperTextAccessibleWrap::NativeState() & ~states::READONLY;
 }
 
-PRUint64
+uint64_t
 HTMLLinkAccessible::NativeLinkState() const
 {
   nsEventStates eventState = mContent->AsElement()->State();
@@ -61,10 +61,10 @@ HTMLLinkAccessible::NativeLinkState() const
   return nsCoreUtils::HasClickListener(mContent) ? states::LINKED : 0;
 }
 
-PRUint64
+uint64_t
 HTMLLinkAccessible::NativeInteractiveState() const
 {
-  PRUint64 state = HyperTextAccessibleWrap::NativeInteractiveState();
+  uint64_t state = HyperTextAccessibleWrap::NativeInteractiveState();
 
   // This is how we indicate it is a named anchor. In other words, this anchor
   // can be selected as a location :) There is no other better state to use to
@@ -85,14 +85,14 @@ HTMLLinkAccessible::Value(nsString& aValue)
     nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
 }
 
-PRUint8
+uint8_t
 HTMLLinkAccessible::ActionCount()
 {
   return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
 }
 
 NS_IMETHODIMP
-HTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+HTMLLinkAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -108,7 +108,7 @@ HTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-HTMLLinkAccessible::DoAction(PRUint8 aIndex)
+HTMLLinkAccessible::DoAction(uint8_t aIndex)
 {
   if (!IsLinked())
     return HyperTextAccessible::DoAction(aIndex);
@@ -135,7 +135,7 @@ HTMLLinkAccessible::IsLink()
 }
 
 already_AddRefed<nsIURI>
-HTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
+HTMLLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
   return aAnchorIndex == 0 ? mContent->GetHrefURI() : nullptr;
 }

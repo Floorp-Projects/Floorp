@@ -13,7 +13,7 @@ txPatternOptimizer::optimize(txPattern* aInPattern, txPattern** aOutPattern)
     nsresult rv = NS_OK;
 
     // First optimize sub expressions
-    PRUint32 i = 0;
+    uint32_t i = 0;
     Expr* subExpr;
     while ((subExpr = aInPattern->getSubExprAt(i))) {
         Expr* newExpr = nullptr;

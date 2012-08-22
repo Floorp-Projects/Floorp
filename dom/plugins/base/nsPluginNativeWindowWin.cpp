@@ -28,8 +28,8 @@ using namespace mozilla;
 
 #define NP_POPUP_API_VERSION 16
 
-#define nsMajorVersion(v)       (((PRInt32)(v) >> 16) & 0xffff)
-#define nsMinorVersion(v)       ((PRInt32)(v) & 0xffff)
+#define nsMajorVersion(v)       (((int32_t)(v) >> 16) & 0xffff)
+#define nsMinorVersion(v)       ((int32_t)(v) & 0xffff)
 #define versionOK(suppliedV, requiredV)                   \
   (nsMajorVersion(suppliedV) == nsMajorVersion(requiredV) \
    && nsMinorVersion(suppliedV) >= nsMinorVersion(requiredV))
@@ -307,7 +307,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   }
 
   if (enablePopups && inst) {
-    PRUint16 apiVersion;
+    uint16_t apiVersion;
     if (NS_SUCCEEDED(inst->GetPluginAPIVersion(&apiVersion)) &&
         !versionOK(apiVersion, NP_POPUP_API_VERSION)) {
       inst->PushPopupsEnabledState(true);

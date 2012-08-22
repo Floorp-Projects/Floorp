@@ -26,10 +26,10 @@ PaintCheckMark(nsIFrame* aFrame,
   rect.Deflate(aFrame->GetUsedBorderAndPadding());
 
   // Points come from the coordinates on a 7X7 unit box centered at 0,0
-  const PRInt32 checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
-  const PRInt32 checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
-  const PRInt32 checkNumPoints = sizeof(checkPolygonX) / sizeof(PRInt32);
-  const PRInt32 checkSize      = 9; // 2 units of padding on either side
+  const int32_t checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
+  const int32_t checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
+  const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(int32_t);
+  const int32_t checkSize      = 9; // 2 units of padding on either side
                                     // of the 7x7 unit checkmark
 
   // Scale the checkmark based on the smallest dimension
@@ -39,7 +39,7 @@ PaintCheckMark(nsIFrame* aFrame,
 
   nsPoint paintPolygon[checkNumPoints];
   // Convert checkmark for screen rendering
-  for (PRInt32 polyIndex = 0; polyIndex < checkNumPoints; polyIndex++) {
+  for (int32_t polyIndex = 0; polyIndex < checkNumPoints; polyIndex++) {
     paintPolygon[polyIndex] = paintCenter +
                               nsPoint(checkPolygonX[polyIndex] * paintScale,
                                       checkPolygonY[polyIndex] * paintScale);

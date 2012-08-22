@@ -240,13 +240,13 @@ ShaderProgramOGL::Initialize()
 
   mProgramState = STATE_OK;
 
-  for (PRUint32 i = 0; i < mProfile.mUniforms.Length(); ++i) {
+  for (uint32_t i = 0; i < mProfile.mUniforms.Length(); ++i) {
     mProfile.mUniforms[i].mLocation =
       mGL->fGetUniformLocation(mProgram, mProfile.mUniforms[i].mName);
     NS_ASSERTION(mProfile.mUniforms[i].mLocation >= 0, "Bad uniform location.");
   }
 
-  for (PRUint32 i = 0; i < mProfile.mAttributes.Length(); ++i) {
+  for (uint32_t i = 0; i < mProfile.mAttributes.Length(); ++i) {
     mProfile.mAttributes[i].mLocation =
       mGL->fGetAttribLocation(mProgram, mProfile.mAttributes[i].mName);
     NS_ASSERTION(mProfile.mAttributes[i].mLocation >= 0, "Bad attribute location.");

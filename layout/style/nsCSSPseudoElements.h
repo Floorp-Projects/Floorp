@@ -68,10 +68,10 @@ public:
   static nsIAtom* GetPseudoAtom(Type aType);
 
 private:
-  static PRUint32 FlagsForPseudoElement(nsIAtom *aAtom);
+  static uint32_t FlagsForPseudoElement(nsIAtom *aAtom);
 
   // Does the given pseudo-element have all of the flags given?
-  static bool PseudoElementHasFlags(nsIAtom *aAtom, PRUint32 aFlags)
+  static bool PseudoElementHasFlags(nsIAtom *aAtom, uint32_t aFlags)
   {
     return (FlagsForPseudoElement(aAtom) & aFlags) == aFlags;
   }

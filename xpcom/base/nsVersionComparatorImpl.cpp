@@ -10,7 +10,7 @@ NS_IMPL_ISUPPORTS1(nsVersionComparatorImpl, nsIVersionComparator)
 
 NS_IMETHODIMP
 nsVersionComparatorImpl::Compare(const nsACString& A, const nsACString& B,
-				 PRInt32 *aResult)
+				 int32_t *aResult)
 {
   *aResult = mozilla::CompareVersions(PromiseFlatCString(A).get(),
 				      PromiseFlatCString(B).get());

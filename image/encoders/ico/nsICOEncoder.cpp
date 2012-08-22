@@ -40,12 +40,12 @@ nsICOEncoder::~nsICOEncoder()
 // Two output options are supported: format=<png|bmp>;bpp=<bpp_value>
 // format specifies whether to use png or bitmap format
 // bpp specifies the bits per pixel to use where bpp_value can be 24 or 32
-NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
-                                         PRUint32 aLength,
-                                         PRUint32 aWidth,
-                                         PRUint32 aHeight,
-                                         PRUint32 aStride,
-                                         PRUint32 aInputFormat,
+NS_IMETHODIMP nsICOEncoder::InitFromData(const uint8_t* aData,
+                                         uint32_t aLength,
+                                         uint32_t aWidth,
+                                         uint32_t aHeight,
+                                         uint32_t aStride,
+                                         uint32_t aInputFormat,
                                          const nsAString& aOutputOptions)
 {
   // validate input format
@@ -79,7 +79,7 @@ NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
 // Returns the number of bytes in the image buffer used
 // For an ICO file, this is all bytes in the buffer.
 NS_IMETHODIMP 
-nsICOEncoder::GetImageBufferUsed(PRUint32 *aOutputSize)
+nsICOEncoder::GetImageBufferUsed(uint32_t *aOutputSize)
 {
   NS_ENSURE_ARG_POINTER(aOutputSize);
   *aOutputSize = mImageBufferSize;
@@ -96,12 +96,12 @@ nsICOEncoder::GetImageBuffer(char **aOutputBuffer)
 }
 
 NS_IMETHODIMP 
-nsICOEncoder::AddImageFrame(const PRUint8* aData,
-                            PRUint32 aLength,
-                            PRUint32 aWidth,
-                            PRUint32 aHeight,
-                            PRUint32 aStride,
-                            PRUint32 aInputFormat, 
+nsICOEncoder::AddImageFrame(const uint8_t* aData,
+                            uint32_t aLength,
+                            uint32_t aWidth,
+                            uint32_t aHeight,
+                            uint32_t aStride,
+                            uint32_t aInputFormat, 
                             const nsAString& aFrameOptions)
 {
   if (mUsePNG) {
@@ -113,11 +113,11 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
                                          aStride, aInputFormat, noParams);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 PNGImageBufferSize;
+    uint32_t PNGImageBufferSize;
     mContainedEncoder->GetImageBufferUsed(&PNGImageBufferSize);
     mImageBufferSize = ICONFILEHEADERSIZE + ICODIRENTRYSIZE + 
                        PNGImageBufferSize;
-    mImageBufferStart = static_cast<PRUint8*>(moz_malloc(mImageBufferSize));
+    mImageBufferStart = static_cast<uint8_t*>(moz_malloc(mImageBufferSize));
     if (!mImageBufferStart) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -144,14 +144,14 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
                                          aStride, aInputFormat, params);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 andMaskSize = ((GetRealWidth() + 31) / 32) * 4 * // row AND mask
+    uint32_t andMaskSize = ((GetRealWidth() + 31) / 32) * 4 * // row AND mask
                            GetRealHeight(); // num rows
 
-    PRUint32 BMPImageBufferSize;
+    uint32_t BMPImageBufferSize;
     mContainedEncoder->GetImageBufferUsed(&BMPImageBufferSize);
     mImageBufferSize = ICONFILEHEADERSIZE + ICODIRENTRYSIZE + 
                        BMPImageBufferSize + andMaskSize;
-    mImageBufferStart = static_cast<PRUint8*>(moz_malloc(mImageBufferSize));
+    mImageBufferStart = static_cast<uint8_t*>(moz_malloc(mImageBufferSize));
     if (!mImageBufferStart) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -170,21 +170,21 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
     memcpy(mImageBufferCurr, imageBuffer + BFH_LENGTH, 
            BMPImageBufferSize - BFH_LENGTH);
     // We need to fix the BMP height to be *2 for the AND mask
-    PRUint32 fixedHeight = GetRealHeight() * 2;
+    uint32_t fixedHeight = GetRealHeight() * 2;
     fixedHeight = NATIVE32_TO_LITTLE(fixedHeight);
     // The height is stored at an offset of 8 from the DIB header
     memcpy(mImageBufferCurr + 8, &fixedHeight, sizeof(fixedHeight));
     mImageBufferCurr += BMPImageBufferSize - BFH_LENGTH;
 
     // Calculate rowsize in DWORD's
-    PRUint32 rowSize = ((GetRealWidth() + 31) / 32) * 4; // + 31 to round up
-    PRInt32 currentLine = GetRealHeight();
+    uint32_t rowSize = ((GetRealWidth() + 31) / 32) * 4; // + 31 to round up
+    int32_t currentLine = GetRealHeight();
     
     // Write out the AND mask
     while (currentLine > 0) {
       currentLine--;
-      PRUint8* encoded = mImageBufferCurr + currentLine * rowSize;
-      PRUint8* encodedEnd = encoded + rowSize;
+      uint8_t* encoded = mImageBufferCurr + currentLine * rowSize;
+      uint8_t* encodedEnd = encoded + rowSize;
       while (encoded != encodedEnd) {
         *encoded = 0; // make everything visible
         encoded++;
@@ -198,9 +198,9 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
 }
 
 // See ::InitFromData for other info.
-NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
-                                             PRUint32 aHeight,
-                                             PRUint32 aInputFormat,
+NS_IMETHODIMP nsICOEncoder::StartImageEncode(uint32_t aWidth,
+                                             uint32_t aHeight,
+                                             uint32_t aInputFormat,
                                              const nsAString& aOutputOptions)
 {
   // can't initialize more than once
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
   }
 
   // parse and check any provided output options
-  PRUint32 bpp = 24;
+  uint32_t bpp = 24;
   bool usePNG = true;
   nsresult rv = ParseOptions(aOutputOptions, &bpp, &usePNG);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -230,8 +230,8 @@ NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
 
   InitFileHeader();
   // The width and height are stored as 0 when we have a value of 256
-  InitInfoHeader(bpp, aWidth == 256 ? 0 : (PRUint8)aWidth, 
-                 aHeight == 256 ? 0 : (PRUint8)aHeight);
+  InitInfoHeader(bpp, aWidth == 256 ? 0 : (uint8_t)aWidth, 
+                 aHeight == 256 ? 0 : (uint8_t)aHeight);
 
   return NS_OK;
 }
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsICOEncoder::EndImageEncode()
 // Parses the encoder options and sets the bits per pixel to use and PNG or BMP
 // See InitFromData for a description of the parse options
 nsresult
-nsICOEncoder::ParseOptions(const nsAString& aOptions, PRUint32* bpp, 
+nsICOEncoder::ParseOptions(const nsAString& aOptions, uint32_t* bpp, 
                            bool *usePNG)
 {
   // If no parsing options just use the default of 24BPP and PNG yes
@@ -334,7 +334,7 @@ NS_IMETHODIMP nsICOEncoder::Close()
 }
 
 // Obtains the available bytes to read
-NS_IMETHODIMP nsICOEncoder::Available(PRUint64 *_retval)
+NS_IMETHODIMP nsICOEncoder::Available(uint64_t *_retval)
 {
   if (!mImageBufferStart || !mImageBufferCurr) {
     return NS_BASE_STREAM_CLOSED;
@@ -345,18 +345,18 @@ NS_IMETHODIMP nsICOEncoder::Available(PRUint64 *_retval)
 }
 
 // [noscript] Reads bytes which are available
-NS_IMETHODIMP nsICOEncoder::Read(char *aBuf, PRUint32 aCount,
-                                 PRUint32 *_retval)
+NS_IMETHODIMP nsICOEncoder::Read(char *aBuf, uint32_t aCount,
+                                 uint32_t *_retval)
 {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
 // [noscript] Reads segments
 NS_IMETHODIMP nsICOEncoder::ReadSegments(nsWriteSegmentFun aWriter,
-                                         void *aClosure, PRUint32 aCount,
-                                         PRUint32 *_retval)
+                                         void *aClosure, uint32_t aCount,
+                                         uint32_t *_retval)
 {
-  PRUint32 maxCount = GetCurrentImageBufferOffset() - mImageBufferReadPoint;
+  uint32_t maxCount = GetCurrentImageBufferOffset() - mImageBufferReadPoint;
   if (maxCount == 0) {
     *_retval = 0;
     return mFinished ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
@@ -387,8 +387,8 @@ nsICOEncoder::IsNonBlocking(bool *_retval)
 
 NS_IMETHODIMP 
 nsICOEncoder::AsyncWait(nsIInputStreamCallback *aCallback,
-                        PRUint32 aFlags,
-                        PRUint32 aRequestedCount,
+                        uint32_t aFlags,
+                        uint32_t aRequestedCount,
                         nsIEventTarget *aTarget)
 {
   if (aFlags != 0) {
@@ -460,7 +460,7 @@ nsICOEncoder::InitFileHeader()
 
 // Initializes the icon directory info header mICODirEntry
 void 
-nsICOEncoder::InitInfoHeader(PRUint32 aBPP, PRUint8 aWidth, PRUint8 aHeight)
+nsICOEncoder::InitInfoHeader(uint32_t aBPP, uint8_t aWidth, uint8_t aHeight)
 {
   memset(&mICODirEntry, 0, sizeof(mICODirEntry));
   mICODirEntry.mBitCount = aBPP;

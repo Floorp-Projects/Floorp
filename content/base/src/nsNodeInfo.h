@@ -39,14 +39,14 @@ public:
    * aName and aOwnerManager may not be null.
    */
   static nsNodeInfo *Create(nsIAtom *aName, nsIAtom *aPrefix,
-                            PRInt32 aNamespaceID, PRUint16 aNodeType,
+                            int32_t aNamespaceID, uint16_t aNodeType,
                             nsIAtom *aExtraName,
                             nsNodeInfoManager *aOwnerManager);
 private:
   nsNodeInfo(); // Unimplemented
   nsNodeInfo(const nsNodeInfo& aOther); // Unimplemented
-  nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-             PRUint16 aNodeType, nsIAtom *aExtraName,
+  nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
+             uint16_t aNodeType, nsIAtom *aExtraName,
              nsNodeInfoManager *aOwnerManager);
 protected:
   virtual ~nsNodeInfo();
@@ -69,7 +69,7 @@ private:
 };
 
 inline void
-CheckValidNodeInfo(PRUint16 aNodeType, nsIAtom *aName, PRInt32 aNamespaceID,
+CheckValidNodeInfo(uint16_t aNodeType, nsIAtom *aName, int32_t aNamespaceID,
                    nsIAtom* aExtraName)
 {
   NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||

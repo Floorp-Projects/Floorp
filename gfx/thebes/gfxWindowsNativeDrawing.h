@@ -58,7 +58,7 @@ public:
      */
     gfxWindowsNativeDrawing(gfxContext *ctx,
                             const gfxRect& nativeRect,
-                            PRUint32 nativeDrawFlags = CANNOT_DRAW_TO_COLOR_ALPHA |
+                            uint32_t nativeDrawFlags = CANNOT_DRAW_TO_COLOR_ALPHA |
                                                        CANNOT_AXIS_ALIGNED_SCALE |
                                                        CANNOT_COMPLEX_TRANSFORM |
                                                        DO_BILINEAR_FILTERING);
@@ -89,10 +89,10 @@ private:
 
     nsRefPtr<gfxContext> mContext;
     gfxRect mNativeRect;
-    PRUint32 mNativeDrawFlags;
+    uint32_t mNativeDrawFlags;
 
     // what state the rendering is in
-    PRUint8 mRenderState;
+    uint8_t mRenderState;
 
     gfxPoint mDeviceOffset;
     nsRefPtr<gfxPattern> mBlackPattern, mWhitePattern;

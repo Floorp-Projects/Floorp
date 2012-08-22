@@ -29,10 +29,10 @@ namespace mozilla {
 namespace gl {
 
 #ifdef DEBUG
-PRUintn GLContext::sCurrentGLContextTLS = -1;
+unsigned GLContext::sCurrentGLContextTLS = -1;
 #endif
 
-PRUint32 GLContext::sDebugMode = 0;
+uint32_t GLContext::sDebugMode = 0;
 
 // define this here since it's global to GLContextProvider, not any
 // specific implementation
@@ -1270,7 +1270,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
     mCurrentImage = 0;
 }
 
-PRUint32 TiledTextureImage::GetTileCount()
+uint32_t TiledTextureImage::GetTileCount()
 {
     return mImages.Length();
 }
@@ -1812,7 +1812,7 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader
         return NULL;
     }
 
-    PRUint32 currentPackAlignment = 0;
+    uint32_t currentPackAlignment = 0;
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*)&currentPackAlignment);
     if (currentPackAlignment != 4) {
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
@@ -2290,7 +2290,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
 
     GLenum format;
     GLenum type;
-    PRInt32 pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
+    int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
     ShaderProgramType shader;
 
     switch (imageSurface->Format()) {
@@ -2324,7 +2324,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
             shader = ShaderProgramType(0);
     }
 
-    PRInt32 stride = imageSurface->Stride();
+    int32_t stride = imageSurface->Stride();
 
     nsIntRegionRectIterator iter(paintRegion);
     const nsIntRect *iterRect;
@@ -2975,7 +2975,7 @@ RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArra
         if (name == 0)
             continue;
 
-        for (PRUint32 i = 0; i < aArray.Length(); ++i) {
+        for (uint32_t i = 0; i < aArray.Length(); ++i) {
             if (aArray[i].name == name) {
                 aArray.RemoveElementAt(i);
                 break;
@@ -3023,7 +3023,7 @@ GLContext::DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNam
 static void
 MarkContextDestroyedInArray(GLContext *aContext, nsTArray<GLContext::NamedResource>& aArray)
 {
-    for (PRUint32 i = 0; i < aArray.Length(); ++i) {
+    for (uint32_t i = 0; i < aArray.Length(); ++i) {
         if (aArray[i].origin == aContext)
             aArray[i].originDeleted = true;
     }
@@ -3052,7 +3052,7 @@ ReportArrayContents(const char *title, const nsTArray<GLContext::NamedResource>&
     copy.Sort();
 
     GLContext *lastContext = NULL;
-    for (PRUint32 i = 0; i < copy.Length(); ++i) {
+    for (uint32_t i = 0; i < copy.Length(); ++i) {
         if (lastContext != copy[i].origin) {
             if (lastContext)
                 printf_stderr("\n");

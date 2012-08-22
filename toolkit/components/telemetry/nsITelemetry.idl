@@ -97,7 +97,7 @@ interface nsITelemetry : nsISupports
    *   clear() - Zeros out the histogram's buckets and sum
    */
   [implicit_jscontext]
-  jsval newHistogram(in ACString name, in PRUint32 min, in PRUint32 max, in PRUint32 bucket_count, in unsigned long histogram_type);
+  jsval newHistogram(in ACString name, in uint32_t min, in uint32_t max, in uint32_t bucket_count, in unsigned long histogram_type);
 
   /**
    * Create a histogram using the current state of an existing histogram.  The
@@ -143,8 +143,8 @@ interface nsITelemetry : nsISupports
    *        HISTOGRAM_BOOLEAN
    */
   void registerAddonHistogram(in ACString addon_id, in ACString name,
-                              in PRUint32 min, in PRUint32 max,
-                              in PRUint32 bucket_count,
+                              in uint32_t min, in uint32_t max,
+                              in uint32_t bucket_count,
                               in unsigned long histogram_type);
 
   /**

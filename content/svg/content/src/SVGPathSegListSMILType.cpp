@@ -106,8 +106,8 @@ CanInterpolate(const SVGPathDataAndOwner& aStart,
   SVGPathDataAndOwner::const_iterator pEndDataEnd = aEnd.end();
 
   while (pStart < pStartDataEnd && pEnd < pEndDataEnd) {
-    PRUint32 startType = SVGPathSegUtils::DecodeType(*pStart);
-    PRUint32 endType = SVGPathSegUtils::DecodeType(*pEnd);
+    uint32_t startType = SVGPathSegUtils::DecodeType(*pStart);
+    uint32_t endType = SVGPathSegUtils::DecodeType(*pEnd);
 
     if (SVGPathSegUtils::IsArcType(startType) &&
         SVGPathSegUtils::IsArcType(endType) &&
@@ -181,7 +181,7 @@ AddWeightedPathSegs(double aCoeff1,
   NS_ABORT_IF_FALSE(aSeg2, "2nd segment must be non-null");
   NS_ABORT_IF_FALSE(aResultSeg, "result segment must be non-null");
 
-  PRUint32 segType = SVGPathSegUtils::DecodeType(aSeg2[0]);
+  uint32_t segType = SVGPathSegUtils::DecodeType(aSeg2[0]);
   NS_ABORT_IF_FALSE(!aSeg1 || SVGPathSegUtils::DecodeType(*aSeg1) == segType,
                     "unexpected segment type");
 
@@ -199,8 +199,8 @@ AddWeightedPathSegs(double aCoeff1,
 
   // SECOND: Add the arguments that are supposed to be added.
   // (The 1's below are to account for segment type)
-  PRUint32 numArgs = SVGPathSegUtils::ArgCountForType(segType);
-  for (PRUint32 i = 1; i < 1 + numArgs; ++i) {
+  uint32_t numArgs = SVGPathSegUtils::ArgCountForType(segType);
+  for (uint32_t i = 1; i < 1 + numArgs; ++i) {
      // Need to skip arc flags for arc-type segments. (already handled them)
     if (!(isArcType && (i == LARGE_ARC_FLAG_IDX || i == SWEEP_FLAG_IDX))) {
       aResultSeg[i] = (aSeg1 ? aCoeff1 * aSeg1[i] : 0.0) + aCoeff2 * aSeg2[i];
@@ -290,10 +290,10 @@ ConvertPathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
                        SVGPathDataAndOwner::iterator& aResult,
                        SVGPathTraversalState& aState)
 {
-  PRUint32 startType = SVGPathSegUtils::DecodeType(*aStart);
-  PRUint32 endType = SVGPathSegUtils::DecodeType(*aEnd);
+  uint32_t startType = SVGPathSegUtils::DecodeType(*aStart);
+  uint32_t endType = SVGPathSegUtils::DecodeType(*aEnd);
 
-  PRUint32 segmentLengthIncludingType =
+  uint32_t segmentLengthIncludingType =
       1 + SVGPathSegUtils::ArgCountForType(startType);
 
   SVGPathDataAndOwner::const_iterator pResultSegmentBegin = aResult;
@@ -397,7 +397,7 @@ ConvertAllPathSegmentData(SVGPathDataAndOwner::const_iterator aStart,
 nsresult
 SVGPathSegListSMILType::Add(nsSMILValue& aDest,
                             const nsSMILValue& aValueToAdd,
-                            PRUint32 aCount) const
+                            uint32_t aCount) const
 {
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");

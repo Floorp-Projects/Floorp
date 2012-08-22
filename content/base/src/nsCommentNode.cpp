@@ -33,7 +33,7 @@ public:
   // Empty interface
 
   // nsINode
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
@@ -42,8 +42,8 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 #ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
+  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
                            bool aDumpAll = true) const
   {
     return;
@@ -98,7 +98,7 @@ NS_IMPL_RELEASE_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 
 
 bool
-nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
+nsCommentNode::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
 }
@@ -117,9 +117,9 @@ nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 
 #ifdef DEBUG
 void
-nsCommentNode::List(FILE* out, PRInt32 aIndent) const
+nsCommentNode::List(FILE* out, int32_t aIndent) const
 {
-  PRInt32 indx;
+  int32_t indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
   fprintf(out, "Comment@%p refcount=%d<!--", (void*)this, mRefCnt.get());

@@ -61,7 +61,7 @@ GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
 }
 
 NS_IMETHODIMP
-nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
+nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -115,10 +115,10 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  PRUint32 flavorCount;
+  uint32_t flavorCount;
   flavorList->Count(&flavorCount);
 
-  for (PRUint32 i = 0; i < flavorCount; i++) {
+  for (uint32_t i = 0; i < flavorCount; i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
@@ -144,7 +144,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       [stringData getBytes:clipboardDataPtr];
 
       // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
-      PRInt32 signedDataLength = dataLength;
+      int32_t signedDataLength = dataLength;
       nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &clipboardDataPtr, &signedDataLength);
       dataLength = signedDataLength;
 
@@ -234,7 +234,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
 }
 
 NS_IMETHODIMP
-nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhichClipboard)
+nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhichClipboard)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -251,14 +251,14 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  PRUint32 flavorCount;
+  uint32_t flavorCount;
   flavorList->Count(&flavorCount);
 
   // If we were the last ones to put something on the pasteboard, then just use the cached
   // transferable. Otherwise clear it because it isn't relevant any more.
   if (mChangeCount == [cocoaPasteboard changeCount]) {
     if (mTransferable) {
-      for (PRUint32 i = 0; i < flavorCount; i++) {
+      for (uint32_t i = 0; i < flavorCount; i++) {
         nsCOMPtr<nsISupports> genericFlavor;
         flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
         nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
@@ -269,7 +269,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
         currentFlavor->ToString(getter_Copies(flavorStr));
 
         nsCOMPtr<nsISupports> dataSupports;
-        PRUint32 dataSize = 0;
+        uint32_t dataSize = 0;
         rv = mTransferable->GetTransferData(flavorStr, getter_AddRefs(dataSupports), &dataSize);
         if (NS_SUCCEEDED(rv)) {
           aTransferable->SetTransferData(flavorStr, dataSupports, dataSize);
@@ -292,8 +292,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
 
 // returns true if we have *any* of the passed in flavors available for pasting
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, bool* outResult)
+nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
+                                    int32_t aWhichClipboard, bool* outResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -307,9 +307,9 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
     nsCOMPtr<nsISupportsArray> transferableFlavorList;
     nsresult rv = mTransferable->FlavorsTransferableCanImport(getter_AddRefs(transferableFlavorList));
     if (NS_SUCCEEDED(rv)) {
-      PRUint32 transferableFlavorCount;
+      uint32_t transferableFlavorCount;
       transferableFlavorList->Count(&transferableFlavorCount);
-      for (PRUint32 j = 0; j < transferableFlavorCount; j++) {
+      for (uint32_t j = 0; j < transferableFlavorCount; j++) {
         nsCOMPtr<nsISupports> transferableFlavorSupports;
         transferableFlavorList->GetElementAt(j, getter_AddRefs(transferableFlavorSupports));
         nsCOMPtr<nsISupportsCString> currentTransferableFlavor(do_QueryInterface(transferableFlavorSupports));
@@ -318,7 +318,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
         nsXPIDLCString transferableFlavorStr;
         currentTransferableFlavor->ToString(getter_Copies(transferableFlavorStr));
 
-        for (PRUint32 k = 0; k < aLength; k++) {
+        for (uint32_t k = 0; k < aLength; k++) {
           if (transferableFlavorStr.Equals(aFlavorList[k])) {
             *outResult = true;
             return NS_OK;
@@ -330,7 +330,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 
   NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
 
-  for (PRUint32 i = 0; i < aLength; i++) {
+  for (uint32_t i = 0; i < aLength; i++) {
     nsDependentCString mimeType(aFlavorList[i]);
     NSString *pboardType = nil;
 
@@ -376,9 +376,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
   if (NS_FAILED(rv))
     return nil;
 
-  PRUint32 flavorCount;
+  uint32_t flavorCount;
   flavorList->Count(&flavorCount);
-  for (PRUint32 i = 0; i < flavorCount; i++) {
+  for (uint32_t i = 0; i < flavorCount; i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
@@ -394,7 +394,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
       void* data = nullptr;
-      PRUint32 dataSize = 0;
+      uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataSize);
       nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
@@ -415,7 +415,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
              flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||
              flavorStr.EqualsLiteral(kNativeImageMime)) {
-      PRUint32 dataSize = 0;
+      uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> transferSupports;
       aTransferable->GetTransferData(flavorStr, getter_AddRefs(transferSupports), &dataSize);
       nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(transferSupports));
@@ -471,7 +471,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      
     }
     else if (flavorStr.EqualsLiteral(kURLMime)) {
-      PRUint32 len = 0;
+      uint32_t len = 0;
       nsCOMPtr<nsISupports> genericURL;
       rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericURL), &len);
       nsCOMPtr<nsISupportsString> urlObject(do_QueryInterface(genericURL));
@@ -480,7 +480,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       urlObject->GetData(url);
 
       // A newline embedded in the URL means that the form is actually URL + title.
-      PRInt32 newlinePos = url.FindChar(PRUnichar('\n'));
+      int32_t newlinePos = url.FindChar(PRUnichar('\n'));
       if (newlinePos >= 0) {
         url.Truncate(newlinePos);
 

@@ -102,24 +102,24 @@ class nsJAR : public nsIZipReader
     nsObjectHashtable        mManifestData;   // Stores metadata for each entry
     bool                     mParsedManifest; // True if manifest has been parsed
     nsCOMPtr<nsIPrincipal>   mPrincipal;      // The entity which signed this file
-    PRInt16                  mGlobalStatus;   // Global signature verification status
+    int16_t                  mGlobalStatus;   // Global signature verification status
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
     mozilla::Mutex           mLock;	
-    PRInt64                  mMtime;
-    PRInt32                  mTotalItemsInManifest;
+    int64_t                  mMtime;
+    int32_t                  mTotalItemsInManifest;
     bool                     mOpened;
 
     nsresult ParseManifest();
-    void     ReportError(const nsACString &aFilename, PRInt16 errorCode);
+    void     ReportError(const nsACString &aFilename, int16_t errorCode);
     nsresult LoadEntry(const nsACString &aFilename, char** aBuf, 
-                       PRUint32* aBufLen = nullptr);
-    PRInt32  ReadLine(const char** src); 
-    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType);
+                       uint32_t* aBufLen = nullptr);
+    int32_t  ReadLine(const char** src); 
+    nsresult ParseOneFile(const char* filebuf, int16_t aFileType);
     nsresult VerifyEntry(nsJARManifestItem* aEntry, const char* aEntryData, 
-                         PRUint32 aLen);
+                         uint32_t aLen);
 
-    nsresult CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
+    nsresult CalculateDigest(const char* aInBuf, uint32_t aInBufLen,
                              nsCString& digest);
 };
 
@@ -139,11 +139,11 @@ public:
     virtual ~nsJARItem() {}
 
 private:
-    PRUint32     mSize;             /* size in original file */
-    PRUint32     mRealsize;         /* inflated size */
-    PRUint32     mCrc32;
+    uint32_t     mSize;             /* size in original file */
+    uint32_t     mRealsize;         /* inflated size */
+    uint32_t     mCrc32;
     PRTime       mLastModTime;
-    PRUint16     mCompression;
+    uint16_t     mCompression;
     bool mIsDirectory; 
     bool mIsSynthetic;
 };
@@ -167,7 +167,7 @@ public:
 private:
     nsZipFind    *mFind;
     const char*   mName;    // pointer to an name owned by mArchive -- DON'T delete
-    PRUint16      mNameLen;
+    uint16_t      mNameLen;
 
     ~nsJAREnumerator() { delete mFind; }
 };
@@ -193,14 +193,14 @@ public:
 
 protected:
   mozilla::Mutex        mLock;
-  PRInt32               mCacheSize;
+  int32_t               mCacheSize;
   nsSupportsHashtable   mZips;
 
 #ifdef ZIP_CACHE_HIT_RATE
-  PRUint32              mZipCacheLookups;
-  PRUint32              mZipCacheHits;
-  PRUint32              mZipCacheFlushes;
-  PRUint32              mZipSyncMisses;
+  uint32_t              mZipCacheLookups;
+  uint32_t              mZipCacheHits;
+  uint32_t              mZipCacheFlushes;
+  uint32_t              mZipSyncMisses;
 #endif
 
 };

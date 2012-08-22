@@ -17,13 +17,13 @@
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
 
-static PRInt32 FindSafeLength(const PRUnichar *aString, PRUint32 aLength,
-                              PRUint32 aMaxChunkLength)
+static int32_t FindSafeLength(const PRUnichar *aString, uint32_t aLength,
+                              uint32_t aMaxChunkLength)
 {
     if (aLength <= aMaxChunkLength)
         return aLength;
 
-    PRInt32 len = aMaxChunkLength;
+    int32_t len = aMaxChunkLength;
 
     // Ensure that we don't break inside a surrogate pair
     while (len > 0 && NS_IS_LOW_SURROGATE(aString[len])) {
@@ -40,8 +40,8 @@ static PRInt32 FindSafeLength(const PRUnichar *aString, PRUint32 aLength,
     return len;
 }
 
-static PRInt32 FindSafeLength(const char *aString, PRUint32 aLength,
-                              PRUint32 aMaxChunkLength)
+static int32_t FindSafeLength(const char *aString, uint32_t aLength,
+                              uint32_t aMaxChunkLength)
 {
     // Since it's ASCII, we don't need to worry about clusters or RTL
     return NS_MIN(aLength, aMaxChunkLength);
@@ -380,7 +380,7 @@ nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
 }
 
 void
-nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
+nsRenderingContext::FillPolygon(const nsPoint twPoints[], int32_t aNumPoints)
 {
     if (aNumPoints == 0)
         return;
@@ -413,7 +413,7 @@ nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
     mFontMetrics = aFontMetrics;
 }
 
-PRInt32
+int32_t
 nsRenderingContext::GetMaxChunkLength()
 {
     if (!mFontMetrics)
@@ -450,12 +450,12 @@ nsRenderingContext::GetWidth(const char* aString)
 }
 
 nscoord
-nsRenderingContext::GetWidth(const char* aString, PRUint32 aLength)
+nsRenderingContext::GetWidth(const char* aString, uint32_t aLength)
 {
-    PRUint32 maxChunkLength = GetMaxChunkLength();
+    uint32_t maxChunkLength = GetMaxChunkLength();
     nscoord width = 0;
     while (aLength > 0) {
-        PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
+        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
         width += mFontMetrics->GetWidth(aString, len, this);
         aLength -= len;
         aString += len;
@@ -464,12 +464,12 @@ nsRenderingContext::GetWidth(const char* aString, PRUint32 aLength)
 }
 
 nscoord
-nsRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength)
+nsRenderingContext::GetWidth(const PRUnichar *aString, uint32_t aLength)
 {
-    PRUint32 maxChunkLength = GetMaxChunkLength();
+    uint32_t maxChunkLength = GetMaxChunkLength();
     nscoord width = 0;
     while (aLength > 0) {
-        PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
+        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
         width += mFontMetrics->GetWidth(aString, len, this);
         aLength -= len;
         aString += len;
@@ -479,10 +479,10 @@ nsRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength)
 
 nsBoundingMetrics
 nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
-                                       PRUint32 aLength)
+                                       uint32_t aLength)
 {
-    PRUint32 maxChunkLength = GetMaxChunkLength();
-    PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
+    uint32_t maxChunkLength = GetMaxChunkLength();
+    int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
     // Assign directly in the first iteration. This ensures that
     // negative ascent/descent can be returned and the left bearing
     // is properly initialized.
@@ -503,12 +503,12 @@ nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
 }
 
 void
-nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,
+nsRenderingContext::DrawString(const char *aString, uint32_t aLength,
                                nscoord aX, nscoord aY)
 {
-    PRUint32 maxChunkLength = GetMaxChunkLength();
+    uint32_t maxChunkLength = GetMaxChunkLength();
     while (aLength > 0) {
-        PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
+        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
         mFontMetrics->DrawString(aString, len, aX, aY, this);
         aLength -= len;
 
@@ -527,10 +527,10 @@ nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY)
 }
 
 void
-nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContext::DrawString(const PRUnichar *aString, uint32_t aLength,
                                nscoord aX, nscoord aY)
 {
-    PRUint32 maxChunkLength = GetMaxChunkLength();
+    uint32_t maxChunkLength = GetMaxChunkLength();
     if (aLength <= maxChunkLength) {
         mFontMetrics->DrawString(aString, aLength, aX, aY, this, this);
         return;
@@ -544,7 +544,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
     }
 
     while (aLength > 0) {
-        PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
+        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
         nscoord width = mFontMetrics->GetWidth(aString, len, this);
         if (isRTL) {
             aX -= width;

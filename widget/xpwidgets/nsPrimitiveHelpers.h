@@ -22,27 +22,27 @@ public:
     // nsISupports* wrapper for passing across IDL boundaries. The length parameter
     // should not include the null if the data is null terminated.
   static void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, 
-                                         PRUint32 aDataLen, nsISupports** aPrimitive ) ;
+                                         uint32_t aDataLen, nsISupports** aPrimitive ) ;
 
     // Given a nsISupports* primitive and the flavor it represents, creates a new data
     // buffer with the data in it. This data will be null terminated, but the length
     // parameter does not reflect that.
   static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
-                                         void** aDataBuff, PRUint32 aDataLen ) ;
+                                         void** aDataBuff, uint32_t aDataLen ) ;
 
     // Given a unicode buffer (flavor text/unicode), this converts it to plain text using
     // the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
     // string, not the # of bytes in the buffer. |outPlainTextData| is null terminated, 
     // but its length parameter, |outPlainTextLen|, does not reflect that.
-  static nsresult ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
-                                                    char** outPlainTextData, PRInt32* outPlainTextLen ) ;
+  static nsresult ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, int32_t inUnicodeLen, 
+                                                    char** outPlainTextData, int32_t* outPlainTextLen ) ;
 
     // Given a char buffer (flavor text/plaikn), this converts it to unicode using
     // the appropriate platform charset encoding. |outUnicode| is null terminated, 
     // but its length parameter, |outUnicodeLen|, does not reflect that. |outUnicodeLen| is
     // the length of the string in characters, not bytes.
-  static nsresult ConvertPlatformPlainTextToUnicode ( const char* inText, PRInt32 inTextLen, 
-                                                    PRUnichar** outUnicode, PRInt32* outUnicodeLen ) ;
+  static nsresult ConvertPlatformPlainTextToUnicode ( const char* inText, int32_t inTextLen, 
+                                                    PRUnichar** outUnicode, int32_t* outUnicodeLen ) ;
 
 }; // class nsPrimitiveHelpers
 
@@ -58,7 +58,7 @@ public:
     // the note below).
     //
     // NOTE: this assumes that it can use nsMemory to dispose of the old buffer.
-  static nsresult ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, PRInt32* ioLengthInBytes ) ;
+  static nsresult ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, int32_t* ioLengthInBytes ) ;
 
 }; // class nsLinebreakHelpers
 

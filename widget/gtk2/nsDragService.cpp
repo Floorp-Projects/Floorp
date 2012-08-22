@@ -302,7 +302,7 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                  nsISupportsArray * aArrayTransferables,
                                  nsIScriptableRegion * aRegion,
-                                 PRUint32 aActionType)
+                                 uint32_t aActionType)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession"));
 
@@ -398,8 +398,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 bool
 nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
                                  GdkDragContext *aContext,
-                                 PRInt32 aXOffset,
-                                 PRInt32 aYOffset,
+                                 int32_t aXOffset,
+                                 int32_t aYOffset,
                                  const nsIntRect& dragRect)
 {
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
@@ -498,13 +498,13 @@ nsDragService::GetCanDrop(bool *aCanDrop)
 }
 
 // count the number of URIs in some text/uri-list format data.
-static PRUint32
+static uint32_t
 CountTextUriListItems(const char *data,
-                      PRUint32 datalen)
+                      uint32_t datalen)
 {
     const char *p = data;
     const char *endPtr = p + datalen;
-    PRUint32 count = 0;
+    uint32_t count = 0;
 
     while (p < endPtr) {
         // skip whitespace (if any)
@@ -525,10 +525,10 @@ CountTextUriListItems(const char *data,
 // unicode.
 static void
 GetTextUriListItem(const char *data,
-                   PRUint32 datalen,
-                   PRUint32 aItemIndex,
+                   uint32_t datalen,
+                   uint32_t aItemIndex,
                    PRUnichar **convertedText,
-                   PRInt32 *convertedTextLen)
+                   int32_t *convertedTextLen)
 {
     const char *p = data;
     const char *endPtr = p + datalen;
@@ -565,7 +565,7 @@ GetTextUriListItem(const char *data,
 }
 
 NS_IMETHODIMP
-nsDragService::GetNumDropItems(PRUint32 * aNumItems)
+nsDragService::GetNumDropItems(uint32_t * aNumItems)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::GetNumDropItems"));
 
@@ -596,7 +596,7 @@ nsDragService::GetNumDropItems(PRUint32 * aNumItems)
 
 NS_IMETHODIMP
 nsDragService::GetData(nsITransferable * aTransferable,
-                       PRUint32 aItemIndex)
+                       uint32_t aItemIndex)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::GetData %d", aItemIndex));
 
@@ -621,7 +621,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
         return rv;
 
     // count the number of flavors
-    PRUint32 cnt;
+    uint32_t cnt;
     flavorList->Count(&cnt);
     unsigned int i;
 
@@ -653,7 +653,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 continue;
 
             nsCOMPtr<nsISupports> data;
-            PRUint32 tmpDataLen = 0;
+            uint32_t tmpDataLen = 0;
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("trying to get transfer data for %s\n",
                    (const char *)flavorStr));
@@ -714,7 +714,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                     if (mTargetDragData) {
                         const char* text = static_cast<char*>(mTargetDragData);
                         PRUnichar* convertedText = nullptr;
-                        PRInt32 convertedTextLen = 0;
+                        int32_t convertedTextLen = 0;
 
                         GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
                                            &convertedText, &convertedTextLen);
@@ -786,7 +786,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             const char* castedText =
                                         reinterpret_cast<char*>(mTargetDragData);
                             PRUnichar* convertedText = nullptr;
-                            PRInt32 convertedTextLen = 0;
+                            int32_t convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
                                                 castedText, mTargetDragDataLen,
                                                 &convertedText, &convertedTextLen);
@@ -819,7 +819,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                         const char *data =
                                    reinterpret_cast<char*>(mTargetDragData);
                         PRUnichar* convertedText = nullptr;
-                        PRInt32 convertedTextLen = 0;
+                        int32_t convertedTextLen = 0;
 
                         GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
                                            &convertedText, &convertedTextLen);
@@ -851,7 +851,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             const char* castedText =
                                   reinterpret_cast<char*>(mTargetDragData);
                             PRUnichar* convertedText = nullptr;
-                            PRInt32 convertedTextLen = 0;
+                            int32_t convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText, mTargetDragDataLen, &convertedText, &convertedTextLen);
                             if ( convertedText ) {
                                 PR_LOG(sDragLm,
@@ -927,13 +927,13 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
     // for it.
     if (isList) {
         PR_LOG(sDragLm, PR_LOG_DEBUG, ("It's a list.."));
-        PRUint32 numDragItems = 0;
+        uint32_t numDragItems = 0;
         // if we don't have mDataItems we didn't start this drag so it's
         // an external client trying to fool us.
         if (!mSourceDataItems)
             return NS_OK;
         mSourceDataItems->Count(&numDragItems);
-        for (PRUint32 itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
+        for (uint32_t itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
             nsCOMPtr<nsISupports> genericItem;
             mSourceDataItems->GetElementAt(itemIndex,
                                            getter_AddRefs(genericItem));
@@ -943,9 +943,9 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
                 currItem->FlavorsTransferableCanExport(
                           getter_AddRefs(flavorList));
                 if (flavorList) {
-                    PRUint32 numFlavors;
+                    uint32_t numFlavors;
                     flavorList->Count( &numFlavors );
-                    for ( PRUint32 flavorIndex = 0;
+                    for ( uint32_t flavorIndex = 0;
                           flavorIndex < numFlavors ;
                           ++flavorIndex ) {
                         nsCOMPtr<nsISupports> genericWrapper;
@@ -1144,7 +1144,7 @@ nsDragService::GetSourceList(void)
     nsTArray<GtkTargetEntry*> targetArray;
     GtkTargetEntry *targets;
     GtkTargetList  *targetList = 0;
-    PRUint32 targetCount = 0;
+    uint32_t targetCount = 0;
     unsigned int numDragItems = 0;
 
     mSourceDataItems->Count(&numDragItems);
@@ -1179,9 +1179,9 @@ nsDragService::GetSourceList(void)
             nsCOMPtr <nsISupportsArray> flavorList;
             currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
             if (flavorList) {
-                PRUint32 numFlavors;
+                uint32_t numFlavors;
                 flavorList->Count( &numFlavors );
-                for (PRUint32 flavorIndex = 0;
+                for (uint32_t flavorIndex = 0;
                      flavorIndex < numFlavors ;
                      ++flavorIndex ) {
                     nsCOMPtr<nsISupports> genericWrapper;
@@ -1221,9 +1221,9 @@ nsDragService::GetSourceList(void)
             nsCOMPtr <nsISupportsArray> flavorList;
             currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
             if (flavorList) {
-                PRUint32 numFlavors;
+                uint32_t numFlavors;
                 flavorList->Count( &numFlavors );
-                for (PRUint32 flavorIndex = 0;
+                for (uint32_t flavorIndex = 0;
                      flavorIndex < numFlavors ;
                      ++flavorIndex ) {
                     nsCOMPtr<nsISupports> genericWrapper;
@@ -1309,7 +1309,7 @@ nsDragService::GetSourceList(void)
         // allocate space to create the list of valid targets
         targets =
           (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry) * targetCount);
-        PRUint32 targetIndex;
+        uint32_t targetIndex;
         for ( targetIndex = 0; targetIndex < targetCount; ++targetIndex) {
             GtkTargetEntry *disEntry = targetArray.ElementAt(targetIndex);
             // this is a string reference but it will be freed later.
@@ -1319,7 +1319,7 @@ nsDragService::GetSourceList(void)
         }
         targetList = gtk_target_list_new(targets, targetCount);
         // clean up the target list
-        for (PRUint32 cleanIndex = 0; cleanIndex < targetCount; ++cleanIndex) {
+        for (uint32_t cleanIndex = 0; cleanIndex < targetCount; ++cleanIndex) {
             GtkTargetEntry *thisTarget = targetArray.ElementAt(cleanIndex);
             g_free(thisTarget->target);
             g_free(thisTarget);
@@ -1355,7 +1355,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
     // The dropEffect of mDataTransfer is not updated for motion outside the
     // app, but is needed for the dragend event, so set it now.
 
-    PRUint32 dropEffect;
+    uint32_t dropEffect;
 
     if (aResult == MOZ_GTK_DRAG_RESULT_SUCCESS) {
 
@@ -1399,7 +1399,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
 static void
 CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
 {
-    PRUint32 i, count;
+    uint32_t i, count;
     GString *uriList = g_string_new(NULL);
 
     items->Count(&count);
@@ -1410,7 +1410,7 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
         item = do_QueryInterface(genericItem);
 
         if (item) {
-            PRUint32 tmpDataLen = 0;
+            uint32_t tmpDataLen = 0;
             void    *tmpData = NULL;
             nsresult rv = NS_OK;
             nsCOMPtr<nsISupports> data;
@@ -1426,14 +1426,14 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
                 char* plainTextData = nullptr;
                 PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
                                                            (tmpData);
-                PRInt32 plainTextLen = 0;
+                int32_t plainTextLen = 0;
                 nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
                                     castedUnicode,
                                     tmpDataLen / 2,
                                     &plainTextData,
                                     &plainTextLen);
                 if (plainTextData) {
-                    PRInt32 j;
+                    int32_t j;
 
                     // text/x-moz-url is of form url + "\n" + title.
                     // We just want the url.
@@ -1517,7 +1517,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         else
             actualFlavor = mimeFlavor;
 
-        PRUint32 tmpDataLen = 0;
+        uint32_t tmpDataLen = 0;
         void    *tmpData = NULL;
         nsresult rv;
         nsCOMPtr<nsISupports> data;
@@ -1533,12 +1533,12 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                 char* plainTextData = nullptr;
                 PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
                                                            (tmpData);
-                PRInt32 plainTextLen = 0;
+                int32_t plainTextLen = 0;
                 if (strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {
                     plainTextData =
                         ToNewUTF8String(
                             nsDependentString(castedUnicode, tmpDataLen / 2),
-                            (PRUint32*)&plainTextLen);
+                            (uint32_t*)&plainTextLen);
                 } else {
                     nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
                                         castedUnicode,
@@ -1591,11 +1591,11 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     if (!pc)
         return;
 
-    PRInt32 sx = mScreenX, sy = mScreenY;
+    int32_t sx = mScreenX, sy = mScreenY;
     ConvertToUnscaledDevPixels(pc, &sx, &sy);
 
-    PRInt32 offsetX = sx - dragRect.x;
-    PRInt32 offsetY = sy - dragRect.y;
+    int32_t offsetX = sx - dragRect.x;
+    int32_t offsetY = sy - dragRect.y;
 
     // If a popup is set as the drag image, use its widget. Otherwise, use
     // the surface that DrawDrag created.
@@ -1996,7 +1996,7 @@ nsDragService::DispatchDropEvent()
     if (mTargetWindow->IsDestroyed())
         return FALSE;
 
-    PRUint32 msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+    uint32_t msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
 
     mTargetWindow->DispatchDragEvent(msg, mTargetWindowPoint, mTargetTime);
 

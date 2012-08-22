@@ -82,7 +82,7 @@ child:
   async SetParentHangTimeout(uint32_t seconds);
 
   rpc PCrashReporter()
-    returns (NativeThreadId tid, PRUint32 processType);
+    returns (NativeThreadId tid, uint32_t processType);
 
 parent:
   /**

@@ -64,9 +64,9 @@ enum InputElementTypes {
   eInputElementTypesMax
 };
 
-PR_STATIC_ASSERT((PRUint32)eFormControlsWithoutSubTypesMax < (PRUint32)NS_FORM_BUTTON_ELEMENT);
-PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEMENT);
-PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
+PR_STATIC_ASSERT((uint32_t)eFormControlsWithoutSubTypesMax < (uint32_t)NS_FORM_BUTTON_ELEMENT);
+PR_STATIC_ASSERT((uint32_t)eButtonElementTypesMax < (uint32_t)NS_FORM_INPUT_ELEMENT);
+PR_STATIC_ASSERT((uint32_t)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
 { 0xbc53dcf5, 0xbd4f, 0x4991, \
@@ -112,7 +112,7 @@ public:
    * Get the type of this control as an int (see NS_FORM_* above)
    * @return the type of this control
    */
-  NS_IMETHOD_(PRUint32) GetType() const = 0 ;
+  NS_IMETHOD_(uint32_t) GetType() const = 0 ;
 
   /**
    * Reset this form control (as it should be when the user clicks the Reset
@@ -189,7 +189,7 @@ protected:
    * @param aType the type to be tested.
    * @return whether mType corresponds to a single line text control type.
    */
-  inline static bool IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType);
+  inline static bool IsSingleLineTextControl(bool aExcludePassword, uint32_t aType);
 
   /**
    * Returns whether this is a auto-focusable form control.
@@ -201,7 +201,7 @@ protected:
 bool
 nsIFormControl::IsSubmitControl() const
 {
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type == NS_FORM_INPUT_SUBMIT ||
          type == NS_FORM_INPUT_IMAGE ||
          type == NS_FORM_BUTTON_SUBMIT;
@@ -210,7 +210,7 @@ nsIFormControl::IsSubmitControl() const
 bool
 nsIFormControl::IsTextControl(bool aExcludePassword) const
 {
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type == NS_FORM_TEXTAREA ||
          IsSingleLineTextControl(aExcludePassword, type);
 }
@@ -223,7 +223,7 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword) const
 
 /*static*/
 bool
-nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType)
+nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
 {
   return aType == NS_FORM_INPUT_TEXT ||
          aType == NS_FORM_INPUT_EMAIL ||
@@ -239,7 +239,7 @@ bool
 nsIFormControl::IsSubmittableControl() const
 {
   // TODO: keygen should be in that list, see bug 101019.
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type == NS_FORM_OBJECT ||
          type == NS_FORM_TEXTAREA ||
          type == NS_FORM_SELECT ||
@@ -251,7 +251,7 @@ nsIFormControl::IsSubmittableControl() const
 bool
 nsIFormControl::AllowDraggableChildren() const
 {
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type == NS_FORM_OBJECT ||
          type == NS_FORM_LABEL ||
          type == NS_FORM_FIELDSET ||
@@ -261,7 +261,7 @@ nsIFormControl::AllowDraggableChildren() const
 bool
 nsIFormControl::IsAutofocusable() const
 {
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type & NS_FORM_INPUT_ELEMENT ||
          type & NS_FORM_BUTTON_ELEMENT ||
          type == NS_FORM_TEXTAREA ||

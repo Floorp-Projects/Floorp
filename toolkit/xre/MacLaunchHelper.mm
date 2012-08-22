@@ -39,7 +39,7 @@ cpu_type_t cpu_x64_86_types[2] = {
 }
 
 void LaunchChildMac(int aArgc, char** aArgv,
-                    PRUint32 aRestartType, pid_t *pid)
+                    uint32_t aRestartType, pid_t *pid)
 {
   // "posix_spawnp" uses null termination for arguments rather than a count.
   // Note that we are not duplicating the argument strings themselves.

@@ -13,11 +13,11 @@
 
 typedef unsigned nsXPCVariant;
 
-extern "C" PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+extern "C" uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    uint32_t result = 0;
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -65,8 +65,8 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
     return result;
 }
 
-extern "C" PRUint32
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+extern "C" uint32_t
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 {
 /*
     We need to copy the parameters for this function to locals and use them

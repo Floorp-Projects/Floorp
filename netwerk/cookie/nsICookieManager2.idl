@@ -54,7 +54,7 @@ interface nsICookieManager2 : nsICookieManager
            in boolean     aIsSecure,
            in boolean     aIsHttpOnly,
            in boolean     aIsSession,
-           in PRInt64     aExpiry);
+           in int64_t     aExpiry);
 
   /**
    * Find whether a given cookie already exists.

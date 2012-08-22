@@ -14,7 +14,7 @@
 class nsXBLInsertionPoint
 {
 public:
-  nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent);
+  nsXBLInsertionPoint(nsIContent* aParentElement, uint32_t aIndex, nsIContent* aDefContent);
   ~nsXBLInsertionPoint();
 
   NS_INLINE_DECL_REFCOUNTING(nsXBLInsertionPoint)
@@ -24,7 +24,7 @@ public:
   nsIContent* GetInsertionParent();
   void ClearInsertionParent() { mParentElement = nullptr; }
 
-  PRInt32 GetInsertionIndex() { return mIndex; }
+  int32_t GetInsertionIndex() { return mIndex; }
 
   void SetDefaultContent(nsIContent* aDefaultContent) { mDefaultContent = aDefaultContent; }
   nsIContent* GetDefaultContent();
@@ -33,16 +33,16 @@ public:
   nsIContent* GetDefaultContentTemplate();
 
   void AddChild(nsIContent* aChildElement) { mElements.AppendObject(aChildElement); }
-  void InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement) { mElements.InsertObjectAt(aChildElement, aIndex); }
+  void InsertChildAt(int32_t aIndex, nsIContent* aChildElement) { mElements.InsertObjectAt(aChildElement, aIndex); }
   void RemoveChild(nsIContent* aChildElement) { mElements.RemoveObject(aChildElement); }
   
-  PRInt32 ChildCount() { return mElements.Count(); }
+  int32_t ChildCount() { return mElements.Count(); }
 
-  nsIContent* ChildAt(PRUint32 aIndex);
+  nsIContent* ChildAt(uint32_t aIndex);
 
-  PRInt32 IndexOf(nsIContent* aContent) { return mElements.IndexOf(aContent); }
+  int32_t IndexOf(nsIContent* aContent) { return mElements.IndexOf(aContent); }
 
-  bool Matches(nsIContent* aContent, PRUint32 aIndex);
+  bool Matches(nsIContent* aContent, uint32_t aIndex);
 
   // Unbind all the default content in this insertion point.  Used
   // when the insertion parent is going away.
@@ -50,7 +50,7 @@ public:
 
 protected:
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
-  PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
+  int32_t mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
   nsCOMArray<nsIContent> mElements;      // An array of elements present at the insertion point.
   nsCOMPtr<nsIContent> mDefaultContentTemplate ;           // The template default content that will be cloned if
                                                            // the insertion point is empty.

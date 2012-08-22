@@ -37,7 +37,7 @@ GetOffsetsFromSlimWrapper(JSObject *obj)
 }
 
 static const xpc_qsHashEntry *
-LookupEntry(PRUint32 tableSize, const xpc_qsHashEntry *table, const nsID &iid)
+LookupEntry(uint32_t tableSize, const xpc_qsHashEntry *table, const nsID &iid)
 {
     size_t i;
     const xpc_qsHashEntry *p;
@@ -54,7 +54,7 @@ LookupEntry(PRUint32 tableSize, const xpc_qsHashEntry *table, const nsID &iid)
 }
 
 static const xpc_qsHashEntry *
-LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
+LookupInterfaceOrAncestor(uint32_t tableSize, const xpc_qsHashEntry *table,
                           const nsID &iid)
 {
     const xpc_qsHashEntry *entry = LookupEntry(tableSize, table, iid);
@@ -276,8 +276,8 @@ SharedDefineSetter(JSContext *cx, unsigned argc, jsval *vp)
 
 JSBool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned flags,
-                       PRUint32 ifacec, const nsIID **interfaces,
-                       PRUint32 tableSize, const xpc_qsHashEntry *table,
+                       uint32_t ifacec, const nsIID **interfaces,
+                       uint32_t tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
                        const xpc_qsFunctionSpec *funcspecs,
                        const char *stringTable)

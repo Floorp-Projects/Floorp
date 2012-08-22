@@ -74,7 +74,7 @@ struct ProgramProfileOGL
    */
   GLint LookupUniformLocation(const char* aName)
   {
-    for (PRUint32 i = 0; i < mUniforms.Length(); ++i) {
+    for (uint32_t i = 0; i < mUniforms.Length(); ++i) {
       if (strcmp(mUniforms[i].mName, aName) == 0) {
         return mUniforms[i].mLocation;
       }
@@ -85,7 +85,7 @@ struct ProgramProfileOGL
 
   GLint LookupAttributeLocation(const char* aName)
   {
-    for (PRUint32 i = 0; i < mAttributes.Length(); ++i) {
+    for (uint32_t i = 0; i < mAttributes.Length(); ++i) {
       if (strcmp(mAttributes[i].mName, aName) == 0) {
         return mAttributes[i].mLocation;
       }
@@ -109,7 +109,7 @@ struct ProgramProfileOGL
 
   nsTArray<Argument> mUniforms;
   nsTArray<Argument> mAttributes;
-  PRUint32 mTextureCount;
+  uint32_t mTextureCount;
   bool mHasMatrixProj;
   bool mHasTextureTransform;
 private:

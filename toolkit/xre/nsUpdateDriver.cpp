@@ -181,7 +181,7 @@ GetStatusFileContents(nsIFile *statusFile, char (&buf)[Size])
   if (NS_FAILED(rv))
     return false;
 
-  const PRInt32 n = PR_Read(fd, buf, Size);
+  const int32_t n = PR_Read(fd, buf, Size);
   PR_Close(fd);
 
   return (n >= 0);
@@ -247,7 +247,7 @@ IsOlderVersion(nsIFile *versionFile, const char *appVersion)
     return true;
 
   char buf[32];
-  const PRInt32 n = PR_Read(fd, buf, sizeof(buf));
+  const int32_t n = PR_Read(fd, buf, sizeof(buf));
   PR_Close(fd);
 
   if (n < 0)
@@ -484,7 +484,7 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
   nsCAutoString pid("0");
 #else
   nsCAutoString pid;
-  pid.AppendInt((PRInt32) getpid());
+  pid.AppendInt((int32_t) getpid());
 #endif
 
   // Append a special token to the PID in order to let the updater know that it
@@ -695,7 +695,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
 #if defined(USE_EXECV)
     pid.AssignASCII("0");
 #else
-    pid.AppendInt((PRInt32) getpid());
+    pid.AppendInt((int32_t) getpid());
 #endif
   }
 
@@ -771,7 +771,7 @@ WaitForProcess(ProcessType pt)
 #elif defined(XP_MACOSX)
   waitpid(pt, 0, 0);
 #else
-  PRInt32 exitCode;
+  int32_t exitCode;
   PR_WaitProcess(pt, &exitCode);
 #endif
 }

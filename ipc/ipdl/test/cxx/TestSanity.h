@@ -24,7 +24,7 @@ public:
 
 protected:    
     virtual bool RecvPong(const int& one, const float& zeroPtTwoFive,
-                          const PRUint8& dummy) MOZ_OVERRIDE;
+                          const uint8_t& dummy) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
@@ -45,7 +45,7 @@ public:
 
 protected:
     virtual bool RecvPing(const int& zero, const float& zeroPtFive,
-                          const PRInt8& dummy) MOZ_OVERRIDE;
+                          const int8_t& dummy) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {

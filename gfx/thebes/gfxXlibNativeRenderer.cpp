@@ -54,9 +54,9 @@
 */
 
 static cairo_bool_t
-_convert_coord_to_int (double coord, PRInt32 *v)
+_convert_coord_to_int (double coord, int32_t *v)
 {
-    *v = (PRInt32)coord;
+    *v = (int32_t)coord;
     /* XXX allow some tolerance here? */
     return *v == coord;
 }
@@ -131,7 +131,7 @@ FINISH:
  */
 bool
 gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
-                                  PRUint32 flags,
+                                  uint32_t flags,
                                   Screen *screen, Visual *visual)
 {
     cairo_t *cr = ctx->GetCairo();
@@ -151,8 +151,8 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* Draw() checked that the matrix contained only a very-close-to-integer
        translation.  Here (and in several other places and thebes) device
        offsets are assumed to be integer. */
-    NS_ASSERTION(PRInt32(device_offset_x) == device_offset_x &&
-                 PRInt32(device_offset_y) == device_offset_y,
+    NS_ASSERTION(int32_t(device_offset_x) == device_offset_x &&
+                 int32_t(device_offset_y) == device_offset_y,
                  "Expected integer device offsets");
     nsIntPoint offset(NS_lroundf(matrix.x0 + device_offset_x),
                       NS_lroundf(matrix.y0 + device_offset_y));
@@ -287,7 +287,7 @@ enum DrawingMethod {
 static already_AddRefed<gfxXlibSurface>
 CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
                        bool canDrawOverBackground,
-                       PRUint32 flags, Screen *screen, Visual *visual,
+                       uint32_t flags, Screen *screen, Visual *visual,
                        DrawingMethod *method)
 {
     bool drawIsOpaque = (flags & gfxXlibNativeRenderer::DRAW_IS_OPAQUE) != 0;
@@ -441,7 +441,7 @@ CopyXlibSurfaceToImage(gfxXlibSurface *tempXlibSurface,
 
 void
 gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
-                            PRUint32 flags, Screen *screen, Visual *visual,
+                            uint32_t flags, Screen *screen, Visual *visual,
                             DrawOutput* result)
 {
     if (result) {
@@ -501,10 +501,10 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     }
     clipExtents.RoundOut();
 
-    nsIntRect intExtents(PRInt32(clipExtents.X()),
-                         PRInt32(clipExtents.Y()),
-                         PRInt32(clipExtents.Width()),
-                         PRInt32(clipExtents.Height()));
+    nsIntRect intExtents(int32_t(clipExtents.X()),
+                         int32_t(clipExtents.Y()),
+                         int32_t(clipExtents.Width()),
+                         int32_t(clipExtents.Height()));
     drawingRect.IntersectRect(drawingRect, intExtents);
     gfxPoint offset(drawingRect.x, drawingRect.y);
 

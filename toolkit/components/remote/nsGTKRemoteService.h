@@ -45,7 +45,7 @@ private:
 
 
   virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                              PRUint32 aTimestamp);
+                                              uint32_t aTimestamp);
 
   nsInterfaceHashtable<nsPtrHashKey<GtkWidget>, nsIWeakReference> mWindows;
   GtkWidget* mServerWindow;  

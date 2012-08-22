@@ -31,9 +31,9 @@ typedef enum {
 
 class nsUniversalDetector {
 public:
-   nsUniversalDetector(PRUint32 aLanguageFilter);
+   nsUniversalDetector(uint32_t aLanguageFilter);
    virtual ~nsUniversalDetector();
-   virtual nsresult HandleData(const char* aBuf, PRUint32 aLen);
+   virtual nsresult HandleData(const char* aBuf, uint32_t aLen);
    virtual void DataEnd(void);
 
 protected:
@@ -46,8 +46,8 @@ protected:
    bool    mGotData;
    char    mLastChar;
    const char *  mDetectedCharset;
-   PRInt32 mBestGuess;
-   PRUint32 mLanguageFilter;
+   int32_t mBestGuess;
+   uint32_t mLanguageFilter;
 
    nsCharSetProber  *mCharSetProbers[NUM_OF_CHARSET_PROBERS];
    nsCharSetProber  *mEscCharSetProber;

@@ -24,15 +24,15 @@ nsScriptableInputStream::Init(nsIInputStream *aInputStream) {
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Available(PRUint64 *_retval) {
+nsScriptableInputStream::Available(uint64_t *_retval) {
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
     return mInputStream->Available(_retval);
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
+nsScriptableInputStream::Read(uint32_t aCount, char **_retval) {
     nsresult rv = NS_OK;
-    PRUint64 count64 = 0;
+    uint64_t count64 = 0;
     char *buffer = nullptr;
 
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
@@ -41,11 +41,11 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     if (NS_FAILED(rv)) return rv;
 
     // bug716556 - Ensure count+1 doesn't overflow
-    PRUint32 count = NS_MIN((PRUint32)NS_MIN<PRUint64>(count64, aCount), PR_UINT32_MAX - 1);
+    uint32_t count = NS_MIN((uint32_t)NS_MIN<uint64_t>(count64, aCount), PR_UINT32_MAX - 1);
     buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint32 amtRead = 0;
+    uint32_t amtRead = 0;
     rv = mInputStream->Read(buffer, count, &amtRead);
     if (NS_FAILED(rv)) {
         nsMemory::Free(buffer);
@@ -58,7 +58,7 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
 }
 
 NS_IMETHODIMP
-nsScriptableInputStream::ReadBytes(PRUint32 aCount, nsACString &_retval) {
+nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString &_retval) {
     if (!mInputStream) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -69,9 +69,9 @@ nsScriptableInputStream::ReadBytes(PRUint32 aCount, nsACString &_retval) {
     }
 
     char *ptr = _retval.BeginWriting();
-    PRUint32 totalBytesRead = 0;
+    uint32_t totalBytesRead = 0;
     while (1) {
-      PRUint32 bytesRead;
+      uint32_t bytesRead;
       nsresult rv = mInputStream->Read(ptr + totalBytesRead,
                                        aCount - totalBytesRead,
                                        &bytesRead);

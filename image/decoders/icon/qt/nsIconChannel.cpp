@@ -39,9 +39,9 @@ moz_qicon_to_channel(QImage *image, nsIURI *aURI,
 
   const int n_channels = 4;
   long int buf_size = 2 + n_channels * height * width;
-  PRUint8 * const buf = (PRUint8*)NS_Alloc(buf_size);
+  uint8_t * const buf = (uint8_t*)NS_Alloc(buf_size);
   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
-  PRUint8 *out = buf;
+  uint8_t *out = buf;
 
   *(out++) = width;
   *(out++) = height;
@@ -53,11 +53,11 @@ moz_qicon_to_channel(QImage *image, nsIURI *aURI,
   const uchar * in = pixels;
   for (int y = 0; y < height; ++y, in += rowextra) {
     for (int x = 0; x < width; ++x) {
-      PRUint8 r = *(in++);
-      PRUint8 g = *(in++);
-      PRUint8 b = *(in++);
-      PRUint8 a = *(in++);
-#define DO_PREMULTIPLY(c_) PRUint8(PRUint16(c_) * PRUint16(a) / PRUint16(255))
+      uint8_t r = *(in++);
+      uint8_t g = *(in++);
+      uint8_t b = *(in++);
+      uint8_t a = *(in++);
+#define DO_PREMULTIPLY(c_) uint8_t(uint16_t(c_) * uint16_t(a) / uint16_t(255))
 #ifdef IS_LITTLE_ENDIAN
       *(out++) = DO_PREMULTIPLY(b);
       *(out++) = DO_PREMULTIPLY(g);
@@ -100,7 +100,7 @@ nsIconChannel::Init(nsIURI* aURI)
   nsCAutoString iconSizeString;
   iconURI->GetIconSize(iconSizeString);
 
-  PRUint32 desiredImageSize;
+  uint32_t desiredImageSize;
   iconURI->GetImageSize(&desiredImageSize);
 
   nsCAutoString iconStateString;
@@ -110,7 +110,7 @@ nsIconChannel::Init(nsIURI* aURI)
   QStyle::StandardPixmap sp_icon = (QStyle::StandardPixmap)0;
   nsCOMPtr <nsIGtkQtIconsConverter> converter = do_GetService("@mozilla.org/gtkqticonsconverter;1");
   if (converter) {
-    PRInt32 res = 0;
+    int32_t res = 0;
     stockIcon.Cut(0,4);
     converter->Convert(stockIcon.get(), &res);
     sp_icon = (QStyle::StandardPixmap)res;

@@ -151,7 +151,7 @@ public:
                    IDBRequest* aRequest,
                    IDBIndex* aIndex,
                    IDBKeyRange* aKeyRange,
-                   const PRUint32 aLimit)
+                   const uint32_t aLimit)
   : GetKeyHelper(aTransaction, aRequest, aIndex, aKeyRange), mLimit(aLimit)
   { }
 
@@ -172,7 +172,7 @@ public:
                                   MOZ_OVERRIDE;
 
 protected:
-  const PRUint32 mLimit;
+  const uint32_t mLimit;
   nsTArray<Key> mKeys;
 };
 
@@ -183,13 +183,13 @@ public:
                IDBRequest* aRequest,
                IDBIndex* aIndex,
                IDBKeyRange* aKeyRange,
-               const PRUint32 aLimit)
+               const uint32_t aLimit)
   : GetKeyHelper(aTransaction, aRequest, aIndex, aKeyRange), mLimit(aLimit)
   { }
 
   ~GetAllHelper()
   {
-    for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+    for (uint32_t index = 0; index < mCloneReadInfos.Length(); index++) {
       IDBObjectStore::ClearStructuredCloneBuffer(
         mCloneReadInfos[index].mCloneBuffer);
     }
@@ -214,7 +214,7 @@ public:
                                   MOZ_OVERRIDE;
 
 protected:
-  const PRUint32 mLimit;
+  const uint32_t mLimit;
   nsTArray<StructuredCloneReadInfo> mCloneReadInfos;
 };
 
@@ -337,7 +337,7 @@ public:
 
 private:
   nsRefPtr<IDBKeyRange> mKeyRange;
-  PRUint64 mCount;
+  uint64_t mCount;
 };
 
 inline
@@ -477,7 +477,7 @@ IDBIndex::GetKeyInternal(IDBKeyRange* aKeyRange,
 
 nsresult
 IDBIndex::GetAllInternal(IDBKeyRange* aKeyRange,
-                         PRUint32 aLimit,
+                         uint32_t aLimit,
                          JSContext* aCx,
                          IDBRequest** _retval)
 {
@@ -503,7 +503,7 @@ IDBIndex::GetAllInternal(IDBKeyRange* aKeyRange,
 
 nsresult
 IDBIndex::GetAllKeysInternal(IDBKeyRange* aKeyRange,
-                             PRUint32 aLimit,
+                             uint32_t aLimit,
                              JSContext* aCx,
                              IDBRequest** _retval)
 {
@@ -831,9 +831,9 @@ IDBIndex::GetKey(const jsval& aKey,
 
 NS_IMETHODIMP
 IDBIndex::GetAll(const jsval& aKey,
-                 PRUint32 aLimit,
+                 uint32_t aLimit,
                  JSContext* aCx,
-                 PRUint8 aOptionalArgCount,
+                 uint8_t aOptionalArgCount,
                  nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -865,9 +865,9 @@ IDBIndex::GetAll(const jsval& aKey,
 
 NS_IMETHODIMP
 IDBIndex::GetAllKeys(const jsval& aKey,
-                     PRUint32 aLimit,
+                     uint32_t aLimit,
                      JSContext* aCx,
-                     PRUint8 aOptionalArgCount,
+                     uint8_t aOptionalArgCount,
                      nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -901,7 +901,7 @@ NS_IMETHODIMP
 IDBIndex::OpenCursor(const jsval& aKey,
                      const nsAString& aDirection,
                      JSContext* aCx,
-                     PRUint8 aOptionalArgCount,
+                     uint8_t aOptionalArgCount,
                      nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -943,7 +943,7 @@ NS_IMETHODIMP
 IDBIndex::OpenKeyCursor(const jsval& aKey,
                         const nsAString& aDirection,
                         JSContext* aCx,
-                        PRUint8 aOptionalArgCount,
+                        uint8_t aOptionalArgCount,
                         nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -980,7 +980,7 @@ IDBIndex::OpenKeyCursor(const jsval& aKey,
 NS_IMETHODIMP
 IDBIndex::Count(const jsval& aKey,
                 JSContext* aCx,
-                PRUint8 aOptionalArgCount,
+                uint8_t aOptionalArgCount,
                 nsIIDBRequest** _retval)
 {
   IDBTransaction* transaction = mObjectStore->Transaction();
@@ -1544,7 +1544,7 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
 
   nsresult rv = ConvertCloneReadInfosToArray(aCx, mCloneReadInfos, aVal);
 
-  for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+  for (uint32_t index = 0; index < mCloneReadInfos.Length(); index++) {
     mCloneReadInfos[index].mCloneBuffer.clear();
   }
 
@@ -1555,7 +1555,7 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
 void
 GetAllHelper::ReleaseMainThreadObjects()
 {
-  for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+  for (uint32_t index = 0; index < mCloneReadInfos.Length(); index++) {
     IDBObjectStore::ClearStructuredCloneBuffer(
       mCloneReadInfos[index].mCloneBuffer);
   }
@@ -1605,7 +1605,7 @@ GetAllHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     FileManager* fileManager = database->Manager();
     NS_ASSERTION(fileManager, "This should never be null!");
 
-    PRUint32 length = mCloneReadInfos.Length();
+    uint32_t length = mCloneReadInfos.Length();
 
     InfallibleTArray<SerializedStructuredCloneReadInfo>& infos =
       getAllResponse.cloneInfos();
@@ -1614,7 +1614,7 @@ GetAllHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     InfallibleTArray<BlobArray>& blobArrays = getAllResponse.blobs();
     blobArrays.SetCapacity(length);
 
-    for (PRUint32 index = 0;
+    for (uint32_t index = 0;
          NS_SUCCEEDED(aResultCode) && index < length;
          index++) {
       const StructuredCloneReadInfo& clone = mCloneReadInfos[index];
@@ -1669,7 +1669,7 @@ GetAllHelper::UnpackResponseFromParentProcess(
 
   mCloneReadInfos.SetCapacity(cloneInfos.Length());
 
-  for (PRUint32 index = 0; index < cloneInfos.Length(); index++) {
+  for (uint32_t index = 0; index < cloneInfos.Length(); index++) {
     const SerializedStructuredCloneReadInfo srcInfo = cloneInfos[index];
     const InfallibleTArray<PBlobChild*> blobs = blobArrays[index].blobsChild();
 

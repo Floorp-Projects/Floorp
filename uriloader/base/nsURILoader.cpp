@@ -84,7 +84,7 @@ public:
   // Real constructor
   // aFlags is a combination of the flags on nsIURILoader
   nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
-                     PRUint32 aFlags,
+                     uint32_t aFlags,
                      nsURILoader* aURILoader);
 
   NS_DECL_ISUPPORTS
@@ -151,7 +151,7 @@ protected:
    * DONT_RETARGET means that we will only try m_originalContext, no other
    * listeners.
    */
-  PRUint32 mFlags;
+  uint32_t mFlags;
 
   /**
    * The type of the data we will be trying to dispatch.
@@ -180,7 +180,7 @@ nsDocumentOpenInfo::nsDocumentOpenInfo()
 }
 
 nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
-                                       PRUint32 aFlags,
+                                       uint32_t aFlags,
                                        nsURILoader* aURILoader)
   : m_originalContext(aWindowContext),
     mFlags(aFlags),
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request, &rv));
 
   if (NS_SUCCEEDED(rv)) {
-    PRUint32 responseCode = 0;
+    uint32_t responseCode = 0;
 
     rv = httpChannel->GetResponseStatus(&responseCode);
 
@@ -278,7 +278,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
 }
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
-                                                  nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
+                                                  nsIInputStream * inStr, uint32_t sourceOffset, uint32_t count)
 {
   TIME_URILOADER_FUNCTION(request);
 
@@ -354,7 +354,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // future, because the user has specified external handling for the MIME
   // type.
   bool forceExternalHandling = false;
-  PRUint32 disposition;
+  uint32_t disposition;
   rv = aChannel->GetContentDisposition(&disposition);
   if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT)
     forceExternalHandling = true;
@@ -386,9 +386,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       // Second step: See whether some other registered listener wants
       // to handle this content type.
       //
-      PRInt32 count = mURILoader->m_listeners.Count();
+      int32_t count = mURILoader->m_listeners.Count();
       nsCOMPtr<nsIURIContentListener> listener;
-      for (PRInt32 i = 0; i < count; i++) {
+      for (int32_t i = 0; i < count; i++) {
         listener = do_QueryReferent(mURILoader->m_listeners[i]);
         if (listener) {
           if (TryContentListener(listener, aChannel)) {
@@ -796,7 +796,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 }
 
 nsresult nsURILoader::OpenChannel(nsIChannel* channel,
-                                  PRUint32 aFlags,
+                                  uint32_t aFlags,
                                   nsIInterfaceRequestor* aWindowContext,
                                   bool aChannelIsOpen,
                                   nsIStreamListener** aListener)
@@ -893,7 +893,7 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
 }
 
 NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
-                                       PRUint32 aFlags,
+                                       uint32_t aFlags,
                                        nsIInterfaceRequestor* aWindowContext,
                                        nsIStreamListener** aListener)
 {

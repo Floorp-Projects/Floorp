@@ -81,58 +81,58 @@ protected:
   static const int kAnnoIndex_LastModified;
 
   nsresult HasAnnotationInternal(nsIURI* aURI,
-                                 PRInt64 aItemId,
+                                 int64_t aItemId,
                                  const nsACString& aName,
                                  bool* _hasAnno);
 
   nsresult StartGetAnnotation(nsIURI* aURI,
-                              PRInt64 aItemId,
+                              int64_t aItemId,
                               const nsACString& aName,
                               nsCOMPtr<mozIStorageStatement>& aStatement);
 
   nsresult StartSetAnnotation(nsIURI* aURI,
-                              PRInt64 aItemId,
+                              int64_t aItemId,
                               const nsACString& aName,
-                              PRInt32 aFlags,
-                              PRUint16 aExpiration,
-                              PRUint16 aType,
+                              int32_t aFlags,
+                              uint16_t aExpiration,
+                              uint16_t aType,
                               nsCOMPtr<mozIStorageStatement>& aStatement);
 
   nsresult SetAnnotationStringInternal(nsIURI* aURI,
-                                       PRInt64 aItemId,
+                                       int64_t aItemId,
                                        const nsACString& aName,
                                        const nsAString& aValue,
-                                       PRInt32 aFlags,
-                                       PRUint16 aExpiration);
+                                       int32_t aFlags,
+                                       uint16_t aExpiration);
   nsresult SetAnnotationInt32Internal(nsIURI* aURI,
-                                      PRInt64 aItemId,
+                                      int64_t aItemId,
                                       const nsACString& aName,
-                                      PRInt32 aValue,
-                                      PRInt32 aFlags,
-                                      PRUint16 aExpiration);
+                                      int32_t aValue,
+                                      int32_t aFlags,
+                                      uint16_t aExpiration);
   nsresult SetAnnotationInt64Internal(nsIURI* aURI,
-                                      PRInt64 aItemId,
+                                      int64_t aItemId,
                                       const nsACString& aName,
-                                      PRInt64 aValue,
-                                      PRInt32 aFlags,
-                                      PRUint16 aExpiration);
+                                      int64_t aValue,
+                                      int32_t aFlags,
+                                      uint16_t aExpiration);
   nsresult SetAnnotationDoubleInternal(nsIURI* aURI,
-                                       PRInt64 aItemId,
+                                       int64_t aItemId,
                                        const nsACString& aName,
                                        double aValue,
-                                       PRInt32 aFlags,
-                                       PRUint16 aExpiration);
+                                       int32_t aFlags,
+                                       uint16_t aExpiration);
   nsresult SetAnnotationBinaryInternal(nsIURI* aURI,
-                                       PRInt64 aItemId,
+                                       int64_t aItemId,
                                        const nsACString& aName,
-                                       const PRUint8* aData,
-                                       PRUint32 aDataLen,
+                                       const uint8_t* aData,
+                                       uint32_t aDataLen,
                                        const nsACString& aMimeType,
-                                       PRInt32 aFlags,
-                                       PRUint16 aExpiration);
+                                       int32_t aFlags,
+                                       uint16_t aExpiration);
 
   nsresult RemoveAnnotationInternal(nsIURI* aURI,
-                                    PRInt64 aItemId,
+                                    int64_t aItemId,
                                     const nsACString& aName);
 
   bool InPrivateBrowsingMode() const;
@@ -141,9 +141,9 @@ public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                           nsCOMArray<nsIURI>* _results);
   nsresult GetItemsWithAnnotationTArray(const nsACString& aName,
-                                        nsTArray<PRInt64>* _result);
+                                        nsTArray<int64_t>* _result);
   nsresult GetAnnotationNamesTArray(nsIURI* aURI,
-                                    PRInt64 aItemId,
+                                    int64_t aItemId,
                                     nsTArray<nsCString>* _result);
 };
 

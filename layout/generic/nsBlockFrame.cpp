@@ -87,7 +87,7 @@ bool nsBlockFrame::gNoisyFloatManager;
 bool nsBlockFrame::gVerifyLines;
 bool nsBlockFrame::gDisableResizeOpt;
 
-PRInt32 nsBlockFrame::gNoiseIndent;
+int32_t nsBlockFrame::gNoiseIndent;
 
 struct BlockDebugFlags {
   const char* name;
@@ -202,7 +202,7 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
 static void
 RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 {
-  static PRUint32 record[2];
+  static uint32_t record[2];
 
   // 0: child-is-block
   // 1: child-is-inline
@@ -210,7 +210,7 @@ RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
   if (!aChildIsBlock) index |= 1;
 
   // Compute new status
-  PRUint32 newS = record[index];
+  uint32_t newS = record[index];
   if (NS_INLINE_IS_BREAK(aFrameReflowStatus)) {
     if (NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
       newS |= 1;
@@ -256,7 +256,7 @@ NS_DECLARE_FRAME_PROPERTY(InsideBulletProperty, nullptr)
 //----------------------------------------------------------------------
 
 nsIFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags)
 {
   nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
   if (it) {
@@ -333,7 +333,7 @@ nsBlockFrame::GetSplittableType() const
 
 #ifdef DEBUG
 NS_METHOD
-nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
+nsBlockFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -382,8 +382,8 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
-  PRInt32 numInlineLines = 0;
-  PRInt32 numBlockLines = 0;
+  int32_t numInlineLines = 0;
+  int32_t numBlockLines = 0;
   if (!mLines.empty()) {
     const_line_iterator line = begin_lines(), line_end = end_lines();
     for ( ; line != line_end; ++line) {
@@ -490,7 +490,7 @@ nsBlockFrame::GetType() const
 void
 nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                 PRUint32 aFlags)
+                                 uint32_t aFlags)
 {
   // Optimize by suppressing invalidation of areas that are clipped out
   // with CSS 'clip'. Don't suppress invalidation of *this* frame directly,
@@ -750,7 +750,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
         data.line = &line;
         data.lineContainer = curFrame;
         nsIFrame *kid = line->mFirstChild;
-        for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
+        for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
           kid->AddInlineMinWidth(aRenderingContext, &data);
         }
@@ -830,7 +830,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
         data.line = &line;
         data.lineContainer = curFrame;
         nsIFrame *kid = line->mFirstChild;
-        for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
+        for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
           kid->AddInlinePrefWidth(aRenderingContext, &data);
         }
@@ -961,7 +961,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
   AutoNoisyIndenter indent(gNoisy);
   PRTime start = LL_ZERO; // Initialize these variablies to silence the compiler.
-  PRInt32 ctc = 0;        // We only use these if they are set (gLameReflowMetrics).
+  int32_t ctc = 0;        // We only use these if they are set (gLameReflowMetrics).
   if (gLameReflowMetrics) {
     start = PR_Now();
     ctc = nsLineBox::GetCtorCount();
@@ -1260,8 +1260,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (gLameReflowMetrics) {
     PRTime end = PR_Now();
 
-    PRInt32 ectc = nsLineBox::GetCtorCount();
-    PRInt32 numLines = mLines.size();
+    int32_t ectc = nsLineBox::GetCtorCount();
+    int32_t numLines = mLines.size();
     if (!numLines) numLines = 1;
     PRTime delta, perLineDelta, lines;
     LL_I2L(lines, numLines);
@@ -1527,7 +1527,7 @@ nsBlockFrame::UpdateOverflow()
        ++line) {
     nsOverflowAreas lineAreas;
 
-    PRInt32 n = line->GetChildCount();
+    int32_t n = line->GetChildCount();
     for (nsIFrame* lineFrame = line->mFirstChild;
          n > 0; lineFrame = lineFrame->GetNextSibling(), --n) {
       ConsiderChildOverflow(lineAreas, lineFrame);
@@ -1576,9 +1576,9 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
  * resizing optimizations
  */
 static inline bool
-IsAlignedLeft(PRUint8 aAlignment,
-              PRUint8 aDirection,
-              PRUint8 aUnicodeBidi,
+IsAlignedLeft(uint8_t aAlignment,
+              uint8_t aDirection,
+              uint8_t aUnicodeBidi,
               nsIFrame* aFrame)
 {
   return (aFrame->IsSVGText() ||
@@ -1802,7 +1802,7 @@ nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame,
 }
 
 static void DumpLine(const nsBlockReflowState& aState, nsLineBox* aLine,
-                     nscoord aDeltaY, PRInt32 aDeltaIndent) {
+                     nscoord aDeltaY, int32_t aDeltaIndent) {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsRect ovis(aLine->GetVisualOverflowArea());
@@ -1869,7 +1869,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
   bool lastLineMovedUp = false;
   // We save up information about BR-clearance here
-  PRUint8 inlineFloatBreakType = aState.mFloatBreakType;
+  uint8_t inlineFloatBreakType = aState.mFloatBreakType;
 
   line_iterator line = begin_lines(), line_end = end_lines();
 
@@ -2431,7 +2431,7 @@ nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine)
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
     // Mark all our child frames dirty so we make sure to reflow them
     // later.
-    PRInt32 n = aLine->GetChildCount();
+    int32_t n = aLine->GetChildCount();
     for (nsIFrame* f = aLine->mFirstChild; n > 0;
          f = f->GetNextSibling(), --n) {
       f->AddStateBits(NS_FRAME_IS_DIRTY);
@@ -2480,7 +2480,7 @@ static void
 InvalidateThebesLayersInLineBox(nsIFrame* aBlock, nsLineBox* aLine)
 {
   if (aBlock->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
-    PRInt32 childCount = aLine->GetChildCount();
+    int32_t childCount = aLine->GetChildCount();
     for (nsIFrame* f = aLine->mFirstChild; childCount;
          --childCount, f = f->GetNextSibling()) {
       FrameLayerBuilder::InvalidateThebesLayersInSubtree(f);
@@ -2762,7 +2762,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     // Note: we need to re-position views even if aDY is 0, because
     // one of our parent frames may have moved and so the view's position
     // relative to its parent may have changed
-    PRInt32 n = aLine->GetChildCount();
+    int32_t n = aLine->GetChildCount();
     while (--n >= 0) {
       if (aDY) {
         nsPoint p = kid->GetPosition();
@@ -2777,9 +2777,9 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 }
 
 NS_IMETHODIMP 
-nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType)
+                               int32_t         aModType)
 {
   nsresult rv = nsBlockFrameSuper::AttributeChanged(aNameSpaceID,
                                                     aAttribute, aModType);
@@ -2968,7 +2968,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   const nsStyleDisplay* display = frame->GetStyleDisplay();
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState);
 
-  PRUint8 breakType = display->mBreakType;
+  uint8_t breakType = display->mBreakType;
   if (NS_STYLE_CLEAR_NONE != aState.mFloatBreakType) {
     breakType = nsLayoutUtils::CombineBreakType(breakType,
                                                 aState.mFloatBreakType);
@@ -3460,7 +3460,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
     do {
       bool allowPullUp = true;
       nsIContent* forceBreakInContent = nullptr;
-      PRInt32 forceBreakOffset = -1;
+      int32_t forceBreakOffset = -1;
       gfxBreakPriority forceBreakPriority = eNoBreak;
       do {
         nsFloatManager::SavedState floatManagerState;
@@ -3582,7 +3582,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // the resolved paragraph level of the first frame on the line, not the block
   // frame, because the block frame could be split by hard line breaks into
   // multiple paragraphs with different base direction
-  PRUint8 direction;
+  uint8_t direction;
   if (GetStyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     FramePropertyTable *propTable = aState.mPresContext->PropertyTable();
     direction =  NS_PTR_TO_INT32(propTable->Get(aLine->mFirstChild,
@@ -3613,7 +3613,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
   LineReflowStatus lineReflowStatus = LINE_REFLOW_OK;
-  PRInt32 i;
+  int32_t i;
   nsIFrame* frame = aLine->mFirstChild;
 
   if (aFloatAvailableSpace.mHasFloats) {
@@ -3662,7 +3662,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       }
 
       while (LINE_REFLOW_OK == lineReflowStatus) {
-        PRInt32 oldCount = aLine->GetChildCount();
+        int32_t oldCount = aLine->GetChildCount();
         rv = ReflowInlineFrame(aState, aLineLayout, aLine, frame,
                                &lineReflowStatus);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -3693,7 +3693,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
   if (needsBackup) {
     // We need to try backing up to before a text run
-    PRInt32 offset;
+    int32_t offset;
     gfxBreakPriority breakPriority;
     nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset, &breakPriority);
     // XXX It's possible, in fact not unusual, for the break opportunity to already
@@ -3873,7 +3873,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     *aLineReflowStatus = LINE_REFLOW_STOP;
 
     // XXX what should aLine's break-type be set to in all these cases?
-    PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
+    uint8_t breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
     NS_ASSERTION((NS_STYLE_CLEAR_NONE != breakType) || 
                  (NS_STYLE_CLEAR_NONE != aState.mFloatBreakType), "bad break type");
     NS_ASSERTION(NS_STYLE_CLEAR_PAGE != breakType, "no page breaks yet");
@@ -4065,7 +4065,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 {
   NS_ABORT_IF_FALSE(aLine->IsInline(), "illegal SplitLine on block line");
 
-  PRInt32 pushCount = aLine->GetChildCount() - aLineLayout.GetCurrentSpanCount();
+  int32_t pushCount = aLine->GetChildCount() - aLineLayout.GetCurrentSpanCount();
   NS_ABORT_IF_FALSE(pushCount >= 0, "bad push count"); 
 
 #ifdef DEBUG
@@ -4092,7 +4092,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 #ifdef DEBUG
     {
       nsIFrame *f = aFrame;
-      PRInt32 count = pushCount;
+      int32_t count = pushCount;
       while (f && count > 0) {
         f = f->GetNextSibling();
         --count;
@@ -4883,7 +4883,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
   FrameLines* overflowLines;
   nsLineList* lineList = &mLines;
   nsLineList::iterator prevSibLine = lineList->end();
-  PRInt32 prevSiblingIndex = -1;
+  int32_t prevSiblingIndex = -1;
   if (aPrevSibling) {
     // XXX_perf This is technically O(N^2) in some cases, but by using
     // RFind instead of Find, we make it O(N) in the most common case,
@@ -4922,7 +4922,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
   if (aPrevSibling) {
     // Split line containing aPrevSibling in two if the insertion
     // point is somewhere in the middle of the line.
-    PRInt32 rem = prevSibLine->GetChildCount() - prevSiblingIndex - 1;
+    int32_t rem = prevSibLine->GetChildCount() - prevSiblingIndex - 1;
     if (rem) {
       // Split the line in two where the frame(s) are being inserted.
       nsLineBox* line = NewLineBox(prevSibLine, aPrevSibling->GetNextSibling(), rem);
@@ -5397,7 +5397,7 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame,
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
 nsresult
-nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
+nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
@@ -5671,7 +5671,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
               &overflowLines);
   while (line != line_end) {
     nsIFrame* frame = line->mFirstChild;
-    PRInt32 n = line->GetChildCount();
+    int32_t n = line->GetChildCount();
     while (--n >= 0) {
       if (frame == aChild) {
         if (frame == line->mFirstChild) {
@@ -5939,7 +5939,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   return NS_OK;
 }
 
-PRUint8
+uint8_t
 nsBlockFrame::FindTrailingClear()
 {
   // find the break type of the last line
@@ -6166,7 +6166,7 @@ nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 }
 
 #ifdef DEBUG
-static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, bool aDrawn) {
+static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
   if (nsBlockFrame::gNoisyDamageRepair) {
     nsFrame::IndentBy(stdout, aDepth+1);
     nsRect lineArea = aLine->GetVisualOverflowArea();
@@ -6184,7 +6184,7 @@ static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, bool aDrawn) {
 static nsresult
 DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
             const nsRect& aDirtyRect, nsBlockFrame::line_iterator& aLine,
-            PRInt32 aDepth, PRInt32& aDrawnLines, const nsDisplayListSet& aLists,
+            int32_t aDepth, int32_t& aDrawnLines, const nsDisplayListSet& aLists,
             nsBlockFrame* aFrame, TextOverflow* aTextOverflow) {
   // If the line's combined area (which includes child frames that
   // stick outside of the line's bounding box or our bounding box)
@@ -6217,7 +6217,7 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   nsDisplayListSet childLists(collection,
     lineInline ? collection.Content() : collection.BlockBorderBackgrounds());
   nsIFrame* kid = aLine->mFirstChild;
-  PRInt32 n = aLine->GetChildCount();
+  int32_t n = aLine->GetChildCount();
   while (--n >= 0) {
     rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, childLists,
                                           lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0);
@@ -6238,8 +6238,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
-  PRInt32 drawnLines; // Will only be used if set (gLamePaintMetrics).
-  PRInt32 depth = 0;
+  int32_t drawnLines; // Will only be used if set (gLamePaintMetrics).
+  int32_t depth = 0;
 #ifdef DEBUG
   if (gNoisyDamageRepair) {
       depth = GetDepth();
@@ -6309,7 +6309,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   } else {
     bool nonDecreasingYs = true;
-    PRInt32 lineCount = 0;
+    int32_t lineCount = 0;
     nscoord lastY = PR_INT32_MIN;
     nscoord lastYMost = PR_INT32_MIN;
     for (line_iterator line = begin_lines();
@@ -6355,7 +6355,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (gLamePaintMetrics) {
     PRTime end = PR_Now();
 
-    PRInt32 numLines = mLines.size();
+    int32_t numLines = mLines.size();
     if (!numLines) numLines = 1;
     PRTime lines, deltaPerLine, delta;
     LL_I2L(lines, numLines);
@@ -6718,7 +6718,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 
   // Setup initial list ordinal value
   // XXX Map html's start property to counter-reset style
-  PRInt32 ordinal = 1;
+  int32_t ordinal = 1;
 
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
@@ -6737,8 +6737,8 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 bool
 nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
-                                   PRInt32* aOrdinal,
-                                   PRInt32 aDepth)
+                                   int32_t* aOrdinal,
+                                   int32_t aDepth)
 {
   // Examine each line in the block
   bool foundValidLine;
@@ -6752,7 +6752,7 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
   do {
     nsLineList::iterator line = bifLineIter.GetLine();
     nsIFrame* kid = line->mFirstChild;
-    PRInt32 n = line->GetChildCount();
+    int32_t n = line->GetChildCount();
     while (--n >= 0) {
       bool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
       if (kidRenumberedABullet) {
@@ -6769,8 +6769,8 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
 bool
 nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
                                nsIFrame* aKid,
-                               PRInt32* aOrdinal,
-                               PRInt32 aDepth)
+                               int32_t* aOrdinal,
+                               int32_t aDepth)
 {
   NS_PRECONDITION(aPresContext && aKid && aOrdinal, "null params are immoral!");
 
@@ -6991,7 +6991,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   
   nsAutoTArray<nsIFrame*, 8> storedFloats;
   bool equal = true;
-  PRUint32 i = 0;
+  uint32_t i = 0;
   for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
     if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
       continue;
@@ -7180,7 +7180,7 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
 
   // Add up the counts on each line. Also validate that IsFirstLine is
   // set properly.
-  PRInt32 count = 0;
+  int32_t count = 0;
   line_iterator line, line_end;
   for (line = begin_lines(), line_end = end_lines();
        line != line_end;
@@ -7198,7 +7198,7 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
   }
 
   // Then count the frames
-  PRInt32 frameCount = 0;
+  int32_t frameCount = 0;
   nsIFrame* frame = mLines.front()->mFirstChild;
   while (frame) {
     frameCount++;
@@ -7270,10 +7270,10 @@ nsBlockFrame::VerifyOverflowSituation()
   }
 }
 
-PRInt32
+int32_t
 nsBlockFrame::GetDepth() const
 {
-  PRInt32 depth = 0;
+  int32_t depth = 0;
   nsIFrame* parent = mParent;
   while (parent) {
     parent = parent->GetParent();

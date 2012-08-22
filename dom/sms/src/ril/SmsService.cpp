@@ -36,7 +36,7 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+SmsService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
 {
   if (!mRIL) {
     *aResult = 0;
@@ -50,8 +50,8 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber,
                  const nsAString& aMessage,
-                 PRInt32 aRequestId,
-                 PRUint64 aProcessId)
+                 int32_t aRequestId,
+                 uint64_t aProcessId)
 {
   if (!mRIL) {
     return NS_OK;
@@ -62,7 +62,7 @@ SmsService::Send(const nsAString& aNumber,
 }
 
 NS_IMETHODIMP
-SmsService::CreateSmsMessage(PRInt32 aId,
+SmsService::CreateSmsMessage(int32_t aId,
                              const nsAString& aDelivery,
                              const nsAString& aSender,
                              const nsAString& aReceiver,

@@ -53,7 +53,7 @@ public:
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
-  virtual nsresult Snapshot(PRUint32 aDuration, nsIDOMFile** aFile);
+  virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
@@ -83,7 +83,7 @@ public:
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
-  virtual nsresult Snapshot(PRUint32 aDuration, nsIDOMFile** aFile);
+  virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

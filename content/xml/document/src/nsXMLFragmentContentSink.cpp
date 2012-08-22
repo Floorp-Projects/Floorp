@@ -53,7 +53,7 @@ public:
                                          const PRUnichar *aData);
   NS_IMETHOD HandleXMLDeclaration(const PRUnichar *aVersion,
                                   const PRUnichar *aEncoding,
-                                  PRInt32 aStandalone);
+                                  int32_t aStandalone);
   NS_IMETHOD ReportError(const PRUnichar* aErrorText, 
                          const PRUnichar* aSourceText,
                          nsIScriptError *aError,
@@ -77,11 +77,11 @@ public:
   NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution);
 
 protected:
-  virtual bool SetDocElement(PRInt32 aNameSpaceID, 
+  virtual bool SetDocElement(int32_t aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
-  virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+  virtual nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+                                 nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
   virtual nsresult CloseElement(nsIContent* aContent);
@@ -196,7 +196,7 @@ nsXMLFragmentContentSink::GetTarget()
 ////////////////////////////////////////////////////////////////////////
 
 bool
-nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
+nsXMLFragmentContentSink::SetDocElement(int32_t aNameSpaceID,
                                         nsIAtom* aTagName,
                                         nsIContent *aContent)
 {
@@ -205,8 +205,8 @@ nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
 }
 
 nsresult
-nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                        nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+                                        nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                         nsIContent** aResult, bool* aAppendContent,
                                         FromParser /*aFromParser*/)
 {
@@ -284,7 +284,7 @@ nsXMLFragmentContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 NS_IMETHODIMP
 nsXMLFragmentContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
                                                const PRUnichar *aEncoding,
-                                               PRInt32 aStandalone)
+                                               int32_t aStandalone)
 {
   NS_NOTREACHED("fragments shouldn't have XML declarations");
   return NS_OK;

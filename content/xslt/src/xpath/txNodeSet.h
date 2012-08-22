@@ -108,7 +108,7 @@ public:
      * sweep() clears all members of the nodeset that haven't been
      * marked before and clear the mMarks array.
      */
-    nsresult mark(PRInt32 aIndex);
+    nsresult mark(int32_t aIndex);
     nsresult sweep();
 
     /**
@@ -123,7 +123,7 @@ public:
      * @param  aStart index to start searching at
      * @return index of specified node or -1 if the node does not exist
      */
-    PRInt32 indexOf(const txXPathNode& aNode, PRUint32 aStart = 0) const;
+    int32_t indexOf(const txXPathNode& aNode, uint32_t aStart = 0) const;
 
     /**
      * Returns true if the specified Node is contained in the set.
@@ -140,7 +140,7 @@ public:
      * @param  aIndex the node of the Node to return
      * @return Node at specified node
      */
-    const txXPathNode& get(PRInt32 aIndex) const;
+    const txXPathNode& get(int32_t aIndex) const;
 
     /**
      * Returns true if there are no Nodes in the NodeSet.
@@ -155,7 +155,7 @@ public:
      * Returns the number of elements in the NodeSet
      * @return the number of elements in the NodeSet
      */
-    PRInt32 size() const
+    int32_t size() const
     {
         return mStart ? mEnd - mStart : 0;
     }
@@ -168,7 +168,7 @@ private:
      *
      * Changes mStart and mEnd as well as mBufferStart and mBufferEnd.
      */
-    bool ensureGrowSize(PRInt32 aSize);
+    bool ensureGrowSize(int32_t aSize);
 
     /**
      * Finds position in the buffer where a node should be inserted
@@ -209,7 +209,7 @@ private:
                  destroyOp aDestroy);
 
     txXPathNode *mStart, *mEnd, *mStartBuffer, *mEndBuffer;
-    PRInt32 mDirection;
+    int32_t mDirection;
     // used for mark() and sweep() in predicates
     bool* mMarks;
 };

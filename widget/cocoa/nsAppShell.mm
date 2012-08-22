@@ -43,7 +43,7 @@ extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
 // defined in nsCocoaWindow.mm
-extern PRInt32             gXULModalLevel;
+extern int32_t             gXULModalLevel;
 
 static bool gAppShellMethodsSwizzled = false;
 // List of current Cocoa app-modal windows (nested if more than one).
@@ -437,7 +437,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   // make sure not to finish the balancing until all the recursion has been
   // unwound.
   if (self->mTerminated) {
-    PRInt32 releaseCount = 0;
+    int32_t releaseCount = 0;
     if (self->mNativeEventScheduledDepth > self->mNativeEventCallbackDepth) {
       releaseCount = PR_ATOMIC_SET(&self->mNativeEventScheduledDepth,
                                    self->mNativeEventCallbackDepth);
@@ -806,7 +806,7 @@ nsAppShell::Exit(void)
   // to ScheduleNativeEventCallback() and ProcessGeckoEvents() isn't on the
   // stack, we need to take care of the problem here.
   if (!mNativeEventCallbackDepth && mNativeEventScheduledDepth) {
-    PRInt32 releaseCount = PR_ATOMIC_SET(&mNativeEventScheduledDepth, 0);
+    int32_t releaseCount = PR_ATOMIC_SET(&mNativeEventScheduledDepth, 0);
     while (releaseCount-- > 0)
       NS_RELEASE_THIS();
   }
@@ -828,7 +828,7 @@ nsAppShell::Exit(void)
 // public
 NS_IMETHODIMP
 nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
-                               PRUint32 aRecursionDepth)
+                               uint32_t aRecursionDepth)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -854,7 +854,7 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 // public
 NS_IMETHODIMP
 nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                  PRUint32 aRecursionDepth)
+                                  uint32_t aRecursionDepth)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

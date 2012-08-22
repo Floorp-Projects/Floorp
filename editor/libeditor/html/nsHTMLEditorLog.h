@@ -24,8 +24,8 @@ private:
 
   nsCOMPtr<nsIOutputStream>     mFileStream;
   nsEditorTxnLog       *mEditorTxnLog;
-  PRInt32               mLocked;
-  PRInt32               mDepth;
+  int32_t               mLocked;
+  int32_t               mDepth;
 
 public:
 
@@ -45,8 +45,8 @@ public:
                              nsIEditor::EStripWrappers aStripWrappers);
   NS_IMETHOD InsertText(const nsAString& aStringToInsert);
   NS_IMETHOD InsertLineBreak();
-  NS_IMETHOD Undo(PRUint32 aCount);
-  NS_IMETHOD Redo(PRUint32 aCount);
+  NS_IMETHOD Undo(uint32_t aCount);
+  NS_IMETHOD Redo(uint32_t aCount);
   NS_IMETHOD BeginTransaction();
   NS_IMETHOD EndTransaction();
   NS_IMETHOD SelectAll();
@@ -55,11 +55,11 @@ public:
 
   NS_IMETHOD Cut();
   NS_IMETHOD Copy();
-  NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
+  NS_IMETHOD Paste(int32_t aSelectionType);
+  NS_IMETHOD PasteAsQuotation(int32_t aSelectionType);
+  NS_IMETHOD PasteAsPlaintextQuotation(int32_t aSelectionType);
   NS_IMETHOD PasteAsCitedQuotation(const nsAString& aCitation,
-                                   PRInt32 aSelectionType);
+                                   int32_t aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText, nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                         bool aAddCites,
@@ -79,14 +79,14 @@ public:
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   
   /* Table Editing */
-  NS_IMETHOD InsertTableCell(PRInt32 aNumber, bool aAfter);
-  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, bool aAfter);
-  NS_IMETHOD InsertTableRow(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableCell(int32_t aNumber, bool aAfter);
+  NS_IMETHOD InsertTableColumn(int32_t aNumber, bool aAfter);
+  NS_IMETHOD InsertTableRow(int32_t aNumber, bool aAfter);
   NS_IMETHOD DeleteTable();
-  NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableCell(int32_t aNumber);
   NS_IMETHOD DeleteTableCellContents();
-  NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
-  NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableColumn(int32_t aNumber);
+  NS_IMETHOD DeleteTableRow(int32_t aNumber);
   NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents);
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
@@ -97,16 +97,16 @@ public:
 
   /* nsHTMLEditorLog public methods. */
   nsresult Write(const char *aBuffer);
-  nsresult WriteInt(PRInt32 aInt);
+  nsresult WriteInt(int32_t aInt);
   nsresult Flush();
   nsresult PrintUnicode(const nsAString &aString);
   nsresult PrintSelection();
-  nsresult PrintNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
-  nsresult PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth);
-  nsresult PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth);
-  nsresult PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
-  nsresult PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth=0);
-  nsresult GetNodeTreeOffsets(nsIDOMNode *aNode, PRInt32 **aResult, PRInt32 *aLength);
+  nsresult PrintNode(nsIDOMNode *aNode, int32_t aDepth=0);
+  nsresult PrintElementNode(nsIDOMNode *aNode, int32_t aDepth);
+  nsresult PrintTextNode(nsIDOMNode *aNode, int32_t aDepth);
+  nsresult PrintAttributeNode(nsIDOMNode *aNode, int32_t aDepth=0);
+  nsresult PrintNodeChildren(nsIDOMNode *aNode, int32_t aDepth=0);
+  nsresult GetNodeTreeOffsets(nsIDOMNode *aNode, int32_t **aResult, int32_t *aLength);
   nsresult Lock();
   nsresult Unlock();
 };

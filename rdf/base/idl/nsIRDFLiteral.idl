@@ -9,7 +9,7 @@
 #include "nscore.h" // for PRUnichar
 %}
 
-[ptr] native const_octet_ptr(const PRUint8);
+[ptr] native const_octet_ptr(const uint8_t);
 
 /**
  * A literal node in the graph, whose value is a string.

@@ -22,7 +22,7 @@
  * Content-Length of a channel. Used instead of the nsIChannel.contentLength
  * property.
  * Not available before onStartRequest has been called.
- * Type: PRUint64
+ * Type: uint64_t
  */
 #define NS_CHANNEL_PROP_CONTENT_LENGTH_STR "content-length"
 

@@ -240,7 +240,7 @@ public:
    * for the given display item key. If there isn't one, we return null,
    * otherwise we return the layer.
    */
-  static Layer* GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  static Layer* GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   /**
    * This callback must be provided to EndTransaction. The callback data
@@ -294,9 +294,9 @@ public:
    * This could be a dedicated layer for the display item, or a ThebesLayer
    * that renders many display items.
    */
-  Layer* GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  Layer* GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
-  static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
   /**
    * Try to determine whether the ThebesLayer aLayer paints an opaque
    * single color everywhere it's visible in aRect.
@@ -332,7 +332,7 @@ public:
    * Returns false if it was rendered into a temporary layer manager and then
    * into a retained layer.
    */
-  static bool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  static bool HasRetainedLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   /**
    * Save transform that was in aLayer when we last painted. It must be an integer
@@ -394,20 +394,20 @@ public:
     // or clearing of other clips must be done by the caller.
     // See aBegin/aEnd note on ApplyRoundedRectsTo.
     void ApplyTo(gfxContext* aContext, nsPresContext* aPresContext,
-                 PRUint32 aBegin = 0, PRUint32 aEnd = PR_UINT32_MAX);
+                 uint32_t aBegin = 0, uint32_t aEnd = PR_UINT32_MAX);
 
-    void ApplyRectTo(gfxContext* aContext, PRInt32 A2D) const;
+    void ApplyRectTo(gfxContext* aContext, int32_t A2D) const;
     // Applies the rounded rects in this Clip to aContext
     // Will only apply rounded rects from aBegin (inclusive) to aEnd
     // (exclusive) or the number of rounded rects, whichever is smaller.
-    void ApplyRoundedRectsTo(gfxContext* aContext, PRInt32 A2DPRInt32,
-                             PRUint32 aBegin, PRUint32 aEnd) const;
+    void ApplyRoundedRectsTo(gfxContext* aContext, int32_t A2DPRInt32,
+                             uint32_t aBegin, uint32_t aEnd) const;
 
     // Draw (fill) the rounded rects in this clip to aContext
-    void DrawRoundedRectsTo(gfxContext* aContext, PRInt32 A2D,
-                            PRUint32 aBegin, PRUint32 aEnd) const;
+    void DrawRoundedRectsTo(gfxContext* aContext, int32_t A2D,
+                            uint32_t aBegin, uint32_t aEnd) const;
     // 'Draw' (create as a path, does not stroke or fill) aRoundRect to aContext
-    void AddRoundedRectPathTo(gfxContext* aContext, PRInt32 A2D,
+    void AddRoundedRectPathTo(gfxContext* aContext, int32_t A2D,
                               const RoundedRect &aRoundRect) const;
 
     // Return a rectangle contained in the intersection of aRect with this
@@ -445,12 +445,12 @@ protected:
    */
   class DisplayItemData {
   public:
-    DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState, PRUint32 aGeneration);
+    DisplayItemData(Layer* aLayer, uint32_t aKey, LayerState aLayerState, uint32_t aGeneration);
     ~DisplayItemData();
 
     nsRefPtr<Layer> mLayer;
-    PRUint32        mDisplayItemKey;
-    PRUint32        mContainerLayerGeneration;
+    uint32_t        mDisplayItemKey;
+    uint32_t        mContainerLayerGeneration;
     LayerState      mLayerState;
   };
 
@@ -481,7 +481,7 @@ protected:
 
     nsAutoTArray<DisplayItemData, 1> mData;
     nsRefPtr<RefCountedRegion> mInvalidRegion;
-    PRUint32 mContainerLayerGeneration;
+    uint32_t mContainerLayerGeneration;
     bool mIsSharingContainerLayer;
 
     enum { ALLOW_MEMMOVE = false };
@@ -525,14 +525,14 @@ protected:
    * mItem always has an underlying frame.
    */
   struct ClippedDisplayItem {
-    ClippedDisplayItem(nsDisplayItem* aItem, const Clip& aClip, PRUint32 aGeneration)
+    ClippedDisplayItem(nsDisplayItem* aItem, const Clip& aClip, uint32_t aGeneration)
       : mItem(aItem), mClip(aClip), mContainerLayerGeneration(aGeneration)
     {
     }
 
     nsDisplayItem* mItem;
     Clip mClip;
-    PRUint32 mContainerLayerGeneration;
+    uint32_t mContainerLayerGeneration;
     bool mInactiveLayer;
   };
 
@@ -557,13 +557,13 @@ public:
     // The translation set on this ThebesLayer before we started updating the
     // layer tree.
     nsIntPoint mLastPaintOffset;
-    PRUint32 mContainerLayerGeneration;
+    uint32_t mContainerLayerGeneration;
     bool mHasExplicitLastPaintOffset;
     /**
       * The first mCommonClipCount rounded rectangle clips are identical for
       * all items in the layer. Computed in ThebesLayerData.
       */
-    PRUint32 mCommonClipCount;
+    uint32_t mCommonClipCount;
 
     enum { ALLOW_MEMMOVE = true };
   };
@@ -620,7 +620,7 @@ protected:
   /**
    * Saved generation counter so we can detect DOM changes.
    */
-  PRUint32                            mInitialDOMGeneration;
+  uint32_t                            mInitialDOMGeneration;
   /**
    * Set to true if we have detected and reported DOM modification during
    * the current paint.
@@ -632,8 +632,8 @@ protected:
    */
   bool                                mInvalidateAllLayers;
 
-  PRUint32                            mContainerLayerGeneration;
-  PRUint32                            mMaxContainerLayerGeneration;
+  uint32_t                            mContainerLayerGeneration;
+  uint32_t                            mMaxContainerLayerGeneration;
 };
 
 }

@@ -30,7 +30,7 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 // argument structure to pass to the background thread
 typedef struct _ARGBUFFER
 {
-  PRUint32  bufLen;
+  uint32_t  bufLen;
   char      buffer[1];
 } ARGBUFFER;
 
@@ -58,7 +58,7 @@ static ULONG  (*APIENTRY _mciSendCommand)(USHORT, USHORT, ULONG, PVOID, USHORT);
 static void   initSounds(void);
 static bool initDlls(void);
 static void   playSound(void *aArgs);
-static FOURCC determineFourCC(PRUint32 aDataLen, const char *aData);
+static FOURCC determineFourCC(uint32_t aDataLen, const char *aData);
 
 /*****************************************************************************/
 /*  nsSound implementation                                                   */
@@ -116,8 +116,8 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 dataLen,
-                                        const PRUint8 *data)
+                                        uint32_t dataLen,
+                                        const uint8_t *data)
 {
   if (NS_FAILED(aStatus)) {
 #ifdef DEBUG
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     DBG_MSG("nsISound::playSystemSound was called with \"_moz_\" events, "
                "they are obsolete, use nsISound::playEventSound instead");
 
-    PRUint32 eventId;
+    uint32_t eventId;
     if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP)) {
       eventId = EVENT_NEW_MAIL_RECEIVED;
     } else if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG)) {
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 // If the attempt fails or a sound isn't set, fall back to a
 // beep for selected events.
 
-NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 {
   if (!sDllError &&
       aEventId < EVENT_CNT &&
@@ -485,7 +485,7 @@ static void playSound(void * aArgs)
 // Returns the FourCC handle for the format, or 0 when failing to
 // find format and codec.
 
-static FOURCC determineFourCC(PRUint32 aDataLen, const char *aData)
+static FOURCC determineFourCC(uint32_t aDataLen, const char *aData)
 {
   FOURCC fcc = 0;
 

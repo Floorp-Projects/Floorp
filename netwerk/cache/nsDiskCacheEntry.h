@@ -16,19 +16,19 @@
  *  nsDiskCacheEntry
  *****************************************************************************/
 struct nsDiskCacheEntry {
-    PRUint32        mHeaderVersion; // useful for stand-alone metadata files
-    PRUint32        mMetaLocation;  // for verification
-    PRInt32         mFetchCount;
-    PRUint32        mLastFetched;
-    PRUint32        mLastModified;
-    PRUint32        mExpirationTime;
-    PRUint32        mDataSize;
-    PRUint32        mKeySize;       // includes terminating null byte
-    PRUint32        mMetaDataSize;  // includes terminating null byte
+    uint32_t        mHeaderVersion; // useful for stand-alone metadata files
+    uint32_t        mMetaLocation;  // for verification
+    int32_t         mFetchCount;
+    uint32_t        mLastFetched;
+    uint32_t        mLastModified;
+    uint32_t        mExpirationTime;
+    uint32_t        mDataSize;
+    uint32_t        mKeySize;       // includes terminating null byte
+    uint32_t        mMetaDataSize;  // includes terminating null byte
     // followed by key data (mKeySize bytes)
     // followed by meta data (mMetaDataSize bytes)
 
-    PRUint32        Size()    { return sizeof(nsDiskCacheEntry) + 
+    uint32_t        Size()    { return sizeof(nsDiskCacheEntry) + 
                                     mKeySize + mMetaDataSize;
                               }
 

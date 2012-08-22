@@ -47,10 +47,10 @@ ProgressMeterAccessible<Max>::NativeRole()
 }
 
 template<int Max>
-PRUint64
+uint64_t
 ProgressMeterAccessible<Max>::NativeState()
 {
-  PRUint64 state = LeafAccessible::NativeState();
+  uint64_t state = LeafAccessible::NativeState();
 
   // An undetermined progressbar (i.e. without a value) has a mixed state.
   nsAutoString attrValue;
@@ -185,14 +185,14 @@ RadioButtonAccessible::
 {
 }
 
-PRUint8
+uint8_t
 RadioButtonAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-RadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+RadioButtonAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("select"); 
@@ -202,7 +202,7 @@ RadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-RadioButtonAccessible::DoAction(PRUint8 aIndex)
+RadioButtonAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;

@@ -85,7 +85,7 @@ public:
    */
   virtual void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) = 0;
 
-  virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const = 0;
+  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const = 0;
   virtual void RadioRequiredChanged(const nsAString& aName,
                                     nsIFormControl* aRadio) = 0;
   virtual bool GetValueMissingState(const nsAString& aName) const = 0;

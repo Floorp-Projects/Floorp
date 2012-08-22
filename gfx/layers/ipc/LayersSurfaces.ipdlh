@@ -57,7 +57,7 @@ struct SurfaceDescriptorGralloc {
 };
 
 struct SharedImageID {
-  PRUint64 id;
+  uint64_t id;
 };
 
 union SurfaceDescriptor {

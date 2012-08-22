@@ -18,9 +18,9 @@
 
 class nsMBCSGroupProber: public nsCharSetProber {
 public:
-  nsMBCSGroupProber(PRUint32 aLanguageFilter);
+  nsMBCSGroupProber(uint32_t aLanguageFilter);
   virtual ~nsMBCSGroupProber();
-  nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
+  nsProbingState HandleData(const char* aBuf, uint32_t aLen);
   const char* GetCharSetName();
   nsProbingState GetState(void) {return mState;}
   void      Reset(void);
@@ -30,16 +30,16 @@ public:
   void  DumpStatus();
 #endif
 #ifdef DEBUG_jgmyers
-  void GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], PRUint32 &offset);
+  void GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], uint32_t &offset);
 #endif
 
 protected:
   nsProbingState mState;
   nsCharSetProber* mProbers[NUM_OF_PROBERS];
   bool            mIsActive[NUM_OF_PROBERS];
-  PRInt32 mBestGuess;
-  PRUint32 mActiveNum;
-  PRUint32 mKeepNext;
+  int32_t mBestGuess;
+  uint32_t mActiveNum;
+  uint32_t mKeepNext;
 };
 
 #endif /* nsMBCSGroupProber_h__ */

@@ -254,7 +254,7 @@ NS_IMETHODIMP nsPK11Token::Reset()
 }
 
 /* readonly attribute long minimumPasswordLength; */
-NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(PRInt32 *aMinimumPasswordLength)
+NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(int32_t *aMinimumPasswordLength)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, bool *_retva
     return NS_ERROR_NOT_AVAILABLE;
 
   SECStatus srv;
-  PRInt32 prerr;
+  int32_t prerr;
   NS_ConvertUTF16toUTF8 aUtf8Password(password);
   srv = PK11_CheckUserPassword(mSlot, 
                   const_cast<char *>(aUtf8Password.get()));
@@ -321,7 +321,7 @@ done:
 
 /* long getAskPasswordTimes(); */
 NS_IMETHODIMP 
-nsPK11Token::GetAskPasswordTimes(PRInt32 *rvAskTimes)
+nsPK11Token::GetAskPasswordTimes(int32_t *rvAskTimes)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -335,7 +335,7 @@ nsPK11Token::GetAskPasswordTimes(PRInt32 *rvAskTimes)
 
 /* long getAskPasswordTimeout(); */
 NS_IMETHODIMP 
-nsPK11Token::GetAskPasswordTimeout(PRInt32 *rvAskTimeout)
+nsPK11Token::GetAskPasswordTimeout(int32_t *rvAskTimeout)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -351,8 +351,8 @@ nsPK11Token::GetAskPasswordTimeout(PRInt32 *rvAskTimeout)
  *                             in unsigned long timeout);
  */
 NS_IMETHODIMP 
-nsPK11Token::SetAskPasswordDefaults(const PRInt32 askTimes,
-                                    const PRInt32 askTimeout)
+nsPK11Token::SetAskPasswordDefaults(const int32_t askTimes,
+                                    const int32_t askTimeout)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())

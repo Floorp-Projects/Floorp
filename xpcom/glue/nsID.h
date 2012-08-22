@@ -24,10 +24,10 @@ struct nsID {
    */
 
   //@{
-  PRUint32 m0;
-  PRUint16 m1;
-  PRUint16 m2;
-  PRUint8 m3[8];
+  uint32_t m0;
+  uint16_t m1;
+  uint16_t m2;
+  uint8_t m3[8];
   //@}
 
   /**
@@ -43,10 +43,10 @@ struct nsID {
   inline bool Equals(const nsID& other) const {
     // Unfortunately memcmp isn't faster than this.
     return
-      ((((PRUint32*) &m0)[0] == ((PRUint32*) &other.m0)[0]) &&
-       (((PRUint32*) &m0)[1] == ((PRUint32*) &other.m0)[1]) &&
-       (((PRUint32*) &m0)[2] == ((PRUint32*) &other.m0)[2]) &&
-       (((PRUint32*) &m0)[3] == ((PRUint32*) &other.m0)[3]));
+      ((((uint32_t*) &m0)[0] == ((uint32_t*) &other.m0)[0]) &&
+       (((uint32_t*) &m0)[1] == ((uint32_t*) &other.m0)[1]) &&
+       (((uint32_t*) &m0)[2] == ((uint32_t*) &other.m0)[2]) &&
+       (((uint32_t*) &m0)[3] == ((uint32_t*) &other.m0)[3]));
   }
 
   /**

@@ -42,8 +42,8 @@ public:
 
   NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports* context,
                              nsIInputStream *aIStream, 
-                             PRUint32 aSourceOffset,
-                             PRUint32 aLength);
+                             uint32_t aSourceOffset,
+                             uint32_t aLength);
 
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
                            nsresult aStatus);
@@ -75,12 +75,12 @@ NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsIRequest *request, 
                                    nsISupports* context,
                                    nsIInputStream *aIStream, 
-                                   PRUint32 aSourceOffset,
-                                   PRUint32 aLength)
+                                   uint32_t aSourceOffset,
+                                   uint32_t aLength)
 {
   char buf[1025];
   while (aLength > 0) {
-    PRUint32 amt;
+    uint32_t amt;
     aIStream->Read(buf, 1024, &amt);
     if (amt == 0) break;
     buf[amt] = '\0';

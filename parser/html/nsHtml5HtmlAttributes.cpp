@@ -57,11 +57,11 @@
 
 nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nullptr;
 
-nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(PRInt32 mode)
+nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(int32_t mode)
   : mode(mode),
     length(0),
-    names(jArray<nsHtml5AttributeName*,PRInt32>::newJArray(5)),
-    values(jArray<nsString*,PRInt32>::newJArray(5))
+    names(jArray<nsHtml5AttributeName*,int32_t>::newJArray(5)),
+    values(jArray<nsString*,int32_t>::newJArray(5))
 {
   MOZ_COUNT_CTOR(nsHtml5HtmlAttributes);
 }
@@ -73,10 +73,10 @@ nsHtml5HtmlAttributes::~nsHtml5HtmlAttributes()
   clear(0);
 }
 
-PRInt32 
+int32_t 
 nsHtml5HtmlAttributes::getIndex(nsHtml5AttributeName* name)
 {
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     if (names[i] == name) {
       return i;
     }
@@ -84,14 +84,14 @@ nsHtml5HtmlAttributes::getIndex(nsHtml5AttributeName* name)
   return -1;
 }
 
-PRInt32 
+int32_t 
 nsHtml5HtmlAttributes::getLength()
 {
   return length;
 }
 
 nsIAtom* 
-nsHtml5HtmlAttributes::getLocalName(PRInt32 index)
+nsHtml5HtmlAttributes::getLocalName(int32_t index)
 {
   if (index < length && index >= 0) {
     return names[index]->getLocal(mode);
@@ -101,7 +101,7 @@ nsHtml5HtmlAttributes::getLocalName(PRInt32 index)
 }
 
 nsHtml5AttributeName* 
-nsHtml5HtmlAttributes::getAttributeName(PRInt32 index)
+nsHtml5HtmlAttributes::getAttributeName(int32_t index)
 {
   if (index < length && index >= 0) {
     return names[index];
@@ -110,8 +110,8 @@ nsHtml5HtmlAttributes::getAttributeName(PRInt32 index)
   }
 }
 
-PRInt32 
-nsHtml5HtmlAttributes::getURI(PRInt32 index)
+int32_t 
+nsHtml5HtmlAttributes::getURI(int32_t index)
 {
   if (index < length && index >= 0) {
     return names[index]->getUri(mode);
@@ -121,7 +121,7 @@ nsHtml5HtmlAttributes::getURI(PRInt32 index)
 }
 
 nsIAtom* 
-nsHtml5HtmlAttributes::getPrefix(PRInt32 index)
+nsHtml5HtmlAttributes::getPrefix(int32_t index)
 {
   if (index < length && index >= 0) {
     return names[index]->getPrefix(mode);
@@ -131,7 +131,7 @@ nsHtml5HtmlAttributes::getPrefix(PRInt32 index)
 }
 
 nsString* 
-nsHtml5HtmlAttributes::getValue(PRInt32 index)
+nsHtml5HtmlAttributes::getValue(int32_t index)
 {
   if (index < length && index >= 0) {
     return values[index];
@@ -143,7 +143,7 @@ nsHtml5HtmlAttributes::getValue(PRInt32 index)
 nsString* 
 nsHtml5HtmlAttributes::getValue(nsHtml5AttributeName* name)
 {
-  PRInt32 index = getIndex(name);
+  int32_t index = getIndex(name);
   if (index == -1) {
     return nullptr;
   } else {
@@ -155,11 +155,11 @@ void
 nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value)
 {
   if (names.length == length) {
-    PRInt32 newLen = length << 1;
-    jArray<nsHtml5AttributeName*,PRInt32> newNames = jArray<nsHtml5AttributeName*,PRInt32>::newJArray(newLen);
+    int32_t newLen = length << 1;
+    jArray<nsHtml5AttributeName*,int32_t> newNames = jArray<nsHtml5AttributeName*,int32_t>::newJArray(newLen);
     nsHtml5ArrayCopy::arraycopy(names, newNames, names.length);
     names = newNames;
-    jArray<nsString*,PRInt32> newValues = jArray<nsString*,PRInt32>::newJArray(newLen);
+    jArray<nsString*,int32_t> newValues = jArray<nsString*,int32_t>::newJArray(newLen);
     nsHtml5ArrayCopy::arraycopy(values, newValues, values.length);
     values = newValues;
   }
@@ -169,9 +169,9 @@ nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value)
 }
 
 void 
-nsHtml5HtmlAttributes::clear(PRInt32 m)
+nsHtml5HtmlAttributes::clear(int32_t m)
 {
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     names[i]->release();
     names[i] = nullptr;
     nsHtml5Portability::releaseString(values[i]);
@@ -182,7 +182,7 @@ nsHtml5HtmlAttributes::clear(PRInt32 m)
 }
 
 void 
-nsHtml5HtmlAttributes::releaseValue(PRInt32 i)
+nsHtml5HtmlAttributes::releaseValue(int32_t i)
 {
   nsHtml5Portability::releaseString(values[i]);
 }
@@ -190,7 +190,7 @@ nsHtml5HtmlAttributes::releaseValue(PRInt32 i)
 void 
 nsHtml5HtmlAttributes::clearWithoutReleasingContents()
 {
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     names[i] = nullptr;
     values[i] = nullptr;
   }
@@ -200,7 +200,7 @@ nsHtml5HtmlAttributes::clearWithoutReleasingContents()
 bool 
 nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* name)
 {
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     if (name->equalsAnother(names[i])) {
       return true;
     }
@@ -225,7 +225,7 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
 {
 
   nsHtml5HtmlAttributes* clone = new nsHtml5HtmlAttributes(0);
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     clone->addAttribute(names[i]->cloneAttributeName(interner), nsHtml5Portability::newStringFromString(values[i]));
   }
   return clone;
@@ -235,14 +235,14 @@ bool
 nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* other)
 {
 
-  PRInt32 otherLength = other->getLength();
+  int32_t otherLength = other->getLength();
   if (length != otherLength) {
     return false;
   }
-  for (PRInt32 i = 0; i < length; i++) {
+  for (int32_t i = 0; i < length; i++) {
     bool found = false;
     nsIAtom* ownLocal = names[i]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
-    for (PRInt32 j = 0; j < otherLength; j++) {
+    for (int32_t j = 0; j < otherLength; j++) {
       if (ownLocal == other->names[j]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {
         found = true;
         if (!nsHtml5Portability::stringEqualsString(values[i], other->values[j])) {

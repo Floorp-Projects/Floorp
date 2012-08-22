@@ -34,25 +34,25 @@ public:
     Usage2D = 1 << 4
   };
 
-  AndroidGraphicBuffer(PRUint32 width, PRUint32 height, PRUint32 usage, gfxASurface::gfxImageFormat format);
+  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage, gfxASurface::gfxImageFormat format);
   virtual ~AndroidGraphicBuffer();
 
-  int Lock(PRUint32 usage, unsigned char **bits);
-  int Lock(PRUint32 usage, const nsIntRect& rect, unsigned char **bits);
+  int Lock(uint32_t usage, unsigned char **bits);
+  int Lock(uint32_t usage, const nsIntRect& rect, unsigned char **bits);
   int Unlock();
-  bool Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface::gfxImageFormat aFormat);
+  bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxASurface::gfxImageFormat aFormat);
 
-  PRUint32 Width() { return mWidth; }
-  PRUint32 Height() { return mHeight; }
+  uint32_t Width() { return mWidth; }
+  uint32_t Height() { return mHeight; }
 
   bool Bind();
 
   static bool IsBlacklisted();
 
 private:
-  PRUint32 mWidth;
-  PRUint32 mHeight;
-  PRUint32 mUsage;
+  uint32_t mWidth;
+  uint32_t mHeight;
+  uint32_t mUsage;
   gfxASurface::gfxImageFormat mFormat;
 
   bool EnsureInitialized();
@@ -61,8 +61,8 @@ private:
   void DestroyBuffer();
   bool EnsureBufferCreated();
 
-  PRUint32 GetAndroidUsage(PRUint32 aUsage);
-  PRUint32 GetAndroidFormat(gfxASurface::gfxImageFormat aFormat);
+  uint32_t GetAndroidUsage(uint32_t aUsage);
+  uint32_t GetAndroidFormat(gfxASurface::gfxImageFormat aFormat);
 
   void *mHandle;
   void *mEGLImage;

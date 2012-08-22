@@ -148,13 +148,13 @@ protected:
 
     virtual PCrashReporterChild*
     AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                        PRUint32* processType);
+                        uint32_t* processType);
     virtual bool
     DeallocPCrashReporter(PCrashReporterChild* actor);
     virtual bool
     AnswerPCrashReporterConstructor(PCrashReporterChild* actor,
                                     mozilla::dom::NativeThreadId* id,
-                                    PRUint32* processType);
+                                    uint32_t* processType);
 
     virtual void
     ActorDestroy(ActorDestroyReason why);

@@ -220,7 +220,7 @@ nsHtml5TreeOpExecutor::FlushPendingNotifications(mozFlushType aType)
 }
 
 void
-nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, PRInt32 aCharsetSource)
+nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource)
 {
   if (mDocument) {
     mDocument->SetDocumentCharacterSetSource(aCharsetSource);
@@ -379,7 +379,7 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
     nsAutoString relVal;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
     if (!relVal.IsEmpty()) {
-      PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
+      uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
       bool hasPrefetch = linkTypes & PREFETCH;
       if (hasPrefetch || (linkTypes & NEXT)) {
         nsAutoString hrefVal;
@@ -425,7 +425,7 @@ class nsHtml5FlushLoopGuard
   private:
     nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
     #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-    PRUint32 mStartTime;
+    uint32_t mStartTime;
     #endif
   public:
     nsHtml5FlushLoopGuard(nsHtml5TreeOpExecutor* aExecutor)
@@ -439,7 +439,7 @@ class nsHtml5FlushLoopGuard
     ~nsHtml5FlushLoopGuard()
     {
       #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-        PRUint32 timeOffTheEventLoop = 
+        uint32_t timeOffTheEventLoop = 
           PR_IntervalToMilliseconds(PR_IntervalNow()) - mStartTime;
         if (timeOffTheEventLoop > 
             nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop) {
@@ -548,7 +548,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
     
     BeginDocUpdate();
 
-    PRUint32 numberOfOpsToFlush = mOpQueue.Length();
+    uint32_t numberOfOpsToFlush = mOpQueue.Length();
 
     mElementsSeenInThisAppendBatch.SetCapacity(numberOfOpsToFlush * 2);
 
@@ -648,7 +648,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   
   BeginDocUpdate();
 
-  PRUint32 numberOfOpsToFlush = mOpQueue.Length();
+  uint32_t numberOfOpsToFlush = mOpQueue.Length();
 
   mElementsSeenInThisAppendBatch.SetCapacity(numberOfOpsToFlush * 2);
 
@@ -828,8 +828,8 @@ nsHtml5TreeOpExecutor::Start()
 
 void
 nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
-                                            PRInt32 aSource,
-                                            PRUint32 aLineNumber)
+                                            int32_t aSource,
+                                            uint32_t aLineNumber)
 {
   EndDocUpdate();
 
@@ -870,7 +870,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
 void
 nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
                                                  bool aError,
-                                                 PRUint32 aLineNumber)
+                                                 uint32_t aLineNumber)
 {
   if (mAlreadyComplainedAboutCharset) {
     return;
@@ -963,7 +963,7 @@ nsHtml5TreeOpExecutor::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 }
 
 void
-nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine)
+nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, int32_t aLine)
 {
   GetParser()->InitializeDocWriteParserState(aState, aLine);
 }
@@ -1094,10 +1094,10 @@ nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL)
 }
 
 #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-PRUint32 nsHtml5TreeOpExecutor::sAppendBatchMaxSize = 0;
-PRUint32 nsHtml5TreeOpExecutor::sAppendBatchSlotsExamined = 0;
-PRUint32 nsHtml5TreeOpExecutor::sAppendBatchExaminations = 0;
-PRUint32 nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop = 0;
-PRUint32 nsHtml5TreeOpExecutor::sTimesFlushLoopInterrupted = 0;
+uint32_t nsHtml5TreeOpExecutor::sAppendBatchMaxSize = 0;
+uint32_t nsHtml5TreeOpExecutor::sAppendBatchSlotsExamined = 0;
+uint32_t nsHtml5TreeOpExecutor::sAppendBatchExaminations = 0;
+uint32_t nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop = 0;
+uint32_t nsHtml5TreeOpExecutor::sTimesFlushLoopInterrupted = 0;
 #endif
 bool nsHtml5TreeOpExecutor::sExternalViewSource = false;

@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 namespace mozilla {
 namespace unicode {
@@ -18,9 +19,9 @@ struct MultiCharMapping {
 
 // Return a pointer to the special case mapping for the given character;
 // returns NULL if no such mapping is defined.
-const MultiCharMapping* SpecialUpper(PRUint32 aCh);
-const MultiCharMapping* SpecialLower(PRUint32 aCh);
-const MultiCharMapping* SpecialTitle(PRUint32 aCh);
+const MultiCharMapping* SpecialUpper(uint32_t aCh);
+const MultiCharMapping* SpecialLower(uint32_t aCh);
+const MultiCharMapping* SpecialTitle(uint32_t aCh);
 
 } // namespace unicode
 } // namespace mozilla

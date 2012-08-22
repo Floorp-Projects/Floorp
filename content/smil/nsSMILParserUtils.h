@@ -58,9 +58,9 @@ public:
 
 
   // Used with ParseClockValue. Allow + or - before a clock value.
-  static const PRInt8 kClockValueAllowSign       = 1;
+  static const int8_t kClockValueAllowSign       = 1;
   // Used with ParseClockValue. Allow "indefinite" in a clock value
-  static const PRInt8 kClockValueAllowIndefinite = 2;
+  static const int8_t kClockValueAllowIndefinite = 2;
 
   /*
    * This method can actually parse more than a clock value as defined in the
@@ -90,7 +90,7 @@ public:
    */
   static nsresult ParseClockValue(const nsAString& aSpec,
                                   nsSMILTimeValue* aResult,
-                                  PRUint32 aFlags = 0,
+                                  uint32_t aFlags = 0,
                                   bool* aIsMedia = nullptr);
 
   /*
@@ -100,7 +100,7 @@ public:
    * method returns the index of the first character after the '-' sign
    * (i.e. the index of the absolute value).  If not, this method returns -1.
    */
-  static PRInt32 CheckForNegativeNumber(const nsAString& aStr);
+  static int32_t CheckForNegativeNumber(const nsAString& aStr);
 };
 
 #endif // NS_SMILPARSERUTILS_H_

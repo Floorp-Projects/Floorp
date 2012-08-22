@@ -153,7 +153,7 @@ nsDOMMediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
     bool oldMatches = mMatches;
     RecomputeMatches();
     if (mMatches != oldMatches) {
-      for (PRUint32 i = 0, i_end = mListeners.Length(); i != i_end; ++i) {
+      for (uint32_t i = 0, i_end = mListeners.Length(); i != i_end; ++i) {
         HandleChangeData *d = aListenersToNotify.AppendElement();
         if (d) {
           d->mql = this;

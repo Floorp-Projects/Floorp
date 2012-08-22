@@ -174,18 +174,18 @@ void SmartCardMonitoringThread::Stop()
 //
 void
 SmartCardMonitoringThread::SetTokenName(CK_SLOT_ID slotid, 
-                                       const char *tokenName, PRUint32 series)
+                                       const char *tokenName, uint32_t series)
 {
   if (mHash) {
     if (tokenName) {
       int len = strlen(tokenName) + 1;
       /* this must match the allocator used in
        * PLHashAllocOps.freeEntry DefaultFreeEntry */
-      char *entry = (char *)PR_Malloc(len+sizeof(PRUint32));
+      char *entry = (char *)PR_Malloc(len+sizeof(uint32_t));
      
       if (entry) {  
-        memcpy(entry,&series,sizeof(PRUint32));
-        memcpy(&entry[sizeof(PRUint32)],tokenName,len);
+        memcpy(entry,&series,sizeof(uint32_t));
+        memcpy(&entry[sizeof(uint32_t)],tokenName,len);
 
         PL_HashTableAdd(mHash,(void *)slotid, entry); /* adopt */
         return;
@@ -208,23 +208,23 @@ SmartCardMonitoringThread::GetTokenName(CK_SLOT_ID slotid)
   if (mHash) {
     entry = (const char *)PL_HashTableLookupConst(mHash,(void *)slotid);
     if (entry) {
-      tokenName = &entry[sizeof(PRUint32)];
+      tokenName = &entry[sizeof(uint32_t)];
     }
   }
   return tokenName;
 }
 
 // retrieve the series saved in SetTokenName above
-PRUint32
+uint32_t
 SmartCardMonitoringThread::GetTokenSeries(CK_SLOT_ID slotid)
 {
-  PRUint32 series = 0;
+  uint32_t series = 0;
   const char *entry;
 
   if (mHash) {
     entry = (const char *)PL_HashTableLookupConst(mHash,(void *)slotid);
     if (entry) {
-      memcpy(&series,entry,sizeof(PRUint32));
+      memcpy(&series,entry,sizeof(uint32_t));
     }
   }
   return series;
@@ -284,7 +284,7 @@ void SmartCardMonitoringThread::Execute()
     if (PK11_IsPresent(slot)) {
       // insertion
       CK_SLOT_ID slotID = PK11_GetSlotID(slot);
-      PRUint32 series = PK11_GetSlotSeries(slot);
+      uint32_t series = PK11_GetSlotSeries(slot);
 
       // skip spurious insertion events...
       if (series != GetTokenSeries(slotID)) {

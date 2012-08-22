@@ -15,7 +15,7 @@ static const uScanClassID g_BIG5ScanClassIDs[] = {
   u2BytesCharset
 };
 
-static const PRUint16 *g_BIG5MappingTableSet [] ={
+static const uint16_t *g_BIG5MappingTableSet [] ={
   g_ASCIIMapping,
   g_utBIG5Mapping
 };

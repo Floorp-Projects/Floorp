@@ -60,10 +60,10 @@ YCbCr42xToRGB565_DITHER30_CONSTS_NEON:
 @  yuv2rgb565_row_scale_bilinear_ctx *ctx, int dither);
 @
 @ ctx = {
-@   PRUint16 *rgb_row;       /*r0*/
-@   const PRUint8 *y_row;    /*r1*/
-@   const PRUint8 *u_row;    /*r2*/
-@   const PRUint8 *v_row;    /*r3*/
+@   uint16_t *rgb_row;       /*r0*/
+@   const uint8_t *y_row;    /*r1*/
+@   const uint8_t *u_row;    /*r2*/
+@   const uint8_t *v_row;    /*r3*/
 @   int y_yweight;           /*r4*/
 @   int y_pitch;             /*r5*/
 @   int width;               /*r6*/

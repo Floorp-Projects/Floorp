@@ -21,5 +21,5 @@ interface imgIContainerDebug : nsISupports
    * fired, and is usually equal to the # of frames actually
    * drawn (but actual drawing might be disabled).
    */
-  readonly attribute PRUint32 framesNotified;
+  readonly attribute uint32_t framesNotified;
 };

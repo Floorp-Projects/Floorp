@@ -136,7 +136,7 @@ nsSVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 // nsIContent methods:
 
 nsresult
-nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {

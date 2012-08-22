@@ -57,7 +57,7 @@ __try {
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRUint8 index = static_cast<PRUint8>(aActionIndex);
+  uint8_t index = static_cast<uint8_t>(aActionIndex);
   nsresult rv = acc->DoAction(index);
   return GetHRESULT(rv);
 
@@ -76,7 +76,7 @@ __try {
     return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
-  PRUint8 index = static_cast<PRUint8>(aActionIndex);
+  uint8_t index = static_cast<uint8_t>(aActionIndex);
   nsresult rv = acc->GetActionDescription(index, description);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -153,7 +153,7 @@ __try {
     return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;
-  PRUint8 index = static_cast<PRUint8>(aActionIndex);
+  uint8_t index = static_cast<uint8_t>(aActionIndex);
   nsresult rv = acc->GetActionName(index, name);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

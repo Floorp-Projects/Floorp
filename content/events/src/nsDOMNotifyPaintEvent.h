@@ -18,7 +18,7 @@ class nsDOMNotifyPaintEvent : public nsDOMEvent,
 public:
   nsDOMNotifyPaintEvent(nsPresContext*           aPresContext,
                         nsEvent*                 aEvent,
-                        PRUint32                 aEventType,
+                        uint32_t                 aEventType,
                         nsInvalidateRequestList* aInvalidateRequests);
 
   NS_DECL_ISUPPORTS_INHERITED

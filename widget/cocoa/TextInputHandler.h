@@ -214,7 +214,7 @@ public:
    * @param aCmdIsPressed         TRUE if Cmd key is pressed.  Otherwise, FALSE.
    * @return                      The computed Gecko keycode.
    */
-  PRUint32 ComputeGeckoKeyCode(UInt32 aNativeKeyCode, UInt32 aKbType,
+  uint32_t ComputeGeckoKeyCode(UInt32 aNativeKeyCode, UInt32 aKbType,
                                bool aCmdIsPressed);
 
 protected:
@@ -247,7 +247,7 @@ protected:
    *                              returns the charCode of it.  Otherwise,
    *                              returns 0.
    */
-  PRUint32 TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
+  uint32_t TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
 
   /**
    * InitKeyPressEvent() initializes aKeyEvent for aNativeKeyEvent.
@@ -275,7 +275,7 @@ protected:
   TISInputSourceRef mInputSource;
   CFArrayRef mInputSourceList;
   const UCKeyboardLayout* mUCKeyboardLayout;
-  PRInt8 mIsRTL;
+  int8_t mIsRTL;
 
   bool mOverrideKeyboard;
 };
@@ -291,7 +291,7 @@ class TextInputHandlerBase
 public:
   nsrefcnt AddRef()
   {
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "mRefCnt is negative");
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "mRefCnt is negative");
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "TextInputHandlerBase", sizeof(*this));
     return mRefCnt;
@@ -340,9 +340,9 @@ public:
    * nsIWidget::SynthesizeNativeKeyEvent().  See the document in nsIWidget.h
    * for the detail.
    */
-  nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                    PRInt32 aNativeKeyCode,
-                                    PRUint32 aModifierFlags,
+  nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                    int32_t aNativeKeyCode,
+                                    uint32_t aModifierFlags,
                                     const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
 
@@ -495,8 +495,8 @@ protected:
    */
   KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent)
   {
-    PRUint32 nestCount = mCurrentKeyEvents.Length();
-    for (PRUint32 i = 0; i < nestCount; i++) {
+    uint32_t nestCount = mCurrentKeyEvents.Length();
+    for (uint32_t i = 0; i < nestCount; i++) {
       // When the key event is caused by another key event, all key events
       // which are being handled should be marked as "consumed".
       mCurrentKeyEvents[i]->mCausedOtherKeyEvents = true;
@@ -573,7 +573,7 @@ protected:
 
 private:
   struct KeyboardLayoutOverride {
-    PRInt32 mKeyboardLayout;
+    int32_t mKeyboardLayout;
     bool mOverrideEnabled;
 
     KeyboardLayoutOverride() :
@@ -916,7 +916,7 @@ protected:
     kDiscardIMEComposition   = 2,
     kSyncASCIICapableOnly    = 4
   };
-  PRUint32 mPendingMethods;
+  uint32_t mPendingMethods;
 
   IMEInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~IMEInputHandler();
@@ -982,7 +982,7 @@ private:
    * @param aSelectedRange        Current selected range (or caret position).
    * @return                      NS_TEXTRANGE_*.
    */
-  PRUint32 ConvertToTextRangeType(PRUint32 aUnderlineStyle,
+  uint32_t ConvertToTextRangeType(uint32_t aUnderlineStyle,
                                   NSRange& aSelectedRange);
 
   /**
@@ -994,7 +994,7 @@ private:
    * @return                      The count of NSUnderlineStyleAttributeName
    *                              ranges in aAttrString.
    */
-  PRUint32 GetRangeCount(NSAttributedString *aString);
+  uint32_t GetRangeCount(NSAttributedString *aString);
 
   /**
    * SetTextRangeList() appends text ranges to aTextRangeList.

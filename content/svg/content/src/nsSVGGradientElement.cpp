@@ -203,7 +203,7 @@ NS_IMETHODIMP nsSVGLinearGradientElement::GetY2(nsIDOMSVGAnimatedLength * *aY2)
 // nsSVGElement methods
 
 SVGAnimatedTransformList*
-nsSVGGradientElement::GetAnimatedTransformList(PRUint32 aFlags)
+nsSVGGradientElement::GetAnimatedTransformList(uint32_t aFlags)
 {
   if (!mGradientTransform && (aFlags & DO_ALLOCATE)) {
     mGradientTransform = new SVGAnimatedTransformList();

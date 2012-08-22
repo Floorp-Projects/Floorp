@@ -313,7 +313,7 @@ nsresult
 nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
                                                       const nsRect&           aDirtyRect,
                                                       const nsDisplayListSet& aLists,
-                                                      PRUint32                aFlags)
+                                                      uint32_t                aFlags)
 {
   nsIFrame* kid = mFrames.FirstChild();
   // Put each child's background directly onto the content list
@@ -340,7 +340,7 @@ nsContainerFrame::IsLeaf() const
 }
 
 bool
-nsContainerFrame::PeekOffsetNoAmount(bool aForward, PRInt32* aOffset)
+nsContainerFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Don't allow the caret to stay in an empty (leaf) container frame.
@@ -348,7 +348,7 @@ nsContainerFrame::PeekOffsetNoAmount(bool aForward, PRInt32* aOffset)
 }
 
 bool
-nsContainerFrame::PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+nsContainerFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                       bool aRespectClusters)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
@@ -724,7 +724,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
                                            nsIFrame*       aFrame,
                                            nsIView*        aView,
                                            const nsRect&   aVisualOverflowArea,
-                                           PRUint32        aFlags)
+                                           uint32_t        aFlags)
 {
   if (!aView) {
     return;
@@ -747,7 +747,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
                                           nsIFrame*        aFrame,
                                           nsStyleContext*  aStyleContext,
                                           nsIView*         aView,
-                                          PRUint32         aFlags)
+                                          uint32_t         aFlags)
 {
   NS_ASSERTION(!aStyleContext || aFrame->GetStyleContext() == aStyleContext,
                "Wrong style context for frame?");
@@ -775,7 +775,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
   // positioned
   bool isPositioned = aFrame->IsPositioned();
 
-  PRInt32 zIndex = 0;
+  int32_t zIndex = 0;
   bool    autoZIndex = false;
 
   if (!isPositioned) {
@@ -917,7 +917,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               const nsHTMLReflowState& aReflowState,
                               nscoord                  aX,
                               nscoord                  aY,
-                              PRUint32                 aFlags,
+                              uint32_t                 aFlags,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
@@ -1021,7 +1021,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     const nsHTMLReflowMetrics& aDesiredSize,
                                     nscoord                    aX,
                                     nscoord                    aY,
-                                    PRUint32                   aFlags)
+                                    uint32_t                   aFlags)
 {
   nsPoint curOrigin = aKidFrame->GetPosition();
   nsRect  bounds(aX, aY, aDesiredSize.width, aDesiredSize.height);
@@ -1059,7 +1059,7 @@ nsresult
 nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsOverflowAreas&         aOverflowRects,
-                                                  PRUint32                 aFlags,
+                                                  uint32_t                 aFlags,
                                                   nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aPresContext, "null pointer");
@@ -1362,7 +1362,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     for (nsIFrame* f = nextNextInFlow; f; f = f->GetNextInFlow()) {
       frames.AppendElement(f);
     }
-    for (PRInt32 i = frames.Length() - 1; i >= 0; --i) {
+    for (int32_t i = frames.Length() - 1; i >= 0; --i) {
       nsIFrame* delFrame = frames.ElementAt(i);
       static_cast<nsContainerFrame*>(delFrame->GetParent())
         ->DeleteNextInFlowChild(aPresContext, delFrame, aDeletingEmptyFrames);
@@ -1757,7 +1757,7 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
+nsContainerFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

@@ -87,7 +87,7 @@ nsDeleteDir::Shutdown(bool finishDeleting)
       gInstance->mStopDeleting = true;
 
     // remove all pending timers
-    for (PRInt32 i = gInstance->mTimers.Count(); i > 0; i--) {
+    for (int32_t i = gInstance->mTimers.Count(); i > 0; i--) {
       nsCOMPtr<nsITimer> timer = gInstance->mTimers[i-1];
       gInstance->mTimers.RemoveObjectAt(i-1);
       timer->Cancel();
@@ -120,7 +120,7 @@ nsDeleteDir::Shutdown(bool finishDeleting)
 
   delete gInstance;
 
-  for (PRInt32 i = 0; i < dirsToRemove.Count(); i++)
+  for (int32_t i = 0; i < dirsToRemove.Count(); i++)
     dirsToRemove[i]->Remove(true);
 
   return NS_OK;
@@ -166,7 +166,7 @@ nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
   {
     MutexAutoLock lock(gInstance->mLock);
 
-    PRInt32 idx = gInstance->mTimers.IndexOf(aTimer);
+    int32_t idx = gInstance->mTimers.IndexOf(aTimer);
     if (idx == -1) {
       // Timer was canceled and removed during shutdown.
       return;
@@ -186,7 +186,7 @@ nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
     // current thread.  So this shouldn't be moved to where we set the priority
     // of the Cache deleter thread using the nsThread's NSPR priority constants.
     nsAutoLowPriorityIO autoLowPriority;
-    for (PRInt32 i = 0; i < dirList->Count() && !shuttingDown; i++) {
+    for (int32_t i = 0; i < dirList->Count() && !shuttingDown; i++) {
       gInstance->RemoveDir((*dirList)[i], &shuttingDown);
     }
   }
@@ -198,7 +198,7 @@ nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
 }
 
 nsresult
-nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, PRUint32 delay)
+nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
 {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_TRASHRENAME> timer;
 
@@ -226,7 +226,7 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, PRUint32 delay)
     // Append random number to the trash directory and check if it exists.
     srand(PR_Now());
     nsCAutoString leaf;
-    for (PRInt32 i = 0; i < 10; i++) {
+    for (int32_t i = 0; i < 10; i++) {
       leaf = origLeaf;
       leaf.AppendInt(rand());
       rv = trash->SetNativeLeafName(leaf);
@@ -386,7 +386,7 @@ nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
 }
 
 nsresult
-nsDeleteDir::PostTimer(void *arg, PRUint32 delay)
+nsDeleteDir::PostTimer(void *arg, uint32_t delay)
 {
   nsresult rv;
 

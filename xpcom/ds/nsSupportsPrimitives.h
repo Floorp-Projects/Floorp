@@ -93,7 +93,7 @@ public:
 private:
     ~nsSupportsPRUint8Impl() {}
 
-    PRUint8 mData;
+    uint8_t mData;
 };
 
 /***************************************************************************/
@@ -110,7 +110,7 @@ public:
 private:
     ~nsSupportsPRUint16Impl() {}
 
-    PRUint16 mData;
+    uint16_t mData;
 };
 
 /***************************************************************************/
@@ -127,7 +127,7 @@ public:
 private:
     ~nsSupportsPRUint32Impl() {}
 
-    PRUint32 mData;
+    uint32_t mData;
 };
 
 /***************************************************************************/
@@ -144,7 +144,7 @@ public:
 private:
     ~nsSupportsPRUint64Impl() {}
 
-    PRUint64 mData;
+    uint64_t mData;
 };
 
 /***************************************************************************/
@@ -195,7 +195,7 @@ public:
 private:
     ~nsSupportsPRInt16Impl() {}
 
-    PRInt16 mData;
+    int16_t mData;
 };
 
 /***************************************************************************/
@@ -212,7 +212,7 @@ public:
 private:
     ~nsSupportsPRInt32Impl() {}
 
-    PRInt32 mData;
+    int32_t mData;
 };
 
 /***************************************************************************/
@@ -229,7 +229,7 @@ public:
 private:
     ~nsSupportsPRInt64Impl() {}
 
-    PRInt64 mData;
+    int64_t mData;
 };
 
 /***************************************************************************/

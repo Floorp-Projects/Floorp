@@ -37,13 +37,13 @@ parent:
 
   Init(bool useDB, bool canUseChromePersist, bool sessionOnly, bool isPrivate,
        nsCString domain, nsCString scopeDBKey, nsCString quotaDomainDBKey,
-       nsCString quotaETLDplus1DomainDBKey, PRUint32 storageType);
+       nsCString quotaETLDplus1DomainDBKey, uint32_t storageType);
   
   sync GetKeys(bool callerSecure)
       returns (nsString[] keys);
   sync GetLength(bool callerSecure, bool sessionOnly)
-      returns (PRUint32 length, nsresult rv);
-  sync GetKey(bool callerSecure, bool sessionOnly, PRUint32 index)
+      returns (uint32_t length, nsresult rv);
+  sync GetKey(bool callerSecure, bool sessionOnly, uint32_t index)
       returns (nsString key, nsresult rv);
   sync GetValue(bool callerSecure, bool sessionOnly, nsString key)
       returns (StorageItem item, nsresult rv);
@@ -52,7 +52,7 @@ parent:
   sync RemoveValue(bool callerSecure, bool sessionOnly, nsString key)
       returns (nsString oldValue, nsresult rv);
   sync Clear(bool callerSecure, bool sessionOnly)
-      returns (PRInt32 oldCount, nsresult rv);
+      returns (int32_t oldCount, nsresult rv);
 
   sync GetDBValue(nsString key)
       returns (nsString value, bool secure, nsresult rv);

@@ -28,38 +28,38 @@ public:
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aClipRect);
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext,
                              nsIFrame* aFrame,
-                             PRUint8 aWidgetType,
+                             uint8_t aWidgetType,
                              nsIntMargin* aResult);
 
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntSize* aResult,
                                   bool* aIsOverridable);
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
                                 nsIAtom* aAttribute, bool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
   bool ThemeSupportsWidget(nsPresContext* aPresContext,
                              nsIFrame* aFrame,
-                             PRUint8 aWidgetType);
+                             uint8_t aWidgetType);
 
-  bool WidgetIsContainer(PRUint8 aWidgetType);
+  bool WidgetIsContainer(uint8_t aWidgetType);
 
   virtual NS_HIDDEN_(bool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
-                                              PRUint8 aWidgetType,
+                                              uint8_t aWidgetType,
                                               nsIntMargin* aResult);
 
   NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
-                                               nsIFrame* aFrame, PRUint8 aWidgetType);
+                                               nsIFrame* aFrame, uint8_t aWidgetType);
 
   bool ThemeNeedsComboboxDropmarker();
 
@@ -71,29 +71,29 @@ private:
   inline nsresult DrawWidgetBackground(QPainter *qPainter,
                                        nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
+                                       uint8_t aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aClipRect);
 
-  void InitButtonStyle(PRUint8 widgetType,
+  void InitButtonStyle(uint8_t widgetType,
                        nsIFrame* aFrame,
                        QRect rect,
                        QStyleOptionButton &opt);
 
-  void InitPlainStyle(PRUint8 aWidgetType,
+  void InitPlainStyle(uint8_t aWidgetType,
                       nsIFrame* aFrame,
                       QRect rect,
                       QStyleOption &opt,
                       QStyle::State extraFlags = QStyle::State_None);
 
-  void InitComboStyle(PRUint8 aWidgetType,
+  void InitComboStyle(uint8_t aWidgetType,
                       nsIFrame* aFrame,
                       QRect rect,
                       QStyleOptionComboBox &opt);
 
 private:
 
-  PRInt32 mFrameWidth;
+  int32_t mFrameWidth;
 
   QPalette mNoBackgroundPalette;
 };

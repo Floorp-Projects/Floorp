@@ -42,7 +42,7 @@
 using namespace mozilla;
 
 bool nsSliderFrame::gMiddlePref = false;
-PRInt32 nsSliderFrame::gSnapMultiplier;
+int32_t nsSliderFrame::gSnapMultiplier;
 
 // Turn this on if you want to debug slider frames.
 #undef DEBUG_SLIDER
@@ -134,39 +134,39 @@ nsSliderFrame::AppendFrames(ChildListID     aListID,
   return rv;
 }
 
-PRInt32
+int32_t
 nsSliderFrame::GetCurrentPosition(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsGkAtoms::curpos, 0);
 }
 
-PRInt32
+int32_t
 nsSliderFrame::GetMinPosition(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsGkAtoms::minpos, 0);
 }
 
-PRInt32
+int32_t
 nsSliderFrame::GetMaxPosition(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsGkAtoms::maxpos, 100);
 }
 
-PRInt32
+int32_t
 nsSliderFrame::GetIncrement(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsGkAtoms::increment, 1);
 }
 
 
-PRInt32
+int32_t
 nsSliderFrame::GetPageIncrement(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsGkAtoms::pageincrement, 10);
 }
 
-PRInt32
-nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue)
+int32_t
+nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, int32_t defaultValue)
 {
     nsAutoString value;
     content->GetAttr(kNameSpaceID_None, atom, value);
@@ -185,7 +185,7 @@ class nsValueChangedRunnable : public nsRunnable
 public:
   nsValueChangedRunnable(nsISliderListener* aListener,
                          nsIAtom* aWhich,
-                         PRInt32 aValue,
+                         int32_t aValue,
                          bool aUserChanged)
   : mListener(aListener), mWhich(aWhich),
     mValue(aValue), mUserChanged(aUserChanged)
@@ -199,7 +199,7 @@ public:
 
   nsCOMPtr<nsISliderListener> mListener;
   nsCOMPtr<nsIAtom> mWhich;
-  PRInt32 mValue;
+  int32_t mValue;
   bool mUserChanged;
 };
 
@@ -222,9 +222,9 @@ public:
 };
 
 NS_IMETHODIMP
-nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
                                 nsIAtom* aAttribute,
-                                PRInt32 aModType)
+                                int32_t aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
@@ -241,9 +241,9 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
       nsIFrame* scrollbarBox = GetScrollbar();
       nsCOMPtr<nsIContent> scrollbar;
       scrollbar = GetContentOfBox(scrollbarBox);
-      PRInt32 current = GetCurrentPosition(scrollbar);
-      PRInt32 min = GetMinPosition(scrollbar);
-      PRInt32 max = GetMaxPosition(scrollbar);
+      int32_t current = GetCurrentPosition(scrollbar);
+      int32_t min = GetMinPosition(scrollbar);
+      int32_t max = GetMaxPosition(scrollbar);
 
       // inform the parent <scale> that the minimum or maximum changed
       nsIFrame* parent = GetParent();
@@ -367,10 +367,10 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   else
     thumbSize.width = clientRect.width;
 
-  PRInt32 curPos = GetCurrentPosition(scrollbar);
-  PRInt32 minPos = GetMinPosition(scrollbar);
-  PRInt32 maxPos = GetMaxPosition(scrollbar);
-  PRInt32 pageIncrement = GetPageIncrement(scrollbar);
+  int32_t curPos = GetCurrentPosition(scrollbar);
+  int32_t minPos = GetMinPosition(scrollbar);
+  int32_t maxPos = GetMaxPosition(scrollbar);
+  int32_t pageIncrement = GetPageIncrement(scrollbar);
 
   maxPos = NS_MAX(minPos, maxPos);
   curPos = clamped(curPos, minPos, maxPos);
@@ -400,7 +400,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   // set the thumb's coord to be the current pos * the ratio.
   nsRect thumbRect(clientRect.x, clientRect.y, thumbSize.width, thumbSize.height);
-  PRInt32& thumbPos = (IsHorizontal() ? thumbRect.x : thumbRect.y);
+  int32_t& thumbPos = (IsHorizontal() ? thumbRect.x : thumbRect.y);
   thumbPos += NSToCoordRound(pos * mRatio);
 
   nsRect oldThumbRect(thumbBox->GetRect());
@@ -590,7 +590,7 @@ nsSliderFrame::GetScrollToClick()
  
   // if there was no scrollbar, always scroll on click
   bool scrollToClick = false;
-  PRInt32 scrollToClickMetric;
+  int32_t scrollToClickMetric;
   nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollToClick,
                                     &scrollToClickMetric);
   if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
@@ -633,12 +633,12 @@ nsSliderFrame::PageUpDown(nscoord change)
     change = -change;
 
   nscoord pageIncrement = GetPageIncrement(scrollbar);
-  PRInt32 curpos = GetCurrentPosition(scrollbar);
-  PRInt32 minpos = GetMinPosition(scrollbar);
-  PRInt32 maxpos = GetMaxPosition(scrollbar);
+  int32_t curpos = GetCurrentPosition(scrollbar);
+  int32_t minpos = GetMinPosition(scrollbar);
+  int32_t maxpos = GetMaxPosition(scrollbar);
 
   // get the new position and make sure it is in bounds
-  PRInt32 newpos = curpos + change * pageIncrement;
+  int32_t newpos = curpos + change * pageIncrement;
   if (newpos < minpos || maxpos < minpos)
     newpos = minpos;
   else if (newpos > maxpos)
@@ -657,15 +657,15 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   scrollbar = GetContentOfBox(scrollbarBox);
 
   // get the current position
-  PRInt32 curPos = GetCurrentPosition(scrollbar);
+  int32_t curPos = GetCurrentPosition(scrollbar);
 
   // do nothing if the position did not change
   if (mCurPos == curPos)
       return NS_OK;
 
   // get our current min and max position from our content node
-  PRInt32 minPos = GetMinPosition(scrollbar);
-  PRInt32 maxPos = GetMaxPosition(scrollbar);
+  int32_t minPos = GetMinPosition(scrollbar);
+  int32_t maxPos = GetMaxPosition(scrollbar);
 
   maxPos = NS_MAX(minPos, maxPos);
   curPos = clamped(curPos, minPos, maxPos);
@@ -736,13 +736,13 @@ nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumb
   nsRect crect;
   GetClientRect(crect);
   nscoord offset = IsHorizontal() ? crect.x : crect.y;
-  PRInt32 newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
+  int32_t newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
   
   if (aMaySnap && mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::snap,
                                         nsGkAtoms::_true, eCaseMatters)) {
     // If snap="true", then the slider may only be set to min + (increment * x).
     // Otherwise, the slider may be set to any positive integer.
-    PRInt32 increment = GetIncrement(aScrollbar);
+    int32_t increment = GetIncrement(aScrollbar);
     newPos = NSToIntRound(newPos / float(increment)) * increment;
   }
   
@@ -754,12 +754,12 @@ nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumb
 // That is, the minpos will be added to the position by this function. In a reverse
 // direction slider, the newpos should be the distance from the end.
 void
-nsSliderFrame::SetCurrentPosition(nsIContent* aScrollbar, PRInt32 aNewPos,
+nsSliderFrame::SetCurrentPosition(nsIContent* aScrollbar, int32_t aNewPos,
                                   bool aIsSmooth, bool aImmediateRedraw)
 {
    // get min and max position from our content node
-  PRInt32 minpos = GetMinPosition(aScrollbar);
-  PRInt32 maxpos = GetMaxPosition(aScrollbar);
+  int32_t minpos = GetMinPosition(aScrollbar);
+  int32_t maxpos = GetMaxPosition(aScrollbar);
 
   // in reverse direction sliders, flip the value so that it goes from
   // right to left, or bottom to top.
@@ -779,7 +779,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* aScrollbar, PRInt32 aNewPos,
 }
 
 void
-nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, PRInt32 aNewPos,
+nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPos,
                                           bool aIsSmooth,
                                           bool aImmediateRedraw)
 {
@@ -860,7 +860,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
   if (mouseEvent) {
-    PRUint16 button = 0;
+    uint16_t button = 0;
     mouseEvent->GetButton(&button);
     if (!(button == 0 || (button == 1 && gMiddlePref)))
       return NS_OK;

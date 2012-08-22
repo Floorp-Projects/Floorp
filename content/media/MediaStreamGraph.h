@@ -28,7 +28,7 @@ extern PRLogModuleInfo* gMediaStreamGraphLog;
 /**
  * Microseconds relative to the start of the graph timeline.
  */
-typedef PRInt64 GraphTime;
+typedef int64_t GraphTime;
 const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 
 /*
@@ -151,7 +151,7 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         TrackRate aTrackRate,
                                         TrackTicks aTrackOffset,
-                                        PRUint32 aTrackEvents,
+                                        uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) {}
 };
 
@@ -286,7 +286,7 @@ public:
   void RemoveVideoOutput(VideoFrameContainer* aContainer);
   // Explicitly block. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data.
-  void ChangeExplicitBlockerCount(PRInt32 aDelta);
+  void ChangeExplicitBlockerCount(int32_t aDelta);
   // Events will be dispatched by calling methods of aListener.
   void AddListener(MediaStreamListener* aListener);
   void RemoveListener(MediaStreamListener* aListener);
@@ -351,7 +351,7 @@ public:
   {
     mVideoOutputs.RemoveElement(aContainer);
   }
-  void ChangeExplicitBlockerCountImpl(StreamTime aTime, PRInt32 aDelta)
+  void ChangeExplicitBlockerCountImpl(StreamTime aTime, int32_t aDelta)
   {
     mExplicitBlockerCount.SetAtAndAfter(aTime, mExplicitBlockerCount.GetAt(aTime) + aDelta);
   }
@@ -410,7 +410,7 @@ protected:
   VideoFrame mLastPlayedVideoFrame;
   // The number of times this stream has been explicitly blocked by the control
   // API, minus the number of times it has been explicitly unblocked.
-  TimeVarying<GraphTime,PRUint32> mExplicitBlockerCount;
+  TimeVarying<GraphTime,uint32_t> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
   nsTArray<nsRefPtr<MainThreadMediaStreamListener> > mMainThreadListeners;
 
@@ -422,7 +422,7 @@ protected:
   // record the entire history of the stream's blocking-ness in mBlocked.
   TimeVarying<GraphTime,bool> mBlocked;
   // Maps graph time to the graph update that affected this stream at that time
-  TimeVarying<GraphTime,PRInt64> mGraphUpdateIndices;
+  TimeVarying<GraphTime,int64_t> mGraphUpdateIndices;
 
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
@@ -576,7 +576,7 @@ public:
     TrackTicks mStart;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
-    PRUint32 mCommands;
+    uint32_t mCommands;
     // Each time the track updates are flushed to the media graph thread,
     // the segment buffer is emptied.
     nsAutoPtr<MediaSegment> mData;
@@ -587,7 +587,7 @@ public:
 protected:
   TrackData* FindDataForTrack(TrackID aID)
   {
-    for (PRUint32 i = 0; i < mUpdateTracks.Length(); ++i) {
+    for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
       if (mUpdateTracks[i].mID == aID) {
         return &mUpdateTracks[i];
       }
@@ -646,7 +646,7 @@ public:
   };
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
   MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
-                 PRUint32 aFlags)
+                 uint32_t aFlags)
     : mSource(aSource)
     , mDest(aDest)
     , mFlags(aFlags)
@@ -692,7 +692,7 @@ protected:
   // Never modified after Init()
   MediaStream* mSource;
   ProcessedMediaStream* mDest;
-  PRUint32 mFlags;
+  uint32_t mFlags;
 };
 
 /**
@@ -711,7 +711,7 @@ public:
    * Allocates a new input port attached to source aStream.
    * This stream can be removed by calling MediaInputPort::Remove().
    */
-  MediaInputPort* AllocateInputPort(MediaStream* aStream, PRUint32 aFlags = 0);
+  MediaInputPort* AllocateInputPort(MediaStream* aStream, uint32_t aFlags = 0);
   /**
    * Force this stream into the finished state.
    */
@@ -797,7 +797,7 @@ public:
    * whether a given update has been processed by the graph thread and reflected
    * in main-thread stream state.
    */
-  PRInt64 GetCurrentGraphUpdateIndex() { return mGraphUpdatesSent; }
+  int64_t GetCurrentGraphUpdateIndex() { return mGraphUpdatesSent; }
 
   /**
    * Media graph thread only.
@@ -827,7 +827,7 @@ protected:
   // Main thread only
   // The number of updates we have sent to the media graph thread. We start
   // this at 1 just to ensure that 0 is usable as a special value.
-  PRInt64 mGraphUpdatesSent;
+  int64_t mGraphUpdatesSent;
 };
 
 }

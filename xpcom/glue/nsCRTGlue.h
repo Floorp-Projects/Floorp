@@ -40,7 +40,7 @@ NS_strtok(const char *delims, char **str);
 /**
  * "strlen" for PRUnichar strings
  */
-NS_COM_GLUE PRUint32
+NS_COM_GLUE uint32_t
 NS_strlen(const PRUnichar *aString);
 
 /**
@@ -66,7 +66,7 @@ NS_strdup(const char *aString);
  * new string is null-terminated. Uses the NS_Alloc allocator.
  */
 NS_COM_GLUE PRUnichar*
-NS_strndup(const PRUnichar *aString, PRUint32 aLen);
+NS_strndup(const PRUnichar *aString, uint32_t aLen);
 
 // The following case-conversion methods only deal in the ascii repertoire
 // A-Z and a-z
@@ -97,10 +97,10 @@ NS_COM_GLUE bool NS_IsAsciiAlpha(PRUnichar aChar);
 NS_COM_GLUE bool NS_IsAsciiDigit(PRUnichar aChar);
 NS_COM_GLUE bool NS_IsAsciiWhitespace(PRUnichar aChar);
 NS_COM_GLUE bool NS_IsAscii(const char* aString);
-NS_COM_GLUE bool NS_IsAscii(const char* aString, PRUint32 aLength);
+NS_COM_GLUE bool NS_IsAscii(const char* aString, uint32_t aLength);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
-NS_COM_GLUE void NS_MakeRandomString(char *buf, PRInt32 bufLen);
+NS_COM_GLUE void NS_MakeRandomString(char *buf, int32_t bufLen);
 #endif
 
 #define FF '\f'

@@ -64,13 +64,13 @@ interface imgIContainer : nsISupports
    * The width of the container rectangle.  In the case of any error,
    * zero is returned, and an exception will be thrown.
    */
-  readonly attribute PRInt32 width;
+  readonly attribute int32_t width;
 
   /**
    * The height of the container rectangle.  In the case of any error,
    * zero is returned, and an exception will be thrown.
    */
-  readonly attribute PRInt32 height;
+  readonly attribute int32_t height;
 
   /**
     * Enumerated values for the 'type' attribute (below).
@@ -86,7 +86,7 @@ interface imgIContainer : nsISupports
   /**
    * Direct C++ accessor for 'type' attribute, for convenience.
    */
-  [noscript, notxpcom] PRUint16 GetType();
+  [noscript, notxpcom] uint16_t GetType();
 
   /**
    * Whether this image is animated. You can only be guaranteed that querying
@@ -151,8 +151,8 @@ interface imgIContainer : nsISupports
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] gfxASurface getFrame(in PRUint32 aWhichFrame,
-                                  in PRUint32 aFlags);
+  [noscript] gfxASurface getFrame(in uint32_t aWhichFrame,
+                                  in uint32_t aFlags);
 
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
@@ -167,8 +167,8 @@ interface imgIContainer : nsISupports
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] gfxImageSurface copyFrame(in PRUint32 aWhichFrame,
-                                       in PRUint32 aFlags);
+  [noscript] gfxImageSurface copyFrame(in uint32_t aWhichFrame,
+                                       in uint32_t aFlags);
 
   /**
    * Create a new imgContainer that contains only a single frame, which itself
@@ -179,9 +179,9 @@ interface imgIContainer : nsISupports
    *              returned imgContainer's frame.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] imgIContainer extractFrame(in PRUint32 aWhichFrame,
+  [noscript] imgIContainer extractFrame(in uint32_t aWhichFrame,
                                         [const] in nsIntRect aRect,
-                                        in PRUint32 aFlags);
+                                        in uint32_t aFlags);
 
   /**
    * Draw the current frame on to the context specified.
@@ -211,7 +211,7 @@ interface imgIContainer : nsISupports
                        [const] in gfxRect aFill,
                        [const] in nsIntRect aSubimage,
                        [const] in nsIntSize aViewportSize,
-                       in PRUint32 aFlags);
+                       in uint32_t aFlags);
 
   /**
    * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,

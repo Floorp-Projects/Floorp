@@ -27,7 +27,7 @@ public:
 protected:
 };
 
-static const PRUint16 g_utGBKUnique2Bytes[] = {
+static const uint16_t g_utGBKUnique2Bytes[] = {
 #include "gbkuniq2b.ut"
 };
 nsGBKUnique2BytesToUnicode::nsGBKUnique2BytesToUnicode() 
@@ -48,7 +48,7 @@ public:
 protected:
 };
 
-static const PRUint16 g_utGB18030Unique2Bytes[] = {
+static const uint16_t g_utGB18030Unique2Bytes[] = {
 #include "gb18030uniq2b.ut"
 };
 nsGB18030Unique2BytesToUnicode::nsGB18030Unique2BytesToUnicode() 
@@ -69,7 +69,7 @@ public:
 protected:
 };
 
-static const PRUint16 g_utGB18030Unique4Bytes[] = {
+static const uint16_t g_utGB18030Unique4Bytes[] = {
 #include "gb180304bytes.ut"
 };
 nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode() 
@@ -99,13 +99,13 @@ nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode()
       (UINT8_IN_RANGE(0x30, (c), 0x39))
 
 NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
-                                            PRInt32 * aSrcLength,
+                                            int32_t * aSrcLength,
                                             PRUnichar *aDest,
-                                            PRInt32 * aDestLength)
+                                            int32_t * aDestLength)
 {
-  PRInt32 i=0;
-  PRInt32 iSrcLength = (*aSrcLength);
-  PRInt32 iDestlen = 0;
+  int32_t i=0;
+  int32_t iSrcLength = (*aSrcLength);
+  int32_t iDestlen = 0;
   nsresult rv=NS_OK;
   *aSrcLength = 0;
   
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
           aSrc++;
         }
       }
-      else if ((PRUint8) aSrc[0] == (PRUint8)0xA0 )
+      else if ((uint8_t) aSrc[0] == (uint8_t)0xA0 )
       {
         // stand-alone (not followed by a valid second byte) 0xA0 !
         // treat it as valid a la Netscape 4.x
@@ -262,15 +262,15 @@ bool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
   if(! LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]))
     return false;
 
-  PRUint8 a1 = (PRUint8) aSrc[0];
-  PRUint8 a2 = (PRUint8) aSrc[1];
-  PRUint8 a3 = (PRUint8) aSrc[2];
-  PRUint8 a4 = (PRUint8) aSrc[3];
-  a1 -= (PRUint8)0x90;
-  a2 -= (PRUint8)0x30;
-  a3 -= (PRUint8)0x81;
-  a4 -= (PRUint8)0x30;
-  PRUint32 idx = (((a1 * 10 + a2 ) * 126 + a3) * 10) + a4;
+  uint8_t a1 = (uint8_t) aSrc[0];
+  uint8_t a2 = (uint8_t) aSrc[1];
+  uint8_t a3 = (uint8_t) aSrc[2];
+  uint8_t a4 = (uint8_t) aSrc[3];
+  a1 -= (uint8_t)0x90;
+  a2 -= (uint8_t)0x30;
+  a3 -= (uint8_t)0x81;
+  a4 -= (uint8_t)0x30;
+  uint32_t idx = (((a1 * 10 + a2 ) * 126 + a3) * 10) + a4;
   // idx == ucs4Codepoint - 0x10000
   if (idx > 0x000FFFFF)
     return false;
@@ -289,8 +289,8 @@ bool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
   {
     nsresult res = mExtensionDecoder->Reset();
     NS_ASSERTION(NS_SUCCEEDED(res), "2 bytes unique conversoin reset failed");
-    PRInt32 len = 2;
-    PRInt32 dstlen = 1;
+    int32_t len = 2;
+    int32_t dstlen = 1;
     res = mExtensionDecoder->Convert(aSrc,&len, aOut, &dstlen); 
     NS_ASSERTION(NS_FAILED(res) || ((len==2) && (dstlen == 1)), 
        "some strange conversion result");
@@ -313,8 +313,8 @@ bool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
   {
     nsresult res = m4BytesDecoder->Reset();
     NS_ASSERTION(NS_SUCCEEDED(res), "4 bytes unique conversoin reset failed");
-    PRInt32 len = 4;
-    PRInt32 dstlen = 1;
+    int32_t len = 4;
+    int32_t dstlen = 1;
     res = m4BytesDecoder->Convert(aSrc,&len, aOut, &dstlen); 
     NS_ASSERTION(NS_FAILED(res) || ((len==4) && (dstlen == 1)), 
        "some strange conversion result");

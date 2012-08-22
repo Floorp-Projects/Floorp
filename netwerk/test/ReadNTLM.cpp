@@ -66,7 +66,7 @@ static const char NTLM_TYPE3_MARKER[] = { 0x03, 0x00, 0x00, 0x00 };
 #define NTLM_HASH_LEN 16
 #define NTLM_RESP_LEN 24
 
-static void PrintFlags(PRUint32 flags)
+static void PrintFlags(uint32_t flags)
 {
 #define TEST(_flag) \
   if (flags & k ## _flag) \
@@ -109,7 +109,7 @@ static void PrintFlags(PRUint32 flags)
 }
 
 static void
-PrintBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
+PrintBuf(const char *tag, const uint8_t *buf, uint32_t bufLen)
 {
   int i;
 
@@ -145,46 +145,46 @@ PrintBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
   }
 }
 
-static PRUint16
-ReadUint16(const PRUint8 *&buf)
+static uint16_t
+ReadUint16(const uint8_t *&buf)
 {
-  PRUint16 x;
+  uint16_t x;
 #ifdef IS_BIG_ENDIAN
-  x = ((PRUint16) buf[1]) | ((PRUint16) buf[0] << 8);
+  x = ((uint16_t) buf[1]) | ((uint16_t) buf[0] << 8);
 #else
-  x = ((PRUint16) buf[0]) | ((PRUint16) buf[1] << 8);
+  x = ((uint16_t) buf[0]) | ((uint16_t) buf[1] << 8);
 #endif
   buf += sizeof(x);
   return x;
 }
 
-static PRUint32
-ReadUint32(const PRUint8 *&buf)
+static uint32_t
+ReadUint32(const uint8_t *&buf)
 {
-  PRUint32 x;
+  uint32_t x;
 #ifdef IS_BIG_ENDIAN
-  x = ( (PRUint32) buf[3])        |
-      (((PRUint32) buf[2]) << 8)  |
-      (((PRUint32) buf[1]) << 16) |
-      (((PRUint32) buf[0]) << 24);
+  x = ( (uint32_t) buf[3])        |
+      (((uint32_t) buf[2]) << 8)  |
+      (((uint32_t) buf[1]) << 16) |
+      (((uint32_t) buf[0]) << 24);
 #else
-  x = ( (PRUint32) buf[0])        |
-      (((PRUint32) buf[1]) << 8)  |
-      (((PRUint32) buf[2]) << 16) |
-      (((PRUint32) buf[3]) << 24);
+  x = ( (uint32_t) buf[0])        |
+      (((uint32_t) buf[1]) << 8)  |
+      (((uint32_t) buf[2]) << 16) |
+      (((uint32_t) buf[3]) << 24);
 #endif
   buf += sizeof(x);
   return x;
 }
 
 typedef struct {
-  PRUint16 length;
-  PRUint16 capacity;
-  PRUint32 offset;
+  uint16_t length;
+  uint16_t capacity;
+  uint32_t offset;
 } SecBuf;
 
 static void
-ReadSecBuf(SecBuf *s, const PRUint8 *&buf)
+ReadSecBuf(SecBuf *s, const uint8_t *&buf)
 {
   s->length = ReadUint16(buf);
   s->capacity = ReadUint16(buf);
@@ -192,10 +192,10 @@ ReadSecBuf(SecBuf *s, const PRUint8 *&buf)
 }
 
 static void
-ReadType1MsgBody(const PRUint8 *inBuf, PRUint32 start)
+ReadType1MsgBody(const uint8_t *inBuf, uint32_t start)
 {
-  const PRUint8 *cursor = inBuf + start;
-  PRUint32 flags;
+  const uint8_t *cursor = inBuf + start;
+  uint32_t flags;
 
   PrintBuf("flags", cursor, 4);
   // read flags
@@ -216,12 +216,12 @@ ReadType1MsgBody(const PRUint8 *inBuf, PRUint32 start)
 }
 
 static void
-ReadType2MsgBody(const PRUint8 *inBuf, PRUint32 start)
+ReadType2MsgBody(const uint8_t *inBuf, uint32_t start)
 {
-  PRUint16 targetLen, offset;
-  PRUint32 flags;
-  const PRUint8 *target;
-  const PRUint8 *cursor = inBuf + start;
+  uint16_t targetLen, offset;
+  uint32_t flags;
+  const uint8_t *target;
+  const uint8_t *cursor = inBuf + start;
 
   // read target name security buffer
   targetLen = ReadUint16(cursor);
@@ -249,9 +249,9 @@ ReadType2MsgBody(const PRUint8 *inBuf, PRUint32 start)
 }
 
 static void
-ReadType3MsgBody(const PRUint8 *inBuf, PRUint32 start)
+ReadType3MsgBody(const uint8_t *inBuf, uint32_t start)
 {
-  const PRUint8 *cursor = inBuf + start;
+  const uint8_t *cursor = inBuf + start;
 
   SecBuf secbuf;
 
@@ -273,22 +273,22 @@ ReadType3MsgBody(const PRUint8 *inBuf, PRUint32 start)
   ReadSecBuf(&secbuf, cursor); // session key
   PrintBuf("session key", inBuf + secbuf.offset, secbuf.length);
 
-  PRUint32 flags = ReadUint32(cursor);
-  PrintBuf("flags", (const PRUint8 *) &flags, sizeof(flags));
+  uint32_t flags = ReadUint32(cursor);
+  PrintBuf("flags", (const uint8_t *) &flags, sizeof(flags));
   PrintFlags(flags);
 }
 
 static void
-ReadMsg(const char *base64buf, PRUint32 bufLen)
+ReadMsg(const char *base64buf, uint32_t bufLen)
 {
-  PRUint8 *inBuf = (PRUint8 *) PL_Base64Decode(base64buf, bufLen, NULL);
+  uint8_t *inBuf = (uint8_t *) PL_Base64Decode(base64buf, bufLen, NULL);
   if (!inBuf)
   {
     printf("PL_Base64Decode failed\n");
     return;
   }
 
-  const PRUint8 *cursor = inBuf;
+  const uint8_t *cursor = inBuf;
 
   PrintBuf("signature", cursor, 8);
 
@@ -320,6 +320,6 @@ int main(int argc, char **argv)
     printf("usage: ntlmread <msg>\n");
     return -1;
   }
-  ReadMsg(argv[1], (PRUint32) strlen(argv[1]));
+  ReadMsg(argv[1], (uint32_t) strlen(argv[1]));
   return 0;
 }

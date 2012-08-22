@@ -11,7 +11,7 @@ interface nsICacheInfoChannel : nsISupports
    * Get expiration time from cache token. This attribute is equivalent to
    * nsICachingChannel.cacheToken.expirationTime.
    */
-  readonly attribute PRUint32 cacheTokenExpirationTime;
+  readonly attribute uint32_t cacheTokenExpirationTime;
 
   /**
    * Set/get charset of cache entry. Accessing this attribute is equivalent to

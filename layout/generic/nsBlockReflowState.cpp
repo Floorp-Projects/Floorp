@@ -905,9 +905,9 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
 }
 
 nscoord
-nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
+nsBlockReflowState::ClearFloats(nscoord aY, uint8_t aBreakType,
                                 nsIFrame *aReplacedBlock,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {

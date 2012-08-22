@@ -45,7 +45,7 @@ nsAndroidNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
 }
 
 NS_IMETHODIMP
-nsAndroidNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
+nsAndroidNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 

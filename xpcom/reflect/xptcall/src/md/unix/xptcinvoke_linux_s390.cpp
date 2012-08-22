@@ -9,11 +9,11 @@
 #include "xptcprivate.h"
 
 
-static PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+static uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    PRUint32 overflow = 0, gpr = 1 /*this*/, fpr = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    uint32_t overflow = 0, gpr = 1 /*this*/, fpr = 0;
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -61,13 +61,13 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 static void
-invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d_ov, PRUint32 overflow)
+invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d_ov, uint32_t overflow)
 {
-    PRUint32 *d_gpr = d_ov + overflow; 
-    PRUint64 *d_fpr = (PRUint64 *)(d_gpr + 4);
-    PRUint32 gpr = 1 /*this*/, fpr = 0;
+    uint32_t *d_gpr = d_ov + overflow; 
+    uint64_t *d_fpr = (uint64_t *)(d_gpr + 4);
+    uint32_t gpr = 1 /*this*/, fpr = 0;
 
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -81,51 +81,51 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d_ov, PRUi
         {
         case nsXPTType::T_I8     : 
             if (gpr < 5)
-                *((PRInt32*) d_gpr) = s->val.i8, d_gpr++, gpr++;
+                *((int32_t*) d_gpr) = s->val.i8, d_gpr++, gpr++;
             else
-                *((PRInt32*) d_ov ) = s->val.i8, d_ov++;
+                *((int32_t*) d_ov ) = s->val.i8, d_ov++;
             break;
         case nsXPTType::T_I16    : 
             if (gpr < 5)
-                *((PRInt32*) d_gpr) = s->val.i16, d_gpr++, gpr++;
+                *((int32_t*) d_gpr) = s->val.i16, d_gpr++, gpr++;
             else
-                *((PRInt32*) d_ov ) = s->val.i16, d_ov++;
+                *((int32_t*) d_ov ) = s->val.i16, d_ov++;
             break;
         case nsXPTType::T_I32    : 
             if (gpr < 5)
-                *((PRInt32*) d_gpr) = s->val.i32, d_gpr++, gpr++;
+                *((int32_t*) d_gpr) = s->val.i32, d_gpr++, gpr++;
             else
-                *((PRInt32*) d_ov ) = s->val.i32, d_ov++;
+                *((int32_t*) d_ov ) = s->val.i32, d_ov++;
             break;
         case nsXPTType::T_I64    : 
             if (gpr < 4)
-                *((PRInt64*) d_gpr) = s->val.i64, d_gpr+=2, gpr+=2;
+                *((int64_t*) d_gpr) = s->val.i64, d_gpr+=2, gpr+=2;
             else
-                *((PRInt64*) d_ov ) = s->val.i64, d_ov+=2, gpr=5;
+                *((int64_t*) d_ov ) = s->val.i64, d_ov+=2, gpr=5;
             break;
         case nsXPTType::T_U8     : 
             if (gpr < 5)
-                *((PRUint32*) d_gpr) = s->val.u8, d_gpr++, gpr++;
+                *((uint32_t*) d_gpr) = s->val.u8, d_gpr++, gpr++;
             else
-                *((PRUint32*) d_ov ) = s->val.u8, d_ov++;
+                *((uint32_t*) d_ov ) = s->val.u8, d_ov++;
             break;
         case nsXPTType::T_U16    : 
             if (gpr < 5)
-                *((PRUint32*)d_gpr) = s->val.u16, d_gpr++, gpr++;
+                *((uint32_t*)d_gpr) = s->val.u16, d_gpr++, gpr++;
             else
-                *((PRUint32*)d_ov ) = s->val.u16, d_ov++;
+                *((uint32_t*)d_ov ) = s->val.u16, d_ov++;
             break;
         case nsXPTType::T_U32    : 
             if (gpr < 5)
-                *((PRUint32*)d_gpr) = s->val.u32, d_gpr++, gpr++;
+                *((uint32_t*)d_gpr) = s->val.u32, d_gpr++, gpr++;
             else
-                *((PRUint32*)d_ov ) = s->val.u32, d_ov++;
+                *((uint32_t*)d_ov ) = s->val.u32, d_ov++;
             break;
         case nsXPTType::T_U64    : 
             if (gpr < 4)
-                *((PRUint64*)d_gpr) = s->val.u64, d_gpr+=2, gpr+=2;
+                *((uint64_t*)d_gpr) = s->val.u64, d_gpr+=2, gpr+=2;
             else
-                *((PRUint64*)d_ov ) = s->val.u64, d_ov+=2, gpr=5;
+                *((uint64_t*)d_ov ) = s->val.u64, d_ov+=2, gpr=5;
             break;
         case nsXPTType::T_FLOAT  : 
             if (fpr < 2)
@@ -141,21 +141,21 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d_ov, PRUi
             break;
         case nsXPTType::T_BOOL   : 
             if (gpr < 5)
-                *((PRUint32*)d_gpr) = s->val.b, d_gpr++, gpr++;
+                *((uint32_t*)d_gpr) = s->val.b, d_gpr++, gpr++;
             else
-                *((PRUint32*)d_ov ) = s->val.b, d_ov++;
+                *((uint32_t*)d_ov ) = s->val.b, d_ov++;
             break;
         case nsXPTType::T_CHAR   : 
             if (gpr < 5)
-                *((PRUint32*)d_gpr) = s->val.c, d_gpr++, gpr++;
+                *((uint32_t*)d_gpr) = s->val.c, d_gpr++, gpr++;
             else
-                *((PRUint32*)d_ov ) = s->val.c, d_ov++;
+                *((uint32_t*)d_ov ) = s->val.c, d_ov++;
             break;
         case nsXPTType::T_WCHAR  : 
             if (gpr < 5)
-                *((PRUint32*)d_gpr) = s->val.wc, d_gpr++, gpr++;
+                *((uint32_t*)d_gpr) = s->val.wc, d_gpr++, gpr++;
             else
-                *((PRUint32*)d_ov ) = s->val.wc, d_ov++;
+                *((uint32_t*)d_ov ) = s->val.wc, d_ov++;
             break;
         default:
             // all the others are plain pointer types
@@ -168,20 +168,20 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d_ov, PRUi
     }
 }
 
-typedef nsresult (*vtable_func)(nsISupports *, PRUint32, PRUint32, PRUint32, PRUint32, double, double);
+typedef nsresult (*vtable_func)(nsISupports *, uint32_t, uint32_t, uint32_t, uint32_t, double, double);
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                 uint32_t paramCount, nsXPTCVariant* params)
 {
     vtable_func *vtable = *reinterpret_cast<vtable_func **>(that);
     vtable_func method = vtable[methodIndex];
-    PRUint32 overflow = invoke_count_words (paramCount, params);
-    PRUint32 *stack_space = reinterpret_cast<PRUint32 *>(__builtin_alloca((overflow + 8 /* 4 32-bits gpr + 2 64-bits fpr */) * 4));
+    uint32_t overflow = invoke_count_words (paramCount, params);
+    uint32_t *stack_space = reinterpret_cast<uint32_t *>(__builtin_alloca((overflow + 8 /* 4 32-bits gpr + 2 64-bits fpr */) * 4));
 
     invoke_copy_to_stack(paramCount, params, stack_space, overflow);
 
-    PRUint32 *d_gpr = stack_space + overflow;
+    uint32_t *d_gpr = stack_space + overflow;
     double *d_fpr = reinterpret_cast<double *>(d_gpr + 4);
 
     return method(that, d_gpr[0], d_gpr[1], d_gpr[2], d_gpr[3],  d_fpr[0], d_fpr[1]);

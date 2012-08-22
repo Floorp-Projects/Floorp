@@ -19,7 +19,7 @@ SharedDIB::~SharedDIB()
 }
 
 nsresult
-SharedDIB::Create(PRUint32 aSize)
+SharedDIB::Create(uint32_t aSize)
 {
   Close();
 
@@ -50,7 +50,7 @@ SharedDIB::Close()
 }
 
 nsresult
-SharedDIB::Attach(Handle aHandle, PRUint32 aSize)
+SharedDIB::Attach(Handle aHandle, uint32_t aSize)
 {
   Close();
 

@@ -29,8 +29,8 @@ retrieveNode(txExecutionState* aExecutionState, const nsAString& aUri,
     nsAutoString absUrl;
     URIUtils::resolveHref(aUri, aBaseUri, absUrl);
 
-    PRInt32 hash = absUrl.RFindChar(PRUnichar('#'));
-    PRUint32 urlEnd, fragStart, fragEnd;
+    int32_t hash = absUrl.RFindChar(PRUnichar('#'));
+    uint32_t urlEnd, fragStart, fragEnd;
     if (hash == kNotFound) {
         urlEnd = absUrl.Length();
         fragStart = 0;
@@ -113,7 +113,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         txNodeSet* nodeSet1 = static_cast<txNodeSet*>
                                          (static_cast<txAExprResult*>
                                                      (exprResult1));
-        PRInt32 i;
+        int32_t i;
         for (i = 0; i < nodeSet1->size(); ++i) {
             const txXPathNode& node = nodeSet1->get(i);
             nsAutoString uriStr;

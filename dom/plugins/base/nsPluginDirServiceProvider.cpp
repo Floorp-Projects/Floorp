@@ -222,18 +222,18 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
     regKey->ReadStringValue(NS_LITERAL_STRING("BrowserJavaVersion"),
                             browserJavaVersion);
 
-    PRUint32 childCount = 0;
+    uint32_t childCount = 0;
     regKey->GetChildCount(&childCount);
 
     // We must enumerate through the keys because what if there is
     // more than one version?
-    for (PRUint32 index = 0; index < childCount; ++index) {
+    for (uint32_t index = 0; index < childCount; ++index) {
       nsAutoString childName;
       rv = regKey->GetChildName(index, childName);
       if (NS_SUCCEEDED(rv)) {
         // Skip major.minor as it always points to latest in its family
-        PRUint32 numChars = 0;
-        PRInt32 offset = 0;
+        uint32_t numChars = 0;
+        int32_t offset = 0;
         while ((offset = childName.FindChar(L'.', offset + 1)) >= 0) {
           ++numChars;
         }
@@ -402,10 +402,10 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
 
     // We must enumerate through the keys because what if there is
     // more than one version?
-    PRUint32 childCount = 0;
+    uint32_t childCount = 0;
     regKey->GetChildCount(&childCount);
 
-    for (PRUint32 index = 0; index < childCount; ++index) {
+    for (uint32_t index = 0; index < childCount; ++index) {
       nsAutoString childName;
       rv = regKey->GetChildName(index, childName);
       if (NS_SUCCEEDED(rv)) {
@@ -460,7 +460,7 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
 }
 
 nsresult
-nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMArray<nsIFile> &aDirs)
+nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(uint32_t aKey, nsCOMArray<nsIFile> &aDirs)
 {
   nsCOMPtr<nsIWindowsRegKey> regKey =
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -471,10 +471,10 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
                              nsIWindowsRegKey::ACCESS_READ);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 childCount = 0;
+  uint32_t childCount = 0;
   regKey->GetChildCount(&childCount);
 
-  for (PRUint32 index = 0; index < childCount; ++index) {
+  for (uint32_t index = 0; index < childCount; ++index) {
     nsAutoString childName;
     rv = regKey->GetChildName(index, childName);
     if (NS_SUCCEEDED(rv)) {
@@ -504,8 +504,8 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
             bool isFileThere = false;
             bool isDupEntry = false;
             if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
-              PRInt32 c = aDirs.Count();
-              for (PRInt32 i = 0; i < c; i++) {
+              int32_t c = aDirs.Count();
+              for (int32_t i = 0; i < c; i++) {
                 nsIFile *dup = static_cast<nsIFile*>(aDirs[i]);
                 if (dup &&
                     NS_SUCCEEDED(dup->Equals(localFile, &isDupEntry)) &&

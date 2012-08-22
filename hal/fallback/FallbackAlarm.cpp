@@ -19,7 +19,7 @@ DisableAlarm()
 }
 
 bool
-SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds)
+SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
   return false;
 }

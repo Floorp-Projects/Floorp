@@ -160,7 +160,7 @@ private:
             hr = SHOpenFolderAndSelectItems(dir, count, selection, 0);
             CoTaskMemFree(dir);
         } else {
-            PRInt32 len = mResolvedPath.Length();
+            int32_t len = mResolvedPath.Length();
             // We don't currently handle UNC long paths of the form \\?\ anywhere so
             // this should be fine.
             if (len > MAX_PATH) {
@@ -314,7 +314,7 @@ public:
                          const WCHAR* args,
                          const WCHAR* description,
                          const WCHAR* iconFile,
-                         PRInt32 iconIndex);
+                         int32_t iconIndex);
 
 private:
     Mutex                  mLock;
@@ -374,7 +374,7 @@ ShortcutResolver::SetShortcut(bool updateExisting,
                               const WCHAR* args,
                               const WCHAR* description,
                               const WCHAR* iconPath,
-                              PRInt32 iconIndex)
+                              int32_t iconIndex)
 {
     if (!mShellLink) {
       return NS_ERROR_FAILURE;
@@ -538,7 +538,7 @@ IsShortcutPath(const nsAString &path)
     // Note also that we don't resolve links in the middle of paths.
     // i.e. "c:\foo.lnk\bar.txt" is invalid.
     NS_ABORT_IF_FALSE(!path.IsEmpty(), "don't pass an empty string");
-    PRInt32 len = path.Length();
+    int32_t len = path.Length();
     return len >= 4 && (StringTail(path, 4).LowerCaseEqualsASCII(".lnk"));
 }
 
@@ -566,7 +566,7 @@ struct _MDFileDesc {
 };
 
 struct PRFilePrivate {
-    PRInt32 state;
+    int32_t state;
     bool nonblocking;
     _PRTriStateBool inheritable;
     PRFileDesc *next;
@@ -592,9 +592,9 @@ OpenFile(const nsAFlatString &name, int osflags, int mode,
          PRFileDesc **fd)
 {
     // XXX : 'mode' is not translated !!!
-    PRInt32 access = 0;
-    PRInt32 flags = 0;
-    PRInt32 flag6 = 0;
+    int32_t access = 0;
+    int32_t flags = 0;
+    int32_t flag6 = 0;
 
     if (osflags & PR_SYNC) flag6 = FILE_FLAG_WRITE_THROUGH;
  
@@ -1188,7 +1188,7 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
 }
 
 NS_IMETHODIMP
-nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
+nsLocalFile::OpenNSPRFileDesc(int32_t flags, int32_t mode, PRFileDesc **_retval)
 {
     nsresult rv = Resolve();
     if (NS_FAILED(rv))
@@ -1215,7 +1215,7 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
 
 
 NS_IMETHODIMP
-nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
+nsLocalFile::Create(uint32_t type, uint32_t attributes)
 {
     if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
         return NS_ERROR_FILE_UNKNOWN_TYPE;
@@ -1407,7 +1407,7 @@ nsLocalFile::Normalize()
     // using ".."  For a local drive this is the first slash (e.g. "c:\").
     // For a UNC path it is the slash following the share name 
     // (e.g. "\\server\share\").
-    PRInt32 rootIdx = 2;        // default to local drive
+    int32_t rootIdx = 2;        // default to local drive
     if (path.First() == L'\\')   // if a share then calculate the rootIdx
     {
         rootIdx = path.FindChar(L'\\', 2);   // skip \\ in front of the server
@@ -1457,11 +1457,11 @@ nsLocalFile::Normalize()
         else
             path.Replace(0, 2, currentDir + NS_LITERAL_STRING("\\"));
     }
-    NS_POSTCONDITION(0 < rootIdx && rootIdx < (PRInt32)path.Length(), "rootIdx is invalid");
+    NS_POSTCONDITION(0 < rootIdx && rootIdx < (int32_t)path.Length(), "rootIdx is invalid");
     NS_POSTCONDITION(path.CharAt(rootIdx) == '\\', "rootIdx is invalid");
 
     // if there is nothing following the root path then it is already normalized
-    if (rootIdx + 1 == (PRInt32)path.Length())
+    if (rootIdx + 1 == (int32_t)path.Length())
         return NS_OK;
 
     // assign the root
@@ -1479,8 +1479,8 @@ nsLocalFile::Normalize()
     // The last form is something that Windows 95 and 98 supported and 
     // is a shortcut for changing up multiple directories. Windows XP
     // and ilk ignore it in a path, as is done here.
-    PRInt32 len, begin, end = rootIdx;
-    while (end < (PRInt32)path.Length())
+    int32_t len, begin, end = rootIdx;
+    while (end < (int32_t)path.Length())
     {
         // find the current segment (text between the backslashes) to 
         // be examined, this will set the following variables:
@@ -1510,7 +1510,7 @@ nsLocalFile::Normalize()
                 // back up a path component on double dot
                 if (len == 2)
                 {
-                    PRInt32 prev = mWorkingPath.RFindChar('\\');
+                    int32_t prev = mWorkingPath.RFindChar('\\');
                     if (prev >= rootIdx)
                         mWorkingPath.Truncate(prev);
                     continue;
@@ -1537,7 +1537,7 @@ nsLocalFile::Normalize()
     }
 
     // kill trailing dots and spaces.
-    PRInt32 filePathLen = mWorkingPath.Length() - 1;
+    int32_t filePathLen = mWorkingPath.Length() - 1;
     while(filePathLen > 0 && (mWorkingPath[filePathLen] == L' ' ||
           mWorkingPath[filePathLen] == L'.'))
     {
@@ -1556,7 +1556,7 @@ nsLocalFile::GetLeafName(nsAString &aLeafName)
     if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    PRInt32 offset = mWorkingPath.RFindChar(L'\\');
+    int32_t offset = mWorkingPath.RFindChar(L'\\');
 
     // if the working path is just a node without any lashes.
     if (offset == kNotFound)
@@ -1576,7 +1576,7 @@ nsLocalFile::SetLeafName(const nsAString &aLeafName)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
-    PRInt32 offset = mWorkingPath.RFindChar(L'\\');
+    int32_t offset = mWorkingPath.RFindChar(L'\\');
     if (offset)
     {
         mWorkingPath.Truncate(offset+1);
@@ -1638,7 +1638,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
                                             (void**)&translate, &pageCount);
         if (queryResult && translate) 
         {
-            for (PRInt32 i = 0; i < 2; ++i) 
+            for (int32_t i = 0; i < 2; ++i) 
             { 
                 PRUnichar subBlock[MAX_PATH];
                 _snwprintf(subBlock, MAX_PATH,
@@ -1675,7 +1675,7 @@ nsLocalFile::SetShortcut(nsIFile* targetFile,
                          const PRUnichar* args,
                          const PRUnichar* description,
                          nsIFile* iconFile,
-                         PRInt32 iconIndex)
+                         int32_t iconIndex)
 {
     bool exists;
     nsresult rv = this->Exists(&exists);
@@ -1989,7 +1989,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
             {
                 nsAutoString temp;
                 GetTarget(temp);
-                PRInt32 offset = temp.RFindChar(L'\\'); 
+                int32_t offset = temp.RFindChar(L'\\'); 
                 if (offset == kNotFound)
                     allocatedNewName = temp;
                 else 
@@ -2250,7 +2250,7 @@ nsLocalFile::Remove(bool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTime(int64_t *aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2267,7 +2267,7 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
         return rv;
 
     // microseconds -> milliseconds
-    PRInt64 usecPerMsec;
+    int64_t usecPerMsec;
     LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
     LL_DIV(*aLastModifiedTime, mFileInfo64.modifyTime, usecPerMsec);
     return NS_OK;
@@ -2275,7 +2275,7 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2291,7 +2291,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
         return rv;
 
     // microseconds -> milliseconds
-    PRInt64 usecPerMsec;
+    int64_t usecPerMsec;
     LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
     LL_DIV(*aLastModifiedTime, info.modifyTime, usecPerMsec);
     return NS_OK;
@@ -2299,7 +2299,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
+nsLocalFile::SetLastModifiedTime(int64_t aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2322,7 +2322,7 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTime)
+nsLocalFile::SetLastModifiedTimeOfLink(int64_t aLastModifiedTime)
 {
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. 
@@ -2335,7 +2335,7 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTime)
 }
 
 nsresult
-nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, const PRUnichar *filePath)
+nsLocalFile::SetModDate(int64_t aLastModifiedTime, const PRUnichar *filePath)
 {
     // The FILE_FLAG_BACKUP_SEMANTICS is required in order to change the
     // modification time for directories.
@@ -2380,7 +2380,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, const PRUnichar *filePath)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetPermissions(PRUint32 *aPermissions)
+nsLocalFile::GetPermissions(uint32_t *aPermissions)
 {
     NS_ENSURE_ARG(aPermissions);
 
@@ -2406,7 +2406,7 @@ nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissions)
+nsLocalFile::GetPermissionsOfLink(uint32_t *aPermissions)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2431,7 +2431,7 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissions)
 
 
 NS_IMETHODIMP
-nsLocalFile::SetPermissions(PRUint32 aPermissions)
+nsLocalFile::SetPermissions(uint32_t aPermissions)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2458,7 +2458,7 @@ nsLocalFile::SetPermissions(PRUint32 aPermissions)
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
+nsLocalFile::SetPermissionsOfLink(uint32_t aPermissions)
 {
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. 
@@ -2478,7 +2478,7 @@ nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetFileSize(PRInt64 *aFileSize)
+nsLocalFile::GetFileSize(int64_t *aFileSize)
 {
     NS_ENSURE_ARG(aFileSize);
 
@@ -2492,7 +2492,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
+nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2511,7 +2511,7 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetFileSize(PRInt64 aFileSize)
+nsLocalFile::SetFileSize(int64_t aFileSize)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2547,7 +2547,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
+nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -2589,7 +2589,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
         return NS_OK;
     }
 
-    PRInt32 offset = mWorkingPath.RFindChar(PRUnichar('\\'));
+    int32_t offset = mWorkingPath.RFindChar(PRUnichar('\\'));
     // adding this offset check that was removed in bug 241708 fixes mail
     // directories that aren't relative to/underneath the profile dir.
     // e.g., on a different drive. Before you remove them, please make
@@ -2739,14 +2739,14 @@ nsLocalFile::IsExecutable(bool *_retval)
         GetPath(path);
 
     // kill trailing dots and spaces.
-    PRInt32 filePathLen = path.Length() - 1;
+    int32_t filePathLen = path.Length() - 1;
     while(filePathLen > 0 && (path[filePathLen] == L' ' || path[filePathLen] == L'.'))
     {
         path.Truncate(filePathLen--);
     } 
 
     // Get extension.
-    PRInt32 dotIdx = path.RFindChar(PRUnichar('.'));
+    int32_t dotIdx = path.RFindChar(PRUnichar('.'));
     if ( dotIdx != kNotFound ) {
         // Convert extension to lower case.
         PRUnichar *p = path.BeginWriting();
@@ -2954,7 +2954,7 @@ nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
     if (NS_FAILED(GetTarget(myFilePath)))
         GetPath(myFilePath);
 
-    PRUint32 myFilePathLen = myFilePath.Length();
+    uint32_t myFilePathLen = myFilePath.Length();
 
     nsAutoString inFilePath;
     if (NS_FAILED(inFile->GetTarget(inFilePath)))
@@ -3067,7 +3067,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 
 /* attrib unsigned long fileAttributesWin; */
 NS_IMETHODIMP
-nsLocalFile::GetFileAttributesWin(PRUint32 *aAttribs)
+nsLocalFile::GetFileAttributesWin(uint32_t *aAttribs)
 {
     *aAttribs = 0;
     DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
@@ -3081,7 +3081,7 @@ nsLocalFile::GetFileAttributesWin(PRUint32 *aAttribs)
 }   
     
 NS_IMETHODIMP
-nsLocalFile::SetFileAttributesWin(PRUint32 aAttribs)
+nsLocalFile::SetFileAttributesWin(uint32_t aAttribs)
 {
     DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
     if (dwAttrs == INVALID_FILE_ATTRIBUTES)
@@ -3379,7 +3379,7 @@ nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetHashCode(PRUint32 *aResult)
+nsLocalFile::GetHashCode(uint32_t *aResult)
 {
     // In order for short and long path names to hash to the same value we
     // always hash on the short pathname.

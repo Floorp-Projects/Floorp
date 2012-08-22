@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 protected:
-  nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd);
+  nsHtml5UTF16Buffer(PRUnichar* aBuffer, int32_t aEnd);
   ~nsHtml5UTF16Buffer();
 
   /**

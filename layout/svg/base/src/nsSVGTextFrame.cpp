@@ -48,9 +48,9 @@ nsSVGTextFrame::Init(nsIContent* aContent,
 #endif /* DEBUG */
 
 NS_IMETHODIMP
-nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGTextFrame::AttributeChanged(int32_t         aNameSpaceID,
                                  nsIAtom*        aAttribute,
-                                 PRInt32         aModType)
+                                 int32_t         aModType)
 {
   if (aNameSpaceID != kNameSpaceID_None)
     return NS_OK;
@@ -87,7 +87,7 @@ nsSVGTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 //----------------------------------------------------------------------
 // nsSVGTextContainerFrame
-PRUint32
+uint32_t
 nsSVGTextFrame::GetNumberOfChars()
 {
   UpdateGlyphPositioning(false);
@@ -104,14 +104,14 @@ nsSVGTextFrame::GetComputedTextLength()
 }
 
 float
-nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
+nsSVGTextFrame::GetSubStringLength(uint32_t charnum, uint32_t nchars)
 {
   UpdateGlyphPositioning(false);
 
   return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars);
 }
 
-PRInt32
+int32_t
 nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 {
   UpdateGlyphPositioning(false);
@@ -120,7 +120,7 @@ nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextFrame::GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
 {
   UpdateGlyphPositioning(false);
 
@@ -128,7 +128,7 @@ nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextFrame::GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
 {
   UpdateGlyphPositioning(false);
 
@@ -136,7 +136,7 @@ nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
+nsSVGTextFrame::GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval)
 {
   UpdateGlyphPositioning(false);
 
@@ -144,7 +144,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
+nsSVGTextFrame::GetRotationOfChar(uint32_t charnum, float *_retval)
 {
   UpdateGlyphPositioning(false);
 
@@ -155,7 +155,7 @@ nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 // nsISVGChildFrame methods
 
 void
-nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGTextFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -267,7 +267,7 @@ nsSVGTextFrame::ReflowSVG()
 
 SVGBBox
 nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                    PRUint32 aFlags)
+                                    uint32_t aFlags)
 {
   UpdateGlyphPositioning(true);
 
@@ -278,7 +278,7 @@ nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGTextFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGTextFrame::GetCanvasTM(uint32_t aFor)
 {
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
@@ -426,7 +426,7 @@ nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
 
     // determine x offset based on text_anchor:
   
-    PRUint8 anchor = firstFrame->GetTextAnchor();
+    uint8_t anchor = firstFrame->GetTextAnchor();
 
     /**
      * XXXsmontagu: The SVG spec is very vague as to how 'text-anchor'

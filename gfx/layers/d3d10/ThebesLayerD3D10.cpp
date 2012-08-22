@@ -269,7 +269,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
 
       device()->CopyResource(readbackTexture, mTexture);
 
-      for (PRUint32 i = 0; i < readbackUpdates.Length(); i++) {
+      for (uint32_t i = 0; i < readbackUpdates.Length(); i++) {
         mD3DManager->readbackManager()->PostTask(readbackTexture,
                                                  &readbackUpdates[i],
                                                  gfxPoint(newTextureRect.x, newTextureRect.y));

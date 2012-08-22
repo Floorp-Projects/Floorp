@@ -20,7 +20,7 @@ interface nsIBidiKeyboard : nsISupports
    * @param aLevel - if odd set the keyboard to RTL, if even set LTR 
    * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
    */
-  void setLangFromBidiLevel(in PRUint8 aLevel);
+  void setLangFromBidiLevel(in uint8_t aLevel);
 
   /**
    * Determines whether the system has at least one keyboard of each direction

@@ -44,7 +44,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual mozilla::SVGAnimatedTransformList*
-    GetAnimatedTransformList(PRUint32 aFlags = 0);
+    GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::gradientTransform;
   }

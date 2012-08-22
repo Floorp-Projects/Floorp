@@ -113,7 +113,7 @@ HTMLPropertiesCollection::WrapObject(JSContext* cx, JSObject* scope,
 }
 
 NS_IMETHODIMP
-HTMLPropertiesCollection::GetLength(PRUint32* aLength)
+HTMLPropertiesCollection::GetLength(uint32_t* aLength)
 {
   EnsureFresh();
   *aLength = mProperties.Length();
@@ -121,7 +121,7 @@ HTMLPropertiesCollection::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-HTMLPropertiesCollection::Item(PRUint32 aIndex, nsIDOMNode** aResult)
+HTMLPropertiesCollection::Item(uint32_t aIndex, nsIDOMNode** aResult)
 {
   EnsureFresh();
   nsGenericHTMLElement* property = mProperties.SafeElementAt(aIndex);
@@ -158,7 +158,7 @@ HTMLPropertiesCollection::GetNamedItem(const nsAString& aName,
 }
 
 nsIContent*
-HTMLPropertiesCollection::GetNodeAt(PRUint32 aIndex)
+HTMLPropertiesCollection::GetNodeAt(uint32_t aIndex)
 {
   EnsureFresh();
   return mProperties.SafeElementAt(aIndex);
@@ -195,8 +195,8 @@ HTMLPropertiesCollection::GetNames(nsIDOMDOMStringList** aResult)
 
 void
 HTMLPropertiesCollection::AttributeChanged(nsIDocument *aDocument, Element* aElement,
-                                           PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                           PRInt32 aModType)
+                                           int32_t aNameSpaceID, nsIAtom* aAttribute,
+                                           int32_t aModType)
 {
   mIsDirty = true;
 }
@@ -204,7 +204,7 @@ HTMLPropertiesCollection::AttributeChanged(nsIDocument *aDocument, Element* aEle
 void
 HTMLPropertiesCollection::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
                                           nsIContent* aFirstNewContent,
-                                          PRInt32 aNewIndexInContainer)
+                                          int32_t aNewIndexInContainer)
 {
   mIsDirty = true;
 }
@@ -213,7 +213,7 @@ void
 HTMLPropertiesCollection::ContentInserted(nsIDocument *aDocument,
                                           nsIContent* aContainer,
                                           nsIContent* aChild,
-                                          PRInt32 aIndexInContainer)
+                                          int32_t aIndexInContainer)
 {
   mIsDirty = true;
 }
@@ -222,7 +222,7 @@ void
 HTMLPropertiesCollection::ContentRemoved(nsIDocument *aDocument,
                                          nsIContent* aContainer,
                                          nsIContent* aChild,
-                                         PRInt32 aIndexInContainer,
+                                         int32_t aIndexInContainer,
                                          nsIContent* aPreviousSibling)
 {
   mIsDirty = true;
@@ -269,10 +269,10 @@ HTMLPropertiesCollection::EnsureFresh()
   mProperties.Sort(comparator);
 
   // Create the names DOMStringList
-  PRUint32 count = mProperties.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mProperties.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     const nsAttrValue* attr = mProperties.ElementAt(i)->GetParsedAttr(nsGkAtoms::itemprop); 
-    for (PRUint32 i = 0; i < attr->GetAtomCount(); i++) {
+    for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
       nsDependentAtomString propName(attr->AtomAt(i));
       // ContainsInternal must not call EnsureFresh
       bool contains = mNames->ContainsInternal(propName);
@@ -304,7 +304,7 @@ HTMLPropertiesCollection::CrawlProperties()
  
   const nsAttrValue* attr = mRoot->GetParsedAttr(nsGkAtoms::itemref);
   if (attr) {
-    for (PRUint32 i = 0; i < attr->GetAtomCount(); i++) {
+    for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
       nsIAtom* ref = attr->AtomAt(i);
       Element* element;
       if (doc) {
@@ -383,7 +383,7 @@ PropertyNodeList::SetDocument(nsIDocument* aDoc)
 }
 
 NS_IMETHODIMP
-PropertyNodeList::GetLength(PRUint32* aLength)
+PropertyNodeList::GetLength(uint32_t* aLength)
 {
   EnsureFresh();
   *aLength = mElements.Length();
@@ -391,7 +391,7 @@ PropertyNodeList::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-PropertyNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+PropertyNodeList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
   EnsureFresh();
   nsINode* element = mElements.SafeElementAt(aIndex);
@@ -403,13 +403,13 @@ PropertyNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsIContent*
-PropertyNodeList::GetNodeAt(PRUint32 aIndex)
+PropertyNodeList::GetNodeAt(uint32_t aIndex)
 {
   EnsureFresh();
   return mElements.SafeElementAt(aIndex);
 }
 
-PRInt32
+int32_t
 PropertyNodeList::IndexOf(nsIContent* aContent)
 {
   EnsureFresh();
@@ -474,11 +474,11 @@ PropertyNodeList::GetValues(nsIVariant** aValues)
   // nsWritableVariant::SetAsArray takes an nsIVariant**.
   nsTArray<nsIVariant*> values;
 
-  PRUint32 length = mElements.Length();
+  uint32_t length = mElements.Length();
   if (length == 0) {
     out->SetAsEmptyArray();
   } else {
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       nsIVariant* itemValue;
       mElements.ElementAt(i)->GetItemValue(&itemValue);
       values.AppendElement(itemValue);
@@ -491,7 +491,7 @@ PropertyNodeList::GetValues(nsIVariant** aValues)
 
   out.forget(aValues);
 
-  for (PRUint32 i = 0; i < values.Length(); ++i) {
+  for (uint32_t i = 0; i < values.Length(); ++i) {
     NS_RELEASE(values[i]);
   }
 
@@ -500,8 +500,8 @@ PropertyNodeList::GetValues(nsIVariant** aValues)
 
 void
 PropertyNodeList::AttributeChanged(nsIDocument* aDocument, Element* aElement,
-                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                   PRInt32 aModType)
+                                   int32_t aNameSpaceID, nsIAtom* aAttribute,
+                                   int32_t aModType)
 {
   mIsDirty = true;
 }
@@ -509,7 +509,7 @@ PropertyNodeList::AttributeChanged(nsIDocument* aDocument, Element* aElement,
 void
 PropertyNodeList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
                                   nsIContent* aFirstNewContent,
-                                  PRInt32 aNewIndexInContainer)
+                                  int32_t aNewIndexInContainer)
 {
   mIsDirty = true;
 }
@@ -518,7 +518,7 @@ void
 PropertyNodeList::ContentInserted(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aChild,
-                                  PRInt32 aIndexInContainer)
+                                  int32_t aIndexInContainer)
 {
   mIsDirty = true;
 }
@@ -527,7 +527,7 @@ void
 PropertyNodeList::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
-                                 PRInt32 aIndexInContainer,
+                                 int32_t aIndexInContainer,
                                  nsIContent* aPreviousSibling)
 {
   mIsDirty = true;
@@ -544,8 +544,8 @@ PropertyNodeList::EnsureFresh()
   mCollection->EnsureFresh();
   Clear();
 
-  PRUint32 count = mCollection->mProperties.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mCollection->mProperties.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     nsGenericHTMLElement* element = mCollection->mProperties.ElementAt(i);
     const nsAttrValue* attr = element->GetParsedAttr(nsGkAtoms::itemprop);
     if (attr->Contains(mName)) {
@@ -577,14 +577,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PropertyStringList)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-PropertyStringList::Item(PRUint32 aIndex, nsAString& aResult)
+PropertyStringList::Item(uint32_t aIndex, nsAString& aResult)
 {
   mCollection->EnsureFresh();
   return nsDOMStringList::Item(aIndex, aResult);
 }
 
 NS_IMETHODIMP
-PropertyStringList::GetLength(PRUint32* aLength)
+PropertyStringList::GetLength(uint32_t* aLength)
 {
   mCollection->EnsureFresh();
   return nsDOMStringList::GetLength(aLength);

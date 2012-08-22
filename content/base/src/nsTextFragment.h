@@ -112,7 +112,7 @@ public:
    * Get the length of the fragment. The length is the number of logical
    * characters, not the number of bytes to store the characters.
    */
-  PRUint32 GetLength() const
+  uint32_t GetLength() const
   {
     return mState.mLength;
   }
@@ -127,14 +127,14 @@ public:
    * buffer. If aUpdateBidi is true, contents of the fragment will be scanned,
    * and mState.mIsBidi will be turned on if it includes any Bidi characters.
    */
-  void SetTo(const PRUnichar* aBuffer, PRInt32 aLength, bool aUpdateBidi);
+  void SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi);
 
   /**
    * Append aData to the end of this fragment. If aUpdateBidi is true, contents
    * of the fragment will be scanned, and mState.mIsBidi will be turned on if
    * it includes any Bidi characters.
    */
-  void Append(const PRUnichar* aBuffer, PRUint32 aLength, bool aUpdateBidi);
+  void Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi);
 
   /**
    * Append the contents of this string fragment to aString
@@ -152,7 +152,7 @@ public:
    * @param aOffset where to start the substring in this text fragment
    * @param aLength the length of the substring
    */
-  void AppendTo(nsAString& aString, PRInt32 aOffset, PRInt32 aLength) const {
+  void AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength) const {
     if (mState.mIs2b) {
       aString.Append(m2b + aOffset, aLength);
     } else {
@@ -166,28 +166,28 @@ public:
    * lie within the fragments data. The fragments data is converted if
    * necessary.
    */
-  void CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount);
+  void CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount);
 
   /**
    * Return the character in the text-fragment at the given
    * index. This always returns a PRUnichar.
    */
-  PRUnichar CharAt(PRInt32 aIndex) const
+  PRUnichar CharAt(int32_t aIndex) const
   {
-    NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
+    NS_ASSERTION(uint32_t(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? m2b[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
   }
 
   struct FragmentBits {
-    // PRUint32 to ensure that the values are unsigned, because we
+    // uint32_t to ensure that the values are unsigned, because we
     // want 0/1, not 0/-1!
     // Making these bool causes Windows to not actually pack them,
     // which causes crashes because we assume this structure is no more than
     // 32 bits!
-    PRUint32 mInHeap : 1;
-    PRUint32 mIs2b : 1;
-    PRUint32 mIsBidi : 1;
-    PRUint32 mLength : 29;
+    uint32_t mInHeap : 1;
+    uint32_t mIs2b : 1;
+    uint32_t mIsBidi : 1;
+    uint32_t mLength : 29;
   };
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -199,7 +199,7 @@ private:
    * Scan the contents of the fragment and turn on mState.mIsBidi if it
    * includes any Bidi characters.
    */
-  void UpdateBidiFlag(const PRUnichar* aBuffer, PRUint32 aLength);
+  void UpdateBidiFlag(const PRUnichar* aBuffer, uint32_t aLength);
  
   union {
     PRUnichar *m2b;
@@ -207,7 +207,7 @@ private:
   };
 
   union {
-    PRUint32 mAllBits;
+    uint32_t mAllBits;
     FragmentBits mState;
   };
 };

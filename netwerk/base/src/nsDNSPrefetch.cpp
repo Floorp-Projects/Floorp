@@ -40,7 +40,7 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI, bool storeTiming)
 }
 
 nsresult 
-nsDNSPrefetch::Prefetch(PRUint16 flags)
+nsDNSPrefetch::Prefetch(uint16_t flags)
 {
     if (mHostname.IsEmpty())
         return NS_ERROR_NOT_AVAILABLE;

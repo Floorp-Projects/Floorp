@@ -15,8 +15,8 @@
 #endif
 
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
-  PRUint32* args, PRUint32* floatargs)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
+  uint32_t* args, uint32_t* floatargs)
 {
 
   typedef struct {
@@ -29,14 +29,14 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
   nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCMiniVariant* dispatchParams = NULL;
   const nsXPTMethodInfo* info;
-  PRInt32 regwords = 1; /* self pointer is not in the variant records */
+  int32_t regwords = 1; /* self pointer is not in the variant records */
   nsresult result = NS_ERROR_FAILURE;
-  PRUint8 paramCount;
-  PRUint8 i;
+  uint8_t paramCount;
+  uint8_t i;
 
   NS_ASSERTION(self,"no self");
 
-  self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+  self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
   NS_ASSERTION(info,"no method info");
   if (!info)
     return NS_ERROR_UNEXPECTED;
@@ -66,9 +66,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     }
     switch(type)
     {
-    case nsXPTType::T_I8     : dp->val.i8  = *((PRInt32*) args); break;
-    case nsXPTType::T_I16    : dp->val.i16 = *((PRInt32*) args); break;
-    case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) args); break;
+    case nsXPTType::T_I8     : dp->val.i8  = *((int32_t*) args); break;
+    case nsXPTType::T_I16    : dp->val.i16 = *((int32_t*) args); break;
+    case nsXPTType::T_I32    : dp->val.i32 = *((int32_t*) args); break;
     case nsXPTType::T_DOUBLE :
                                if (regwords & 1)
                                {
@@ -93,8 +93,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
                                  ++regwords; /* align on double word */
                                  --args;
                                }
-                               ((DU *)dp)->lo = *((PRUint32*) args);
-                               ((DU *)dp)->hi = *((PRUint32*) --args);
+                               ((DU *)dp)->lo = *((uint32_t*) args);
+                               ((DU *)dp)->hi = *((uint32_t*) --args);
                                regwords += 2;
                                continue;
     case nsXPTType::T_FLOAT  :
@@ -103,12 +103,12 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
                                else
                                  dp->val.f = *((float*) floatargs+4+regwords);
                                break;
-    case nsXPTType::T_U8     : dp->val.u8  = *((PRUint32*) args); break;
-    case nsXPTType::T_U16    : dp->val.u16 = *((PRUint32*) args); break;
-    case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*) args); break;
-    case nsXPTType::T_BOOL   : dp->val.b   = *((PRUint32*) args); break;
-    case nsXPTType::T_CHAR   : dp->val.c   = *((PRUint32*) args); break;
-    case nsXPTType::T_WCHAR  : dp->val.wc  = *((PRInt32*)  args); break;
+    case nsXPTType::T_U8     : dp->val.u8  = *((uint32_t*) args); break;
+    case nsXPTType::T_U16    : dp->val.u16 = *((uint32_t*) args); break;
+    case nsXPTType::T_U32    : dp->val.u32 = *((uint32_t*) args); break;
+    case nsXPTType::T_BOOL   : dp->val.b   = *((uint32_t*) args); break;
+    case nsXPTType::T_CHAR   : dp->val.c   = *((uint32_t*) args); break;
+    case nsXPTType::T_WCHAR  : dp->val.wc  = *((int32_t*)  args); break;
     default:
       NS_ERROR("bad type");
       break;
@@ -116,7 +116,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     ++regwords;
   }
 
-  result = self->mOuter->CallMethod((PRUint16) methodIndex, info, dispatchParams); 
+  result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams); 
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;

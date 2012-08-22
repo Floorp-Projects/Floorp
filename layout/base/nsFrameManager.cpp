@@ -153,7 +153,7 @@ public:
 
 class nsFrameManagerBase::UndisplayedMap {
 public:
-  UndisplayedMap(PRUint32 aNumBuckets = 16) NS_HIDDEN;
+  UndisplayedMap(uint32_t aNumBuckets = 16) NS_HIDDEN;
   ~UndisplayedMap(void) NS_HIDDEN;
 
   NS_HIDDEN_(UndisplayedNode*) GetFirstNode(nsIContent* aParentContent);
@@ -285,7 +285,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
 
 static PLDHashOperator
 UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
-                       PRUint32 number, void* arg)
+                       uint32_t number, void* arg)
 {
   PlaceholderMapEntry* entry = static_cast<PlaceholderMapEntry*>(hdr);
   entry->placeholderFrame->SetOutOfFlowFrame(nullptr);
@@ -418,9 +418,9 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
   nsINodeList* list =
     aParentContent->OwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParentContent);
   if (list) {
-    PRUint32 length;
+    uint32_t length;
     list->GetLength(&length);
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       nsIContent* child = list->GetNodeAt(i);
       if (child->GetParent() != aParentContent) {
         ClearUndisplayedContentIn(child, child->GetParent());
@@ -666,7 +666,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
   
   // do additional contexts 
-  PRInt32 contextIndex = -1;
+  int32_t contextIndex = -1;
   while (1) {
     nsStyleContext* extraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
     if (extraContext) {
@@ -930,7 +930,7 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
         }
 
         // do additional contexts 
-        PRInt32 contextIndex = -1;
+        int32_t contextIndex = -1;
         while (1) {
           nsStyleContext* oldExtraContext =
             aFrame->GetAdditionalStyleContext(++contextIndex);
@@ -1302,7 +1302,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // do additional contexts
     // XXXbz might be able to avoid selector matching here in some
     // cases; won't worry about it for now.
-    PRInt32 contextIndex = -1;
+    int32_t contextIndex = -1;
     while (1 == 1) {
       nsStyleContext* oldExtraContext = nullptr;
       oldExtraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
@@ -1611,8 +1611,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           accService->ContentRemoved(presShell, content->GetParent(), content);
 
           // Process children staying shown.
-          PRUint32 visibleContentCount = aVisibleKidsOfHiddenElement.Length();
-          for (PRUint32 idx = 0; idx < visibleContentCount; idx++) {
+          uint32_t visibleContentCount = aVisibleKidsOfHiddenElement.Length();
+          for (uint32_t idx = 0; idx < visibleContentCount; idx++) {
             nsIContent* content = aVisibleKidsOfHiddenElement[idx];
             accService->ContentRangeInserted(presShell, content->GetParent(),
                                              content, content->GetNextSibling());
@@ -1853,7 +1853,7 @@ CompareKeys(void* key1, void* key2)
 
 //----------------------------------------------------------------------
 
-nsFrameManagerBase::UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
+nsFrameManagerBase::UndisplayedMap::UndisplayedMap(uint32_t aNumBuckets)
 {
   MOZ_COUNT_CTOR(nsFrameManagerBase::UndisplayedMap);
   mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
@@ -1994,4 +1994,4 @@ nsFrameManagerBase::UndisplayedMap::Clear(void)
   PL_HashTableEnumerateEntries(mTable, RemoveUndisplayedEntry, 0);
 }
 
-PRUint32 nsFrameManagerBase::sGlobalGenerationNumber;
+uint32_t nsFrameManagerBase::sGlobalGenerationNumber;

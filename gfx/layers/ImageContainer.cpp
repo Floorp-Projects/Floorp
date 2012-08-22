@@ -41,7 +41,7 @@ namespace layers {
 
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
-                          PRUint32 aNumFormats,
+                          uint32_t aNumFormats,
                           const gfxIntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
@@ -88,7 +88,7 @@ BufferRecycleBin::BufferRecycleBin()
 }
 
 void
-BufferRecycleBin::RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize)
+BufferRecycleBin::RecycleBuffer(uint8_t* aBuffer, uint32_t aSize)
 {
   MutexAutoLock lock(mLock);
 
@@ -99,16 +99,16 @@ BufferRecycleBin::RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize)
   mRecycledBuffers.AppendElement(aBuffer);
 }
 
-PRUint8*
-BufferRecycleBin::GetBuffer(PRUint32 aSize)
+uint8_t*
+BufferRecycleBin::GetBuffer(uint32_t aSize)
 {
   MutexAutoLock lock(mLock);
 
   if (mRecycledBuffers.IsEmpty() || mRecycledBufferSize != aSize)
-    return new PRUint8[aSize];
+    return new uint8_t[aSize];
 
-  PRUint32 last = mRecycledBuffers.Length() - 1;
-  PRUint8* result = mRecycledBuffers[last].forget();
+  uint32_t last = mRecycledBuffers.Length() - 1;
+  uint8_t* result = mRecycledBuffers[last].forget();
   mRecycledBuffers.RemoveElementAt(last);
   return result;
 }
@@ -139,7 +139,7 @@ ImageContainer::~ImageContainer()
 
 already_AddRefed<Image>
 ImageContainer::CreateImage(const ImageFormat *aFormats,
-                            PRUint32 aNumFormats)
+                            uint32_t aNumFormats)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   return mImageFactory->CreateImage(aFormats, aNumFormats, mScaleHint, mRecycleBin);
@@ -194,7 +194,7 @@ bool ImageContainer::IsAsync() const {
   return mImageContainerChild != nullptr;
 }
 
-PRUint64 ImageContainer::GetAsyncContainerID() const
+uint64_t ImageContainer::GetAsyncContainerID() const
 {
   NS_ASSERTION(IsAsync(),"Shared image ID is only relevant to async ImageContainers");
   if (IsAsync()) {
@@ -403,26 +403,26 @@ PlanarYCbCrImage::~PlanarYCbCrImage()
   }
 }
 
-PRUint8* 
-PlanarYCbCrImage::AllocateBuffer(PRUint32 aSize)
+uint8_t* 
+PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
   return mRecycleBin->GetBuffer(aSize); 
 }
 
 static void
-CopyPlane(PRUint8 *aDst, PRUint8 *aSrc,
-          const gfxIntSize &aSize, PRInt32 aStride,
-          PRInt32 aOffset, PRInt32 aSkip)
+CopyPlane(uint8_t *aDst, uint8_t *aSrc,
+          const gfxIntSize &aSize, int32_t aStride,
+          int32_t aOffset, int32_t aSkip)
 {
   if (!aOffset && !aSkip) {
     // Fast path: planar input.
     memcpy(aDst, aSrc, aSize.height * aStride);
   } else {
-    PRInt32 height = aSize.height;
-    PRInt32 width = aSize.width;
+    int32_t height = aSize.height;
+    int32_t width = aSize.width;
     for (int y = 0; y < height; ++y) {
-      PRUint8 *src = aSrc + aOffset;
-      PRUint8 *dst = aDst;
+      uint8_t *src = aSrc + aOffset;
+      uint8_t *dst = aDst;
       if (!aSkip) {
         // Fast path: offset only, no per-pixel skip.
         memcpy(dst, src, width);

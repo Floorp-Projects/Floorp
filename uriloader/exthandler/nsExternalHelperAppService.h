@@ -228,7 +228,7 @@ public:
                        nsIInterfaceRequestor * aWindowContext,
                        nsExternalHelperAppService * aExtProtSvc,
                        const nsAString& aFilename,
-                       PRUint32 aReason, bool aForceSave);
+                       uint32_t aReason, bool aForceSave);
 
   ~nsExternalAppHandler();
 
@@ -292,7 +292,7 @@ protected:
    * reason the dialog was shown (unknown content type, server requested it,
    * etc).
    */
-  PRUint32 mReason;
+  uint32_t mReason;
 
   /**
    * Track the executable-ness of the temporary file.
@@ -300,8 +300,8 @@ protected:
   bool mTempFileIsExecutable;
 
   PRTime mTimeDownloadStarted;
-  PRInt64 mContentLength;
-  PRInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
+  int64_t mContentLength;
+  int64_t mProgress; /**< Number of bytes received (for sending progress notifications). */
 
   /**
    * When we are told to save the temp file to disk (in a more permament
@@ -310,7 +310,7 @@ protected:
    */
   nsCOMPtr<nsIFile> mFinalFileDestination;
 
-  PRUint32 mBufferSize;
+  uint32_t mBufferSize;
   char    *mDataBuffer;
 
   /**

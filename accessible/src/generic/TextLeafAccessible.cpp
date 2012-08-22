@@ -37,8 +37,8 @@ TextLeafAccessible::NativeRole()
 }
 
 void
-TextLeafAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
-                                 PRUint32 aLength)
+TextLeafAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
+                                 uint32_t aLength)
 {
   aText.Append(Substring(mText, aStartOffset, aLength));
 }

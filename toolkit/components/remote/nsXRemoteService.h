@@ -42,13 +42,13 @@ protected:
 private:
     void EnsureAtoms();
     static const char* HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
-                                     PRUint32 aTimestamp);
+                                     uint32_t aTimestamp);
 
     static const char* HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
-                                         PRUint32 aTimestamp);
+                                         uint32_t aTimestamp);
 
     virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                                PRUint32 aTimestamp) = 0;
+                                                uint32_t aTimestamp) = 0;
 
     nsCString mAppName;
     nsCString mProfileName;

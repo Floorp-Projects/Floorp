@@ -38,7 +38,7 @@ ChildIterator::Init(nsIContent*    aContent,
   aLast->mNodes    = nodes;
 
   if (nodes) {
-    PRUint32 length;
+    uint32_t length;
     nodes->GetLength(&length);
     aFirst->mIndex = 0;
     aLast->mIndex = length;

@@ -20,9 +20,9 @@
 
 class NS_COM_GLUE nsTObserverArray_base {
   public:
-    typedef PRUint32 index_type;
-    typedef PRUint32 size_type;
-    typedef PRInt32  diff_type;
+    typedef uint32_t index_type;
+    typedef uint32_t size_type;
+    typedef int32_t  diff_type;
 
   protected:
     class Iterator_base {
@@ -67,7 +67,7 @@ class NS_COM_GLUE nsTObserverArray_base {
     mutable Iterator_base* mIterators;
 };
 
-template<class T, PRUint32 N>
+template<class T, uint32_t N>
 class nsAutoTObserverArray : protected nsTObserverArray_base {
   public:
     typedef T           elem_type;

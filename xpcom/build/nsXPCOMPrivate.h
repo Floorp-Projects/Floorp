@@ -42,25 +42,25 @@ typedef nsresult   (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 
 typedef nsresult   (* StringContainerInitFunc)(nsStringContainer&);
-typedef nsresult   (* StringContainerInit2Func)(nsStringContainer&, const PRUnichar *, PRUint32, PRUint32);
+typedef nsresult   (* StringContainerInit2Func)(nsStringContainer&, const PRUnichar *, uint32_t, uint32_t);
 typedef void       (* StringContainerFinishFunc)(nsStringContainer&);
-typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, bool*);
-typedef PRUint32   (* StringGetMutableDataFunc)(nsAString&, PRUint32, PRUnichar**);
+typedef uint32_t   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, bool*);
+typedef uint32_t   (* StringGetMutableDataFunc)(nsAString&, uint32_t, PRUnichar**);
 typedef PRUnichar* (* StringCloneDataFunc)(const nsAString&);
-typedef nsresult   (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
-typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
+typedef nsresult   (* StringSetDataFunc)(nsAString&, const PRUnichar*, uint32_t);
+typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, uint32_t, uint32_t, const PRUnichar*, uint32_t);
 typedef nsresult   (* StringCopyFunc)(nsAString &, const nsAString &);
 typedef void       (* StringSetIsVoidFunc)(nsAString &, const bool);
 typedef bool       (* StringGetIsVoidFunc)(const nsAString &);
 
 typedef nsresult   (* CStringContainerInitFunc)(nsCStringContainer&);
-typedef nsresult   (* CStringContainerInit2Func)(nsCStringContainer&, const char *, PRUint32, PRUint32);
+typedef nsresult   (* CStringContainerInit2Func)(nsCStringContainer&, const char *, uint32_t, uint32_t);
 typedef void       (* CStringContainerFinishFunc)(nsCStringContainer&);
-typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, bool*);
-typedef PRUint32   (* CStringGetMutableDataFunc)(nsACString&, PRUint32, char**);
+typedef uint32_t   (* CStringGetDataFunc)(const nsACString&, const char**, bool*);
+typedef uint32_t   (* CStringGetMutableDataFunc)(nsACString&, uint32_t, char**);
 typedef char*      (* CStringCloneDataFunc)(const nsACString&);
-typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
-typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
+typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, uint32_t);
+typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, uint32_t, uint32_t, const char*, uint32_t);
 typedef nsresult   (* CStringCopyFunc)(nsACString &, const nsACString &);
 typedef void       (* CStringSetIsVoidFunc)(nsACString &, const bool);
 typedef bool       (* CStringGetIsVoidFunc)(const nsACString &);
@@ -72,19 +72,19 @@ typedef void*      (* AllocFunc)(size_t size);
 typedef void*      (* ReallocFunc)(void* ptr, size_t size);
 typedef void       (* FreeFunc)(void* ptr);
 
-typedef void       (* DebugBreakFunc)(PRUint32 aSeverity,
+typedef void       (* DebugBreakFunc)(uint32_t aSeverity,
                                       const char *aStr, const char *aExpr,
-                                      const char *aFile, PRInt32 aLine);
+                                      const char *aFile, int32_t aLine);
 
 typedef void       (* xpcomVoidFunc)();
-typedef void       (* LogAddRefFunc)(void*, nsrefcnt, const char*, PRUint32);
+typedef void       (* LogAddRefFunc)(void*, nsrefcnt, const char*, uint32_t);
 typedef void       (* LogReleaseFunc)(void*, nsrefcnt, const char*);
-typedef void       (* LogCtorFunc)(void*, const char*, PRUint32);
+typedef void       (* LogCtorFunc)(void*, const char*, uint32_t);
 typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
 
 typedef nsresult   (* GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*, nsISomeInterface**);
 typedef void       (* DestroyXPTCallStubFunc)(nsISomeInterface*);
-typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, PRUint32, PRUint32, nsXPTCVariant*);
+typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, uint32_t, uint32_t, nsXPTCVariant*);
 typedef bool       (* CycleCollectorFunc)(nsISupports*);
 typedef nsPurpleBufferEntry*
                    (* CycleCollectorSuspect2Func)(nsISupports*);
@@ -93,12 +93,12 @@ typedef bool       (* CycleCollectorForget2Func)(nsPurpleBufferEntry*);
 // PRIVATE AND DEPRECATED
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
 
-typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, uint32_t priority);
 typedef nsresult   (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
 
 typedef struct XPCOMFunctions{
-    PRUint32 version;
-    PRUint32 size;
+    uint32_t version;
+    uint32_t size;
 
     InitFunc init;
     ShutdownFunc shutdown;

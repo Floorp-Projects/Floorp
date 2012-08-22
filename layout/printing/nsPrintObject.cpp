@@ -30,7 +30,7 @@ nsPrintObject::nsPrintObject() :
 nsPrintObject::~nsPrintObject()
 {
   MOZ_COUNT_DTOR(nsPrintObject);
-  for (PRUint32 i=0;i<mKids.Length();i++) {
+  for (uint32_t i=0;i<mKids.Length();i++) {
     nsPrintObject* po = mKids[i];
     delete po;
   }
@@ -58,7 +58,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   } else {
     mTreeOwner = do_GetInterface(aDocShell);
     nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(aDocShell);
-    PRInt32 itemType = 0;
+    int32_t itemType = 0;
     item->GetItemType(&itemType);
     // Create a container docshell for printing.
     mDocShell = do_CreateInstance("@mozilla.org/docshell;1");

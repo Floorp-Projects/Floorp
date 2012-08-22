@@ -58,7 +58,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeDelta) {
+void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   if (mLockPanning) {
     return;
   }
@@ -88,7 +88,7 @@ void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeD
   mPos = aPos;
 }
 
-void Axis::StartTouch(PRInt32 aPos) {
+void Axis::StartTouch(int32_t aPos) {
   mStartPos = aPos;
   mPos = aPos;
   mLockPanning = false;
@@ -167,7 +167,7 @@ float Axis::GetExcess() {
   }
 }
 
-Axis::Overscroll Axis::DisplacementWillOverscroll(PRInt32 aDisplacement) {
+Axis::Overscroll Axis::DisplacementWillOverscroll(int32_t aDisplacement) {
   // If the current pan plus a displacement takes the viewport to the left of or
   // above the current page rect.
   bool minus = GetOrigin() + aDisplacement < GetPageStart();

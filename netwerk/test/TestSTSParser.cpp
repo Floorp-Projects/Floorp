@@ -76,7 +76,7 @@ bool TestFailure(const char* hdr,
 
 
 int
-main(PRInt32 argc, char *argv[])
+main(int32_t argc, char *argv[])
 {
     nsresult rv;
     ScopedXPCOM xpcom("STS Parser Tests");

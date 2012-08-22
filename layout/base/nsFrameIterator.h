@@ -5,7 +5,7 @@
 #ifndef NSFRAMEITERATOR_H
 #define NSFRAMEITERATOR_H
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 class nsPresContext;
 class nsIFrame;
@@ -20,7 +20,7 @@ class nsFrameIterator
 {
 public:
   nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
-                  nsIteratorType aType, PRUint32 aFlags);
+                  nsIteratorType aType, uint32_t aFlags);
 
   ~nsFrameIterator() {}
 
@@ -45,8 +45,8 @@ protected:
   nsIFrame *getStart(){return mStart;}
   nsIFrame *getLast(){return mLast;}
   void      setLast(nsIFrame *aFrame){mLast = aFrame;}
-  PRInt8    getOffEdge(){return mOffEdge;}
-  void      setOffEdge(PRInt8 aOffEdge){mOffEdge = aOffEdge;}
+  int8_t    getOffEdge(){return mOffEdge;}
+  void      setOffEdge(int8_t aOffEdge){mOffEdge = aOffEdge;}
   void      SetLockInScrollView(bool aLockScroll){mLockScroll = aLockScroll;}
 
   /*
@@ -97,7 +97,7 @@ protected:
   nsIFrame *mStart;
   nsIFrame *mCurrent;
   nsIFrame *mLast; //the last one that was in current;
-  PRInt8    mOffEdge; //0= no -1 to far prev, 1 to far next;
+  int8_t    mOffEdge; //0= no -1 to far prev, 1 to far next;
   nsIteratorType mType;
   bool mLockScroll;
   bool mFollowOOFs;

@@ -32,17 +32,6 @@ Types = (
     'size_t',
     'ssize_t',
 
-    # NSPR types
-    'PRInt8',
-    'PRUint8',
-    'PRInt16',
-    'PRUint16',
-    'PRInt32',
-    'PRUint32',
-    'PRInt64',
-    'PRUint64',
-    'PRSize',
-
     # Mozilla types: "less" standard things we know how serialize/deserialize
     'nsresult',
     'nsString',

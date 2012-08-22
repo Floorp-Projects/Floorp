@@ -10,7 +10,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 
-nsDocShellEnumerator::nsDocShellEnumerator(PRInt32 inEnumerationDirection)
+nsDocShellEnumerator::nsDocShellEnumerator(int32_t inEnumerationDirection)
 : mRootItem(nullptr)
 , mCurIndex(0)
 , mDocShellType(nsIDocShellTreeItem::typeAll)
@@ -73,14 +73,14 @@ nsresult nsDocShellEnumerator::SetEnumerationRootItem(nsIDocShellTreeItem * aEnu
   return NS_OK;
 }
 
-nsresult nsDocShellEnumerator::GetEnumDocShellType(PRInt32 *aEnumerationItemType)
+nsresult nsDocShellEnumerator::GetEnumDocShellType(int32_t *aEnumerationItemType)
 {
   NS_ENSURE_ARG_POINTER(aEnumerationItemType);
   *aEnumerationItemType = mDocShellType;
   return NS_OK;
 }
 
-nsresult nsDocShellEnumerator::SetEnumDocShellType(PRInt32 aEnumerationItemType)
+nsresult nsDocShellEnumerator::SetEnumDocShellType(int32_t aEnumerationItemType)
 {
   mDocShellType = aEnumerationItemType;
   ClearState();
@@ -126,7 +126,7 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PRInt32   itemType;
+  int32_t   itemType;
   // add this item to the array
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))
@@ -135,11 +135,11 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRInt32   numChildren;
+  int32_t   numChildren;
   rv = itemAsNode->GetChildCount(&numChildren);
   if (NS_FAILED(rv)) return rv;
   
-  for (PRInt32 i = 0; i < numChildren; ++i)
+  for (int32_t i = 0; i < numChildren; ++i)
   {
     nsCOMPtr<nsIDocShellTreeItem> curChild;
     rv = itemAsNode->GetChildAt(i, getter_AddRefs(curChild));
@@ -159,11 +159,11 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem*
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PRInt32   numChildren;
+  int32_t   numChildren;
   rv = itemAsNode->GetChildCount(&numChildren);
   if (NS_FAILED(rv)) return rv;
   
-  for (PRInt32 i = numChildren - 1; i >= 0; --i)
+  for (int32_t i = numChildren - 1; i >= 0; --i)
   {
     nsCOMPtr<nsIDocShellTreeItem> curChild;
     rv = itemAsNode->GetChildAt(i, getter_AddRefs(curChild));
@@ -173,7 +173,7 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem*
     if (NS_FAILED(rv)) return rv;
   }
 
-  PRInt32   itemType;
+  int32_t   itemType;
   // add this item to the array
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))

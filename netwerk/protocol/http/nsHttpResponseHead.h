@@ -28,9 +28,9 @@ public:
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
     nsHttpHeaderArray    &Headers()             { return mHeaders; }
     nsHttpVersion         Version()       const { return mVersion; }
-    PRUint16              Status()        const { return mStatus; }
+    uint16_t              Status()        const { return mStatus; }
     const nsAFlatCString &StatusText()    const { return mStatusText; }
-    PRInt64               ContentLength() const { return mContentLength; }
+    int64_t               ContentLength() const { return mContentLength; }
     const nsAFlatCString &ContentType()   const { return mContentType; }
     const nsAFlatCString &ContentCharset() const { return mContentCharset; }
     bool                  NoStore() const { return mCacheControlNoStore; }
@@ -40,7 +40,7 @@ public:
      * than ContentLength(), which will only represent the requested part of the
      * entity.
      */
-    PRInt64               TotalEntitySize() const;
+    int64_t               TotalEntitySize() const;
 
     const char *PeekHeader(nsHttpAtom h) const      { return mHeaders.PeekHeader(h); }
     nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false);
@@ -59,7 +59,7 @@ public:
 
     void     SetContentType(const nsACString &s)    { mContentType = s; }
     void     SetContentCharset(const nsACString &s) { mContentCharset = s; }
-    void     SetContentLength(PRInt64);
+    void     SetContentLength(int64_t);
 
     // write out the response status line and headers as a single text block,
     // optionally pruning out transient headers (ie. headers that only make
@@ -77,8 +77,8 @@ public:
     nsresult ParseHeaderLine(const char *line);
 
     // cache validation support methods
-    nsresult ComputeFreshnessLifetime(PRUint32 *) const;
-    nsresult ComputeCurrentAge(PRUint32 now, PRUint32 requestTime, PRUint32 *result) const;
+    nsresult ComputeFreshnessLifetime(uint32_t *) const;
+    nsresult ComputeCurrentAge(uint32_t now, uint32_t requestTime, uint32_t *result) const;
     bool     MustValidate() const;
     bool     MustValidateIfExpired() const;
 
@@ -96,15 +96,15 @@ public:
     void     Reset();
 
     // these return failure if the header does not exist.
-    nsresult ParseDateHeader(nsHttpAtom header, PRUint32 *result) const;
-    nsresult GetAgeValue(PRUint32 *result) const;
-    nsresult GetMaxAgeValue(PRUint32 *result) const;
-    nsresult GetDateValue(PRUint32 *result) const
+    nsresult ParseDateHeader(nsHttpAtom header, uint32_t *result) const;
+    nsresult GetAgeValue(uint32_t *result) const;
+    nsresult GetMaxAgeValue(uint32_t *result) const;
+    nsresult GetDateValue(uint32_t *result) const
     {
         return ParseDateHeader(nsHttp::Date, result);
     }
-    nsresult GetExpiresValue(PRUint32 *result) const ;
-    nsresult GetLastModifiedValue(PRUint32 *result) const
+    nsresult GetExpiresValue(uint32_t *result) const ;
+    nsresult GetLastModifiedValue(uint32_t *result) const
     {
         return ParseDateHeader(nsHttp::Last_Modified, result);
     }
@@ -118,9 +118,9 @@ private:
     // All members must be copy-constructable and assignable
     nsHttpHeaderArray mHeaders;
     nsHttpVersion     mVersion;
-    PRUint16          mStatus;
+    uint16_t          mStatus;
     mozilla::net::InfallableCopyCString mStatusText;
-    PRInt64           mContentLength;
+    int64_t           mContentLength;
     mozilla::net::InfallableCopyCString mContentType;
     mozilla::net::InfallableCopyCString mContentCharset;
     bool              mCacheControlNoStore;

@@ -77,7 +77,7 @@ static int compare(nsIFile* aElement1, nsIFile* aElement2, void* aData)
         // but CompareString could still be smarter - see bug 99383 - bbaetz
         // NB - 99393 has been WONTFIXed. So if the I18N code is ever made
         // threadsafe so that this matters, we'd have to pass through a
-        // struct { nsIFile*, PRUint8* } with the pre-calculated key.
+        // struct { nsIFile*, uint8_t* } with the pre-calculated key.
         return Compare(name1, name2);
     }
 
@@ -200,13 +200,13 @@ nsDirectoryIndexStream::Close()
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::Available(PRUint64* aLength)
+nsDirectoryIndexStream::Available(uint64_t* aLength)
 {
     if (NS_FAILED(mStatus))
         return mStatus;
 
     // If there's data in our buffer, use that
-    if (mOffset < (PRInt32)mBuf.Length()) {
+    if (mOffset < (int32_t)mBuf.Length()) {
         *aLength = mBuf.Length() - mOffset;
         return NS_OK;
     }
@@ -217,7 +217,7 @@ nsDirectoryIndexStream::Available(PRUint64* aLength)
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
+nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
 {
     if (mStatus == NS_BASE_STREAM_CLOSED) {
         *aReadCount = 0;
@@ -226,11 +226,11 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
     if (NS_FAILED(mStatus))
         return mStatus;
 
-    PRUint32 nread = 0;
+    uint32_t nread = 0;
 
     // If anything is enqueued (or left-over) in mBuf, then feed it to
     // the reader first.
-    while (mOffset < (PRInt32)mBuf.Length() && aCount != 0) {
+    while (mOffset < (int32_t)mBuf.Length() && aCount != 0) {
         *(aBuf++) = char(mBuf.CharAt(mOffset++));
         --aCount;
         ++nread;
@@ -242,7 +242,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         mBuf.Truncate();
 
         // Okay, now we'll suck stuff off of our iterator into the mBuf...
-        while (PRUint32(mBuf.Length()) < aCount) {
+        while (uint32_t(mBuf.Length()) < aCount) {
             bool more = mPos < mArray.Count();
             if (!more) break;
 
@@ -275,10 +275,10 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 #endif
 
-            PRInt64 fileSize = 0;
+            int64_t fileSize = 0;
             current->GetFileSize( &fileSize );
 
-            PRInt64 fileInfoModifyTime = 0;
+            int64_t fileInfoModifyTime = 0;
             current->GetLastModifiedTime( &fileInfoModifyTime );
             fileInfoModifyTime *= PR_USEC_PER_MSEC;
 
@@ -346,7 +346,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
         // ...and once we've either run out of directory entries, or
         // filled up the buffer, then we'll push it to the reader.
-        while (mOffset < (PRInt32)mBuf.Length() && aCount != 0) {
+        while (mOffset < (int32_t)mBuf.Length() && aCount != 0) {
             *(aBuf++) = char(mBuf.CharAt(mOffset++));
             --aCount;
             ++nread;
@@ -358,7 +358,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint32_t count, uint32_t *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

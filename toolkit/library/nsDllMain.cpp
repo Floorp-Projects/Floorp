@@ -65,7 +65,7 @@ BOOL APIENTRY DllMain(
  */
 static bool IsWin8OrHigher()
 {
-  static PRInt32 version = 0;
+  static int32_t version = 0;
 
   if (version) {
     return (version >= 0x602);

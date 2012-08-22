@@ -32,18 +32,18 @@ interface nsIPermission : nsISupports
     /**
      * The permission (see nsIPermissionManager.idl for allowed values)
      */
-    readonly attribute PRUint32 capability;
+    readonly attribute uint32_t capability;
 
     /**
      * The expiration type of the permission (session, time-based or none).
      * Constants are EXPIRE_*, defined in nsIPermissionManager.
      * @see nsIPermissionManager
      */
-    readonly attribute PRUint32 expireType;
+    readonly attribute uint32_t expireType;
 
     /**
      * The expiration time of the permission (milliseconds since Jan 1 1970
      * 0:00:00).
      */
-    readonly attribute PRInt64 expireTime;
+    readonly attribute int64_t expireTime;
 };

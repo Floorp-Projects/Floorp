@@ -45,7 +45,7 @@ PR_BEGIN_EXTERN_C
 #define PL_DHASH_GOLDEN_RATIO   0x9E3779B9U
 
 /* Primitive and forward-struct typedefs. */
-typedef PRUint32                PLDHashNumber;
+typedef uint32_t                PLDHashNumber;
 typedef struct PLDHashEntryHdr  PLDHashEntryHdr;
 typedef struct PLDHashEntryStub PLDHashEntryStub;
 typedef struct PLDHashTable     PLDHashTable;
@@ -163,33 +163,33 @@ struct PLDHashEntryHdr {
 struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
-    PRInt16             hashShift;      /* multiplicative hash shift */
-    PRUint8             maxAlphaFrac;   /* 8-bit fixed point max alpha */
-    PRUint8             minAlphaFrac;   /* 8-bit fixed point min alpha */
-    PRUint32            entrySize;      /* number of bytes in an entry */
-    PRUint32            entryCount;     /* number of entries in table */
-    PRUint32            removedCount;   /* removed entry sentinels in table */
-    PRUint32            generation;     /* entry storage generation number */
+    int16_t             hashShift;      /* multiplicative hash shift */
+    uint8_t             maxAlphaFrac;   /* 8-bit fixed point max alpha */
+    uint8_t             minAlphaFrac;   /* 8-bit fixed point min alpha */
+    uint32_t            entrySize;      /* number of bytes in an entry */
+    uint32_t            entryCount;     /* number of entries in table */
+    uint32_t            removedCount;   /* removed entry sentinels in table */
+    uint32_t            generation;     /* entry storage generation number */
     char                *entryStore;    /* entry storage */
 #ifdef PL_DHASHMETER
     struct PLDHashStats {
-        PRUint32        searches;       /* total number of table searches */
-        PRUint32        steps;          /* hash chain links traversed */
-        PRUint32        hits;           /* searches that found key */
-        PRUint32        misses;         /* searches that didn't find key */
-        PRUint32        lookups;        /* number of PL_DHASH_LOOKUPs */
-        PRUint32        addMisses;      /* adds that miss, and do work */
-        PRUint32        addOverRemoved; /* adds that recycled a removed entry */
-        PRUint32        addHits;        /* adds that hit an existing entry */
-        PRUint32        addFailures;    /* out-of-memory during add growth */
-        PRUint32        removeHits;     /* removes that hit, and do work */
-        PRUint32        removeMisses;   /* useless removes that miss */
-        PRUint32        removeFrees;    /* removes that freed entry directly */
-        PRUint32        removeEnums;    /* removes done by Enumerate */
-        PRUint32        grows;          /* table expansions */
-        PRUint32        shrinks;        /* table contractions */
-        PRUint32        compresses;     /* table compressions */
-        PRUint32        enumShrinks;    /* contractions after Enumerate */
+        uint32_t        searches;       /* total number of table searches */
+        uint32_t        steps;          /* hash chain links traversed */
+        uint32_t        hits;           /* searches that found key */
+        uint32_t        misses;         /* searches that didn't find key */
+        uint32_t        lookups;        /* number of PL_DHASH_LOOKUPs */
+        uint32_t        addMisses;      /* adds that miss, and do work */
+        uint32_t        addOverRemoved; /* adds that recycled a removed entry */
+        uint32_t        addHits;        /* adds that hit an existing entry */
+        uint32_t        addFailures;    /* out-of-memory during add growth */
+        uint32_t        removeHits;     /* removes that hit, and do work */
+        uint32_t        removeMisses;   /* useless removes that miss */
+        uint32_t        removeFrees;    /* removes that freed entry directly */
+        uint32_t        removeEnums;    /* removes done by Enumerate */
+        uint32_t        grows;          /* table expansions */
+        uint32_t        shrinks;        /* table contractions */
+        uint32_t        compresses;     /* table compressions */
+        uint32_t        enumShrinks;    /* contractions after Enumerate */
     } stats;
 #endif
 };
@@ -207,7 +207,7 @@ struct PLDHashTable {
  * equal to 0; but note that pldhash.c code will never call with 0 nbytes).
  */
 typedef void *
-(* PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
+(* PLDHashAllocTable)(PLDHashTable *table, uint32_t nbytes);
 
 typedef void
 (* PLDHashFreeTable) (PLDHashTable *table, void *ptr);
@@ -309,7 +309,7 @@ struct PLDHashTableOps {
  * Default implementations for the above ops.
  */
 NS_COM_GLUE void *
-PL_DHashAllocTable(PLDHashTable *table, PRUint32 nbytes);
+PL_DHashAllocTable(PLDHashTable *table, uint32_t nbytes);
 
 NS_COM_GLUE void
 PL_DHashFreeTable(PLDHashTable *table, void *ptr);
@@ -365,8 +365,8 @@ PL_DHashGetStubOps(void);
  * the ops->allocTable callback.
  */
 NS_COM_GLUE PLDHashTable *
-PL_NewDHashTable(const PLDHashTableOps *ops, void *data, PRUint32 entrySize,
-                 PRUint32 capacity);
+PL_NewDHashTable(const PLDHashTableOps *ops, void *data, uint32_t entrySize,
+                 uint32_t capacity);
 
 /*
  * Finalize table's data, free its entry storage (via table->ops->freeTable),
@@ -383,7 +383,7 @@ PL_DHashTableDestroy(PLDHashTable *table);
  */
 NS_COM_GLUE bool
 PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
-                  PRUint32 entrySize, PRUint32 capacity);
+                  uint32_t entrySize, uint32_t capacity);
 
 /*
  * Set maximum and minimum alpha for table.  The defaults are 0.75 and .25.
@@ -421,11 +421,11 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
 #define PL_DHASH_DEFAULT_MIN_ALPHA 0.25
 
 #define PL_DHASH_CAP(entryCount, maxAlpha)                                    \
-    ((PRUint32)((double)(entryCount) / (maxAlpha)))
+    ((uint32_t)((double)(entryCount) / (maxAlpha)))
 
 #define PL_DHASH_CAPACITY(entryCount, maxAlpha)                               \
     (PL_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((PL_DHASH_CAP(entryCount, maxAlpha) * (PRUint8)(0x100 * (maxAlpha)))     \
+     (((PL_DHASH_CAP(entryCount, maxAlpha) * (uint8_t)(0x100 * (maxAlpha)))     \
        >> 8) < (entryCount)))
 
 #define PL_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
@@ -539,10 +539,10 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
  */
 typedef PLDHashOperator
-(* PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
+(* PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
                       void *arg);
 
-NS_COM_GLUE PRUint32
+NS_COM_GLUE uint32_t
 PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);
 
 typedef size_t

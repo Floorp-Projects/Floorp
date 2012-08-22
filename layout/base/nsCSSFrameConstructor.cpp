@@ -283,7 +283,7 @@ nsIFrame*
 NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewMenuFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+NS_NewMenuFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags);
 
 nsIFrame*
 NS_NewMenuBarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -327,11 +327,11 @@ NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 
 #ifdef NOISY_FINDFRAME
-static PRInt32 FFWC_totalCount=0;
-static PRInt32 FFWC_doLoop=0;
-static PRInt32 FFWC_doSibling=0;
-static PRInt32 FFWC_recursions=0;
-static PRInt32 FFWC_nextInFlows=0;
+static int32_t FFWC_totalCount=0;
+static int32_t FFWC_doLoop=0;
+static int32_t FFWC_doSibling=0;
+static int32_t FFWC_recursions=0;
+static int32_t FFWC_nextInFlows=0;
 #endif
 
 #ifdef MOZ_FLEXBOX
@@ -982,7 +982,7 @@ nsFrameConstructorState::~nsFrameConstructorState()
 #ifdef MOZ_XUL
   ProcessFrameInsertions(mPopupItems, nsIFrame::kPopupList);
 #endif
-  for (PRInt32 i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0; --i) {
+  for (int32_t i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0; --i) {
     mGeneratedTextNodesWithInitializer[i]->
       DeleteProperty(nsGkAtoms::genConInitializerProperty);
   }
@@ -1265,7 +1265,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
       nsIFrame* insertionPoint = nullptr;
       for (nsIFrame* f = childList.FirstChild(); f != lastChild;
            f = f->GetNextSibling()) {
-        PRInt32 compare =
+        int32_t compare =
           nsLayoutUtils::CompareTreePosition(f, firstNewFrame, containingBlock);
         if (compare > 0) {
           // f comes after the new children, so stop here and insert after
@@ -1522,7 +1522,7 @@ already_AddRefed<nsIContent>
 nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                               nsIContent*     aParentContent,
                                               nsStyleContext* aStyleContext,
-                                              PRUint32        aContentIndex)
+                                              uint32_t        aContentIndex)
 {
   // Get the content value
   const nsStyleContentData &data =
@@ -1559,10 +1559,10 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
   case eStyleContentType_Attr:
     {
       nsCOMPtr<nsIAtom> attrName;
-      PRInt32 attrNameSpace = kNameSpaceID_None;
+      int32_t attrNameSpace = kNameSpaceID_None;
       nsAutoString contentString(data.mContent.mString);
       
-      PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
+      int32_t barIndex = contentString.FindChar('|'); // CSS namespace delimiter
       if (-1 != barIndex) {
         nsAutoString  nameSpaceVal;
         contentString.Left(nameSpaceVal, barIndex);
@@ -1728,8 +1728,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     return;
   }
 
-  PRUint32 contentCount = pseudoStyleContext->GetStyleContent()->ContentCount();
-  for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
+  uint32_t contentCount = pseudoStyleContext->GetStyleContent()->ContentCount();
+  for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
       CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
                              contentIndex);
@@ -1879,7 +1879,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
-  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
+  const uint32_t nameSpaceID = aItem.mNameSpaceID;
 
   nsresult rv = NS_OK;
 
@@ -1978,7 +1978,7 @@ nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
                   "Unexpected call");
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
-  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
+  const uint32_t nameSpaceID = aItem.mNameSpaceID;
 
   nsIFrame* newFrame;
   if (kNameSpaceID_MathML == nameSpaceID)
@@ -2033,8 +2033,8 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
   *aNewFrame = colFrame;
 
   // construct additional col frames if the col frame has a span > 1
-  PRInt32 span = colFrame->GetSpan();
-  for (PRInt32 spanX = 1; spanX < span; spanX++) {
+  int32_t span = colFrame->GetSpan();
+  for (int32_t spanX = 1; spanX < span; spanX++) {
     nsTableColFrame* newCol = NS_NewTableColFrame(mPresShell, styleContext);
     if (NS_UNLIKELY(!newCol)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2063,7 +2063,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
 
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
-  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
+  const uint32_t nameSpaceID = aItem.mNameSpaceID;
 
   bool borderCollapse = IsBorderCollapse(aParentFrame);
   nsIFrame* newFrame;
@@ -2932,7 +2932,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
   // Construct a frame-based listbox or combobox
   nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(content));
-  PRUint32 size = 1;
+  uint32_t size = 1;
   if (sel) {
     sel->GetSize(&size); 
     bool multipleSelect = false;
@@ -2944,7 +2944,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
         // a dropdown list. The display area and button are created through anonymous content.
         // The drop-down list's frame is created explicitly. The combobox frame shares its content
         // with the drop-down list.
-      PRUint32 flags = NS_BLOCK_FLOAT_MGR;
+      uint32_t flags = NS_BLOCK_FLOAT_MGR;
       nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, styleContext, flags);
 
       // Save the history state so we don't restore during construction
@@ -3276,11 +3276,11 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindDataByInt(PRInt32 aInt,
+nsCSSFrameConstructor::FindDataByInt(int32_t aInt,
                                      Element* aElement,
                                      nsStyleContext* aStyleContext,
                                      const FrameConstructionDataByInt* aDataPtr,
-                                     PRUint32 aDataLength)
+                                     uint32_t aDataLength)
 {
   for (const FrameConstructionDataByInt *curData = aDataPtr,
          *endData = aDataPtr + aDataLength;
@@ -3305,7 +3305,7 @@ nsCSSFrameConstructor::FindDataByTag(nsIAtom* aTag,
                                      Element* aElement,
                                      nsStyleContext* aStyleContext,
                                      const FrameConstructionDataByTag* aDataPtr,
-                                     PRUint32 aDataLength)
+                                     uint32_t aDataLength)
 {
   for (const FrameConstructionDataByTag *curData = aDataPtr,
          *endData = aDataPtr + aDataLength;
@@ -3342,7 +3342,7 @@ nsCSSFrameConstructor::FindDataByTag(nsIAtom* aTag,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindHTMLData(Element* aElement,
                                     nsIAtom* aTag,
-                                    PRInt32 aNameSpaceID,
+                                    int32_t aNameSpaceID,
                                     nsIFrame* aParentFrame,
                                     nsStyleContext* aStyleContext)
 {
@@ -3490,7 +3490,7 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
   // GetDisplayedType isn't necessarily nsIObjectLoadingContent::TYPE_NULL for
   // cases when the object is broken/suppressed/etc (e.g. a broken image), but
   // we want to treat those cases as TYPE_NULL
-  PRUint32 type;
+  uint32_t type;
   if (aElement->State().HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
                                               NS_EVENT_STATE_USERDISABLED |
                                               NS_EVENT_STATE_SUPPRESSED)) {
@@ -3516,7 +3516,7 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
     // Nothing for TYPE_NULL so we'll construct frames by display there
   };
 
-  return FindDataByInt((PRInt32)type, aElement, aStyleContext,
+  return FindDataByInt((int32_t)type, aElement, aStyleContext,
                        sObjectData, ArrayLength(sObjectData));
 }
 
@@ -3552,7 +3552,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   const FrameConstructionData* data = aItem.mFCData;
   NS_ASSERTION(data, "Must have frame construction data");
 
-  PRUint32 bits = data->mBits;
+  uint32_t bits = data->mBits;
 
   NS_ASSERTION(!(bits & FCDATA_FUNC_IS_DATA_GETTER),
                "Should have dealt with this inside the data finder");
@@ -3830,7 +3830,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
   nsresult rv = GetAnonymousContent(aParent, aParentFrame, newAnonymousItems);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 count = newAnonymousItems.Length();
+  uint32_t count = newAnonymousItems.Length();
   if (count == 0) {
     return NS_OK;
   }
@@ -3846,7 +3846,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
   NS_ASSERTION(creator,
                "How can that happen if we have nodes to construct frames for?");
 
-  for (PRUint32 i=0; i < count; i++) {
+  for (uint32_t i=0; i < count; i++) {
     nsIContent* content = newAnonymousItems[i].mContent;
     NS_ASSERTION(content, "null anonymous content?");
     NS_ASSERTION(!newAnonymousItems[i].mStyleContext, "Unexpected style context");
@@ -3883,10 +3883,10 @@ SetFlagsOnSubtree(nsIContent *aNode, PtrBits aFlagsToSet)
   aNode->SetFlags(aFlagsToSet);
 
   // Set the flag on all of its children recursively
-  PRUint32 count;
+  uint32_t count;
   nsIContent * const *children = aNode->GetChildArray(&count);
 
-  for (PRUint32 index = 0; index < count; ++index) {
+  for (uint32_t index = 0; index < count; ++index) {
     SetFlagsOnSubtree(children[index], aFlagsToSet);
   }
 }
@@ -3903,8 +3903,8 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
   nsresult rv = creator->CreateAnonymousContent(aContent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 count = aContent.Length();
-  for (PRUint32 i=0; i < count; i++) {
+  uint32_t count = aContent.Length();
+  for (uint32_t i=0; i < count; i++) {
     // get our child's content and set its parent to our content
     nsIContent* content = aContent[i].mContent;
     NS_ASSERTION(content, "null anonymous content?");
@@ -4001,7 +4001,7 @@ nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULTagData(Element* aElement,
                                       nsIAtom* aTag,
-                                      PRInt32 aNameSpaceID,
+                                      int32_t aNameSpaceID,
                                       nsStyleContext* aStyleContext)
 {
   if (aNameSpaceID != kNameSpaceID_XUL) {
@@ -4118,7 +4118,7 @@ nsCSSFrameConstructor::FindXULMenubarData(Element* aElement,
   if (container) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
     if (treeItem) {
-      PRInt32 type;
+      int32_t type;
       treeItem->GetItemType(&type);
       if (nsIDocShellTreeItem::typeChrome == type) {
         nsCOMPtr<nsIDocShellTreeItem> parent;
@@ -4664,7 +4664,7 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindMathMLData(Element* aElement,
                                       nsIAtom* aTag,
-                                      PRInt32 aNameSpaceID,
+                                      int32_t aNameSpaceID,
                                       nsStyleContext* aStyleContext)
 {
   // Make sure that we remain confined in the MathML world
@@ -4829,7 +4829,7 @@ IsFilterPrimitiveChildTag(const nsIAtom* aTag)
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindSVGData(Element* aElement,
                                    nsIAtom* aTag,
-                                   PRInt32 aNameSpaceID,
+                                   int32_t aNameSpaceID,
                                    nsIFrame* aParentFrame,
                                    nsStyleContext* aStyleContext)
 {
@@ -4848,7 +4848,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   // frame's content?  Should it not be based on the type of the parent frame
   // (e.g. whether it's an SVG frame)?
   if (parentContent) {
-    PRInt32 parentNSID;
+    int32_t parentNSID;
     nsIAtom* parentTag =
       parentContent->OwnerDoc()->BindingManager()->
         ResolveTag(parentContent, &parentNSID);
@@ -5140,10 +5140,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                                          nsIContent* aContent,
                                                          nsIFrame* aParentFrame,
                                                          nsIAtom* aTag,
-                                                         PRInt32 aNameSpaceID,
+                                                         int32_t aNameSpaceID,
                                                          bool aSuppressWhiteSpaceOptimizations,
                                                          nsStyleContext* aStyleContext,
-                                                         PRUint32 aFlags,
+                                                         uint32_t aFlags,
                                                          FrameConstructionItemList& aItems)
 {
   NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eTEXT) ||
@@ -5297,7 +5297,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 #endif /* MOZ_XUL */
   }
 
-  PRUint32 bits = data->mBits;
+  uint32_t bits = data->mBits;
 
   // Inside colgroups, suppress everything except columns.
   if (aParentFrame &&
@@ -5862,7 +5862,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
 bool
 nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
                                       nsIContent*            aContent,
-                                      PRUint8&               aDisplay)
+                                      uint8_t&               aDisplay)
 {
   nsIFrame* parentFrame = aSibling->GetParent();
   nsIAtom* parentType = nullptr;
@@ -5875,7 +5875,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
     }
   }
 
-  PRUint8 siblingDisplay = aSibling->GetDisplay();
+  uint8_t siblingDisplay = aSibling->GetDisplay();
   if ((NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == siblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_COLUMN       == siblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_CAPTION      == siblingDisplay) ||
@@ -5950,7 +5950,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
 nsIFrame*
 nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
                                                   nsIContent* aTargetContent,
-                                                  PRUint8& aTargetContentDisplay,
+                                                  uint8_t& aTargetContentDisplay,
                                                   bool aPrevSibling)
 {
   nsIFrame* sibling = aContent->GetPrimaryFrame();
@@ -5994,7 +5994,7 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
 nsIFrame*
 nsCSSFrameConstructor::FindPreviousSibling(const ChildIterator& aFirst,
                                            ChildIterator aIter,
-                                           PRUint8& aTargetContentDisplay)
+                                           uint8_t& aTargetContentDisplay)
 {
   nsIContent* child = *aIter;
 
@@ -6017,7 +6017,7 @@ nsCSSFrameConstructor::FindPreviousSibling(const ChildIterator& aFirst,
 nsIFrame*
 nsCSSFrameConstructor::FindNextSibling(ChildIterator aIter,
                                        const ChildIterator& aLast,
-                                       PRUint8& aTargetContentDisplay)
+                                       uint8_t& aTargetContentDisplay)
 {
   if (aIter == aLast) {
     // XXXbz Can happen when XBL lies to us about insertion points.  This check
@@ -6102,7 +6102,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
   }
 #endif
 
-  PRUint8 childDisplay = UNSET_DISPLAY;
+  uint8_t childDisplay = UNSET_DISPLAY;
   nsIFrame* prevSibling = FindPreviousSibling(first, iter, childDisplay);
 
   // Now, find the geometric parent so that we can handle
@@ -6346,10 +6346,10 @@ nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
 
   // Scan the children of aContent to see what operations (if any) we need to
   // perform.
-  PRUint32 childCount = aContent->GetChildCount();
+  uint32_t childCount = aContent->GetChildCount();
   bool inRun = false;
   nsIContent* firstChildInRun = nullptr;
-  for (PRUint32 i = 0; i < childCount; i++) {
+  for (uint32_t i = 0; i < childCount; i++) {
     nsIContent* child = aContent->GetChildAt(i);
     if (child->HasFlag(NODE_NEEDS_FRAME)) {
       NS_ASSERTION(!child->GetPrimaryFrame() ||
@@ -6460,7 +6460,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   if (multiple || hasInsertion) {
     // We have an insertion point.  There are some additional tests we need to do
     // in order to ensure that an append is a safe operation.
-    PRUint32 childCount = 0;
+    uint32_t childCount = 0;
 
     if (!multiple) {
       // We may need to make multiple ContentInserted calls instead.  A
@@ -6547,7 +6547,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
 #ifdef MOZ_XUL
   if (aContainer) {
-    PRInt32 namespaceID;
+    int32_t namespaceID;
     nsIAtom* tag =
       mDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
 
@@ -7084,7 +7084,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   // containing block haveFirst* flags if the parent frame where
   // the insertion/append is occurring is an inline or block
   // container. For other types of containers this isn't relevant.
-  PRUint8 parentDisplay = parentFrame->GetDisplay();
+  uint8_t parentDisplay = parentFrame->GetDisplay();
 
   // Examine the parentFrame where the insertion is taking
   // place. If it's a certain kind of container then some special
@@ -8005,7 +8005,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
-  PRInt32 count = aChangeList.Count();
+  int32_t count = aChangeList.Count();
   if (!count)
     return NS_OK;
 
@@ -8019,7 +8019,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
   // optmization is possible if nsStyleChangeList::AppendChange could coalesce
-  PRInt32 index = count;
+  int32_t index = count;
 
   while (0 <= --index) {
     const nsStyleChangeData* changeData;
@@ -8276,7 +8276,7 @@ nsCSSFrameConstructor::ContentStateChanged(nsIContent* aContent,
                                          NS_EVENT_STATE_LOADING)) {
       hint = nsChangeHint_ReconstructFrame;
     } else {
-      PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
+      uint8_t app = primaryFrame->GetStyleDisplay()->mAppearance;
       if (app) {
         nsITheme *theme = presContext->GetTheme();
         if (theme && theme->ThemeSupportsWidget(presContext,
@@ -8314,9 +8314,9 @@ nsCSSFrameConstructor::ContentStateChanged(nsIContent* aContent,
 
 void
 nsCSSFrameConstructor::AttributeWillChange(Element* aElement,
-                                           PRInt32 aNameSpaceID,
+                                           int32_t aNameSpaceID,
                                            nsIAtom* aAttribute,
-                                           PRInt32 aModType)
+                                           int32_t aModType)
 {
   nsRestyleHint rshint =
     mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
@@ -8329,9 +8329,9 @@ nsCSSFrameConstructor::AttributeWillChange(Element* aElement,
 
 void
 nsCSSFrameConstructor::AttributeChanged(Element* aElement,
-                                        PRInt32 aNameSpaceID,
+                                        int32_t aNameSpaceID,
                                         nsIAtom* aAttribute,
-                                        PRInt32 aModType)
+                                        int32_t aModType)
 {
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
@@ -8357,7 +8357,7 @@ nsCSSFrameConstructor::AttributeChanged(Element* aElement,
   // content from being removed and re-inserted (which is what would
   // happen otherwise).
   if (!primaryFrame && !reframe) {
-    PRInt32 namespaceID;
+    int32_t namespaceID;
     nsIAtom* tag =
       mDocument->BindingManager()->ResolveTag(aElement, &namespaceID);
 
@@ -8968,14 +8968,14 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
       return NS_OK;
     }
 
-    PRUint32 index;
+    uint32_t index;
     insertionElement = bindingManager->GetInsertionPoint(container,
                                                          aChildContent,
                                                          &index);
   }
   else {
     bool multiple;
-    PRUint32 index;
+    uint32_t index;
     insertionElement = bindingManager->GetSingleInsertionPoint(container,
                                                                &index,
                                                                &multiple);
@@ -9407,7 +9407,7 @@ nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
                                   mPresShell->GetPresContext());
   if (hasFirstLine) {
     // But disable for fieldsets
-    PRInt32 namespaceID;
+    int32_t namespaceID;
     nsIAtom* tag = mDocument->BindingManager()->ResolveTag(aContent,
                                                            &namespaceID);
     // This check must match the one in FindHTMLData.
@@ -9879,7 +9879,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   // constructed before the popupset.
   nsAutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
   GetAnonymousContent(aContent, aPossiblyLeafFrame, anonymousItems);
-  for (PRUint32 i = 0; i < anonymousItems.Length(); ++i) {
+  for (uint32_t i = 0; i < anonymousItems.Length(); ++i) {
     nsIContent* content = anonymousItems[i].mContent;
 #ifdef DEBUG
     nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
@@ -10294,13 +10294,13 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
 
 // Determine how many characters in the text fragment apply to the
 // first letter
-static PRInt32
+static int32_t
 FirstLetterCount(const nsTextFragment* aFragment)
 {
-  PRInt32 count = 0;
-  PRInt32 firstLetterLength = 0;
+  int32_t count = 0;
+  int32_t firstLetterLength = 0;
 
-  PRInt32 i, n = aFragment->GetLength();
+  int32_t i, n = aFragment->GetLength();
   for (i = 0; i < n; i++) {
     PRUnichar ch = aFragment->CharAt(i);
     if (XP_IS_SPACE(ch)) {
@@ -10336,8 +10336,8 @@ NeedFirstLetterContinuation(nsIContent* aContent)
   if (aContent) {
     const nsTextFragment* frag = aContent->GetText();
     if (frag) {
-      PRInt32 flc = FirstLetterCount(frag);
-      PRInt32 tl = frag->GetLength();
+      int32_t flc = FirstLetterCount(frag);
+      int32_t tl = frag->GetLength();
       if (flc < tl) {
         result = true;
       }
@@ -11739,7 +11739,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
     }
   }
 #endif
-  PRUint32 selectorFlags =
+  uint32_t selectorFlags =
     aContainer->GetFlags() & (NODE_ALL_SELECTOR_FLAGS &
                               ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   if (selectorFlags == 0)
@@ -11816,7 +11816,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
 {
   NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
                "anonymous nodes should not be in child lists");
-  PRUint32 selectorFlags =
+  uint32_t selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
     return;
@@ -11904,7 +11904,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
     // up the logs.  Make it an assert again when that's fixed.
     NS_WARNING("anonymous nodes should not be in child lists (bug 439258)");
   }
-  PRUint32 selectorFlags =
+  uint32_t selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
     return;
@@ -12061,7 +12061,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   mPendingRestyles.ProcessRestyles();
 
 #ifdef DEBUG
-  PRUint32 oldPendingRestyleCount = mPendingRestyles.Count();
+  uint32_t oldPendingRestyleCount = mPendingRestyles.Count();
 #endif
 
   // ...and then process animation restyles.  This needs to happen
@@ -12206,7 +12206,7 @@ FrameConstructionItem::IsWhitespace(nsFrameConstructorState& aState) const
 //////////////////////////////////////////////////////////////
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
-AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta)
+AdjustCountsForItem(FrameConstructionItem* aItem, int32_t aDelta)
 {
   NS_PRECONDITION(aDelta == 1 || aDelta == -1, "Unexpected delta");
   mItemCount += aDelta;

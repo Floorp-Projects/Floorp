@@ -59,9 +59,9 @@ NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-PRUint8 nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute)
+uint8_t nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute)
 {
-  PRUint8 modifiers = knsMenuItemNoModifier;
+  uint8_t modifiers = knsMenuItemNoModifier;
   char* str = ToNewCString(modifiersAttribute);
   char* newStr;
   char* token = strtok_r(str, ", \t", &newStr);
@@ -83,7 +83,7 @@ PRUint8 nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAt
   return modifiers;
 }
 
-unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
+unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(uint8_t geckoModifiers)
 {
   unsigned int macModifiers = 0;
   
@@ -184,8 +184,8 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent,
   nsMenuObjectTypeX parentType = aParent->MenuObjectType();
   if (parentType == eMenuBarObjectType) {
     nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(aParent);
-    PRUint32 numMenus = menubarParent->GetMenuCount();
-    for (PRUint32 i = 0; i < numMenus; i++) {
+    uint32_t numMenus = menubarParent->GetMenuCount();
+    for (uint32_t i = 0; i < numMenus; i++) {
       nsMenuX* currMenu = menubarParent->GetMenuAt(i);
       if (currMenu == aChild)
         return insertionPoint; // we found ourselves, break out
@@ -201,8 +201,8 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent,
     else
       menuParent = static_cast<nsStandaloneNativeMenu*>(aParent)->GetMenuXObject();
 
-    PRUint32 numItems = menuParent->GetItemCount();
-    for (PRUint32 i = 0; i < numItems; i++) {
+    uint32_t numItems = menuParent->GetItemCount();
+    for (uint32_t i = 0; i < numItems; i++) {
       // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
       nsMenuObjectX* currItem = menuParent->GetItemAt(i);
       if (currItem == aChild)

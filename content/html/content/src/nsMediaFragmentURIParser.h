@@ -60,9 +60,9 @@ private:
   bool ParseNPTFraction(nsDependentSubstring& aString, double& aFraction);
   bool ParseNPTMMSS(nsDependentSubstring& aString, double& aTime);
   bool ParseNPTHHMMSS(nsDependentSubstring& aString, double& aTime);
-  bool ParseNPTHH(nsDependentSubstring& aString, PRUint32& aHour);
-  bool ParseNPTMM(nsDependentSubstring& aString, PRUint32& aMinute);
-  bool ParseNPTSS(nsDependentSubstring& aString, PRUint32& aSecond);
+  bool ParseNPTHH(nsDependentSubstring& aString, uint32_t& aHour);
+  bool ParseNPTMM(nsDependentSubstring& aString, uint32_t& aMinute);
+  bool ParseNPTSS(nsDependentSubstring& aString, uint32_t& aSecond);
 
   // Fragment portion of the URI given on construction
   nsCAutoString mHash;

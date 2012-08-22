@@ -125,7 +125,7 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 nsresult
 txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                                          const nsSubstring& aName,
-                                         PRInt32 aNsID,
+                                         int32_t aNsID,
                                          txAXMLEventHandler** aHandler)
 {
     *aHandler = nullptr;
@@ -215,7 +215,7 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 nsresult
 txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                                               const nsSubstring& aName,
-                                              PRInt32 aNsID,
+                                              int32_t aNsID,
                                               txAXMLEventHandler** aHandler)
 {
     *aHandler = nullptr;
@@ -376,13 +376,13 @@ public:
     }
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID)
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID)
     {
         aID = mResolver->lookupNamespace(aPrefix);
         return aID == kNameSpaceID_Unknown ? NS_ERROR_DOM_NAMESPACE_ERR :
                                              NS_OK;
     }
-    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+    nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
                                  FunctionCall** aFunction)
     {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
@@ -391,12 +391,12 @@ public:
     {
         return false;
     }
-    void SetErrorOffset(PRUint32 aOffset)
+    void SetErrorOffset(uint32_t aOffset)
     {
     }
 
     // txIEvalContext
-    nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+    nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
                          txAExprResult*& aResult)
     {
         aResult = nullptr;
@@ -421,11 +421,11 @@ public:
     {
       return mContext;
     }
-    PRUint32 size()
+    uint32_t size()
     {
       return 1;
     }
-    PRUint32 position()
+    uint32_t position()
     {
       return 1;
     }
@@ -486,7 +486,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     }
 
     nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-    PRInt32 nsId = kNameSpaceID_Unknown;
+    int32_t nsId = kNameSpaceID_Unknown;
     rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespace, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -723,7 +723,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
     nsCOMPtr<nsIVariant> value = aValue;
 
-    PRUint16 dataType;
+    uint16_t dataType;
     value->GetDataType(&dataType);
     switch (dataType) {
         // Number
@@ -785,7 +785,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                                    (static_cast<txAExprResult*>(result));
 
                     nsCOMPtr<nsIDOMNode> node;
-                    PRInt32 i, count = nodeSet->size();
+                    int32_t i, count = nodeSet->size();
                     for (i = 0; i < count; ++i) {
                         rv = txXPathNativeNode::getNode(nodeSet->get(i),
                                                         getter_AddRefs(node));
@@ -817,11 +817,11 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
             nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
             if (nodeList) {
-                PRUint32 length;
+                uint32_t length;
                 nodeList->GetLength(&length);
 
                 nsCOMPtr<nsIDOMNode> node;
-                PRUint32 i;
+                uint32_t i;
                 for (i = 0; i < length; ++i) {
                     nodeList->Item(i, getter_AddRefs(node));
 
@@ -846,9 +846,9 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
         case nsIDataType::VTYPE_ARRAY:
         {
-            PRUint16 type;
+            uint16_t type;
             nsIID iid;
-            PRUint32 count;
+            uint32_t count;
             void* array;
             nsresult rv = value->GetAsArray(&type, &iid, &count, &array);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -863,7 +863,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
             nsISupports** values = static_cast<nsISupports**>(array);
 
-            PRUint32 i;
+            uint32_t i;
             for (i = 0; i < count; ++i) {
                 nsISupports *supports = values[i];
                 nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
@@ -901,7 +901,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
         }        
     }
 
-    PRInt32 nsId = kNameSpaceID_Unknown;
+    int32_t nsId = kNameSpaceID_Unknown;
     nsresult rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -925,7 +925,7 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
                                      nsIVariant **aResult)
 {
-    PRInt32 nsId = kNameSpaceID_Unknown;
+    int32_t nsId = kNameSpaceID_Unknown;
     nsresult rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -943,7 +943,7 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
                                         const nsAString& aLocalName)
 {
-    PRInt32 nsId = kNameSpaceID_Unknown;
+    int32_t nsId = kNameSpaceID_Unknown;
     nsresult rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -978,7 +978,7 @@ txMozillaXSLTProcessor::Reset()
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::SetFlags(PRUint32 aFlags)
+txMozillaXSLTProcessor::SetFlags(uint32_t aFlags)
 {
     NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(),
                    NS_ERROR_DOM_SECURITY_ERR);
@@ -989,7 +989,7 @@ txMozillaXSLTProcessor::SetFlags(PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::GetFlags(PRUint32* aFlags)
+txMozillaXSLTProcessor::GetFlags(uint32_t* aFlags)
 {
     NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(),
                    NS_ERROR_DOM_SECURITY_ERR);
@@ -1201,9 +1201,9 @@ txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
 void
 txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
                                          Element* aElement,
-                                         PRInt32 aNameSpaceID,
+                                         int32_t aNameSpaceID,
                                          nsIAtom* aAttribute,
-                                         PRInt32 aModType)
+                                         int32_t aModType)
 {
     mStylesheet = nullptr;
 }
@@ -1212,7 +1212,7 @@ void
 txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aFirstNewContent,
-                                        PRInt32 /* unused */)
+                                        int32_t /* unused */)
 {
     mStylesheet = nullptr;
 }
@@ -1221,7 +1221,7 @@ void
 txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild,
-                                        PRInt32 /* unused */)
+                                        int32_t /* unused */)
 {
     mStylesheet = nullptr;
 }
@@ -1230,7 +1230,7 @@ void
 txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
-                                       PRInt32 aIndexInContainer,
+                                       int32_t aIndexInContainer,
                                        nsIContent* aPreviousSibling)
 {
     mStylesheet = nullptr;
@@ -1238,7 +1238,7 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
 
 NS_IMETHODIMP
 txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
-                                   JSObject* obj, PRUint32 argc, jsval* argv)
+                                   JSObject* obj, uint32_t argc, jsval* argv)
 {
     nsCOMPtr<nsIPrincipal> prin;
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
@@ -1297,7 +1297,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
 {
     *aResult = nullptr;
 
-    PRUint16 dataType;
+    uint16_t dataType;
     aValue->GetDataType(&dataType);
     switch (dataType) {
         // Number
@@ -1400,11 +1400,11 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
 
-                PRUint32 length;
+                uint32_t length;
                 nodeList->GetLength(&length);
 
                 nsCOMPtr<nsIDOMNode> node;
-                PRUint32 i;
+                uint32_t i;
                 for (i = 0; i < length; ++i) {
                     nodeList->Item(i, getter_AddRefs(node));
 
@@ -1454,9 +1454,9 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
 
         case nsIDataType::VTYPE_ARRAY:
         {
-            PRUint16 type;
+            uint16_t type;
             nsIID iid;
-            PRUint32 count;
+            uint32_t count;
             void* array;
             nsresult rv = aValue->GetAsArray(&type, &iid, &count, &array);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -1474,7 +1474,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            PRUint32 i;
+            uint32_t i;
             for (i = 0; i < count; ++i) {
                 nsISupports *supports = values[i];
                 nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);

@@ -50,7 +50,7 @@ public:
    * of the scrolled contents, in which case it will reflect the current
    * assumptions about scrollbar visibility.
    */
-  virtual PRUint32 GetScrollbarVisibility() const = 0;
+  virtual uint32_t GetScrollbarVisibility() const = 0;
   /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not visible.

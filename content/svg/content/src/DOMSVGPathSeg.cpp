@@ -47,7 +47,7 @@ NS_INTERFACE_MAP_END
 
 
 DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
-                             PRUint32 aListIndex,
+                             uint32_t aListIndex,
                              bool aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
@@ -68,9 +68,9 @@ DOMSVGPathSeg::DOMSVGPathSeg()
 }
 
 NS_IMETHODIMP
-DOMSVGPathSeg::GetPathSegType(PRUint16 *aPathSegType)
+DOMSVGPathSeg::GetPathSegType(uint16_t *aPathSegType)
 {
-  *aPathSegType = PRUint16(Type());
+  *aPathSegType = uint16_t(Type());
   return NS_OK;
 }
 
@@ -83,7 +83,7 @@ DOMSVGPathSeg::GetPathSegTypeAsLetter(nsAString &aPathSegTypeAsLetter)
 
 void
 DOMSVGPathSeg::InsertingIntoList(DOMSVGPathSegList *aList,
-                                 PRUint32 aListIndex,
+                                 uint32_t aListIndex,
                                  bool aIsAnimValItem)
 {
   NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that is already in a list");
@@ -98,7 +98,7 @@ DOMSVGPathSeg::InsertingIntoList(DOMSVGPathSegList *aList,
 void
 DOMSVGPathSeg::RemovingFromList()
 {
-  PRUint32 argCount = SVGPathSegUtils::ArgCountForType(Type());
+  uint32_t argCount = SVGPathSegUtils::ArgCountForType(Type());
   // InternalItem() + 1, because the args come after the encoded seg type
   memcpy(PtrToMemberArgs(), InternalItem() + 1, argCount * sizeof(float));
   mList = nullptr;
@@ -109,7 +109,7 @@ void
 DOMSVGPathSeg::ToSVGPathSegEncodedData(float* aRaw)
 {
   NS_ABORT_IF_FALSE(aRaw, "null pointer");
-  PRUint32 argCount = SVGPathSegUtils::ArgCountForType(Type());
+  uint32_t argCount = SVGPathSegUtils::ArgCountForType(Type());
   if (IsInList()) {
     // 1 + argCount, because we're copying the encoded seg type and args
     memcpy(aRaw, InternalItem(), (1 + argCount) * sizeof(float));
@@ -123,7 +123,7 @@ DOMSVGPathSeg::ToSVGPathSegEncodedData(float* aRaw)
 float*
 DOMSVGPathSeg::InternalItem()
 {
-  PRUint32 dataIndex = mList->mItems[mListIndex].mInternalDataIndex;
+  uint32_t dataIndex = mList->mItems[mListIndex].mInternalDataIndex;
   return &(mList->InternalList().mData[dataIndex]);
 }
 
@@ -145,8 +145,8 @@ DOMSVGPathSeg::IndexIsValid()
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                      \
           NS_ABORT_IF_FALSE(ArrayLength(mArgs) ==                         \
-            SVGPathSegUtils::ArgCountForType(PRUint32(segType)) ||            \
-            PRUint32(segType) == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH,         \
+            SVGPathSegUtils::ArgCountForType(uint32_t(segType)) ||            \
+            uint32_t(segType) == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH,         \
             "Arg count/array size out of sync")
 
 #define IMPL_SVGPATHSEG_SUBCLASS_COMMON(segName, segType)                     \
@@ -155,17 +155,17 @@ DOMSVGPathSeg::IndexIsValid()
   {                                                                           \
     CHECK_ARG_COUNT_IN_SYNC(segType);                                         \
     memcpy(mArgs, aArgs,                                                      \
-        SVGPathSegUtils::ArgCountForType(PRUint32(segType)) * sizeof(float)); \
+        SVGPathSegUtils::ArgCountForType(uint32_t(segType)) * sizeof(float)); \
   }                                                                           \
   DOMSVGPathSeg##segName(DOMSVGPathSegList *aList,                            \
-                         PRUint32 aListIndex,                                 \
+                         uint32_t aListIndex,                                 \
                          bool aIsAnimValItem)                               \
     : DOMSVGPathSeg(aList, aListIndex, aIsAnimValItem)                        \
   {                                                                           \
     CHECK_ARG_COUNT_IN_SYNC(segType);                                         \
   }                                                                           \
   /* From DOMSVGPathSeg: */                                                   \
-  virtual PRUint32                                                            \
+  virtual uint32_t                                                            \
   Type() const                                                                \
   {                                                                           \
     return segType;                                                           \
@@ -830,12 +830,12 @@ IMPL_FLOAT_PROP(CurvetoQuadraticSmoothRel, Y, 1)
 // This must come after DOMSVGPathSegClosePath et. al. have been declared.
 /* static */ DOMSVGPathSeg*
 DOMSVGPathSeg::CreateFor(DOMSVGPathSegList *aList,
-                         PRUint32 aListIndex,
+                         uint32_t aListIndex,
                          bool aIsAnimValItem)
 {
-  PRUint32 dataIndex = aList->mItems[aListIndex].mInternalDataIndex;
+  uint32_t dataIndex = aList->mItems[aListIndex].mInternalDataIndex;
   float *data = &aList->InternalList().mData[dataIndex];
-  PRUint32 type = SVGPathSegUtils::DecodeType(data[0]);
+  uint32_t type = SVGPathSegUtils::DecodeType(data[0]);
 
   switch (type)
   {

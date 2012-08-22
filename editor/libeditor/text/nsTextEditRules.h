@@ -84,7 +84,7 @@ public:
    *        * nsIPlaintextEditor::eNewlinesPasteToFirst or any other value:
    *          remove the first newline and all characters following it.
    */
-  static void HandleNewLines(nsString &aString, PRInt32 aNewLineHandling);
+  static void HandleNewLines(nsString &aString, int32_t aNewLineHandling);
 
   /**
    * Prepare a string buffer for being displayed as the contents of a password
@@ -96,7 +96,7 @@ public:
    * @param aLength the number of password characters that aOutString should
    *        contain.
    */
-  static void FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
+  static void FillBufWithPWChars(nsAString *aOutString, int32_t aLength);
 
 protected:
 
@@ -107,12 +107,12 @@ protected:
                             bool            *aHandled,
                             const nsAString *inString,
                             nsAString       *outString,
-                            PRInt32          aMaxLength);
+                            int32_t          aMaxLength);
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
   nsresult WillInsertBreak(mozilla::Selection* aSelection, bool* aCancel,
-                           bool *aHandled, PRInt32 aMaxLength);
+                           bool *aHandled, int32_t aMaxLength);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
@@ -170,18 +170,18 @@ protected:
   nsresult TruncateInsertionIfNeeded(mozilla::Selection*       aSelection,
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
-                                     PRInt32                   aMaxLength,
+                                     int32_t                   aMaxLength,
                                      bool                     *aTruncated);
 
   /** Remove IME composition text from password buffer */
-  void RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString);
+  void RemoveIMETextFromPWBuf(int32_t &aStart, nsAString *aIMEString);
 
-  nsresult CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
+  nsresult CreateMozBR(nsIDOMNode* inParent, int32_t inOffset,
                        nsIDOMNode** outBRNode = nullptr);
 
   nsresult CheckBidiLevelForDeletion(nsISelection         *aSelection,
                                      nsIDOMNode           *aSelNode, 
-                                     PRInt32               aSelOffset, 
+                                     int32_t               aSelOffset, 
                                      nsIEditor::EDirection aAction,
                                      bool                 *aCancel);
 
@@ -222,11 +222,11 @@ protected:
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
   nsString             mPasswordText;  // a buffer we use to store the real value of password editors
   nsString             mPasswordIMEText;  // a buffer we use to track the IME composition string
-  PRUint32             mPasswordIMEIndex;
+  uint32_t             mPasswordIMEIndex;
   nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
   nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node
-  PRInt32              mCachedSelectionOffset;  // cached selected offset
-  PRUint32             mActionNesting;
+  int32_t              mCachedSelectionOffset;  // cached selected offset
+  uint32_t             mActionNesting;
   bool                 mLockRulesSniffing;
   bool                 mDidExplicitlySetInterline;
   bool                 mDeleteBidiImmediately; // in bidirectional text, delete
@@ -235,7 +235,7 @@ protected:
                                                // moving the caret first.
   EditAction mTheAction;     // the top level editor action
   nsCOMPtr<nsITimer>   mTimer;
-  PRUint32             mLastStart, mLastLength;
+  uint32_t             mLastStart, mLastLength;
 
   // friends
   friend class nsAutoLockRulesSniffing;
@@ -270,7 +270,7 @@ class nsTextRulesInfo : public nsRulesInfo
   const nsAString *inString;
   nsAString *outString;
   const nsAString *outputFormat;
-  PRInt32 maxLength;
+  int32_t maxLength;
   
   // kDeleteSelection
   nsIEditor::EDirection collapsedAction;

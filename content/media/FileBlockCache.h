@@ -62,7 +62,7 @@ public:
   void Close();
 
   // Can be called on any thread. This defers to a non-main thread.
-  nsresult WriteBlock(PRUint32 aBlockIndex, const PRUint8* aData);
+  nsresult WriteBlock(uint32_t aBlockIndex, const uint8_t* aData);
 
   // Performs block writes and block moves on its own thread.
   NS_IMETHOD Run();
@@ -70,14 +70,14 @@ public:
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
   // Not recommended to be called from the main thread, as can cause jank.
-  nsresult Read(PRInt64 aOffset,
-                PRUint8* aData,
-                PRInt32 aLength,
-                PRInt32* aBytes);
+  nsresult Read(int64_t aOffset,
+                uint8_t* aData,
+                int32_t aLength,
+                int32_t* aBytes);
 
   // Moves a block asynchronously. Can be called on any thread.
   // This defers file I/O to a non-main thread.
-  nsresult MoveBlock(PRInt32 aSourceBlockIndex, PRInt32 aDestBlockIndex);
+  nsresult MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex);
 
   // Represents a change yet to be made to a block in the file. The change
   // is either a write (and the data to be written is stored in this struct)
@@ -88,20 +88,20 @@ public:
 
     // This block is waiting in memory to be written.
     // Stores a copy of the block, so we can write it asynchronously.
-    BlockChange(const PRUint8* aData)
+    BlockChange(const uint8_t* aData)
       : mSourceBlockIndex(-1)
     {
-      mData = new PRUint8[BLOCK_SIZE];
+      mData = new uint8_t[BLOCK_SIZE];
       memcpy(mData.get(), aData, BLOCK_SIZE);
     }
 
     // This block's contents are located in another file
     // block, i.e. this block has been moved.
-    BlockChange(PRInt32 aSourceBlockIndex)
+    BlockChange(int32_t aSourceBlockIndex)
       : mSourceBlockIndex(aSourceBlockIndex) {}
 
-    nsAutoArrayPtr<PRUint8> mData;
-    const PRInt32 mSourceBlockIndex;
+    nsAutoArrayPtr<uint8_t> mData;
+    const int32_t mSourceBlockIndex;
 
     bool IsMove() const {
       return mSourceBlockIndex != -1;
@@ -114,18 +114,18 @@ public:
 
   class Int32Queue : private nsDeque {
   public:
-    PRInt32 PopFront() {
-      PRInt32 front = ObjectAt(0);
+    int32_t PopFront() {
+      int32_t front = ObjectAt(0);
       nsDeque::PopFront();
       return front;
     }
 
-    void PushBack(PRInt32 aValue) {
+    void PushBack(int32_t aValue) {
       nsDeque::Push(reinterpret_cast<void*>(aValue));
     }
 
-    bool Contains(PRInt32 aValue) {
-      for (PRInt32 i = 0; i < GetSize(); ++i) {
+    bool Contains(int32_t aValue) {
+      for (int32_t i = 0; i < GetSize(); ++i) {
         if (ObjectAt(i) == aValue) {
           return true;
         }
@@ -138,11 +138,11 @@ public:
     }
 
   private:
-    PRInt32 ObjectAt(PRInt32 aIndex) {
+    int32_t ObjectAt(int32_t aIndex) {
       void* v = nsDeque::ObjectAt(aIndex);
       // Ugly hack to work around "casting 64bit void* to 32bit int loses precision"
       // error on 64bit Linux.
-      return *(reinterpret_cast<PRInt32*>(&v));
+      return *(reinterpret_cast<int32_t*>(&v));
     }
   };
 
@@ -152,21 +152,21 @@ private:
   // while accessing any of the following data fields or methods.
   mozilla::Monitor mFileMonitor;
   // Moves a block already committed to file.
-  nsresult MoveBlockInFile(PRInt32 aSourceBlockIndex,
-                           PRInt32 aDestBlockIndex);
+  nsresult MoveBlockInFile(int32_t aSourceBlockIndex,
+                           int32_t aDestBlockIndex);
   // Seeks file pointer.
-  nsresult Seek(PRInt64 aOffset);
+  nsresult Seek(int64_t aOffset);
   // Reads data from file offset.
-  nsresult ReadFromFile(PRInt32 aOffset,
-                        PRUint8* aDest,
-                        PRInt32 aBytesToRead,
-                        PRInt32& aBytesRead);
-  nsresult WriteBlockToFile(PRInt32 aBlockIndex, const PRUint8* aBlockData);
+  nsresult ReadFromFile(int32_t aOffset,
+                        uint8_t* aDest,
+                        int32_t aBytesToRead,
+                        int32_t& aBytesRead);
+  nsresult WriteBlockToFile(int32_t aBlockIndex, const uint8_t* aBlockData);
   // File descriptor we're writing to. This is created externally, but
   // shutdown by us.
   PRFileDesc* mFD;
   // The current file offset in the file.
-  PRInt64 mFDCurrentPos;
+  int64_t mFDCurrentPos;
 
   // Monitor which controls access to all data in this class, except mFD
   // and mFDCurrentPos. Don't hold mDataMonitor while holding mFileMonitor!
@@ -188,7 +188,7 @@ private:
   // main thread).
   nsCOMPtr<nsIThread> mThread;
   // Queue of pending block indexes that need to be written or moved.
-  //nsAutoTArray<PRInt32, 8> mChangeIndexList;
+  //nsAutoTArray<int32_t, 8> mChangeIndexList;
   Int32Queue mChangeIndexList;
   // True if we've dispatched an event to commit all pending block changes
   // to file on mThread.

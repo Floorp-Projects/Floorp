@@ -39,7 +39,7 @@ public:
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 };
 
 /**
@@ -74,7 +74,7 @@ public:
   // Accessible
   virtual a11y::role NativeRole();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual Relation RelationByType(uint32_t aType);
 };
 
 } // namespace a11y

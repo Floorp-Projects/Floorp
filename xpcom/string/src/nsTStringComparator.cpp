@@ -35,7 +35,7 @@ Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_Cha
   }
 
 int
-nsTDefaultStringComparator_CharT::operator()( const char_type* lhs, const char_type* rhs, PRUint32 lLength, PRUint32 rLength) const
+nsTDefaultStringComparator_CharT::operator()( const char_type* lhs, const char_type* rhs, uint32_t lLength, uint32_t rLength) const
   {
     return (lLength == rLength) ? nsCharTraits<CharT>::compare(lhs, rhs, lLength) :
            (lLength > rLength) ? 1 : -1;

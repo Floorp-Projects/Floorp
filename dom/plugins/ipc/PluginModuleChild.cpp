@@ -672,7 +672,7 @@ PluginModuleChild::QuickExit()
 
 PCrashReporterChild*
 PluginModuleChild::AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                                       PRUint32* processType)
+                                       uint32_t* processType)
 {
     return new CrashReporterChild();
 }
@@ -688,7 +688,7 @@ bool
 PluginModuleChild::AnswerPCrashReporterConstructor(
         PCrashReporterChild* actor,
         mozilla::dom::NativeThreadId* id,
-        PRUint32* processType)
+        uint32_t* processType)
 {
 #ifdef MOZ_CRASHREPORTER
     *id = CrashReporter::CurrentThreadId();
@@ -2310,7 +2310,7 @@ void
 PluginModuleChild::ExitedCall()
 {
     NS_ASSERTION(mIncallPumpingStack.Length(), "mismatched entered/exited");
-    PRUint32 len = mIncallPumpingStack.Length();
+    uint32_t len = mIncallPumpingStack.Length();
     const IncallFrame& f = mIncallPumpingStack[len - 1];
     if (f._spinning)
         MessageLoop::current()->SetNestableTasksAllowed(f._savedNestableTasksAllowed);
@@ -2347,7 +2347,7 @@ LRESULT CALLBACK
 PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
 {
     PluginModuleChild* self = current();
-    PRUint32 len = self->mIncallPumpingStack.Length();
+    uint32_t len = self->mIncallPumpingStack.Length();
     if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]._spinning) {
         MessageLoop* loop = MessageLoop::current();
         self->SendProcessNativeEventsInRPCCall();

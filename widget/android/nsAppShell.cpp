@@ -118,7 +118,7 @@ class AfterPaintListener : public nsIDOMEventListener {
     }
 
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent) {
-        PRUint32 generation = nsFrameManager::GetGlobalGenerationNumber();
+        uint32_t generation = nsFrameManager::GetGlobalGenerationNumber();
         if (mLastGeneration == generation) {
             // the frame tree has not changed since our last AfterPaint
             // so we can drop this event.
@@ -149,7 +149,7 @@ class AfterPaintListener : public nsIDOMEventListener {
     }
 
   private:
-    PRUint32 mLastGeneration;
+    uint32_t mLastGeneration;
     nsCOMPtr<nsIDOMEventTarget> mEventTarget;
 };
 
@@ -503,8 +503,8 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!bridge)
             break;
 
-        PRInt32 token = curEvent->Flags();
-        PRInt32 tabId = curEvent->MetaState();
+        int32_t token = curEvent->Flags();
+        int32_t tabId = curEvent->MetaState();
         nsTArray<nsIntPoint> points = curEvent->Points();
         RefCountedJavaObject* buffer = curEvent->ByteBuffer();
         nsCOMPtr<ScreenshotRunnable> sr = 
@@ -609,7 +609,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         }
 
         nsIntRect rect;
-        PRInt32 colorDepth, pixelDepth;
+        int32_t colorDepth, pixelDepth;
         dom::ScreenOrientation orientation;
         nsCOMPtr<nsIScreen> screen;
 
@@ -702,7 +702,7 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
         case AndroidGeckoEvent::COMPOSITOR_RESUME:
             // Give priority to these events, but maintain their order wrt each other.
             {
-                PRUint32 i = 0;
+                uint32_t i = 0;
                 while (i < mEventQueue.Length() &&
                        (mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_PAUSE ||
                         mEventQueue[i]->Type() == AndroidGeckoEvent::COMPOSITOR_RESUME)) {

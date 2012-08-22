@@ -41,7 +41,7 @@ public:
     // These accessors will never return null.
     gfxContext *ThebesContext() { return mThebes; }
     nsDeviceContext *DeviceContext() { return mDeviceContext; }
-    PRUint32 AppUnitsPerDevPixel() { return NSToIntRound(mP2A); }
+    uint32_t AppUnitsPerDevPixel() { return NSToIntRound(mP2A); }
 
     // Graphics state
 
@@ -77,7 +77,7 @@ public:
 
     void FillRect(const nsRect& aRect);
     void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+    void FillPolygon(const nsPoint aPoints[], int32_t aNumPoints);
 
     void FillEllipse(const nsRect& aRect);
     void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -95,16 +95,16 @@ public:
     nscoord GetWidth(PRUnichar aC);
     nscoord GetWidth(const nsString& aString);
     nscoord GetWidth(const char* aString);
-    nscoord GetWidth(const char* aString, PRUint32 aLength);
-    nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength);
+    nscoord GetWidth(const char* aString, uint32_t aLength);
+    nscoord GetWidth(const PRUnichar *aString, uint32_t aLength);
 
     nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
-                                         PRUint32 aLength);
+                                         uint32_t aLength);
 
     void DrawString(const nsString& aString, nscoord aX, nscoord aY);
-    void DrawString(const char *aString, PRUint32 aLength,
+    void DrawString(const char *aString, uint32_t aLength,
                     nscoord aX, nscoord aY);
-    void DrawString(const PRUnichar *aString, PRUint32 aLength,
+    void DrawString(const PRUnichar *aString, uint32_t aLength,
                     nscoord aX, nscoord aY);
 
     void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
@@ -118,7 +118,7 @@ public:
     }
 
 protected:
-    PRInt32 GetMaxChunkLength();
+    int32_t GetMaxChunkLength();
 
     nsRefPtr<gfxContext> mThebes;
     nsRefPtr<nsDeviceContext> mDeviceContext;

@@ -23,7 +23,7 @@ int CToken::GetTokenCount() {
  *  
  *  @update gess 7/21/98
  */
-CToken::CToken(PRInt32 aTag) {
+CToken::CToken(int32_t aTag) {
   mAttrCount=0;
   mNewlineCount=0;
   mLineNumber = 0;
@@ -68,7 +68,7 @@ CToken::~CToken() {
  *  @param  aScanner -- object to retrieve data from
  *  @return int error code
  */
-nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
+nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,int32_t aMode) {
   nsresult result=NS_OK;
   return result;
 }
@@ -98,7 +98,7 @@ void CToken::AppendSourceTo(nsAString& anOutputString) {
  *  @update gess 3/25/98
  *  @return int containing ordinal value
  */
-PRInt32 CToken::GetTypeID(void) {
+int32_t CToken::GetTypeID(void) {
   return mTypeID;
 }
 
@@ -108,7 +108,7 @@ PRInt32 CToken::GetTypeID(void) {
  *  @update gess 3/25/98
  *  @return int containing attribute count
  */
-PRInt16 CToken::GetAttributeCount(void) {
+int16_t CToken::GetAttributeCount(void) {
   return mAttrCount;
 }
 
@@ -120,7 +120,7 @@ PRInt16 CToken::GetAttributeCount(void) {
  *  @update gess 3/25/98
  *  @return int value containing token type.
  */
-PRInt32 CToken::GetTokenType(void) {
+int32_t CToken::GetTokenType(void) {
   return -1;
 }
 

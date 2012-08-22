@@ -37,7 +37,7 @@ public:
 private:
   nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
   nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
-                            PRUint32 argCount, PRUnichar** argArray,
+                            uint32_t argCount, PRUnichar** argArray,
                             PRUnichar* *result);
 
   void flushBundleCache();

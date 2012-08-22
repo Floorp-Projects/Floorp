@@ -82,8 +82,8 @@ private:
   Page *mHead;
   Page *mTail;
 
-  PRUint16 mOffsetHead;  // offset into mHead where next item is removed
-  PRUint16 mOffsetTail;  // offset into mTail where next item is added
+  uint16_t mOffsetHead;  // offset into mHead where next item is removed
+  uint16_t mOffsetTail;  // offset into mTail where next item is added
 };
 
 #endif  // nsEventQueue_h__

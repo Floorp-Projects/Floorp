@@ -10,8 +10,8 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsHTMLMediaElement.h"
 
-typedef PRUint16 nsMediaNetworkState;
-typedef PRUint16 nsMediaReadyState;
+typedef uint16_t nsMediaNetworkState;
+typedef uint16_t nsMediaReadyState;
 
 class nsHTMLAudioElement : public nsHTMLMediaElement,
                            public nsIDOMHTMLAudioElement,
@@ -41,7 +41,7 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject* aObj, PRUint32 argc, jsval* argv);
+                        JSObject* aObj, uint32_t argc, jsval* argv);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);

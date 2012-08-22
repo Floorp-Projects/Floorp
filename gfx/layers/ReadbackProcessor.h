@@ -46,7 +46,7 @@ public:
     /**
      * The sequence counter value to use when calling DoUpdate
      */
-    PRUint64       mSequenceCounter;
+    uint64_t       mSequenceCounter;
   };
   /**
    * Appends any ReadbackLayers that need to be updated, and the rects that

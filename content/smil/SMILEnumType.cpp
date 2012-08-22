@@ -49,7 +49,7 @@ SMILEnumType::IsEqual(const nsSMILValue& aLeft,
 
 nsresult
 SMILEnumType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                  PRUint32 aCount) const
+                  uint32_t aCount) const
 {
   NS_PRECONDITION(aValueToAdd.mType == aDest.mType,
                   "Trying to add invalid types");

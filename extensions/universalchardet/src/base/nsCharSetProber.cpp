@@ -7,7 +7,7 @@
 #include "prmem.h"
 
 //This filter applies to all scripts which do not use English characters
-bool nsCharSetProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
+bool nsCharSetProber::FilterWithoutEnglishLetters(const char* aBuf, uint32_t aLen, char** newBuf, uint32_t& newLen)
 {
   char *newptr;
   char *prevPtr, *curPtr;
@@ -47,7 +47,7 @@ bool nsCharSetProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32 aLe
 }
 
 //This filter applies to all scripts which contain both English characters and upper ASCII characters.
-bool nsCharSetProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
+bool nsCharSetProber::FilterWithEnglishLetters(const char* aBuf, uint32_t aLen, char** newBuf, uint32_t& newLen)
 {
   //do filtering to reduce load to probers
   char *newptr;

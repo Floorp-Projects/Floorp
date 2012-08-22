@@ -12,41 +12,41 @@
 // Class nsUnicodeDecodeHelper [implementation]
 nsresult nsUnicodeDecodeHelper::ConvertByTable(
                                      const char * aSrc, 
-                                     PRInt32 * aSrcLength, 
+                                     int32_t * aSrcLength, 
                                      PRUnichar * aDest, 
-                                     PRInt32 * aDestLength, 
+                                     int32_t * aDestLength, 
                                      uScanClassID aScanClass,
                                      uShiftInTable * aShiftInTable, 
                                      uMappingTable  * aMappingTable,
                                      bool aErrorSignal)
 {
   const char * src = aSrc;
-  PRInt32 srcLen = *aSrcLength;
+  int32_t srcLen = *aSrcLength;
   PRUnichar * dest = aDest;
   PRUnichar * destEnd = aDest + *aDestLength;
 
   PRUnichar med;
-  PRInt32 bcr; // byte count for read
+  int32_t bcr; // byte count for read
   nsresult res = NS_OK;
 
   while ((srcLen > 0) && (dest < destEnd)) {
     bool charFound;
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftInTable, "shift table missing");
-      charFound = uScanShift(aShiftInTable, NULL, (PRUint8 *)src,
-                             reinterpret_cast<PRUint16*>(&med), srcLen, 
-                             (PRUint32 *)&bcr);
+      charFound = uScanShift(aShiftInTable, NULL, (uint8_t *)src,
+                             reinterpret_cast<uint16_t*>(&med), srcLen, 
+                             (uint32_t *)&bcr);
     } else {
-      charFound = uScan(aScanClass, NULL, (PRUint8 *)src,
-                        reinterpret_cast<PRUint16*>(&med),
-                        srcLen, (PRUint32 *)&bcr);
+      charFound = uScan(aScanClass, NULL, (uint8_t *)src,
+                        reinterpret_cast<uint16_t*>(&med),
+                        srcLen, (uint32_t *)&bcr);
     }
     if (!charFound) {
       res = NS_OK_UDEC_MOREINPUT;
       break;
     }
 
-    if (!uMapCode((uTable*) aMappingTable, static_cast<PRUint16>(med), reinterpret_cast<PRUint16*>(dest))) {
+    if (!uMapCode((uTable*) aMappingTable, static_cast<uint16_t>(med), reinterpret_cast<uint16_t*>(dest))) {
       if (med < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
         *dest = med;
@@ -74,24 +74,24 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
 
 nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
                                      const char * aSrc, 
-                                     PRInt32 * aSrcLength, 
+                                     int32_t * aSrcLength, 
                                      PRUnichar * aDest, 
-                                     PRInt32 * aDestLength, 
-                                     PRInt32 aTableCount, 
+                                     int32_t * aDestLength, 
+                                     int32_t aTableCount, 
                                      const uRange * aRangeArray, 
                                      uScanClassID * aScanClassArray,
                                      uMappingTable ** aMappingTable,
                                      bool aErrorSignal)
 {
-  PRUint8 * src = (PRUint8 *)aSrc;
-  PRInt32 srcLen = *aSrcLength;
+  uint8_t * src = (uint8_t *)aSrc;
+  int32_t srcLen = *aSrcLength;
   PRUnichar * dest = aDest;
   PRUnichar * destEnd = aDest + *aDestLength;
 
   PRUnichar med;
-  PRInt32 bcr; // byte count for read
+  int32_t bcr; // byte count for read
   nsresult res = NS_OK;
-  PRInt32 i;
+  int32_t i;
 
   while ((srcLen > 0) && (dest < destEnd)) 
   {
@@ -104,13 +104,13 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
       {
         passRangeCheck = true;
         if (uScan(aScanClassArray[i], NULL, src, 
-                   reinterpret_cast<PRUint16*>(&med), srcLen, 
-                   (PRUint32 *)&bcr)) 
+                   reinterpret_cast<uint16_t*>(&med), srcLen, 
+                   (uint32_t *)&bcr)) 
         {
           passScan = true;
           done = uMapCode((uTable*) aMappingTable[i], 
-                          static_cast<PRUint16>(med), 
-                          reinterpret_cast<PRUint16*>(dest)); 
+                          static_cast<uint16_t>(med), 
+                          reinterpret_cast<uint16_t*>(dest)); 
         } // if (uScan ... )
       } // if Range
     } // for loop
@@ -124,10 +124,10 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
     if(! done)
     {
       bcr = 1;
-      if ((PRUint8)*src < 0x20) {
+      if ((uint8_t)*src < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
         *dest = *src;
-      } else if(*src == (PRUint8) 0xa0) {
+      } else if(*src == (uint8_t) 0xa0) {
         // handle nbsp
         *dest = 0x00a0;
       } else {
@@ -137,12 +137,12 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
           if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
           {
             if (uScan(aScanClassArray[i], NULL, src, 
-                   reinterpret_cast<PRUint16*>(&med), srcLen, 
-                   (PRUint32*)&bcr)) 
+                   reinterpret_cast<uint16_t*>(&med), srcLen, 
+                   (uint32_t*)&bcr)) 
             { 
                // match the patten
               
-               PRInt32 k; 
+               int32_t k; 
                for(k = 1; k < bcr; k++)
                {
                  if(0 == (src[k]  & 0x80))
@@ -157,7 +157,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
           }
         }
         // treat it as NSBR if bcr == 1 and it is 0xa0
-        if ((1==bcr)&&(*src == (PRUint8)0xa0 )) {
+        if ((1==bcr)&&(*src == (uint8_t)0xa0 )) {
           *dest = 0x00a0;
         } else {
           if (aErrorSignal) {
@@ -176,22 +176,22 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
 
   if ((srcLen > 0) && (res == NS_OK)) res = NS_OK_UDEC_MOREOUTPUT;
 
-  *aSrcLength = src - (PRUint8 *)aSrc;
+  *aSrcLength = src - (uint8_t *)aSrc;
   *aDestLength  = dest - aDest;
   return res;
 }
 
 nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
                                      const char * aSrc, 
-                                     PRInt32 * aSrcLength, 
+                                     int32_t * aSrcLength, 
                                      PRUnichar * aDest, 
-                                     PRInt32 * aDestLength, 
+                                     int32_t * aDestLength, 
                                      const PRUnichar * aFastTable, 
-                                     PRInt32 aTableSize,
+                                     int32_t aTableSize,
                                      bool aErrorSignal)
 {
-  PRUint8 * src = (PRUint8 *)aSrc;
-  PRUint8 * srcEnd = src;
+  uint8_t * src = (uint8_t *)aSrc;
+  uint8_t * srcEnd = src;
   PRUnichar * dest = aDest;
 
   nsresult res;
@@ -213,7 +213,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
     dest++;
   }
 
-  *aSrcLength = src - (PRUint8 *)aSrc;
+  *aSrcLength = src - (uint8_t *)aSrc;
   *aDestLength  = dest - aDest;
   return res;
 }
@@ -221,15 +221,15 @@ nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
 nsresult nsUnicodeDecodeHelper::CreateFastTable(
                                      uMappingTable  * aMappingTable,
                                      PRUnichar * aFastTable, 
-                                     PRInt32 aTableSize)
+                                     int32_t aTableSize)
 {
-  PRInt32 tableSize = aTableSize;
-  PRInt32 buffSize = aTableSize;
+  int32_t tableSize = aTableSize;
+  int32_t buffSize = aTableSize;
   char * buff = new char [buffSize];
   if (buff == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
   char * p = buff;
-  for (PRInt32 i=0; i<aTableSize; i++) *(p++) = i;
+  for (int32_t i=0; i<aTableSize; i++) *(p++) = i;
   nsresult res = ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
       u1ByteCharset, nullptr, aMappingTable);
 

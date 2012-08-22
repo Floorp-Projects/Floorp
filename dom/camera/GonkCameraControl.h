@@ -33,16 +33,16 @@ class GraphicBufferLocked;
 class nsGonkCameraControl : public nsCameraControl
 {
 public:
-  nsGonkCameraControl(PRUint32 aCameraId, nsIThread* aCameraThread);
+  nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread);
 
   const char* GetParameter(const char* aKey);
-  const char* GetParameterConstChar(PRUint32 aKey);
-  double GetParameterDouble(PRUint32 aKey);
-  void GetParameter(PRUint32 aKey, nsTArray<dom::CameraRegion>& aRegions);
+  const char* GetParameterConstChar(uint32_t aKey);
+  double GetParameterDouble(uint32_t aKey);
+  void GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions);
   void SetParameter(const char* aKey, const char* aValue);
-  void SetParameter(PRUint32 aKey, const char* aValue);
-  void SetParameter(PRUint32 aKey, double aValue);
-  void SetParameter(PRUint32 aKey, const nsTArray<dom::CameraRegion>& aRegions);
+  void SetParameter(uint32_t aKey, const char* aValue);
+  void SetParameter(uint32_t aKey, double aValue);
+  void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
   void PushParameters();
 
   void ReceiveFrame(layers::GraphicBufferLocked* aBuffer);
@@ -58,7 +58,7 @@ protected:
   nsresult PushParametersImpl(PushParametersTask* aPushParameters);
   nsresult PullParametersImpl(PullParametersTask* aPullParameters);
 
-  PRUint32                  mHwHandle;
+  uint32_t                  mHwHandle;
   double                    mExposureCompensationMin;
   double                    mExposureCompensationStep;
   bool                      mDeferConfigUpdate;
@@ -71,7 +71,7 @@ private:
 };
 
 // camera driver callbacks
-void ReceiveImage(nsGonkCameraControl* gc, PRUint8* aData, PRUint32 aLength);
+void ReceiveImage(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength);
 void AutoFocusComplete(nsGonkCameraControl* gc, bool success);
 void ReceiveFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked* aBuffer);
 

@@ -120,14 +120,14 @@ NS_IMETHODIMP
 nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
                                  nsISupports *aCtxt,
                                  nsIInputStream *aStream,
-                                 PRUint32 aSourceOffset,
-                                 PRUint32 aCount)
+                                 uint32_t aSourceOffset,
+                                 uint32_t aCount)
 {
   nsresult rv = NS_OK;
 
   if (mOutputStream && mDataBuffer && aCount > 0)
   {
-    PRUint32 numBytesRead = 0;
+    uint32_t numBytesRead = 0;
     while (aCount > 0) // while we still have bytes to copy...
     {
       aStream->Read(mDataBuffer, NS_MIN(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
@@ -147,15 +147,15 @@ nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
 nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * aContext)
 {
   nsresult status = NS_OK;
-  PRUint16 tmpcrc, cval;
+  uint16_t tmpcrc, cval;
   unsigned char ctmp, c = mRlebuf;
 
   /* do CRC */
   ctmp = mInCRC ? c : 0;
   cval = mCRC & 0xf000;
-  tmpcrc = ((PRUint16) (mCRC << 4) | (ctmp >> 4)) ^ (cval | (cval >> 7) | (cval >> 12));
+  tmpcrc = ((uint16_t) (mCRC << 4) | (ctmp >> 4)) ^ (cval | (cval >> 7) | (cval >> 12));
   cval = tmpcrc & 0xf000;
-  mCRC = ((PRUint16) (tmpcrc << 4) | (ctmp & 0x0f)) ^ (cval | (cval >> 7) | (cval >> 12));
+  mCRC = ((uint16_t) (tmpcrc << 4) | (ctmp & 0x0f)) ^ (cval | (cval >> 7) | (cval >> 12));
 
   /* handle state */
   switch (mState)
@@ -219,9 +219,9 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
         /* only output data fork in the non-mac system.      */
         if (mState == BINHEX_STATE_DFORK)
         {
-          PRUint32 numBytesWritten = 0;
+          uint32_t numBytesWritten = 0;
           mOutputStream->Write(mOutgoingBuffer, mPosOutputBuff, &numBytesWritten);
-          if (PRInt32(numBytesWritten) != mPosOutputBuff)
+          if (int32_t(numBytesWritten) != mPosOutputBuff)
             status = NS_ERROR_FAILURE;
 
           // now propagate the data we just wrote
@@ -239,13 +239,13 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 
         mInCRC = 1;
       }
-      else if (mPosOutputBuff >= (PRInt32) nsIOService::gDefaultSegmentSize)
+      else if (mPosOutputBuff >= (int32_t) nsIOService::gDefaultSegmentSize)
       {
         if (mState == BINHEX_STATE_DFORK)
         {
-          PRUint32 numBytesWritten = 0;
+          uint32_t numBytesWritten = 0;
           mOutputStream->Write(mOutgoingBuffer, mPosOutputBuff, &numBytesWritten);
-          if (PRInt32(numBytesWritten) != mPosOutputBuff)
+          if (int32_t(numBytesWritten) != mPosOutputBuff)
             status = NS_ERROR_FAILURE;
 
           mNextListener->OnDataAvailable(aRequest, aContext, mInputStream, 0, numBytesWritten);
@@ -303,11 +303,11 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
   return NS_OK;
 }
 
-nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * aContext, PRUint32 numBytesInBuffer)
+nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * aContext, uint32_t numBytesInBuffer)
 {
   bool foundStart;
-  PRInt16 octetpos, c = 0;
-  PRUint32 val;
+  int16_t octetpos, c = 0;
+  uint32_t val;
   mPosInDataBuffer = 0; // use member variable.
 
   NS_ENSURE_TRUE(numBytesInBuffer > 0, NS_ERROR_FAILURE);
@@ -353,7 +353,7 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
       c = GetNextChar(numBytesInBuffer);
       if (c == 0)  return NS_OK;
 
-      if ((val = BHEXVAL(c)) == PRUint32(-1))
+      if ((val = BHEXVAL(c)) == uint32_t(-1))
       {
         /* we incount an invalid character.  */
         if (c)
@@ -422,7 +422,7 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
   return   NS_OK;
 }
 
-PRInt16 nsBinHexDecoder::GetNextChar(PRUint32 numBytesInBuffer)
+int16_t nsBinHexDecoder::GetNextChar(uint32_t numBytesInBuffer)
 {
   char c = 0;
 

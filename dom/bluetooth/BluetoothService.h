@@ -201,13 +201,13 @@ public:
                                   const nsAString& aPattern,
                                   int aAttributeId) = 0;
 
-  virtual nsTArray<PRUint32>
+  virtual nsTArray<uint32_t>
   AddReservedServicesInternal(const nsAString& aAdapterPath,
-                              const nsTArray<PRUint32>& aServices) = 0;
+                              const nsTArray<uint32_t>& aServices) = 0;
 
   virtual bool
   RemoveReservedServicesInternal(const nsAString& aAdapterPath,
-                                 const nsTArray<PRUint32>& aServiceHandles) = 0;
+                                 const nsTArray<uint32_t>& aServiceHandles) = 0;
 
   virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aAdapterPath,
@@ -221,7 +221,7 @@ public:
                        BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual bool SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode) = 0;
-  virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, PRUint32 aPasskey) = 0;
+  virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
   virtual bool SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
   virtual bool SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
 

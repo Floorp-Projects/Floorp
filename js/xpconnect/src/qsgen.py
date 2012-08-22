@@ -341,7 +341,7 @@ def writeHeaderFile(filename, name):
                 "#define " + headerMacro + "\n\n"
                 "JSBool " + name + "_DefineQuickStubs("
                 "JSContext *cx, JSObject *proto, unsigned flags, "
-                "PRUint32 count, const nsID **iids);\n\n"
+                "uint32_t count, const nsID **iids);\n\n"
                 "void " + name + "_MarkInterfaces();\n\n"
                 "void " + name + "_ClearInterfaces();\n\n"
                 "inline void " + name + "_InitInterfaces()\n"
@@ -985,7 +985,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             if member.implicit_jscontext:
                 argv.append('cx')
             if member.optional_argc:
-                argv.append('NS_MIN<PRUint32>(argc, %d) - %d' % 
+                argv.append('NS_MIN<uint32_t>(argc, %d) - %d' % 
                             (len(member.params), requiredArgs))
             if not isVoidType(member.realtype):
                 argv.append(outParamForm(resultname, member.realtype))
@@ -1110,7 +1110,7 @@ def writeResultXPCInterfacesArray(f, conf, resulttypes):
     f.write("void %s_MarkInterfaces()\n"
             "{\n" % conf.name)
     if count > 0:
-        f.write("    for (PRUint32 i = 0; i < %d; ++i)\n"
+        f.write("    for (uint32_t i = 0; i < %d; ++i)\n"
                 "        if (interfaces[i])\n"
                 "            interfaces[i]->Mark();\n" % count)
     f.write("}\n")
@@ -1122,7 +1122,7 @@ def writeResultXPCInterfacesArray(f, conf, resulttypes):
     f.write("}\n\n")
     i = 0
     for type in resulttypes:
-        f.write("static const PRUint32 k_%s = %d;\n" % (type, i))
+        f.write("static const uint32_t k_%s = %d;\n" % (type, i))
         i += 1
     if count > 0:
         f.write("\n\n")
@@ -1249,7 +1249,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
     # the definer function (entry point to this quick stubs file)
     f.write("namespace xpc {\n")
     f.write("bool %s_DefineQuickStubs(" % conf.name)
-    f.write("JSContext *cx, JSObject *proto, unsigned flags, PRUint32 count, "
+    f.write("JSContext *cx, JSObject *proto, unsigned flags, uint32_t count, "
             "const nsID **iids)\n"
             "{\n")
     f.write("    return !!xpc_qsDefineQuickStubs("

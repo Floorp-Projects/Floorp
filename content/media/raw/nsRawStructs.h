@@ -5,33 +5,33 @@
 #if !defined(nsRawStructs_h_)
 #define nsRawStructs_h_
 
-static const PRUint32 RAW_ID = 0x595556;
+static const uint32_t RAW_ID = 0x595556;
 
 struct nsRawVideo_PRUint24 {
-  operator PRUint32() const { return value[2] << 16 | value[1] << 8 | value[0]; }
-  nsRawVideo_PRUint24& operator= (const PRUint32& rhs)
+  operator uint32_t() const { return value[2] << 16 | value[1] << 8 | value[0]; }
+  nsRawVideo_PRUint24& operator= (const uint32_t& rhs)
   { value[2] = (rhs & 0x00FF0000) >> 16;
     value[1] = (rhs & 0x0000FF00) >> 8;
     value[0] = (rhs & 0x000000FF);
     return *this; }
 private:
-  PRUint8 value[3];
+  uint8_t value[3];
 };
 
 struct nsRawPacketHeader {
   typedef nsRawVideo_PRUint24 PRUint24;
-  PRUint8 packetID;
+  uint8_t packetID;
   PRUint24 codecID;
 };
 
 // This is Arc's draft from wiki.xiph.org/OggYUV
 struct nsRawVideoHeader {
   typedef nsRawVideo_PRUint24 PRUint24;
-  PRUint8 headerPacketID;          // Header Packet ID (always 0)
+  uint8_t headerPacketID;          // Header Packet ID (always 0)
   PRUint24 codecID;                // Codec identifier (always "YUV")
-  PRUint8 majorVersion;            // Version Major (breaks backwards compat)
-  PRUint8 minorVersion;            // Version Minor (preserves backwards compat)
-  PRUint16 options;                // Bit 1: Color (false = B/W)
+  uint8_t majorVersion;            // Version Major (breaks backwards compat)
+  uint8_t minorVersion;            // Version Minor (preserves backwards compat)
+  uint16_t options;                // Bit 1: Color (false = B/W)
                                    // Bits 2-4: Chroma Pixel Shape
                                    // Bit 5: 50% horizontal offset for Cr samples
                                    // Bit 6: 50% vertical ...
@@ -43,18 +43,18 @@ struct nsRawVideoHeader {
                                    // Bit 13: Interlaced (false = Progressive)
                                    // Bits 14-16: Interlace options (undefined)
 
-  PRUint8 alphaChannelBpp;
-  PRUint8 lumaChannelBpp;
-  PRUint8 chromaChannelBpp;
-  PRUint8 colorspace;
+  uint8_t alphaChannelBpp;
+  uint8_t lumaChannelBpp;
+  uint8_t chromaChannelBpp;
+  uint8_t colorspace;
 
   PRUint24 frameWidth;
   PRUint24 frameHeight;
   PRUint24 aspectNumerator;
   PRUint24 aspectDenominator;
 
-  PRUint32 framerateNumerator;
-  PRUint32 framerateDenominator;
+  uint32_t framerateNumerator;
+  uint32_t framerateDenominator;
 };
 
 #endif // nsRawStructs_h_

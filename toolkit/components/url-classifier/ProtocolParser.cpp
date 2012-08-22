@@ -37,7 +37,7 @@ const uint32 DOMAIN_SIZE = 4;
 static bool
 ParseChunkRange(nsACString::const_iterator& aBegin,
                 const nsACString::const_iterator& aEnd,
-                PRUint32* aFirst, PRUint32* aLast)
+                uint32_t* aFirst, uint32_t* aLast)
 {
   nsACString::const_iterator iter = aBegin;
   FindCharInReadable(',', iter, aEnd);
@@ -47,10 +47,10 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
   if (aBegin != aEnd)
     aBegin++;
 
-  PRUint32 numRead = PR_sscanf(element.get(), "%u-%u", aFirst, aLast);
+  uint32_t numRead = PR_sscanf(element.get(), "%u-%u", aFirst, aLast);
   if (numRead == 2) {
     if (*aFirst > *aLast) {
-      PRUint32 tmp = *aFirst;
+      uint32_t tmp = *aFirst;
       *aFirst = *aLast;
       *aLast = tmp;
     }
@@ -65,7 +65,7 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
   return false;
 }
 
-ProtocolParser::ProtocolParser(PRUint32 aHashKey)
+ProtocolParser::ProtocolParser(uint32_t aHashKey)
     : mState(PROTOCOL_STATE_CONTROL)
   , mHashKey(aHashKey)
   , mUpdateStatus(NS_OK)
@@ -179,7 +179,7 @@ ProtocolParser::AppendStream(const nsACString& aData)
 
   // Digest the data if we have a server MAC.
   if (mHMAC && !mServerMAC.IsEmpty()) {
-    rv = mHMAC->Update(reinterpret_cast<const PRUint8*>(aData.BeginReading()),
+    rv = mHMAC->Update(reinterpret_cast<const uint8_t*>(aData.BeginReading()),
                        aData.Length());
     if (NS_FAILED(rv)) {
       mUpdateStatus = rv;
@@ -265,7 +265,7 @@ ProtocolParser::ProcessMAC(const nsCString& aLine)
     nsUrlClassifierUtils::UnUrlsafeBase64(mServerMAC);
 
     // The remainder of the pending update wasn't digested, digest it now.
-    rv = mHMAC->Update(reinterpret_cast<const PRUint8*>(mPending.BeginReading()),
+    rv = mHMAC->Update(reinterpret_cast<const uint8_t*>(mPending.BeginReading()),
                        mPending.Length());
     return rv;
   }
@@ -286,9 +286,9 @@ ProtocolParser::ProcessExpirations(const nsCString& aLine)
   list.BeginReading(begin);
   list.EndReading(end);
   while (begin != end) {
-    PRUint32 first, last;
+    uint32_t first, last;
     if (ParseChunkRange(begin, end, &first, &last)) {
-      for (PRUint32 num = first; num <= last; num++) {
+      for (uint32_t num = first; num <= last; num++) {
         if (aLine[0] == 'a')
           mTableUpdate->NewAddExpiration(num);
         else
@@ -447,7 +447,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         rv = LookupCache::GetKey(line, &domHash, mCryptoHash);
         NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(line, mCryptoHash);
-        PRUint32 codedHash;
+        uint32_t codedHash;
         rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
                                     &codedHash, !mPerClientRandomize);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -478,7 +478,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
         rv = LookupCache::GetKey(Substring(iter, end), &domHash, mCryptoHash);
         NS_ENSURE_SUCCESS(rv, rv);
         hash.FromPlaintext(Substring(iter, end), mCryptoHash);
-        PRUint32 codedHash;
+        uint32_t codedHash;
         rv = LookupCache::KeyedHash(hash.ToUint32(), domHash.ToUint32(), mHashKey,
                                     &codedHash, !mPerClientRandomize);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -499,7 +499,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
 nsresult
 ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
 {
-  PRUint32 start = 0;
+  uint32_t start = 0;
   while (start < aChunk.Length()) {
     // First four bytes are the domain key.
     Prefix domain;
@@ -533,14 +533,14 @@ ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
 }
 
 nsresult
-ProtocolParser::ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
-                               const nsACString& aChunk, PRUint32* aStart)
+ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
+                               const nsACString& aChunk, uint32_t* aStart)
 {
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostAdd should only be called for prefix hashes.");
 
-  PRUint32 codedHash;
-  PRUint32 domHash = aDomain.ToUint32();
+  uint32_t codedHash;
+  uint32_t domHash = aDomain.ToUint32();
 
   if (aNumEntries == 0) {
     nsresult rv = LookupCache::KeyedHash(domHash, domHash, mHashKey, &codedHash,
@@ -573,14 +573,14 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
 }
 
 nsresult
-ProtocolParser::ProcessHostSub(const Prefix& aDomain, PRUint8 aNumEntries,
-                               const nsACString& aChunk, PRUint32 *aStart)
+ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
+                               const nsACString& aChunk, uint32_t *aStart)
 {
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostSub should only be called for prefix hashes.");
 
-  PRUint32 codedHash;
-  PRUint32 domHash = aDomain.ToUint32();
+  uint32_t codedHash;
+  uint32_t domHash = aDomain.ToUint32();
 
   if (aNumEntries == 0) {
     if ((*aStart) + 4 > aChunk.Length()) {
@@ -643,8 +643,8 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, PRUint8 aNumEntries,
 }
 
 nsresult
-ProtocolParser::ProcessHostAddComplete(PRUint8 aNumEntries,
-                                       const nsACString& aChunk, PRUint32* aStart)
+ProtocolParser::ProcessHostAddComplete(uint8_t aNumEntries,
+                                       const nsACString& aChunk, uint32_t* aStart)
 {
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostAddComplete should only be called for complete hashes.");
@@ -671,8 +671,8 @@ ProtocolParser::ProcessHostAddComplete(PRUint8 aNumEntries,
 }
 
 nsresult
-ProtocolParser::ProcessHostSubComplete(PRUint8 aNumEntries,
-                                       const nsACString& aChunk, PRUint32* aStart)
+ProtocolParser::ProcessHostSubComplete(uint8_t aNumEntries,
+                                       const nsACString& aChunk, uint32_t* aStart)
 {
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostSubComplete should only be called for complete hashes.");
@@ -688,7 +688,7 @@ ProtocolParser::ProcessHostSubComplete(PRUint8 aNumEntries,
     return NS_ERROR_FAILURE;
   }
 
-  for (PRUint8 i = 0; i < aNumEntries; i++) {
+  for (uint8_t i = 0; i < aNumEntries; i++) {
     Completion hash;
     hash.Assign(Substring(aChunk, *aStart, COMPLETE_SIZE));
     *aStart += COMPLETE_SIZE;

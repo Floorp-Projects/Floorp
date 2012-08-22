@@ -217,7 +217,7 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
     cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
   }
   // insert the cells into the cell map
-  PRInt32 colIndex = -1;
+  int32_t colIndex = -1;
   if (prevCellFrame) {
     prevCellFrame->GetColIndex(colIndex);
   }
@@ -239,7 +239,7 @@ nsTableRowFrame::RemoveFrame(ChildListID     aListID,
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   nsTableCellFrame *cellFrame = do_QueryFrame(aOldFrame);
   if (cellFrame) {
-    PRInt32 colIndex;
+    int32_t colIndex;
     cellFrame->GetColIndex(colIndex);
     // remove the cell from the cell map
     tableFrame->RemoveCell(cellFrame, GetRowIndex());
@@ -284,10 +284,10 @@ GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
 {
   nscoord height = 0;
   nscoord cellSpacingY = aTableFrame.GetCellSpacingY();
-  PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan(aTableCellFrame);
+  int32_t rowSpan = aTableFrame.GetEffectiveRowSpan(aTableCellFrame);
   // add in height of rows spanned beyond the 1st one
   nsIFrame* nextRow = aTableCellFrame.GetParent()->GetNextSibling();
-  for (PRInt32 rowX = 1; ((rowX < rowSpan) && nextRow);) {
+  for (int32_t rowX = 1; ((rowX < rowSpan) && nextRow);) {
     if (nsGkAtoms::tableRowFrame == nextRow->GetType()) {
       height += nextRow->GetSize().height;
       rowX++;
@@ -455,7 +455,7 @@ nsTableRowFrame::UpdateHeight(nscoord           aHeight,
   if (aHeight != NS_UNCONSTRAINEDSIZE) {
     if (!(aCellFrame->HasVerticalAlignBaseline())) { // only the cell's height matters
       if (GetHeight() < aHeight) {
-        PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
+        int32_t rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
         if (rowSpan == 1) {
           SetContentHeight(aHeight);
         }
@@ -469,7 +469,7 @@ nsTableRowFrame::UpdateHeight(nscoord           aHeight,
       }
       // see if this is a long descender and without rowspan
       if (mMaxCellDescent < aDescent) {
-        PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
+        int32_t rowSpan = aTableFrame->GetEffectiveRowSpan(*aCellFrame);
         if (rowSpan == 1) {
           mMaxCellDescent = aDescent;
         }
@@ -606,7 +606,7 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   const nsStylePosition* position = aCellFrame->GetStylePosition();
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
+  int32_t rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
   
   switch (position->mHeight.GetUnit()) {
     case eStyleUnit_Coord: {
@@ -662,12 +662,12 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
                nscoord           aCellSpacingX)
 {
   nscoord cellAvailWidth = 0;
-  PRInt32 colIndex;
+  int32_t colIndex;
   aCellFrame.GetColIndex(colIndex);
-  PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
+  int32_t colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
   NS_ASSERTION(colspan > 0, "effective colspan should be positive");
 
-  for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
+  for (int32_t spanX = 0; spanX < colspan; spanX++) {
     cellAvailWidth += aTableFrame.GetColumnWidth(colIndex + spanX);
     if (spanX > 0 &&
         aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
@@ -678,16 +678,16 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
 }
 
 nscoord
-GetSpaceBetween(PRInt32       aPrevColIndex,
-                PRInt32       aColIndex,
-                PRInt32       aColSpan,
+GetSpaceBetween(int32_t       aPrevColIndex,
+                int32_t       aColIndex,
+                int32_t       aColSpan,
                 nsTableFrame& aTableFrame,
                 nscoord       aCellSpacingX,
                 bool          aIsLeftToRight,
                 bool          aCheckVisibility)
 {
   nscoord space = 0;
-  PRInt32 colX;
+  int32_t colX;
   if (aIsLeftToRight) {
     for (colX = aPrevColIndex + 1; aColIndex > colX; colX++) {
       bool isCollapsed = false;
@@ -712,7 +712,7 @@ GetSpaceBetween(PRInt32       aPrevColIndex,
     }
   } 
   else {
-    PRInt32 lastCol = aColIndex + aColSpan - 1;
+    int32_t lastCol = aColIndex + aColSpan - 1;
     for (colX = aPrevColIndex - 1; colX > lastCol; colX--) {
       bool isCollapsed = false;
       if (!aCheckVisibility) {
@@ -770,12 +770,12 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   const bool borderCollapse = aTableFrame.IsBorderCollapse();
   nsresult rv = NS_OK;
   nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
-  PRInt32 cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
+  int32_t cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
   
   nsTableIterator iter(*this);
   // remember the col index of the previous cell to handle rowspans into this row
-  PRInt32 firstPrevColIndex = (iter.IsLeftToRight()) ? -1 : aTableFrame.GetColCount();
-  PRInt32 prevColIndex  = firstPrevColIndex;
+  int32_t firstPrevColIndex = (iter.IsLeftToRight()) ? -1 : aTableFrame.GetColCount();
+  int32_t prevColIndex  = firstPrevColIndex;
   nscoord x = 0; // running total of children x offset
 
   // This computes the max of all cell heights
@@ -822,7 +822,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       }
     }
 
-    PRInt32 cellColIndex;
+    int32_t cellColIndex;
     cellFrame->GetColIndex(cellColIndex);
     cellColSpan = aTableFrame.GetEffectiveColSpan(*cellFrame);
 
@@ -919,7 +919,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       }
       else {
         cellMaxHeight = NS_MAX(cellMaxHeight, desiredSize.height);
-        PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
+        int32_t rowSpan = aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
         if (1 == rowSpan) {
           SetContentHeight(cellMaxHeight);
         }
@@ -1141,12 +1141,12 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     nsTableIterator iter(*this);
     // remember the col index of the previous cell to handle rowspans into this
     // row
-    PRInt32 firstPrevColIndex = (iter.IsLeftToRight()) ? -1 :
+    int32_t firstPrevColIndex = (iter.IsLeftToRight()) ? -1 :
                                 tableFrame->GetColCount();
-    PRInt32 prevColIndex  = firstPrevColIndex;
+    int32_t prevColIndex  = firstPrevColIndex;
     nscoord x = 0; // running total of children x offset
 
-    PRInt32 colIncrement = iter.IsLeftToRight() ? 1 : -1;
+    int32_t colIncrement = iter.IsLeftToRight() ? 1 : -1;
 
     //nscoord x = cellSpacingX;
 
@@ -1154,9 +1154,9 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
     while (kidFrame) {
       nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
       if (cellFrame) {
-        PRInt32 cellColIndex;
+        int32_t cellColIndex;
         cellFrame->GetColIndex(cellColIndex);
-        PRInt32 cellColSpan = tableFrame->GetEffectiveColSpan(*cellFrame);
+        int32_t cellColSpan = tableFrame->GetEffectiveColSpan(*cellFrame);
 
         // If the adjacent cell is in a prior row (because of a rowspan) add in
         // the space
@@ -1173,11 +1173,11 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         // spans into
         prevColIndex = (iter.IsLeftToRight()) ?
                        cellColIndex + (cellColSpan - 1) : cellColIndex;
-        PRInt32 startIndex = (iter.IsLeftToRight()) ?
+        int32_t startIndex = (iter.IsLeftToRight()) ?
                              cellColIndex : cellColIndex + (cellColSpan - 1);
-        PRInt32 actualColSpan = cellColSpan;
+        int32_t actualColSpan = cellColSpan;
         bool isVisible = false;
-        for (PRInt32 colX = startIndex; actualColSpan > 0;
+        for (int32_t colX = startIndex; actualColSpan > 0;
              colX += colIncrement, actualColSpan--) {
 
           nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
@@ -1207,7 +1207,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         x += cRect.width;
         if (isVisible)
           x += cellSpacingX;
-        PRInt32 actualRowSpan = tableFrame->GetEffectiveRowSpan(*cellFrame);
+        int32_t actualRowSpan = tableFrame->GetEffectiveRowSpan(*cellFrame);
         nsTableRowFrame* rowFrame = GetNextRow();
         for (actualRowSpan--; actualRowSpan > 0 && rowFrame; actualRowSpan--) {
           const nsStyleVisibility* nextRowVis = rowFrame->GetStyleVisibility();
@@ -1265,7 +1265,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
  */
 void 
 nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
-                                 PRInt32           aColIndex)
+                                 int32_t           aColIndex)
 {
   // Find the cell frame where col index < aColIndex
   nsTableCellFrame* priorCell = nullptr;
@@ -1273,7 +1273,7 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
        child = child->GetNextSibling()) {
     nsTableCellFrame *cellFrame = do_QueryFrame(child);
     if (cellFrame) {
-      PRInt32 colIndex;
+      int32_t colIndex;
       cellFrame->GetColIndex(colIndex);
       if (colIndex < aColIndex) {
         priorCell = cellFrame;
@@ -1324,7 +1324,7 @@ nsTableRowFrame::GetUnpaginatedHeight(nsPresContext* aPresContext)
   return NS_PTR_TO_INT32(props.Get(RowUnpaginatedHeightProperty()));
 }
 
-void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+void nsTableRowFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
                                                  BCPixelSize aPixelValue)
 {
   switch (aForSide) {

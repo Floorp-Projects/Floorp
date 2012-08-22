@@ -174,7 +174,7 @@ getSecureBrowserUI(nsIInterfaceRequestor * callbacks,
 }
 
 void
-nsNSSSocketInfo::SetNegotiatedNPN(const char *value, PRUint32 length)
+nsNSSSocketInfo::SetNegotiatedNPN(const char *value, uint32_t length)
 {
   if (!value)
     mNegotiatedNPN.Truncate();
@@ -196,7 +196,7 @@ nsNSSSocketInfo::GetNegotiatedNPN(nsACString &aNegotiatedNPN)
 NS_IMETHODIMP
 nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
                                 const nsACString & hostname,
-                                PRInt32 port,
+                                int32_t port,
                                 bool *_retval)
 {
   *_retval = false;
@@ -294,7 +294,7 @@ nsNSSSocketInfo::SetNPNList(nsTArray<nsCString> &protocolArray)
   // the npn list is a concatenated list of 8 bit byte strings.
   nsCString npnList;
 
-  for (PRUint32 index = 0; index < protocolArray.Length(); ++index) {
+  for (uint32_t index = 0; index < protocolArray.Length(); ++index) {
     if (protocolArray[index].IsEmpty() ||
         protocolArray[index].Length() > 255)
       return NS_ERROR_ILLEGAL_VALUE;
@@ -511,7 +511,7 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRErrorCode err)
   nsXPIDLCString hostName;
   socketInfo->GetHostName(getter_Copies(hostName));
 
-  PRInt32 port;
+  int32_t port;
   socketInfo->GetPort(&port);
 
   // Try to get a nsISSLErrorListener implementation from the socket consumer.
@@ -537,7 +537,7 @@ namespace {
 
 enum Operation { reading, writing, not_reading_or_writing };
 
-PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
+int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
                        PRFileDesc* ssl_layer_fd,
                        nsNSSSocketInfo *socketInfo);
 
@@ -601,7 +601,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
 void
 nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
 {
-  PRInt32 port;
+  int32_t port;
   socketInfo->GetPort(&port);
 
   nsXPIDLCString host;
@@ -749,7 +749,7 @@ nsDumpBuffer(unsigned char *buf, int len)
 #endif
 
 static bool
-isNonSSLErrorThatWeAllowToRetry(PRInt32 err, bool withInitialCleartext)
+isNonSSLErrorThatWeAllowToRetry(int32_t err, bool withInitialCleartext)
 {
   switch (err)
   {
@@ -766,7 +766,7 @@ isNonSSLErrorThatWeAllowToRetry(PRInt32 err, bool withInitialCleartext)
 }
 
 static bool
-isTLSIntoleranceError(PRInt32 err, bool withInitialCleartext)
+isTLSIntoleranceError(int32_t err, bool withInitialCleartext)
 {
   // This function is supposed to decide, which error codes should
   // be used to conclude server is TLS intolerant.
@@ -822,7 +822,7 @@ class SSLErrorRunnable : public SyncRunnableBase
 
 namespace {
 
-PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
+int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
                        PRFileDesc* ssl_layer_fd,
                        nsNSSSocketInfo *socketInfo)
 {
@@ -863,7 +863,7 @@ PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
   bool wantRetry = false;
 
   if (0 > bytesTransfered) {
-    PRInt32 err = PR_GetError();
+    int32_t err = PR_GetError();
 
     if (handleHandshakeResultNow) {
       if (PR_WOULD_BLOCK_ERROR == err) {
@@ -927,8 +927,8 @@ PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
 
 }
 
-static PRInt16 PR_CALLBACK
-nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
+static int16_t PR_CALLBACK
+nsSSLIOLayerPoll(PRFileDesc * fd, int16_t in_flags, int16_t *out_flags)
 {
   nsNSSShutDownPreventionLock locker;
 
@@ -981,7 +981,7 @@ nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
   // don't need to do anything special here. libssl automatically blocks when
   // it reaches any point that would be unsafe to send/receive something before
   // cert validation is complete.
-  PRInt16 result = fd->lower->methods->poll(fd->lower, in_flags, out_flags);
+  int16_t result = fd->lower->methods->poll(fd->lower, in_flags, out_flags);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] poll SSL socket returned %d\n",
                                     (void*)fd, (int) result));
   return result;
@@ -995,7 +995,7 @@ nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSIntolerantSites = nullp
 nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSTolerantSites = nullptr;
 nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nullptr;
 bool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = false;
-PRInt32 nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
+int32_t nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
 
 static int _PSM_InvalidInt(void)
 {
@@ -1004,7 +1004,7 @@ static int _PSM_InvalidInt(void)
     return -1;
 }
 
-static PRInt64 _PSM_InvalidInt64(void)
+static int64_t _PSM_InvalidInt64(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
@@ -1063,7 +1063,7 @@ static PRStatus PR_CALLBACK PSMSetsocketoption(PRFileDesc *fd,
   return fd->lower->methods->setsocketoption(fd, data);
 }
 
-static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
+static int32_t PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, int32_t amount,
     int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1076,7 +1076,7 @@ static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
     return -1;
   }
 
-  PRInt32 bytesRead = fd->lower->methods->recv(fd->lower, buf, amount, flags,
+  int32_t bytesRead = fd->lower->methods->recv(fd->lower, buf, amount, flags,
                                                timeout);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
@@ -1088,7 +1088,7 @@ static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
   return checkHandshake(bytesRead, true, fd, socketInfo);
 }
 
-static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
+static int32_t PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, int32_t amount,
     int flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1105,7 +1105,7 @@ static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amou
   DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
 #endif
 
-  PRInt32 bytesWritten = fd->lower->methods->send(fd->lower, buf, amount,
+  int32_t bytesWritten = fd->lower->methods->send(fd->lower, buf, amount,
                                                   flags, timeout);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n",
@@ -1114,19 +1114,19 @@ static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amou
   return checkHandshake(bytesWritten, false, fd, socketInfo);
 }
 
-static PRInt32 PR_CALLBACK
-nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
+static int32_t PR_CALLBACK
+nsSSLIOLayerRead(PRFileDesc* fd, void* buf, int32_t amount)
 {
   return PSMRecv(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
 }
 
-static PRInt32 PR_CALLBACK
-nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
+static int32_t PR_CALLBACK
+nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, int32_t amount)
 {
   return PSMSend(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
 }
 
-static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, PRInt16 out_flags)
+static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, int16_t out_flags)
 {
   nsNSSShutDownPreventionLock locker;
   if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker)) {
@@ -1143,7 +1143,7 @@ static int PSMAvailable(void)
   return -1;
 }
 
-static PRInt64 PSMAvailable64(void)
+static int64_t PSMAvailable64(void)
 {
   // This is called through PR_Available(), but is not implemented in PSM
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
@@ -1281,24 +1281,24 @@ bool nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()
   return mTreatUnsafeNegotiationAsBroken;
 }
 
-void nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(PRInt32 level)
+void nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(int32_t level)
 {
   MutexAutoLock lock(*mutex);
   mWarnLevelMissingRFC5746 = level;
 }
 
-PRInt32 nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746()
+int32_t nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746()
 {
   MutexAutoLock lock(*mutex);
   return mWarnLevelMissingRFC5746;
 }
 
 nsresult
-nsSSLIOLayerNewSocket(PRInt32 family,
+nsSSLIOLayerNewSocket(int32_t family,
                       const char *host,
-                      PRInt32 port,
+                      int32_t port,
                       const char *proxyHost,
-                      PRInt32 proxyPort,
+                      int32_t proxyPort,
                       PRFileDesc **fd,
                       nsISupports** info,
                       bool forSTARTTLS,
@@ -1337,7 +1337,7 @@ SECStatus nsConvertCANamesToStrings(PRArenaPool* arena, char** caNameStrings,
     SECItem* dername;
     SECStatus rv;
     int headerlen;
-    PRUint32 contentlen;
+    uint32_t contentlen;
     SECItem newitem;
     int n;
     char* namestring;
@@ -1520,7 +1520,7 @@ done:
 }
 
 static SECStatus cert_DecodeCertIPAddress(SECItem* genname, 
-                                          PRUint32* constraint, PRUint32* mask)
+                                          uint32_t* constraint, uint32_t* mask)
 {
     /* in case of failure */
     *constraint = 0;
@@ -1536,8 +1536,8 @@ static SECStatus cert_DecodeCertIPAddress(SECItem* genname,
     }
 
     /* get them in the right order */
-    *constraint = PR_ntohl((PRUint32)(*genname->data));
-    *mask = PR_ntohl((PRUint32)(*(genname->data + 4)));
+    *constraint = PR_ntohl((uint32_t)(*genname->data));
+    *mask = PR_ntohl((uint32_t)(*(genname->data + 4)));
 
     return SECSuccess;
 }
@@ -1573,7 +1573,7 @@ static bool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
     int numEntries = 0;
     int i;
     char* hostLower = NULL;
-    PRUint32 hostIPAddr = 0;
+    uint32_t hostIPAddr = 0;
 
     PR_ASSERT((cert != NULL) && (hostname != NULL) && (hostIP != NULL));
 
@@ -1655,8 +1655,8 @@ static bool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
             break;
         }
         case certIPAddress: {
-            PRUint32 constraint;
-            PRUint32 mask;
+            uint32_t constraint;
+            uint32_t mask;
             PRNetAddr addr;
             
             if (hostIPAddr == 0) {
@@ -1890,7 +1890,7 @@ void ClientAuthDataRunnable::RunOnTargetThread()
   char* extracted = NULL;
   int keyError = 0; /* used for private key retrieval error */
   SSM_UserCertChoice certChoice;
-  PRInt32 NumberOfCerts = 0;
+  int32_t NumberOfCerts = 0;
   void * wincx = mSocketInfo;
 
   /* create caNameStrings */
@@ -2062,7 +2062,7 @@ if (!hasRemembered)
 {
     /* user selects a cert to present */
     nsIClientAuthDialogs *dialogs = NULL;
-    PRInt32 selectedIndex = -1;
+    int32_t selectedIndex = -1;
     PRUnichar **certNicknameList = NULL;
     PRUnichar **certDetailsList = NULL;
 
@@ -2127,7 +2127,7 @@ if (!hasRemembered)
     voidCleaner ccnCleaner(v);
     NS_ConvertUTF8toUTF16 cn(ccn);
 
-    PRInt32 port;
+    int32_t port;
     mSocketInfo->GetPort(&port);
 
     nsString cn_host_port;
@@ -2161,7 +2161,7 @@ if (!hasRemembered)
       goto loser;
     }
 
-    PRInt32 CertsToUse;
+    int32_t CertsToUse;
     for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
          node = CERT_LIST_NEXT(node)
@@ -2339,7 +2339,7 @@ loser:
 
 static nsresult
 nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS, 
-                       const char *proxyHost, const char *host, PRInt32 port,
+                       const char *proxyHost, const char *host, int32_t port,
                        bool anonymousLoad, nsNSSSocketInfo *infoObject)
 {
   nsNSSShutDownPreventionLock locker;
@@ -2410,11 +2410,11 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
 }
 
 nsresult
-nsSSLIOLayerAddToSocket(PRInt32 family,
+nsSSLIOLayerAddToSocket(int32_t family,
                         const char* host,
-                        PRInt32 port,
+                        int32_t port,
                         const char* proxyHost,
-                        PRInt32 proxyPort,
+                        int32_t proxyPort,
                         PRFileDesc* fd,
                         nsISupports** info,
                         bool forSTARTTLS,

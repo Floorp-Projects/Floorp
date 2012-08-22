@@ -225,8 +225,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
-  PRInt32 unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
+  int32_t srcLength = (int32_t) PL_strlen(strOut);
+  int32_t unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
   PRUnichar unichars[NSDATETIME_FORMAT_BUFFER_LEN*2];   // buffer for date and time
 
   rv = mDecoder->Convert(strOut, &srcLength, unichars, &unicharLength);

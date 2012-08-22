@@ -81,7 +81,7 @@ public:
    * @update 04/04/99 harishd
    * @param aPosition - The position from where the new context begins.
    */
-  NS_IMETHOD BeginContext(PRInt32 aPosition) = 0;
+  NS_IMETHOD BeginContext(int32_t aPosition) = 0;
   
   /**
    * This method terminates any new context that got created by
@@ -90,13 +90,13 @@ public:
    * @update 04/04/99 harishd
    * @param aPosition - Validates the end of a context.
    */
-  NS_IMETHOD EndContext(PRInt32 aPosition) = 0;
+  NS_IMETHOD EndContext(int32_t aPosition) = 0;
   
   /**
    * @update 01/09/2003 harishd
    * @param aTag - Check if this tag is enabled or not.
    */
-  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn) = 0;
+  NS_IMETHOD IsEnabled(int32_t aTag, bool* aReturn) = 0;
 
   /**
    * This method is called when parser has

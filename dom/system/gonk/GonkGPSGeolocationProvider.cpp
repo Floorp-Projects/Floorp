@@ -423,7 +423,7 @@ GonkGPSGeolocationProvider::StartGPS()
 {
   MOZ_ASSERT(mGpsInterface);
 
-  PRInt32 update = Preferences::GetInt("geo.default.update", kDefaultPeriod);
+  int32_t update = Preferences::GetInt("geo.default.update", kDefaultPeriod);
 
   if (mSupportsMSA || mSupportsMSB) {
     SetupAGPS();
@@ -460,7 +460,7 @@ GonkGPSGeolocationProvider::SetupAGPS()
   MOZ_ASSERT(mAGpsRilInterface);
 
   const nsAdoptingCString& suplServer = Preferences::GetCString("geo.gps.supl_server");
-  PRInt32 suplPort = Preferences::GetInt("geo.gps.supl_port", -1);
+  int32_t suplPort = Preferences::GetInt("geo.gps.supl_port", -1);
   if (!suplServer.IsEmpty() && suplPort > 0) {
     mAGpsInterface->set_server(AGPS_TYPE_SUPL, suplServer.get(), suplPort);
   } else {
@@ -556,7 +556,7 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
   MOZ_ASSERT(mAGpsInterface);
   nsCOMPtr<nsIRILDataCallInfo> datacall = aDataCall;
 
-  PRUint32 callState;
+  uint32_t callState;
   nsresult rv = datacall->GetState(&callState);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -596,7 +596,7 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
 
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::ReceiveDataCallList(nsIRILDataCallInfo** aDataCalls,
-                                                PRUint32 aLength)
+                                                uint32_t aLength)
 {
   return NS_OK;
 }

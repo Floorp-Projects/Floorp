@@ -308,7 +308,7 @@ sub printarray
    my($r, $def) = @_;
 printf "[%s || %s]\n", $r, $def;
    $k = hex($r) * 256;
-   printf HEADER "static const PRUint32 gLBClass%s[32] = {\n", $r;
+   printf HEADER "static const uint32_t gLBClass%s[32] = {\n", $r;
    for($i = 0 ; $i < 256; $i+= 8)
    {  
       for($j = 7 ; $j >= 0; $j-- )

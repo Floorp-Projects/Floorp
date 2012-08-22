@@ -69,7 +69,7 @@ TestOpenInputStream(const char* url)
 
     char buf[1024];
     while (1) {
-        PRUint32 amt;
+        uint32_t amt;
         rv = in->Read(buf, sizeof(buf), &amt);
         if (NS_FAILED(rv)) return rv;
         if (amt == 0) break;    // eof
@@ -150,11 +150,11 @@ public:
 
     NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
                                nsIInputStream *inStr,
-                               PRUint32 sourceOffset, PRUint32 count) {
+                               uint32_t sourceOffset, uint32_t count) {
         nsresult rv;
         char buf[1024];
         while (count > 0) {
-            PRUint32 amt;
+            uint32_t amt;
             rv = inStr->Read(buf, sizeof(buf), &amt);
             count -= amt;
             char* c = buf;

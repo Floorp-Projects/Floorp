@@ -14,10 +14,10 @@
 namespace mozilla {
 namespace ipc {
 
-static PRInt64 gShmemAllocated;
-static PRInt64 gShmemMapped;
-static PRInt64 GetShmemAllocated() { return gShmemAllocated; }
-static PRInt64 GetShmemMapped() { return gShmemMapped; }
+static int64_t gShmemAllocated;
+static int64_t gShmemMapped;
+static int64_t GetShmemAllocated() { return gShmemAllocated; }
+static int64_t GetShmemMapped() { return gShmemMapped; }
 
 NS_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
   "shmem-allocated",
@@ -73,7 +73,7 @@ SharedMemory::Mapped(size_t aNBytes)
 void
 SharedMemory::Unmapped()
 {
-  NS_ABORT_IF_FALSE(gShmemMapped >= PRInt64(mMappedSize),
+  NS_ABORT_IF_FALSE(gShmemMapped >= int64_t(mMappedSize),
                     "Can't unmap more than mapped");
   gShmemMapped -= mMappedSize;
   mMappedSize = 0;
@@ -82,7 +82,7 @@ SharedMemory::Unmapped()
 /*static*/ void
 SharedMemory::Destroyed()
 {
-  NS_ABORT_IF_FALSE(gShmemAllocated >= PRInt64(mAllocSize),
+  NS_ABORT_IF_FALSE(gShmemAllocated >= int64_t(mAllocSize),
                     "Can't destroy more than allocated");
   gShmemAllocated -= mAllocSize;
   mAllocSize = 0;

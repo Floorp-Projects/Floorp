@@ -74,7 +74,7 @@ extern void CheckElementTable();
  */
 inline bool TestBits(int aBitset,int aTest) {
   if(aTest) {
-    PRInt32 result=(aBitset & aTest);
+    int32_t result=(aBitset & aTest);
     return bool(result==aTest);
   }
   return false;
@@ -157,28 +157,28 @@ struct nsHTMLElement {
                   }
 
 
-  static  PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag);
+  static  int32_t GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag);
 
   const TagList*  GetSynonymousTags(void) const {return mSynonymousTags;}
   const TagList*  GetRootTags(void) const {return mRootNodes;}
   const TagList*  GetEndRootTags(void) const {return mEndRootNodes;}
   const TagList*  GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   const TagList*  GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
-  eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex,nsDTDMode aMode) const;
+  eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,int32_t anIndex,nsDTDMode aMode) const;
 
   const TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
   const TagList*        GetSpecialParents(void) const {return mSpecialParents;}
 
-  bool            IsMemberOf(PRInt32 aType) const;
-  bool            ContainsSet(PRInt32 aType) const;
-  bool            CanContainType(PRInt32 aType) const;
+  bool            IsMemberOf(int32_t aType) const;
+  bool            ContainsSet(int32_t aType) const;
+  bool            CanContainType(int32_t aType) const;
 
   bool            CanContain(eHTMLTags aChild,nsDTDMode aMode) const;
   bool            CanExclude(eHTMLTags aChild) const;
   bool            CanOmitEndTag(void) const;
   bool            CanContainSelf(void) const;
-  bool            CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,eHTMLTags aTag) const;
-  bool            HasSpecialProperty(PRInt32 aProperty) const;
+  bool            CanAutoCloseTag(nsDTDContext& aContext,int32_t aIndex,eHTMLTags aTag) const;
+  bool            HasSpecialProperty(int32_t aProperty) const;
   bool            IsSpecialParent(eHTMLTags aTag) const;
   bool            IsExcludableParent(eHTMLTags aParent) const;
   bool            SectionContains(eHTMLTags aTag,bool allowDepthSearch) const;
@@ -209,7 +209,7 @@ struct nsHTMLElement {
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain
   int             mSpecialProperties; //used for various special purposes...
-  PRUint32        mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
+  uint32_t        mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
   const TagList*  mSpecialParents;    //These are the special tags that contain this tag (directly)
   const TagList*  mSpecialKids;       //These are the extra things you can contain
 }; 

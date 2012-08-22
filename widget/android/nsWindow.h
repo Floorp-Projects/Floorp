@@ -77,23 +77,23 @@ public:
     NS_IMETHOD SetModal(bool aModal);
     virtual bool IsVisible() const;
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 PRInt32 *aX,
-                                 PRInt32 *aY);
-    NS_IMETHOD Move(PRInt32 aX,
-                    PRInt32 aY);
-    NS_IMETHOD Resize(PRInt32 aWidth,
-                      PRInt32 aHeight,
+                                 int32_t *aX,
+                                 int32_t *aY);
+    NS_IMETHOD Move(int32_t aX,
+                    int32_t aY);
+    NS_IMETHOD Resize(int32_t aWidth,
+                      int32_t aHeight,
                       bool    aRepaint);
-    NS_IMETHOD Resize(PRInt32 aX,
-                      PRInt32 aY,
-                      PRInt32 aWidth,
-                      PRInt32 aHeight,
+    NS_IMETHOD Resize(int32_t aX,
+                      int32_t aY,
+                      int32_t aWidth,
+                      int32_t aHeight,
                       bool aRepaint);
-    NS_IMETHOD SetZIndex(PRInt32 aZIndex);
+    NS_IMETHOD SetZIndex(int32_t aZIndex);
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget *aWidget,
                            bool aActivate);
-    NS_IMETHOD SetSizeMode(PRInt32 aMode);
+    NS_IMETHOD SetSizeMode(int32_t aMode);
     NS_IMETHOD Enable(bool aState);
     virtual bool IsEnabled() const;
     NS_IMETHOD Invalidate(const nsIntRect &aRect);
@@ -111,12 +111,12 @@ public:
     NS_IMETHOD SetBackgroundColor(const nscolor &aColor) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(nsCursor aCursor) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                         PRUint32 aHotspotX,
-                         PRUint32 aHotspotY) { return NS_ERROR_NOT_IMPLEMENTED; }
+                         uint32_t aHotspotX,
+                         uint32_t aHotspotY) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
     NS_IMETHOD HideWindowChrome(bool aShouldHide) { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual void* GetNativeData(PRUint32 aDataType);
+    virtual void* GetNativeData(uint32_t aDataType);
     NS_IMETHOD SetTitle(const nsAString& aTitle) { return NS_OK; }
     NS_IMETHOD SetIcon(const nsAString& aIconSpec) { return NS_OK; }
     NS_IMETHOD EnableDragDrop(bool aEnable) { return NS_OK; }
@@ -125,8 +125,8 @@ public:
                                    bool aDoCapture,
                                    bool aConsumeRollupEvent) { return NS_ERROR_NOT_IMPLEMENTED; }
 
-    NS_IMETHOD GetAttention(PRInt32 aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetAttention(int32_t aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD ResetInputState();
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
@@ -135,7 +135,7 @@ public:
     NS_IMETHOD CancelIMEComposition();
 
     NS_IMETHOD OnIMEFocusChange(bool aFocus);
-    NS_IMETHOD OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
+    NS_IMETHOD OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd);
     NS_IMETHOD OnIMESelectionChange(void);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
@@ -207,8 +207,8 @@ private:
     void DispatchMotionEvent(nsInputEvent &event,
                              mozilla::AndroidGeckoEvent *ae,
                              const nsIntPoint &refPoint);
-    void DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
-                              const nsIntPoint &refPoint, PRUint64 time);
+    void DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
+                              const nsIntPoint &refPoint, uint64_t time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void RedrawAll();
 

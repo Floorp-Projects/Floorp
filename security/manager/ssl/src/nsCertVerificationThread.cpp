@@ -42,8 +42,8 @@ void nsCertVerificationJob::Run()
   if (!mListener || !mCert)
     return;
 
-  PRUint32 verified;
-  PRUint32 count;
+  uint32_t verified;
+  uint32_t count;
   PRUnichar **usages;
 
   nsCOMPtr<nsICertVerificationResult> ires;
@@ -175,8 +175,8 @@ nsCertVerificationResult::~nsCertVerificationResult()
 }
 
 NS_IMETHODIMP
-nsCertVerificationResult::GetUsagesArrayResult(PRUint32 *aVerified,
-                                               PRUint32 *aCount,
+nsCertVerificationResult::GetUsagesArrayResult(uint32_t *aVerified,
+                                               uint32_t *aCount,
                                                PRUnichar ***aUsages)
 {
   if (NS_FAILED(mRV))

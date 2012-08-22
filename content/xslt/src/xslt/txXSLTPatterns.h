@@ -53,24 +53,24 @@ public:
     /**
      * Returns sub-expression at given position
      */
-    virtual Expr* getSubExprAt(PRUint32 aPos) = 0;
+    virtual Expr* getSubExprAt(uint32_t aPos) = 0;
 
     /**
      * Replace sub-expression at given position. Does not delete the old
      * expression, that is the responsibility of the caller.
      */
-    virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr) = 0;
+    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr) = 0;
 
     /**
      * Returns sub-pattern at given position
      */
-    virtual txPattern* getSubPatternAt(PRUint32 aPos) = 0;
+    virtual txPattern* getSubPatternAt(uint32_t aPos) = 0;
 
     /**
      * Replace sub-pattern at given position. Does not delete the old
      * pattern, that is the responsibility of the caller.
      */
-    virtual void setSubPatternAt(PRUint32 aPos, txPattern* aPattern) = 0;
+    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern) = 0;
 
 #ifdef TX_TO_STRING
     /*
@@ -88,10 +88,10 @@ public:
 #define TX_DECL_PATTERN_BASE \
     bool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
     double getDefaultPriority(); \
-    virtual Expr* getSubExprAt(PRUint32 aPos); \
-    virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr); \
-    virtual txPattern* getSubPatternAt(PRUint32 aPos); \
-    virtual void setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
+    virtual Expr* getSubExprAt(uint32_t aPos); \
+    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr); \
+    virtual txPattern* getSubPatternAt(uint32_t aPos); \
+    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern)
 
 #ifndef TX_TO_STRING
 #define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
@@ -103,24 +103,24 @@ public:
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)             \
 Expr*                                                         \
-_class::getSubExprAt(PRUint32 aPos)                           \
+_class::getSubExprAt(uint32_t aPos)                           \
 {                                                             \
     return nullptr;                                            \
 }                                                             \
 void                                                          \
-_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+_class::setSubExprAt(uint32_t aPos, Expr* aExpr)              \
 {                                                             \
     NS_NOTREACHED("setting bad subexpression index");         \
 }
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(_class)          \
 txPattern*                                                    \
-_class::getSubPatternAt(PRUint32 aPos)                        \
+_class::getSubPatternAt(uint32_t aPos)                        \
 {                                                             \
     return nullptr;                                            \
 }                                                             \
 void                                                          \
-_class::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)   \
+_class::setSubPatternAt(uint32_t aPos, txPattern* aPattern)   \
 {                                                             \
     NS_NOTREACHED("setting bad subexpression index");         \
 }
@@ -198,7 +198,7 @@ class txKeyPattern : public txPattern
 {
 public:
     txKeyPattern(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                 PRInt32 aNSID, const nsAString& aValue)
+                 int32_t aNSID, const nsAString& aValue)
         : mName(aNSID, aLocalName),
 #ifdef TX_TO_STRING
           mPrefix(aPrefix),

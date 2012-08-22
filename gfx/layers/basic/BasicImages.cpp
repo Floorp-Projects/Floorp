@@ -49,7 +49,7 @@ public:
 private:
   gfxIntSize mScaleHint;
   int mStride;
-  nsAutoArrayPtr<PRUint8> mDecodedBuffer;
+  nsAutoArrayPtr<uint8_t> mDecodedBuffer;
 };
 
 class BasicImageFactory : public ImageFactory
@@ -58,7 +58,7 @@ public:
   BasicImageFactory() {}
 
   virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
-                                              PRUint32 aNumFormats,
+                                              uint32_t aNumFormats,
                                               const gfxIntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin)
   {
@@ -115,7 +115,7 @@ static cairo_user_data_key_t imageSurfaceDataKey;
 static void
 DestroyBuffer(void* aBuffer)
 {
-  delete[] static_cast<PRUint8*>(aBuffer);
+  delete[] static_cast<uint8_t*>(aBuffer);
 }
 
 already_AddRefed<gfxASurface>

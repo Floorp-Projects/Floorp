@@ -26,7 +26,7 @@ gfxQuartzImageSurface::~gfxQuartzImageSurface()
 {
 }
 
-PRInt32
+int32_t
 gfxQuartzImageSurface::KnownMemoryUsed()
 {
   // This surface doesn't own any memory itself, but we want to report here the

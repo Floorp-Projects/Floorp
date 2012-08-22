@@ -79,7 +79,7 @@ protected:
 
 nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
 nsXULPDGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
-PRUint32 nsXULPrototypeDocument::gRefCnt;
+uint32_t nsXULPrototypeDocument::gRefCnt;
 
 
 void
@@ -171,7 +171,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mGlobalObject");
     cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfoManager)
-    for (PRUint32 i = 0; i < tmp->mPrototypeWaiters.Length(); ++i) {
+    for (uint32_t i = 0; i < tmp->mPrototypeWaiters.Length(); ++i) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mPrototypeWaiters[i]");
         cb.NoteXPCOMChild(static_cast<nsINode*>(tmp->mPrototypeWaiters[i].get()));
     }
@@ -248,7 +248,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
     rv = aStream->ReadObject(true, getter_AddRefs(mURI));
 
-    PRUint32 count, i;
+    uint32_t count, i;
     nsCOMPtr<nsIURI> styleOverlayURI;
 
     nsresult tmp = aStream->Read32(&count);
@@ -335,7 +335,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
 
     // Document contents
-    PRUint32 type;
+    uint32_t type;
     while (NS_SUCCEEDED(rv)) {
         tmp = aStream->Read32(&type);
         if (NS_FAILED(tmp)) {
@@ -389,7 +389,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
     }
 
     // Search attributes
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < aPrototype->mNumAttributes; ++i) {
         nsCOMPtr<nsINodeInfo> ni;
         nsAttrName* name = &aPrototype->mAttributes[i].mName;
@@ -430,7 +430,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
     rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), true);
     
-    PRUint32 count;
+    uint32_t count;
 
     count = mStyleSheetReferences.Count();
     nsresult tmp = aStream->Write32(count);
@@ -438,7 +438,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
       rv = tmp;
     }
 
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < count; ++i) {
         tmp = aStream->WriteCompoundObject(mStyleSheetReferences[i],
                                            NS_GET_IID(nsIURI), true);
@@ -470,7 +470,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
       }
     }
 
-    PRUint32 nodeInfoCount = nodeInfos.Count();
+    uint32_t nodeInfoCount = nodeInfos.Count();
     tmp = aStream->Write32(nodeInfoCount);
     if (NS_FAILED(tmp)) {
       rv = tmp;
@@ -668,7 +668,7 @@ nsXULPrototypeDocument::NotifyLoadDone()
 
     mLoaded = true;
 
-    for (PRUint32 i = mPrototypeWaiters.Length(); i > 0; ) {
+    for (uint32_t i = mPrototypeWaiters.Length(); i > 0; ) {
         --i;
         // true means that OnPrototypeLoadDone will also
         // call ResumeWalk().

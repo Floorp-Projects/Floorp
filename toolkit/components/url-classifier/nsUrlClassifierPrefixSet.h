@@ -27,9 +27,9 @@ public:
   virtual ~nsUrlClassifierPrefixSet();
 
   NS_IMETHOD Init(const nsACString& aName);
-  NS_IMETHOD SetPrefixes(const PRUint32* aArray, PRUint32 aLength);
-  NS_IMETHOD GetPrefixes(PRUint32* aCount, PRUint32** aPrefixes);
-  NS_IMETHOD Contains(PRUint32 aPrefix, bool* aFound);
+  NS_IMETHOD SetPrefixes(const uint32_t* aArray, uint32_t aLength);
+  NS_IMETHOD GetPrefixes(uint32_t* aCount, uint32_t** aPrefixes);
+  NS_IMETHOD Contains(uint32_t aPrefix, bool* aFound);
   NS_IMETHOD IsEmpty(bool* aEmpty);
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
@@ -41,14 +41,14 @@ public:
   size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 protected:
-  static const PRUint32 DELTAS_LIMIT = 100;
-  static const PRUint32 MAX_INDEX_DIFF = (1 << 16);
-  static const PRUint32 PREFIXSET_VERSION_MAGIC = 1;
+  static const uint32_t DELTAS_LIMIT = 100;
+  static const uint32_t MAX_INDEX_DIFF = (1 << 16);
+  static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
   nsRefPtr<nsPrefixSetReporter> mReporter;
 
-  nsresult MakePrefixSet(const PRUint32* aArray, PRUint32 aLength);
-  PRUint32 BinSearch(PRUint32 start, PRUint32 end, PRUint32 target);
+  nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
+  uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
   nsresult LoadFromFd(mozilla::AutoFDClose& fileFd);
   nsresult StoreToFd(mozilla::AutoFDClose& fileFd);
 
@@ -56,12 +56,12 @@ protected:
   // called with a non-empty array.
   bool mHasPrefixes;
   // the prefix for each index.
-  FallibleTArray<PRUint32> mIndexPrefixes;
+  FallibleTArray<uint32_t> mIndexPrefixes;
   // the value corresponds to the beginning of the run
   // (an index in |_deltas|) for the index
-  FallibleTArray<PRUint32> mIndexStarts;
+  FallibleTArray<uint32_t> mIndexStarts;
   // array containing deltas from indices.
-  FallibleTArray<PRUint16> mDeltas;
+  FallibleTArray<uint16_t> mDeltas;
 };
 
 #endif

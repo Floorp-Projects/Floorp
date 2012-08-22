@@ -66,16 +66,16 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual PRInt32 IndexOf(nsIContent* aContent);
+  virtual int32_t IndexOf(nsIContent* aContent);
   virtual nsINode *GetParentObject()
   {
     return mContent;
   }
 
-  PRInt32 GetInsertionPointCount() { return mElements->Length(); }
+  int32_t GetInsertionPointCount() { return mElements->Length(); }
 
-  nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
-  void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
+  nsXBLInsertionPoint* GetInsertionPointAt(int32_t i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
+  void RemoveInsertionPointAt(int32_t i) { mElements->RemoveElementAt(i); }
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
@@ -137,7 +137,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
   {
-    PRInt32 i, count = tmp->mElements->Length();
+    int32_t i, count = tmp->mElements->Length();
     for (i = 0; i < count; ++i) {
       NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mElements->ElementAt(i),
                                                       nsXBLInsertionPoint);
@@ -150,23 +150,23 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMETHODIMP
-nsAnonymousContentList::GetLength(PRUint32* aLength)
+nsAnonymousContentList::GetLength(uint32_t* aLength)
 {
   NS_ASSERTION(aLength != nullptr, "null ptr");
   if (! aLength)
       return NS_ERROR_NULL_POINTER;
 
-  PRInt32 cnt = mElements->Length();
+  int32_t cnt = mElements->Length();
 
   *aLength = 0;
-  for (PRInt32 i = 0; i < cnt; i++)
+  for (int32_t i = 0; i < cnt; i++)
     *aLength += static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i))->ChildCount();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+nsAnonymousContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
   nsINode* item = GetNodeAt(aIndex);
   if (!item)
@@ -176,12 +176,12 @@ nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsIContent*
-nsAnonymousContentList::GetNodeAt(PRUint32 aIndex)
+nsAnonymousContentList::GetNodeAt(uint32_t aIndex)
 {
-  PRInt32 cnt = mElements->Length();
-  PRUint32 pointCount = 0;
+  int32_t cnt = mElements->Length();
+  uint32_t pointCount = 0;
 
-  for (PRInt32 i = 0; i < cnt; i++) {
+  for (int32_t i = 0; i < cnt; i++) {
     aIndex -= pointCount;
     
     nsXBLInsertionPoint* point = static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i));
@@ -195,16 +195,16 @@ nsAnonymousContentList::GetNodeAt(PRUint32 aIndex)
   return nullptr;
 }
 
-PRInt32
+int32_t
 nsAnonymousContentList::IndexOf(nsIContent* aContent)
 {
-  PRInt32 cnt = mElements->Length();
-  PRInt32 lengthSoFar = 0;
+  int32_t cnt = mElements->Length();
+  int32_t lengthSoFar = 0;
 
-  for (PRInt32 i = 0; i < cnt; ++i) {
+  for (int32_t i = 0; i < cnt; ++i) {
     nsXBLInsertionPoint* point =
       static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i));
-    PRInt32 idx = point->IndexOf(aContent);
+    int32_t idx = point->IndexOf(aContent);
     if (idx != -1) {
       return idx + lengthSoFar;
     }
@@ -464,7 +464,7 @@ nsBindingManager::~nsBindingManager(void)
 
 PLDHashOperator
 RemoveInsertionParentCB(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                        PRUint32 aNumber, void* aArg)
+                        uint32_t aNumber, void* aArg)
 {
   return (static_cast<ObjectEntry*>(aEntry)->GetValue() ==
           static_cast<nsISupports*>(aArg)) ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
@@ -478,8 +478,8 @@ RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
     CallQueryInterface(aList, &list);
   }
   if (list) {
-    PRInt32 count = list->GetInsertionPointCount();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = list->GetInsertionPointCount();
+    for (int32_t i = 0; i < count; ++i) {
       nsRefPtr<nsXBLInsertionPoint> currPoint = list->GetInsertionPointAt(i);
       currPoint->UnbindDefaultContent();
 #ifdef DEBUG
@@ -543,7 +543,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
     }
     // Don't remove items here as that could mess up an executing
     // ProcessAttachedQueue
-    PRUint32 index = mAttachedStack.IndexOf(oldBinding);
+    uint32_t index = mAttachedStack.IndexOf(oldBinding);
     if (index != mAttachedStack.NoIndex) {
       mAttachedStack[index] = nullptr;
     }
@@ -652,7 +652,7 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
 }
 
 nsIAtom*
-nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID)
+nsBindingManager::ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID)
 {
   nsXBLBinding *binding = GetBinding(aContent);
   
@@ -780,7 +780,7 @@ nsINodeList*
 nsBindingManager::GetXBLChildNodesInternal(nsIContent* aContent,
                                            bool* aIsAnonymousContentList)
 {
-  PRUint32 length;
+  uint32_t length;
 
   // Retrieve the anonymous content that we should build.
   nsINodeList* result = GetAnonymousNodesInternal(aContent,
@@ -822,7 +822,7 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent)
 nsIContent*
 nsBindingManager::GetInsertionPoint(nsIContent* aParent,
                                     const nsIContent* aChild,
-                                    PRUint32* aIndex)
+                                    uint32_t* aIndex)
 {
   nsXBLBinding *binding = GetBinding(aParent);
   return binding ? binding->GetInsertionPoint(aChild, aIndex) : nullptr;
@@ -830,7 +830,7 @@ nsBindingManager::GetInsertionPoint(nsIContent* aParent,
 
 nsIContent*
 nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent,
-                                          PRUint32* aIndex,
+                                          uint32_t* aIndex,
                                           bool* aMultipleInsertionPoints)
 {
   nsXBLBinding *binding = GetBinding(aParent);
@@ -991,7 +991,7 @@ nsBindingManager::DoProcessAttachedQueue()
 }
 
 void
-nsBindingManager::ProcessAttachedQueue(PRUint32 aSkipSize)
+nsBindingManager::ProcessAttachedQueue(uint32_t aSkipSize)
 {
   if (mProcessingAttachedStack || mAttachedStack.Length() <= aSkipSize)
     return;
@@ -1002,7 +1002,7 @@ nsBindingManager::ProcessAttachedQueue(PRUint32 aSkipSize)
 
   // Excute constructors. Do this from high index to low
   while (mAttachedStack.Length() > aSkipSize) {
-    PRUint32 lastItem = mAttachedStack.Length() - 1;
+    uint32_t lastItem = mAttachedStack.Length() - 1;
     nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
     mAttachedStack.RemoveElementAt(lastItem);
     if (binding) {
@@ -1049,7 +1049,7 @@ nsBindingManager::ExecuteDetachedHandlers()
   if (mBindingTable.IsInitialized()) {
     BindingTableReadClosure closure;
     mBindingTable.EnumerateRead(AccumulateBindingsToDetach, &closure);
-    PRUint32 i, count = closure.mBindings.Length();
+    uint32_t i, count = closure.mBindings.Length();
     for (i = 0; i < count; ++i) {
       closure.mBindings[i]->ExecuteDetachedHandler();
     }
@@ -1428,7 +1428,7 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent,
     return nullptr; // It is anonymous. Don't use the insertion point, since that's only
                    // for the explicit kids.
 
-  PRUint32 index;
+  uint32_t index;
   nsIContent *insertionElement = GetInsertionPoint(aParent, aChild, &index);
   if (insertionElement && insertionElement != aParent) {
     // See if we nest even further in.
@@ -1446,7 +1446,7 @@ nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
 {
   *aMultipleInsertionPoints = false;
   
-  PRUint32 index;
+  uint32_t index;
   nsIContent *insertionElement =
     GetSingleInsertionPoint(aParent, &index, aMultipleInsertionPoints);
   if (*aMultipleInsertionPoints) {
@@ -1467,9 +1467,9 @@ nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
 nsXBLInsertionPoint*
 nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
                                              nsIContent* aInsertionParent,
-                                             PRUint32 aIndexInContainer,
-                                             PRInt32 aAppend,
-                                             PRInt32* aInsertionIndex)
+                                             uint32_t aIndexInContainer,
+                                             int32_t aAppend,
+                                             int32_t* aInsertionIndex)
 {
   bool isAnonymousContentList;
   nsINodeList* nodeList =
@@ -1485,8 +1485,8 @@ nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
   nsAnonymousContentList* contentList =
     static_cast<nsAnonymousContentList*>(nodeList);
 
-  PRInt32 count = contentList->GetInsertionPointCount();
-  for (PRInt32 i = 0; i < count; i++) {
+  int32_t count = contentList->GetInsertionPointCount();
+  for (int32_t i = 0; i < count; i++) {
     nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
     if (point->GetInsertionIndex() != -1) {
       // We're real. Jam the kid in.
@@ -1496,11 +1496,11 @@ nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
       // content, not all of aContainer's kids, etc.  So find the last
       // child of aContainer that comes before aIndexInContainer and is in
       // the insertion point and insert right after it.
-      PRInt32 pointSize = point->ChildCount();
-      for (PRInt32 parentIndex = aIndexInContainer - 1; parentIndex >= 0;
+      int32_t pointSize = point->ChildCount();
+      for (int32_t parentIndex = aIndexInContainer - 1; parentIndex >= 0;
            --parentIndex) {
         nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
-        for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
+        for (int32_t pointIndex = pointSize - 1; pointIndex >= 0;
              --pointIndex) {
           if (point->ChildAt(pointIndex) == currentSibling) {
             *aInsertionIndex = pointIndex + 1;
@@ -1534,7 +1534,7 @@ void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aFirstNewContent,
-                                  PRInt32     aNewIndexInContainer)
+                                  int32_t     aNewIndexInContainer)
 {
   if (aNewIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
@@ -1546,20 +1546,20 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
 
     if (multiple) {
       // Do each kid individually
-      PRInt32 childCount = aContainer->GetChildCount();
-      for (PRInt32 idx = aNewIndexInContainer; idx < childCount; ++idx) {
+      int32_t childCount = aContainer->GetChildCount();
+      for (int32_t idx = aNewIndexInContainer; idx < childCount; ++idx) {
         HandleChildInsertion(aContainer, aContainer->GetChildAt(idx),
                              idx, true);
       }
     }
     else if (ins) {
-      PRInt32 insertionIndex;
+      int32_t insertionIndex;
       nsXBLInsertionPoint* point =
         FindInsertionPointAndIndex(aContainer, ins, aNewIndexInContainer,
                                    true, &insertionIndex);
       if (point) {
-        PRInt32 childCount = aContainer->GetChildCount();
-        for (PRInt32 j = aNewIndexInContainer; j < childCount;
+        int32_t childCount = aContainer->GetChildCount();
+        for (int32_t j = aNewIndexInContainer; j < childCount;
              j++, insertionIndex++) {
           nsIContent* child = aContainer->GetChildAt(j);
           point->InsertChildAt(insertionIndex, child);
@@ -1574,7 +1574,7 @@ void
 nsBindingManager::ContentInserted(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aChild,
-                                  PRInt32 aIndexInContainer)
+                                  int32_t aIndexInContainer)
 {
   if (aIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
@@ -1599,8 +1599,8 @@ RemoveChildFromInsertionPoint(nsAnonymousContentList* aInsertionPointList,
   // removed something.  Wouldn't that let us short-circuit the walk?
   // Or can a child be in multiple insertion points?  I wouldn't think
   // so...
-  PRInt32 count = aInsertionPointList->GetInsertionPointCount();
-  for (PRInt32 i = 0; i < count; i++) {
+  int32_t count = aInsertionPointList->GetInsertionPointCount();
+  for (int32_t i = 0; i < count; i++) {
     nsXBLInsertionPoint* point =
       aInsertionPointList->GetInsertionPointAt(i);
     if ((point->GetInsertionIndex() == -1) == aRemoveFromPseudoPoints) {
@@ -1613,7 +1613,7 @@ void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
-                                 PRInt32 aIndexInContainer,
+                                 int32_t aIndexInContainer,
                                  nsIContent* aPreviousSibling)
 {
   if (aContainer && aIndexInContainer != -1 &&
@@ -1765,18 +1765,18 @@ nsBindingManager::EndOutermostUpdate()
 void
 nsBindingManager::HandleChildInsertion(nsIContent* aContainer,
                                        nsIContent* aChild,
-                                       PRUint32 aIndexInContainer,
+                                       uint32_t aIndexInContainer,
                                        bool aAppend)
 {
   NS_PRECONDITION(aChild, "Must have child");
   NS_PRECONDITION(!aContainer ||
-                  PRUint32(aContainer->IndexOf(aChild)) == aIndexInContainer,
+                  uint32_t(aContainer->IndexOf(aChild)) == aIndexInContainer,
                   "Child not at the right index?");
 
   nsIContent* ins = GetNestedInsertionPoint(aContainer, aChild);
 
   if (ins) {
-    PRInt32 insertionIndex;
+    int32_t insertionIndex;
     nsXBLInsertionPoint* point =
       FindInsertionPointAndIndex(aContainer, ins, aIndexInContainer, aAppend,
                                  &insertionIndex);

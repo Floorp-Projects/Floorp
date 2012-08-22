@@ -192,7 +192,7 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        PRUint32 aArgc, jsval* aArgv);
+                        uint32_t aArgc, jsval* aArgv);
 
   virtual nsresult InitFromCtor(const nsAString& aType,
                                 JSContext* aCx, jsval* aVal);
@@ -205,7 +205,7 @@ public:
 
   static void Shutdown();
 
-  static const char* GetEventName(PRUint32 aEventType);
+  static const char* GetEventName(uint32_t aEventType);
   static nsIntPoint GetClientCoords(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIntPoint aPoint,
@@ -238,7 +238,7 @@ protected:
   NS_IMETHOD GetType(nsAString& aType){ return _to GetType(aType); } \
   NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) { return _to GetTarget(aTarget); } \
   NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
-  NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) { return _to GetEventPhase(aEventPhase); } \
+  NS_IMETHOD GetEventPhase(uint16_t *aEventPhase) { return _to GetEventPhase(aEventPhase); } \
   NS_IMETHOD GetBubbles(bool *aBubbles) { return _to GetBubbles(aBubbles); } \
   NS_IMETHOD GetCancelable(bool *aCancelable) { return _to GetCancelable(aCancelable); } \
   NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) { return _to GetTimeStamp(aTimeStamp); } \

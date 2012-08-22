@@ -91,18 +91,18 @@ public:
 
   nsTagEntry*     PopEntry();
   void            PushEntry(nsTagEntry* aEntry, bool aRefCntNode = true);
-  void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
+  void            EnsureCapacityFor(int32_t aNewMax, int32_t aShiftOffset=0);
   void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            PushTag(eHTMLTags aTag);
   void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            Append(nsEntryStack *aStack);
   nsCParserNode*  Pop(void);
-  nsCParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
-  nsCParserNode*  NodeAt(PRInt32 anIndex) const;
+  nsCParserNode*  Remove(int32_t anIndex,eHTMLTags aTag);
+  nsCParserNode*  NodeAt(int32_t anIndex) const;
   eHTMLTags       First() const;
-  eHTMLTags       TagAt(PRInt32 anIndex) const;
-  nsTagEntry*     EntryAt(PRInt32 anIndex) const;
-  eHTMLTags       operator[](PRInt32 anIndex) const;
+  eHTMLTags       TagAt(int32_t anIndex) const;
+  nsTagEntry*     EntryAt(int32_t anIndex) const;
+  eHTMLTags       operator[](int32_t anIndex) const;
   eHTMLTags       Last() const;
   void            Empty(void); 
 
@@ -117,8 +117,8 @@ public:
    * @param   aTag
    * @return  index of tag, or kNotFound if not found
    */
-  inline PRInt32 FirstOf(eHTMLTags aTag) const {
-    PRInt32 index=-1;
+  inline int32_t FirstOf(eHTMLTags aTag) const {
+    int32_t index=-1;
     
     if(0<mCount) {
       while(++index<mCount) {
@@ -137,8 +137,8 @@ public:
    * @param   aTag
    * @return  index of tag, or kNotFound if not found
    */
-  inline PRInt32 LastOf(eHTMLTags aTag) const {
-    PRInt32 index=mCount;
+  inline int32_t LastOf(eHTMLTags aTag) const {
+    int32_t index=mCount;
     while(--index>=0) {
         if(aTag==mEntries[index].mTag) {
           return index; 
@@ -148,8 +148,8 @@ public:
   }
 
   nsTagEntry* mEntries;
-  PRInt32    mCount;
-  PRInt32    mCapacity;
+  int32_t    mCount;
+  int32_t    mCapacity;
 };
 
 
@@ -257,7 +257,7 @@ public:
 protected:
   nsDeque mSharedNodes;
 #ifdef DEBUG_TRACK_NODES
-  PRInt32 mCount;
+  int32_t mCount;
 #endif
 #endif
 
@@ -277,7 +277,7 @@ public:
 
   nsTagEntry*     PopEntry();
   void            PushEntry(nsTagEntry* aEntry, bool aRefCntNode = true);
-  void            MoveEntries(nsDTDContext& aDest, PRInt32 aCount);
+  void            MoveEntries(nsDTDContext& aDest, int32_t aCount);
   void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            PushTag(eHTMLTags aTag);
   nsCParserNode*  Pop(nsEntryStack*& aChildStack);
@@ -286,16 +286,16 @@ public:
   eHTMLTags       First(void) const;
   eHTMLTags       Last(void) const;
   nsTagEntry*     LastEntry(void) const;
-  eHTMLTags       TagAt(PRInt32 anIndex) const;
-  eHTMLTags       operator[](PRInt32 anIndex) const {return TagAt(anIndex);}
+  eHTMLTags       TagAt(int32_t anIndex) const;
+  eHTMLTags       operator[](int32_t anIndex) const {return TagAt(anIndex);}
   bool            HasOpenContainer(eHTMLTags aTag) const;
-  PRInt32         FirstOf(eHTMLTags aTag) const {return mStack.FirstOf(aTag);}
-  PRInt32         LastOf(eHTMLTags aTag) const {return mStack.LastOf(aTag);}
+  int32_t         FirstOf(eHTMLTags aTag) const {return mStack.FirstOf(aTag);}
+  int32_t         LastOf(eHTMLTags aTag) const {return mStack.LastOf(aTag);}
 
   void            Empty(void); 
-  PRInt32         GetCount(void) const {return mStack.mCount;}
-  PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
-  nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
+  int32_t         GetCount(void) const {return mStack.mCount;}
+  int32_t         GetResidualStyleCount(void) {return mResidualStyleCount;}
+  nsEntryStack*   GetStylesAt(int32_t anIndex) const;
   void            PushStyle(nsCParserNode* aNode);
   void            PushStyles(nsEntryStack *aStyles);
   nsCParserNode*  PopStyle(void);
@@ -308,8 +308,8 @@ public:
   void            SetNodeAllocator(nsNodeAllocator* aNodeAllocator) { mNodeAllocator=aNodeAllocator; }
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
-  PRInt32         mResidualStyleCount;
-  PRInt32         mContextTopIndex;
+  int32_t         mResidualStyleCount;
+  int32_t         mContextTopIndex;
 
   nsTokenAllocator  *mTokenAllocator;
   nsNodeAllocator   *mNodeAllocator;
@@ -363,7 +363,7 @@ public:
  * @param   aTagSet -- set of tags to be searched
  * @return
  */
-inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCount)  {
+inline int32_t IndexOfTagInSet(int32_t aTag,const eHTMLTags* aTagSet,int32_t aCount)  {
 
   const eHTMLTags* theEnd=aTagSet+aCount;
   const eHTMLTags* theTag=aTagSet;
@@ -386,7 +386,7 @@ inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCo
  * @param   aTagSet -- set of tags to be searched
  * @return
  */
-inline bool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  {
+inline bool FindTagInSet(int32_t aTag,const eHTMLTags *aTagSet,int32_t aCount)  {
   return bool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
 }
 
@@ -404,7 +404,7 @@ struct TagList {
  * @param   aTagList
  * @return  index of tag, or kNotFound if not found
  */
-inline PRInt32 LastOf(nsDTDContext& aContext, const TagList& aTagList){
+inline int32_t LastOf(nsDTDContext& aContext, const TagList& aTagList){
   int max = aContext.GetCount();
   int index;
   for(index=max-1;index>=0;index--){
@@ -424,7 +424,7 @@ inline PRInt32 LastOf(nsDTDContext& aContext, const TagList& aTagList){
  * @param   aTagList
  * @return  index of tag, or kNotFound if not found
  */
-inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
+inline int32_t FirstOf(nsDTDContext& aContext,int32_t aStartOffset,TagList& aTagList){
   int max = aContext.GetCount();
   int index;
   for(index=aStartOffset;index<max;++index){

@@ -58,7 +58,7 @@ public:
     PR_INIT_CLIST(this);
   }
 
-  nsresult Start(PRUint32 flags);
+  nsresult Start(uint32_t flags);
   void     Complete(nsresult status, const nsCString &pacString);
 
 private:
@@ -72,7 +72,7 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(PendingPACQuery, nsIDNSListener)
 
 nsresult
-PendingPACQuery::Start(PRUint32 flags)
+PendingPACQuery::Start(uint32_t flags)
 {
   if (mDNSRequest)
     return NS_OK;  // already started
@@ -309,8 +309,8 @@ nsPACMan::MaybeReloadPAC()
 void
 nsPACMan::OnLoadFailure()
 {
-  PRInt32 minInterval = 5;    // 5 seconds
-  PRInt32 maxInterval = 300;  // 5 minutes
+  int32_t minInterval = 5;    // 5 seconds
+  int32_t maxInterval = 300;  // 5 minutes
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -320,7 +320,7 @@ nsPACMan::OnLoadFailure()
                       &maxInterval);
   }
 
-  PRInt32 interval = minInterval << mLoadFailureCount++;  // seconds
+  int32_t interval = minInterval << mLoadFailureCount++;  // seconds
   if (!interval || interval > maxInterval)
     interval = maxInterval;
 
@@ -328,7 +328,7 @@ nsPACMan::OnLoadFailure()
   printf("PAC load failure: will retry in %d seconds\n", interval);
 #endif
 
-  mScheduledReload = PR_Now() + PRInt64(interval) * PR_USEC_PER_SEC;
+  mScheduledReload = PR_Now() + int64_t(interval) * PR_USEC_PER_SEC;
 }
 
 void
@@ -375,8 +375,8 @@ NS_IMETHODIMP
 nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
                            nsISupports *context,
                            nsresult status,
-                           PRUint32 dataLen,
-                           const PRUint8 *data)
+                           uint32_t dataLen,
+                           const uint8_t *data)
 {
   if (mLoader != loader) {
     // If this happens, then it means that LoadPACFromURI was called more
@@ -456,7 +456,7 @@ nsPACMan::GetInterface(const nsIID &iid, void **result)
 
 NS_IMETHODIMP
 nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
-                                 PRUint32 flags,
+                                 uint32_t flags,
                                  nsIAsyncVerifyRedirectCallback *callback)
 {
   nsresult rv = NS_OK;

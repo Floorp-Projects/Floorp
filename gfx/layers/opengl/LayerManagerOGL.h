@@ -113,11 +113,11 @@ public:
   {
       if (!mGLContext)
           return false;
-      PRInt32 maxSize = mGLContext->GetMaxTextureSize();
+      int32_t maxSize = mGLContext->GetMaxTextureSize();
       return aSize <= gfxIntSize(maxSize, maxSize);
   }
 
-  virtual PRInt32 GetMaxTextureSize() const
+  virtual int32_t GetMaxTextureSize() const
   {
     return mGLContext->GetMaxTextureSize();
   }

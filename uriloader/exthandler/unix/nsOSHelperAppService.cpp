@@ -1102,7 +1102,7 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
                   rv = process->Run(true, args, 2);
                   if (NS_FAILED(rv))
                     continue;
-                  PRInt32 exitValue;
+                  int32_t exitValue;
                   rv = process->GetExitValue(&exitValue);
                   if (NS_FAILED(rv))
                     continue;

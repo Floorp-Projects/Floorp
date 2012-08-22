@@ -119,14 +119,14 @@ class nsHtml5TreeOperation {
     
     inline void Init(eHtml5TreeOperation aOpCode, 
                      const nsACString& aString,
-                     PRInt32 aInt32) {
+                     int32_t aInt32) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
 
-      PRInt32 len = aString.Length();
+      int32_t len = aString.Length();
       char* str = new char[len + 1];
       const char* start = aString.BeginReading();
-      for (PRInt32 i = 0; i < len; ++i) {
+      for (int32_t i = 0; i < len; ++i) {
         str[i] = start[i];
       }
       str[len] = '\0';
@@ -138,8 +138,8 @@ class nsHtml5TreeOperation {
 
     inline void Init(eHtml5TreeOperation aOpCode,
                      const nsACString& aString,
-                     PRInt32 aInt32,
-                     PRInt32 aLineNumber) {
+                     int32_t aInt32,
+                     int32_t aLineNumber) {
       Init(aOpCode, aString, aInt32);
       mTwo.integer = aLineNumber;
     }
@@ -175,7 +175,7 @@ class nsHtml5TreeOperation {
       mTwo.state = nullptr;
     }
     
-    inline void Init(PRInt32 aNamespace, 
+    inline void Init(int32_t aNamespace, 
                      nsIAtom* aName, 
                      nsHtml5HtmlAttributes* aAttributes,
                      nsIContent** aTarget,
@@ -199,7 +199,7 @@ class nsHtml5TreeOperation {
 
     inline void Init(eHtml5TreeOperation aOpCode, 
                      PRUnichar* aBuffer, 
-                     PRInt32 aLength, 
+                     int32_t aLength, 
                      nsIContent** aStackParent,
                      nsIContent** aTable) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
@@ -214,7 +214,7 @@ class nsHtml5TreeOperation {
 
     inline void Init(eHtml5TreeOperation aOpCode, 
                      PRUnichar* aBuffer, 
-                     PRInt32 aLength, 
+                     int32_t aLength, 
                      nsIContent** aParent) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
@@ -227,7 +227,7 @@ class nsHtml5TreeOperation {
 
     inline void Init(eHtml5TreeOperation aOpCode, 
                      PRUnichar* aBuffer, 
-                     PRInt32 aLength) {
+                     int32_t aLength) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aBuffer, "Initialized tree op with null buffer.");
@@ -282,7 +282,7 @@ class nsHtml5TreeOperation {
 
     inline void Init(const char* aMsgId,
                      bool aError,
-                     PRInt32 aLineNumber) {
+                     int32_t aLineNumber) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       mOpCode = eTreeOpMaybeComplainAboutCharset;
@@ -302,7 +302,7 @@ class nsHtml5TreeOperation {
     
     inline void Init(eHtml5TreeOperation aOpCode,
                      nsIContent** aNode,
-                     PRInt32 aInt) {
+                     int32_t aInt) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aNode, "Initialized tree op with null node.");
@@ -323,7 +323,7 @@ class nsHtml5TreeOperation {
     }
 
     inline void InitAddLineNumberId(nsIContent** aNode,
-                                    const PRInt32 aLineNumber) {
+                                    const int32_t aLineNumber) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aNode, "Initialized tree op with null node.");
@@ -338,7 +338,7 @@ class nsHtml5TreeOperation {
       return mOpCode == eTreeOpRunScript;
     }
     
-    inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine) {
+    inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine) {
       NS_ASSERTION(IsRunScript(), 
         "Setting a snapshot for a tree operation other than eTreeOpRunScript!");
       NS_PRECONDITION(aSnapshot, "Initialized tree op with null snapshot.");
@@ -360,12 +360,12 @@ class nsHtml5TreeOperation {
   private:
 
     nsresult AppendTextToTextNode(const PRUnichar* aBuffer,
-                                  PRUint32 aLength,
+                                  uint32_t aLength,
                                   nsIContent* aTextNode,
                                   nsHtml5TreeOpExecutor* aBuilder);
 
     nsresult AppendText(const PRUnichar* aBuffer,
-                        PRUint32 aLength,
+                        uint32_t aLength,
                         nsIContent* aParent,
                         nsHtml5TreeOpExecutor* aBuilder);
 
@@ -389,7 +389,7 @@ class nsHtml5TreeOperation {
       char*                           charPtr;
       nsHtml5TreeOperationStringPair* stringPair;
       nsAHtml5TreeBuilderState*       state;
-      PRInt32                         integer;
+      int32_t                         integer;
     }                   mOne, mTwo, mThree, mFour;
 };
 

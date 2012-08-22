@@ -24,6 +24,6 @@ interface nsISSLErrorListener : nsISupports {
    *          related to the error (the connection will still get canceled).
    */
   boolean notifySSLError(in nsIInterfaceRequestor socketInfo, 
-                         in PRInt32 error,
+                         in int32_t error,
                          in AUTF8String targetSite);
 };

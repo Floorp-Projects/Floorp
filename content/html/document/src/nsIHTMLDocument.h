@@ -54,7 +54,7 @@ public:
    */
   // XXXbz is this still needed now that we can flush just content,
   // not the rest?
-  virtual PRInt32 GetNumFormsSynchronous() = 0;
+  virtual int32_t GetNumFormsSynchronous() = 0;
   
   virtual bool IsWriting() = 0;
 
@@ -79,7 +79,7 @@ public:
    *                true, -1 if it was changed to false
    */
   virtual nsresult ChangeContentEditableCount(nsIContent *aElement,
-                                              PRInt32 aChange) = 0;
+                                              int32_t aChange) = 0;
 
   enum EditingState {
     eTearingDown = -2,

@@ -11,7 +11,7 @@
 // Global functions and data [declaration]
 
 // Shift Table
-static const PRInt16 g0201ShiftOutTable[] =  {
+static const int16_t g0201ShiftOutTable[] =  {
         2,
         ShiftOutCell(u1ByteChar,         1, 0x00, 0x00, 0x00, 0x7F),
         ShiftOutCell(u1BytePrefix8EChar, 2, 0x00, 0xA1, 0x00, 0xDF)
@@ -24,13 +24,13 @@ static const uScanClassID gScanClassIDs[SIZE_OF_TABLES] = {
   uMultibytesCharset
 };
 
-static const PRInt16 *gShiftTables[SIZE_OF_TABLES] =  {
+static const int16_t *gShiftTables[SIZE_OF_TABLES] =  {
     0,
     0,
     g0201ShiftOutTable
 };
 
-static const PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
+static const uint16_t *gMappingTables[SIZE_OF_TABLES] = {
     g_uf0208Mapping,
     g_uf0208extMapping,
     g_uf0201Mapping

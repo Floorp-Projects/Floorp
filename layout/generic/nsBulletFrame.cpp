@@ -226,10 +226,10 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect)
 {
   const nsStyleList* myList = GetStyleList();
-  PRUint8 listStyleType = myList->mListStyleType;
+  uint8_t listStyleType = myList->mListStyleType;
 
   if (myList->GetListStyleImage() && mImageRequest) {
-    PRUint32 status;
+    uint32_t status;
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
         !(status & imgIRequest::STATUS_ERROR)) {
@@ -350,12 +350,12 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   }
 }
 
-PRInt32
-nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
+int32_t
+nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
                                   bool* aChanged)
 {
   // Assume that the ordinal comes from the caller
-  PRInt32 oldOrdinal = mOrdinal;
+  int32_t oldOrdinal = mOrdinal;
   mOrdinal = aNextOrdinal;
 
   // Try to get value directly from the list-item, if it specifies a
@@ -388,21 +388,21 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
  * could represent mOrder in the desired numbering system.  false
  * means we had to fall back to decimal
  */
-static bool DecimalToText(PRInt32 ordinal, nsString& result)
+static bool DecimalToText(int32_t ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
    result.AppendASCII(cbuf);
    return true;
 }
-static bool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
+static bool DecimalLeadingZeroToText(int32_t ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
    result.AppendASCII(cbuf);
    return true;
 }
-static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
+static bool OtherDecimalToText(int32_t ordinal, PRUnichar zeroChar, nsString& result)
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
    DecimalToText(ordinal, result);
@@ -415,7 +415,7 @@ static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& re
       *p += diff;
    return true;
 }
-static bool TamilToText(PRInt32 ordinal,  nsString& result)
+static bool TamilToText(int32_t ordinal,  nsString& result)
 {
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
    DecimalToText(ordinal, result); 
@@ -436,7 +436,7 @@ static const char gUpperRomanCharsA[] = "IXCM";
 static const char gLowerRomanCharsB[] = "vld";
 static const char gUpperRomanCharsB[] = "VLD";
 
-static bool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
+static bool RomanToText(int32_t ordinal, nsString& result, const char* achars, const char* bchars)
 {
   if (ordinal < 1 || ordinal > 3999) {
     DecimalToText(ordinal, result);
@@ -663,17 +663,17 @@ static const PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_
 
 #define NUM_BUF_SIZE 34 
 
-static bool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
+static bool CharListToText(int32_t ordinal, nsString& result, const PRUnichar* chars, int32_t aBase)
 {
   PRUnichar buf[NUM_BUF_SIZE];
-  PRInt32 idx = NUM_BUF_SIZE;
+  int32_t idx = NUM_BUF_SIZE;
   if (ordinal < 1) {
     DecimalToText(ordinal, result);
     return false;
   }
   do {
     ordinal--; // a == 0
-    PRInt32 cur = ordinal % aBase;
+    int32_t cur = ordinal % aBase;
     buf[--idx] = chars[cur];
     ordinal /= aBase ;
   } while ( ordinal > 0);
@@ -718,13 +718,13 @@ static const PRUnichar gCJKIdeographic10KUnit3[4] =
   0x000, 0x4E07, 0x5104, 0x5146
 };
 
-static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
+static const bool CJKIdeographicToText(int32_t ordinal, nsString& result, 
                                    const PRUnichar* digits,
                                    const PRUnichar *unit, 
                                    const PRUnichar* unit10k)
 {
 // In theory, we need the following if condiction,
-// However, the limit, 10 ^ 16, is greater than the max of PRUint32
+// However, the limit, 10 ^ 16, is greater than the max of uint32_t
 // so we don't really need to test it here.
 // if( ordinal > 9999999999999999)
 // {
@@ -740,15 +740,15 @@ static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result,
   PRUnichar c10kUnit = 0;
   PRUnichar cUnit = 0;
   PRUnichar cDigit = 0;
-  PRUint32 ud = 0;
+  uint32_t ud = 0;
   PRUnichar buf[NUM_BUF_SIZE];
-  PRInt32 idx = NUM_BUF_SIZE;
+  int32_t idx = NUM_BUF_SIZE;
   bool bOutputZero = ( 0 == ordinal );
   do {
     if(0 == (ud % 4)) {
       c10kUnit = unit10k[ud/4];
     }
-    PRInt32 cur = ordinal % 10;
+    int32_t cur = ordinal % 10;
     cDigit = digits[cur];
     if( 0 == cur)
     {
@@ -794,7 +794,7 @@ static const PRUnichar gHebrewDigit[22] =
 0x05E7, 0x05E8, 0x05E9, 0x05EA
 };
 
-static bool HebrewToText(PRInt32 ordinal, nsString& result)
+static bool HebrewToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 999999) {
     DecimalToText(ordinal, result);
@@ -804,9 +804,9 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
   nsAutoString allText, thousandsGroup;
   do {
     thousandsGroup.Truncate();
-    PRInt32 n3 = ordinal % 1000;
+    int32_t n3 = ordinal % 1000;
     // Process digit for 100 - 900
-    for(PRInt32 n1 = 400; n1 > 0; )
+    for(int32_t n1 = 400; n1 > 0; )
     {
       if( n3 >= n1)
       {
@@ -818,7 +818,7 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
     } // for
 
     // Process digit for 10 - 90
-    PRInt32 n2;
+    int32_t n2;
     if( n3 >= 10 )
     {
       // Special process for 15 and 16
@@ -853,7 +853,7 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
 }
 
 
-static bool ArmenianToText(PRInt32 ordinal, nsString& result)
+static bool ArmenianToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
     DecimalToText(ordinal, result);
@@ -861,10 +861,10 @@ static bool ArmenianToText(PRInt32 ordinal, nsString& result)
   }
 
   PRUnichar buf[NUM_BUF_SIZE];
-  PRInt32 idx = NUM_BUF_SIZE;
-  PRInt32 d = 0;
+  int32_t idx = NUM_BUF_SIZE;
+  int32_t d = 0;
   do {
-    PRInt32 cur = ordinal % 10;
+    int32_t cur = ordinal % 10;
     if (cur > 0)
     {
       PRUnichar u = 0x0530 + (d * 9) + cur;
@@ -890,7 +890,7 @@ static const PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 //  10000
    0x10F5
 };
-static bool GeorgianToText(PRInt32 ordinal, nsString& result)
+static bool GeorgianToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 19999) { // zero or reach the limit of Georgian numbering system
     DecimalToText(ordinal, result);
@@ -898,10 +898,10 @@ static bool GeorgianToText(PRInt32 ordinal, nsString& result)
   }
 
   PRUnichar buf[NUM_BUF_SIZE];
-  PRInt32 idx = NUM_BUF_SIZE;
-  PRInt32 d = 0;
+  int32_t idx = NUM_BUF_SIZE;
+  int32_t d = 0;
   do {
-    PRInt32 cur = ordinal % 10;
+    int32_t cur = ordinal % 10;
     if (cur > 0)
     {
       PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
@@ -924,7 +924,7 @@ static bool GeorgianToText(PRInt32 ordinal, nsString& result)
 #define ETHIOPIC_HUNDRED         0x137B
 #define ETHIOPIC_TEN_THOUSAND    0x137C
 
-static bool EthiopicToText(PRInt32 ordinal, nsString& result)
+static bool EthiopicToText(int32_t ordinal, nsString& result)
 {
   nsAutoString asciiNumberString;      // decimal string representation of ordinal
   DecimalToText(ordinal, asciiNumberString);
@@ -932,7 +932,7 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
     result.Append(asciiNumberString);
     return false;
   }
-  PRUint8 asciiStringLength = asciiNumberString.Length();
+  uint8_t asciiStringLength = asciiNumberString.Length();
 
   // If number length is odd, add a leading "0"
   // the leading "0" preconditions the string to always have the
@@ -948,12 +948,12 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
   // Iterate from the highest digits to lowest
   // indexFromLeft       indexes digits (0 = most significant)
   // groupIndexFromRight indexes pairs of digits (0 = least significant)
-  for (PRUint8 indexFromLeft = 0, groupIndexFromRight = asciiStringLength >> 1;
+  for (uint8_t indexFromLeft = 0, groupIndexFromRight = asciiStringLength >> 1;
        indexFromLeft <= asciiStringLength;
        indexFromLeft += 2, groupIndexFromRight--) {
-    PRUint8 tensValue  = asciiNumberString.CharAt(indexFromLeft) & 0x0F;
-    PRUint8 unitsValue = asciiNumberString.CharAt(indexFromLeft + 1) & 0x0F;
-    PRUint8 groupValue = tensValue * 10 + unitsValue;
+    uint8_t tensValue  = asciiNumberString.CharAt(indexFromLeft) & 0x0F;
+    uint8_t unitsValue = asciiNumberString.CharAt(indexFromLeft + 1) & 0x0F;
+    uint8_t groupValue = tensValue * 10 + unitsValue;
 
     bool oddGroup = (groupIndexFromRight & 1);
 
@@ -990,8 +990,8 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
 
 
 /* static */ bool
-nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
-                                 PRInt32 aOrdinal,
+nsBulletFrame::AppendCounterText(int32_t aListStyleType,
+                                 int32_t aOrdinal,
                                  nsString& result)
 {
   bool success = true;
@@ -1271,7 +1271,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   RemoveStateBits(BULLET_FRAME_IMAGE_LOADING);
 
   if (myList->GetListStyleImage() && mImageRequest) {
-    PRUint32 status;
+    uint32_t status;
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
         !(status & imgIRequest::STATUS_ERROR)) {
@@ -1433,7 +1433,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   if (!aImage) return NS_ERROR_INVALID_ARG;
   if (!aRequest) return NS_ERROR_INVALID_ARG;
 
-  PRUint32 status;
+  uint32_t status;
   aRequest->GetImageStatus(&status);
   if (status & imgIRequest::STATUS_ERROR) {
     return NS_OK;

@@ -120,9 +120,9 @@ static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
 
 /* Memory reporter stuff */
 static nsIMemoryReporter *gCanvasAzureMemoryReporter = nullptr;
-static PRInt64 gCanvasAzureMemoryUsed = 0;
+static int64_t gCanvasAzureMemoryUsed = 0;
 
-static PRInt64 GetCanvasAzureMemoryUsed() {
+static int64_t GetCanvasAzureMemoryUsed() {
   return gCanvasAzureMemoryUsed;
 }
 
@@ -542,9 +542,9 @@ NS_INTERFACE_MAP_END
 
 
 // Initialize our static variables.
-PRUint32 nsCanvasRenderingContext2DAzure::sNumLivingContexts = 0;
-PRUint8 (*nsCanvasRenderingContext2DAzure::sUnpremultiplyTable)[256] = nullptr;
-PRUint8 (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nullptr;
+uint32_t nsCanvasRenderingContext2DAzure::sNumLivingContexts = 0;
+uint8_t (*nsCanvasRenderingContext2DAzure::sUnpremultiplyTable)[256] = nullptr;
+uint8_t (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nullptr;
 
 namespace mozilla {
 namespace dom {
@@ -590,7 +590,7 @@ nsCanvasRenderingContext2DAzure::~nsCanvasRenderingContext2DAzure()
 {
   Reset();
   // Drop references from all CanvasRenderingContext2DUserDataAzure to this context
-  for (PRUint32 i = 0; i < mUserDatas.Length(); ++i) {
+  for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
     mUserDatas[i]->Forget();
   }
   sNumLivingContexts--;
@@ -835,7 +835,7 @@ nsCanvasRenderingContext2DAzure::RedrawUser(const gfxRect& r)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::SetDimensions(int32_t width, int32_t height)
 {
   RefPtr<DrawTarget> target;
 
@@ -889,7 +889,7 @@ nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 nsresult
-nsCanvasRenderingContext2DAzure::Initialize(PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::Initialize(int32_t width, int32_t height)
 {
   mWidth = width;
   mHeight = height;
@@ -927,7 +927,7 @@ nsCanvasRenderingContext2DAzure::Initialize(PRInt32 width, PRInt32 height)
 }
 
 nsresult
-nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, int32_t width, int32_t height)
 {
   Reset();
 
@@ -954,7 +954,7 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, int32_t width, int32_t height)
 {
   mDocShell = shell;
   mThebesSurface = surface;
@@ -1002,7 +1002,7 @@ nsCanvasRenderingContext2DAzure::SetIsIPC(bool isIPC)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter, PRUint32 aFlags)
+nsCanvasRenderingContext2DAzure::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter, uint32_t aFlags)
 {
   nsresult rv = NS_OK;
 
@@ -1076,7 +1076,7 @@ nsCanvasRenderingContext2DAzure::GetInputStream(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
+  nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[mWidth * mHeight * 4]);
   if (!imageBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1153,7 +1153,7 @@ nsCanvasRenderingContext2DAzure::Restore()
   if (mStyleStack.Length() - 1 == 0)
     return;
 
-  for (PRUint32 i = 0; i < CurrentState().clipsPushed.size(); i++) {
+  for (uint32_t i = 0; i < CurrentState().clipsPushed.size(); i++) {
     mTarget->PopClip();
   }
 
@@ -1341,7 +1341,7 @@ ObjectToMatrix(JSContext* cx, JSObject& obj, Matrix& matrix, ErrorResult& error)
 
   Float* elts[] = { &matrix._11, &matrix._12, &matrix._21, &matrix._22,
                     &matrix._31, &matrix._32 };
-  for (PRUint32 i = 0; i < 6; ++i) {
+  for (uint32_t i = 0; i < 6; ++i) {
     jsval elt;
     double d;
     if (!JS_GetElement(cx, &obj, i, &elt)) {
@@ -1570,7 +1570,7 @@ nsCanvasRenderingContext2DAzure::SetStrokeStyle(nsIVariant *aValue)
   nsString str;
 
   nsresult rv;
-  PRUint16 vtype;
+  uint16_t vtype;
   rv = aValue->GetDataType(&vtype);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1612,7 +1612,7 @@ nsCanvasRenderingContext2DAzure::GetStrokeStyle(nsIVariant **aResult)
 
   nsCOMPtr<nsISupports> sup;
   nsString str;
-  PRInt32 t;
+  int32_t t;
   nsresult rv = GetStrokeStyle_multi(str, getter_AddRefs(sup), &t);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1643,7 +1643,7 @@ nsCanvasRenderingContext2DAzure::SetFillStyle(nsIVariant *aValue)
 
   nsString str;
   nsresult rv;
-  PRUint16 vtype;
+  uint16_t vtype;
   rv = aValue->GetDataType(&vtype);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1682,7 +1682,7 @@ nsCanvasRenderingContext2DAzure::GetFillStyle(nsIVariant **aResult)
 
   nsCOMPtr<nsISupports> sup;
   nsString str;
-  PRInt32 t;
+  int32_t t;
   nsresult rv = GetFillStyle_multi(str, getter_AddRefs(sup), &t);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1752,7 +1752,7 @@ nsCanvasRenderingContext2DAzure::SetStrokeStyle_multi(const nsAString& aStr, nsI
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+nsCanvasRenderingContext2DAzure::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, int32_t *aType)
 {
   CanvasMultiGetterType type;
   NS_IF_ADDREF(*aInterface = GetStyleAsStringOrInterface(aStr, type, STYLE_STROKE));
@@ -1768,7 +1768,7 @@ nsCanvasRenderingContext2DAzure::SetFillStyle_multi(const nsAString& aStr, nsISu
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+nsCanvasRenderingContext2DAzure::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, int32_t *aType)
 {
   CanvasMultiGetterType type;
   NS_IF_ADDREF(*aInterface = GetStyleAsStringOrInterface(aStr, type, STYLE_FILL));
@@ -2722,7 +2722,7 @@ nsCanvasRenderingContext2DAzure::SetFont(const nsAString& font,
   }
 
   // use CSS pixels instead of dev pixels to avoid being affected by page zoom
-  const PRUint32 aupcp = nsPresContext::AppUnitsPerCSSPixel();
+  const uint32_t aupcp = nsPresContext::AppUnitsPerCSSPixel();
   // un-zoom the font size to avoid being affected by text-only zoom
   //
   // Purposely ignore the font size that respects the user's minimum
@@ -2968,7 +2968,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
 {
   typedef nsCanvasRenderingContext2DAzure::ContextState ContextState;
 
-  virtual void SetText(const PRUnichar* text, PRInt32 length, nsBidiDirection direction)
+  virtual void SetText(const PRUnichar* text, int32_t length, nsBidiDirection direction)
   {
     mFontgrp->UpdateFontList(); // ensure user font generation is current
     mTextRun = mFontgrp->MakeTextRun(text,
@@ -3025,18 +3025,18 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       // throughout the text layout process
     }
 
-    PRUint32 numRuns;
+    uint32_t numRuns;
     const gfxTextRun::GlyphRun *runs = mTextRun->GetGlyphRuns(&numRuns);
-    const PRUint32 appUnitsPerDevUnit = mAppUnitsPerDevPixel;
+    const uint32_t appUnitsPerDevUnit = mAppUnitsPerDevPixel;
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     Point baselineOrigin =
       Point(point.x * devUnitsPerAppUnit, point.y * devUnitsPerAppUnit);
 
     float advanceSum = 0;
 
-    for (PRUint32 c = 0; c < numRuns; c++) {
+    for (uint32_t c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
-      PRUint32 endRun = 0;
+      uint32_t endRun = 0;
       if (c + 1 < numRuns) {
         endRun = runs[c + 1].mCharacterOffset;
       } else {
@@ -3057,7 +3057,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
 
       std::vector<Glyph> glyphBuf;
 
-      for (PRUint32 i = runs[c].mCharacterOffset; i < endRun; i++) {
+      for (uint32_t i = runs[c].mCharacterOffset; i < endRun; i++) {
         Glyph newGlyph;
         if (glyphs[i].IsSimpleGlyph()) {
           newGlyph.mIndex = glyphs[i].GetSimpleGlyph();
@@ -3080,7 +3080,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         gfxTextRun::DetailedGlyph *detailedGlyphs =
           mTextRun->GetDetailedGlyphs(i);
 
-        for (PRUint32 c = 0; c < glyphs[i].GetGlyphCount(); c++) {
+        for (uint32_t c = 0; c < glyphs[i].GetGlyphCount(); c++) {
           newGlyph.mIndex = detailedGlyphs[c].mGlyphID;
           if (mTextRun->IsRightToLeft()) {
             newGlyph.mPosition.x = baselineOrigin.x + detailedGlyphs[c].mXOffset * devUnitsPerAppUnit -
@@ -3142,7 +3142,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
   gfxFontGroup* mFontgrp;
 
   // dev pixel conversion factor
-  PRUint32 mAppUnitsPerDevPixel;
+  uint32_t mAppUnitsPerDevPixel;
 
   // operation (fill or stroke)
   nsCanvasRenderingContext2DAzure::TextDrawOperation mOp;
@@ -3647,7 +3647,7 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
                                            double sx, double sy, double sw,
                                            double sh, double dx, double dy,
                                            double dw, double dh, 
-                                           PRUint8 optional_argc,
+                                           uint8_t optional_argc,
                                            ErrorResult& error)
 {
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
@@ -3705,7 +3705,7 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
   if (!srcSurf) {
     // The canvas spec says that drawImage should draw the first frame
     // of animated images
-    PRUint32 sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
+    uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
     nsLayoutUtils::SurfaceFromElementResult res =
       nsLayoutUtils::SurfaceFromElement(element, sfeFlags);
 
@@ -3791,7 +3791,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
                                            float a2, float a3, float a4, float a5,
                                            float a6, float a7, float a8,
-                                           PRUint8 optional_argc)
+                                           uint8_t optional_argc)
 {
   if (!(optional_argc == 0 || optional_argc == 2 || optional_argc == 6)) {
     return NS_ERROR_INVALID_ARG;
@@ -3906,7 +3906,7 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
 {
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
-  if (!gfxASurface::CheckSurfaceSize(gfxIntSize(PRInt32(w), PRInt32(h)),
+  if (!gfxASurface::CheckSurfaceSize(gfxIntSize(int32_t(w), int32_t(h)),
                                      0xffff)) {
     error.Throw(NS_ERROR_FAILURE);
     return;
@@ -3961,7 +3961,7 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* window, double x,
            nsPresContext::CSSPixelsToAppUnits((float)y),
            nsPresContext::CSSPixelsToAppUnits((float)w),
            nsPresContext::CSSPixelsToAppUnits((float)h));
-  PRUint32 renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+  uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                              nsIPresShell::RENDER_DOCUMENT_RELATIVE);
   if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
     renderDocFlags |= nsIPresShell::RENDER_CARET;
@@ -3990,7 +3990,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY,
                                             float aW, float aH,
                                             const nsAString& aBGColor,
-                                            PRUint32 flags)
+                                            uint32_t flags)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -4055,7 +4055,7 @@ nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* elem,
   bool flush =
     (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) == 0;
 
-  PRUint32 renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+  uint32_t renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
   if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
     renderDocFlags |= nsIPresShell::RENDER_CARET;
   }
@@ -4090,7 +4090,7 @@ nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* aElem,
                                                      float aX, float aY,
                                                      float aW, float aH,
                                                      const nsAString& aBGColor,
-                                                     PRUint32 flags)
+                                                     uint32_t flags)
 {
   NS_ENSURE_ARG(aElem);
 
@@ -4109,7 +4109,7 @@ nsCanvasRenderingContext2DAzure::EnsureUnpremultiplyTable() {
     return;
 
   // Infallably alloc the unpremultiply table.
-  sUnpremultiplyTable = new PRUint8[256][256];
+  sUnpremultiplyTable = new uint8_t[256][256];
 
   // It's important that the array be indexed first by alpha and then by rgb
   // value.  When we unpremultiply a pixel, we're guaranteed to do three
@@ -4118,13 +4118,13 @@ nsCanvasRenderingContext2DAzure::EnsureUnpremultiplyTable() {
   // increasing the chance of a cache hit.
 
   // a == 0 case
-  for (PRUint32 c = 0; c <= 255; c++) {
+  for (uint32_t c = 0; c <= 255; c++) {
     sUnpremultiplyTable[0][c] = c;
   }
 
   for (int a = 1; a <= 255; a++) {
     for (int c = 0; c <= 255; c++) {
-      sUnpremultiplyTable[a][c] = (PRUint8)((c * 255) / a);
+      sUnpremultiplyTable[a][c] = (uint8_t)((c * 255) / a);
     }
   }
 }
@@ -4285,15 +4285,15 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
     for (int32_t i = 0; i < dstWriteRect.width; ++i) {
       // XXX Is there some useful swizzle MMX we can use here?
 #ifdef IS_LITTLE_ENDIAN
-      PRUint8 b = *src++;
-      PRUint8 g = *src++;
-      PRUint8 r = *src++;
-      PRUint8 a = *src++;
+      uint8_t b = *src++;
+      uint8_t g = *src++;
+      uint8_t r = *src++;
+      uint8_t a = *src++;
 #else
-      PRUint8 a = *src++;
-      PRUint8 r = *src++;
-      PRUint8 g = *src++;
-      PRUint8 b = *src++;
+      uint8_t a = *src++;
+      uint8_t r = *src++;
+      uint8_t g = *src++;
+      uint8_t b = *src++;
 #endif
       // Convert to non-premultiplied color
       *dst++ = sUnpremultiplyTable[a][r];
@@ -4315,7 +4315,7 @@ nsCanvasRenderingContext2DAzure::EnsurePremultiplyTable() {
     return;
 
   // Infallably alloc the premultiply table.
-  sPremultiplyTable = new PRUint8[256][256];
+  sPremultiplyTable = new uint8_t[256][256];
 
   // Like the unpremultiply table, it's important that we index the premultiply
   // table with the alpha value as the first index to ensure good cache
@@ -4383,7 +4383,7 @@ nsCanvasRenderingContext2DAzure::PutImageData(JSContext* cx,
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::PutImageData(const JS::Value&, double, double,
                                               double, double, double, double,
-                                              JSContext*, PRUint8)
+                                              JSContext*, uint8_t)
 {
   /* Should never be called -- the new binding code handles it, and
      C++ callers should call PutImageData_explicit */
@@ -4391,10 +4391,10 @@ nsCanvasRenderingContext2DAzure::PutImageData(const JS::Value&, double, double,
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
-                                                       unsigned char *aData, PRUint32 aDataLen,
-                                                       bool hasDirtyRect, PRInt32 dirtyX, PRInt32 dirtyY,
-                                                       PRInt32 dirtyWidth, PRInt32 dirtyHeight)
+nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,
+                                                       unsigned char *aData, uint32_t aDataLen,
+                                                       bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
+                                                       int32_t dirtyWidth, int32_t dirtyHeight)
 {
   if (!mValid) {
     return NS_ERROR_FAILURE;
@@ -4449,7 +4449,7 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRU
     return NS_OK;
   }
 
-  PRUint32 len = w * h * 4;
+  uint32_t len = w * h * 4;
   if (aDataLen != len) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -4463,15 +4463,15 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRU
   // ensure premultiply table has been created
   EnsurePremultiplyTable();
 
-  PRUint8 *src = aData;
-  PRUint8 *dst = imgsurf->Data();
+  uint8_t *src = aData;
+  uint8_t *dst = imgsurf->Data();
 
-  for (PRUint32 j = 0; j < h; j++) {
-    for (PRUint32 i = 0; i < w; i++) {
-      PRUint8 r = *src++;
-      PRUint8 g = *src++;
-      PRUint8 b = *src++;
-      PRUint8 a = *src++;
+  for (uint32_t j = 0; j < h; j++) {
+    for (uint32_t i = 0; i < w; i++) {
+      uint8_t r = *src++;
+      uint8_t g = *src++;
+      uint8_t b = *src++;
+      uint8_t a = *src++;
 
       // Convert to premultiplied color (losslessly if the input came from getImageData)
 #ifdef IS_LITTLE_ENDIAN
@@ -4593,7 +4593,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::CreateImageData(const JS::Value &arg1,
                                                  const JS::Value &arg2,
                                                  JSContext* cx,
-                                                 PRUint8 optional_argc,
+                                                 uint8_t optional_argc,
                                                  nsIDOMImageData** retval)
 {
   /* Should never be called; handled entirely in new bindings */
@@ -4614,7 +4614,7 @@ nsCanvasRenderingContext2DAzure::SetMozImageSmoothingEnabled(bool val)
   return NS_OK;
 }
 
-static PRUint8 g2DContextLayerUserData;
+static uint8_t g2DContextLayerUserData;
 
 already_AddRefed<CanvasLayer>
 nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
@@ -4667,7 +4667,7 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   data.mSize = nsIntSize(mWidth, mHeight);
 
   canvasLayer->Initialize(data);
-  PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
+  uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
   canvasLayer->SetContentFlags(flags);
   canvasLayer->Updated();
 

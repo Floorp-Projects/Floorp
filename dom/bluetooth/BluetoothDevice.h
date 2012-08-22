@@ -68,7 +68,7 @@ private:
   nsString mAdapterPath;
   nsString mAddress;
   nsString mName;
-  PRUint32 mClass;
+  uint32_t mClass;
   bool mConnected;
   bool mPaired;
   bool mIsRooted;

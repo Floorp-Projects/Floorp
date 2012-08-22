@@ -11,7 +11,7 @@
 // Global functions and data [declaration]
 
 
-static const PRUint16 *g_EUCKRMappingTable[3] = {
+static const uint16_t *g_EUCKRMappingTable[3] = {
   g_ucvko_AsciiMapping,
   g_ufKSC5601Mapping,
   g_HangulNullMapping

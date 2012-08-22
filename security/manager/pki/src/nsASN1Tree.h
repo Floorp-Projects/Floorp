@@ -60,13 +60,13 @@ protected:
   void ClearNodes();
   void ClearNodesRecursively(myNode *n);
 
-  PRInt32 CountVisibleNodes(myNode *n);
-  myNode *FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
-                            PRInt32 &index_counter, PRInt32 &level_counter,
-                            PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel);
-  myNode *FindNodeFromIndex(PRInt32 wantedIndex, 
-                            PRInt32 *optionalOutParentIndex = nullptr, 
-                            PRInt32 *optionalOutLevel = nullptr);
+  int32_t CountVisibleNodes(myNode *n);
+  myNode *FindNodeFromIndex(myNode *n, int32_t wantedIndex,
+                            int32_t &index_counter, int32_t &level_counter,
+                            int32_t *optionalOutParentIndex, int32_t *optionalOutLevel);
+  myNode *FindNodeFromIndex(int32_t wantedIndex, 
+                            int32_t *optionalOutParentIndex = nullptr, 
+                            int32_t *optionalOutLevel = nullptr);
 
 };
 #endif //_NSSASNTREE_H_

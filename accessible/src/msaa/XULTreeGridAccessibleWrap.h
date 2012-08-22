@@ -44,7 +44,7 @@ public:
                                 XULTreeGridRowAccessible* aRowAcc,
                                 nsITreeBoxObject* aTree,
                                 nsITreeView* aTreeView,
-                                PRInt32 aRow, nsITreeColumn* aColumn);
+                                int32_t aRow, nsITreeColumn* aColumn);
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

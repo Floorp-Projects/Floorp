@@ -39,7 +39,7 @@ private:
     {
         MOZ_COUNT_CTOR(txXPathNode);
     }
-    txXPathNode(nsINode *aNode, PRUint32 aIndex, nsINode *aRoot)
+    txXPathNode(nsINode *aNode, uint32_t aIndex, nsINode *aRoot)
         : mNode(aNode),
           mRefCountRoot(aRoot ? 1 : 0),
           mIndex(aIndex)
@@ -98,22 +98,22 @@ private:
     };
 
     nsINode* mNode;
-    PRUint32 mRefCountRoot : 1;
-    PRUint32 mIndex : 31;
+    uint32_t mRefCountRoot : 1;
+    uint32_t mIndex : 31;
 };
 
 class txNamespaceManager
 {
 public:
-    static PRInt32 getNamespaceID(const nsAString& aNamespaceURI);
-    static nsresult getNamespaceURI(const PRInt32 aID, nsAString& aResult);
+    static int32_t getNamespaceID(const nsAString& aNamespaceURI);
+    static nsresult getNamespaceURI(const int32_t aID, nsAString& aResult);
 };
 
 /* static */
-inline PRInt32
+inline int32_t
 txNamespaceManager::getNamespaceID(const nsAString& aNamespaceURI)
 {
-    PRInt32 namespaceID = kNameSpaceID_Unknown;
+    int32_t namespaceID = kNameSpaceID_Unknown;
     nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, namespaceID);
     return namespaceID;
@@ -121,7 +121,7 @@ txNamespaceManager::getNamespaceID(const nsAString& aNamespaceURI)
 
 /* static */
 inline nsresult
-txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
+txNamespaceManager::getNamespaceURI(const int32_t aID, nsAString& aResult)
 {
     return nsContentUtils::NameSpaceManager()->
         GetNameSpaceURI(aID, aResult);

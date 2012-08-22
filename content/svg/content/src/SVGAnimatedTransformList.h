@@ -107,8 +107,8 @@ private:
     static void ParseValue(const nsAString& aSpec,
                            const nsIAtom* aTransformType,
                            nsSMILValue& aResult);
-    static PRInt32 ParseParameterList(const nsAString& aSpec, float* aVars,
-                                      PRInt32 aNVars);
+    static int32_t ParseParameterList(const nsAString& aSpec, float* aVars,
+                                      int32_t aNVars);
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to

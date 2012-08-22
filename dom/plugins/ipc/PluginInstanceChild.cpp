@@ -615,7 +615,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(
 {
     AssertPluginThread();
 
-    PRUint32 value = 0;
+    uint32_t value = 0;
     if (!mPluginIface->getvalue) {
         *rv = NPERR_GENERIC_ERROR;
     }
@@ -2447,8 +2447,8 @@ PluginInstanceChild::NPN_URLRedirectResponse(void* notifyData, NPBool allow)
 
     InfallibleTArray<PStreamNotifyChild*> notifyStreams;
     ManagedPStreamNotifyChild(notifyStreams);
-    PRUint32 notifyStreamCount = notifyStreams.Length();
-    for (PRUint32 i = 0; i < notifyStreamCount; i++) {
+    uint32_t notifyStreamCount = notifyStreams.Length();
+    for (uint32_t i = 0; i < notifyStreamCount; i++) {
         StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyStreams[i]);
         if (sn->mClosure == notifyData) {
             sn->SendRedirectNotifyResponse(static_cast<bool>(allow));
@@ -4053,13 +4053,13 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     ManagedPBrowserStreamChild(streams);
 
     // First make sure none of these streams become deleted
-    for (PRUint32 i = 0; i < streams.Length(); ) {
+    for (uint32_t i = 0; i < streams.Length(); ) {
         if (static_cast<BrowserStreamChild*>(streams[i])->InstanceDying())
             ++i;
         else
             streams.RemoveElementAt(i);
     }
-    for (PRUint32 i = 0; i < streams.Length(); ++i)
+    for (uint32_t i = 0; i < streams.Length(); ++i)
         static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
     mTimers.Clear();
@@ -4109,7 +4109,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 
     // Pending async calls are discarded, not delivered. This matches the
     // in-process behavior.
-    for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
+    for (uint32_t i = 0; i < mPendingAsyncCalls.Length(); ++i)
         mPendingAsyncCalls[i]->Cancel();
 
     mPendingAsyncCalls.Clear();

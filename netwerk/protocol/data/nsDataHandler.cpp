@@ -50,14 +50,14 @@ nsDataHandler::GetScheme(nsACString &result) {
 }
 
 NS_IMETHODIMP
-nsDataHandler::GetDefaultPort(PRInt32 *result) {
+nsDataHandler::GetDefaultPort(int32_t *result) {
     // no ports for data protocol
     *result = -1;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDataHandler::GetProtocolFlags(PRUint32 *result) {
+nsDataHandler::GetProtocolFlags(uint32_t *result) {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
         URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE |
         URI_SYNC_LOAD_IS_OK;
@@ -129,7 +129,7 @@ nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result) {
 }
 
 NS_IMETHODIMP 
-nsDataHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval) {
+nsDataHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
     // don't override anything.  
     *_retval = false;
     return NS_OK;

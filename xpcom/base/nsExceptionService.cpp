@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
+static const unsigned BAD_TLS_INDEX = (unsigned) -1;
 
 #define CHECK_SERVICE_USE_OK() if (!sLock) return NS_ERROR_NOT_INITIALIZED
 #define CHECK_MANAGER_USE_OK() if (!mService || !nsExceptionService::sLock) return NS_ERROR_NOT_INITIALIZED
@@ -22,10 +22,10 @@ static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
 // A key for our registered module providers hashtable
 class nsProviderKey : public nsHashKey {
 protected:
-  PRUint32 mKey;
+  uint32_t mKey;
 public:
-  nsProviderKey(PRUint32 key) : mKey(key) {}
-  PRUint32 HashCode(void) const {
+  nsProviderKey(uint32_t key) : mKey(key) {}
+  uint32_t HashCode(void) const {
     return mKey;
   }
   bool Equals(const nsHashKey *aKey) const {
@@ -34,7 +34,7 @@ public:
   nsHashKey *Clone() const {
     return new nsProviderKey(mKey);
   }
-  PRUint32 GetValue() { return mKey; }
+  uint32_t GetValue() { return mKey; }
 };
 
 /** Exception Manager definition **/
@@ -50,7 +50,7 @@ public:
   nsExceptionManager *mNextThread; // not ref-counted.
   nsExceptionService *mService; // not ref-counted
 #ifdef DEBUG
-  static PRInt32 totalInstances;
+  static int32_t totalInstances;
 #endif
 
 private:
@@ -59,7 +59,7 @@ private:
 
 
 #ifdef DEBUG
-PRInt32 nsExceptionManager::totalInstances = 0;
+int32_t nsExceptionManager::totalInstances = 0;
 #endif
 
 // Note this object is single threaded - the service itself ensures
@@ -113,12 +113,12 @@ NS_IMETHODIMP nsExceptionManager::GetExceptionFromProvider(nsresult rc, nsIExcep
 
 /* The Exception Service */
 
-PRUintn nsExceptionService::tlsIndex = BAD_TLS_INDEX;
+unsigned nsExceptionService::tlsIndex = BAD_TLS_INDEX;
 Mutex *nsExceptionService::sLock = nullptr;
 nsExceptionManager *nsExceptionService::firstThread = nullptr;
 
 #ifdef DEBUG
-PRInt32 nsExceptionService::totalInstances = 0;
+int32_t nsExceptionService::totalInstances = 0;
 #endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsExceptionService,
@@ -228,8 +228,8 @@ NS_IMETHODIMP nsExceptionService::GetCurrentExceptionManager(nsIExceptionManager
     return NS_OK;
 }
 
-/* void registerErrorProvider (in nsIExceptionProvider provider, in PRUint32 moduleCode); */
-NS_IMETHODIMP nsExceptionService::RegisterExceptionProvider(nsIExceptionProvider *provider, PRUint32 errorModule)
+/* void registerErrorProvider (in nsIExceptionProvider provider, in uint32_t moduleCode); */
+NS_IMETHODIMP nsExceptionService::RegisterExceptionProvider(nsIExceptionProvider *provider, uint32_t errorModule)
 {
     CHECK_SERVICE_USE_OK();
 
@@ -240,8 +240,8 @@ NS_IMETHODIMP nsExceptionService::RegisterExceptionProvider(nsIExceptionProvider
     return NS_OK;
 }
 
-/* void unregisterErrorProvider (in nsIExceptionProvider provider, in PRUint32 errorModule); */
-NS_IMETHODIMP nsExceptionService::UnregisterExceptionProvider(nsIExceptionProvider *provider, PRUint32 errorModule)
+/* void unregisterErrorProvider (in nsIExceptionProvider provider, in uint32_t errorModule); */
+NS_IMETHODIMP nsExceptionService::UnregisterExceptionProvider(nsIExceptionProvider *provider, uint32_t errorModule)
 {
     CHECK_SERVICE_USE_OK();
     nsProviderKey key(errorModule);

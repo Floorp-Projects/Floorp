@@ -45,7 +45,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   // The TeXbook (Ch 17. p.141) says the superscript inherits the compression
   // while the subscript is compressed. So here we collect subscripts and set
   // the compression flag in them.
-  PRInt32 count = 0;
+  int32_t count = 0;
   bool isSubScript = false;
   nsAutoTArray<nsIFrame*, 8> subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
@@ -70,7 +70,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
     count++;
     childFrame = childFrame->GetNextSibling();
   }
-  for (PRInt32 i = subScriptFrames.Length() - 1; i >= 0; i--) {
+  for (int32_t i = subScriptFrames.Length() - 1; i >= 0; i--) {
     childFrame = subScriptFrames[i];
     PropagatePresentationDataFor(childFrame,
       NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
@@ -228,7 +228,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
   nscoord trySupScriptShift = supScriptShift;
   nscoord maxSubScriptShift = subScriptShift;
   nscoord maxSupScriptShift = supScriptShift;
-  PRInt32 count = 0;
+  int32_t count = 0;
   nsHTMLReflowMetrics baseSize;
   nsHTMLReflowMetrics subScriptSize;
   nsHTMLReflowMetrics supScriptSize;

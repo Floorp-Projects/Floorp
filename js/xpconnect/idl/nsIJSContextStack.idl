@@ -11,7 +11,7 @@
 [uuid(c67d8270-3189-11d3-9885-006008962422)]
 interface nsIJSContextStack : nsISupports
 {
-    readonly attribute PRInt32  count;
+    readonly attribute int32_t  count;
     JSContext                   peek();
     JSContext                   pop();
     void                        push(in JSContext cx);

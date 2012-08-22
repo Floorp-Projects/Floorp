@@ -40,9 +40,9 @@ public:
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
   // nsINode
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -53,7 +53,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
@@ -148,7 +148,7 @@ nsHTMLOptGroupElement::GetSelect()
 
 nsresult
 nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
-                                     PRUint32 aIndex,
+                                     uint32_t aIndex,
                                      bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, aKid, aIndex, aNotify);
@@ -160,7 +160,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
 }
 
 void
-nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
+nsHTMLOptGroupElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, nullptr, aIndex,
                                         aNotify);
@@ -168,7 +168,7 @@ nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 }
 
 nsresult
-nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                     const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {

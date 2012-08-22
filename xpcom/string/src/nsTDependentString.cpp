@@ -17,7 +17,7 @@ nsTDependentString_CharT::Rebind( const char_type* data, size_type length )
   }
 
 void
-nsTDependentString_CharT::Rebind( const string_type& str, PRUint32 startPos )
+nsTDependentString_CharT::Rebind( const string_type& str, uint32_t startPos )
   {
     // If we currently own a buffer, release it.
     Finalize();

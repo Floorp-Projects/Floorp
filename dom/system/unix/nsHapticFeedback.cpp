@@ -17,7 +17,7 @@ using namespace QtMobility;
 NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
 
 NS_IMETHODIMP
-nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
+nsHapticFeedback::PerformSimpleAction(int32_t aType)
 {
 #if (MOZ_PLATFORM_MAEMO == 5)
     DBusError err;

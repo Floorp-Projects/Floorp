@@ -82,7 +82,7 @@ DataToTexture(IDirect3DDevice9 *aDevice,
     texture->LockRect(0, &lockedRect, NULL, 0);
   }
 
-  PRUint32 width = aSize.width;
+  uint32_t width = aSize.width;
   if (aFormat == D3DFMT_A8R8G8B8) {
     width *= 4;
   }
@@ -138,8 +138,8 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
   D3DLOCKED_RECT lockrectY;
   D3DLOCKED_RECT lockrectCb;
   D3DLOCKED_RECT lockrectCr;
-  PRUint8* src;
-  PRUint8* dest;
+  uint8_t* src;
+  uint8_t* dest;
 
   nsRefPtr<IDirect3DSurface9> tmpSurfaceY;
   nsRefPtr<IDirect3DSurface9> tmpSurfaceCb;
@@ -231,7 +231,7 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
 
   src  = data->mYChannel;
   //FIX cast
-  dest = (PRUint8*)lockrectY.pBits;
+  dest = (uint8_t*)lockrectY.pBits;
 
   // copy over data
   for (int h=0; h<data->mYSize.height; h++) {
@@ -242,7 +242,7 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
 
   src  = data->mCbChannel;
   //FIX cast
-  dest = (PRUint8*)lockrectCb.pBits;
+  dest = (uint8_t*)lockrectCb.pBits;
 
   // copy over data
   for (int h=0; h<data->mCbCrSize.height; h++) {
@@ -253,7 +253,7 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
 
   src  = data->mCrChannel;
   //FIX cast
-  dest = (PRUint8*)lockrectCr.pBits;
+  dest = (uint8_t*)lockrectCr.pBits;
 
   // copy over data
   for (int h=0; h<data->mCbCrSize.height; h++) {

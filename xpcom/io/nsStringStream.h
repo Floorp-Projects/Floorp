@@ -49,7 +49,7 @@
  */
 extern nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
-                      const char* aStringToRead, PRInt32 aLength = -1,
+                      const char* aStringToRead, int32_t aLength = -1,
                       nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
 
 /**

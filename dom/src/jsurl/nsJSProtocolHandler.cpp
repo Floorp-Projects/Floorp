@@ -59,7 +59,7 @@ public:
     nsresult Init(nsIURI* uri);
     nsresult EvaluateScript(nsIChannel *aChannel,
                             PopupControlState aPopupState,
-                            PRUint32 aExecutionPolicy,
+                            uint32_t aExecutionPolicy,
                             nsPIDOMWindow *aOriginalInnerWindow);
 
 protected:
@@ -136,7 +136,7 @@ nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
 
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
                                    PopupControlState aPopupState,
-                                   PRUint32 aExecutionPolicy,
+                                   uint32_t aExecutionPolicy,
                                    nsPIDOMWindow *aOriginalInnerWindow)
 {
     if (aExecutionPolicy == nsIScriptChannel::NO_EXECUTION) {
@@ -360,7 +360,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     }
     else {
         char *bytes;
-        PRUint32 bytesLen;
+        uint32_t bytesLen;
         NS_NAMED_LITERAL_CSTRING(isoCharset, "ISO-8859-1");
         NS_NAMED_LITERAL_CSTRING(utf8Charset, "UTF-8");
         const nsCString *charset;
@@ -439,7 +439,7 @@ protected:
 
     nsRefPtr<nsJSThunk>     mIOThunk;
     PopupControlState       mPopupState;
-    PRUint32                mExecutionPolicy;
+    uint32_t                mExecutionPolicy;
     bool                    mIsAsync;
     bool                    mIsActive;
     bool                    mOpenedStreamChannel;
@@ -1002,7 +1002,7 @@ nsJSChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+nsJSChannel::GetContentDisposition(uint32_t *aContentDisposition)
 {
     return mStreamChannel->GetContentDisposition(aContentDisposition);
 }
@@ -1020,13 +1020,13 @@ nsJSChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetContentLength(PRInt32 *aContentLength)
+nsJSChannel::GetContentLength(int32_t *aContentLength)
 {
     return mStreamChannel->GetContentLength(aContentLength);
 }
 
 NS_IMETHODIMP
-nsJSChannel::SetContentLength(PRInt32 aContentLength)
+nsJSChannel::SetContentLength(int32_t aContentLength)
 {
     return mStreamChannel->SetContentLength(aContentLength);
 }
@@ -1044,8 +1044,8 @@ NS_IMETHODIMP
 nsJSChannel::OnDataAvailable(nsIRequest* aRequest,
                              nsISupports* aContext, 
                              nsIInputStream* aInputStream,
-                             PRUint32 aOffset,
-                             PRUint32 aCount)
+                             uint32_t aOffset,
+                             uint32_t aCount)
 {
     NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
@@ -1083,7 +1083,7 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-nsJSChannel::SetExecutionPolicy(PRUint32 aPolicy)
+nsJSChannel::SetExecutionPolicy(uint32_t aPolicy)
 {
     NS_ENSURE_ARG(aPolicy <= EXECUTE_NORMAL);
     
@@ -1092,7 +1092,7 @@ nsJSChannel::SetExecutionPolicy(PRUint32 aPolicy)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetExecutionPolicy(PRUint32* aPolicy)
+nsJSChannel::GetExecutionPolicy(uint32_t* aPolicy)
 {
     *aPolicy = mExecutionPolicy;
     return NS_OK;
@@ -1186,14 +1186,14 @@ nsJSProtocolHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsJSProtocolHandler::GetDefaultPort(int32_t *result)
 {
     *result = -1;        // no port for javascript: URLs
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::GetProtocolFlags(PRUint32 *result)
+nsJSProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
         URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE | URI_OPENING_EXECUTES_SCRIPT;
@@ -1259,7 +1259,7 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsJSProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsJSProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;

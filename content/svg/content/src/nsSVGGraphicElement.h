@@ -30,7 +30,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                      PRInt32 aModType) const;
+                                      int32_t aModType) const;
 
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
@@ -38,7 +38,7 @@ public:
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
 
   virtual mozilla::SVGAnimatedTransformList*
-    GetAnimatedTransformList(PRUint32 aFlags = 0);
+    GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::transform;
   }

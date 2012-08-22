@@ -19,9 +19,9 @@ CLANG_TESTS = [
 
 MSVC_TESTS = [
     ("C:/mozilla-central/test/foo.cpp(793) : warning C4244: 'return' : "
-     "conversion from 'double' to 'PRUint32', possible loss of data",
+     "conversion from 'double' to 'uint32_t', possible loss of data",
      'C:/mozilla-central/test/foo.cpp', 793, 'C4244',
-     "'return' : conversion from 'double' to 'PRUint32', possible loss of "
+     "'return' : conversion from 'double' to 'uint32_t', possible loss of "
          'data')
 ]
 

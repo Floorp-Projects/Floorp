@@ -126,7 +126,7 @@ enum nsStyleAnimType {
   // nscoord values
   eStyleAnimType_nscoord,
 
-  // enumerated values (stored in a PRUint8)
+  // enumerated values (stored in a uint8_t)
   // In order for a property to use this unit, _all_ of its enumerated values
   // must be listed in its keyword table, so that any enumerated value can be
   // converted into a string via a nsCSSValue of type eCSSUnit_Enumerated.
@@ -185,39 +185,39 @@ public:
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the 
   // value. Return back nullstr if no value is found
-  static const nsAFlatCString& LookupPropertyValue(nsCSSProperty aProperty, PRInt32 aValue);
+  static const nsAFlatCString& LookupPropertyValue(nsCSSProperty aProperty, int32_t aValue);
 
   // Get a color name for a predefined color value like buttonhighlight or activeborder
   // Sets the aStr param to the name of the propertyID
-  static bool GetColorName(PRInt32 aPropID, nsCString &aStr);
+  static bool GetColorName(int32_t aPropID, nsCString &aStr);
 
   // Find |aKeyword| in |aTable|, if found set |aValue| to its corresponding value.
   // If not found, return false and do not set |aValue|.
-  static bool FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aValue);
+  static bool FindKeyword(nsCSSKeyword aKeyword, const int32_t aTable[], int32_t& aValue);
   // Return the first keyword in |aTable| that has the corresponding value |aValue|.
   // Return |eCSSKeyword_UNKNOWN| if not found.
-  static nsCSSKeyword ValueToKeywordEnum(PRInt32 aValue, const PRInt32 aTable[]);
+  static nsCSSKeyword ValueToKeywordEnum(int32_t aValue, const int32_t aTable[]);
   // Ditto but as a string, return "" when not found.
-  static const nsAFlatCString& ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[]);
+  static const nsAFlatCString& ValueToKeyword(int32_t aValue, const int32_t aTable[]);
 
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
-  static const PRInt32* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
+  static const int32_t* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const ptrdiff_t
     kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
-  static const PRUint32        kFlagsTable[eCSSProperty_COUNT];
+  static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
 
 public:
-  static inline bool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
+  static inline bool PropHasFlags(nsCSSProperty aProperty, uint32_t aFlags)
   {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
-  static inline PRUint32 PropertyParseType(nsCSSProperty aProperty)
+  static inline uint32_t PropertyParseType(nsCSSProperty aProperty)
   {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
@@ -225,7 +225,7 @@ public:
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
-  static inline PRUint32 ValueRestrictions(nsCSSProperty aProperty)
+  static inline uint32_t ValueRestrictions(nsCSSProperty aProperty)
   {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
@@ -235,10 +235,10 @@ public:
 
 private:
   // Lives in nsCSSParser.cpp for the macros it depends on.
-  static const PRUint32 kParserVariantTable[eCSSProperty_COUNT_no_shorthands];
+  static const uint32_t kParserVariantTable[eCSSProperty_COUNT_no_shorthands];
 
 public:
-  static inline PRUint32 ParserVariant(nsCSSProperty aProperty) {
+  static inline uint32_t ParserVariant(nsCSSProperty aProperty) {
     NS_ABORT_IF_FALSE(0 <= aProperty &&
                       aProperty < eCSSProperty_COUNT_no_shorthands,
                       "out of range");
@@ -323,118 +323,118 @@ public:
        *iter_ != eCSSProperty_UNKNOWN; ++iter_)
 
   // Keyword/Enum value tables
-  static const PRInt32 kAnimationDirectionKTable[];
-  static const PRInt32 kAnimationFillModeKTable[];
-  static const PRInt32 kAnimationIterationCountKTable[];
-  static const PRInt32 kAnimationPlayStateKTable[];
-  static const PRInt32 kAnimationTimingFunctionKTable[];
-  static const PRInt32 kAppearanceKTable[];
-  static const PRInt32 kAzimuthKTable[];
-  static const PRInt32 kBackfaceVisibilityKTable[];
-  static const PRInt32 kTransformStyleKTable[];
-  static const PRInt32 kBackgroundAttachmentKTable[];
-  static const PRInt32 kBackgroundInlinePolicyKTable[];
-  static const PRInt32 kBackgroundOriginKTable[];
-  static const PRInt32 kBackgroundPositionKTable[];
-  static const PRInt32 kBackgroundRepeatKTable[];
-  static const PRInt32 kBackgroundRepeatPartKTable[];
-  static const PRInt32 kBackgroundSizeKTable[];
-  static const PRInt32 kBorderCollapseKTable[];
-  static const PRInt32 kBorderColorKTable[];
-  static const PRInt32 kBorderImageRepeatKTable[];
-  static const PRInt32 kBorderImageSliceKTable[];
-  static const PRInt32 kBorderStyleKTable[];
-  static const PRInt32 kBorderWidthKTable[];
-  static const PRInt32 kBoxAlignKTable[];
-  static const PRInt32 kBoxDirectionKTable[];
-  static const PRInt32 kBoxOrientKTable[];
-  static const PRInt32 kBoxPackKTable[];
-  static const PRInt32 kDominantBaselineKTable[];
-  static const PRInt32 kFillRuleKTable[];
-  static const PRInt32 kImageRenderingKTable[];
-  static const PRInt32 kShapeRenderingKTable[];
-  static const PRInt32 kStrokeLinecapKTable[];
-  static const PRInt32 kStrokeLinejoinKTable[];
-  static const PRInt32 kVectorEffectKTable[];
-  static const PRInt32 kTextAnchorKTable[];
-  static const PRInt32 kTextRenderingKTable[];
-  static const PRInt32 kColorInterpolationKTable[];
-  static const PRInt32 kColumnFillKTable[];
-  static const PRInt32 kBoxPropSourceKTable[];
-  static const PRInt32 kBoxShadowTypeKTable[];
-  static const PRInt32 kBoxSizingKTable[];
-  static const PRInt32 kCaptionSideKTable[];
-  static const PRInt32 kClearKTable[];
-  static const PRInt32 kColorKTable[];
-  static const PRInt32 kContentKTable[];
-  static const PRInt32 kCursorKTable[];
-  static const PRInt32 kDirectionKTable[];
-  static const PRInt32 kDisplayKTable[];
-  static const PRInt32 kElevationKTable[];
-  static const PRInt32 kEmptyCellsKTable[];
+  static const int32_t kAnimationDirectionKTable[];
+  static const int32_t kAnimationFillModeKTable[];
+  static const int32_t kAnimationIterationCountKTable[];
+  static const int32_t kAnimationPlayStateKTable[];
+  static const int32_t kAnimationTimingFunctionKTable[];
+  static const int32_t kAppearanceKTable[];
+  static const int32_t kAzimuthKTable[];
+  static const int32_t kBackfaceVisibilityKTable[];
+  static const int32_t kTransformStyleKTable[];
+  static const int32_t kBackgroundAttachmentKTable[];
+  static const int32_t kBackgroundInlinePolicyKTable[];
+  static const int32_t kBackgroundOriginKTable[];
+  static const int32_t kBackgroundPositionKTable[];
+  static const int32_t kBackgroundRepeatKTable[];
+  static const int32_t kBackgroundRepeatPartKTable[];
+  static const int32_t kBackgroundSizeKTable[];
+  static const int32_t kBorderCollapseKTable[];
+  static const int32_t kBorderColorKTable[];
+  static const int32_t kBorderImageRepeatKTable[];
+  static const int32_t kBorderImageSliceKTable[];
+  static const int32_t kBorderStyleKTable[];
+  static const int32_t kBorderWidthKTable[];
+  static const int32_t kBoxAlignKTable[];
+  static const int32_t kBoxDirectionKTable[];
+  static const int32_t kBoxOrientKTable[];
+  static const int32_t kBoxPackKTable[];
+  static const int32_t kDominantBaselineKTable[];
+  static const int32_t kFillRuleKTable[];
+  static const int32_t kImageRenderingKTable[];
+  static const int32_t kShapeRenderingKTable[];
+  static const int32_t kStrokeLinecapKTable[];
+  static const int32_t kStrokeLinejoinKTable[];
+  static const int32_t kVectorEffectKTable[];
+  static const int32_t kTextAnchorKTable[];
+  static const int32_t kTextRenderingKTable[];
+  static const int32_t kColorInterpolationKTable[];
+  static const int32_t kColumnFillKTable[];
+  static const int32_t kBoxPropSourceKTable[];
+  static const int32_t kBoxShadowTypeKTable[];
+  static const int32_t kBoxSizingKTable[];
+  static const int32_t kCaptionSideKTable[];
+  static const int32_t kClearKTable[];
+  static const int32_t kColorKTable[];
+  static const int32_t kContentKTable[];
+  static const int32_t kCursorKTable[];
+  static const int32_t kDirectionKTable[];
+  static const int32_t kDisplayKTable[];
+  static const int32_t kElevationKTable[];
+  static const int32_t kEmptyCellsKTable[];
 #ifdef MOZ_FLEXBOX
-  static const PRInt32 kAlignItemsKTable[];
-  static const PRInt32 kAlignSelfKTable[];
-  static const PRInt32 kFlexDirectionKTable[];
-  static const PRInt32 kJustifyContentKTable[];
+  static const int32_t kAlignItemsKTable[];
+  static const int32_t kAlignSelfKTable[];
+  static const int32_t kFlexDirectionKTable[];
+  static const int32_t kJustifyContentKTable[];
 #endif // MOZ_FLEXBOX
-  static const PRInt32 kFloatKTable[];
-  static const PRInt32 kFloatEdgeKTable[];
-  static const PRInt32 kFontKTable[];
-  static const PRInt32 kFontSizeKTable[];
-  static const PRInt32 kFontStretchKTable[];
-  static const PRInt32 kFontStyleKTable[];
-  static const PRInt32 kFontVariantKTable[];
-  static const PRInt32 kFontWeightKTable[];
-  static const PRInt32 kIMEModeKTable[];
-  static const PRInt32 kLineHeightKTable[];
-  static const PRInt32 kListStylePositionKTable[];
-  static const PRInt32 kListStyleKTable[];
-  static const PRInt32 kOrientKTable[];
-  static const PRInt32 kOutlineStyleKTable[];
-  static const PRInt32 kOutlineColorKTable[];
-  static const PRInt32 kOverflowKTable[];
-  static const PRInt32 kOverflowSubKTable[];
-  static const PRInt32 kPageBreakKTable[];
-  static const PRInt32 kPageBreakInsideKTable[];
-  static const PRInt32 kPageMarksKTable[];
-  static const PRInt32 kPageSizeKTable[];
-  static const PRInt32 kPitchKTable[];
-  static const PRInt32 kPointerEventsKTable[];
-  static const PRInt32 kPositionKTable[];
-  static const PRInt32 kRadialGradientShapeKTable[];
-  static const PRInt32 kRadialGradientSizeKTable[];
-  static const PRInt32 kRadialGradientLegacySizeKTable[];
-  static const PRInt32 kResizeKTable[];
-  static const PRInt32 kSpeakKTable[];
-  static const PRInt32 kSpeakHeaderKTable[];
-  static const PRInt32 kSpeakNumeralKTable[];
-  static const PRInt32 kSpeakPunctuationKTable[];
-  static const PRInt32 kSpeechRateKTable[];
-  static const PRInt32 kStackSizingKTable[];
-  static const PRInt32 kTableLayoutKTable[];
-  static const PRInt32 kTextAlignKTable[];
-  static const PRInt32 kTextAlignLastKTable[];
-  static const PRInt32 kTextBlinkKTable[];
-  static const PRInt32 kTextDecorationLineKTable[];
-  static const PRInt32 kTextDecorationStyleKTable[];
-  static const PRInt32 kTextOverflowKTable[];
-  static const PRInt32 kTextTransformKTable[];
-  static const PRInt32 kTransitionTimingFunctionKTable[];
-  static const PRInt32 kUnicodeBidiKTable[];
-  static const PRInt32 kUserFocusKTable[];
-  static const PRInt32 kUserInputKTable[];
-  static const PRInt32 kUserModifyKTable[];
-  static const PRInt32 kUserSelectKTable[];
-  static const PRInt32 kVerticalAlignKTable[];
-  static const PRInt32 kVisibilityKTable[];
-  static const PRInt32 kVolumeKTable[];
-  static const PRInt32 kWhitespaceKTable[];
-  static const PRInt32 kWidthKTable[]; // also min-width, max-width
-  static const PRInt32 kWindowShadowKTable[];
-  static const PRInt32 kWordBreakKTable[];
-  static const PRInt32 kWordWrapKTable[];
-  static const PRInt32 kHyphensKTable[];
+  static const int32_t kFloatKTable[];
+  static const int32_t kFloatEdgeKTable[];
+  static const int32_t kFontKTable[];
+  static const int32_t kFontSizeKTable[];
+  static const int32_t kFontStretchKTable[];
+  static const int32_t kFontStyleKTable[];
+  static const int32_t kFontVariantKTable[];
+  static const int32_t kFontWeightKTable[];
+  static const int32_t kIMEModeKTable[];
+  static const int32_t kLineHeightKTable[];
+  static const int32_t kListStylePositionKTable[];
+  static const int32_t kListStyleKTable[];
+  static const int32_t kOrientKTable[];
+  static const int32_t kOutlineStyleKTable[];
+  static const int32_t kOutlineColorKTable[];
+  static const int32_t kOverflowKTable[];
+  static const int32_t kOverflowSubKTable[];
+  static const int32_t kPageBreakKTable[];
+  static const int32_t kPageBreakInsideKTable[];
+  static const int32_t kPageMarksKTable[];
+  static const int32_t kPageSizeKTable[];
+  static const int32_t kPitchKTable[];
+  static const int32_t kPointerEventsKTable[];
+  static const int32_t kPositionKTable[];
+  static const int32_t kRadialGradientShapeKTable[];
+  static const int32_t kRadialGradientSizeKTable[];
+  static const int32_t kRadialGradientLegacySizeKTable[];
+  static const int32_t kResizeKTable[];
+  static const int32_t kSpeakKTable[];
+  static const int32_t kSpeakHeaderKTable[];
+  static const int32_t kSpeakNumeralKTable[];
+  static const int32_t kSpeakPunctuationKTable[];
+  static const int32_t kSpeechRateKTable[];
+  static const int32_t kStackSizingKTable[];
+  static const int32_t kTableLayoutKTable[];
+  static const int32_t kTextAlignKTable[];
+  static const int32_t kTextAlignLastKTable[];
+  static const int32_t kTextBlinkKTable[];
+  static const int32_t kTextDecorationLineKTable[];
+  static const int32_t kTextDecorationStyleKTable[];
+  static const int32_t kTextOverflowKTable[];
+  static const int32_t kTextTransformKTable[];
+  static const int32_t kTransitionTimingFunctionKTable[];
+  static const int32_t kUnicodeBidiKTable[];
+  static const int32_t kUserFocusKTable[];
+  static const int32_t kUserInputKTable[];
+  static const int32_t kUserModifyKTable[];
+  static const int32_t kUserSelectKTable[];
+  static const int32_t kVerticalAlignKTable[];
+  static const int32_t kVisibilityKTable[];
+  static const int32_t kVolumeKTable[];
+  static const int32_t kWhitespaceKTable[];
+  static const int32_t kWidthKTable[]; // also min-width, max-width
+  static const int32_t kWindowShadowKTable[];
+  static const int32_t kWordBreakKTable[];
+  static const int32_t kWordWrapKTable[];
+  static const int32_t kHyphensKTable[];
 };
 
 #endif /* nsCSSProps_h___ */

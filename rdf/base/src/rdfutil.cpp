@@ -43,7 +43,7 @@ rdf_MakeRelativeRef(const nsCSubstring& aBaseURI, nsCString& aURI)
     // This implementation is extremely simple: e.g., it can't compute
     // relative paths, or anything fancy like that. If the context URI
     // is not a prefix of the URI in question, we'll just bail.
-    PRUint32 prefixLen = aBaseURI.Length();
+    uint32_t prefixLen = aBaseURI.Length();
     if (prefixLen != 0 && StringBeginsWith(aURI, aBaseURI)) {
         if (prefixLen < aURI.Length() && aURI.CharAt(prefixLen) == '/')
             ++prefixLen; // chop the leading slash so it's not `absolute'
@@ -69,8 +69,8 @@ rdf_FormatDate(PRTime aTime, nsACString &aResult)
 
     // usecs
     aResult.Append(" +");
-    PRInt32 usec = t.tm_usec;
-    for (PRInt32 digit = 100000; digit > 1; digit /= 10) {
+    int32_t usec = t.tm_usec;
+    for (int32_t digit = 100000; digit > 1; digit /= 10) {
         aResult.Append(char('0' + (usec / digit)));
         usec %= digit;
     }
@@ -83,7 +83,7 @@ rdf_ParseDate(const nsACString &aTime)
     PRTime t;
     PR_ParseTimeString(PromiseFlatCString(aTime).get(), true, &t);
 
-    PRInt32 usec = 0;
+    int32_t usec = 0;
 
     nsACString::const_iterator begin, digit, end;
     aTime.BeginReading(begin);

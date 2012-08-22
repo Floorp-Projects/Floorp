@@ -82,14 +82,14 @@ nsXFormsTriggerAccessible::Value(nsString& aValue)
   aValue.Truncate();
 }
 
-PRUint8
+uint8_t
 nsXFormsTriggerAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-nsXFormsTriggerAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsTriggerAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("press");
@@ -99,7 +99,7 @@ nsXFormsTriggerAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsXFormsTriggerAccessible::DoAction(PRUint8 aIndex)
+nsXFormsTriggerAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -130,14 +130,14 @@ nsXFormsInputAccessible::NativeRole()
   return roles::ENTRY;
 }
 
-PRUint8
+uint8_t
 nsXFormsInputAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-nsXFormsInputAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsInputAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -147,7 +147,7 @@ nsXFormsInputAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsXFormsInputAccessible::DoAction(PRUint8 aIndex)
+nsXFormsInputAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -173,10 +173,10 @@ nsXFormsInputBooleanAccessible::NativeRole()
   return roles::CHECKBUTTON;
 }
 
-PRUint64
+uint64_t
 nsXFormsInputBooleanAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsAccessible::NativeState();
+  uint64_t state = nsXFormsAccessible::NativeState();
 
   nsAutoString value;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
@@ -189,14 +189,14 @@ nsXFormsInputBooleanAccessible::NativeState()
   return state;
 }
 
-PRUint8
+uint8_t
 nsXFormsInputBooleanAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-nsXFormsInputBooleanAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsInputBooleanAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -215,7 +215,7 @@ nsXFormsInputBooleanAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsXFormsInputBooleanAccessible::DoAction(PRUint8 aIndex)
+nsXFormsInputBooleanAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -258,7 +258,7 @@ nsXFormsSecretAccessible::NativeRole()
   return roles::PASSWORD_TEXT;
 }
 
-PRUint64
+uint64_t
 nsXFormsSecretAccessible::NativeState()
 {
   return nsXFormsInputAccessible::NativeState() | states::PROTECTED;
@@ -287,12 +287,12 @@ nsXFormsRangeAccessible::NativeRole()
   return roles::SLIDER;
 }
 
-PRUint64
+uint64_t
 nsXFormsRangeAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsAccessible::NativeState();
+  uint64_t state = nsXFormsAccessible::NativeState();
 
-  PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
+  uint32_t isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsInRange(DOMNode, &isInRange);
   NS_ENSURE_SUCCESS(rv, state);
@@ -374,12 +374,12 @@ nsXFormsSelectAccessible::
 {
 }
 
-PRUint64
+uint64_t
 nsXFormsSelectAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsContainerAccessible::NativeState();
+  uint64_t state = nsXFormsContainerAccessible::NativeState();
 
-  PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
+  uint32_t isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsInRange(DOMNode, &isInRange);
   NS_ENSURE_SUCCESS(rv, state);
@@ -459,10 +459,10 @@ nsXFormsItemCheckgroupAccessible::NativeRole()
   return roles::CHECKBUTTON;
 }
 
-PRUint64
+uint64_t
 nsXFormsItemCheckgroupAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
+  uint64_t state = nsXFormsSelectableItemAccessible::NativeState();
 
   if (IsSelected())
     state |= states::CHECKED;
@@ -471,7 +471,7 @@ nsXFormsItemCheckgroupAccessible::NativeState()
 }
 
 NS_IMETHODIMP
-nsXFormsItemCheckgroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsItemCheckgroupAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -501,10 +501,10 @@ nsXFormsItemRadiogroupAccessible::NativeRole()
   return roles::RADIOBUTTON;
 }
 
-PRUint64
+uint64_t
 nsXFormsItemRadiogroupAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
+  uint64_t state = nsXFormsSelectableItemAccessible::NativeState();
 
   if (IsSelected())
     state |= states::CHECKED;
@@ -513,7 +513,7 @@ nsXFormsItemRadiogroupAccessible::NativeState()
 }
 
 NS_IMETHODIMP
-nsXFormsItemRadiogroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsItemRadiogroupAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -539,10 +539,10 @@ nsXFormsSelectComboboxAccessible::NativeRole()
   return roles::COMBOBOX;
 }
 
-PRUint64
+uint64_t
 nsXFormsSelectComboboxAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsSelectableAccessible::NativeState();
+  uint64_t state = nsXFormsSelectableAccessible::NativeState();
 
   bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
@@ -557,7 +557,7 @@ nsXFormsSelectComboboxAccessible::NativeState()
   return state | states::HASPOPUP;
 }
 
-PRUint64
+uint64_t
 nsXFormsSelectComboboxAccessible::NativeInteractiveState() const
 {
   return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;
@@ -586,17 +586,17 @@ nsXFormsItemComboboxAccessible::NativeRole()
   return roles::LISTITEM;
 }
 
-PRUint64
+uint64_t
 nsXFormsItemComboboxAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
+  uint64_t state = nsXFormsSelectableItemAccessible::NativeState();
   if (IsSelected())
     state |= states::SELECTED;
 
   return state;
 }
 
-PRUint64
+uint64_t
 nsXFormsItemComboboxAccessible::NativeInteractiveState() const
 {
   return NativelyUnavailable() ?
@@ -604,7 +604,7 @@ nsXFormsItemComboboxAccessible::NativeInteractiveState() const
 }
 
 NS_IMETHODIMP
-nsXFormsItemComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+nsXFormsItemComboboxAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
