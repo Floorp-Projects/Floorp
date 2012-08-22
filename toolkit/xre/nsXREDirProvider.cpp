@@ -419,7 +419,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     bool isWritable;
     if (NS_SUCCEEDED(file->Exists(&fileToEnsureExists)) && fileToEnsureExists
         && NS_SUCCEEDED(file->IsWritable(&isWritable)) && !isWritable) {
-      PRUint32 permissions;
+      uint32_t permissions;
       if (NS_SUCCEEDED(file->GetPermissions(&permissions))) {
         rv = file->SetPermissions(permissions | 0600);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to ensure file permissions");
@@ -462,7 +462,7 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
   nsCOMPtr<nsIFile> appended;
   bool exists;
 
-  for (PRInt32 i = 0; i < aSourceDirs.Count(); ++i) {
+  for (int32_t i = 0; i < aSourceDirs.Count(); ++i) {
     aSourceDirs[i]->Clone(getter_AddRefs(appended));
     if (!appended)
       continue;
@@ -523,7 +523,7 @@ LoadExtensionDirectories(nsINIParser &parser,
                          NSLocationType aType)
 {
   nsresult rv;
-  PRInt32 i = 0;
+  int32_t i = 0;
   do {
     nsCAutoString buf("Extension");
     buf.AppendInt(i++);
@@ -622,7 +622,7 @@ DumpFileArray(const char *key,
   fprintf(stderr, "nsXREDirProvider::GetFilesInternal(%s)\n", key);
 
   nsCAutoString path;
-  for (PRInt32 i = 0; i < dirs.Count(); ++i) {
+  for (int32_t i = 0; i < dirs.Count(); ++i) {
     dirs[i]->GetNativePath(path);
     fprintf(stderr, "  %s\n", path.get());
   }
@@ -869,7 +869,7 @@ static nsresult
 GetShellFolderPath(int folder, nsAString& _retval)
 {
   PRUnichar* buf;
-  PRUint32 bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
+  uint32_t bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
   NS_ENSURE_TRUE(bufLength >= (MAXPATHLEN + 3), NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = NS_OK;
@@ -958,7 +958,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   nsString longPath;
   PRUnichar* buf;
 
-  PRUint32 bufLength = longPath.GetMutableData(&buf, MAXPATHLEN);
+  uint32_t bufLength = longPath.GetMutableData(&buf, MAXPATHLEN);
   NS_ENSURE_TRUE(bufLength >= MAXPATHLEN, NS_ERROR_OUT_OF_MEMORY);
 
   DWORD len = GetLongPathNameW(appPath.get(), buf, bufLength);
@@ -977,7 +977,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   programFiles.AppendLiteral("\\");
-  PRUint32 programFilesLen = programFiles.Length();
+  uint32_t programFilesLen = programFiles.Length();
 
   if (longPath.Length() < programFilesLen)
     return NS_ERROR_FAILURE;

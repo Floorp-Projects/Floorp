@@ -83,7 +83,7 @@ private:
     ULONG mRefCnt; // Object reference count
     ULONG mCurrentIdx; // Current element
 
-    void SetIndex(PRUint32 aIdx);
+    void SetIndex(uint32_t aIdx);
 };
 
 

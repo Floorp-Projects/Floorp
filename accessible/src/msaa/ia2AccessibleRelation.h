@@ -20,7 +20,7 @@ namespace a11y {
 class ia2AccessibleRelation : public IAccessibleRelation
 {
 public:
-  ia2AccessibleRelation(PRUint32 aType, Relation* aRel);
+  ia2AccessibleRelation(uint32_t aType, Relation* aRel);
   virtual ~ia2AccessibleRelation() { }
 
   // IUnknown
@@ -55,7 +55,7 @@ private:
   ia2AccessibleRelation(const ia2AccessibleRelation&);
   ia2AccessibleRelation& operator = (const ia2AccessibleRelation&);
 
-  PRUint32 mType;
+  uint32_t mType;
   nsTArray<nsRefPtr<Accessible> > mTargets;
   ULONG mReferences;
 };

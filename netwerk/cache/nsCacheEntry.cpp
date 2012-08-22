@@ -298,7 +298,7 @@ nsCacheEntryInfo::GetKey(nsACString &key)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetFetchCount(PRInt32 * fetchCount)
+nsCacheEntryInfo::GetFetchCount(int32_t * fetchCount)
 {
     NS_ENSURE_ARG_POINTER(fetchCount);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -309,7 +309,7 @@ nsCacheEntryInfo::GetFetchCount(PRInt32 * fetchCount)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetLastFetched(PRUint32 * lastFetched)
+nsCacheEntryInfo::GetLastFetched(uint32_t * lastFetched)
 {
     NS_ENSURE_ARG_POINTER(lastFetched);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -320,7 +320,7 @@ nsCacheEntryInfo::GetLastFetched(PRUint32 * lastFetched)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetLastModified(PRUint32 * lastModified)
+nsCacheEntryInfo::GetLastModified(uint32_t * lastModified)
 {
     NS_ENSURE_ARG_POINTER(lastModified);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -331,7 +331,7 @@ nsCacheEntryInfo::GetLastModified(PRUint32 * lastModified)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetExpirationTime(PRUint32 * expirationTime)
+nsCacheEntryInfo::GetExpirationTime(uint32_t * expirationTime)
 {
     NS_ENSURE_ARG_POINTER(expirationTime);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -342,7 +342,7 @@ nsCacheEntryInfo::GetExpirationTime(PRUint32 * expirationTime)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetDataSize(PRUint32 * dataSize)
+nsCacheEntryInfo::GetDataSize(uint32_t * dataSize)
 {
     NS_ENSURE_ARG_POINTER(dataSize);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;

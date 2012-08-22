@@ -226,10 +226,10 @@ MouseScrollHandler::ProcessMessage(nsWindow* aWindow, UINT msg,
 nsresult
 MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindow* aWindow,
                                                      const nsIntPoint& aPoint,
-                                                     PRUint32 aNativeMessage,
-                                                     PRInt32 aDelta,
-                                                     PRUint32 aModifierFlags,
-                                                     PRUint32 aAdditionalFlags)
+                                                     uint32_t aNativeMessage,
+                                                     int32_t aDelta,
+                                                     uint32_t aModifierFlags,
+                                                     uint32_t aAdditionalFlags)
 {
   bool useFocusedWindow =
     !(aAdditionalFlags & nsIDOMWindowUtils::MOUSESCROLL_PREFER_WIDGET_AT_POINT);
@@ -277,9 +277,9 @@ MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindow* aWindow,
   nsAutoTArray<KeyPair,10> keySequence;
   nsWindow::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
 
-  for (PRUint32 i = 0; i < keySequence.Length(); ++i) {
-    PRUint8 key = keySequence[i].mGeneral;
-    PRUint8 keySpecific = keySequence[i].mSpecific;
+  for (uint32_t i = 0; i < keySequence.Length(); ++i) {
+    uint8_t key = keySequence[i].mGeneral;
+    uint8_t keySpecific = keySequence[i].mSpecific;
     kbdState[key] = 0x81; // key is down and toggled on if appropriate
     if (keySpecific) {
       kbdState[keySpecific] = 0x81;
@@ -651,7 +651,7 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindow* aWindow,
   WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, aWindow);
   double& delta =
    (aMessage == MOZ_WM_VSCROLL) ? wheelEvent.deltaY : wheelEvent.deltaX;
-  PRInt32& lineOrPageDelta =
+  int32_t& lineOrPageDelta =
    (aMessage == MOZ_WM_VSCROLL) ? wheelEvent.lineOrPageDeltaY :
                                   wheelEvent.lineOrPageDeltaX;
 
@@ -736,7 +736,7 @@ MouseScrollHandler::EventInfo::CanDispatchWheelEvent() const
   return (mDelta != 0);
 }
 
-PRInt32
+int32_t
 MouseScrollHandler::EventInfo::GetScrollAmount() const
 {
   if (mIsPage) {
@@ -756,7 +756,7 @@ bool
 MouseScrollHandler::LastEventInfo::CanContinueTransaction(
                                      const EventInfo& aNewEvent)
 {
-  PRInt32 timeout = MouseScrollHandler::sInstance->
+  int32_t timeout = MouseScrollHandler::sInstance->
                       mUserPrefs.GetMouseScrollTransactionTimeout();
   return !mWnd ||
            (mWnd == aNewEvent.GetWindowHandle() &&
@@ -793,10 +793,10 @@ MouseScrollHandler::LastEventInfo::RecordEvent(const EventInfo& aEvent)
 }
 
 /* static */
-PRInt32
+int32_t
 MouseScrollHandler::LastEventInfo::RoundDelta(double aDelta)
 {
-  return (aDelta >= 0) ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
+  return (aDelta >= 0) ? (int32_t)floor(aDelta) : (int32_t)ceil(aDelta);
 }
 
 bool
@@ -817,13 +817,13 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
   // Our positive delta value means to bottom or right.
   // But positive native delta value means to top or right.
   // Use orienter for computing our delta value with native delta value.
-  PRInt32 orienter = mIsVertical ? -1 : 1;
+  int32_t orienter = mIsVertical ? -1 : 1;
 
   aWheelEvent.deltaMode = mIsPage ? nsIDOMWheelEvent::DOM_DELTA_PAGE :
                                     nsIDOMWheelEvent::DOM_DELTA_LINE;
 
   double& delta = mIsVertical ? aWheelEvent.deltaY : aWheelEvent.deltaX;
-  PRInt32& lineOrPageDelta = mIsVertical ? aWheelEvent.lineOrPageDeltaY :
+  int32_t& lineOrPageDelta = mIsVertical ? aWheelEvent.lineOrPageDeltaY :
                                            aWheelEvent.lineOrPageDeltaX;
 
   double nativeDeltaPerUnit =
@@ -1034,7 +1034,7 @@ MouseScrollHandler::Device::GetWorkaroundPref(const char* aPrefName,
     return aValueIfAutomatic;
   }
 
-  PRInt32 lHackValue = 0;
+  int32_t lHackValue = 0;
   if (NS_FAILED(Preferences::GetInt(aPrefName, &lHackValue))) {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::Device::GetWorkaroundPref(): Preferences::GetInt() failed,"
@@ -1084,7 +1084,7 @@ MouseScrollHandler::Device::Init()
 void
 MouseScrollHandler::Device::Elantech::Init()
 {
-  PRInt32 version = GetDriverMajorVersion();
+  int32_t version = GetDriverMajorVersion();
   bool needsHack =
     Device::GetWorkaroundPref("ui.elantech_gesture_hacks.enabled",
                               version != 0);
@@ -1098,7 +1098,7 @@ MouseScrollHandler::Device::Elantech::Init()
 }
 
 /* static */
-PRInt32
+int32_t
 MouseScrollHandler::Device::Elantech::GetDriverMajorVersion()
 {
   PRUnichar buf[40];

@@ -50,32 +50,32 @@ public:
   NS_DECL_NSIIDBVERSIONCHANGEEVENT
 
   inline static already_AddRefed<nsDOMEvent>
-  Create(PRInt64 aOldVersion,
-         PRInt64 aNewVersion)
+  Create(int64_t aOldVersion,
+         int64_t aNewVersion)
   {
     return CreateInternal(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR),
                           aOldVersion, aNewVersion);
   }
 
   inline static already_AddRefed<nsDOMEvent>
-  CreateBlocked(PRUint64 aOldVersion,
-                PRUint64 aNewVersion)
+  CreateBlocked(uint64_t aOldVersion,
+                uint64_t aNewVersion)
   {
     return CreateInternal(NS_LITERAL_STRING(BLOCKED_EVT_STR),
                           aOldVersion, aNewVersion);
   }
 
   inline static already_AddRefed<nsDOMEvent>
-  CreateUpgradeNeeded(PRUint64 aOldVersion,
-                      PRUint64 aNewVersion)
+  CreateUpgradeNeeded(uint64_t aOldVersion,
+                      uint64_t aNewVersion)
   {
     return CreateInternal(NS_LITERAL_STRING(UPGRADENEEDED_EVT_STR),
                           aOldVersion, aNewVersion);
   }
 
   inline static already_AddRefed<nsIRunnable>
-  CreateRunnable(PRUint64 aOldVersion,
-                 PRUint64 aNewVersion,
+  CreateRunnable(uint64_t aOldVersion,
+                 uint64_t aNewVersion,
                  nsIDOMEventTarget* aTarget)
   {
     return CreateRunnableInternal(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR),
@@ -83,8 +83,8 @@ public:
   }
 
   static already_AddRefed<nsIRunnable>
-  CreateBlockedRunnable(PRUint64 aOldVersion,
-                        PRUint64 aNewVersion,
+  CreateBlockedRunnable(uint64_t aOldVersion,
+                        uint64_t aNewVersion,
                         nsIDOMEventTarget* aTarget)
   {
     return CreateRunnableInternal(NS_LITERAL_STRING(BLOCKED_EVT_STR),
@@ -97,17 +97,17 @@ protected:
 
   static already_AddRefed<nsDOMEvent>
   CreateInternal(const nsAString& aType,
-                 PRUint64 aOldVersion,
-                 PRUint64 aNewVersion);
+                 uint64_t aOldVersion,
+                 uint64_t aNewVersion);
 
   static already_AddRefed<nsIRunnable>
   CreateRunnableInternal(const nsAString& aType,
-                         PRUint64 aOldVersion,
-                         PRUint64 aNewVersion,
+                         uint64_t aOldVersion,
+                         uint64_t aNewVersion,
                          nsIDOMEventTarget* aTarget);
 
-  PRUint64 mOldVersion;
-  PRUint64 mNewVersion;
+  uint64_t mOldVersion;
+  uint64_t mNewVersion;
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -32,7 +32,7 @@
 #include "nsObserverService.h"
 
 static bool sInited = 0;
-PRUint32 nsCCUncollectableMarker::sGeneration = 0;
+uint32_t nsCCUncollectableMarker::sGeneration = 0;
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
@@ -99,18 +99,18 @@ MarkMessageManagers()
   }
 
   globalMM->MarkForCC();
-  PRUint32 childCount = 0;
+  uint32_t childCount = 0;
   globalMM->GetChildCount(&childCount);
-  for (PRUint32 i = 0; i < childCount; ++i) {
+  for (uint32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsITreeItemFrameMessageManager> windowMM;
     globalMM->GetChildAt(i, getter_AddRefs(windowMM));
     if (!windowMM) {
       continue;
     }
     windowMM->MarkForCC();
-    PRUint32 tabChildCount = 0;
+    uint32_t tabChildCount = 0;
     windowMM->GetChildCount(&tabChildCount);
-    for (PRUint32 j = 0; j < tabChildCount; ++j) {
+    for (uint32_t j = 0; j < tabChildCount; ++j) {
       nsCOMPtr<nsITreeItemFrameMessageManager> tabMM;
       windowMM->GetChildAt(j, getter_AddRefs(tabMM));
       if (!tabMM) {
@@ -189,14 +189,14 @@ MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS, bool aPrepareForCC)
   MarkContentViewer(cview, aCleanupJS, aPrepareForCC);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
-  PRInt32 i = 0;
+  int32_t i = 0;
   while (NS_SUCCEEDED(aSHEntry->ChildShellAt(i++, getter_AddRefs(child))) &&
          child) {
     MarkDocShell(child, aCleanupJS, aPrepareForCC);
   }
 
   nsCOMPtr<nsISHContainer> shCont = do_QueryInterface(aSHEntry);
-  PRInt32 count;
+  int32_t count;
   shCont->GetChildCount(&count);
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> childEntry;
@@ -222,7 +222,7 @@ MarkDocShell(nsIDocShellTreeNode* aNode, bool aCleanupJS, bool aPrepareForCC)
   nsCOMPtr<nsISHistory> history;
   webNav->GetSessionHistory(getter_AddRefs(history));
   if (history) {
-    PRInt32 i, historyCount;
+    int32_t i, historyCount;
     history->GetCount(&historyCount);
     for (i = 0; i < historyCount; ++i) {
       nsCOMPtr<nsIHistoryEntry> historyEntry;
@@ -233,7 +233,7 @@ MarkDocShell(nsIDocShellTreeNode* aNode, bool aCleanupJS, bool aPrepareForCC)
     }
   }
 
-  PRInt32 i, childCount;
+  int32_t i, childCount;
   aNode->GetChildCount(&childCount);
   for (i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> child;
@@ -361,7 +361,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 static PLDHashOperator
-TraceActiveWindowGlobal(const PRUint64& aId, nsGlobalWindow*& aWindow, void* aClosure)
+TraceActiveWindowGlobal(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aClosure)
 {
   if (aWindow->GetDocShell() && aWindow->IsOuterWindow()) {
     if (JSObject* global = aWindow->FastGetGlobalJSObject()) {

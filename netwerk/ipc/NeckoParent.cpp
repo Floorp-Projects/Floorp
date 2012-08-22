@@ -110,7 +110,7 @@ NeckoParent::DeallocPWebSocket(PWebSocketParent* actor)
 
 bool
 NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
-                                 const PRUint16& flags)
+                                 const uint16_t& flags)
 {
   nsHTMLDNSPrefetch::Prefetch(hostname, flags);
   return true;
@@ -118,7 +118,7 @@ NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
 
 bool
 NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
-                                 const PRUint16& flags,
+                                 const uint16_t& flags,
                                  const nsresult& reason)
 {
   nsHTMLDNSPrefetch::CancelPrefetch(hostname, flags, reason);

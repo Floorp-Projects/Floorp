@@ -197,7 +197,7 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
  *  FindActiveEntry :  to find active colliding entry so we can doom it
  */
 nsDiskCacheBinding *
-nsDiskCacheBindery::FindActiveBinding(PRUint32  hashNumber)
+nsDiskCacheBindery::FindActiveBinding(uint32_t  hashNumber)
 {
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     // find hash entry for key
@@ -330,7 +330,7 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
 PLDHashOperator
 ActiveBinding(PLDHashTable *    table,
               PLDHashEntryHdr * hdr,
-              PRUint32          number,
+              uint32_t          number,
               void *            arg)
 {
     nsDiskCacheBinding * binding = ((HashTableEntry *)hdr)->mBinding;

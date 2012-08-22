@@ -16,9 +16,9 @@ public:
 
 protected:
     void SetInt32Property(const nsAString &aPropertyName,
-                          const PRInt32 aValue);
+                          const int32_t aValue);
     void SetUint64Property(const nsAString &aPropertyName,
-                           const PRUint64 aValue);
+                           const uint64_t aValue);
 
 private:
     ~nsSystemInfo();

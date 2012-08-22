@@ -21,28 +21,28 @@ using namespace mozilla::a11y::aria;
 struct EnumTypeData
 {
   EnumTypeData(nsIAtom* aAttrName,
-               nsIAtom** aValue1, PRUint64 aState1,
-               nsIAtom** aValue2, PRUint64 aState2,
-               nsIAtom** aValue3 = 0, PRUint64 aState3 = 0) :
+               nsIAtom** aValue1, uint64_t aState1,
+               nsIAtom** aValue2, uint64_t aState2,
+               nsIAtom** aValue3 = 0, uint64_t aState3 = 0) :
     mState1(aState1), mState2(aState2), mState3(aState3), mDefaultState(0),
     mAttrName(aAttrName), mValue1(aValue1), mValue2(aValue2), mValue3(aValue3),
     mNullValue(nullptr)
   { }
 
-  EnumTypeData(nsIAtom* aAttrName, PRUint64 aDefaultState,
-               nsIAtom** aValue1, PRUint64 aState1) :
+  EnumTypeData(nsIAtom* aAttrName, uint64_t aDefaultState,
+               nsIAtom** aValue1, uint64_t aState1) :
     mState1(aState1), mState2(0), mState3(0), mDefaultState(aDefaultState),
     mAttrName(aAttrName), mValue1(aValue1), mValue2(nullptr), mValue3(nullptr),
     mNullValue(nullptr)
   { }
 
   // States applied if corresponding enum values are matched.
-  const PRUint64 mState1;
-  const PRUint64 mState2;
-  const PRUint64 mState3;
+  const uint64_t mState1;
+  const uint64_t mState2;
+  const uint64_t mState3;
 
   // Default state if no one enum value is matched.
-  const PRUint64 mDefaultState;
+  const uint64_t mDefaultState;
 
   // ARIA attribute name.
   nsIAtom* const mAttrName;
@@ -68,10 +68,10 @@ enum ETokenType
  */
 struct TokenTypeData
 {
-  TokenTypeData(nsIAtom* aAttrName, PRUint32 aType,
-                PRUint64 aPermanentState,
-                PRUint64 aTrueState,
-                PRUint64 aFalseState = 0) :
+  TokenTypeData(nsIAtom* aAttrName, uint32_t aType,
+                uint64_t aPermanentState,
+                uint64_t aTrueState,
+                uint64_t aFalseState = 0) :
   mAttrName(aAttrName), mType(aType), mPermanentState(aPermanentState),
   mTrueState(aTrueState), mFalseState(aFalseState)
   { }
@@ -80,31 +80,31 @@ struct TokenTypeData
   nsIAtom* const mAttrName;
 
   // Type.
-  const PRUint32 mType;
+  const uint32_t mType;
 
   // State applied if the attribute is defined or mType doesn't have
   // eDefinedIfAbsent flag set.
-  const PRUint64 mPermanentState;
+  const uint64_t mPermanentState;
 
   // States applied if the attribute value is true/false.
-  const PRUint64 mTrueState;
-  const PRUint64 mFalseState;
+  const uint64_t mTrueState;
+  const uint64_t mFalseState;
 };
 
 /**
  * Map enum type attribute value to accessible state.
  */
-static void MapEnumType(dom::Element* aElement, PRUint64* aState,
+static void MapEnumType(dom::Element* aElement, uint64_t* aState,
                         const EnumTypeData& aData);
 
 /**
  * Map token type attribute value to states.
  */
-static void MapTokenType(dom::Element* aContent, PRUint64* aState,
+static void MapTokenType(dom::Element* aContent, uint64_t* aState,
                          const TokenTypeData& aData);
 
 bool
-aria::MapToState(EStateRule aRule, dom::Element* aElement, PRUint64* aState)
+aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
 {
   switch (aRule) {
     case eARIAAutoComplete:
@@ -315,7 +315,7 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, PRUint64* aState)
 }
 
 static void
-MapEnumType(dom::Element* aElement, PRUint64* aState, const EnumTypeData& aData)
+MapEnumType(dom::Element* aElement, uint64_t* aState, const EnumTypeData& aData)
 {
   switch (aElement->FindAttrValueIn(kNameSpaceID_None, aData.mAttrName,
                                     &aData.mValue1, eCaseMatters)) {
@@ -334,7 +334,7 @@ MapEnumType(dom::Element* aElement, PRUint64* aState, const EnumTypeData& aData)
 }
 
 static void
-MapTokenType(dom::Element* aElement, PRUint64* aState,
+MapTokenType(dom::Element* aElement, uint64_t* aState,
              const TokenTypeData& aData)
 {
   if (aElement->HasAttr(kNameSpaceID_None, aData.mAttrName)) {

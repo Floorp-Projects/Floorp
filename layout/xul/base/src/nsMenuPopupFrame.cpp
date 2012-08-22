@@ -53,7 +53,7 @@
 
 using namespace mozilla;
 
-PRInt8 nsMenuPopupFrame::sDefaultLevelIsTop = -1;
+int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
 // NS_NewMenuPopupFrame
 //
@@ -131,7 +131,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
 
   mPopupType = ePopupTypePanel;
   nsIDocument* doc = aContent->OwnerDoc();
-  PRInt32 namespaceID;
+  int32_t namespaceID;
   nsCOMPtr<nsIAtom> tag = doc->BindingManager()->ResolveTag(aContent, &namespaceID);
   if (namespaceID == kNameSpaceID_XUL) {
     if (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup)
@@ -148,7 +148,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
 
   nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
-  PRInt32 type = -1;
+  int32_t type = -1;
   if (dsti && NS_SUCCEEDED(dsti->GetItemType(&type)) &&
       type == nsIDocShellTreeItem::typeChrome)
     mInContentShell = false;
@@ -310,10 +310,10 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   return NS_OK;
 }
 
-PRUint8
+uint8_t
 nsMenuPopupFrame::GetShadowStyle()
 {
-  PRUint8 shadow = GetStyleUIReset()->mWindowShadow;
+  uint8_t shadow = GetStyleUIReset()->mWindowShadow;
   if (shadow != NS_STYLE_WINDOW_SHADOW_DEFAULT)
     return shadow;
 
@@ -536,7 +536,7 @@ void
 nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
                                   nsIContent* aTriggerContent,
                                   const nsAString& aPosition,
-                                  PRInt32 aXPos, PRInt32 aYPos,
+                                  int32_t aXPos, int32_t aYPos,
                                   bool aAttributesOverride)
 {
   EnsureWidget();
@@ -573,7 +573,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
     mFlipBoth = flip.EqualsLiteral("both");
 
     position.CompressWhitespace();
-    PRInt32 spaceIdx = position.FindChar(' ');
+    int32_t spaceIdx = position.FindChar(' ');
     // if there is a space in the position, assume it is the anchor and
     // alignment as two separate tokens.
     if (spaceIdx >= 0) {
@@ -639,12 +639,12 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
     nsresult err;
     if (!left.IsEmpty()) {
-      PRInt32 x = left.ToInteger(&err);
+      int32_t x = left.ToInteger(&err);
       if (NS_SUCCEEDED(err))
         mScreenXPos = x;
     }
     if (!top.IsEmpty()) {
-      PRInt32 y = top.ToInteger(&err);
+      int32_t y = top.ToInteger(&err);
       if (NS_SUCCEEDED(err))
         mScreenYPos = y;
     }
@@ -653,7 +653,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
 void
 nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
-                                          PRInt32 aXPos, PRInt32 aYPos,
+                                          int32_t aXPos, int32_t aYPos,
                                           bool aIsContextMenu)
 {
   EnsureWidget();
@@ -674,7 +674,7 @@ void
 nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
                                                  nsAString& aAnchor,
                                                  nsAString& aAlign,
-                                                 PRInt32 aXPos, PRInt32 aYPos)
+                                                 int32_t aXPos, int32_t aYPos)
 {
   EnsureWidget();
 
@@ -816,13 +816,13 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
 void
 nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
                                      nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     PRUint32 aFlags)
+                                     uint32_t aFlags)
 {
   InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 void
-nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
+nsMenuPopupFrame::GetLayoutFlags(uint32_t& aFlags)
 {
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;
 }
@@ -867,8 +867,8 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
                                                FlipStyle& aHFlip, FlipStyle& aVFlip)
 {
   // flip the anchor and alignment for right-to-left
-  PRInt8 popupAnchor(mPopupAnchor);
-  PRInt8 popupAlign(mPopupAlignment);
+  int8_t popupAnchor(mPopupAnchor);
+  int8_t popupAlign(mPopupAlignment);
   if (IsDirectionRTL()) {
     // no need to flip the centered anchor types
     if (popupAnchor < POPUPALIGNMENT_LEFTCENTER) {
@@ -1195,13 +1195,13 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove)
     // first convert the screen position in mScreenXPos and mScreenYPos from
     // CSS pixels into device pixels, ignoring any scaling as mScreenXPos and
     // mScreenYPos are unscaled screen coordinates.
-    PRInt32 factor = devContext->UnscaledAppUnitsPerDevPixel();
+    int32_t factor = devContext->UnscaledAppUnitsPerDevPixel();
 
     // context menus should be offset by two pixels so that they don't appear
     // directly where the cursor is. Otherwise, it is too easy to have the
     // context menu close up again.
     if (mAdjustOffsetForContextMenu) {
-      PRInt32 offsetForContextMenuDev =
+      int32_t offsetForContextMenuDev =
         nsPresContext::CSSPixelsToAppUnits(2) / factor;
       offsetForContextMenu = presContext->DevPixelsToAppUnits(offsetForContextMenuDev);
     }
@@ -1326,8 +1326,8 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
     // so we should use the same screen. Otherwise, use the screen where the
     // anchor is located.
     nsRect rect = mInContentShell ? aRootScreenRect : aAnchorRect;
-    PRInt32 width = rect.width > 0 ? presContext->AppUnitsToDevPixels(rect.width) : 1;
-    PRInt32 height = rect.height > 0 ? presContext->AppUnitsToDevPixels(rect.height) : 1;
+    int32_t width = rect.width > 0 ? presContext->AppUnitsToDevPixels(rect.width) : 1;
+    int32_t height = rect.height > 0 ? presContext->AppUnitsToDevPixels(rect.height) : 1;
     sm->ScreenForRect(presContext->AppUnitsToDevPixels(rect.x),
                       presContext->AppUnitsToDevPixels(rect.y),
                       width, height, getter_AddRefs(screen));
@@ -1354,9 +1354,9 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
   return screenRect;
 }
 
-void nsMenuPopupFrame::CanAdjustEdges(PRInt8 aHorizontalSide, PRInt8 aVerticalSide, nsIntPoint& aChange)
+void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide, int8_t aVerticalSide, nsIntPoint& aChange)
 {
-  PRInt8 popupAlign(mPopupAlignment);
+  int8_t popupAlign(mPopupAlignment);
   if (IsDirectionRTL()) {
     popupAlign = -popupAlign;
   }
@@ -1545,7 +1545,7 @@ nsMenuPopupFrame::Enter(nsGUIEvent* aEvent)
 nsMenuFrame*
 nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction)
 {
-  PRUint32 charCode, keyCode;
+  uint32_t charCode, keyCode;
   aKeyEvent->GetCharCode(&charCode);
   aKeyEvent->GetKeyCode(&keyCode);
 
@@ -1558,7 +1558,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   if (!immediateParent)
     immediateParent = this;
 
-  PRUint32 matchCount = 0, matchShortcutCount = 0;
+  uint32_t matchCount = 0, matchShortcutCount = 0;
   bool foundActive = false;
   bool isShortcut;
   nsMenuFrame* frameBefore = nullptr;
@@ -1602,7 +1602,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
 
   // See bug 188199 & 192346, if all letters in incremental string are same, just try to match the first one
   nsAutoString incrementalString(mIncrementalString);
-  PRUint32 charIndex = 1, stringLength = incrementalString.Length();
+  uint32_t charIndex = 1, stringLength = incrementalString.Length();
   while (charIndex < stringLength && incrementalString[charIndex] == incrementalString[charIndex - 1]) {
     charIndex++;
   }
@@ -1621,7 +1621,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
   currFrame = immediateParent->GetFirstPrincipalChild();
 
-  PRInt32 menuAccessKey = -1;
+  int32_t menuAccessKey = -1;
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
 
   // We start searching from first child. This process is divided into two parts
@@ -1761,9 +1761,9 @@ nsMenuPopupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 // helpers /////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   PRInt32 aModType)
+                                   int32_t aModType)
 
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
@@ -1801,8 +1801,8 @@ nsMenuPopupFrame::MoveToAttributePosition()
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
   nsresult err1, err2;
-  PRInt32 xpos = left.ToInteger(&err1);
-  PRInt32 ypos = top.ToInteger(&err2);
+  int32_t xpos = left.ToInteger(&err1);
+  int32_t ypos = top.ToInteger(&err2);
 
   if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2))
     MoveTo(xpos, ypos, false);
@@ -1833,7 +1833,7 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 
 void
-nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, bool aUpdateAttrs)
+nsMenuPopupFrame::MoveTo(int32_t aLeft, int32_t aTop, bool aUpdateAttrs)
 {
   nsIWidget* widget = GetWidget();
   if ((mScreenXPos == aLeft && mScreenYPos == aTop) &&
@@ -1878,7 +1878,7 @@ nsMenuPopupFrame::SetAutoPosition(bool aShouldAutoPosition)
 }
 
 void
-nsMenuPopupFrame::SetConsumeRollupEvent(PRUint32 aConsumeMode)
+nsMenuPopupFrame::SetConsumeRollupEvent(uint32_t aConsumeMode)
 {
   mConsumeRollupEvent = aConsumeMode;
 }
@@ -1900,7 +1900,7 @@ nsMenuPopupFrame::CreatePopupView()
   // Create a view
   nsIView* parentView = viewManager->GetRootView();
   nsViewVisibility visibility = nsViewVisibility_kHide;
-  PRInt32 zIndex = PR_INT32_MAX;
+  int32_t zIndex = PR_INT32_MAX;
   bool    autoZIndex = false;
 
   NS_ASSERTION(parentView, "no parent view");

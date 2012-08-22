@@ -625,7 +625,7 @@ $versionInfo
 
 __END
 
-print DATA_TABLES "static const PRUint32 sScriptCodeToTag[] = {\n";
+print DATA_TABLES "static const uint32_t sScriptCodeToTag[] = {\n";
 for (my $i = 0; $i < scalar @scriptCodeToTag; ++$i) {
   printf DATA_TABLES "  HB_TAG(%s)", $scriptCodeToTag[$i];
   print DATA_TABLES $i < $#scriptCodeToTag ? ",\n" : "\n";
@@ -634,7 +634,7 @@ print DATA_TABLES "};\n\n";
 
 our $totalData = 0;
 
-print DATA_TABLES "static const PRInt16 sMirrorOffsets[] = {\n";
+print DATA_TABLES "static const int16_t sMirrorOffsets[] = {\n";
 for (my $i = 0; $i < scalar @offsets; ++$i) {
     printf DATA_TABLES "  $offsets[$i]";
     print DATA_TABLES $i < $#offsets ? ",\n" : "\n";
@@ -674,22 +674,22 @@ sub sprintHanVariants
   }
   return sprintf("0x%02x,", $val);
 }
-&genTables("HanVariant", "", "PRUint8", 9, 7, \&sprintHanVariants, 2, 1, 4);
+&genTables("HanVariant", "", "uint8_t", 9, 7, \&sprintHanVariants, 2, 1, 4);
 
 sub sprintCasemap
 {
   my $usv = shift;
   return sprintf("0x%08x,", $casemap[$usv]);
 }
-&genTables("CaseMap", "", "PRUint32", 11, 5, \&sprintCasemap, 1, 4, 1);
+&genTables("CaseMap", "", "uint32_t", 11, 5, \&sprintCasemap, 1, 4, 1);
 
 print STDERR "Total data = $totalData\n";
 
-printf DATA_TABLES "const PRUint32 kTitleToUpper = 0x%08x;\n", $kTitleToUpper;
-printf DATA_TABLES "const PRUint32 kUpperToLower = 0x%08x;\n", $kUpperToLower;
-printf DATA_TABLES "const PRUint32 kLowerToTitle = 0x%08x;\n", $kLowerToTitle;
-printf DATA_TABLES "const PRUint32 kLowerToUpper = 0x%08x;\n", $kLowerToUpper;
-printf DATA_TABLES "const PRUint32 kCaseMapCharMask = 0x%08x;\n\n", $kCaseMapCharMask;
+printf DATA_TABLES "const uint32_t kTitleToUpper = 0x%08x;\n", $kTitleToUpper;
+printf DATA_TABLES "const uint32_t kUpperToLower = 0x%08x;\n", $kUpperToLower;
+printf DATA_TABLES "const uint32_t kLowerToTitle = 0x%08x;\n", $kLowerToTitle;
+printf DATA_TABLES "const uint32_t kLowerToUpper = 0x%08x;\n", $kLowerToUpper;
+printf DATA_TABLES "const uint32_t kCaseMapCharMask = 0x%08x;\n\n", $kCaseMapCharMask;
 
 sub genTables
 {
@@ -734,7 +734,7 @@ sub genTables
   }
 
   if ($maxPlane) {
-    print DATA_TABLES "static const PRUint8 s${prefix}Planes[$maxPlane] = {";
+    print DATA_TABLES "static const uint8_t s${prefix}Planes[$maxPlane] = {";
     print DATA_TABLES join(',', map { sprintf("%d", $_) } unpack('C*', $planeMap));
     print DATA_TABLES "};\n\n";
   }
@@ -742,7 +742,7 @@ sub genTables
   my $chCount = scalar @char;
   my $pmBits = $chCount > 255 ? 16 : 8;
   my $pmCount = scalar @pageMap;
-  print DATA_TABLES "static const PRUint${pmBits} s${prefix}Pages[$pmCount][$indexLen] = {\n";
+  print DATA_TABLES "static const uint${pmBits}_t s${prefix}Pages[$pmCount][$indexLen] = {\n";
   for (my $i = 0; $i < scalar @pageMap; ++$i) {
     print DATA_TABLES "  {";
     print DATA_TABLES join(',', map { sprintf("%d", $_) } unpack('S*', $pageMap[$i]));

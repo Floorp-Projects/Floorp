@@ -58,7 +58,7 @@ public:
 #endif
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eBidiInlineContainer | nsIFrame::eLineParticipant));
@@ -69,7 +69,7 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
-  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true);
   
   // nsIHTMLReflow overrides
@@ -80,7 +80,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,

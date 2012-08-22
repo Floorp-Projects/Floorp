@@ -75,31 +75,31 @@ public:
   // Get the offset in FlatText of the range. (also used by nsIMEStateManager)
   static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                            nsINode* aNode,
-                                           PRInt32 aNodeOffset,
-                                           PRUint32* aOffset);
+                                           int32_t aNodeOffset,
+                                           uint32_t* aOffset);
   static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                            nsRange* aRange,
-                                           PRUint32* aOffset);
+                                           uint32_t* aOffset);
 protected:
   // Make the DOM range from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
   nsresult SetRangeFromFlatTextOffset(nsRange* aRange,
-                                      PRUint32 aNativeOffset,
-                                      PRUint32 aNativeLength,
+                                      uint32_t aNativeOffset,
+                                      uint32_t aNativeLength,
                                       bool aExpandToClusterBoundaries);
   // Find the first textframe for the range, and get the start offset in
   // the frame.
   nsresult GetStartFrameAndOffset(nsRange* aRange,
                                   nsIFrame** aFrame,
-                                  PRInt32* aOffsetInFrame);
+                                  int32_t* aOffsetInFrame);
   // Convert the frame relative offset to the root view relative offset.
   nsresult ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
                                            nsRect& aRect);
   // Expand aXPOffset to the nearest offset in cluster boundary. aForward is
   // true, it is expanded to forward.
   nsresult ExpandToClusterBoundary(nsIContent* aContent, bool aForward,
-                                   PRUint32* aXPOffset);
+                                   uint32_t* aXPOffset);
 };
 
 #endif // nsContentEventHandler_h__

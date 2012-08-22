@@ -42,7 +42,7 @@ nsRepeatService::Shutdown()
 }
 
 void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
-                            PRUint32 aInitialDelay)
+                            uint32_t aInitialDelay)
 {
   NS_PRECONDITION(aCallback != nullptr, "null ptr");
 

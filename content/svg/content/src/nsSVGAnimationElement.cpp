@@ -129,7 +129,7 @@ nsSVGAnimationElement::GetTargetElementContent()
 }
 
 bool
-nsSVGAnimationElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
+nsSVGAnimationElement::GetTargetAttributeName(int32_t *aNamespaceID,
                                               nsIAtom **aLocalName) const
 {
   const nsAttrValue* nameAttr
@@ -154,7 +154,7 @@ nsSVGAnimationElement::GetTargetAttributeType() const
                                                nullptr};
   nsSMILTargetAttrType smilTypes[] = { eSMILTargetAttrType_CSS,
                                        eSMILTargetAttrType_XML };
-  PRInt32 index = FindAttrValueIn(kNameSpaceID_None,
+  int32_t index = FindAttrValueIn(kNameSpaceID_None,
                                   nsGkAtoms::attributeType,
                                   typeValues,
                                   eCaseMatters);
@@ -300,7 +300,7 @@ nsSVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 bool
-nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
+nsSVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
                                       nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
@@ -342,7 +342,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
 }
 
 nsresult
-nsSVGAnimationElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                     const nsAttrValue* aValue, bool aNotify)
 {
   nsresult rv =
@@ -366,7 +366,7 @@ nsSVGAnimationElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
+nsSVGAnimationElement::UnsetAttr(int32_t aNamespaceID,
                                  nsIAtom* aAttribute, bool aNotify)
 {
   nsresult rv = nsSVGAnimationElementBase::UnsetAttr(aNamespaceID, aAttribute,
@@ -384,7 +384,7 @@ nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
 }
 
 bool
-nsSVGAnimationElement::IsNodeOfType(PRUint32 aFlags) const
+nsSVGAnimationElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eANIMATION));
 }

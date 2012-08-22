@@ -74,7 +74,7 @@ interface nsIFocusManager : nsISupports
    * of retrieving the method that was used to focus the currently focused
    * element.
    */
-  PRUint32 getLastFocusMethod(in nsIDOMWindow window);
+  uint32_t getLastFocusMethod(in nsIDOMWindow window);
 
   /**
    * Changes the focused element reference within the window containing

@@ -15,7 +15,7 @@
 typedef NS_STDCALL_FUNCPROTO(nsresult, CanvasStyleSetterType, nsIDOMCanvasRenderingContext2D,
                              SetStrokeStyle_multi, (const nsAString &, nsISupports *));
 typedef NS_STDCALL_FUNCPROTO(nsresult, CanvasStyleGetterType, nsIDOMCanvasRenderingContext2D,
-                             GetStrokeStyle_multi, (nsAString &, nsISupports **, PRInt32 *));
+                             GetStrokeStyle_multi, (nsAString &, nsISupports **, int32_t *));
 
 static JSBool
 Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleValue vp,
@@ -69,7 +69,7 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, JSMutableHandleVa
 
     nsString resultString;
     nsCOMPtr<nsISupports> resultInterface;
-    PRInt32 resultType;
+    int32_t resultType;
     rv = (self->*getfunc)(resultString, getter_AddRefs(resultInterface), &resultType);
     if (NS_FAILED(rv))
         return xpc_qsThrowGetterSetterFailed(cx, rv, JSVAL_TO_OBJECT(vp), id);
@@ -291,7 +291,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, unsigned argc, jsval 
 
     // make the call
     MOZ_ASSERT(JS_IsTypedArrayObject(tsrc, cx));
-    PRUint8* data = reinterpret_cast<PRUint8*>(JS_GetArrayBufferViewData(tsrc, cx));
+    uint8_t* data = reinterpret_cast<uint8_t*>(JS_GetArrayBufferViewData(tsrc, cx));
     uint32_t byteLength = JS_GetTypedArrayByteLength(tsrc, cx);
     rv = self->PutImageData_explicit(x, y, w, h, data, byteLength, hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
     if (NS_FAILED(rv))

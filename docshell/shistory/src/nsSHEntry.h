@@ -54,10 +54,10 @@ private:
   nsCOMPtr<nsIURI>         mReferrerURI;
   nsString                 mTitle;
   nsCOMPtr<nsIInputStream> mPostData;
-  PRUint32                 mLoadType;
-  PRUint32                 mID;
-  PRInt32                  mScrollPositionX;
-  PRInt32                  mScrollPositionY;
+  uint32_t                 mLoadType;
+  uint32_t                 mID;
+  int32_t                  mScrollPositionX;
+  int32_t                  mScrollPositionY;
   nsISHEntry*              mParent;
   nsCOMArray<nsISHEntry>   mChildren;
   bool                     mURIWasModified;

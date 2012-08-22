@@ -67,29 +67,29 @@ public:
   // nsIContentSink overrides
   NS_IMETHOD HandleStartElement(const PRUnichar *aName, 
                                 const PRUnichar **aAtts, 
-                                PRUint32 aAttsCount, 
-                                PRInt32 aIndex, 
-                                PRUint32 aLineNumber);
+                                uint32_t aAttsCount, 
+                                int32_t aIndex, 
+                                uint32_t aLineNumber);
 
   NS_IMETHOD HandleEndElement(const PRUnichar *aName);
   
   NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
-                                PRUint32 aLength);
+                                uint32_t aLength);
 
 protected:
     // nsXMLContentSink overrides
     virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
     bool OnOpenContainer(const PRUnichar **aAtts, 
-                           PRUint32 aAttsCount, 
-                           PRInt32 aNameSpaceID, 
+                           uint32_t aAttsCount, 
+                           int32_t aNameSpaceID, 
                            nsIAtom* aTagName,
-                           PRUint32 aLineNumber);
+                           uint32_t aLineNumber);
 
     bool NotifyForDocElement() { return false; }
 
-    nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                           nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+    nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+                           nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser);
     
@@ -98,19 +98,19 @@ protected:
 
 #ifdef MOZ_XUL    
     nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
-                                         PRUint32 aAttsCount, 
+                                         uint32_t aAttsCount, 
                                          nsXULPrototypeElement* aElement);
 #endif
 
     // Our own helpers for constructing XBL prototype objects.
-    nsresult ConstructBinding(PRUint32 aLineNumber);
-    void ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber);
+    nsresult ConstructBinding(uint32_t aLineNumber);
+    void ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber);
     void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
     void ConstructImplementation(const PRUnichar **aAtts);
     void ConstructProperty(const PRUnichar **aAtts);
     void ConstructMethod(const PRUnichar **aAtts);
     void ConstructParameter(const PRUnichar **aAtts);
-    void ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber);
+    void ConstructField(const PRUnichar **aAtts, uint32_t aLineNumber);
   
 
   // nsXMLContentSink overrides
@@ -123,7 +123,7 @@ protected:
                          bool *_retval);
 
 protected:
-  nsresult ReportUnexpectedElement(nsIAtom* aElementName, PRUint32 aLineNumber);
+  nsresult ReportUnexpectedElement(nsIAtom* aElementName, uint32_t aLineNumber);
 
   void AddMember(nsXBLProtoImplMember* aMember);
   void AddField(nsXBLProtoImplField* aField);

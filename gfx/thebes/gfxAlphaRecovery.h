@@ -28,7 +28,7 @@ public:
      * skipped because of misalignment.  Fast-paths may still be taken
      * even if GoodAlignmentLog2() is not met, in some conditions.
      */
-    static PRUint32 GoodAlignmentLog2() { return 4; /* for SSE2 */ }
+    static uint32_t GoodAlignmentLog2() { return 4; /* for SSE2 */ }
 
     /* Given two surfaces of equal size with the same rendering, one onto a
      * black background and the other onto white, recovers alpha values from
@@ -90,11 +90,11 @@ public:
      * gfxRecoverAlpha.cpp and gfxRecoverAlphaSSE2.cpp.
      */
 
-    static inline PRUint32
-    RecoverPixel(PRUint32 black, PRUint32 white)
+    static inline uint32_t
+    RecoverPixel(uint32_t black, uint32_t white)
     {
-        const PRUint32 GREEN_MASK = 0x0000FF00;
-        const PRUint32 ALPHA_MASK = 0xFF000000;
+        const uint32_t GREEN_MASK = 0x0000FF00;
+        const uint32_t ALPHA_MASK = 0xFF000000;
 
         /* |diff| here is larger when the source image pixel is more transparent.
            If both renderings are from the same source image composited with OVER,
@@ -104,12 +104,12 @@ public:
            If there is overflow, then behave as if we limit to the difference to
            >= 0, which will make the rendering opaque.  (Without this overflow
            will make the rendering transparent.) */
-        PRUint32 diff = (white & GREEN_MASK) - (black & GREEN_MASK);
+        uint32_t diff = (white & GREEN_MASK) - (black & GREEN_MASK);
         /* |diff| is 0xFFFFxx00 on overflow and 0x0000xx00 otherwise, so use this
             to limit the transparency. */
-        PRUint32 limit = diff & ALPHA_MASK;
+        uint32_t limit = diff & ALPHA_MASK;
         /* The alpha bits of the result */
-        PRUint32 alpha = (ALPHA_MASK - (diff << 16)) | limit;
+        uint32_t alpha = (ALPHA_MASK - (diff << 16)) | limit;
 
         return alpha | (black & ~ALPHA_MASK);
     }

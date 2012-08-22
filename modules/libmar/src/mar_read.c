@@ -19,8 +19,8 @@
 
 
 /* this is the same hash algorithm used by nsZipArchive.cpp */
-static PRUint32 mar_hash_name(const char *name) {
-  PRUint32 val = 0;
+static uint32_t mar_hash_name(const char *name) {
+  uint32_t val = 0;
   unsigned char* c;
 
   for (c = (unsigned char *) name; *c; ++c)
@@ -30,9 +30,9 @@ static PRUint32 mar_hash_name(const char *name) {
 }
 
 static int mar_insert_item(MarFile *mar, const char *name, int namelen,
-                           PRUint32 offset, PRUint32 length, PRUint32 flags) {
+                           uint32_t offset, uint32_t length, uint32_t flags) {
   MarItem *item, *root;
-  PRUint32 hash;
+  uint32_t hash;
   
   item = (MarItem *) malloc(sizeof(MarItem) + namelen);
   if (!item)
@@ -60,19 +60,19 @@ static int mar_insert_item(MarFile *mar, const char *name, int namelen,
 static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
   /*
    * Each item has the following structure:
-   *   PRUint32 offset      (network byte order)
-   *   PRUint32 length      (network byte order)
-   *   PRUint32 flags       (network byte order)
+   *   uint32_t offset      (network byte order)
+   *   uint32_t length      (network byte order)
+   *   uint32_t flags       (network byte order)
    *   char     name[N]     (where N >= 1)
    *   char     null_byte;
    */
-  PRUint32 offset;
-  PRUint32 length;
-  PRUint32 flags;
+  uint32_t offset;
+  uint32_t length;
+  uint32_t flags;
   const char *name;
   int namelen;
 
-  if ((buf_end - *buf) < (int)(3*sizeof(PRUint32) + 2))
+  if ((buf_end - *buf) < (int)(3*sizeof(uint32_t) + 2))
     return -1;
 
   memcpy(&offset, *buf, sizeof(offset));
@@ -106,7 +106,7 @@ static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
 
 static int mar_read_index(MarFile *mar) {
   char id[MAR_ID_SIZE], *buf, *bufptr, *bufend;
-  PRUint32 offset_to_index, size_of_index;
+  uint32_t offset_to_index, size_of_index;
 
   /* verify MAR ID */
   if (fread(id, MAR_ID_SIZE, 1, mar->fp) != 1)
@@ -114,13 +114,13 @@ static int mar_read_index(MarFile *mar) {
   if (memcmp(id, MAR_ID, MAR_ID_SIZE) != 0)
     return -1;
 
-  if (fread(&offset_to_index, sizeof(PRUint32), 1, mar->fp) != 1)
+  if (fread(&offset_to_index, sizeof(uint32_t), 1, mar->fp) != 1)
     return -1;
   offset_to_index = ntohl(offset_to_index);
 
   if (fseek(mar->fp, offset_to_index, SEEK_SET))
     return -1;
-  if (fread(&size_of_index, sizeof(PRUint32), 1, mar->fp) != 1)
+  if (fread(&size_of_index, sizeof(uint32_t), 1, mar->fp) != 1)
     return -1;
   size_of_index = ntohl(size_of_index);
 
@@ -229,7 +229,7 @@ int get_mar_file_info_fp(FILE *fp,
                          int *offsetAdditionalBlocks,
                          int *numAdditionalBlocks)
 {
-  PRUint32 offsetToIndex, offsetToContent, signatureCount, signatureLen, i;
+  uint32_t offsetToIndex, offsetToContent, signatureCount, signatureLen, i;
   
   /* One of hasSignatureBlock or hasAdditionalBlocks must be non NULL */
   if (!hasSignatureBlock && !hasAdditionalBlocks) {
@@ -250,7 +250,7 @@ int get_mar_file_info_fp(FILE *fp,
 
   if (numSignatures) {
      /* Skip past the MAR file size field */
-    if (fseek(fp, sizeof(PRUint64), SEEK_CUR)) {
+    if (fseek(fp, sizeof(uint64_t), SEEK_CUR)) {
       return -1;
     }
 
@@ -262,13 +262,13 @@ int get_mar_file_info_fp(FILE *fp,
   }
 
   /* Skip to the first index entry past the index size field 
-     We do it in 2 calls because offsetToIndex + sizeof(PRUint32) 
+     We do it in 2 calls because offsetToIndex + sizeof(uint32_t) 
      could oerflow in theory. */
   if (fseek(fp, offsetToIndex, SEEK_SET)) {
     return -1;
   }
 
-  if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
+  if (fseek(fp, sizeof(uint32_t), SEEK_CUR)) {
     return -1;
   }
 
@@ -280,7 +280,7 @@ int get_mar_file_info_fp(FILE *fp,
 
   /* Check if we have a new or old MAR file */
   if (hasSignatureBlock) {
-    if (offsetToContent == MAR_ID_SIZE + sizeof(PRUint32)) {
+    if (offsetToContent == MAR_ID_SIZE + sizeof(uint32_t)) {
       *hasSignatureBlock = 0;
     } else {
       *hasSignatureBlock = 1;
@@ -313,12 +313,12 @@ int get_mar_file_info_fp(FILE *fp,
   /* Skip past the whole signature block */
   for (i = 0; i < signatureCount; i++) {
     /* Skip past the signature algorithm ID */
-    if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
+    if (fseek(fp, sizeof(uint32_t), SEEK_CUR)) {
       return -1;
     }
 
     /* Read the signature length and skip past the signature */
-    if (fread(&signatureLen, sizeof(PRUint32), 1, fp) != 1) {
+    if (fread(&signatureLen, sizeof(uint32_t), 1, fp) != 1) {
       return -1;
     }
     signatureLen = ntohl(signatureLen);
@@ -334,7 +334,7 @@ int get_mar_file_info_fp(FILE *fp,
       /* We have an additional block, so read in the number of additional blocks
          and set the offset. */
       *hasAdditionalBlocks = 1;
-      if (fread(numAdditionalBlocks, sizeof(PRUint32), 1, fp) != 1) {
+      if (fread(numAdditionalBlocks, sizeof(uint32_t), 1, fp) != 1) {
         return -1;
       }
       *numAdditionalBlocks = ntohl(*numAdditionalBlocks);
@@ -344,7 +344,7 @@ int get_mar_file_info_fp(FILE *fp,
     } else if (offsetAdditionalBlocks) {
       /* numAdditionalBlocks is not specified but offsetAdditionalBlocks 
          is, so fill it! */
-      *offsetAdditionalBlocks = ftell(fp) + sizeof(PRUint32);
+      *offsetAdditionalBlocks = ftell(fp) + sizeof(uint32_t);
     }
   }
 
@@ -471,7 +471,7 @@ mar_read_product_info_block(MarFile *mar,
 }
 
 const MarItem *mar_find_item(MarFile *mar, const char *name) {
-  PRUint32 hash;
+  uint32_t hash;
   const MarItem *item;
 
   hash = mar_hash_name(name);

@@ -48,9 +48,9 @@ class SmartCardMonitoringThread
  private:
 
   static void LaunchExecute(void *arg);
-  void SetTokenName(CK_SLOT_ID slotid, const char *tokenName, PRUint32 series);
+  void SetTokenName(CK_SLOT_ID slotid, const char *tokenName, uint32_t series);
   const char *GetTokenName(CK_SLOT_ID slotid);
-  PRUint32 GetTokenSeries(CK_SLOT_ID slotid);
+  uint32_t GetTokenSeries(CK_SLOT_ID slotid);
   nsresult SendEvent(const nsAString &type,const char *tokenName);
   
   

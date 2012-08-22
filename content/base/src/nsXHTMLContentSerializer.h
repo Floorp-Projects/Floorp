@@ -25,13 +25,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   nsXHTMLContentSerializer();
   virtual ~nsXHTMLContentSerializer();
 
-  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
+  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
                   bool aRewriteEncodingDeclaration);
 
   NS_IMETHOD AppendText(nsIContent* aText,
-                        PRInt32 aStartOffset,
-                        PRInt32 aEndOffset,
+                        int32_t aStartOffset,
+                        int32_t aEndOffset,
                         nsAString& aStr);
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
@@ -46,7 +46,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
                                nsIAtom * aName,
-                               PRInt32 aNamespaceID,
+                               int32_t aNamespaceID,
                                nsAString& aStr);
 
   virtual void AfterElementStart(nsIContent * aContent,
@@ -60,12 +60,12 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void AfterElementEnd(nsIContent * aContent,
                                nsAString& aStr);
 
-  virtual bool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName);
 
-  bool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
+  bool HasLongLines(const nsString& text, int32_t& aLastNewlineOffset);
 
   // functions to check if we enter in or leave from a preformated content
   virtual void MaybeEnterInPreContent(nsIContent* aNode);
@@ -77,7 +77,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                            const nsAString& aTagNamespaceURI,
                            nsIAtom* aTagName,
                            nsAString& aStr,
-                           PRUint32 aSkipAttr,
+                           uint32_t aSkipAttr,
                            bool aAddNSAttr);
 
   bool IsFirstChildOfOL(nsIContent* aElement);
@@ -112,7 +112,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
    * output the content of the element without doing any entity encoding
    * what so ever.
    */
-  PRInt32 mDisableEntityEncoding;
+  int32_t mDisableEntityEncoding;
 
   // This is to ensure that we only do meta tag fixups when dealing with
   // whole documents.
@@ -123,7 +123,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   // To keep track of startvalue of OL and first list item for nested lists
   struct olState {
-    olState(PRInt32 aStart, bool aIsFirst)
+    olState(int32_t aStart, bool aIsFirst)
       : startVal(aStart),
         isFirstListItem(aIsFirst)
     {
@@ -136,7 +136,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
     }
 
     // the value of the start attribute in the OL
-    PRInt32 startVal;
+    int32_t startVal;
 
     // is true only before the serialization of the first li of an ol
     // should be false for other li in the list

@@ -32,13 +32,13 @@ static const float EPSILON = 0.0001;
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
  */
-static const PRInt32 PAN_REPAINT_INTERVAL = 250;
+static const int32_t PAN_REPAINT_INTERVAL = 250;
 
 /**
  * Maximum amount of time flinging before sending a viewport change. This will
  * asynchronously repaint the page.
  */
-static const PRInt32 FLING_REPAINT_INTERVAL = 75;
+static const int32_t FLING_REPAINT_INTERVAL = 75;
 
 /**
  * Minimum amount of speed along an axis before we begin painting far ahead by
@@ -165,7 +165,7 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
   case NS_TOUCH_EVENT: {
     nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aOutEvent);
     const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
-    for (PRUint32 i = 0; i < touches.Length(); ++i) {
+    for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
       if (touch) {
         gfx::Point refPoint = WidgetSpaceToCompensatedViewportSpace(
@@ -278,7 +278,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
 
   nsIntPoint point = touch.mScreenPoint;
-  PRInt32 xPos = point.x, yPos = point.y;
+  int32_t xPos = point.x, yPos = point.y;
 
   switch (mState) {
     case ANIMATING_ZOOM:
@@ -579,7 +579,7 @@ void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
 void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
   nsIntPoint point = touch.mScreenPoint;
-  PRInt32 xPos = point.x, yPos = point.y;
+  int32_t xPos = point.x, yPos = point.y;
   TimeDuration timeDelta = TimeDuration().FromMilliseconds(aEvent.mTime - mLastEventTime);
 
   // Probably a duplicate event, just throw it away.
@@ -608,8 +608,8 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     // larger swipe should move you a shorter distance.
     float inverseScale = 1 / mFrameMetrics.mResolution.width;
 
-    PRInt32 xDisplacement = mX.GetDisplacementForDuration(inverseScale, timeDelta);
-    PRInt32 yDisplacement = mY.GetDisplacementForDuration(inverseScale, timeDelta);
+    int32_t xDisplacement = mX.GetDisplacementForDuration(inverseScale, timeDelta);
+    int32_t yDisplacement = mY.GetDisplacementForDuration(inverseScale, timeDelta);
     if (!xDisplacement && !yDisplacement) {
       return;
     }

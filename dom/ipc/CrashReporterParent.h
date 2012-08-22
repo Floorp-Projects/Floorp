@@ -61,7 +61,7 @@ public:
 #endif
   /* Initialize this reporter with data from the child process */
   void
-    SetChildData(const NativeThreadId& id, const PRUint32& processType);
+    SetChildData(const NativeThreadId& id, const uint32_t& processType);
 
   /* Returns the shared hang ID of a parent/child paired minidump.
      GeneratePairedMinidump must be called first.
@@ -104,7 +104,7 @@ public:
   nsString mParentDumpID;
   NativeThreadId mMainThread;
   time_t mStartTime;
-  PRUint32 mProcessType;
+  uint32_t mProcessType;
   bool mInitialized;
 };
 
@@ -152,7 +152,7 @@ CrashReporterParent::CreateCrashReporter(Toplevel* actor)
 {
 #ifdef MOZ_CRASHREPORTER
   NativeThreadId id;
-  PRUint32 processType;
+  uint32_t processType;
   PCrashReporterParent* p =
       actor->CallPCrashReporterConstructor(&id, &processType);
   if (p) {

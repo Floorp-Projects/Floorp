@@ -76,7 +76,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();
          nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
          if (dsti) {
-           PRInt32 type = -1;
+           int32_t type = -1;
            if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
                type == nsIDocShellTreeItem::typeChrome) {
              // we're tracking.

@@ -40,10 +40,10 @@ public:
   NS_IMETHOD Click() {
     return nsGenericHTMLElement::Click();
   }
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex) {
+  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) {
     return nsGenericHTMLElement::GetTabIndex(aTabIndex);
   }
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) {
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex) {
     return nsGenericHTMLElement::SetTabIndex(aTabIndex);
   }
   NS_IMETHOD Focus();
@@ -66,21 +66,21 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                              int32_t aModType) const;
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

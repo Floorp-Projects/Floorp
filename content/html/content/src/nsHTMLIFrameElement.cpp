@@ -88,7 +88,7 @@ nsHTMLIFrameElement::GetSVGDocument(nsIDOMDocument **aResult)
 }
 
 bool
-nsHTMLIFrameElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
@@ -131,7 +131,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // else leave it as the value set in html.css
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::frameborder);
     if (value && value->Type() == nsAttrValue::eEnum) {
-      PRInt32 frameborder = value->GetEnumValue();
+      int32_t frameborder = value->GetEnumValue();
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
@@ -206,7 +206,7 @@ nsHTMLIFrameElement::GetAttributeMappingFunction() const
 }
 
 nsresult
-nsHTMLIFrameElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                   const nsAttrValue* aValue,
                                   bool aNotify)
 {
@@ -217,7 +217,7 @@ nsHTMLIFrameElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       nsCOMPtr<nsIDocShell> docshell = mFrameLoader->GetExistingDocShell();
 
       if (docshell) {
-        PRUint32 newFlags = 0;
+        uint32_t newFlags = 0;
         // If a NULL aValue is passed in, we want to clear the sandbox flags
         // which we will do by setting them to 0.
         if (aValue) {

@@ -70,14 +70,14 @@ nsContentPolicy::~nsContentPolicy()
 
 inline nsresult
 nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
-                             PRUint32          contentType,
+                             uint32_t          contentType,
                              nsIURI           *contentLocation,
                              nsIURI           *requestingLocation,
                              nsISupports      *requestingContext,
                              const nsACString &mimeType,
                              nsISupports      *extra,
                              nsIPrincipal     *requestPrincipal,
-                             PRInt16           *decision)
+                             int16_t           *decision)
 {
     //sanity-check passed-through parameters
     NS_PRECONDITION(decision, "Null out pointer");
@@ -118,8 +118,8 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
      */
     nsresult rv;
     const nsCOMArray<nsIContentPolicy>& entries = mPolicies.GetEntries();
-    PRInt32 count = entries.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    int32_t count = entries.Count();
+    for (int32_t i = 0; i < count; i++) {
         /* check the appropriate policy */
         rv = (entries[i]->*policyMethod)(contentType, contentLocation,
                                          requestingLocation, requestingContext,
@@ -173,14 +173,14 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 #endif //!defined(PR_LOGGING)
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldLoad(PRUint32          contentType,
+nsContentPolicy::ShouldLoad(uint32_t          contentType,
                             nsIURI           *contentLocation,
                             nsIURI           *requestingLocation,
                             nsISupports      *requestingContext,
                             const nsACString &mimeType,
                             nsISupports      *extra,
                             nsIPrincipal     *requestPrincipal,
-                            PRInt16          *decision)
+                            int16_t          *decision)
 {
     // ShouldProcess does not need a content location, but we do
     NS_PRECONDITION(contentLocation, "Must provide request location");
@@ -194,14 +194,14 @@ nsContentPolicy::ShouldLoad(PRUint32          contentType,
 }
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldProcess(PRUint32          contentType,
+nsContentPolicy::ShouldProcess(uint32_t          contentType,
                                nsIURI           *contentLocation,
                                nsIURI           *requestingLocation,
                                nsISupports      *requestingContext,
                                const nsACString &mimeType,
                                nsISupports      *extra,
                                nsIPrincipal     *requestPrincipal,
-                               PRInt16          *decision)
+                               int16_t          *decision)
 {
     nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldProcess, contentType,
                               contentLocation, requestingLocation,

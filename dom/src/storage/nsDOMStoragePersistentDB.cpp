@@ -404,7 +404,7 @@ nsDOMStoragePersistentDB::GetAllKeys(DOMStorageImpl* aStorage,
     rv = stmt->GetString(1, value);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 secureInt = 0;
+    int32_t secureInt = 0;
     rv = stmt->GetInt32(2, &secureInt);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -455,7 +455,7 @@ nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
   rv = stmt->ExecuteStep(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 secureInt = 0;
+  int32_t secureInt = 0;
   if (exists) {
     rv = stmt->GetString(0, aValue);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -477,16 +477,16 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  const nsAString& aValue,
                                  bool aSecure,
-                                 PRInt32 aQuota,
+                                 int32_t aQuota,
                                  bool aExcludeOfflineFromUsage,
-                                 PRInt32 *aNewUsage)
+                                 int32_t *aNewUsage)
 {
   nsresult rv;
 
   rv = EnsureLoadTemporaryTableForStorage(aStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 usage = 0;
+  int32_t usage = 0;
   if (!aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage).IsEmpty()) {
     rv = GetUsage(aStorage, aExcludeOfflineFromUsage, &usage);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -589,7 +589,7 @@ nsresult
 nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
                                     const nsAString& aKey,
                                     bool aExcludeOfflineFromUsage,
-                                    PRInt32 aKeyUsage)
+                                    int32_t aKeyUsage)
 {
   nsresult rv;
 
@@ -718,7 +718,7 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
     expression.AppendLiteral("DELETE FROM webappsstore2_view WHERE scope NOT IN (");
   }
 
-  for (PRUint32 i = 0; i < aOwners.Length(); i++) {
+  for (uint32_t i = 0; i < aOwners.Length(); i++) {
     if (i)
       expression.AppendLiteral(" UNION ");
 
@@ -743,7 +743,7 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
                                     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < aOwners.Length(); i++) {
+  for (uint32_t i = 0; i < aOwners.Length(); i++) {
     nsCAutoString quotaKey;
     rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
       NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
@@ -798,7 +798,7 @@ nsDOMStoragePersistentDB::RemoveAll()
 nsresult
 nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
                                    bool aExcludeOfflineFromUsage,
-                                   PRInt32 *aUsage)
+                                   int32_t *aUsage)
 {
   return GetUsageInternal(aStorage->GetQuotaDomainDBKey(!aExcludeOfflineFromUsage),
                                                         aExcludeOfflineFromUsage,
@@ -808,7 +808,7 @@ nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
 nsresult
 nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
                                    bool aIncludeSubDomains,
-                                   PRInt32 *aUsage)
+                                   int32_t *aUsage)
 {
   nsresult rv;
 
@@ -825,7 +825,7 @@ nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
 nsresult
 nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
                                            bool aExcludeOfflineFromUsage,
-                                           PRInt32 *aUsage)
+                                           int32_t *aUsage)
 {
   if (aQuotaDomainDBKey == mCachedOwner) {
     *aUsage = mCachedUsage;

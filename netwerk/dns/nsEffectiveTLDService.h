@@ -87,7 +87,7 @@ public:
   nsresult Init();
 
 private:
-  nsresult GetBaseDomainInternal(nsCString &aHostname, PRUint32 aAdditionalParts, nsACString &aBaseDomain);
+  nsresult GetBaseDomainInternal(nsCString &aHostname, uint32_t aAdditionalParts, nsACString &aBaseDomain);
   nsresult NormalizeHostname(nsCString &aHostname);
   ~nsEffectiveTLDService() { }
 

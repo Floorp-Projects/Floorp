@@ -142,7 +142,7 @@ public:
   MessageLoop * GetMessageLoop() const;
 
   // overriden from PImageBridgeChild
-  PImageContainerChild* AllocPImageContainer(PRUint64*);
+  PImageContainerChild* AllocPImageContainer(uint64_t*);
   // overriden from PImageBridgeChild
   bool DeallocPImageContainer(PImageContainerChild* aImgContainerChild);
 

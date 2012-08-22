@@ -44,7 +44,7 @@ private:
   nsCOMPtr<nsIContent> mTop;
   nsCOMPtr<nsIContent> mCurrent;
   nsCOMPtr<nsIDocument> mDocument;
-  PRInt32 mNamespaceId;
+  int32_t mNamespaceId;
 };
 
 //----------------------------------------------------------------------

@@ -61,9 +61,9 @@ nsSVGGradientFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 NS_IMETHODIMP
-nsSVGGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
+                                     int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::gradientUnits ||
@@ -85,14 +85,14 @@ nsSVGGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 //----------------------------------------------------------------------
 
-PRUint32
+uint32_t
 nsSVGGradientFrame::GetStopCount()
 {
   return GetStopFrame(-1, nullptr);
 }
 
 void
-nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
+nsSVGGradientFrame::GetStopInformation(int32_t aIndex,
                                        float *aOffset,
                                        nscolor *aStopColor,
                                        float *aStopOpacity)
@@ -121,8 +121,8 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
   *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
 }
 
-PRUint16
-nsSVGGradientFrame::GetEnumValue(PRUint32 aIndex, nsIContent *aDefault)
+uint16_t
+nsSVGGradientFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGEnum& thisEnum =
     static_cast<nsSVGGradientElement *>(mContent)->mEnumAttributes[aIndex];
@@ -138,14 +138,14 @@ nsSVGGradientFrame::GetEnumValue(PRUint32 aIndex, nsIContent *aDefault)
       mEnumAttributes[aIndex].GetAnimValue();
 }
 
-PRUint16
+uint16_t
 nsSVGGradientFrame::GetGradientUnits()
 {
   // This getter is called every time the others are called - maybe cache it?
   return GetEnumValue(nsSVGGradientElement::GRADIENTUNITS);
 }
 
-PRUint16
+uint16_t
 nsSVGGradientFrame::GetSpreadMethod()
 {
   return GetEnumValue(nsSVGGradientElement::SPREADMETHOD);
@@ -174,7 +174,7 @@ nsSVGGradientFrame::GetGradientTransform(nsIFrame *aSource,
 {
   gfxMatrix bboxMatrix;
 
-  PRUint16 gradientUnits = GetGradientUnits();
+  uint16_t gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
     // If this gradient is applied to text, our caller
     // will be the glyph, which is not a container, so we
@@ -206,7 +206,7 @@ nsSVGGradientFrame::GetGradientTransform(nsIFrame *aSource,
 }
 
 nsSVGLinearGradientElement *
-nsSVGGradientFrame::GetLinearGradientWithLength(PRUint32 aIndex,
+nsSVGGradientFrame::GetLinearGradientWithLength(uint32_t aIndex,
   nsSVGLinearGradientElement* aDefault)
 {
   // If this was a linear gradient with the required length, we would have
@@ -220,7 +220,7 @@ nsSVGGradientFrame::GetLinearGradientWithLength(PRUint32 aIndex,
 }
 
 nsSVGRadialGradientElement *
-nsSVGGradientFrame::GetRadialGradientWithLength(PRUint32 aIndex,
+nsSVGGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
   nsSVGRadialGradientElement* aDefault)
 {
   // If this was a radial gradient with the required length, we would have
@@ -249,7 +249,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
   if (patternMatrix.IsSingular())
     return nullptr;
 
-  PRUint32 nStops = GetStopCount();
+  uint32_t nStops = GetStopCount();
 
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
@@ -269,7 +269,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
   if (!gradient || gradient->CairoStatus())
     return nullptr;
 
-  PRUint16 aSpread = GetSpreadMethod();
+  uint16_t aSpread = GetSpreadMethod();
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
     gradient->SetExtend(gfxPattern::EXTEND_PAD);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)
@@ -282,7 +282,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
   // setup stops
   float lastOffset = 0.0f;
 
-  for (PRUint32 i = 0; i < nStops; i++) {
+  for (uint32_t i = 0; i < nStops; i++) {
     float offset, stopOpacity;
     nscolor stopColor;
 
@@ -365,10 +365,10 @@ nsSVGGradientFrame::GetReferencedGradientIfNotInUse()
   return referenced;
 }
 
-PRInt32
-nsSVGGradientFrame::GetStopFrame(PRInt32 aIndex, nsIFrame * *aStopFrame)
+int32_t
+nsSVGGradientFrame::GetStopFrame(int32_t aIndex, nsIFrame * *aStopFrame)
 {
-  PRInt32 stopCount = 0;
+  int32_t stopCount = 0;
   nsIFrame *stopFrame = nullptr;
   for (stopFrame = mFrames.FirstChild(); stopFrame;
        stopFrame = stopFrame->GetNextSibling()) {
@@ -418,9 +418,9 @@ nsSVGLinearGradientFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGLinearGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGLinearGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
                                            nsIAtom*        aAttribute,
-                                           PRInt32         aModType)
+                                           int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::x1 ||
@@ -437,7 +437,7 @@ nsSVGLinearGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 
 float
-nsSVGLinearGradientFrame::GetLengthValue(PRUint32 aIndex)
+nsSVGLinearGradientFrame::GetLengthValue(uint32_t aIndex)
 {
   nsSVGLinearGradientElement* lengthElement =
     GetLinearGradientWithLength(aIndex,
@@ -452,7 +452,7 @@ nsSVGLinearGradientFrame::GetLengthValue(PRUint32 aIndex)
   // transform in GetGradientTransform, but we need to handle user
   // space units as part of the individual Get* routines.  Fixes 323669.
 
-  PRUint16 gradientUnits = GetGradientUnits();
+  uint16_t gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
     return nsSVGUtils::UserSpace(mSource, &length);
   }
@@ -465,7 +465,7 @@ nsSVGLinearGradientFrame::GetLengthValue(PRUint32 aIndex)
 }
 
 nsSVGLinearGradientElement *
-nsSVGLinearGradientFrame::GetLinearGradientWithLength(PRUint32 aIndex,
+nsSVGLinearGradientFrame::GetLinearGradientWithLength(uint32_t aIndex,
   nsSVGLinearGradientElement* aDefault)
 {
   nsSVGLinearGradientElement* thisElement =
@@ -519,9 +519,9 @@ nsSVGRadialGradientFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGRadialGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGRadialGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
                                            nsIAtom*        aAttribute,
-                                           PRInt32         aModType)
+                                           int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::r ||
@@ -539,7 +539,7 @@ nsSVGRadialGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 
 float
-nsSVGRadialGradientFrame::GetLengthValue(PRUint32 aIndex)
+nsSVGRadialGradientFrame::GetLengthValue(uint32_t aIndex)
 {
   nsSVGRadialGradientElement* lengthElement =
     GetRadialGradientWithLength(aIndex,
@@ -552,7 +552,7 @@ nsSVGRadialGradientFrame::GetLengthValue(PRUint32 aIndex)
 }
 
 float
-nsSVGRadialGradientFrame::GetLengthValue(PRUint32 aIndex, float aDefaultValue)
+nsSVGRadialGradientFrame::GetLengthValue(uint32_t aIndex, float aDefaultValue)
 {
   nsSVGRadialGradientElement* lengthElement =
     GetRadialGradientWithLength(aIndex, nullptr);
@@ -562,7 +562,7 @@ nsSVGRadialGradientFrame::GetLengthValue(PRUint32 aIndex, float aDefaultValue)
 }
 
 float
-nsSVGRadialGradientFrame::GetLengthValueFromElement(PRUint32 aIndex,
+nsSVGRadialGradientFrame::GetLengthValueFromElement(uint32_t aIndex,
   nsSVGRadialGradientElement& aElement)
 {
   const nsSVGLength2 &length = aElement.mLengthAttributes[aIndex];
@@ -571,7 +571,7 @@ nsSVGRadialGradientFrame::GetLengthValueFromElement(PRUint32 aIndex,
   // transform in GetGradientTransform, but we need to handle user
   // space units as part of the individual Get* routines.  Fixes 323669.
 
-  PRUint16 gradientUnits = GetGradientUnits();
+  uint16_t gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
     return nsSVGUtils::UserSpace(mSource, &length);
   }
@@ -584,7 +584,7 @@ nsSVGRadialGradientFrame::GetLengthValueFromElement(PRUint32 aIndex,
 }
 
 nsSVGRadialGradientElement *
-nsSVGRadialGradientFrame::GetRadialGradientWithLength(PRUint32 aIndex,
+nsSVGRadialGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
   nsSVGRadialGradientElement* aDefault)
 {
   nsSVGRadialGradientElement* thisElement =

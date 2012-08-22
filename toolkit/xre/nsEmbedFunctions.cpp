@@ -125,7 +125,7 @@ XRE_LockProfileDirectory(nsIFile* aDirectory,
   return rv;
 }
 
-static PRInt32 sInitCounter;
+static int32_t sInitCounter;
 
 nsresult
 XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
@@ -228,8 +228,8 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
 bool
-XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump,
-                         PRUint32* aSequence)
+XRE_TakeMinidumpForChild(uint32_t aChildPid, nsIFile** aDump,
+                         uint32_t* aSequence)
 {
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump, aSequence);
 }

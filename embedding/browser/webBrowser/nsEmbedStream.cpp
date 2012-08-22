@@ -65,12 +65,12 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
 }
 
 NS_METHOD
-nsEmbedStream::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
+nsEmbedStream::AppendToStream(const uint8_t *aData, uint32_t aLen)
 {
   nsresult rv;
   NS_ENSURE_STATE(mOutputStream);
 
-  PRUint32 bytesWritten = 0;
+  uint32_t bytesWritten = 0;
   rv = mOutputStream->Write(reinterpret_cast<const char*>(aData),
                             aLen, &bytesWritten);
   if (NS_FAILED(rv))

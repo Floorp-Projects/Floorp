@@ -51,13 +51,13 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHODIMP
-  GetInterfaces(PRUint32 *_count, nsIID ***_array)
+  GetInterfaces(uint32_t *_count, nsIID ***_array)
   {
     return NS_CI_INTERFACE_GETTER_NAME(AsyncStatement)(_count, _array);
   }
 
   NS_IMETHODIMP
-  GetHelperForLanguage(PRUint32 aLanguage, nsISupports **_helper)
+  GetHelperForLanguage(uint32_t aLanguage, nsISupports **_helper)
   {
     if (aLanguage == nsIProgrammingLanguage::JAVASCRIPT) {
       static AsyncStatementJSHelper sJSHelper;
@@ -91,14 +91,14 @@ public:
   }
 
   NS_IMETHODIMP
-  GetImplementationLanguage(PRUint32 *_language)
+  GetImplementationLanguage(uint32_t *_language)
   {
     *_language = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetFlags(PRUint32 *_flags)
+  GetFlags(uint32_t *_flags)
   {
     *_flags = 0;
     return NS_OK;
@@ -399,7 +399,7 @@ AsyncStatement::BindParameters(mozIStorageBindingParamsArray *aParameters)
 }
 
 NS_IMETHODIMP
-AsyncStatement::GetState(PRInt32 *_state)
+AsyncStatement::GetState(int32_t *_state)
 {
   if (mFinalized)
     *_state = MOZ_STORAGE_STATEMENT_INVALID;

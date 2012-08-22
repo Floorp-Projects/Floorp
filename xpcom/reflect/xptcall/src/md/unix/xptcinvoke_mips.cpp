@@ -14,12 +14,12 @@
 #include "mozilla/StandardInteger.h"
 
 extern "C" uint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
     // Count a word for a0 even though it's never stored or loaded
     // We do this only for alignment of register pairs.
-    PRUint32 result = 1;
-    for (PRUint32 i = 0; i < paramCount; i++, result++, s++)
+    uint32_t result = 1;
+    for (uint32_t i = 0; i < paramCount; i++, result++, s++)
     {
         if (s->IsPtrData())
             continue;
@@ -38,17 +38,17 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
             break;
         }
     }
-    return (result + 1) & ~(PRUint32)1;
+    return (result + 1) & ~(uint32_t)1;
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount,
                      nsXPTCVariant* s)
 {
     // Skip the unused a0 slot, which we keep only for register pair alignment.
     d++;
 
-    for (PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for (uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         if (s->IsPtrData())
         {
@@ -58,19 +58,19 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
 
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *d = (PRUint32) s->val.i8;   break;
-        case nsXPTType::T_I16    : *d = (PRUint32) s->val.i16;  break;
-        case nsXPTType::T_I32    : *d = (PRUint32) s->val.i32;  break;
+        case nsXPTType::T_I8     : *d = (uint32_t) s->val.i8;   break;
+        case nsXPTType::T_I16    : *d = (uint32_t) s->val.i16;  break;
+        case nsXPTType::T_I32    : *d = (uint32_t) s->val.i32;  break;
         case nsXPTType::T_I64    :
             if ((intptr_t)d & 4) d++;
-            *((PRInt64*) d)  = s->val.i64;    d++;
+            *((int64_t*) d)  = s->val.i64;    d++;
             break;
-        case nsXPTType::T_U8     : *d = (PRUint32) s->val.u8;   break;
-        case nsXPTType::T_U16    : *d = (PRUint32) s->val.u16;  break;
-        case nsXPTType::T_U32    : *d = (PRUint32) s->val.u32;  break;
+        case nsXPTType::T_U8     : *d = (uint32_t) s->val.u8;   break;
+        case nsXPTType::T_U16    : *d = (uint32_t) s->val.u16;  break;
+        case nsXPTType::T_U32    : *d = (uint32_t) s->val.u32;  break;
         case nsXPTType::T_U64    :
             if ((intptr_t)d & 4) d++;
-            *((PRUint64*) d) = s->val.u64;    d++;
+            *((uint64_t*) d) = s->val.u64;    d++;
             break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;  break;
         case nsXPTType::T_DOUBLE :
@@ -87,13 +87,13 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
     }
 }
 
-extern "C" nsresult _NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                                        PRUint32 paramCount,
+extern "C" nsresult _NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                                        uint32_t paramCount,
                                         nsXPTCVariant* params);
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params)
 {
     return _NS_InvokeByIndex_P(that, methodIndex, paramCount, params);
 }

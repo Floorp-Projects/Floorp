@@ -58,7 +58,7 @@ class nsSTSHostEntry : public PLDHashEntryHdr
     explicit nsSTSHostEntry(const nsSTSHostEntry& toCopy);
 
     nsCString    mHost;
-    PRInt64      mExpireTime;
+    int64_t      mExpireTime;
     bool mDeleted;
     bool mIncludeSubdomains;
 
@@ -105,20 +105,20 @@ public:
 
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
-  nsresult SetStsState(nsIURI* aSourceURI, PRInt64 maxage, bool includeSubdomains);
+  nsresult SetStsState(nsIURI* aSourceURI, int64_t maxage, bool includeSubdomains);
   nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader);
 
   // private-mode-preserving permission manager overlay functions
   nsresult AddPermission(nsIURI     *aURI,
                          const char *aType,
-                         PRUint32   aPermission,
-                         PRUint32   aExpireType,
-                         PRInt64    aExpireTime);
+                         uint32_t   aPermission,
+                         uint32_t   aExpireType,
+                         int64_t    aExpireTime);
   nsresult RemovePermission(const nsCString  &aHost,
                             const char       *aType);
   nsresult TestPermission(nsIURI     *aURI,
                           const char *aType,
-                          PRUint32   *aPermission,
+                          uint32_t   *aPermission,
                           bool       testExact);
 
   // cached services

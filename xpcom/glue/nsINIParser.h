@@ -94,7 +94,7 @@ public:
      * @see GetString [1]
      */
     nsresult GetString(const char *aSection, const char* aKey,
-                       char *aResult, PRUint32 aResultLen);
+                       char *aResult, uint32_t aResultLen);
 
 private:
     struct INIValue

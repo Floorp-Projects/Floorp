@@ -65,7 +65,7 @@ using namespace mozilla::hal;
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-static const PRUint32 kAllMutationBits =
+static const uint32_t kAllMutationBits =
   NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
   NS_EVENT_BITS_MUTATION_NODEINSERTED |
   NS_EVENT_BITS_MUTATION_NODEREMOVED |
@@ -74,8 +74,8 @@ static const PRUint32 kAllMutationBits =
   NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
   NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
 
-static PRUint32
-MutationBitForEventType(PRUint32 aEventType)
+static uint32_t
+MutationBitForEventType(uint32_t aEventType)
 {
   switch (aEventType) {
     case NS_MUTATION_SUBTREEMODIFIED:
@@ -98,7 +98,7 @@ MutationBitForEventType(PRUint32 aEventType)
   return 0;
 }
 
-PRUint32 nsEventListenerManager::sCreatedCount = 0;
+uint32_t nsEventListenerManager::sCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
   mMayHavePaintEventListener(false),
@@ -150,8 +150,8 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsEventListenerManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsEventListenerManager, Release)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsEventListenerManager)
-  PRUint32 count = tmp->mListeners.Length();
-  for (PRUint32 i = 0; i < count; i++) {
+  uint32_t count = tmp->mListeners.Length();
+  for (uint32_t i = 0; i < count; i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mListener");
     cb.NoteXPCOMChild(tmp->mListeners.ElementAt(i).mListener.get());
   }  
@@ -183,9 +183,9 @@ nsEventListenerManager::GetInnerWindowForTarget()
 
 void
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
-                                         PRUint32 aType,
+                                         uint32_t aType,
                                          nsIAtom* aTypeAtom,
-                                         PRInt32 aFlags)
+                                         int32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aType && aTypeAtom, "Missing type");
 
@@ -196,8 +196,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
 
   nsListenerStruct* ls;
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; i++) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; i++) {
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
         EVENT_TYPE_EQUALS(ls, aType, aTypeAtom)) {
@@ -302,7 +302,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
 }
 
 bool
-nsEventListenerManager::IsDeviceType(PRUint32 aType)
+nsEventListenerManager::IsDeviceType(uint32_t aType)
 {
   switch (aType) {
     case NS_DEVICE_ORIENTATION:
@@ -318,7 +318,7 @@ nsEventListenerManager::IsDeviceType(PRUint32 aType)
 }
 
 void
-nsEventListenerManager::EnableDevice(PRUint32 aType)
+nsEventListenerManager::EnableDevice(uint32_t aType)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
   if (!window) {
@@ -350,7 +350,7 @@ nsEventListenerManager::EnableDevice(PRUint32 aType)
 }
 
 void
-nsEventListenerManager::DisableDevice(PRUint32 aType)
+nsEventListenerManager::DisableDevice(uint32_t aType)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
   if (!window) {
@@ -383,9 +383,9 @@ nsEventListenerManager::DisableDevice(PRUint32 aType)
 
 void
 nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, 
-                                            PRUint32 aType,
+                                            uint32_t aType,
                                             nsIAtom* aUserType,
-                                            PRInt32 aFlags)
+                                            int32_t aFlags)
 {
   if (!aListener || !aType) {
     return;
@@ -394,11 +394,11 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   nsListenerStruct* ls;
   aFlags &= ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
-  PRUint32 count = mListeners.Length();
-  PRUint32 typeCount = 0;
+  uint32_t count = mListeners.Length();
+  uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aType);
 
-  for (PRUint32 i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
     if (EVENT_TYPE_EQUALS(ls, aType, aUserType)) {
       ++typeCount;
@@ -437,32 +437,32 @@ ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
 void
 nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
                                                const nsAString& aType,
-                                               PRInt32 aFlags)
+                                               int32_t aFlags)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
-  PRUint32 type = nsContentUtils::GetEventId(atom);
+  uint32_t type = nsContentUtils::GetEventId(atom);
   AddEventListener(aListener, type, atom, aFlags);
 }
 
 void
 nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener, 
                                                   const nsAString& aType,
-                                                  PRInt32 aFlags)
+                                                  int32_t aFlags)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
-  PRUint32 type = nsContentUtils::GetEventId(atom);
+  uint32_t type = nsContentUtils::GetEventId(atom);
   RemoveEventListener(aListener, type, atom, aFlags);
 }
 
 nsListenerStruct*
-nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
+nsEventListenerManager::FindJSEventListener(uint32_t aEventType,
                                             nsIAtom* aTypeAtom)
 {
   // Run through the listeners for this type and see if a script
   // listener is registered
   nsListenerStruct *ls;
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
     if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
         (ls->mListenerType == eJSEventListener))
@@ -482,7 +482,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
                                            nsListenerStruct **aListenerStruct)
 {
   nsresult rv = NS_OK;
-  PRUint32 eventType = nsContentUtils::GetEventId(aName);
+  uint32_t eventType = nsContentUtils::GetEventId(aName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (!ls) {
@@ -519,7 +519,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
 nsresult
 nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
                                                const nsAString& aBody,
-                                               PRUint32 aLanguage,
+                                               uint32_t aLanguage,
                                                bool aDeferCompilation,
                                                bool aPermitUntrustedEvents)
 {
@@ -641,11 +641,11 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
 void
 nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
 {
-  PRUint32 eventType = nsContentUtils::GetEventId(aName);
+  uint32_t eventType = nsContentUtils::GetEventId(aName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (ls) {
-    mListeners.RemoveElementAt(PRUint32(ls - &mListeners.ElementAt(0)));
+    mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nullptr;
   }
@@ -712,7 +712,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       body = &handlerBody;
     }
 
-    PRUint32 lineNo = 0;
+    uint32_t lineNo = 0;
     nsCAutoString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
     nsCOMPtr<nsIDocument> doc;
     if (content) {
@@ -737,7 +737,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       return NS_ERROR_FAILURE;
     }
 
-    PRUint32 argCount;
+    uint32_t argCount;
     const char **argNames;
     // If no content, then just use kNameSpaceID_None for the
     // namespace ID.  In practice, it doesn't matter since SVG is
@@ -778,7 +778,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEventListener* aListener,
                                            nsIDOMEvent* aDOMEvent,
                                            nsIDOMEventTarget* aCurrentTarget,
-                                           PRUint32 aPhaseFlags,
+                                           uint32_t aPhaseFlags,
                                            nsCxPusher* aPusher)
 {
   nsresult result = NS_OK;
@@ -813,7 +813,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
                                             nsIDOMEventTarget* aCurrentTarget,
-                                            PRUint32 aFlags,
+                                            uint32_t aFlags,
                                             nsEventStatus* aEventStatus,
                                             nsCxPusher* aPusher)
 {
@@ -905,7 +905,7 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
                                          bool aUseCapture,
                                          bool aWantsUntrusted)
 {
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  int32_t flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
   if (aWantsUntrusted) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
@@ -919,7 +919,7 @@ nsEventListenerManager::RemoveEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener, 
                                             bool aUseCapture)
 {
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  int32_t flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
   RemoveEventListenerByType(aListener, aType, flags);
 }
@@ -928,8 +928,8 @@ bool
 nsEventListenerManager::HasMutationListeners()
 {
   if (mMayHaveMutationListeners) {
-    PRUint32 count = mListeners.Length();
-    for (PRUint32 i = 0; i < count; ++i) {
+    uint32_t count = mListeners.Length();
+    for (uint32_t i = 0; i < count; ++i) {
       nsListenerStruct* ls = &mListeners.ElementAt(i);
       if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
@@ -941,13 +941,13 @@ nsEventListenerManager::HasMutationListeners()
   return false;
 }
 
-PRUint32
+uint32_t
 nsEventListenerManager::MutationListenerBits()
 {
-  PRUint32 bits = 0;
+  uint32_t bits = 0;
   if (mMayHaveMutationListeners) {
-    PRUint32 count = mListeners.Length();
-    for (PRUint32 i = 0; i < count; ++i) {
+    uint32_t count = mListeners.Length();
+    for (uint32_t i = 0; i < count; ++i) {
       nsListenerStruct* ls = &mListeners.ElementAt(i);
       if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
@@ -966,8 +966,8 @@ nsEventListenerManager::HasListenersFor(const nsAString& aEventName)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aEventName);
 
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     nsListenerStruct* ls = &mListeners.ElementAt(i);
     if (ls->mTypeAtom == atom) {
       return true;
@@ -988,8 +988,8 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
   NS_ENSURE_STATE(target);
   aList->Clear();
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     const nsListenerStruct& ls = mListeners.ElementAt(i);
     bool capturing = !!(ls.mFlags & NS_EVENT_FLAG_CAPTURE);
     bool systemGroup = !!(ls.mFlags & NS_EVENT_FLAG_SYSTEM_EVENT);
@@ -1014,8 +1014,8 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
 bool
 nsEventListenerManager::HasUnloadListeners()
 {
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     nsListenerStruct* ls = &mListeners.ElementAt(i);
     if (ls->mEventType == NS_PAGE_UNLOAD ||
         ls->mEventType == NS_BEFORE_PAGE_UNLOAD) {
@@ -1067,7 +1067,7 @@ nsEventListenerManager::SetJSEventListenerToJsval(nsIAtom *aEventName,
 void
 nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
 {
-  PRUint32 eventType = nsContentUtils::GetEventId(aEventName);
+  uint32_t eventType = nsContentUtils::GetEventId(aEventName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aEventName);
 
   *vp = JSVAL_NULL;
@@ -1091,8 +1091,8 @@ nsEventListenerManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
   n += mListeners.SizeOfExcludingThis(aMallocSizeOf);
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     nsIJSEventListener* jsl = mListeners.ElementAt(i).GetJSListener();
     if (jsl) {
       n += jsl->SizeOfIncludingThis(aMallocSizeOf);
@@ -1104,8 +1104,8 @@ nsEventListenerManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 void
 nsEventListenerManager::UnmarkGrayJSListeners()
 {
-  PRUint32 count = mListeners.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     const nsListenerStruct& ls = mListeners.ElementAt(i);
     nsIJSEventListener* jsl = ls.GetJSListener();
     if (jsl) {

@@ -90,7 +90,7 @@ OfflineCacheUpdateChild::~OfflineCacheUpdateChild()
 nsresult
 OfflineCacheUpdateChild::GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers)
 {
-    for (PRInt32 i = 0; i < mWeakObservers.Count(); i++) {
+    for (int32_t i = 0; i < mWeakObservers.Count(); i++) {
         nsCOMPtr<nsIOfflineCacheUpdateObserver> observer =
             do_QueryReferent(mWeakObservers[i]);
         if (observer)
@@ -99,7 +99,7 @@ OfflineCacheUpdateChild::GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserve
             mWeakObservers.RemoveObjectAt(i--);
     }
 
-    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+    for (int32_t i = 0; i < mObservers.Count(); i++) {
         aObservers.AppendObject(mObservers[i]);
     }
 
@@ -244,7 +244,7 @@ OfflineCacheUpdateChild::GetUpdateDomain(nsACString &aUpdateDomain)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetStatus(PRUint16 *aStatus)
+OfflineCacheUpdateChild::GetStatus(uint16_t *aStatus)
 {
     switch (mState) {
     case STATE_CHECKING :
@@ -328,7 +328,7 @@ OfflineCacheUpdateChild::RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver
 
     NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 
-    for (PRInt32 i = 0; i < mWeakObservers.Count(); i++) {
+    for (int32_t i = 0; i < mWeakObservers.Count(); i++) {
         nsCOMPtr<nsIOfflineCacheUpdateObserver> observer =
             do_QueryReferent(mWeakObservers[i]);
         if (observer == aObserver) {
@@ -337,7 +337,7 @@ OfflineCacheUpdateChild::RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver
         }
     }
 
-    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+    for (int32_t i = 0; i < mObservers.Count(); i++) {
         if (mObservers[i] == aObserver) {
             mObservers.RemoveObjectAt(i);
             return NS_OK;
@@ -348,7 +348,7 @@ OfflineCacheUpdateChild::RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetByteProgress(PRUint64 * _result)
+OfflineCacheUpdateChild::GetByteProgress(uint64_t * _result)
 {
     NS_ENSURE_ARG(_result);
 
@@ -444,15 +444,15 @@ OfflineCacheUpdateChild::RecvAssociateDocuments(const nsCString &cacheGroupId,
     rv = GatherObservers(observers);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    for (PRInt32 i = 0; i < observers.Count(); i++)
+    for (int32_t i = 0; i < observers.Count(); i++)
         observers[i]->ApplicationCacheAvailable(cache);
 
     return true;
 }
 
 bool
-OfflineCacheUpdateChild::RecvNotifyStateEvent(const PRUint32 &event,
-                                              const PRUint64 &byteProgress)
+OfflineCacheUpdateChild::RecvNotifyStateEvent(const uint32_t &event,
+                                              const uint64_t &byteProgress)
 {
     LOG(("OfflineCacheUpdateChild::RecvNotifyStateEvent [%p]", this));
 
@@ -476,7 +476,7 @@ OfflineCacheUpdateChild::RecvNotifyStateEvent(const PRUint32 &event,
     nsresult rv = GatherObservers(observers);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    for (PRInt32 i = 0; i < observers.Count(); i++)
+    for (int32_t i = 0; i < observers.Count(); i++)
         observers[i]->UpdateStateChanged(this, event);
 
     return true;

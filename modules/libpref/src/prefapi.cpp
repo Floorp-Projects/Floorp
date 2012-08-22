@@ -111,7 +111,7 @@ static PLDHashTableOps     pref_HashTableOps = {
 static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
 {
     void* mem;
-    PRUint32 len = strlen(str);
+    uint32_t len = strlen(str);
     PL_ARENA_ALLOCATE(mem, aArena, len+1);
     if (mem)
         memcpy(mem, str, len+1);
@@ -144,7 +144,7 @@ enum {
     kPrefSetDefault = 1,
     kPrefForceSet = 2
 };
-static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRUint32 flags);
+static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t flags);
 
 #define PREF_HASHTABLE_INITIAL_SIZE	2048
 
@@ -254,7 +254,7 @@ PREF_SetCharPref(const char *pref_name, const char *value, bool set_default)
 }
 
 nsresult
-PREF_SetIntPref(const char *pref_name, PRInt32 value, bool set_default)
+PREF_SetIntPref(const char *pref_name, int32_t value, bool set_default)
 {
     PrefValue pref;
     pref.intVal = value;
@@ -290,7 +290,7 @@ pref_SetPrefTuple(const PrefTuple &aPref, bool set_default)
 }
 
 PLDHashOperator
-pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
+pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
 {
     pref_saveArgs *argData = static_cast<pref_saveArgs *>(arg);
     PrefHashEntry *pref = static_cast<PrefHashEntry *>(heh);
@@ -350,7 +350,7 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 PLDHashOperator
 pref_MirrorPrefs(PLDHashTable *table,
                  PLDHashEntryHdr *heh,
-                 PRUint32 i,
+                 uint32_t i,
                  void *arg)
 {
     if (heh) {
@@ -447,7 +447,7 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default
     return rv;
 }
 
-nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, bool get_default)
+nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -458,7 +458,7 @@ nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, bool get_de
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
         {
-            PRInt32 tempInt = pref->defaultPref.intVal;
+            int32_t tempInt = pref->defaultPref.intVal;
             /* check to see if we even had a default */
             if (!(pref->flags & PREF_HAS_DEFAULT))
                 return NS_ERROR_UNEXPECTED;
@@ -500,7 +500,7 @@ nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_d
 
 /* Delete a branch. Used for deleting mime types */
 static PLDHashOperator
-pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
+pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
 {
     PrefHashEntry* he = static_cast<PrefHashEntry*>(heh);
     const char *to_delete = (const char *) arg;
@@ -508,8 +508,8 @@ pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg
 
     /* note if we're deleting "ldap" then we want to delete "ldap.xxx"
         and "ldap" (if such a leaf node exists) but not "ldap_1.xxx" */
-    if (to_delete && (PL_strncmp(he->key, to_delete, (PRUint32) len) == 0 ||
-        (len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (PRUint32)(len-1)) == 0)))
+    if (to_delete && (PL_strncmp(he->key, to_delete, (uint32_t) len) == 0 ||
+        (len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (uint32_t)(len-1)) == 0)))
         return PL_DHASH_REMOVE;
 
     return PL_DHASH_NEXT;
@@ -562,7 +562,7 @@ PREF_ClearUserPref(const char *pref_name)
 }
 
 static PLDHashOperator
-pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
+pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, uint32_t,
                    void *arg)
 {
     PrefHashEntry *pref = static_cast<PrefHashEntry*>(he);
@@ -668,7 +668,7 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
     return result;
 }
 
-nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRUint32 flags)
+nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t flags)
 {
     if (!gHashTable.ops)
         return NS_ERROR_OUT_OF_MEMORY;

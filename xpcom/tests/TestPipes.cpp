@@ -21,8 +21,8 @@ nsresult TP_NewPipe2(nsIAsyncInputStream** input,
                      nsIAsyncOutputStream** output,
                      bool nonBlockingInput,
                      bool nonBlockingOutput,
-                     PRUint32 segmentSize,
-                     PRUint32 segmentCount,
+                     uint32_t segmentSize,
+                     uint32_t segmentCount,
                      nsIMemory* segmentAlloc)
 {
   nsCOMPtr<nsIPipe> pipe = do_CreateInstance("@mozilla.org/pipe;1");
@@ -47,15 +47,15 @@ nsresult TP_NewPipe2(nsIAsyncInputStream** input,
 #define TP_DEFAULT_SEGMENT_SIZE  4096
 nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     nsIOutputStream **pipeOut,
-                    PRUint32 segmentSize = 0,
-                    PRUint32 maxSize = 0,
+                    uint32_t segmentSize = 0,
+                    uint32_t maxSize = 0,
                     bool nonBlockingInput = false,
                     bool nonBlockingOutput = false,
                     nsIMemory *segmentAlloc = nullptr);
 nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     nsIOutputStream **pipeOut,
-                    PRUint32 segmentSize,
-                    PRUint32 maxSize,
+                    uint32_t segmentSize,
+                    uint32_t maxSize,
                     bool nonBlockingInput,
                     bool nonBlockingOutput,
                     nsIMemory *segmentAlloc)
@@ -64,7 +64,7 @@ nsresult TP_NewPipe(nsIInputStream **pipeIn,
         segmentSize = TP_DEFAULT_SEGMENT_SIZE;
 
     // Handle maxSize of PR_UINT32_MAX as a special case
-    PRUint32 segmentCount;
+    uint32_t segmentCount;
     if (maxSize == PR_UINT32_MAX)
         segmentCount = PR_UINT32_MAX;
     else
@@ -89,12 +89,12 @@ char kTestPattern[] = "My hovercraft is full of eels.\n";
 bool gTrace = false;
 
 static nsresult
-WriteAll(nsIOutputStream *os, const char *buf, PRUint32 bufLen, PRUint32 *lenWritten)
+WriteAll(nsIOutputStream *os, const char *buf, uint32_t bufLen, uint32_t *lenWritten)
 {
     const char *p = buf;
     *lenWritten = 0;
     while (bufLen) {
-        PRUint32 n;
+        uint32_t n;
         nsresult rv = os->Write(p, bufLen, &n);
         if (NS_FAILED(rv)) return rv;
         p += n;
@@ -111,7 +111,7 @@ public:
     NS_IMETHOD Run() {
         nsresult rv;
         char buf[101];
-        PRUint32 count;
+        uint32_t count;
         PRIntervalTime start = PR_IntervalNow();
         while (true) {
             rv = mIn->Read(buf, 100, &count);
@@ -139,11 +139,11 @@ public:
     nsReceiver(nsIInputStream* in) : mIn(in), mCount(0) {
     }
 
-    PRUint32 GetBytesRead() { return mCount; }
+    uint32_t GetBytesRead() { return mCount; }
 
 protected:
     nsCOMPtr<nsIInputStream> mIn;
-    PRUint32            mCount;
+    uint32_t            mCount;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsReceiver, nsIRunnable)
@@ -161,16 +161,16 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     rv = NS_NewThread(getter_AddRefs(thread), receiver);
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 total = 0;
+    uint32_t total = 0;
     PRIntervalTime start = PR_IntervalNow();
-    for (PRUint32 i = 0; i < ITERATIONS; i++) {
-        PRUint32 writeCount;
+    for (uint32_t i = 0; i < ITERATIONS; i++) {
+        uint32_t writeCount;
         char *buf = PR_smprintf("%d %s", i, kTestPattern);
-        PRUint32 len = strlen(buf);
+        uint32_t len = strlen(buf);
         rv = WriteAll(out, buf, len, &writeCount);
         if (gTrace) {
             printf("wrote: ");
-            for (PRUint32 j = 0; j < writeCount; j++) {
+            for (uint32_t j = 0; j < writeCount; j++) {
                 putc(buf[j], stdout);
             }
             printf("\n");
@@ -202,8 +202,8 @@ public:
     NS_IMETHOD Run() {
         nsresult rv;
         char buf[101];
-        PRUint32 count;
-        PRUint32 total = 0;
+        uint32_t count;
+        uint32_t total = 0;
         while (true) {
             //if (gTrace)
             //    printf("calling Read\n");
@@ -234,15 +234,15 @@ public:
         mMon = new Monitor("nsShortReader");
     }
 
-    void Received(PRUint32 count) {
+    void Received(uint32_t count) {
         MonitorAutoEnter mon(*mMon);
         mReceived += count;
         mon.Notify();
     }
 
-    PRUint32 WaitForReceipt(const PRUint32 aWriteCount) {
+    uint32_t WaitForReceipt(const uint32_t aWriteCount) {
         MonitorAutoEnter mon(*mMon);
-        PRUint32 result = mReceived;
+        uint32_t result = mReceived;
 
         while (result < aWriteCount) {
             mon.Wait();
@@ -257,7 +257,7 @@ public:
 
 protected:
     nsCOMPtr<nsIInputStream> mIn;
-    PRUint32                 mReceived;
+    uint32_t                 mReceived;
     Monitor*                 mMon;
 };
 
@@ -276,11 +276,11 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     rv = NS_NewThread(getter_AddRefs(thread), receiver);
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 total = 0;
-    for (PRUint32 i = 0; i < ITERATIONS; i++) {
-        PRUint32 writeCount;
+    uint32_t total = 0;
+    for (uint32_t i = 0; i < ITERATIONS; i++) {
+        uint32_t writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        PRUint32 len = strlen(buf);
+        uint32_t len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = NS_MAX(1, len);
         rv = WriteAll(out, buf, len, &writeCount);
@@ -296,7 +296,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
         //printf("calling WaitForReceipt\n");
 
 #ifdef DEBUG
-        const PRUint32 received =
+        const uint32_t received =
 #endif
           receiver->WaitForReceipt(writeCount);
         NS_ASSERTION(received == writeCount, "received wrong amount");
@@ -320,7 +320,7 @@ public:
 
     NS_IMETHOD Run() {
         nsresult rv;
-        PRUint32 count;
+        uint32_t count;
         while (true) {
             rv = mOut->WriteFrom(mIn, ~0U, &count);
             if (NS_FAILED(rv)) {
@@ -349,7 +349,7 @@ public:
 protected:
     nsCOMPtr<nsIInputStream>      mIn;
     nsCOMPtr<nsIOutputStream>     mOut;
-    PRUint32                            mCount;
+    uint32_t                            mCount;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPump,
@@ -385,11 +385,11 @@ TestChainedPipes()
     rv = NS_NewThread(getter_AddRefs(receiverThread), receiver);
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 total = 0;
-    for (PRUint32 i = 0; i < ITERATIONS; i++) {
-        PRUint32 writeCount;
+    uint32_t total = 0;
+    for (uint32_t i = 0; i < ITERATIONS; i++) {
+        uint32_t writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        PRUint32 len = strlen(buf);
+        uint32_t len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = NS_MAX(1, len);
         rv = WriteAll(out1, buf, len, &writeCount);
@@ -415,12 +415,12 @@ TestChainedPipes()
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-RunTests(PRUint32 segSize, PRUint32 segCount)
+RunTests(uint32_t segSize, uint32_t segCount)
 {
     nsresult rv;
     nsCOMPtr<nsIInputStream> in;
     nsCOMPtr<nsIOutputStream> out;
-    PRUint32 bufSize = segSize * segCount;
+    uint32_t bufSize = segSize * segCount;
     printf("Testing New Pipes: segment size %d buffer size %d\n", segSize, bufSize);
 
     printf("Testing long writes...\n");

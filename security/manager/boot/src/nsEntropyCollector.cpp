@@ -28,7 +28,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsEntropyCollector,
                               nsIBufEntropyCollector)
 
 NS_IMETHODIMP
-nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
+nsEntropyCollector::RandomUpdate(void *new_entropy, int32_t bufLen)
 {
   if (bufLen > 0) {
     if (mForwardTarget) {
@@ -39,10 +39,10 @@ nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
       const unsigned char *PastEndPointer = mEntropyCache + entropy_buffer_size;
 
       // if the input is large, we only take as much as we can store
-      PRInt32 bytes_wanted = NS_MIN(bufLen, PRInt32(entropy_buffer_size));
+      int32_t bytes_wanted = NS_MIN(bufLen, int32_t(entropy_buffer_size));
 
       // remember the number of bytes we will have after storing new_entropy
-      mBytesCollected = NS_MIN(PRInt32(entropy_buffer_size),
+      mBytesCollected = NS_MIN(int32_t(entropy_buffer_size),
                                mBytesCollected + bytes_wanted);
 
       // as the above statements limit bytes_wanted to the entropy_buffer_size,
@@ -50,13 +50,13 @@ nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
       while (bytes_wanted > 0) {
 
         // how many bytes to end of cyclic buffer?
-        const PRInt32 space_to_end = PastEndPointer - mWritePointer;
+        const int32_t space_to_end = PastEndPointer - mWritePointer;
 
         // how many bytes can we copy, not reaching the end of the buffer?
-        const PRInt32 this_time = NS_MIN(space_to_end, bytes_wanted);
+        const int32_t this_time = NS_MIN(space_to_end, bytes_wanted);
 
         // copy at most to the end of the cyclic buffer
-        for (PRInt32 i = 0; i < this_time; ++i) {
+        for (int32_t i = 0; i < this_time; ++i) {
 
           unsigned int old = *mWritePointer;
 

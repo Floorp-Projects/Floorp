@@ -66,9 +66,9 @@ XULSelectControlAccessible::SelectedItems()
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect =
     do_QueryInterface(mSelectControl);
   if (xulMultiSelect) {
-    PRInt32 length = 0;
+    int32_t length = 0;
     xulMultiSelect->GetSelectedCount(&length);
-    for (PRInt32 index = 0; index < length; index++) {
+    for (int32_t index = 0; index < length; index++) {
       nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
       xulMultiSelect->MultiGetSelectedItem(index, getter_AddRefs(itemElm));
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
@@ -95,7 +95,7 @@ XULSelectControlAccessible::SelectedItems()
 }
 
 Accessible*
-XULSelectControlAccessible::GetSelectedItem(PRUint32 aIndex)
+XULSelectControlAccessible::GetSelectedItem(uint32_t aIndex)
 {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
     do_QueryInterface(mSelectControl);
@@ -110,26 +110,26 @@ XULSelectControlAccessible::GetSelectedItem(PRUint32 aIndex)
   return itemNode && mDoc ? mDoc->GetAccessible(itemNode) : nullptr;
 }
 
-PRUint32
+uint32_t
 XULSelectControlAccessible::SelectedItemCount()
 {
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
     do_QueryInterface(mSelectControl);
   if (multiSelectControl) {
-    PRInt32 count = 0;
+    int32_t count = 0;
     multiSelectControl->GetSelectedCount(&count);
     return count;
   }
 
   // For XUL single-select control/menulist
-  PRInt32 index;
+  int32_t index;
   mSelectControl->GetSelectedIndex(&index);
   return (index >= 0) ? 1 : 0;
 }
 
 bool
-XULSelectControlAccessible::AddItemToSelection(PRUint32 aIndex)
+XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex)
 {
   Accessible* item = GetChildAt(aIndex);
   if (!item)
@@ -157,7 +157,7 @@ XULSelectControlAccessible::AddItemToSelection(PRUint32 aIndex)
 }
 
 bool
-XULSelectControlAccessible::RemoveItemFromSelection(PRUint32 aIndex)
+XULSelectControlAccessible::RemoveItemFromSelection(uint32_t aIndex)
 {
   Accessible* item = GetChildAt(aIndex);
   if (!item)
@@ -185,7 +185,7 @@ XULSelectControlAccessible::RemoveItemFromSelection(PRUint32 aIndex)
 }
 
 bool
-XULSelectControlAccessible::IsItemSelected(PRUint32 aIndex)
+XULSelectControlAccessible::IsItemSelected(uint32_t aIndex)
 {
   Accessible* item = GetChildAt(aIndex);
   if (!item)

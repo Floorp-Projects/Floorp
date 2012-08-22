@@ -114,22 +114,22 @@ public:
     NS_IMETHOD         SetModal(bool aModal);
     virtual bool       IsVisible() const;
     NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
-                                         PRInt32 *aX,
-                                         PRInt32 *aY);
-    NS_IMETHOD         Move(PRInt32 aX,
-                            PRInt32 aY);
-    NS_IMETHOD         Resize(PRInt32 aWidth,
-                              PRInt32 aHeight,
+                                         int32_t *aX,
+                                         int32_t *aY);
+    NS_IMETHOD         Move(int32_t aX,
+                            int32_t aY);
+    NS_IMETHOD         Resize(int32_t aWidth,
+                              int32_t aHeight,
                               bool    aRepaint);
-    NS_IMETHOD         Resize(PRInt32 aX,
-                              PRInt32 aY,
-                              PRInt32 aWidth,
-                              PRInt32 aHeight,
+    NS_IMETHOD         Resize(int32_t aX,
+                              int32_t aY,
+                              int32_t aWidth,
+                              int32_t aHeight,
                               bool     aRepaint);
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate);
-    NS_IMETHOD         SetSizeMode(PRInt32 aMode);
+    NS_IMETHOD         SetSizeMode(int32_t aMode);
     NS_IMETHOD         Enable(bool aState);
     NS_IMETHOD         SetFocus(bool aRaise = false);
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect);
@@ -137,14 +137,14 @@ public:
     NS_IMETHOD         SetBackgroundColor(const nscolor &aColor);
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
-                                 PRUint32 aHotspotX, PRUint32 aHotspotY);
+                                 uint32_t aHotspotX, uint32_t aHotspotY);
     NS_IMETHOD         SetHasTransparentBackground(bool aTransparent);
     NS_IMETHOD         GetHasTransparentBackground(bool& aTransparent);
     NS_IMETHOD         HideWindowChrome(bool aShouldHide);
     NS_IMETHOD         MakeFullScreen(bool aFullScreen);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect);
 
-    virtual void*      GetNativeData(PRUint32 aDataType);
+    virtual void*      GetNativeData(uint32_t aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     virtual nsIntPoint WidgetToScreenOffset();
@@ -158,8 +158,8 @@ public:
 
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
 
-    NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
-    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
+    NS_IMETHOD         GetAttention(int32_t aCycleCount);
+    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
@@ -199,7 +199,7 @@ public:
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
     QWidget* GetViewWidget();
-    virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
+    virtual uint32_t GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
 protected:
     nsCOMPtr<nsIWidget> mParent;
@@ -260,20 +260,20 @@ protected:
     virtual nsEventStatus OnTouchEvent(QTouchEvent *event, bool &handled);
 
     virtual nsEventStatus OnGestureEvent(QGestureEvent *event, bool &handled);
-    nsEventStatus DispatchGestureEvent(PRUint32 aMsg, PRUint32 aDirection,
+    nsEventStatus DispatchGestureEvent(uint32_t aMsg, uint32_t aDirection,
                                        double aDelta, const nsIntPoint& aRefPoint);
 
     double DistanceBetweenPoints(const QPointF &aFirstPoint, const QPointF &aSecondPoint);
 #endif
 
-    void               NativeResize(PRInt32 aWidth,
-                                    PRInt32 aHeight,
+    void               NativeResize(int32_t aWidth,
+                                    int32_t aHeight,
                                     bool    aRepaint);
 
-    void               NativeResize(PRInt32 aX,
-                                    PRInt32 aY,
-                                    PRInt32 aWidth,
-                                    PRInt32 aHeight,
+    void               NativeResize(int32_t aX,
+                                    int32_t aY,
+                                    int32_t aWidth,
+                                    int32_t aHeight,
                                     bool    aRepaint);
 
     void               NativeShow  (bool    aAction);
@@ -311,7 +311,7 @@ private:
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &event, QGraphicsSceneMouseEvent *aEvent, int aClickCount = 1);
     nsEventStatus      DispatchCommandEvent(nsIAtom* aCommand);
-    nsEventStatus      DispatchContentCommandEvent(PRInt32 aMsg);
+    nsEventStatus      DispatchContentCommandEvent(int32_t aMsg);
     MozQWidget*        createQWidget(MozQWidget* parent,
                                      nsNativeWidget nativeParent,
                                      nsWidgetInitData* aInitData);
@@ -319,9 +319,9 @@ private:
 
     MozQWidget*        mWidget;
 
-    PRUint32           mIsVisible : 1,
+    uint32_t           mIsVisible : 1,
                        mActivatePending : 1;
-    PRInt32            mSizeState;
+    int32_t            mSizeState;
     PluginType         mPluginType;
 
     nsRefPtr<gfxASurface> mThebesSurface;
@@ -335,37 +335,37 @@ private:
 
     // this is everything we need to be able to fire motion events
     // repeatedly
-    PRUint32 mKeyDownFlags[8];
+    uint32_t mKeyDownFlags[8];
 
     /* Helper methods for DOM Key Down event suppression. */
-    PRUint32* GetFlagWord32(PRUint32 aKeyCode, PRUint32* aMask) {
+    uint32_t* GetFlagWord32(uint32_t aKeyCode, uint32_t* aMask) {
         /* Mozilla DOM Virtual Key Code is from 0 to 224. */
         NS_ASSERTION((aKeyCode <= 0xFF), "Invalid DOM Key Code");
         aKeyCode &= 0xFF;
 
         /* 32 = 2^5 = 0x20 */
-        *aMask = PRUint32(1) << (aKeyCode & 0x1F);
+        *aMask = uint32_t(1) << (aKeyCode & 0x1F);
         return &mKeyDownFlags[(aKeyCode >> 5)];
     }
 
-    bool IsKeyDown(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
+    bool IsKeyDown(uint32_t aKeyCode) {
+        uint32_t mask;
+        uint32_t* flag = GetFlagWord32(aKeyCode, &mask);
         return ((*flag) & mask) != 0;
     }
 
-    void SetKeyDownFlag(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
+    void SetKeyDownFlag(uint32_t aKeyCode) {
+        uint32_t mask;
+        uint32_t* flag = GetFlagWord32(aKeyCode, &mask);
         *flag |= mask;
     }
 
-    void ClearKeyDownFlag(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
+    void ClearKeyDownFlag(uint32_t aKeyCode) {
+        uint32_t mask;
+        uint32_t* flag = GetFlagWord32(aKeyCode, &mask);
         *flag &= ~mask;
     }
-    PRInt32 mQCursor;
+    int32_t mQCursor;
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -432,7 +432,7 @@ public:
     nsChildWindow();
     ~nsChildWindow();
 
-    PRInt32 mChildID;
+    int32_t mChildID;
 };
 
 class nsPopupWindow : public nsWindow
@@ -441,7 +441,7 @@ public:
     nsPopupWindow ();
     ~nsPopupWindow ();
 
-    PRInt32 mChildID;
+    int32_t mChildID;
 };
 #endif /* __nsWindow_h__ */
 

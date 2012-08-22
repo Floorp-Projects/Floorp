@@ -19,7 +19,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
   NS_IMETHOD_(nsrefcnt) RefCnt() = 0;
-  NS_IMETHOD_(PRInt32) ID() = 0;
+  NS_IMETHOD_(int32_t) ID() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
@@ -27,7 +27,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 class Foo MOZ_FINAL : public IFoo {
 public:
 
-  Foo(PRInt32 aID);
+  Foo(int32_t aID);
   ~Foo();
 
   // nsISupports implementation
@@ -35,16 +35,16 @@ public:
 
   // IFoo implementation
   NS_IMETHOD_(nsrefcnt) RefCnt() { return mRefCnt; }
-  NS_IMETHOD_(PRInt32) ID() { return mID; }
+  NS_IMETHOD_(int32_t) ID() { return mID; }
 
-  static PRInt32 gCount;
+  static int32_t gCount;
 
-  PRInt32 mID;
+  int32_t mID;
 };
 
-PRInt32 Foo::gCount = 0;
+int32_t Foo::gCount = 0;
 
-Foo::Foo(PRInt32 aID)
+Foo::Foo(int32_t aID)
 {
   mID = aID;
   ++gCount;
@@ -83,13 +83,13 @@ public:
   // nsISupports implementation
   NS_DECL_ISUPPORTS
 
-  static PRInt32 sReleaseCalled;
+  static int32_t sReleaseCalled;
 
 private:
   nsCOMArray<IBar>& mArray;
 };
 
-PRInt32 Bar::sReleaseCalled = 0;
+int32_t Bar::sReleaseCalled = 0;
 
 typedef nsCOMArray<IBar> Array2;
 
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 
   Array arr;
 
-  for (PRInt32 i = 0; i < 20; ++i) {
+  for (int32_t i = 0; i < 20; ++i) {
     nsCOMPtr<IFoo> foo = new Foo(i);
     arr.AppendObject(foo);
   }
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     rv = 1;
   }
 
-  for (PRInt32 i = 0; i < 10; ++i) {
+  for (int32_t i = 0; i < 10; ++i) {
 	if (arr[i] == nullptr) {
       fail("nsCOMArray elements should be non-null");
       rv = 1;
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     }
   }
 
-  for (PRInt32 i = 10; i < 30; ++i) {
+  for (int32_t i = 10; i < 30; ++i) {
 	if (arr[i] != nullptr) {
       fail("nsCOMArray elements should be null");
       rv = 1;
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     }
   }
 
-  PRInt32 base;
+  int32_t base;
   {
     Array2 arr2;
 
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
          *fourthObject,
          *fifthObject,
          *ninthObject;
-    for (PRInt32 i = 0; i < 20; ++i) {
+    for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar = new Bar(arr2);
       switch (i) {
       case 2:
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
     if (arr2.Count() != 5) {
       fail("RemoveObjectsAt should remove exactly three objects");
     }
-    for (PRInt32 j = 0; j < arr2.Count(); ++j) {
+    for (int32_t j = 0; j < arr2.Count(); ++j) {
       if (arr2.ObjectAt(j) == thirdObject) {
         fail("RemoveObjectsAt should have removed thirdObject");
       }
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
   {
     Array2 arr2;
 
-    for (PRInt32 i = 0; i < 20; ++i) {
+    for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar  = new Bar(arr2);
       arr2.AppendObject(bar);
     }

@@ -31,13 +31,13 @@
 #include "nsMemory.h"
 
 struct nsHtml5CharacterName {
-  PRUint16 nameStart;
-  PRUint16 nameLen;
+  uint16_t nameStart;
+  uint16_t nameLen;
   #ifdef DEBUG
-  PRInt32 n;
+  int32_t n;
   #endif
-  PRInt32 length() const;
-  PRUnichar charAt(PRInt32 index) const;
+  int32_t length() const;
+  PRUnichar charAt(int32_t index) const;
 };
 
 class nsHtml5NamedCharacters

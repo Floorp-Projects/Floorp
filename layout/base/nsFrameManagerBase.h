@@ -53,7 +53,7 @@ public:
     mRootFrame = aRootFrame;
   }
 
-  static PRUint32 GetGlobalGenerationNumber() { return sGlobalGenerationNumber; }
+  static uint32_t GetGlobalGenerationNumber() { return sGlobalGenerationNumber; }
 
 protected:
   class UndisplayedMap;
@@ -75,7 +75,7 @@ protected:
   // makes sure we always using the correct number.
   // A per PresContext generation number is available
   // via nsPresContext::GetDOMGeneration
-  static PRUint32                 sGlobalGenerationNumber;
+  static uint32_t                 sGlobalGenerationNumber;
 };
 
 #endif

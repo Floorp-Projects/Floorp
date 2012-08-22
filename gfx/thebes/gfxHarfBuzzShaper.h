@@ -33,8 +33,8 @@ public:
     hb_position_t GetGlyphHAdvance(gfxContext *aContext,
                                    hb_codepoint_t glyph) const;
 
-    hb_position_t GetHKerning(PRUint16 aFirstGlyph,
-                              PRUint16 aSecondGlyph) const;
+    hb_position_t GetHKerning(uint16_t aFirstGlyph,
+                              uint16_t aSecondGlyph) const;
 
 protected:
     nsresult SetGlyphsFromRun(gfxContext *aContext,
@@ -46,7 +46,7 @@ protected:
     nscoord GetGlyphPositions(gfxContext *aContext,
                               hb_buffer_t *aBuffer,
                               nsTArray<nsPoint>& aPositions,
-                              PRUint32 aAppUnitsPerDevUnit);
+                              uint32_t aAppUnitsPerDevUnit);
 
     // harfbuzz face object, created on first use (caches font tables)
     hb_face_t         *mHBFace;
@@ -65,15 +65,15 @@ protected:
     // This is a signed value so that we can use -1 to indicate
     // an error (if the hhea table was not available).
     mutable hb_blob_t *mHmtxTable;
-    mutable PRInt32    mNumLongMetrics;
+    mutable int32_t    mNumLongMetrics;
 
     // Cached pointer to cmap subtable to be used for char-to-glyph mapping.
     // This comes from GetFontTablePtr; if it is non-null, our destructor
     // must call ReleaseFontTablePtr to avoid permanently caching the table.
     mutable hb_blob_t *mCmapTable;
-    mutable PRInt32    mCmapFormat;
-    mutable PRUint32   mSubtableOffset;
-    mutable PRUint32   mUVSTableOffset;
+    mutable int32_t    mCmapFormat;
+    mutable uint32_t   mSubtableOffset;
+    mutable uint32_t   mUVSTableOffset;
 
     // Whether the font implements GetGlyph, or we should read tables
     // directly

@@ -25,14 +25,14 @@ public:
    * Simple management of screen brightness locks. This abstract base class
    * allows all widget implementations to share brightness locking code.
    */
-  NS_IMETHOD LockMinimumBrightness(PRUint32 aBrightness);
-  NS_IMETHOD UnlockMinimumBrightness(PRUint32 aBrightness);
+  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness);
+  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness);
 
-  NS_IMETHOD GetRotation(PRUint32* aRotation) {
+  NS_IMETHOD GetRotation(uint32_t* aRotation) {
     *aRotation = nsIScreen::ROTATION_0_DEG;
     return NS_OK;
   }
-  NS_IMETHOD SetRotation(PRUint32 aRotation) { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD SetRotation(uint32_t aRotation) { return NS_ERROR_NOT_AVAILABLE; }
 
 protected:
   /**
@@ -53,7 +53,7 @@ protected:
    *                    then that signifies that there is no current
    *                    minimum brightness level, and the screen can shut off.
    */
-  virtual void ApplyMinimumBrightness(PRUint32 aBrightness) { }
+  virtual void ApplyMinimumBrightness(uint32_t aBrightness) { }
 
 private:
   /**
@@ -62,7 +62,7 @@ private:
    */
   void CheckMinimumBrightness();
 
-  PRUint32 mBrightnessLocks[nsIScreen::BRIGHTNESS_LEVELS];
+  uint32_t mBrightnessLocks[nsIScreen::BRIGHTNESS_LEVELS];
 };
 
 #endif // nsBaseScreen_h

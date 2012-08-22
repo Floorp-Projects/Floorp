@@ -63,7 +63,7 @@ public:
  * addition to nsMemory::Free.
  * 
  * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a PRInt32.  Note that this means this macro 
+ *                  should be a int32_t.  Note that this means this macro 
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  * @param freeFunc  The function or macro to be used to free it. 
@@ -77,7 +77,7 @@ public:
  */
 #define NS_FREE_XPCOM_POINTER_ARRAY(size, array, freeFunc)                    \
     PR_BEGIN_MACRO                                                            \
-        PRInt32 iter_ = PRInt32(size);                                        \
+        int32_t iter_ = int32_t(size);                                        \
         while (--iter_ >= 0)                                                  \
             freeFunc((array)[iter_]);                                         \
         NS_Free((array));                                                     \
@@ -91,7 +91,7 @@ public:
  * convenience wrapper around NS_FREE_XPCOM_POINTER_ARRAY.
  *
  * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a PRInt32.  Note that this means this macro 
+ *                  should be a int32_t.  Note that this means this macro 
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */
@@ -109,7 +109,7 @@ public:
  * free function.
  *
  * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a PRInt32.  Note that this means this macro 
+ *                  should be a int32_t.  Note that this means this macro 
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */

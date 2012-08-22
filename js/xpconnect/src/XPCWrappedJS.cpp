@@ -258,7 +258,7 @@ CheckMainThreadOnly(nsXPCWrappedJS *aWrapper)
     nsCOMPtr<nsIClassInfo> ci;
     CallQueryInterface(aWrapper, getter_AddRefs(ci));
     if (ci) {
-        PRUint32 flags;
+        uint32_t flags;
         if (NS_SUCCEEDED(ci->GetFlags(&flags)) && !(flags & nsIClassInfo::MAIN_THREAD_ONLY))
             return true;
 
@@ -557,7 +557,7 @@ nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** info)
 }
 
 NS_IMETHODIMP
-nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
+nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
                            const XPTMethodDescriptor* info,
                            nsXPTCMiniVariant* params)
 {
@@ -638,7 +638,7 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
 /***************************************************************************/
 
 NS_IMETHODIMP
-nsXPCWrappedJS::DebugDump(PRInt16 depth)
+nsXPCWrappedJS::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     XPC_LOG_ALWAYS(("nsXPCWrappedJS @ %x with mRefCnt = %d", this, mRefCnt.get()));

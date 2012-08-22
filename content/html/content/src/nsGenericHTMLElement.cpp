@@ -121,7 +121,7 @@ void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
 
   nsStringKey key(name);
 
-  PRInt32 count = (PRInt32)sGEUS_ElementCounts.Get(&key);
+  int32_t count = (int32_t)sGEUS_ElementCounts.Get(&key);
 
   count++;
 
@@ -279,7 +279,7 @@ nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst)
 {
   nsresult rv;
-  PRInt32 i, count = GetAttrCount();
+  int32_t i, count = GetAttrCount();
   for (i = 0; i < count; ++i) {
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
@@ -571,7 +571,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 }
 
 nsresult
-nsGenericHTMLElement::GetOffsetTop(PRInt32* aOffsetTop)
+nsGenericHTMLElement::GetOffsetTop(int32_t* aOffsetTop)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
@@ -583,7 +583,7 @@ nsGenericHTMLElement::GetOffsetTop(PRInt32* aOffsetTop)
 }
 
 nsresult
-nsGenericHTMLElement::GetOffsetLeft(PRInt32* aOffsetLeft)
+nsGenericHTMLElement::GetOffsetLeft(int32_t* aOffsetLeft)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
@@ -595,7 +595,7 @@ nsGenericHTMLElement::GetOffsetLeft(PRInt32* aOffsetLeft)
 }
 
 nsresult
-nsGenericHTMLElement::GetOffsetWidth(PRInt32* aOffsetWidth)
+nsGenericHTMLElement::GetOffsetWidth(int32_t* aOffsetWidth)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
@@ -607,7 +607,7 @@ nsGenericHTMLElement::GetOffsetWidth(PRInt32* aOffsetWidth)
 }
 
 nsresult
-nsGenericHTMLElement::GetOffsetHeight(PRInt32* aOffsetHeight)
+nsGenericHTMLElement::GetOffsetHeight(int32_t* aOffsetHeight)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
@@ -670,7 +670,7 @@ private:
       const nsTextFragment* mTextFragment;
     };
     Type     mType;
-    PRUint32 mLength;
+    uint32_t mLength;
   };
 public:
   StringBuilder() : mLast(this), mLength(0) {}
@@ -680,7 +680,7 @@ public:
     Unit* u = AddUnit();
     u->mAtom = aAtom;
     u->mType = Unit::eAtom;
-    PRUint32 len = aAtom->GetLength();
+    uint32_t len = aAtom->GetLength();
     u->mLength = len;
     mLength += len;
   }
@@ -691,7 +691,7 @@ public:
     Unit* u = AddUnit();
     u->mLiteral = aLiteral;
     u->mType = Unit::eLiteral;
-    PRUint32 len = N - 1;
+    uint32_t len = N - 1;
     u->mLength = len;
     mLength += len;
   }
@@ -702,7 +702,7 @@ public:
     Unit* u = AddUnit();
     u->mLiteral = aLiteral;
     u->mType = Unit::eLiteral;
-    PRUint32 len = N - 1;
+    uint32_t len = N - 1;
     u->mLength = len;
     mLength += len;
   }
@@ -712,7 +712,7 @@ public:
     Unit* u = AddUnit();
     u->mString = new nsAutoString(aString);
     u->mType = Unit::eString;
-    PRUint32 len = aString.Length();
+    uint32_t len = aString.Length();
     u->mLength = len;
     mLength += len;
   }
@@ -722,12 +722,12 @@ public:
     Unit* u = AddUnit();
     u->mString = aString;
     u->mType = Unit::eString;
-    PRUint32 len = aString->Length();
+    uint32_t len = aString->Length();
     u->mLength = len;
     mLength += len;
   }
 
-  void AppendWithAttrEncode(nsAutoString* aString, PRUint32 aLen)
+  void AppendWithAttrEncode(nsAutoString* aString, uint32_t aLen)
   {
     Unit* u = AddUnit();
     u->mString = aString;
@@ -741,12 +741,12 @@ public:
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
     u->mType = Unit::eTextFragment;
-    PRUint32 len = aTextFragment->GetLength();
+    uint32_t len = aTextFragment->GetLength();
     u->mLength = len;
     mLength += len;
   }
 
-  void AppendWithEncode(const nsTextFragment* aTextFragment, PRUint32 aLen)
+  void AppendWithEncode(const nsTextFragment* aTextFragment, uint32_t aLen)
   {
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
@@ -762,8 +762,8 @@ public:
     }
 
     for (StringBuilder* current = this; current; current = current->mNext) {
-      PRUint32 len = current->mUnits.Length();
-      for (PRUint32 i = 0; i < len; ++i) {
+      uint32_t len = current->mUnits.Length();
+      for (uint32_t i = 0; i < len; ++i) {
         Unit& u = current->mUnits[i];
         switch (u.mType) {
           case Unit::eAtom:
@@ -832,10 +832,10 @@ private:
 
   void EncodeTextFragment(const nsTextFragment* aValue, nsAString& aOut)
   {
-    PRUint32 len = aValue->GetLength();
+    uint32_t len = aValue->GetLength();
     if (aValue->Is2b()) {
       const PRUnichar* data = aValue->Get2b();
-      for (PRUint32 i = 0; i < len; ++i) {
+      for (uint32_t i = 0; i < len; ++i) {
         const PRUnichar c = data[i];
         switch (c) {
           case '<':
@@ -857,7 +857,7 @@ private:
       }
     } else {
       const char* data = aValue->Get1b();
-      for (PRUint32 i = 0; i < len; ++i) {
+      for (uint32_t i = 0; i < len; ++i) {
         const unsigned char c = data[i];
         switch (c) {
           case '<':
@@ -884,17 +884,17 @@ private:
   nsAutoPtr<StringBuilder>                mNext;
   StringBuilder*                          mLast;
   // mLength is used only in the first StringBuilder object in the linked list.
-  PRUint32                                mLength;
+  uint32_t                                mLength;
 };
 
 static void
 AppendEncodedCharacters(const nsTextFragment* aText, StringBuilder& aBuilder)
 {
-  PRUint32 extraSpaceNeeded = 0;
-  PRUint32 len = aText->GetLength();
+  uint32_t extraSpaceNeeded = 0;
+  uint32_t len = aText->GetLength();
   if (aText->Is2b()) {
     const PRUnichar* data = aText->Get2b();
-    for (PRUint32 i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       const PRUnichar c = data[i];
       switch (c) {
         case '<':
@@ -915,7 +915,7 @@ AppendEncodedCharacters(const nsTextFragment* aText, StringBuilder& aBuilder)
     }
   } else {
     const char* data = aText->Get1b();
-    for (PRUint32 i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       const unsigned char c = data[i];
       switch (c) {
         case '<':
@@ -949,7 +949,7 @@ AppendEncodedAttributeValue(nsAutoString* aValue, StringBuilder& aBuilder)
   const PRUnichar* c = aValue->BeginReading();
   const PRUnichar* end = aValue->EndReading();
 
-  PRUint32 extraSpaceNeeded = 0;
+  uint32_t extraSpaceNeeded = 0;
   while (c < end) {
     switch (*c) {
       case '"':
@@ -978,7 +978,7 @@ static void
 StartElement(Element* aContent, StringBuilder& aBuilder)
 {
   nsIAtom* localName = aContent->Tag();
-  PRInt32 tagNS = aContent->GetNameSpaceID();
+  int32_t tagNS = aContent->GetNameSpaceID();
 
   aBuilder.Append("<");
   if (aContent->IsHTML() || aContent->IsSVG() || aContent->IsMathML()) {
@@ -987,11 +987,11 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
     aBuilder.Append(aContent->NodeName());
   }
 
-  PRInt32 count = aContent->GetAttrCount();
-  for (PRInt32 i = count; i > 0;) {
+  int32_t count = aContent->GetAttrCount();
+  for (int32_t i = count; i > 0;) {
     --i;
     const nsAttrName* name = aContent->GetAttrNameAt(i);
-    PRInt32 attNs = name->NamespaceID();
+    int32_t attNs = name->NamespaceID();
     nsIAtom* attName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
@@ -1082,14 +1082,14 @@ ShouldEscape(nsIContent* aParent)
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
-    for (PRUint32 i = 0; i < ArrayLength(nonEscapingElements); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(nonEscapingElements); ++i) {
       sFilter.add(nonEscapingElements[i]);
     }
   }
 
   nsIAtom* tag = aParent->Tag();
   if (sFilter.mightContain(tag)) {
-    for (PRUint32 i = 0; i < ArrayLength(nonEscapingElements); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(nonEscapingElements); ++i) {
       if (tag == nonEscapingElements[i]) {
         return false;
       }
@@ -1119,14 +1119,14 @@ IsVoidTag(Element* aElement)
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
-    for (PRUint32 i = 0; i < ArrayLength(voidElements); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(voidElements); ++i) {
       sFilter.add(voidElements[i]);
     }
   }
   
   nsIAtom* tag = aElement->Tag();
   if (sFilter.mightContain(tag)) {
-    for (PRUint32 i = 0; i < ArrayLength(voidElements); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(voidElements); ++i) {
       if (tag == voidElements[i]) {
         return true;
       }
@@ -1255,7 +1255,7 @@ nsGenericHTMLElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  PRUint32 flags = nsIDocumentEncoder::OutputEncodeBasicEntities |
+  uint32_t flags = nsIDocumentEncoder::OutputEncodeBasicEntities |
                    // Output DOM-standard newlines
                    nsIDocumentEncoder::OutputLFLineBreak |
                    // Don't do linebreaking that's not present in
@@ -1300,10 +1300,10 @@ nsGenericHTMLElement::GetOuterHTML(nsAString& aOuterHTML) {
 void
 nsGenericHTMLElement::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
                                                          nsIContent* aDest,
-                                                         PRInt32 aOldChildCount)
+                                                         int32_t aOldChildCount)
 {
   // Fire mutation events. Optimize for the case when there are no listeners
-  PRInt32 newChildCount = aDest->GetChildCount();
+  int32_t newChildCount = aDest->GetChildCount();
   if (newChildCount && nsContentUtils::
         HasMutationListeners(aDoc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
     nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
@@ -1333,9 +1333,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, true);
 
   // Remove childnodes.
-  PRUint32 childCount = GetChildCount();
+  uint32_t childCount = GetChildCount();
   nsAutoMutationBatch mb(this, true, false);
-  for (PRUint32 i = 0; i < childCount; ++i) {
+  for (uint32_t i = 0; i < childCount; ++i) {
     RemoveChildAt(0, true);
   }
   mb.RemovalDone();
@@ -1344,7 +1344,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   
   nsresult rv = NS_OK;
   if (doc->IsHTML()) {
-    PRInt32 oldChildCount = GetChildCount();
+    int32_t oldChildCount = GetChildCount();
     rv = nsContentUtils::ParseFragmentHTML(aInnerHTML,
                                            this,
                                            Tag(),
@@ -1389,7 +1389,7 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
 
   if (OwnerDoc()->IsHTML()) {
     nsIAtom* localName;
-    PRInt32 namespaceID;
+    int32_t namespaceID;
     if (parent->IsElement()) {
       localName = static_cast<nsIContent*>(parent.get())->Tag();
       namespaceID = static_cast<nsIContent*>(parent.get())->GetNameSpaceID();
@@ -1491,8 +1491,8 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
       (position == eBeforeEnd ||
        (position == eAfterEnd && !GetNextSibling()) ||
        (position == eAfterBegin && !GetFirstChild()))) {
-    PRInt32 oldChildCount = destination->GetChildCount();
-    PRInt32 contextNs = destination->GetNameSpaceID();
+    int32_t oldChildCount = destination->GetChildCount();
+    int32_t contextNs = destination->GetNameSpaceID();
     nsIAtom* contextLocal = destination->Tag();
     if (contextLocal == nsGkAtoms::html && contextNs == kNameSpaceID_XHTML) {
       // For compat with IE6 through IE9. Willful violation of HTML5 as of
@@ -1545,7 +1545,7 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
 }
 
 nsresult
-nsGenericHTMLElement::ScrollIntoView(bool aTop, PRUint8 optional_argc)
+nsGenericHTMLElement::ScrollIntoView(bool aTop, uint8_t optional_argc)
 {
   nsIDocument *document = GetCurrentDoc();
 
@@ -1563,7 +1563,7 @@ nsGenericHTMLElement::ScrollIntoView(bool aTop, PRUint8 optional_argc)
     aTop = true;
   }
 
-  PRInt16 vpercent = aTop ? nsIPresShell::SCROLL_TOP :
+  int16_t vpercent = aTop ? nsIPresShell::SCROLL_TOP :
     nsIPresShell::SCROLL_BOTTOM;
 
   presShell->ScrollContentIntoView(this,
@@ -1620,7 +1620,7 @@ nsGenericHTMLElement::GetSpellcheck(bool* aSpellcheck)
   }
 
   // Is this a multiline plaintext input?
-  PRInt32 controlType = formControl->GetType();
+  int32_t controlType = formControl->GetType();
   if (controlType == NS_FORM_TEXTAREA) {
     *aSpellcheck = true;             // Spellchecked by default
     return NS_OK;
@@ -1636,7 +1636,7 @@ nsGenericHTMLElement::GetSpellcheck(bool* aSpellcheck)
   // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
   // The web page should not know if the user has disabled spellchecking.
   // We'll catch this in the editor itself.
-  PRInt32 spellcheckLevel = Preferences::GetInt("layout.spellcheckDefault", 1);
+  int32_t spellcheckLevel = Preferences::GetInt("layout.spellcheckDefault", 1);
   if (spellcheckLevel == 2) {           // "Spellcheck multi- and single-line"
     *aSpellcheck = true;             // Spellchecked by default
   }
@@ -1895,7 +1895,7 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 }
 
 nsresult
-nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -1977,7 +1977,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
 }
 
 nsresult
-nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                               nsIAtom* aPrefix, const nsAString& aValue,
                               bool aNotify)
 {
@@ -1986,7 +1986,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   bool accessKey = aName == nsGkAtoms::accesskey && 
                      aNameSpaceID == kNameSpaceID_None;
 
-  PRInt32 change = 0;
+  int32_t change = 0;
   if (contentEditable) {
     change = GetContentEditableValue() == eTrue ? -1 : 0;
     SetMayHaveContentEditableAttr();
@@ -2017,11 +2017,11 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                 bool aNotify)
 {
   bool contentEditable = false;
-  PRInt32 contentEditableChange = 0;
+  int32_t contentEditableChange = 0;
 
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -2084,7 +2084,7 @@ CanHaveName(nsIAtom* aTag)
 }
 
 bool
-nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
+nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
                                      nsIAtom* aAttribute,
                                      const nsAString& aValue,
                                      nsAttrValue& aResult)
@@ -2551,7 +2551,7 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
                           NS_STYLE_INHERIT_BIT(TextReset))) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
-      PRInt32 align = value->GetEnumValue();
+      int32_t align = value->GetEnumValue();
       if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
         nsCSSValue* cssFloat = aRuleData->ValueForCssFloat();
         if (cssFloat->GetUnit() == eCSSUnit_Null) {
@@ -2820,11 +2820,11 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
     aData->ValueForOverflowX(),
     aData->ValueForOverflowY(),
   };
-  for (PRUint32 i = 0; i < ArrayLength(overflowValues); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(overflowValues); ++i) {
     if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::scrolling);
       if (value && value->Type() == nsAttrValue::eEnum) {
-        PRInt32 mappedValue;
+        int32_t mappedValue;
         switch (value->GetEnumValue()) {
           case NS_STYLE_FRAME_ON:
           case NS_STYLE_FRAME_SCROLL:
@@ -2879,7 +2879,7 @@ nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, bool* aValue) const
 }
 
 nsresult
-nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aResult)
+nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, int32_t aDefault, int32_t* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
@@ -2892,7 +2892,7 @@ nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aRes
 }
 
 nsresult
-nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
+nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, int32_t aValue)
 {
   nsAutoString value;
   value.AppendInt(aValue);
@@ -2901,8 +2901,8 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aDefault,
-                                         PRUint32* aResult)
+nsGenericHTMLElement::GetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aDefault,
+                                         uint32_t* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
@@ -2915,7 +2915,7 @@ nsGenericHTMLElement::GetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aDefault,
 }
 
 nsresult
-nsGenericHTMLElement::SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue)
+nsGenericHTMLElement::SetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aValue)
 {
   nsAutoString value;
   value.AppendInt(aValue);
@@ -3171,7 +3171,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
                                    nsIFormControl)
 
 bool
-nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
+nsGenericHTMLFormElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eHTML_FORM_CONTROL));
 }
@@ -3336,7 +3336,7 @@ nsGenericHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                         const nsAttrValueOrString* aValue,
                                         bool aNotify)
 {
@@ -3393,7 +3393,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                        const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -3499,7 +3499,7 @@ nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset)
 bool
 nsGenericHTMLFormElement::CanBeDisabled() const
 {
-  PRInt32 type = GetType();
+  int32_t type = GetType();
   // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_LABEL &&
@@ -3510,7 +3510,7 @@ nsGenericHTMLFormElement::CanBeDisabled() const
 bool
 nsGenericHTMLFormElement::IsHTMLFocusable(bool aWithMouse,
                                           bool* aIsFocusable,
-                                          PRInt32* aTabIndex)
+                                          int32_t* aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
@@ -3660,7 +3660,7 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
 }
 
 bool 
-nsGenericHTMLFormElement::IsElementDisabledForEvents(PRUint32 aMessage, 
+nsGenericHTMLFormElement::IsElementDisabledForEvents(uint32_t aMessage, 
                                                     nsIFrame* aFrame)
 {
   bool disabled = IsDisabled();
@@ -3797,7 +3797,7 @@ nsGenericHTMLFormElement::IsLabelable() const
 {
   // TODO: keygen should be in that list, see bug 101019.
   // TODO: NS_FORM_INPUT_HIDDEN should be removed, see bug 597650.
-  PRUint32 type = GetType();
+  uint32_t type = GetType();
   return type & NS_FORM_INPUT_ELEMENT ||
          type & NS_FORM_BUTTON_ELEMENT ||
          // type == NS_FORM_KEYGEN ||
@@ -3868,7 +3868,7 @@ nsresult nsGenericHTMLElement::Click()
 bool
 nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
                                       bool *aIsFocusable,
-                                      PRInt32 *aTabIndex)
+                                      int32_t *aTabIndex)
 {
   nsIDocument *doc = GetCurrentDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
@@ -3882,7 +3882,7 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
     return true;
   }
 
-  PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
+  int32_t tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
 
   bool override, disabled = false;
@@ -3937,9 +3937,9 @@ nsGenericHTMLElement::RegUnRegAccessKey(bool aDoReg)
 
     // Register or unregister as appropriate.
     if (aDoReg) {
-      esm->RegisterAccessKey(this, (PRUint32)accessKey.First());
+      esm->RegisterAccessKey(this, (uint32_t)accessKey.First());
     } else {
-      esm->UnregisterAccessKey(this, (PRUint32)accessKey.First());
+      esm->UnregisterAccessKey(this, (uint32_t)accessKey.First());
     }
   }
 }
@@ -4065,7 +4065,7 @@ nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
 void
 nsGenericHTMLElement::RecompileScriptEventListeners()
 {
-    PRInt32 i, count = mAttrsAndChildren.AttrCount();
+    int32_t i, count = mAttrsAndChildren.AttrCount();
     for (i = 0; i < count; ++i) {
         const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
 
@@ -4132,7 +4132,7 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
 }
 
 void
-nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
+nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
 {
   nsIDocument* document = GetCurrentDoc();
   if (!document) {

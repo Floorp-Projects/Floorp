@@ -51,7 +51,7 @@ NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue, NumericType aMaxValue)
 /**
  * CSS Frame type. Included as part of the reflow state.
  */
-typedef PRUint32  nsCSSFrameType;
+typedef uint32_t  nsCSSFrameType;
 
 #define NS_CSS_FRAME_TYPE_UNKNOWN         0
 #define NS_CSS_FRAME_TYPE_INLINE          1
@@ -190,11 +190,11 @@ protected:
   // same as previous, but using mComputedBorderPadding, mComputedPadding,
   // and mComputedMargin
   nscoord ComputeWidthValue(nscoord aContainingBlockWidth,
-                            PRUint8 aBoxSizing,
+                            uint8_t aBoxSizing,
                             const nsStyleCoord& aCoord);
 
   nscoord ComputeHeightValue(nscoord aContainingBlockHeight,
-                             PRUint8 aBoxSizing,
+                             uint8_t aBoxSizing,
                              const nsStyleCoord& aCoord);
 };
 
@@ -301,7 +301,7 @@ public:
     return mStyleDisplay->IsFloating(frame);
   }
 
-  PRUint8 GetDisplay() const {
+  uint8_t GetDisplay() const {
     return mStyleDisplay->GetDisplay(frame);
   }
 
@@ -318,38 +318,38 @@ public:
 
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
-  PRInt16 mReflowDepth;
+  int16_t mReflowDepth;
 
   struct ReflowStateFlags {
-    PRUint16 mSpecialHeightReflow:1; // used by tables to communicate special reflow (in process) to handle
+    uint16_t mSpecialHeightReflow:1; // used by tables to communicate special reflow (in process) to handle
                                      // percent height frames inside cells which may not have computed heights
-    PRUint16 mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
+    uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
                                      // is changing
-    PRUint16 mIsTopOfPage:1;         // Is the current context at the top of a
+    uint16_t mIsTopOfPage:1;         // Is the current context at the top of a
                                      // page?  When true, we force something
                                      // that's too tall for a page/column to
                                      // fit anyway to avoid infinite loops.
-    PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
-    PRUint16 mHasClearance:1;        // Block has clearance
-    PRUint16 mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    uint16_t mBlinks:1;              // Keep track of text-decoration: blink
+    uint16_t mHasClearance:1;        // Block has clearance
+    uint16_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a horizontal scrollbar
-    PRUint16 mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
 
-    PRUint16 mHResize:1;             // Is frame (a) not dirty and (b) a
+    uint16_t mHResize:1;             // Is frame (a) not dirty and (b) a
                                      // different width than before?
 
-    PRUint16 mVResize:1;             // Is frame (a) not dirty and (b) a
+    uint16_t mVResize:1;             // Is frame (a) not dirty and (b) a
                                      // different height than before or
                                      // (potentially) in a context where
                                      // percent heights have a different
                                      // basis?
-    PRUint16 mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
+    uint16_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
                                      // and never insider a column frame
-    PRUint16 mHeightDependsOnAncestorCell:1;   // Does frame height depend on
+    uint16_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
                                                // an ancestor table-cell?
-    PRUint16 mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
-    PRUint16 mDummyParentReflowState:1; // a "fake" reflow state made
+    uint16_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
+    uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
   } mFlags;
@@ -364,7 +364,7 @@ public:
                     nsIFrame*                aFrame,
                     nsRenderingContext*     aRenderingContext,
                     const nsSize&            aAvailableSpace,
-                    PRUint32                 aFlags = 0);
+                    uint32_t                 aFlags = 0);
 
   // Initialize a reflow state for a child frames reflow. Some state
   // is copied from the parent reflow state; the remaining state is
@@ -482,7 +482,7 @@ public:
   }
 
   // Compute the offsets for a relative position element
-  static void ComputeRelativeOffsets(PRUint8 aCBDirection,
+  static void ComputeRelativeOffsets(uint8_t aCBDirection,
                                      nsIFrame* aFrame,
                                      nscoord aContainingBlockWidth,
                                      nscoord aContainingBlockHeight,

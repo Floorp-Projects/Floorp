@@ -41,8 +41,8 @@ public:
 
 private:
   nsresult mRV;
-  PRUint32 mVerified;
-  PRUint32 mCount;
+  uint32_t mVerified;
+  uint32_t mCount;
   PRUnichar **mUsages;
 
 friend class nsCertVerificationJob;
@@ -58,7 +58,7 @@ public:
   nsCOMPtr<nsISMimeVerificationListener> mListener;
 
   unsigned char *digest_data;
-  PRUint32 digest_len;
+  uint32_t digest_len;
 
   void Run();
 };

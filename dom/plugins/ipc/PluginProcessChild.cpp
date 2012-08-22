@@ -52,8 +52,8 @@ PluginProcessChild::Init()
         // If we added the path to libplugin_child_interpose.dylib to an
         // existing DYLD_INSERT_LIBRARIES, we appended it to the end, after a
         // ":" path seperator.
-        PRInt32 lastSeparatorPos = interpose.RFind(":");
-        PRInt32 lastTriggerPos = interpose.RFind("libplugin_child_interpose.dylib");
+        int32_t lastSeparatorPos = interpose.RFind(":");
+        int32_t lastTriggerPos = interpose.RFind("libplugin_child_interpose.dylib");
         bool needsReset = false;
         if (lastTriggerPos != -1) {
             if (lastSeparatorPos == -1) {

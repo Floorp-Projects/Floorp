@@ -77,10 +77,10 @@ __try {
   if (imageAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
+  uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
-  PRInt32 x = 0, y = 0;
+  int32_t x = 0, y = 0;
 
   nsresult rv = imageAcc->GetImagePosition(geckoCoordType, &x, &y);
   if (NS_FAILED(rv))
@@ -106,7 +106,7 @@ __try {
   if (imageAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRInt32 width = 0, height = 0;
+  int32_t width = 0, height = 0;
   nsresult rv = imageAcc->GetImageSize(&width, &height);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

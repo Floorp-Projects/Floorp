@@ -20,7 +20,7 @@
 #include "nsTransactionManager.h"
 #include "nsTransactionStack.h"
 
-nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
+nsTransactionManager::nsTransactionManager(int32_t aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
   , mDoStack(nsTransactionStack::FOR_UNDO)
   , mUndoStack(nsTransactionStack::FOR_UNDO)
@@ -297,21 +297,21 @@ nsTransactionManager::EndBatch()
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
+nsTransactionManager::GetNumberOfUndoItems(int32_t *aNumItems)
 {
   *aNumItems = mUndoStack.GetSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
+nsTransactionManager::GetNumberOfRedoItems(int32_t *aNumItems)
 {
   *aNumItems = mRedoStack.GetSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetMaxTransactionCount(PRInt32 *aMaxCount)
+nsTransactionManager::GetMaxTransactionCount(int32_t *aMaxCount)
 {
   NS_ENSURE_TRUE(aMaxCount, NS_ERROR_NULL_POINTER);
 
@@ -321,9 +321,9 @@ nsTransactionManager::GetMaxTransactionCount(PRInt32 *aMaxCount)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
+nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
 {
-  PRInt32 numUndoItems  = 0, numRedoItems = 0, total = 0;
+  int32_t numUndoItems  = 0, numRedoItems = 0, total = 0;
 
   // It is illegal to call SetMaxTransactionCount() while the transaction
   // manager is executing a  transaction's DoTransaction() method because
@@ -489,7 +489,7 @@ nsresult
 nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -508,7 +508,7 @@ nsresult
 nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -527,7 +527,7 @@ nsresult
 nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -546,7 +546,7 @@ nsresult
 nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -565,7 +565,7 @@ nsresult
 nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -584,7 +584,7 @@ nsresult
 nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedoResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -603,7 +603,7 @@ nsresult
 nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -622,7 +622,7 @@ nsresult
 nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -641,7 +641,7 @@ nsresult
 nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -660,7 +660,7 @@ nsresult
 nsTransactionManager::DidEndBatchNotify(nsresult aResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -679,7 +679,7 @@ nsresult
 nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -701,7 +701,7 @@ nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
                                      nsresult aMergeResult)
 {
   nsresult result = NS_OK;
-  for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
   {
     nsITransactionListener *listener = mListeners[i];
 
@@ -754,7 +754,7 @@ nsTransactionManager::EndTransaction()
   nsCOMPtr<nsITransaction> tint = tx->GetTransaction();
 
   if (!tint) {
-    PRInt32 nc = 0;
+    int32_t nc = 0;
 
     // If we get here, the transaction must be a dummy batch transaction
     // created by BeginBatch(). If it contains no children, get rid of it!
@@ -840,7 +840,7 @@ nsTransactionManager::EndTransaction()
   // Check to see if we've hit the max level of undo. If so,
   // pop the bottom transaction off the undo stack and release it!
 
-  PRInt32 sz = mUndoStack.GetSize();
+  int32_t sz = mUndoStack.GetSize();
 
   if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
     nsRefPtr<nsTransactionItem> overflow = mUndoStack.PopBottom();

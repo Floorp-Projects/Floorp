@@ -128,8 +128,8 @@ class nsIParser : public nsParserBase {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource)=0;
-    NS_IMETHOD_(void) GetDocumentCharset(nsACString& oCharset, PRInt32& oSource)=0;
+    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, int32_t aSource)=0;
+    NS_IMETHOD_(void) GetDocumentCharset(nsACString& oCharset, int32_t& oSource)=0;
 
     /** 
      * Get the channel associated with this parser

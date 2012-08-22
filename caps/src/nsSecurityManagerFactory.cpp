@@ -41,7 +41,7 @@ nsSecurityNameSet::~nsSecurityNameSet()
 NS_IMPL_ISUPPORTS1(nsSecurityNameSet, nsIScriptExternalNameSet)
 
 static JSString *
-getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, jsval *argv)
+getStringArgument(JSContext *cx, JSObject *obj, uint16_t argNum, unsigned argc, jsval *argv)
 {
     if (argc <= argNum || !JSVAL_IS_STRING(argv[argNum])) {
         JS_ReportError(cx, "String argument expected");
@@ -56,7 +56,7 @@ getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, 
 }
 
 static bool
-getBytesArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, jsval *argv,
+getBytesArgument(JSContext *cx, JSObject *obj, uint16_t argNum, unsigned argc, jsval *argv,
                  JSAutoByteString *bytes)
 {
     JSString *str = getStringArgument(cx, obj, argNum, argc, argv);

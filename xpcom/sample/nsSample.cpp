@@ -133,7 +133,7 @@ nsSampleImpl::WriteValue(const char* aPrefix)
     foopy.Append(PRUnichar('y'));
     
     const PRUnichar* f = foopy.get();
-    PRUint32 l = foopy.Length();
+    uint32_t l = foopy.Length();
     printf("%c%c%c%c%c %d\n", char(f[0]), char(f[1]), char(f[2]), char(f[3]), char(f[4]), l);
     
     nsEmbedCString foopy2;
@@ -141,7 +141,7 @@ nsSampleImpl::WriteValue(const char* aPrefix)
 
     //foopy2.AppendLiteral("foopy");
     const char* f2 = foopy2.get();
-    PRUint32 l2 = foopy2.Length();
+    uint32_t l2 = foopy2.Length();
 
     printf("%s %d\n", f2, l2);
 

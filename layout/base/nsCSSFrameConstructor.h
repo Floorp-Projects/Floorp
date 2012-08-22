@@ -211,13 +211,13 @@ public:
   void NotifyDestroyingFrame(nsIFrame* aFrame);
 
   void AttributeWillChange(Element* aElement,
-                           PRInt32  aNameSpaceID,
+                           int32_t  aNameSpaceID,
                            nsIAtom* aAttribute,
-                           PRInt32  aModType);
+                           int32_t  aModType);
   void AttributeChanged(Element* aElement,
-                        PRInt32  aNameSpaceID,
+                        int32_t  aNameSpaceID,
                         nsIAtom* aAttribute,
-                        PRInt32  aModType);
+                        int32_t  aModType);
 
   void BeginUpdate();
   void EndUpdate();
@@ -229,7 +229,7 @@ public:
 
   // Get an integer that increments every time there is a style change
   // as a result of a change to the :hover content state.
-  PRUint32 GetHoverGeneration() const { return mHoverGeneration; }
+  uint32_t GetHoverGeneration() const { return mHoverGeneration; }
 
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessRestyledFrames call in a view update batch and a script blocker.
@@ -451,7 +451,7 @@ private:
    */
   nsresult CreateAttributeContent(nsIContent* aParentContent,
                                   nsIFrame* aParentFrame,
-                                  PRInt32 aAttrNamespace,
+                                  int32_t aAttrNamespace,
                                   nsIAtom* aAttrName,
                                   nsStyleContext* aStyleContext,
                                   nsCOMArray<nsIContent>& aGeneratedContent,
@@ -479,7 +479,7 @@ private:
   already_AddRefed<nsIContent> CreateGeneratedContent(nsFrameConstructorState& aState,
                                                       nsIContent*     aParentContent,
                                                       nsStyleContext* aStyleContext,
-                                                      PRUint32        aContentIndex);
+                                                      uint32_t        aContentIndex);
 
   // aFrame may be null; this method doesn't use it directly in any case.
   void CreateGeneratedContentItem(nsFrameConstructorState&   aState,
@@ -561,7 +561,7 @@ private:
   ParentType((_bits) >> FCDATA_PARENT_TYPE_OFFSET)
   /* Macro to create FrameConstructionData bits out of a desired parent type */
 #define FCDATA_DESIRED_PARENT_TYPE_TO_BITS(_type)     \
-  (((PRUint32)(_type)) << FCDATA_PARENT_TYPE_OFFSET)
+  (((uint32_t)(_type)) << FCDATA_PARENT_TYPE_OFFSET)
 
   /* Get the parent type that aParentFrame has. */
   static ParentType GetParentType(nsIFrame* aParentFrame) {
@@ -703,7 +703,7 @@ private:
      constructed.  */
   struct FrameConstructionData {
     // Flag bits that can modify the way the construction happens
-    PRUint32 mBits;
+    uint32_t mBits;
     // We have exactly one of three types of functions, so use a union for
     // better cache locality for the ones that aren't pointer-to-member.  That
     // one needs to be separate, because we can't cast between it and the
@@ -736,7 +736,7 @@ private:
      FrameConstructionData. There are no magic integer values here. */
   struct FrameConstructionDataByInt {
     /* Could be used for display or whatever else */
-    const PRInt32 mInt;
+    const int32_t mInt;
     const FrameConstructionData mData;
   };
 
@@ -756,10 +756,10 @@ private:
      match or if the matching integer has a FrameConstructionDataGetter that
      returns null. */
   static const FrameConstructionData*
-    FindDataByInt(PRInt32 aInt, Element* aElement,
+    FindDataByInt(int32_t aInt, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByInt* aDataPtr,
-                  PRUint32 aDataLength);
+                  uint32_t aDataLength);
 
   /* A function that takes a tag, content, style context, and array of
      FrameConstructionDataByTags and finds the appropriate frame construction
@@ -770,7 +770,7 @@ private:
     FindDataByTag(nsIAtom* aTag, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByTag* aDataPtr,
-                  PRUint32 aDataLength);
+                  uint32_t aDataLength);
 
   /* A class representing a list of FrameConstructionItems */
   class FrameConstructionItemList {
@@ -808,7 +808,7 @@ private:
         // getting it off the style context is not too bad.
         nsFrameManager *mgr =
           mUndisplayedItems[0].mStyleContext->PresContext()->FrameManager();
-        for (PRUint32 i = 0; i < mUndisplayedItems.Length(); ++i) {
+        for (uint32_t i = 0; i < mUndisplayedItems.Length(); ++i) {
           UndisplayedItem& item = mUndisplayedItems[i];
           mgr->SetUndisplayedContent(item.mContent, item.mStyleContext);
         }
@@ -838,7 +838,7 @@ private:
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
-                                      PRInt32 aNameSpaceID,
+                                      int32_t aNameSpaceID,
                                       PendingBinding* aPendingBinding,
                                       already_AddRefed<nsStyleContext> aStyleContext,
                                       bool aSuppressWhiteSpaceOptimizations)
@@ -989,14 +989,14 @@ private:
 
     // Adjust our various counts for aItem being added or removed.  aDelta
     // should be either +1 or -1 depending on which is happening.
-    void AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta);
+    void AdjustCountsForItem(FrameConstructionItem* aItem, int32_t aDelta);
 
     PRCList mItems;
-    PRUint32 mInlineCount;
-    PRUint32 mBlockCount;
-    PRUint32 mLineParticipantCount;
-    PRUint32 mItemCount;
-    PRUint32 mDesiredParentCounts[eParentTypeCount];
+    uint32_t mInlineCount;
+    uint32_t mBlockCount;
+    uint32_t mLineParticipantCount;
+    uint32_t mItemCount;
+    uint32_t mDesiredParentCounts[eParentTypeCount];
     // True if there is guaranteed to be a line boundary before the
     // frames created by these items
     bool mLineBoundaryAtStart;
@@ -1023,7 +1023,7 @@ private:
     FrameConstructionItem(const FrameConstructionData* aFCData,
                           nsIContent* aContent,
                           nsIAtom* aTag,
-                          PRInt32 aNameSpaceID,
+                          int32_t aNameSpaceID,
                           PendingBinding* aPendingBinding,
                           already_AddRefed<nsStyleContext> aStyleContext,
                           bool aSuppressWhiteSpaceOptimizations) :
@@ -1069,7 +1069,7 @@ private:
     // The XBL-resolved tag name to use for frame construction.
     nsIAtom* mTag;
     // The XBL-resolved namespace to use for frame construction.
-    PRInt32 mNameSpaceID;
+    int32_t mNameSpaceID;
     // The PendingBinding for this frame construction item, if any.  May be
     // null.  We maintain a list of PendingBindings in the frame construction
     // state in the order in which AddToAttachedQueue should be called on them:
@@ -1222,7 +1222,7 @@ private:
   // inline frame.
   static const FrameConstructionData* FindHTMLData(Element* aContent,
                                                    nsIAtom* aTag,
-                                                   PRInt32 aNameSpaceID,
+                                                   int32_t aNameSpaceID,
                                                    nsIFrame* aParentFrame,
                                                    nsStyleContext* aStyleContext);
   // HTML data-finding helper functions
@@ -1268,10 +1268,10 @@ private:
                                          nsIContent*              aContent,
                                          nsIFrame*                aParentFrame,
                                          nsIAtom*                 aTag,
-                                         PRInt32                  aNameSpaceID,
+                                         int32_t                  aNameSpaceID,
                                          bool                     aSuppressWhiteSpaceOptimizations,
                                          nsStyleContext*          aStyleContext,
-                                         PRUint32                 aFlags,
+                                         uint32_t                 aFlags,
                                          FrameConstructionItemList& aItems);
 
   /**
@@ -1314,14 +1314,14 @@ private:
   // null if aContent is not MathML.
   static const FrameConstructionData* FindMathMLData(Element* aElement,
                                                      nsIAtom* aTag,
-                                                     PRInt32 aNameSpaceID,
+                                                     int32_t aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not XUL.
   static const FrameConstructionData* FindXULTagData(Element* aElement,
                                                      nsIAtom* aTag,
-                                                     PRInt32 aNameSpaceID,
+                                                     int32_t aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
   // XUL data-finding helper functions and structures
 #ifdef MOZ_XUL
@@ -1368,7 +1368,7 @@ private:
 
   static const FrameConstructionData* FindSVGData(Element* aElement,
                                                   nsIAtom* aTag,
-                                                  PRInt32 aNameSpaceID,
+                                                  int32_t aNameSpaceID,
                                                   nsIFrame* aParentFrame,
                                                   nsStyleContext* aStyleContext);
 
@@ -1767,7 +1767,7 @@ private:
   // already known, UNSET_DISPLAY otherwise. It will be filled in if needed.
   nsIFrame* FindFrameForContentSibling(nsIContent* aContent,
                                        nsIContent* aTargetContent,
-                                       PRUint8& aTargetContentDisplay,
+                                       uint8_t& aTargetContentDisplay,
                                        bool aPrevSibling);
 
   // Find the ``rightmost'' frame for the content immediately preceding the one
@@ -1775,14 +1775,14 @@ private:
   // value on purpose, so as not to modify the caller's iterator.
   nsIFrame* FindPreviousSibling(const ChildIterator& aFirst,
                                 ChildIterator aIter,
-                                PRUint8& aTargetContentDisplay);
+                                uint8_t& aTargetContentDisplay);
 
   // Find the frame for the content node immediately following the one aIter
   // points to, following continuations if necessary.  aIter is passed by value
   // on purpose, so as not to modify the caller's iterator.
   nsIFrame* FindNextSibling(ChildIterator aIter,
                             const ChildIterator& aLast,
-                            PRUint8& aTargetContentDisplay);
+                            uint8_t& aTargetContentDisplay);
 
   // Find the right previous sibling for an insertion.  This also updates the
   // parent frame to point to the correct continuation of the parent frame to
@@ -1811,7 +1811,7 @@ private:
   // may be constructed based on tag, not based on aDisplay!
   bool IsValidSibling(nsIFrame*              aSibling,
                         nsIContent*            aContent,
-                        PRUint8&               aDisplay);
+                        uint8_t&               aDisplay);
   
   void QuotesDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
@@ -1862,7 +1862,7 @@ private:
   nsIFrame*           mPageSequenceFrame;
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
-  PRUint16            mUpdateCount;
+  uint16_t            mUpdateCount;
   bool                mQuotesDirty : 1;
   bool                mCountersDirty : 1;
   bool                mIsDestroyingFrameTree : 1;
@@ -1873,7 +1873,7 @@ private:
   bool                mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
   bool                mInStyleRefresh : 1;
-  PRUint32            mHoverGeneration;
+  uint32_t            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;

@@ -21,14 +21,14 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKETPROVIDER
     
-    nsSOCKSSocketProvider(PRUint32 version) : mVersion(version) {}
+    nsSOCKSSocketProvider(uint32_t version) : mVersion(version) {}
     virtual ~nsSOCKSSocketProvider() {}
     
     static nsresult CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
     static nsresult CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
     
 private:
-    PRUint32 mVersion; // NS_SOCKS_VERSION_4 or 5
+    uint32_t mVersion; // NS_SOCKS_VERSION_4 or 5
 };
 
 #endif /* nsSOCKSSocketProvider_h__ */

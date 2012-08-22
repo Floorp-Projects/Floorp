@@ -45,23 +45,23 @@ public:
   }
 #endif
 
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext, const nsIntRect *aDirtyRect);
   virtual void ReflowSVG();
-  virtual void NotifySVGChanged(PRUint32 aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor);
 
   virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const;
 
   // nsISVGSVGFrame interface:
-  virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags);
+  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags);
 
 protected:
 

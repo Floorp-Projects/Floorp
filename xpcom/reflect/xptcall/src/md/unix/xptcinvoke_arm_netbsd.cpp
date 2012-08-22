@@ -9,11 +9,11 @@
 
 // Remember that these 'words' are 32bit DWORDS
 
-static PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+static uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    uint32_t result = 0;
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -59,9 +59,9 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 static void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 {
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -70,14 +70,14 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         }
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt8*)  d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt16*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((PRUint8*) d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint16*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I8     : *((int8_t*)  d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int16_t*) d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U8     : *((uint8_t*) d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint16_t*)d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
         case nsXPTType::T_BOOL   : *((bool*)  d) = s->val.b;           break;
@@ -94,25 +94,25 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 extern "C" 
 struct my_params_struct {
     nsISupports* that;      
-    PRUint32 Index;         
-    PRUint32 Count;         
+    uint32_t Index;         
+    uint32_t Count;         
     nsXPTCVariant* params;  
-    PRUint32 fn_count;     
-    PRUint32 fn_copy;      
+    uint32_t fn_count;     
+    uint32_t fn_copy;      
 };
 
 XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+XPTC_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params)
 {
-    PRUint32 result;
+    uint32_t result;
     struct my_params_struct my_params;
     my_params.that = that;
     my_params.Index = methodIndex;
     my_params.Count = paramCount;
     my_params.params = params;
-    my_params.fn_copy = (PRUint32) &invoke_copy_to_stack;
-    my_params.fn_count = (PRUint32) &invoke_count_words;
+    my_params.fn_copy = (uint32_t) &invoke_copy_to_stack;
+    my_params.fn_count = (uint32_t) &invoke_count_words;
 
 /* This is to call a given method of class that.
  * The parameters are in params, the number is in paramCount.

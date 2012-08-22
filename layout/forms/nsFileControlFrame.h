@@ -47,9 +47,9 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
   virtual void ContentStatesChanged(nsEventStates aStates);
   virtual bool IsLeaf() const;
 
@@ -58,7 +58,7 @@ public:
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter);
+                                        uint32_t aFilter);
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<Accessible> CreateAccessible();
@@ -70,10 +70,10 @@ protected:
   
   struct CaptureCallbackData {
     nsICapturePicker* picker;
-    PRUint32 mode;
+    uint32_t mode;
   };
   
-  PRUint32 GetCaptureMode(const CaptureCallbackData& aData);
+  uint32_t GetCaptureMode(const CaptureCallbackData& aData);
   
   class MouseListener;
   friend class MouseListener;
@@ -123,7 +123,7 @@ protected:
     {}
 
     NS_DECL_NSIDOMEVENTLISTENER
-    PRUint32 mMode;
+    uint32_t mMode;
   };
   
   class BrowseMouseListener: public MouseListener {
@@ -137,7 +137,7 @@ protected:
     static bool IsValidDropData(nsIDOMDragEvent* aEvent);
   };
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
@@ -180,8 +180,8 @@ protected:
    * @param aAttribute attribute atom
    * @param aWhichControls which controls to apply to (SYNC_TEXT or SYNC_FILE)
    */
-  void SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                PRInt32 aWhichControls);
+  void SyncAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                int32_t aWhichControls);
 
   /**
    * Sync the disabled state of the content with anonymous children.

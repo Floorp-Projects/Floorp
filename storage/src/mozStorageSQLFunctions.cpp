@@ -176,8 +176,8 @@ levenshteinDistance(const nsAString &aStringS,
     // Set the result to a non-sensical value in case we encounter an error.
     *_result = -1;
 
-    const PRUint32 sLen = aStringS.Length();
-    const PRUint32 tLen = aStringT.Length();
+    const uint32_t sLen = aStringS.Length();
+    const uint32_t tLen = aStringT.Length();
 
     if (sLen == 0) {
       *_result = tLen;
@@ -218,7 +218,7 @@ levenshteinDistance(const nsAString &aStringS,
     NS_ENSURE_TRUE(currRow, SQLITE_NOMEM);
 
     // Initialize the first row.
-    for (PRUint32 i = 0; i <= sLen; i++)
+    for (uint32_t i = 0; i <= sLen; i++)
         prevRow[i] = i;
 
     const PRUnichar *s = aStringS.BeginReading();
@@ -226,7 +226,7 @@ levenshteinDistance(const nsAString &aStringS,
 
     // Compute the empty cells in the "matrix" row-by-row, starting with
     // the second row.
-    for (PRUint32 ti = 1; ti <= tLen; ti++) {
+    for (uint32_t ti = 1; ti <= tLen; ti++) {
 
         // Initialize the first cell in this row.
         currRow[0] = ti;
@@ -236,7 +236,7 @@ levenshteinDistance(const nsAString &aStringS,
 
         // Compute the remaining cells in this row, left-to-right,
         // starting at the second column (and first character of "s").
-        for (PRUint32 si = 1; si <= sLen; si++) {
+        for (uint32_t si = 1; si <= sLen; si++) {
             
             // Get the character from "s" that corresponds to this column,
             // compare it to the t-character, and compute the "cost".

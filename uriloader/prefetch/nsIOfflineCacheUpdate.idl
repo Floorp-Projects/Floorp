@@ -36,7 +36,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
    * @param event
    *        See enumeration above
    */
-  void updateStateChanged(in nsIOfflineCacheUpdate aUpdate, in PRUint32 state);
+  void updateStateChanged(in nsIOfflineCacheUpdate aUpdate, in uint32_t state);
 
   /**
    * Informs the observer about an application being available to associate.
@@ -161,7 +161,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Return the number of bytes downloaded so far
    */
-  readonly attribute PRUint64 byteProgress;
+  readonly attribute uint64_t byteProgress;
 };
 
 [scriptable, uuid(dc5de18c-197c-41d2-9584-dd7ac7494611)]

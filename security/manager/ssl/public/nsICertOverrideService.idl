@@ -50,9 +50,9 @@ interface nsICertOverrideService : nsISupports {
    *  @param aOverrideBits The errors we want to be overriden
    */
   void rememberValidityOverride(in ACString aHostName, 
-                                in PRInt32 aPort,
+                                in int32_t aPort,
                                 in nsIX509Cert aCert,
-                                in PRUint32 aOverrideBits,
+                                in uint32_t aOverrideBits,
                                 in boolean aTemporary);
 
   /**
@@ -71,9 +71,9 @@ interface nsICertOverrideService : nsISupports {
    *          that matches the given certificate
    */
   boolean hasMatchingOverride(in ACString aHostName, 
-                              in PRInt32 aPort,
+                              in int32_t aPort,
                               in nsIX509Cert aCert,
-                              out PRUint32 aOverrideBits,
+                              out uint32_t aOverrideBits,
                               out boolean aIsTemporary);
 
   /**
@@ -90,10 +90,10 @@ interface nsICertOverrideService : nsISupports {
    *          and aFingerprint is currently on file
    */
   boolean getValidityOverride(in ACString aHostName, 
-                              in PRInt32 aPort,
+                              in int32_t aPort,
                               out ACString aHashAlg,
                               out ACString aFingerprint,
-                              out PRUint32 aOverrideBits,
+                              out uint32_t aOverrideBits,
                               out boolean aIsTemporary);
 
   /**
@@ -106,7 +106,7 @@ interface nsICertOverrideService : nsISupports {
    *               then all temporary certificates should be cleared.
    */
   void clearValidityOverride(in ACString aHostName,
-                             in PRInt32 aPort);
+                             in int32_t aPort);
 
   /**
    *  Obtain the full list of hostname:port for which overrides are known.
@@ -114,7 +114,7 @@ interface nsICertOverrideService : nsISupports {
    *  @param aCount The number of host:port entries returned
    *  @param aHostsWithPortsArray The array of host:port entries returned
    */
-  void getAllOverrideHostsWithPorts(out PRUint32 aCount, 
+  void getAllOverrideHostsWithPorts(out uint32_t aCount, 
                                     [array, size_is(aCount)] out wstring aHostsWithPortsArray);
 
   /**
@@ -124,7 +124,7 @@ interface nsICertOverrideService : nsISupports {
    *  @return how many override entries are currently on file
    *          for the given certificate
    */
-  PRUint32 isCertUsedForOverrides(in nsIX509Cert aCert,
+  uint32_t isCertUsedForOverrides(in nsIX509Cert aCert,
                                   in boolean aCheckTemporaries,
                                   in boolean aCheckPermanents);
 };

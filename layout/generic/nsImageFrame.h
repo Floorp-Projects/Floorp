@@ -105,9 +105,9 @@ public:
                         nsEventStatus* aEventStatus);
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<Accessible> CreateAccessible();
@@ -115,14 +115,14 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return ImageFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
 #endif
 
   virtual int GetSkipSides() const;
@@ -184,7 +184,7 @@ protected:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
 
   bool IsServerImageMap();
 
@@ -203,9 +203,9 @@ protected:
    * @return width of the string that fits within aMaxWidth
    */
   nscoord MeasureString(const PRUnichar*     aString,
-                        PRInt32              aLength,
+                        int32_t              aLength,
                         nscoord              aMaxWidth,
-                        PRUint32&            aMaxFit,
+                        uint32_t&            aMaxFit,
                         nsRenderingContext& aContext);
 
   void DisplayAltText(nsPresContext*      aPresContext,
@@ -215,7 +215,7 @@ protected:
 
   void PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
                   const nsRect& aDirtyRect, imgIContainer* aImage,
-                  PRUint32 aFlags);
+                  uint32_t aFlags);
 
 protected:
   friend class nsImageListener;

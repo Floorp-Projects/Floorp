@@ -43,7 +43,7 @@
 // Thread Local Storage Operations
 //
 #if defined(ANGLE_USE_NSPR)
-typedef PRUintn OS_TLSIndex;
+typedef unsigned OS_TLSIndex;
 #define OS_INVALID_TLS_INDEX 0xFFFFFFFF
 #elif defined(ANGLE_OS_WIN)
 typedef DWORD OS_TLSIndex;

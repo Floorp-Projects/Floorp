@@ -130,13 +130,13 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
 #endif
 
 
-        PRUint8 *src = (PRUint8*)&rval;
+        uint8_t *src = (uint8_t*)&rval;
         // We want to grab the mRBytes least significant bytes of rval, since
         // mRBytes less than sizeof(rval) means the high bytes are 0.
 #ifdef IS_BIG_ENDIAN
         src += sizeof(rval) - mRBytes;
 #endif
-        PRUint8 *dst = ((PRUint8*) id) + (sizeof(nsID) - bytesLeft);
+        uint8_t *dst = ((uint8_t*) id) + (sizeof(nsID) - bytesLeft);
         size_t toWrite = (bytesLeft < mRBytes ? bytesLeft : mRBytes);
         for (size_t i = 0; i < toWrite; i++)
             dst[i] = src[i];

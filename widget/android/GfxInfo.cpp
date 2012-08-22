@@ -301,8 +301,8 @@ GfxInfo::GetGfxDriverInfo()
 }
 
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
-                              PRInt32 *aStatus, 
+GfxInfo::GetFeatureStatusImpl(int32_t aFeature, 
+                              int32_t *aStatus, 
                               nsAString & aSuggestedDriverVersion,
                               const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nullptr */)
@@ -365,7 +365,7 @@ NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
 }
 
 /* void spoofOSVersion (in unsigned long aVersion); */
-NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
 {
   return NS_OK;
 }

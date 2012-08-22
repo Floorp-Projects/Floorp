@@ -88,14 +88,14 @@ protected:
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);
   
-  static PRUint32   CalculateChromeFlags(nsIDOMWindow *aParent,
+  static uint32_t   CalculateChromeFlags(nsIDOMWindow *aParent,
                                          const char *aFeatures,
                                          bool aFeaturesSpecified,
                                          bool aDialog,
                                          bool aChromeURL,
                                          bool aHasChromeParent);
-  static PRInt32    WinHasOption(const char *aOptions, const char *aName,
-                                 PRInt32 aDefault, bool *aPresenceFlag);
+  static int32_t    WinHasOption(const char *aOptions, const char *aName,
+                                 int32_t aDefault, bool *aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
   static void       CalcSizeSpec(const char* aFeatures, SizeSpec& aResult);
   static nsresult   ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,

@@ -35,8 +35,8 @@ parent:
   PFTPChannel();
   PWebSocket(PBrowser browser);
 
-  HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
-  CancelHTMLDNSPrefetch(nsString hostname, PRUint16 flags, nsresult reason);
+  HTMLDNSPrefetch(nsString hostname, uint16_t flags);
+  CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
 
 both:
   PHttpChannel(nullable PBrowser browser);

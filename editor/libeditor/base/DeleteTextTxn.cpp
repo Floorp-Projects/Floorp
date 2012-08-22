@@ -44,8 +44,8 @@ NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 NS_IMETHODIMP
 DeleteTextTxn::Init(nsEditor* aEditor,
                     nsIDOMCharacterData* aCharData,
-                    PRUint32 aOffset,
-                    PRUint32 aNumCharsToDelete,
+                    uint32_t aOffset,
+                    uint32_t aNumCharsToDelete,
                     nsRangeUpdater* aRangeUpdater)
 {
   MOZ_ASSERT(aEditor && aCharData);
@@ -61,7 +61,7 @@ DeleteTextTxn::Init(nsEditor* aEditor,
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
 #ifdef DEBUG
-  PRUint32 length;
+  uint32_t length;
   mCharData->GetLength(&length);
   NS_ASSERTION(length >= aOffset + aNumCharsToDelete,
                "Trying to delete more characters than in node");

@@ -75,7 +75,7 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 }
 
 void
-nsXBLProtoImplMethod::SetLineNumber(PRUint32 aLineNumber)
+nsXBLProtoImplMethod::SetLineNumber(uint32_t aLineNumber)
 {
   NS_PRECONDITION(!IsCompiled(),
                   "Must not be compiled when accessing uncompiled method");
@@ -171,7 +171,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 
   // We have a method.
   // Allocate an array for our arguments.
-  PRInt32 paramCount = uncompiledMethod->GetParameterCount();
+  int32_t paramCount = uncompiledMethod->GetParameterCount();
   char** args = nullptr;
   if (paramCount > 0) {
     args = new char*[paramCount];
@@ -179,7 +179,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
       return NS_ERROR_OUT_OF_MEMORY;
 
     // Add our parameters to our args array.
-    PRInt32 argPos = 0; 
+    int32_t argPos = 0; 
     for (nsXBLParameter* curr = uncompiledMethod->mParameters; 
          curr; 
          curr = curr->mNext) {
@@ -198,7 +198,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   // and then define it.
   NS_ConvertUTF16toUTF8 cname(mName);
   nsCAutoString functionUri(aClassStr);
-  PRInt32 hash = functionUri.RFindChar('#');
+  int32_t hash = functionUri.RFindChar('#');
   if (hash != kNotFound) {
     functionUri.Truncate(hash);
   }

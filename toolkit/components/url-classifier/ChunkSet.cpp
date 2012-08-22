@@ -13,15 +13,15 @@ ChunkSet::Serialize(nsACString& aChunkStr)
 {
   aChunkStr.Truncate();
 
-  PRUint32 i = 0;
+  uint32_t i = 0;
   while (i < mChunks.Length()) {
     if (i != 0) {
       aChunkStr.Append(',');
     }
-    aChunkStr.AppendInt((PRInt32)mChunks[i]);
+    aChunkStr.AppendInt((int32_t)mChunks[i]);
 
-    PRUint32 first = i;
-    PRUint32 last = first;
+    uint32_t first = i;
+    uint32_t last = first;
     i++;
     while (i < mChunks.Length() && (mChunks[i] == mChunks[i - 1] + 1 || mChunks[i] == mChunks[i - 1])) {
       last = i++;
@@ -29,7 +29,7 @@ ChunkSet::Serialize(nsACString& aChunkStr)
 
     if (last != first) {
       aChunkStr.Append('-');
-      aChunkStr.AppendInt((PRInt32)mChunks[last]);
+      aChunkStr.AppendInt((int32_t)mChunks[last]);
     }
   }
 
@@ -37,9 +37,9 @@ ChunkSet::Serialize(nsACString& aChunkStr)
 }
 
 nsresult
-ChunkSet::Set(PRUint32 aChunk)
+ChunkSet::Set(uint32_t aChunk)
 {
-  PRUint32 idx = mChunks.BinaryIndexOf(aChunk);
+  uint32_t idx = mChunks.BinaryIndexOf(aChunk);
   if (idx == nsTArray<uint32>::NoIndex) {
     mChunks.InsertElementSorted(aChunk);
   }
@@ -47,7 +47,7 @@ ChunkSet::Set(PRUint32 aChunk)
 }
 
 nsresult
-ChunkSet::Unset(PRUint32 aChunk)
+ChunkSet::Unset(uint32_t aChunk)
 {
   mChunks.RemoveElementSorted(aChunk);
 
@@ -55,7 +55,7 @@ ChunkSet::Unset(PRUint32 aChunk)
 }
 
 bool
-ChunkSet::Has(PRUint32 aChunk) const
+ChunkSet::Has(uint32_t aChunk) const
 {
   return mChunks.BinaryIndexOf(aChunk) != nsTArray<uint32>::NoIndex;
 }

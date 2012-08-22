@@ -37,8 +37,8 @@ ToUTF8(const nsACString &aString, const char *aCharset,
   if (!aAllowSubstitution)
     unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 
-  PRInt32 srcLen = aString.Length();
-  PRInt32 dstLen;
+  int32_t srcLen = aString.Length();
+  int32_t dstLen;
   const nsAFlatCString& inStr = PromiseFlatCString(aString);
   rv = unicodeDecoder->GetMaxLength(inStr.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -59,7 +59,7 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
                                             const char *aCharset, 
                                             bool aSkipCheck, 
                                             bool aAllowSubstitution,
-                                            PRUint8 aOptionalArgc,
+                                            uint8_t aOptionalArgc,
                                             nsACString &aUTF8String)
 {
   bool allowSubstitution = (aOptionalArgc == 1) ? aAllowSubstitution : true;

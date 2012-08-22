@@ -35,10 +35,10 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLPreElement
-  NS_IMETHOD GetWidth(PRInt32* aWidth);
-  NS_IMETHOD SetWidth(PRInt32 aWidth);
+  NS_IMETHOD GetWidth(int32_t* aWidth);
+  NS_IMETHOD SetWidth(int32_t aWidth);
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -87,7 +87,7 @@ NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 
 bool
-nsHTMLPreElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLPreElement::ParseAttribute(int32_t aNamespaceID,
                                  nsIAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)

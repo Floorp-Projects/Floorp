@@ -28,7 +28,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsZipDataStream, nsIStreamListener,
 nsresult nsZipDataStream::Init(nsZipWriter *aWriter,
                                nsIOutputStream *aStream,
                                nsZipHeader *aHeader,
-                               PRInt32 aCompression)
+                               int32_t aCompression)
 {
     mWriter = aWriter;
     mHeader = aHeader;
@@ -65,8 +65,8 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter,
 NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
                                                nsISupports *aContext,
                                                nsIInputStream *aInputStream,
-                                               PRUint32 aOffset,
-                                               PRUint32 aCount)
+                                               uint32_t aOffset,
+                                               uint32_t aCount)
 {
     if (!mOutput)
         return NS_ERROR_NOT_INITIALIZED;
@@ -121,7 +121,7 @@ inline nsresult nsZipDataStream::CompleteEntry()
     nsresult rv;
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt64 pos;
+    int64_t pos;
     rv = seekable->Tell(&pos);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -132,7 +132,7 @@ inline nsresult nsZipDataStream::CompleteEntry()
 
 nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
                                       nsISupports *aContext, char *aBuffer,
-                                      PRUint32 aOffset, PRUint32 aCount)
+                                      uint32_t aOffset, uint32_t aCount)
 {
     mHeader->mCRC = crc32(mHeader->mCRC,
                           reinterpret_cast<const unsigned char*>(aBuffer),
@@ -161,8 +161,8 @@ nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream)
     nsAutoArrayPtr<char> buffer(new char[4096]);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
-    PRUint32 read = 0;
-    PRUint32 offset = 0;
+    uint32_t read = 0;
+    uint32_t offset = 0;
     do
     {
         rv = aStream->Read(buffer.get(), 4096, &read);

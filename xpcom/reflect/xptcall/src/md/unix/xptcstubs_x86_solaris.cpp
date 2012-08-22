@@ -10,20 +10,20 @@
 #include "xptiprivate.h"
 
 nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-    PRUint8 i;
+    uint8_t paramCount;
+    uint8_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
@@ -35,7 +35,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
 
-    PRUint32* ap = args;
+    uint32_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -51,13 +51,13 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 	    dp->val.p = (void*) *ap;
         switch(type)
         {
-        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((int64_t*) ap); ap++; break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((uint64_t*)ap); ap++; break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
         }
     }
 
-    result = self->mOuter->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->mOuter->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

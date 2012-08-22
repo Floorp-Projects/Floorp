@@ -86,7 +86,7 @@ nsSVGElement::Init()
 
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < lengthInfo.mLengthCount; i++) {
     lengthInfo.Reset(i);
   }
@@ -227,7 +227,7 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 nsresult
-nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                            const nsAttrValue* aValue, bool aNotify)
 {
   // We don't currently use nsMappedAttributes within SVG. If this changes, we
@@ -260,7 +260,7 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 bool
-nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
+nsSVGElement::ParseAttribute(int32_t aNamespaceID,
                              nsIAtom* aAttribute,
                              const nsAString& aValue,
                              nsAttrValue& aResult)
@@ -274,7 +274,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < lengthInfo.mLengthCount; i++) {
       if (aAttribute == *lengthInfo.mLengthInfo[i].mName) {
         rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this, false);
@@ -564,7 +564,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
   if (!foundMatch) {
     // Check for nsSVGString attribute
     StringAttributesInfo stringInfo = GetStringInfo();
-    for (PRUint32 i = 0; i < stringInfo.mStringCount; i++) {
+    for (uint32_t i = 0; i < stringInfo.mStringCount; i++) {
       if (aNamespaceID == stringInfo.mStringInfo[i].mNamespaceID &&
           aAttribute == *stringInfo.mStringInfo[i].mName) {
         stringInfo.mStrings[i].SetBaseValue(aValue, this, false);
@@ -590,7 +590,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 }
 
 void
-nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
                                 bool aNotify)
 {
   // XXXbz there's a bunch of redundancy here with AfterSetAttr.
@@ -613,7 +613,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a length attribute going away
     LengthAttributesInfo lenInfo = GetLengthInfo();
 
-    for (PRUint32 i = 0; i < lenInfo.mLengthCount; i++) {
+    for (uint32_t i = 0; i < lenInfo.mLengthCount; i++) {
       if (aName == *lenInfo.mLengthInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lenInfo.Reset(i);
@@ -624,7 +624,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a length list attribute going away
     LengthListAttributesInfo lengthListInfo = GetLengthListInfo();
 
-    for (PRUint32 i = 0; i < lengthListInfo.mLengthListCount; i++) {
+    for (uint32_t i = 0; i < lengthListInfo.mLengthListCount; i++) {
       if (aName == *lengthListInfo.mLengthListInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lengthListInfo.Reset(i);
@@ -635,7 +635,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a number list attribute going away
     NumberListAttributesInfo numberListInfo = GetNumberListInfo();
 
-    for (PRUint32 i = 0; i < numberListInfo.mNumberListCount; i++) {
+    for (uint32_t i = 0; i < numberListInfo.mNumberListCount; i++) {
       if (aName == *numberListInfo.mNumberListInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numberListInfo.Reset(i);
@@ -666,7 +666,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a number attribute going away
     NumberAttributesInfo numInfo = GetNumberInfo();
 
-    for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
+    for (uint32_t i = 0; i < numInfo.mNumberCount; i++) {
       if (aName == *numInfo.mNumberInfo[i].mName) {
         numInfo.Reset(i);
         return;
@@ -676,7 +676,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a number pair attribute going away
     NumberPairAttributesInfo numPairInfo = GetNumberPairInfo();
 
-    for (PRUint32 i = 0; i < numPairInfo.mNumberPairCount; i++) {
+    for (uint32_t i = 0; i < numPairInfo.mNumberPairCount; i++) {
       if (aName == *numPairInfo.mNumberPairInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numPairInfo.Reset(i);
@@ -687,7 +687,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is an integer attribute going away
     IntegerAttributesInfo intInfo = GetIntegerInfo();
 
-    for (PRUint32 i = 0; i < intInfo.mIntegerCount; i++) {
+    for (uint32_t i = 0; i < intInfo.mIntegerCount; i++) {
       if (aName == *intInfo.mIntegerInfo[i].mName) {
         intInfo.Reset(i);
         return;
@@ -697,7 +697,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is an integer pair attribute going away
     IntegerPairAttributesInfo intPairInfo = GetIntegerPairInfo();
 
-    for (PRUint32 i = 0; i < intPairInfo.mIntegerPairCount; i++) {
+    for (uint32_t i = 0; i < intPairInfo.mIntegerPairCount; i++) {
       if (aName == *intPairInfo.mIntegerPairInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         intPairInfo.Reset(i);
@@ -708,7 +708,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is an angle attribute going away
     AngleAttributesInfo angleInfo = GetAngleInfo();
 
-    for (PRUint32 i = 0; i < angleInfo.mAngleCount; i++) {
+    for (uint32_t i = 0; i < angleInfo.mAngleCount; i++) {
       if (aName == *angleInfo.mAngleInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         angleInfo.Reset(i);
@@ -719,7 +719,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a boolean attribute going away
     BooleanAttributesInfo boolInfo = GetBooleanInfo();
 
-    for (PRUint32 i = 0; i < boolInfo.mBooleanCount; i++) {
+    for (uint32_t i = 0; i < boolInfo.mBooleanCount; i++) {
       if (aName == *boolInfo.mBooleanInfo[i].mName) {
         boolInfo.Reset(i);
         return;
@@ -729,7 +729,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is an enum attribute going away
     EnumAttributesInfo enumInfo = GetEnumInfo();
 
-    for (PRUint32 i = 0; i < enumInfo.mEnumCount; i++) {
+    for (uint32_t i = 0; i < enumInfo.mEnumCount; i++) {
       if (aName == *enumInfo.mEnumInfo[i].mName) {
         enumInfo.Reset(i);
         return;
@@ -778,7 +778,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check if this is a string list attribute going away
     StringListAttributesInfo stringListInfo = GetStringListInfo();
 
-    for (PRUint32 i = 0; i < stringListInfo.mStringListCount; i++) {
+    for (uint32_t i = 0; i < stringListInfo.mStringListCount; i++) {
       if (aName == *stringListInfo.mStringListInfo[i].mName) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         stringListInfo.Reset(i);
@@ -790,7 +790,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
   // Check if this is a string attribute going away
   StringAttributesInfo stringInfo = GetStringInfo();
 
-  for (PRUint32 i = 0; i < stringInfo.mStringCount; i++) {
+  for (uint32_t i = 0; i < stringInfo.mStringCount; i++) {
     if (aNamespaceID == stringInfo.mStringInfo[i].mNamespaceID &&
         aName == *stringInfo.mStringInfo[i].mName) {
       stringInfo.Reset(i);
@@ -800,7 +800,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGElement::UnsetAttr(int32_t aNamespaceID, nsIAtom* aName,
                         bool aNotify)
 {
   UnsetAttrInternal(aNamespaceID, aName, aNotify);
@@ -809,7 +809,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
 nsChangeHint
 nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                     PRInt32 aModType) const
+                                     int32_t aModType) const
 {
   nsChangeHint retval =
     nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
@@ -825,7 +825,7 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 bool
-nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
+nsSVGElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~eCONTENT);
 }
@@ -1183,7 +1183,7 @@ nsSVGElement::UpdateContentStyleRule()
 {
   NS_ASSERTION(!mContentStyleRule, "we already have a content style rule");
 
-  PRUint32 attrCount = mAttrsAndChildren.AttrCount();
+  uint32_t attrCount = mAttrsAndChildren.AttrCount();
   if (!attrCount) {
     // nothing to do
     return;
@@ -1193,7 +1193,7 @@ nsSVGElement::UpdateContentStyleRule()
   MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
                                     GetBaseURI(), NodePrincipal());
 
-  for (PRUint32 i = 0; i < attrCount; ++i) {
+  for (uint32_t i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
@@ -1387,9 +1387,9 @@ nsSVGElement::WillChangeValue(nsIAtom* aName)
     emptyOrOldAttrValue.SetToSerialized(*attrValue);
   }
 
-  PRUint8 modType = attrValue
-                  ? static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION)
-                  : static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  uint8_t modType = attrValue
+                  ? static_cast<uint8_t>(nsIDOMMutationEvent::MODIFICATION)
+                  : static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION);
   nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType);
 
   return emptyOrOldAttrValue;
@@ -1415,9 +1415,9 @@ nsSVGElement::DidChangeValue(nsIAtom* aName,
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);
-  PRUint8 modType = HasAttr(kNameSpaceID_None, aName)
-                  ? static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION)
-                  : static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  uint8_t modType = HasAttr(kNameSpaceID_None, aName)
+                  ? static_cast<uint8_t>(nsIDOMMutationEvent::MODIFICATION)
+                  : static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION);
   SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, aEmptyOrOldValue,
                    aNewValue, modType, hasListeners, kNotifyDocumentObservers,
                    kCallAfterSetAttr);
@@ -1503,7 +1503,7 @@ nsSVGElement::GetLengthInfo()
   return LengthAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::LengthAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::LengthAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mLengths[aAttrEnum].Init(mLengthInfo[aAttrEnum].mCtxType,
                            aAttrEnum,
@@ -1516,7 +1516,7 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
 {
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+  for (uint32_t i = 0; i < lengthInfo.mLengthCount; i++) {
     if (aName == *lengthInfo.mLengthInfo[i].mName) {
       lengthInfo.mLengths[i] = aLength;
       DidAnimateLength(i);
@@ -1527,13 +1527,13 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
 }
 
 nsAttrValue
-nsSVGElement::WillChangeLength(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeLength(uint8_t aAttrEnum)
 {
   return WillChangeValue(*GetLengthInfo().mLengthInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeLength(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeLength(uint8_t aAttrEnum,
                               const nsAttrValue& aEmptyOrOldValue)
 {
   LengthAttributesInfo info = GetLengthInfo();
@@ -1550,7 +1550,7 @@ nsSVGElement::DidChangeLength(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateLength(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateLength(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1567,7 +1567,7 @@ nsSVGElement::GetAnimatedLength(const nsIAtom *aAttrName)
 {
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+  for (uint32_t i = 0; i < lengthInfo.mLengthCount; i++) {
     if (aAttrName == *lengthInfo.mLengthInfo[i].mName) {
       return &lengthInfo.mLengths[i];
     }
@@ -1587,13 +1587,13 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   nsSVGSVGElement *ctx = nullptr;
 
   float *f = aFirst;
-  PRUint32 i = 0;
+  uint32_t i = 0;
 
   va_list args;
   va_start(args, aFirst);
 
   while (f && i < info.mLengthCount) {
-    PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
+    uint8_t type = info.mLengths[i].GetSpecifiedUnitType();
     if (!ctx) {
       if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
           type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
@@ -1617,20 +1617,20 @@ nsSVGElement::GetLengthListInfo()
 }
 
 void
-nsSVGElement::LengthListAttributesInfo::Reset(PRUint8 aAttrEnum)
+nsSVGElement::LengthListAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mLengthLists[aAttrEnum].ClearBaseValue(aAttrEnum);
   // caller notifies
 }
 
 nsAttrValue
-nsSVGElement::WillChangeLengthList(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeLengthList(uint8_t aAttrEnum)
 {
   return WillChangeValue(*GetLengthListInfo().mLengthListInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeLengthList(uint8_t aAttrEnum,
                                   const nsAttrValue& aEmptyOrOldValue)
 {
   LengthListAttributesInfo info = GetLengthListInfo();
@@ -1647,7 +1647,7 @@ nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateLengthList(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateLengthList(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1668,7 +1668,7 @@ nsSVGElement::GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...)
                "GetAnimatedLengthListValues on element with no length list attribs");
 
   SVGUserUnitList *list = aFirst;
-  PRUint32 i = 0;
+  uint32_t i = 0;
 
   va_list args;
   va_start(args, aFirst);
@@ -1683,7 +1683,7 @@ nsSVGElement::GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...)
 }
 
 SVGAnimatedLengthList*
-nsSVGElement::GetAnimatedLengthList(PRUint8 aAttrEnum)
+nsSVGElement::GetAnimatedLengthList(uint8_t aAttrEnum)
 {
   LengthListAttributesInfo info = GetLengthListInfo();
   if (aAttrEnum < info.mLengthListCount) {
@@ -1701,7 +1701,7 @@ nsSVGElement::GetNumberListInfo()
 }
 
 void
-nsSVGElement::NumberListAttributesInfo::Reset(PRUint8 aAttrEnum)
+nsSVGElement::NumberListAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   NS_ABORT_IF_FALSE(aAttrEnum < mNumberListCount, "Bad attr enum");
   mNumberLists[aAttrEnum].ClearBaseValue(aAttrEnum);
@@ -1709,13 +1709,13 @@ nsSVGElement::NumberListAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 nsAttrValue
-nsSVGElement::WillChangeNumberList(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeNumberList(uint8_t aAttrEnum)
 {
   return WillChangeValue(*GetNumberListInfo().mNumberListInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeNumberList(uint8_t aAttrEnum,
                                   const nsAttrValue& aEmptyOrOldValue)
 {
   NumberListAttributesInfo info = GetNumberListInfo();
@@ -1733,7 +1733,7 @@ nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateNumberList(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateNumberList(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1748,7 +1748,7 @@ nsSVGElement::DidAnimateNumberList(PRUint8 aAttrEnum)
 }
 
 SVGAnimatedNumberList*
-nsSVGElement::GetAnimatedNumberList(PRUint8 aAttrEnum)
+nsSVGElement::GetAnimatedNumberList(uint8_t aAttrEnum)
 {
   NumberListAttributesInfo info = GetNumberListInfo();
   if (aAttrEnum < info.mNumberListCount) {
@@ -1762,7 +1762,7 @@ SVGAnimatedNumberList*
 nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
 {
   NumberListAttributesInfo info = GetNumberListInfo();
-  for (PRUint32 i = 0; i < info.mNumberListCount; i++) {
+  for (uint32_t i = 0; i < info.mNumberListCount; i++) {
     if (aAttrName == *info.mNumberListInfo[i].mName) {
       return &info.mNumberLists[i];
     }
@@ -1847,14 +1847,14 @@ nsSVGElement::GetNumberInfo()
   return NumberAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::NumberAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::NumberAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mNumbers[aAttrEnum].Init(aAttrEnum,
                            mNumberInfo[aAttrEnum].mDefaultValue);
 }
 
 void
-nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum)
+nsSVGElement::DidChangeNumber(uint8_t aAttrEnum)
 {
   NumberAttributesInfo info = GetNumberInfo();
 
@@ -1870,7 +1870,7 @@ nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidAnimateNumber(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateNumber(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1891,7 +1891,7 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
                "GetAnimatedNumberValues on element with no number attribs");
 
   float *f = aFirst;
-  PRUint32 i = 0;
+  uint32_t i = 0;
 
   va_list args;
   va_start(args, aFirst);
@@ -1909,7 +1909,7 @@ nsSVGElement::GetNumberPairInfo()
   return NumberPairAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::NumberPairAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::NumberPairAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mNumberPairs[aAttrEnum].Init(aAttrEnum,
                                mNumberPairInfo[aAttrEnum].mDefaultValue1,
@@ -1917,13 +1917,13 @@ void nsSVGElement::NumberPairAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 nsAttrValue
-nsSVGElement::WillChangeNumberPair(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeNumberPair(uint8_t aAttrEnum)
 {
   return WillChangeValue(*GetNumberPairInfo().mNumberPairInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeNumberPair(uint8_t aAttrEnum,
                                   const nsAttrValue& aEmptyOrOldValue)
 {
   NumberPairAttributesInfo info = GetNumberPairInfo();
@@ -1940,7 +1940,7 @@ nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateNumberPair(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateNumberPair(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -1958,14 +1958,14 @@ nsSVGElement::GetIntegerInfo()
   return IntegerAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::IntegerAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::IntegerAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mIntegers[aAttrEnum].Init(aAttrEnum,
                             mIntegerInfo[aAttrEnum].mDefaultValue);
 }
 
 void
-nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum)
+nsSVGElement::DidChangeInteger(uint8_t aAttrEnum)
 {
   IntegerAttributesInfo info = GetIntegerInfo();
 
@@ -1981,7 +1981,7 @@ nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidAnimateInteger(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateInteger(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
   
@@ -1994,22 +1994,22 @@ nsSVGElement::DidAnimateInteger(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
+nsSVGElement::GetAnimatedIntegerValues(int32_t *aFirst, ...)
 {
   IntegerAttributesInfo info = GetIntegerInfo();
 
   NS_ASSERTION(info.mIntegerCount > 0,
                "GetAnimatedIntegerValues on element with no integer attribs");
 
-  PRInt32 *n = aFirst;
-  PRUint32 i = 0;
+  int32_t *n = aFirst;
+  uint32_t i = 0;
 
   va_list args;
   va_start(args, aFirst);
 
   while (n && i < info.mIntegerCount) {
     *n = info.mIntegers[i++].GetAnimValue();
-    n = va_arg(args, PRInt32*);
+    n = va_arg(args, int32_t*);
   }
   va_end(args);
 }
@@ -2020,7 +2020,7 @@ nsSVGElement::GetIntegerPairInfo()
   return IntegerPairAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::IntegerPairAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::IntegerPairAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mIntegerPairs[aAttrEnum].Init(aAttrEnum,
                                 mIntegerPairInfo[aAttrEnum].mDefaultValue1,
@@ -2028,14 +2028,14 @@ void nsSVGElement::IntegerPairAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 nsAttrValue
-nsSVGElement::WillChangeIntegerPair(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeIntegerPair(uint8_t aAttrEnum)
 {
   return WillChangeValue(
     *GetIntegerPairInfo().mIntegerPairInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeIntegerPair(uint8_t aAttrEnum,
                                    const nsAttrValue& aEmptyOrOldValue)
 {
   IntegerPairAttributesInfo info = GetIntegerPairInfo();
@@ -2052,7 +2052,7 @@ nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateIntegerPair(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateIntegerPair(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
   
@@ -2070,7 +2070,7 @@ nsSVGElement::GetAngleInfo()
   return AngleAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::AngleAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::AngleAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mAngles[aAttrEnum].Init(aAttrEnum, 
                           mAngleInfo[aAttrEnum].mDefaultValue,
@@ -2078,13 +2078,13 @@ void nsSVGElement::AngleAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 nsAttrValue
-nsSVGElement::WillChangeAngle(PRUint8 aAttrEnum)
+nsSVGElement::WillChangeAngle(uint8_t aAttrEnum)
 {
   return WillChangeValue(*GetAngleInfo().mAngleInfo[aAttrEnum].mName);
 }
 
 void
-nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum,
+nsSVGElement::DidChangeAngle(uint8_t aAttrEnum,
                              const nsAttrValue& aEmptyOrOldValue)
 {
   AngleAttributesInfo info = GetAngleInfo();
@@ -2100,7 +2100,7 @@ nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum,
 }
 
 void
-nsSVGElement::DidAnimateAngle(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateAngle(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -2118,14 +2118,14 @@ nsSVGElement::GetBooleanInfo()
   return BooleanAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::BooleanAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::BooleanAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mBooleans[aAttrEnum].Init(aAttrEnum,
                             mBooleanInfo[aAttrEnum].mDefaultValue);
 }
 
 void
-nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum)
+nsSVGElement::DidChangeBoolean(uint8_t aAttrEnum)
 {
   BooleanAttributesInfo info = GetBooleanInfo();
 
@@ -2139,7 +2139,7 @@ nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidAnimateBoolean(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateBoolean(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
   
@@ -2157,14 +2157,14 @@ nsSVGElement::GetEnumInfo()
   return EnumAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::EnumAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::EnumAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mEnums[aAttrEnum].Init(aAttrEnum,
                          mEnumInfo[aAttrEnum].mDefaultValue);
 }
 
 void
-nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum)
+nsSVGElement::DidChangeEnum(uint8_t aAttrEnum)
 {
   EnumAttributesInfo info = GetEnumInfo();
 
@@ -2178,7 +2178,7 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidAnimateEnum(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateEnum(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -2308,12 +2308,12 @@ nsSVGElement::GetStringInfo()
   return StringAttributesInfo(nullptr, nullptr, 0);
 }
 
-void nsSVGElement::StringAttributesInfo::Reset(PRUint8 aAttrEnum)
+void nsSVGElement::StringAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mStrings[aAttrEnum].Init(aAttrEnum);
 }
 
-void nsSVGElement::GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) const
+void nsSVGElement::GetStringBaseValue(uint8_t aAttrEnum, nsAString& aResult) const
 {
   nsSVGElement::StringAttributesInfo info = const_cast<nsSVGElement*>(this)->GetStringInfo();
 
@@ -2326,7 +2326,7 @@ void nsSVGElement::GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) con
           *info.mStringInfo[aAttrEnum].mName, aResult);
 }
 
-void nsSVGElement::SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue)
+void nsSVGElement::SetStringBaseValue(uint8_t aAttrEnum, const nsAString& aValue)
 {
   nsSVGElement::StringAttributesInfo info = GetStringInfo();
 
@@ -2340,7 +2340,7 @@ void nsSVGElement::SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue
 }
 
 void
-nsSVGElement::DidAnimateString(PRUint8 aAttrEnum)
+nsSVGElement::DidAnimateString(uint8_t aAttrEnum)
 {
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -2360,7 +2360,7 @@ nsSVGElement::GetStringListInfo()
 
 nsAttrValue
 nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
-                                   PRUint8 aAttrEnum)
+                                   uint8_t aAttrEnum)
 {
   nsIAtom* name;
   if (aIsConditionalProcessingAttribute) {
@@ -2374,7 +2374,7 @@ nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
 
 void
 nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
-                                  PRUint8 aAttrEnum,
+                                  uint8_t aAttrEnum,
                                   const nsAttrValue& aEmptyOrOldValue)
 {
   nsIAtom* name;
@@ -2404,7 +2404,7 @@ nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
 }
 
 void
-nsSVGElement::StringListAttributesInfo::Reset(PRUint8 aAttrEnum)
+nsSVGElement::StringListAttributesInfo::Reset(uint8_t aAttrEnum)
 {
   mStringLists[aAttrEnum].Clear();
   // caller notifies
@@ -2426,7 +2426,7 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
 void
 nsSVGElement::RecompileScriptEventListeners()
 {
-  PRInt32 i, count = mAttrsAndChildren.AttrCount();
+  int32_t i, count = mAttrsAndChildren.AttrCount();
   for (i = 0; i < count; ++i) {
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
 
@@ -2447,7 +2447,7 @@ nsSVGElement::RecompileScriptEventListeners()
 }
 
 nsISMILAttr*
-nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
+nsSVGElement::GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     // We check mapped-into-style attributes first so that animations
@@ -2482,7 +2482,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
 
     // Lengths:
     LengthAttributesInfo info = GetLengthInfo();
-    for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+    for (uint32_t i = 0; i < info.mLengthCount; i++) {
       if (aName == *info.mLengthInfo[i].mName) {
         return info.mLengths[i].ToSMILAttr(this);
       }
@@ -2491,7 +2491,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Numbers:
     {
       NumberAttributesInfo info = GetNumberInfo();
-      for (PRUint32 i = 0; i < info.mNumberCount; i++) {
+      for (uint32_t i = 0; i < info.mNumberCount; i++) {
         if (aName == *info.mNumberInfo[i].mName) {
           return info.mNumbers[i].ToSMILAttr(this);
         }
@@ -2501,7 +2501,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Number Pairs:
     {
       NumberPairAttributesInfo info = GetNumberPairInfo();
-      for (PRUint32 i = 0; i < info.mNumberPairCount; i++) {
+      for (uint32_t i = 0; i < info.mNumberPairCount; i++) {
         if (aName == *info.mNumberPairInfo[i].mName) {
           return info.mNumberPairs[i].ToSMILAttr(this);
         }
@@ -2511,7 +2511,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Integers:
     {
       IntegerAttributesInfo info = GetIntegerInfo();
-      for (PRUint32 i = 0; i < info.mIntegerCount; i++) {
+      for (uint32_t i = 0; i < info.mIntegerCount; i++) {
         if (aName == *info.mIntegerInfo[i].mName) {
           return info.mIntegers[i].ToSMILAttr(this);
         }
@@ -2521,7 +2521,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Integer Pairs:
     {
       IntegerPairAttributesInfo info = GetIntegerPairInfo();
-      for (PRUint32 i = 0; i < info.mIntegerPairCount; i++) {
+      for (uint32_t i = 0; i < info.mIntegerPairCount; i++) {
         if (aName == *info.mIntegerPairInfo[i].mName) {
           return info.mIntegerPairs[i].ToSMILAttr(this);
         }
@@ -2531,7 +2531,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Enumerations:
     {
       EnumAttributesInfo info = GetEnumInfo();
-      for (PRUint32 i = 0; i < info.mEnumCount; i++) {
+      for (uint32_t i = 0; i < info.mEnumCount; i++) {
         if (aName == *info.mEnumInfo[i].mName) {
           return info.mEnums[i].ToSMILAttr(this);
         }
@@ -2541,7 +2541,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Booleans:
     {
       BooleanAttributesInfo info = GetBooleanInfo();
-      for (PRUint32 i = 0; i < info.mBooleanCount; i++) {
+      for (uint32_t i = 0; i < info.mBooleanCount; i++) {
         if (aName == *info.mBooleanInfo[i].mName) {
           return info.mBooleans[i].ToSMILAttr(this);
         }
@@ -2551,7 +2551,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Angles:
     {
       AngleAttributesInfo info = GetAngleInfo();
-      for (PRUint32 i = 0; i < info.mAngleCount; i++) {
+      for (uint32_t i = 0; i < info.mAngleCount; i++) {
         if (aName == *info.mAngleInfo[i].mName) {
           return info.mAngles[i].ToSMILAttr(this);
         }
@@ -2575,10 +2575,10 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // NumberLists:
     {
       NumberListAttributesInfo info = GetNumberListInfo();
-      for (PRUint32 i = 0; i < info.mNumberListCount; i++) {
+      for (uint32_t i = 0; i < info.mNumberListCount; i++) {
         if (aName == *info.mNumberListInfo[i].mName) {
           NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
-          return info.mNumberLists[i].ToSMILAttr(this, PRUint8(i));
+          return info.mNumberLists[i].ToSMILAttr(this, uint8_t(i));
         }
       }
     }
@@ -2586,11 +2586,11 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // LengthLists:
     {
       LengthListAttributesInfo info = GetLengthListInfo();
-      for (PRUint32 i = 0; i < info.mLengthListCount; i++) {
+      for (uint32_t i = 0; i < info.mLengthListCount; i++) {
         if (aName == *info.mLengthListInfo[i].mName) {
           NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
           return info.mLengthLists[i].ToSMILAttr(this,
-                                                 PRUint8(i),
+                                                 uint8_t(i),
                                                  info.mLengthListInfo[i].mAxis,
                                                  info.mLengthListInfo[i].mCouldZeroPadList);
         }
@@ -2621,7 +2621,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
   // Strings
   {
     StringAttributesInfo info = GetStringInfo();
-    for (PRUint32 i = 0; i < info.mStringCount; i++) {
+    for (uint32_t i = 0; i < info.mStringCount; i++) {
       if (aNamespaceID == info.mStringInfo[i].mNamespaceID &&
           aName == *info.mStringInfo[i].mName) {
         return info.mStrings[i].ToSMILAttr(this);

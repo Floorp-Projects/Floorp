@@ -47,7 +47,7 @@ using namespace mozilla;
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
 
-PRInt32 gXULModalLevel = 0;
+int32_t gXULModalLevel = 0;
 
 // In principle there should be only one app-modal window at any given time.
 // But sometimes, despite our best efforts, another window appears above the
@@ -512,7 +512,7 @@ nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
   return parent;
 }
 
-void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
+void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
@@ -1016,7 +1016,7 @@ bool nsCocoaWindow::IsEnabled() const
 #define kWindowPositionSlop 20
 
 NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
-                                               PRInt32 *aX, PRInt32 *aY)
+                                               int32_t *aX, int32_t *aY)
 {
   if (!mWindow || ![mWindow screen]) {
     return NS_OK;
@@ -1027,7 +1027,7 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
   nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (screenMgr) {
     nsCOMPtr<nsIScreen> screen;
-    PRInt32 width, height;
+    int32_t width, height;
 
     // zero size rects confuse the screen manager
     width = mBounds.width > 0 ? mBounds.width : 1;
@@ -1079,8 +1079,8 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
   rect = [mWindow frameRectForContentRect:rect];
 
   SizeConstraints c = aConstraints;
-  c.mMinSize.width = NS_MAX(PRInt32(rect.size.width), c.mMinSize.width);
-  c.mMinSize.height = NS_MAX(PRInt32(rect.size.height), c.mMinSize.height);
+  c.mMinSize.width = NS_MAX(int32_t(rect.size.width), c.mMinSize.width);
+  c.mMinSize.height = NS_MAX(int32_t(rect.size.height), c.mMinSize.height);
 
   NSSize minSize = { static_cast<CGFloat>(c.mMinSize.width),
                      static_cast<CGFloat>(c.mMinSize.height) };
@@ -1095,7 +1095,7 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP nsCocoaWindow::Move(int32_t aX, int32_t aY)
 {
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
     return NS_OK;
@@ -1115,7 +1115,7 @@ NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   return NS_OK;
 }
 
-NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
+NS_METHOD nsCocoaWindow::SetSizeMode(int32_t aMode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1269,7 +1269,7 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1296,7 +1296,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
@@ -1358,7 +1358,7 @@ NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetCursor(imgIContainer* aCursor,
-                                       PRUint32 aHotspotX, PRUint32 aHotspotY)
+                                       uint32_t aHotspotX, uint32_t aHotspotY)
 {
   if (mPopupContentView)
     return mPopupContentView->SetCursor(aCursor, aHotspotX, aHotspotY);
@@ -1678,7 +1678,7 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
+NS_IMETHODIMP nsCocoaWindow::GetAttention(int32_t aCycleCount)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1694,7 +1694,7 @@ nsCocoaWindow::HasPendingInputEvent()
   return nsChildView::DoHasPendingInputEvent();
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
+NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1780,7 +1780,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
       qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
       if (transform) {
-        PRUint8 color[3];
+        uint8_t color[3];
         color[0] = NS_GET_R(aColor);
         color[1] = NS_GET_G(aColor);
         color[2] = NS_GET_B(aColor);
@@ -1811,8 +1811,8 @@ void nsCocoaWindow::SetDrawsInTitlebar(bool aState)
 }
 
 NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                                        PRUint32 aNativeMessage,
-                                                        PRUint32 aModifierFlags)
+                                                        uint32_t aNativeMessage,
+                                                        uint32_t aModifierFlags)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

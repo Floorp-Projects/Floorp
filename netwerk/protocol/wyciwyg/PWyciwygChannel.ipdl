@@ -22,25 +22,25 @@ parent:
 
   Init(URI uri);
   AsyncOpen(URI                   originalURI,
-            PRUint32              loadFlags,
+            uint32_t              loadFlags,
             SerializedLoadContext loadContext);
 
   // methods corresponding to those of nsIWyciwygChannel
   WriteToCacheEntry(nsString data);
   CloseCacheEntry(nsresult reason);
-  SetCharsetAndSource(PRInt32 source, nsCString charset);
+  SetCharsetAndSource(int32_t source, nsCString charset);
   SetSecurityInfo(nsCString securityInfo);
   Cancel(nsresult status);
 
 child:
   OnStartRequest(nsresult  statusCode,
-                 PRInt32   contentLength,
-                 PRInt32   source,
+                 int32_t   contentLength,
+                 int32_t   source,
                  nsCString charset,
                  nsCString securityInfo);
 
   OnDataAvailable(nsCString data,
-                  PRUint32  offset);
+                  uint32_t  offset);
 
   OnStopRequest(nsresult statusCode);
 

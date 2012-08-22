@@ -41,7 +41,7 @@ parent:
   // before sending __delete__.
   sync Stop();
 
-  sync PImageContainer() returns (PRUint64 id);
+  sync PImageContainer() returns (uint64_t id);
 };
 
 

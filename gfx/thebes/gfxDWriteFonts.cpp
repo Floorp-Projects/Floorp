@@ -229,8 +229,8 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     mMetrics->maxAdvance = mAdjustedSize;
 
     // try to get the true maxAdvance value from 'hhea'
-    PRUint8 *tableData;
-    PRUint32 len;
+    uint8_t *tableData;
+    uint32_t len;
     void *tableContext = NULL;
     BOOL exists;
     HRESULT hr =
@@ -244,7 +244,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
             const mozilla::HheaTable* hhea =
                 reinterpret_cast<const mozilla::HheaTable*>(tableData);
             mMetrics->maxAdvance =
-                PRUint16(hhea->advanceWidthMax) * mFUnitsConvFactor;
+                uint16_t(hhea->advanceWidthMax) * mFUnitsConvFactor;
         }
         mFontFace->ReleaseFontTable(tableContext);
     }
@@ -252,7 +252,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     mMetrics->internalLeading = NS_MAX(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
     mMetrics->externalLeading = ceil(fontMetrics.lineGap * mFUnitsConvFactor);
 
-    UINT16 glyph = (PRUint16)GetSpaceGlyph();
+    UINT16 glyph = (uint16_t)GetSpaceGlyph();
     mMetrics->spaceWidth = MeasureGlyphWidth(glyph);
 
     // try to get aveCharWidth from the OS/2 table, fall back to measuring 'x'
@@ -272,7 +272,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
                 const mozilla::OS2Table* os2 =
                     reinterpret_cast<const mozilla::OS2Table*>(tableData);
                 mMetrics->aveCharWidth =
-                    PRInt16(os2->xAvgCharWidth) * mFUnitsConvFactor;
+                    int16_t(os2->xAvgCharWidth) * mFUnitsConvFactor;
             }
             mFontFace->ReleaseFontTable(tableContext);
         }
@@ -333,18 +333,18 @@ struct EBLCHeader {
 };
 
 struct SbitLineMetrics {
-    PRInt8  ascender;
-    PRInt8  descender;
-    PRUint8 widthMax;
-    PRInt8  caretSlopeNumerator;
-    PRInt8  caretSlopeDenominator;
-    PRInt8  caretOffset;
-    PRInt8  minOriginSB;
-    PRInt8  minAdvanceSB;
-    PRInt8  maxBeforeBL;
-    PRInt8  minAfterBL;
-    PRInt8  pad1;
-    PRInt8  pad2;
+    int8_t  ascender;
+    int8_t  descender;
+    uint8_t widthMax;
+    int8_t  caretSlopeNumerator;
+    int8_t  caretSlopeDenominator;
+    int8_t  caretOffset;
+    int8_t  minOriginSB;
+    int8_t  minAdvanceSB;
+    int8_t  maxBeforeBL;
+    int8_t  minAfterBL;
+    int8_t  pad1;
+    int8_t  pad2;
 };
 
 struct BitmapSizeTable {
@@ -356,10 +356,10 @@ struct BitmapSizeTable {
     SbitLineMetrics   vert;
     AutoSwap_PRUint16 startGlyphIndex;
     AutoSwap_PRUint16 endGlyphIndex;
-    PRUint8           ppemX;
-    PRUint8           ppemY;
-    PRUint8           bitDepth;
-    PRUint8           flags;
+    uint8_t           ppemX;
+    uint8_t           ppemY;
+    uint8_t           bitDepth;
+    uint8_t           flags;
 };
 
 typedef EBLCHeader EBSCHeader;
@@ -367,17 +367,17 @@ typedef EBLCHeader EBSCHeader;
 struct BitmapScaleTable {
     SbitLineMetrics   hori;
     SbitLineMetrics   vert;
-    PRUint8           ppemX;
-    PRUint8           ppemY;
-    PRUint8           substitutePpemX;
-    PRUint8           substitutePpemY;
+    uint8_t           ppemX;
+    uint8_t           ppemY;
+    uint8_t           substitutePpemX;
+    uint8_t           substitutePpemY;
 };
 
 bool
-gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
+gfxDWriteFont::HasBitmapStrikeForSize(uint32_t aSize)
 {
-    PRUint8 *tableData;
-    PRUint32 len;
+    uint8_t *tableData;
+    uint32_t len;
     void *tableContext;
     BOOL exists;
     HRESULT hr =
@@ -400,7 +400,7 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
         if (hdr->version != 0x00020000) {
             break;
         }
-        PRUint32 numSizes = hdr->numSizes;
+        uint32_t numSizes = hdr->numSizes;
         if (numSizes > 0xffff) { // sanity-check, prevent overflow below
             break;
         }
@@ -409,14 +409,14 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
         }
         const BitmapSizeTable *sizeTable =
             reinterpret_cast<const BitmapSizeTable*>(hdr + 1);
-        for (PRUint32 i = 0; i < numSizes; ++i, ++sizeTable) {
+        for (uint32_t i = 0; i < numSizes; ++i, ++sizeTable) {
             if (sizeTable->ppemX == aSize && sizeTable->ppemY == aSize) {
                 // we ignore a strike that contains fewer than 4 glyphs,
                 // as that probably indicates a font such as Courier New
                 // that provides bitmaps ONLY for the "shading" characters
                 // U+2591..2593
-                hasStrike = (PRUint16(sizeTable->endGlyphIndex) >=
-                             PRUint16(sizeTable->startGlyphIndex) + 3);
+                hasStrike = (uint16_t(sizeTable->endGlyphIndex) >=
+                             uint16_t(sizeTable->startGlyphIndex) + 3);
                 break;
             }
         }
@@ -447,7 +447,7 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
         if (hdr->version != 0x00020000) {
             break;
         }
-        PRUint32 numSizes = hdr->numSizes;
+        uint32_t numSizes = hdr->numSizes;
         if (numSizes > 0xffff) {
             break;
         }
@@ -456,7 +456,7 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
         }
         const BitmapScaleTable *scaleTable =
             reinterpret_cast<const BitmapScaleTable*>(hdr + 1);
-        for (PRUint32 i = 0; i < numSizes; ++i, ++scaleTable) {
+        for (uint32_t i = 0; i < numSizes; ++i, ++scaleTable) {
             if (scaleTable->ppemX == aSize && scaleTable->ppemY == aSize) {
                 hasStrike = true;
                 break;
@@ -469,7 +469,7 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
     return hasStrike;
 }
 
-PRUint32
+uint32_t
 gfxDWriteFont::GetSpaceGlyph()
 {
     UINT32 ucs = L' ';
@@ -576,7 +576,7 @@ gfxDWriteFont::CairoScaledFont()
 
 gfxFont::RunMetrics
 gfxDWriteFont::Measure(gfxTextRun *aTextRun,
-                    PRUint32 aStart, PRUint32 aEnd,
+                    uint32_t aStart, uint32_t aEnd,
                     BoundingBoxType aBoundingBoxType,
                     gfxContext *aRefContext,
                     Spacing *aSpacing)
@@ -628,7 +628,7 @@ gfxDWriteFont::DestroyBlobFunc(void* aUserData)
 }
 
 hb_blob_t *
-gfxDWriteFont::GetFontTable(PRUint32 aTag)
+gfxDWriteFont::GetFontTable(uint32_t aTag)
 {
     const void *data;
     UINT32      size;
@@ -662,14 +662,14 @@ gfxDWriteFont::ProvidesGlyphWidths()
            (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
 }
 
-PRInt32
-gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+int32_t
+gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
 {
     if (!mGlyphWidths.IsInitialized()) {
         mGlyphWidths.Init(200);
     }
 
-    PRInt32 width = -1;
+    int32_t width = -1;
     if (mGlyphWidths.Get(aGID, &width)) {
         return width;
     }
@@ -710,7 +710,7 @@ gfxDWriteFont::GetMeasuringMode()
 }
 
 gfxFloat
-gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
+gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph)
 {
     DWRITE_GLYPH_METRICS metrics;
     HRESULT hr;

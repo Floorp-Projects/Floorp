@@ -44,13 +44,13 @@ public:
    * indicating how long it has been since the previous one. This triggers a
    * recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeDelta);
+  void UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.
    */
-  void StartTouch(PRInt32 aPos);
+  void StartTouch(int32_t aPos);
 
   /**
    * Notify this Axis that a touch has ended gracefully. This may perform
@@ -126,7 +126,7 @@ public:
    * That is to say, if the given displacement is applied, this will tell you
    * whether or not it will overscroll, and in what direction.
    */
-  Overscroll DisplacementWillOverscroll(PRInt32 aDisplacement);
+  Overscroll DisplacementWillOverscroll(int32_t aDisplacement);
 
   /**
    * If a displacement will overscroll the axis, this returns the amount and in
@@ -143,7 +143,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  Overscroll ScaleWillOverscroll(float aScale, PRInt32 aFocus);
+  Overscroll ScaleWillOverscroll(float aScale, int32_t aFocus);
 
   /**
    * If a scale will overscroll the axis, this returns the amount and in what
@@ -176,15 +176,15 @@ public:
   virtual float GetRectOffset(const gfx::Rect& aRect) = 0;
 
 protected:
-  PRInt32 mPos;
-  PRInt32 mStartPos;
+  int32_t mPos;
+  int32_t mStartPos;
   float mVelocity;
   // Acceleration is represented by an int, which is the power we raise a
   // constant to and then multiply the velocity by whenever it is sampled. We do
   // this only when we detect that the user wants to do a fast fling; that is,
   // they are flinging multiple times in a row very quickly, probably trying to
   // reach one of the extremes of the page.
-  PRInt32 mAcceleration;
+  int32_t mAcceleration;
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
   bool mLockPanning;
 };

@@ -18,10 +18,10 @@ class nsAXPCNativeCallContext
 {
 public:
     NS_IMETHOD GetCallee(nsISupports **aResult) = 0;
-    NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aResult) = 0;
+    NS_IMETHOD GetCalleeMethodIndex(uint16_t *aResult) = 0;
     NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative **aResult) = 0;
     NS_IMETHOD GetJSContext(JSContext **aResult) = 0;
-    NS_IMETHOD GetArgc(PRUint32 *aResult) = 0;
+    NS_IMETHOD GetArgc(uint32_t *aResult) = 0;
     NS_IMETHOD GetArgvPtr(jsval **aResult) = 0;
 
     // Methods added since mozilla 0.6....
@@ -35,7 +35,7 @@ public:
            LANG_JS      = 1,
            LANG_NATIVE  = 2 };
 
-    NS_IMETHOD GetLanguage(PRUint16 *aResult) = 0;
+    NS_IMETHOD GetLanguage(uint16_t *aResult) = 0;
 };
 
 #endif

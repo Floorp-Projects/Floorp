@@ -84,7 +84,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
        (eventType.EqualsLiteral("contextmenu") && mIsContext)))
     return NS_OK;
 
-  PRUint16 button;
+  uint16_t button;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
   if (!mouseEvent) {
@@ -126,7 +126,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
       // If the target node is for plug-in, we should not open XUL context
       // menu on windowless plug-ins.
       nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(targetNode);
-      PRUint32 type;
+      uint32_t type;
       if (olc && NS_SUCCEEDED(olc->GetDisplayedType(&type)) &&
           type == nsIObjectLoadingContent::TYPE_PLUGIN) {
         return NS_OK;
@@ -221,7 +221,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsIFrame* currFrame = targetFrame;
     // Look for the nearest enclosing focusable frame.
     while (currFrame) {
-        PRInt32 tabIndexUnused;
+        int32_t tabIndexUnused;
         if (currFrame->IsFocusable(&tabIndexUnused, true)) {
           newFocus = currFrame->GetContent();
           nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
@@ -346,7 +346,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
       nsCOMPtr<nsIDOMNodeList> list;
       nsDoc->GetAnonymousNodes(mElement, getter_AddRefs(list));
       if (list) {
-        PRUint32 ctr,listLength;
+        uint32_t ctr,listLength;
         nsCOMPtr<nsIDOMNode> node;
         list->GetLength(&listLength);
         for (ctr = 0; ctr < listLength; ctr++) {
@@ -401,7 +401,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
                   false, true, false, aEvent);
   }
   else {
-    PRInt32 xPos = 0, yPos = 0;
+    int32_t xPos = 0, yPos = 0;
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
     mouseEvent->GetScreenX(&xPos);
     mouseEvent->GetScreenY(&yPos);

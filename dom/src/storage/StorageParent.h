@@ -23,9 +23,9 @@ public:
 private:
   bool RecvGetKeys(const bool& aCallerSecure, InfallibleTArray<nsString>* aKeys);
   bool RecvGetLength(const bool& aCallerSecure, const bool& aSessionOnly,
-                     PRUint32* aLength, nsresult* rv);
+                     uint32_t* aLength, nsresult* rv);
   bool RecvGetKey(const bool& aCallerSecure, const bool& aSessionOnly,
-                  const PRUint32& aIndex,nsString* aKey, nsresult* rv);
+                  const uint32_t& aIndex,nsString* aKey, nsresult* rv);
   bool RecvGetValue(const bool& aCallerSecure, const bool& aSessionOnly,
                     const nsString& aKey, StorageItem* aItem, nsresult* rv);
   bool RecvSetValue(const bool& aCallerSecure, const bool& aSessionOnly,
@@ -34,7 +34,7 @@ private:
   bool RecvRemoveValue(const bool& aCallerSecure, const bool& aSessionOnly,
                        const nsString& aKey, nsString* aOldData, nsresult* rv);
   bool RecvClear(const bool& aCallerSecure, const bool& aSessionOnly,
-                 PRInt32* aOldCount, nsresult* rv);
+                 int32_t* aOldCount, nsresult* rv);
 
   bool RecvGetDBValue(const nsString& aKey, nsString* aValue, bool* aSecure,
                       nsresult* rv);
@@ -50,7 +50,7 @@ private:
                 const nsCString& aScopeDBKey,
                 const nsCString& aQuotaDomainDBKey,
                 const nsCString& aQuotaETLDplus1DomainDBKey,
-                const PRUint32& aStorageType);
+                const uint32_t& aStorageType);
 
   bool RecvUpdatePrivateState(const bool& aEnabled);
 

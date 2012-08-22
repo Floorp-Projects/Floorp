@@ -124,7 +124,7 @@ static bool EnsurePreflightCache()
 void
 nsPreflightCache::CacheEntry::PurgeExpired(PRTime now)
 {
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < mMethods.Length(); ++i) {
     if (now >= mMethods[i].expirationTime) {
       mMethods.RemoveElementAt(i--);
@@ -144,7 +144,7 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
   PurgeExpired(PR_Now());
 
   if (!aMethod.EqualsLiteral("GET") && !aMethod.EqualsLiteral("POST")) {
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < mMethods.Length(); ++i) {
       if (aMethod.Equals(mMethods[i].token))
         break;
@@ -154,8 +154,8 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
     }
   }
 
-  for (PRUint32 i = 0; i < aHeaders.Length(); ++i) {
-    PRUint32 j;
+  for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
+    uint32_t j;
     for (j = 0; j < mHeaders.Length(); ++j) {
       if (aHeaders[i].Equals(mHeaders[j].token,
                              nsCaseInsensitiveCStringComparator())) {
@@ -407,7 +407,7 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
     mPreflightMethod(aPreflightMethod),
     mPreflightHeaders(aPreflightHeaders)
 {
-  for (PRUint32 i = 0; i < mPreflightHeaders.Length(); ++i) {
+  for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
     ToLowerCase(mPreflightHeaders[i]);
   }
   mPreflightHeaders.Sort();
@@ -585,7 +585,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
       }
       headers.AppendElement(header);
     }
-    for (PRUint32 i = 0; i < mPreflightHeaders.Length(); ++i) {
+    for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
       if (!headers.Contains(mPreflightHeaders[i],
                             nsCaseInsensitiveCStringArrayComparator())) {
         return NS_ERROR_DOM_BAD_URI;
@@ -614,8 +614,8 @@ NS_IMETHODIMP
 nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
                                      nsISupports* aContext, 
                                      nsIInputStream* aInputStream,
-                                     PRUint32 aOffset,
-                                     PRUint32 aCount)
+                                     uint32_t aOffset,
+                                     uint32_t aCount)
 {
   if (!mRequestApproved) {
     return NS_ERROR_DOM_BAD_URI;
@@ -642,7 +642,7 @@ nsCORSListenerProxy::GetInterface(const nsIID & aIID, void **aResult)
 NS_IMETHODIMP
 nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIChannel *aNewChannel,
-                                            PRUint32 aFlags,
+                                            uint32_t aFlags,
                                             nsIAsyncVerifyRedirectCallback *cb)
 {
   nsresult rv;
@@ -777,7 +777,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
 
     if (!mPreflightHeaders.IsEmpty()) {
       nsCAutoString headers;
-      for (PRUint32 i = 0; i < mPreflightHeaders.Length(); ++i) {
+      for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
         if (i != 0) {
           headers += ',';
         }
@@ -863,7 +863,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
   // Sanitize the string. We only allow 'delta-seconds' as specified by
   // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
   // trailing non-whitespace characters).
-  PRUint32 age = 0;
+  uint32_t age = 0;
   nsCSubstring::const_char_iterator iter, end;
   headerVal.BeginReading(iter);
   headerVal.EndReading(end);
@@ -890,7 +890,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
   NS_GetFinalChannelURI(http, getter_AddRefs(uri));
 
   // PR_Now gives microseconds
-  PRTime expirationTime = PR_Now() + (PRUint64)age * PR_USEC_PER_SEC;
+  PRTime expirationTime = PR_Now() + (uint64_t)age * PR_USEC_PER_SEC;
 
   nsPreflightCache::CacheEntry* entry =
     sPreflightCache->GetEntry(uri, mReferrerPrincipal, mWithCredentials,
@@ -910,7 +910,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
     if (method.IsEmpty()) {
       continue;
     }
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < entry->mMethods.Length(); ++i) {
       if (entry->mMethods[i].token.Equals(method)) {
         entry->mMethods[i].expirationTime = expirationTime;
@@ -940,7 +940,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
     if (header.IsEmpty()) {
       continue;
     }
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < entry->mHeaders.Length(); ++i) {
       if (entry->mHeaders[i].token.Equals(header)) {
         entry->mHeaders[i].expirationTime = expirationTime;
@@ -1006,17 +1006,17 @@ NS_IMETHODIMP
 nsCORSPreflightListener::OnDataAvailable(nsIRequest *aRequest,
                                          nsISupports *ctxt,
                                          nsIInputStream *inStr,
-                                         PRUint32 sourceOffset,
-                                         PRUint32 count)
+                                         uint32_t sourceOffset,
+                                         uint32_t count)
 {
-  PRUint32 totalRead;
+  uint32_t totalRead;
   return inStr->ReadSegments(NS_DiscardSegment, nullptr, count, &totalRead);
 }
 
 NS_IMETHODIMP
 nsCORSPreflightListener::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                                 nsIChannel *aNewChannel,
-                                                PRUint32 aFlags,
+                                                uint32_t aFlags,
                                                 nsIAsyncVerifyRedirectCallback *callback)
 {
   // Only internal redirects allowed for now.

@@ -316,7 +316,7 @@ gfxImageSurface::MovePixels(const nsIntRect& aSourceRect,
     }
 
     // Slow(er) path: have to move row-by-row.
-    const PRInt32 bpp = BytePerPixelFromFormat(mFormat);
+    const int32_t bpp = BytePerPixelFromFormat(mFormat);
     const size_t nRowBytes = dest.width * bpp;
     // dstRow points at the first pixel within the current destination
     // row, and similarly for srcRow.  endSrcRow is one row beyond the

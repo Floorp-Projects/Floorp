@@ -16,13 +16,13 @@ class nsISupportsArray;
 class nsDFAState : public nsHashKey
 {
 public:
-  PRUint32 mStateID;
+  uint32_t mStateID;
 
-  nsDFAState(PRUint32 aID) :mStateID(aID) {}
+  nsDFAState(uint32_t aID) :mStateID(aID) {}
 
-  PRUint32 GetStateID() { return mStateID; }
+  uint32_t GetStateID() { return mStateID; }
 
-  PRUint32 HashCode(void) const {
+  uint32_t HashCode(void) const {
     return mStateID;
   }
 
@@ -39,15 +39,15 @@ public:
 class nsTransitionKey : public nsHashKey
 {
 public:
-  PRUint32 mState;
+  uint32_t mState;
   nsCOMPtr<nsIAtom> mInputSymbol;
 
-  nsTransitionKey(PRUint32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {}
+  nsTransitionKey(uint32_t aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {}
 
-  PRUint32 HashCode(void) const {
+  uint32_t HashCode(void) const {
     // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
-    PRInt32 hb = mState << 16;
-    PRInt32 lb = (NS_PTR_TO_INT32(mInputSymbol.get()) << 16) >> 16;
+    int32_t hb = mState << 16;
+    int32_t lb = (NS_PTR_TO_INT32(mInputSymbol.get()) << 16) >> 16;
     return hb+lb;
   }
 
@@ -103,7 +103,7 @@ protected:
 
   // An integer counter that is used when we need to make new states in the
   // DFA.
-  PRUint32 mNextState;
+  uint32_t mNextState;
 };
 
 #endif // nsTreeStyleCache_h__

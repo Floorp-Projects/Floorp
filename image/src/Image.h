@@ -17,8 +17,8 @@ class Image : public imgIContainer
 {
 public:
   // From NS_DECL_IMGICONTAINER:
-  NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
-  NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
+  NS_IMETHOD GetAnimationMode(uint16_t *aAnimationMode);
+  NS_IMETHOD SetAnimationMode(uint16_t aAnimationMode);
 
   imgStatusTracker& GetStatusTracker() { return *mStatusTracker; }
 
@@ -38,10 +38,10 @@ public:
    * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
    * and INIT_FLAG_DECODE_ON_DRAW must not be set.
    */
-  static const PRUint32 INIT_FLAG_NONE           = 0x0;
-  static const PRUint32 INIT_FLAG_DISCARDABLE    = 0x1;
-  static const PRUint32 INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  static const PRUint32 INIT_FLAG_MULTIPART      = 0x4;
+  static const uint32_t INIT_FLAG_NONE           = 0x0;
+  static const uint32_t INIT_FLAG_DISCARDABLE    = 0x1;
+  static const uint32_t INIT_FLAG_DECODE_ON_DRAW = 0x2;
+  static const uint32_t INIT_FLAG_MULTIPART      = 0x4;
 
   /**
    * Creates a new image container.
@@ -53,7 +53,7 @@ public:
   virtual nsresult Init(imgIDecoderObserver* aObserver,
                         const char* aMimeType,
                         const char* aURIString,
-                        PRUint32 aFlags) = 0;
+                        uint32_t aFlags) = 0;
 
   /**
    * The rectangle defining the location and size of the currently displayed
@@ -65,7 +65,7 @@ public:
    * The size, in bytes, occupied by the significant data portions of the image.
    * This includes both compressed source data and decoded frames.
    */
-  PRUint32 SizeOfData();
+  uint32_t SizeOfData();
 
   /**
    * The components that make up SizeOfData().
@@ -90,13 +90,13 @@ public:
   void IncrementAnimationConsumers();
   void DecrementAnimationConsumers();
 #ifdef DEBUG
-  PRUint32 GetAnimationConsumers() { return mAnimationConsumers; }
+  uint32_t GetAnimationConsumers() { return mAnimationConsumers; }
 #endif
 
-  void SetInnerWindowID(PRUint64 aInnerWindowId) {
+  void SetInnerWindowID(uint64_t aInnerWindowId) {
     mInnerWindowId = aInnerWindowId;
   }
-  PRUint64 InnerWindowID() const { return mInnerWindowId; }
+  uint64_t InnerWindowID() const { return mInnerWindowId; }
 
   bool HasError() { return mError; }
 
@@ -112,12 +112,12 @@ protected:
   virtual nsresult StartAnimation() = 0;
   virtual nsresult StopAnimation() = 0;
 
-  PRUint64 mInnerWindowId;
+  uint64_t mInnerWindowId;
 
   // Member data shared by all implementations of this abstract class
   nsAutoPtr<imgStatusTracker> mStatusTracker;
-  PRUint32                    mAnimationConsumers;
-  PRUint16                    mAnimationMode;   // Enum values in imgIContainer
+  uint32_t                    mAnimationConsumers;
+  uint16_t                    mAnimationMode;   // Enum values in imgIContainer
   bool                        mInitialized:1;   // Have we been initalized?
   bool                        mAnimating:1;     // Are we currently animating?
   bool                        mError:1;         // Error handling

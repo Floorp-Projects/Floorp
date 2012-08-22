@@ -98,7 +98,7 @@ JSValToMatrixElts(JSContext* cx, const jsval& val,
         return false;
     }
 
-    for (PRUint32 i = 0; i < N; ++i) {
+    for (uint32_t i = 0; i < N; ++i) {
         jsval elt;
         double d;
         if (!JS_GetElement(cx, obj, i, &elt)) {

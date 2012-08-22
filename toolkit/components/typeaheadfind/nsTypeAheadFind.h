@@ -54,7 +54,7 @@ protected:
                         bool *aUsesIndependentSelection);
   nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                      bool aIsFirstVisiblePreferred, bool aFindPrev,
-                     PRUint16* aResult);
+                     uint16_t* aResult);
   nsresult GetSearchContainers(nsISupports *aContainer,
                                nsISelectionController *aSelectionController,
                                bool aIsFirstVisiblePreferred,
@@ -78,7 +78,7 @@ protected:
   nsCOMPtr<nsIDOMWindow> mCurrentWindow;
   // mLastFindLength is the character length of the last find string.  It is used for
   // disabling the "not found" sound when using backspace or delete
-  PRUint32 mLastFindLength;
+  uint32_t mLastFindLength;
 
   // Sound is played asynchronously on some platforms.
   // If we destroy mSoundInterface before sound has played, it won't play

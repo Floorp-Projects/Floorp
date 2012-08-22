@@ -20,7 +20,7 @@ ImageLoader::SetAnimationModeEnumerator(nsISupports* aKey, FrameSet* aValue,
 {
   imgIRequest* request = static_cast<imgIRequest*>(aKey);
 
-  PRUint16* mode = static_cast<PRUint16*>(aClosure);
+  uint16_t* mode = static_cast<uint16_t*>(aClosure);
 
 #ifdef DEBUG
   {
@@ -98,7 +98,7 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   }
 
   // Add these to the sets, but only if they're not already there.
-  PRUint32 i;
+  uint32_t i;
   if (!frameSet->GreatestIndexLtEq(aFrame, i)) {
     frameSet->InsertElementAt(i, aFrame);
   }
@@ -208,7 +208,7 @@ ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 }
 
 void
-ImageLoader::SetAnimationMode(PRUint16 aMode)
+ImageLoader::SetAnimationMode(uint16_t aMode)
 {
   NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
                aMode == imgIContainer::kDontAnimMode ||
@@ -394,7 +394,7 @@ ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
 }
 
 NS_IMETHODIMP
-ImageLoader::OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame)
+ImageLoader::OnStopFrame(imgIRequest *aRequest, uint32_t aFrame)
 {
   if (!mDocument || mInClone) {
     return NS_OK;

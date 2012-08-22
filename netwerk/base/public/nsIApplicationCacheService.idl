@@ -36,7 +36,7 @@ interface nsIApplicationCacheService : nsISupports
      */
     nsIApplicationCache createCustomApplicationCache(in ACString group,
                                                      in nsIFile profileDir,
-                                                     in PRInt32 quota);
+                                                     in int32_t quota);
 
     /**
      * Get an application cache object for the given client ID.

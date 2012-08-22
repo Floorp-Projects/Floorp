@@ -68,7 +68,7 @@ DispatchNamedNotification(const nsAString &aName,
   if (!delegate)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRUint32 ind = 0;
+  uint32_t ind = 0;
   if (aListener)
     ind = [delegate addObserver: aListener];
 

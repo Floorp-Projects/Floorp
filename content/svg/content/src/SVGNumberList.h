@@ -46,11 +46,11 @@ public:
     return mNumbers.IsEmpty();
   }
 
-  PRUint32 Length() const {
+  uint32_t Length() const {
     return mNumbers.Length();
   }
 
-  const float& operator[](PRUint32 aIndex) const {
+  const float& operator[](uint32_t aIndex) const {
     return mNumbers[aIndex];
   }
 
@@ -58,7 +58,7 @@ public:
     return mNumbers == rhs.mNumbers;
   }
 
-  bool SetCapacity(PRUint32 size) {
+  bool SetCapacity(uint32_t size) {
     return mNumbers.SetCapacity(size);
   }
 
@@ -81,7 +81,7 @@ protected:
    */
   nsresult CopyFrom(const SVGNumberList& rhs);
 
-  float& operator[](PRUint32 aIndex) {
+  float& operator[](uint32_t aIndex) {
     return mNumbers[aIndex];
   }
 
@@ -89,7 +89,7 @@ protected:
    * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  bool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(uint32_t aNumberOfItems) {
     return mNumbers.SetLength(aNumberOfItems);
   }
 
@@ -105,20 +105,20 @@ private:
     mNumbers.Clear();
   }
 
-  bool InsertItem(PRUint32 aIndex, const float &aNumber) {
+  bool InsertItem(uint32_t aIndex, const float &aNumber) {
     if (aIndex >= mNumbers.Length()) {
       aIndex = mNumbers.Length();
     }
     return !!mNumbers.InsertElementAt(aIndex, aNumber);
   }
 
-  void ReplaceItem(PRUint32 aIndex, const float &aNumber) {
+  void ReplaceItem(uint32_t aIndex, const float &aNumber) {
     NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers[aIndex] = aNumber;
   }
 
-  void RemoveItem(PRUint32 aIndex) {
+  void RemoveItem(uint32_t aIndex) {
     NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers.RemoveElementAt(aIndex);
@@ -182,13 +182,13 @@ public:
   nsresult CopyFrom(const SVGNumberList& rhs) {
     return SVGNumberList::CopyFrom(rhs);
   }
-  const float& operator[](PRUint32 aIndex) const {
+  const float& operator[](uint32_t aIndex) const {
     return SVGNumberList::operator[](aIndex);
   }
-  float& operator[](PRUint32 aIndex) {
+  float& operator[](uint32_t aIndex) {
     return SVGNumberList::operator[](aIndex);
   }
-  bool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(uint32_t aNumberOfItems) {
     return SVGNumberList::SetLength(aNumberOfItems);
   }
 

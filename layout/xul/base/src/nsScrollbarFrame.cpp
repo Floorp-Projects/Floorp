@@ -77,9 +77,9 @@ nsScrollbarFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   PRInt32 aModType)
+                                   int32_t aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);

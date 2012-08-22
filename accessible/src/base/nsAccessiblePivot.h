@@ -45,7 +45,7 @@ private:
    * observers have been notified.
    */
   bool NotifyOfPivotChange(Accessible* aOldAccessible,
-                           PRInt32 aOldStart, PRInt32 aOldEnd,
+                           int32_t aOldStart, int32_t aOldEnd,
                            PivotMoveReason aReason);
 
   /*
@@ -88,12 +88,12 @@ private:
   /*
    * The text start offset ofthe pivot.
    */
-  PRInt32 mStartOffset;
+  int32_t mStartOffset;
 
   /*
    * The text end offset ofthe pivot.
    */
-  PRInt32 mEndOffset;
+  int32_t mEndOffset;
 
   /*
    * The list of pivot-changed observers.

@@ -17,9 +17,9 @@
 // caller.  The rest of the parameters are passed in the callers stack
 // area.
 
-const PRUint32 PARAM_BUFFER_COUNT   = 16;
-const PRUint32 GPR_COUNT            = 6;
-const PRUint32 FPR_COUNT            = 8;
+const uint32_t PARAM_BUFFER_COUNT   = 16;
+const uint32_t GPR_COUNT            = 6;
+const uint32_t FPR_COUNT            = 8;
 
 // PrepareAndDispatch() is called by SharedStub() and calls the actual method.
 //
@@ -31,19 +31,19 @@ const PRUint32 FPR_COUNT            = 8;
 // and then the method gets called.
 
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
-                   PRUint64 * args, PRUint64 * gpregs, double *fpregs)
+PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
+                   uint64_t * args, uint64_t * gpregs, double *fpregs)
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint32 paramCount;
-    PRUint32 i;
+    uint32_t paramCount;
+    uint32_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no method info");
     if (!info)
         return NS_ERROR_UNEXPECTED;
@@ -60,10 +60,10 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
     if (!dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint64* ap = args;
-    PRUint32 nr_gpr = 1;    // skip one GPR register for 'that'
-    PRUint32 nr_fpr = 0;
-    PRUint64 value;
+    uint64_t* ap = args;
+    uint32_t nr_gpr = 1;    // skip one GPR register for 'that'
+    uint32_t nr_fpr = 0;
+    uint64_t value;
 
     for (i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -100,14 +100,14 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
         }
 
         switch (type) {
-        case nsXPTType::T_I8:      dp->val.i8  = (PRInt8)   value; break;
-        case nsXPTType::T_I16:     dp->val.i16 = (PRInt16)  value; break;
-        case nsXPTType::T_I32:     dp->val.i32 = (PRInt32)  value; break;
-        case nsXPTType::T_I64:     dp->val.i64 = (PRInt64)  value; break;
-        case nsXPTType::T_U8:      dp->val.u8  = (PRUint8)  value; break;
-        case nsXPTType::T_U16:     dp->val.u16 = (PRUint16) value; break;
-        case nsXPTType::T_U32:     dp->val.u32 = (PRUint32) value; break;
-        case nsXPTType::T_U64:     dp->val.u64 = (PRUint64) value; break;
+        case nsXPTType::T_I8:      dp->val.i8  = (int8_t)   value; break;
+        case nsXPTType::T_I16:     dp->val.i16 = (int16_t)  value; break;
+        case nsXPTType::T_I32:     dp->val.i32 = (int32_t)  value; break;
+        case nsXPTType::T_I64:     dp->val.i64 = (int64_t)  value; break;
+        case nsXPTType::T_U8:      dp->val.u8  = (uint8_t)  value; break;
+        case nsXPTType::T_U16:     dp->val.u16 = (uint16_t) value; break;
+        case nsXPTType::T_U32:     dp->val.u32 = (uint32_t) value; break;
+        case nsXPTType::T_U64:     dp->val.u64 = (uint64_t) value; break;
         case nsXPTType::T_BOOL:    dp->val.b   = (bool)   value; break;
         case nsXPTType::T_CHAR:    dp->val.c   = (char)     value; break;
         case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  value; break;
@@ -118,7 +118,7 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
         }
     }
 
-    result = self->mOuter->CallMethod((PRUint16) methodIndex, info, dispatchParams);
+    result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams);
 
     if (dispatchParams != paramBuffer)
         delete [] dispatchParams;
@@ -146,7 +146,7 @@ asm(".section	__TEXT,__text\n\t" \
     "movl	$" #n ", %eax\n\t" \
     "jmp	SharedStub\n\t");
 
-// static nsresult SharedStub(PRUint32 methodIndex)
+// static nsresult SharedStub(uint32_t methodIndex)
 asm(".section   __TEXT,__text\n\t"
     ".align     3\n\t"
     "SharedStub:\n\t"

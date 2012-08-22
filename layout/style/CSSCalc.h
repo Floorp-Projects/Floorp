@@ -22,8 +22,8 @@ namespace css {
  *   // expectations (which happen to be met by two classes (nsCSSValue
  *   // and nsStyleCoord).  There must be methods (roughly):
  *   //   input_array_type* input_type::GetArrayValue();
- *   //   PRUint32 input_array_type::Count() const;
- *   //   input_type& input_array_type::Item(PRUint32);
+ *   //   uint32_t input_array_type::Count() const;
+ *   //   input_type& input_array_type::Item(uint32_t);
  *   typedef ... input_type;
  *   typedef ... input_array_type;
  *
@@ -231,8 +231,8 @@ struct NumbersAlreadyNormalizedOps : public CSSValueInputCalcOps
  *   // expectations (which happen to be met by two classes (nsCSSValue
  *   // and nsStyleCoord).  There must be methods (roughly):
  *   //   input_array_type* input_type::GetArrayValue();
- *   //   PRUint32 input_array_type::Count() const;
- *   //   input_type& input_array_type::Item(PRUint32);
+ *   //   uint32_t input_array_type::Count() const;
+ *   //   input_type& input_array_type::Item(uint32_t);
  *   typedef ... input_type;
  *   typedef ... input_array_type;
  *

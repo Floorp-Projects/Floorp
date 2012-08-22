@@ -117,10 +117,10 @@ nsAssignmentSet::Add(const nsAssignment& aAssignment)
     return NS_OK;
 }
 
-PRInt32
+int32_t
 nsAssignmentSet::Count() const
 {
-    PRInt32 count = 0;
+    int32_t count = 0;
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment)
         ++count;
 
@@ -436,12 +436,12 @@ ReteNodeSet::Add(ReteNode* aNode)
         return NS_ERROR_NULL_POINTER;
 
     if (mCount >= mCapacity) {
-        PRInt32 capacity = mCapacity + 4;
+        int32_t capacity = mCapacity + 4;
         ReteNode** nodes = new ReteNode*[capacity];
         if (! nodes)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        for (PRInt32 i = mCount - 1; i >= 0; --i)
+        for (int32_t i = mCount - 1; i >= 0; --i)
             nodes[i] = mNodes[i];
 
         delete[] mNodes;

@@ -133,7 +133,7 @@ NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFil
 /* void setFilterRes (in unsigned long filterResX, in unsigned long filterResY);
  */
 NS_IMETHODIMP
-nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
+nsSVGFilterElement::SetFilterRes(uint32_t filterResX, uint32_t filterResY)
 {
   mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this);
   return NS_OK;

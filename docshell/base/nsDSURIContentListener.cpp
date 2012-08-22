@@ -186,7 +186,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 
     nsresult rv = NS_OK;
     if (aContentType) {
-        PRUint32 canHandle = nsIWebNavigationInfo::UNSUPPORTED;
+        uint32_t canHandle = nsIWebNavigationInfo::UNSUPPORTED;
         rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType),
                                        mDocShell,
                                        &canHandle);

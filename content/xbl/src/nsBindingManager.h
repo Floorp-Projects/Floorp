@@ -69,7 +69,7 @@ public:
                                    nsIDocument* aOldDocument,
                                    nsIContent* aContentBindingParent);
 
-  nsIAtom* ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID);
+  nsIAtom* ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID);
 
   /**
    * Return a list of all explicit children, including any children
@@ -141,14 +141,14 @@ public:
   // shouldn't be handing it out in our public API, since it's not useful to
   // anyone.
   nsIContent* GetInsertionPoint(nsIContent* aParent,
-                                const nsIContent* aChild, PRUint32* aIndex);
+                                const nsIContent* aChild, uint32_t* aIndex);
 
   /**
    * Return the unfiltered insertion point for the specified parent
    * element. If other filtered insertion points exist,
    * aMultipleInsertionPoints will be set to true.
    */
-  nsIContent* GetSingleInsertionPoint(nsIContent* aParent, PRUint32* aIndex,
+  nsIContent* GetSingleInsertionPoint(nsIContent* aParent, uint32_t* aIndex,
                                       bool* aMultipleInsertionPoints);
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent,
@@ -163,7 +163,7 @@ public:
                                nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
-  void ProcessAttachedQueue(PRUint32 aSkipSize = 0);
+  void ProcessAttachedQueue(uint32_t aSkipSize = 0);
 
   void ExecuteDetachedHandlers();
 
@@ -223,7 +223,7 @@ protected:
   // aIndexInContainer is the index of the child in the parent.  aAppend is
   // true if this child is being appended, not inserted.
   void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
-                            PRUint32 aIndexInContainer, bool aAppend);
+                            uint32_t aIndexInContainer, bool aAppend);
 
   // For the given container under which a child is being added, given
   // insertion parent and given index of the child being inserted, find the
@@ -234,9 +234,9 @@ protected:
   // will be returned; otherwise 0 will be returned.
   nsXBLInsertionPoint* FindInsertionPointAndIndex(nsIContent* aContainer,
                                                   nsIContent* aInsertionParent,
-                                                  PRUint32 aIndexInContainer,
-                                                  PRInt32 aAppend,
-                                                  PRInt32* aInsertionIndex);
+                                                  uint32_t aIndexInContainer,
+                                                  int32_t aAppend,
+                                                  int32_t* aInsertionIndex);
 
   // Same as ProcessAttachedQueue, but also nulls out
   // mProcessAttachedQueueEvent
@@ -298,7 +298,7 @@ protected:
   nsBindingList mAttachedStack;
   bool mProcessingAttachedStack;
   bool mDestroyed;
-  PRUint32 mAttachedStackSizeOnOutermost;
+  uint32_t mAttachedStackSizeOnOutermost;
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;

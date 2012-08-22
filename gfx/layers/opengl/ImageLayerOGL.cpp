@@ -165,7 +165,7 @@ TextureRecycleBin::GetTexture(TextureType aType, const gfxIntSize& aSize,
     aOutTexture->Allocate(aContext);
     return;
   }
-  PRUint32 last = mRecycledTextures[aType].Length() - 1;
+  uint32_t last = mRecycledTextures[aType].Length() - 1;
   aOutTexture->TakeFrom(&mRecycledTextures[aType].ElementAt(last));
   mRecycledTextures[aType].RemoveElementAt(last);
 }
@@ -770,7 +770,7 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
     if (aNewFront.type() == SharedImage::TSharedImageID) {
       // We are using ImageBridge protocol. The image data will be queried at render
       // time in the parent side.
-      PRUint64 newID = aNewFront.get_SharedImageID().id();
+      uint64_t newID = aNewFront.get_SharedImageID().id();
       if (newID != mImageContainerID) {
         mImageContainerID = newID;
         mImageVersion = 0;
@@ -889,7 +889,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   if (mImageContainerID) {
     ImageContainerParent::SetCompositorIDForImage(mImageContainerID,
                                                   mOGLManager->GetCompositorID());
-    PRUint32 imgVersion = ImageContainerParent::GetSharedImageVersion(mImageContainerID);
+    uint32_t imgVersion = ImageContainerParent::GetSharedImageVersion(mImageContainerID);
     if (imgVersion != mImageVersion) {
       SharedImage* img = ImageContainerParent::GetSharedImage(mImageContainerID);
       if (img && (img->type() == SharedImage::TYUVImage)) {

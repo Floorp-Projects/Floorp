@@ -22,12 +22,12 @@ public:
   virtual ~nsClipboard();
 
   // nsIClipboard
-  NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, bool *_retval);
+  NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
+                                    int32_t aWhichClipboard, bool *_retval);
 
 protected:
-  NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
-  NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable, PRInt32 aWhichClipboard);
+  NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard);
+  NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable, int32_t aWhichClipboard);
 
   enum ClipboardAction
   {
@@ -35,9 +35,9 @@ protected:
     Write
   };
 
-  PRUint32 GetFormatID(const char *aMimeStr);
+  uint32_t GetFormatID(const char *aMimeStr);
   bool     GetClipboardData(const char *aFlavour);
-  bool     GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor);
+  bool     GetClipboardDataByID(uint32_t aFormatID, const char *aFlavor);
   void     SetClipboardData(const char *aFlavour);
   nsresult DoClipboardAction(ClipboardAction aAction);
 };

@@ -59,7 +59,7 @@ DOMFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
 }
 
 already_AddRefed<nsIDOMFile>
-DOMFileHandle::CreateFileObject(LockedFile* aLockedFile, PRUint32 aFileSize)
+DOMFileHandle::CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize)
 {
   nsCOMPtr<nsIDOMFile> file = 
     new File(mName, mType, aFileSize, mFile, aLockedFile);

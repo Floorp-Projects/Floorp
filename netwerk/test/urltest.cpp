@@ -35,7 +35,7 @@ enum {
     URL_FACTORY_STDURL
 };
 
-nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
+nsresult writeoutto(const char* i_pURL, char** o_Result, int32_t urlFactory = URL_FACTORY_DEFAULT)
 {
     if (!o_Result || !i_pURL)
         return NS_ERROR_FAILURE;
@@ -73,7 +73,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
     {
         nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
         nsCAutoString temp;
-        PRInt32 port;
+        int32_t port;
         nsresult rv;
 
 #define RESULT() NS_SUCCEEDED(rv) ? temp.get() : ""
@@ -124,7 +124,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
     return NS_OK;
 }
 
-nsresult writeout(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
+nsresult writeout(const char* i_pURL, int32_t urlFactory = URL_FACTORY_DEFAULT)
 {
     if (!i_pURL) return NS_ERROR_FAILURE;
     nsCString temp;
@@ -135,7 +135,7 @@ nsresult writeout(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 
 /* construct a url and print out its elements separated by commas and
    the whole spec */
-nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
+nsresult testURL(const char* i_pURL, int32_t urlFactory = URL_FACTORY_DEFAULT)
 {
 
     if (i_pURL)
@@ -174,7 +174,7 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
                 printf("no results to compare to!\n");
             else 
             {
-                PRInt32 res;
+                int32_t res;
                 printf("Result:   %s\n", prevResult.get());
                 if (urlFactory != URL_FACTORY_DEFAULT) {
                     printf("Expected: %s\n", tempurl.get());
@@ -393,7 +393,7 @@ int main(int argc, char **argv)
         // end of all messages from register components...
         printf("------------------\n\n");
 
-        PRInt32 urlFactory = URL_FACTORY_DEFAULT;
+        int32_t urlFactory = URL_FACTORY_DEFAULT;
         bool bMakeAbs= false;
         char* relativePath = 0;
         char* url = 0;
@@ -445,7 +445,7 @@ int main(int argc, char **argv)
         if (gFileIO)
         {
             PRTime endTime = PR_Now();
-            printf("Elapsed time: %d micros.\n", (PRInt32)
+            printf("Elapsed time: %d micros.\n", (int32_t)
                 (endTime - startTime));
         }
     } // this scopes the nsCOMPtrs

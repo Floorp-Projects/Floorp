@@ -30,14 +30,14 @@ public:
   NS_IMETHOD ToTitle( PRUnichar aChar, PRUnichar* aReturn) = 0;
 
   // Convert an array of Unicode characters into upper case
-  NS_IMETHOD ToUpper( const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen) = 0;
+  NS_IMETHOD ToUpper( const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen) = 0;
 
   // Convert an array of Unicode characters into lower case
-  NS_IMETHOD ToLower( const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen) = 0;
+  NS_IMETHOD ToLower( const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen) = 0;
 
   // case-insensitive PRUnichar* comparison - aResult returns similar
   // to strcasecmp
-  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32* aResult) = 0;
+  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, uint32_t aLength, int32_t* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICaseConversion, NS_ICASECONVERSION_IID)

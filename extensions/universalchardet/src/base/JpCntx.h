@@ -14,18 +14,18 @@
 #define MAX_REL_THRESHOLD     1000
 
 //hiragana frequency category table
-extern const PRUint8 jp2CharContext[83][83];
+extern const uint8_t jp2CharContext[83][83];
 
 class JapaneseContextAnalysis
 {
 public:
   JapaneseContextAnalysis() {Reset(false);}
 
-  void HandleData(const char* aBuf, PRUint32 aLen);
+  void HandleData(const char* aBuf, uint32_t aLen);
 
-  void HandleOneChar(const char* aStr, PRUint32 aCharLen)
+  void HandleOneChar(const char* aStr, uint32_t aCharLen)
   {
-    PRInt32 order;
+    int32_t order;
 
     //if we received enough data, stop here   
     if (mTotalRel > MAX_REL_THRESHOLD)   mDone = true;
@@ -47,24 +47,24 @@ public:
   bool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}
 
 protected:
-  virtual PRInt32 GetOrder(const char* str, PRUint32 *charLen) = 0;
-  virtual PRInt32 GetOrder(const char* str) = 0;
+  virtual int32_t GetOrder(const char* str, uint32_t *charLen) = 0;
+  virtual int32_t GetOrder(const char* str) = 0;
 
   //category counters, each integer counts sequences in its category
-  PRUint32 mRelSample[NUM_OF_CATEGORY];
+  uint32_t mRelSample[NUM_OF_CATEGORY];
 
   //total sequence received
-  PRUint32 mTotalRel;
+  uint32_t mTotalRel;
 
   //Number of sequences needed to trigger detection
-  PRUint32 mDataThreshold;
+  uint32_t mDataThreshold;
   
   //The order of previous char
-  PRInt32  mLastCharOrder;
+  int32_t  mLastCharOrder;
 
   //if last byte in current buffer is not the last byte of a character, we
   //need to know how many byte to skip in next buffer.
-  PRUint32 mNeedToSkipCharNum;
+  uint32_t mNeedToSkipCharNum;
 
   //If this flag is set to true, detection is done and conclusion has been made
   bool     mDone;
@@ -75,9 +75,9 @@ class SJISContextAnalysis : public JapaneseContextAnalysis
 {
   //SJISContextAnalysis(){};
 protected:
-  PRInt32 GetOrder(const char* str, PRUint32 *charLen);
+  int32_t GetOrder(const char* str, uint32_t *charLen);
 
-  PRInt32 GetOrder(const char* str)
+  int32_t GetOrder(const char* str)
   {
     //We only interested in Hiragana, so first byte is '\202'
     if (*str == '\202' && 
@@ -91,8 +91,8 @@ protected:
 class EUCJPContextAnalysis : public JapaneseContextAnalysis
 {
 protected:
-  PRInt32 GetOrder(const char* str, PRUint32 *charLen);
-  PRInt32 GetOrder(const char* str)
+  int32_t GetOrder(const char* str, uint32_t *charLen);
+  int32_t GetOrder(const char* str)
     //We only interested in Hiragana, so first byte is '\244'
   {
     if (*str == '\244' &&

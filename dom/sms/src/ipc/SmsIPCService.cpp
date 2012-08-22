@@ -41,7 +41,7 @@ SmsIPCService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
 {
   GetSmsChild()->SendGetNumberOfMessagesForText(nsString(aText), aResult);
 
@@ -50,7 +50,7 @@ SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aRes
 
 NS_IMETHODIMP
 SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage,
-                    PRInt32 aRequestId, PRUint64 aProcessId)
+                    int32_t aRequestId, uint64_t aProcessId)
 {
   GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage),
                                  aRequestId, ContentChild::GetSingleton()->GetID());
@@ -59,7 +59,7 @@ SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage,
 }
 
 NS_IMETHODIMP
-SmsIPCService::CreateSmsMessage(PRInt32 aId,
+SmsIPCService::CreateSmsMessage(int32_t aId,
                                 const nsAString& aDelivery,
                                 const nsAString& aSender,
                                 const nsAString& aReceiver,
@@ -79,7 +79,7 @@ SmsIPCService::CreateSmsMessage(PRInt32 aId,
 NS_IMETHODIMP
 SmsIPCService::SaveReceivedMessage(const nsAString& aSender,
                                    const nsAString& aBody,
-                                   PRUint64 aDate, PRInt32* aId)
+                                   uint64_t aDate, int32_t* aId)
 {
   GetSmsChild()->SendSaveReceivedMessage(nsString(aSender), nsString(aBody),
                                          aDate, aId);
@@ -90,7 +90,7 @@ SmsIPCService::SaveReceivedMessage(const nsAString& aSender,
 NS_IMETHODIMP
 SmsIPCService::SaveSentMessage(const nsAString& aReceiver,
                                const nsAString& aBody,
-                               PRUint64 aDate, PRInt32* aId)
+                               uint64_t aDate, int32_t* aId)
 {
   GetSmsChild()->SendSaveSentMessage(nsString(aReceiver), nsString(aBody),
                                      aDate, aId);
@@ -99,8 +99,8 @@ SmsIPCService::SaveSentMessage(const nsAString& aReceiver,
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
-                             PRUint64 aProcessId)
+SmsIPCService::GetMessageMoz(int32_t aMessageId, int32_t aRequestId,
+                             uint64_t aProcessId)
 {
   GetSmsChild()->SendGetMessage(aMessageId, aRequestId,
                                 ContentChild::GetSingleton()->GetID());
@@ -108,8 +108,8 @@ SmsIPCService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
 }
 
 NS_IMETHODIMP
-SmsIPCService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
-                             PRUint64 aProcessId)
+SmsIPCService::DeleteMessage(int32_t aMessageId, int32_t aRequestId,
+                             uint64_t aProcessId)
 {
   GetSmsChild()->SendDeleteMessage(aMessageId, aRequestId,
                                    ContentChild::GetSingleton()->GetID());
@@ -118,7 +118,7 @@ SmsIPCService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
 
 NS_IMETHODIMP
 SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter, bool aReverse,
-                                 PRInt32 aRequestId, PRUint64 aProcessId)
+                                 int32_t aRequestId, uint64_t aProcessId)
 {
   SmsFilter* filter = static_cast<SmsFilter*>(aFilter);
   GetSmsChild()->SendCreateMessageList(filter->GetData(), aReverse, aRequestId,
@@ -128,8 +128,8 @@ SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter, bool aReverse,
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
-                                    PRUint64 aProcessId)
+SmsIPCService::GetNextMessageInList(int32_t aListId, int32_t aRequestId,
+                                    uint64_t aProcessId)
 {
   GetSmsChild()->SendGetNextMessageInList(aListId, aRequestId,
                                           ContentChild::GetSingleton()->GetID());
@@ -137,15 +137,15 @@ SmsIPCService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
 }
 
 NS_IMETHODIMP
-SmsIPCService::ClearMessageList(PRInt32 aListId)
+SmsIPCService::ClearMessageList(int32_t aListId)
 {
   GetSmsChild()->SendClearMessageList(aListId);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsIPCService::MarkMessageRead(PRInt32 aMessageId, bool aValue,
-                               PRInt32 aRequestId, PRUint64 aProcessId)
+SmsIPCService::MarkMessageRead(int32_t aMessageId, bool aValue,
+                               int32_t aRequestId, uint64_t aProcessId)
 {
   GetSmsChild()->SendMarkMessageRead(aMessageId, aValue, aRequestId,
                                      ContentChild::GetSingleton()->GetID());

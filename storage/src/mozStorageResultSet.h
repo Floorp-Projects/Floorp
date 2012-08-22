@@ -32,13 +32,13 @@ public:
   /**
    * @returns the number of rows this result set holds.
    */
-  PRInt32 rows() const { return mData.Count(); }
+  int32_t rows() const { return mData.Count(); }
 
 private:
   /**
    * Stores the current index of the active result set.
    */
-  PRInt32 mCurrentIndex;
+  int32_t mCurrentIndex;
 
   /**
    * Stores the tuples.

@@ -40,7 +40,7 @@ public:
   // nsIDOMHTMLHRElement
   NS_DECL_NSIDOMHTMLHRELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -97,7 +97,7 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
 };
 
 bool
-nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLHRElement::ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)

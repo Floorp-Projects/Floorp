@@ -16,12 +16,12 @@ nsUnicodeToGB2312V2::nsUnicodeToGB2312V2() :
 }
 
 NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc, 
-                                                 PRInt32 * aSrcLength, 
+                                                 int32_t * aSrcLength, 
                                                  char * aDest, 
-                                                 PRInt32 * aDestLength)
+                                                 int32_t * aDestLength)
 {
-  PRInt32 iSrcLength = 0;
-  PRInt32 iDestLength = 0;
+  int32_t iSrcLength = 0;
+  int32_t iDestLength = 0;
   nsresult res = NS_OK;
   
   while (iSrcLength < *aSrcLength)

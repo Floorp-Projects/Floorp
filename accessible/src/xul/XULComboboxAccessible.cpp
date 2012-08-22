@@ -39,7 +39,7 @@ XULComboboxAccessible::NativeRole()
   return IsAutoComplete() ? roles::AUTOCOMPLETE : roles::COMBOBOX;
 }
 
-PRUint64
+uint64_t
 XULComboboxAccessible::NativeState()
 {
   // As a nsComboboxAccessible we can have the following states:
@@ -50,7 +50,7 @@ XULComboboxAccessible::NativeState()
   //     STATE_COLLAPSED
 
   // Get focus status from base class
-  PRUint64 state = Accessible::NativeState();
+  uint64_t state = Accessible::NativeState();
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
@@ -113,7 +113,7 @@ XULComboboxAccessible::CanHaveAnonChildren()
   return false;
 }
 
-PRUint8
+uint8_t
 XULComboboxAccessible::ActionCount()
 {
   // Just one action (click).
@@ -121,7 +121,7 @@ XULComboboxAccessible::ActionCount()
 }
 
 NS_IMETHODIMP
-XULComboboxAccessible::DoAction(PRUint8 aIndex)
+XULComboboxAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != XULComboboxAccessible::eAction_Click) {
     return NS_ERROR_INVALID_ARG;
@@ -141,7 +141,7 @@ XULComboboxAccessible::DoAction(PRUint8 aIndex)
 }
 
 NS_IMETHODIMP
-XULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+XULComboboxAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex != XULComboboxAccessible::eAction_Click) {
     return NS_ERROR_INVALID_ARG;
@@ -178,8 +178,8 @@ XULComboboxAccessible::IsActiveWidget() const
   if (IsAutoComplete() ||
      mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                            nsGkAtoms::_true, eIgnoreCase)) {
-    PRInt32 childCount = mChildren.Length();
-    for (PRInt32 idx = 0; idx < childCount; idx++) {
+    int32_t childCount = mChildren.Length();
+    for (int32_t idx = 0; idx < childCount; idx++) {
       Accessible* child = mChildren[idx];
       if (child->Role() == roles::ENTRY)
         return FocusMgr()->HasDOMFocus(child->GetContent());

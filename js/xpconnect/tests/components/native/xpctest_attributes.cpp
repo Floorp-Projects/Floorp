@@ -33,11 +33,11 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(bool *aBoolReadOnly) {
     *aBoolReadOnly = boolProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(PRInt16 *aShortReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(int16_t *aShortReadOnly){
     *aShortReadOnly = shortProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(PRInt32 *aLongReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(int32_t *aLongReadOnly){
     *aLongReadOnly = longProperty;
     return NS_OK;
 }
@@ -97,19 +97,19 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(bool aBooleanProperty
     boolProperty = aBooleanProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(PRInt16 *aShortProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(int16_t *aShortProperty) {
     *aShortProperty = shortProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: SetShortProperty(PRInt16 aShortProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: SetShortProperty(int16_t aShortProperty) {
     shortProperty = aShortProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(PRInt32 *aLongProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(int32_t *aLongProperty) {
     *aLongProperty = longProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: SetLongProperty(PRInt32 aLongProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: SetLongProperty(int32_t aLongProperty) {
     longProperty = aLongProperty;
     return NS_OK;
 }

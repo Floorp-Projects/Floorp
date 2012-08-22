@@ -18,7 +18,7 @@ class nsIAtom;
 class nsISMILAnimationElement;
 class nsSMILValue;
 
-typedef PRUint8 nsSVGEnumValue;
+typedef uint8_t nsSVGEnumValue;
 
 struct nsSVGEnumMapping {
   nsIAtom **mKey;
@@ -28,8 +28,8 @@ struct nsSVGEnumMapping {
 class nsSVGEnum
 {
 public:
-  void Init(PRUint8 aAttrEnum, PRUint16 aValue) {
-    mAnimVal = mBaseVal = PRUint8(aValue);
+  void Init(uint8_t aAttrEnum, uint16_t aValue) {
+    mAnimVal = mBaseVal = uint8_t(aValue);
     mAttrEnum = aAttrEnum;
     mIsAnimated = false;
     mIsBaseSet = false;
@@ -37,13 +37,13 @@ public:
 
   nsresult SetBaseValueAtom(const nsIAtom* aValue, nsSVGElement *aSVGElement);
   nsIAtom* GetBaseValueAtom(nsSVGElement *aSVGElement);
-  nsresult SetBaseValue(PRUint16 aValue,
+  nsresult SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement);
-  PRUint16 GetBaseValue() const
+  uint16_t GetBaseValue() const
     { return mBaseVal; }
 
-  void SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement);
-  PRUint16 GetAnimValue() const
+  void SetAnimValue(uint16_t aValue, nsSVGElement *aSVGElement);
+  uint16_t GetAnimValue() const
     { return mAnimVal; }
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
@@ -56,7 +56,7 @@ public:
 private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 
@@ -74,14 +74,14 @@ public:
     nsSVGEnum *mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(PRUint16* aResult)
+    NS_IMETHOD GetBaseVal(uint16_t* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(PRUint16 aValue)
+    NS_IMETHOD SetBaseVal(uint16_t aValue)
       { return mVal->SetBaseValue(aValue, mSVGElement); }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAnimVal(PRUint16* aResult)
+    NS_IMETHOD GetAnimVal(uint16_t* aResult)
     {
       mSVGElement->FlushAnimations();
       *aResult = mVal->GetAnimValue();

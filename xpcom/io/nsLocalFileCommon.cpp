@@ -49,7 +49,7 @@ nsLocalFile::InitWithFile(nsIFile *aFile)
 // requirement: kMaxExtensionLength < kMaxFilenameLength - kMaxSequenceNumberLength
 
 NS_IMETHODIMP
-nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
+nsLocalFile::CreateUnique(uint32_t type, uint32_t attributes)
 {
     nsresult rv;
     bool longName;
@@ -78,13 +78,13 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
     if (NS_FAILED(rv))
         return rv;
 
-    const PRInt32 lastDot = leafName.RFindChar(PRUnichar('.'));
+    const int32_t lastDot = leafName.RFindChar(PRUnichar('.'));
 #else
     rv = GetNativeLeafName(leafName);
     if (NS_FAILED(rv))
         return rv;
 
-    const PRInt32 lastDot = leafName.RFindChar('.');
+    const int32_t lastDot = leafName.RFindChar('.');
 #endif
 
     if (lastDot == kNotFound)
@@ -99,7 +99,7 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 
     if (longName)
     {
-        PRInt32 maxRootLength = (kMaxFilenameLength -
+        int32_t maxRootLength = (kMaxFilenameLength -
                                  (pathName.Length() - leafName.Length()) -
                                  suffix.Length() - kMaxSequenceNumberLength);
 
@@ -162,7 +162,7 @@ static const PRUnichar kPathSeparatorChar       = '/';
 #error Need to define file path separator for your platform
 #endif
 
-static PRInt32 SplitPath(PRUnichar *path, PRUnichar **nodeArray, PRInt32 arrayLen)
+static int32_t SplitPath(PRUnichar *path, PRUnichar **nodeArray, int32_t arrayLen)
 {
     if (*path == 0)
       return 0;
@@ -190,7 +190,7 @@ NS_IMETHODIMP
 nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
 {
     NS_ENSURE_ARG_POINTER(fromFile);
-    const PRInt32 kMaxNodesInPath = 32;
+    const int32_t kMaxNodesInPath = 32;
 
     //
     // _retval will be UTF-8 encoded
@@ -201,7 +201,7 @@ nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
 
     nsAutoString thisPath, fromPath;
     PRUnichar *thisNodes[kMaxNodesInPath], *fromNodes[kMaxNodesInPath];
-    PRInt32  thisNodeCnt, fromNodeCnt, nodeIndex;
+    int32_t  thisNodeCnt, fromNodeCnt, nodeIndex;
     
     rv = GetPath(thisPath);
     if (NS_FAILED(rv))
@@ -229,7 +229,7 @@ nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
 #endif
     }
     
-    PRInt32 branchIndex = nodeIndex;
+    int32_t branchIndex = nodeIndex;
     for (nodeIndex = branchIndex; nodeIndex < fromNodeCnt; nodeIndex++) 
       _retval.AppendLiteral("../");
     for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {

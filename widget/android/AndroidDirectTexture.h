@@ -24,18 +24,18 @@ namespace mozilla {
 class AndroidDirectTexture
 {
 public:
-  AndroidDirectTexture(PRUint32 width, PRUint32 height, PRUint32 usage, gfxASurface::gfxImageFormat format);
+  AndroidDirectTexture(uint32_t width, uint32_t height, uint32_t usage, gfxASurface::gfxImageFormat format);
   virtual ~AndroidDirectTexture();
 
-  bool Lock(PRUint32 usage, unsigned char **bits);
-  bool Lock(PRUint32 usage, const nsIntRect& rect, unsigned char **bits);
+  bool Lock(uint32_t usage, unsigned char **bits);
+  bool Lock(uint32_t usage, const nsIntRect& rect, unsigned char **bits);
   bool Unlock(bool aFlip = true);
 
-  bool Reallocate(PRUint32 aWidth, PRUint32 aHeight);
-  bool Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface::gfxImageFormat aFormat);
+  bool Reallocate(uint32_t aWidth, uint32_t aHeight);
+  bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxASurface::gfxImageFormat aFormat);
 
-  PRUint32 Width() { return mWidth; }
-  PRUint32 Height() { return mHeight; }
+  uint32_t Width() { return mWidth; }
+  uint32_t Height() { return mHeight; }
 
   bool Bind();
 
@@ -43,8 +43,8 @@ private:
   mozilla::Mutex mLock;
   bool mNeedFlip;
 
-  PRUint32 mWidth;
-  PRUint32 mHeight;
+  uint32_t mWidth;
+  uint32_t mHeight;
   gfxASurface::gfxImageFormat mFormat;
 
   AndroidGraphicBuffer* mFrontBuffer;

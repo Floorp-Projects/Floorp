@@ -26,7 +26,7 @@ public:
     virtual ~nsLookAndFeel();
 
     virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle);
-    virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
+    virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
     virtual bool GetEchoPasswordImpl();
 
 protected:

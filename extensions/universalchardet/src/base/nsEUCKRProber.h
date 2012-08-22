@@ -18,14 +18,14 @@ public:
     Reset();
   }
   virtual ~nsEUCKRProber(void){delete mCodingSM;}
-  nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
+  nsProbingState HandleData(const char* aBuf, uint32_t aLen);
   const char* GetCharSetName() {return "EUC-KR";}
   nsProbingState GetState(void) {return mState;}
   void      Reset(void);
   float     GetConfidence(void);
 
 protected:
-  void      GetDistribution(PRUint32 aCharLen, const char* aStr);
+  void      GetDistribution(uint32_t aCharLen, const char* aStr);
   
   nsCodingStateMachine* mCodingSM;
   nsProbingState mState;

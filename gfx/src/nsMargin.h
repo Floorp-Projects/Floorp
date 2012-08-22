@@ -21,13 +21,13 @@ struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {
     : Super(aLeft, aTop, aRight, aBottom) {}
 };
 
-struct nsIntMargin : public mozilla::gfx::BaseMargin<PRInt32, nsIntMargin> {
-  typedef mozilla::gfx::BaseMargin<PRInt32, nsIntMargin> Super;
+struct nsIntMargin : public mozilla::gfx::BaseMargin<int32_t, nsIntMargin> {
+  typedef mozilla::gfx::BaseMargin<int32_t, nsIntMargin> Super;
 
   // Constructors
   nsIntMargin() : Super() {}
   nsIntMargin(const nsIntMargin& aMargin) : Super(aMargin) {}
-  nsIntMargin(PRInt32 aLeft,  PRInt32 aTop, PRInt32 aRight, PRInt32 aBottom)
+  nsIntMargin(int32_t aLeft,  int32_t aTop, int32_t aRight, int32_t aBottom)
     : Super(aLeft, aTop, aRight, aBottom) {}
 };
 

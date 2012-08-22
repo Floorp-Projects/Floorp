@@ -55,9 +55,9 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
 
-  PRUint8* frame = static_cast<PRUint8*> (buffer);
-  const PRUint8 lumaBpp = 8;
-  const PRUint8 chromaBpp = 4;
+  uint8_t* frame = static_cast<uint8_t*> (buffer);
+  const uint8_t lumaBpp = 8;
+  const uint8_t chromaBpp = 4;
 
   layers::PlanarYCbCrImage::Data data;
   data.mYChannel = frame;
@@ -222,7 +222,7 @@ MediaEngineWebRTCVideoSource::Stop()
 }
 
 nsresult
-MediaEngineWebRTCVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
+MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 {
   /**
    * To get a Snapshot we do the following:

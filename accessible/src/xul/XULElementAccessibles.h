@@ -23,8 +23,8 @@ public:
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-  virtual Relation RelationByType(PRUint32 aRelationType);
+  virtual uint64_t NativeState();
+  virtual Relation RelationByType(uint32_t aRelationType);
 };
 
 /**
@@ -38,7 +38,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 };
 
 class XULLinkAccessible : public HyperTextAccessibleWrap
@@ -50,23 +50,23 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t aIndex);
 
   // Accessible
   virtual void Value(nsString& aValue);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeLinkState() const;
+  virtual uint64_t NativeLinkState() const;
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   // HyperLinkAccessible
   virtual bool IsLink();
-  virtual PRUint32 StartOffset();
-  virtual PRUint32 EndOffset();
-  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
+  virtual uint32_t StartOffset();
+  virtual uint32_t EndOffset();
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
 
 protected:
   enum { eAction_Jump = 0 };

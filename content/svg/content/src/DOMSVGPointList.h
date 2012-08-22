@@ -100,7 +100,7 @@ public:
    * This will normally be the same as InternalList().Length(), except if
    * we've hit OOM, in which case our length will be zero.
    */
-  PRUint32 Length() const {
+  uint32_t Length() const {
     NS_ABORT_IF_FALSE(mItems.Length() == 0 ||
                       mItems.Length() == InternalList().Length(),
                       "DOM wrapper's list length is out of sync");
@@ -170,10 +170,10 @@ private:
   SVGAnimatedPointList& InternalAList() const;
 
   /// Creates a DOMSVGPoint for aIndex, if it doesn't already exist.
-  void EnsureItemAt(PRUint32 aIndex);
+  void EnsureItemAt(uint32_t aIndex);
 
-  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
-  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
+  void MaybeInsertNullInAnimValListAt(uint32_t aIndex);
+  void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex);
 
   // Weak refs to our DOMSVGPoint items. The items are friends and take care
   // of clearing our pointer to them when they die.

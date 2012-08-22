@@ -70,7 +70,7 @@ gfxPlatformMac::gfxPlatformMac()
     }
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
-    PRUint32 backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
+    uint32_t backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
     InitCanvasBackend(backendMask);
 }
 
@@ -183,7 +183,7 @@ gfxPlatformMac::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry* 
 gfxPlatformMac::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                 const PRUint8 *aFontData, PRUint32 aLength)
+                                 const uint8_t *aFontData, uint32_t aLength)
 {
     // Ownership of aFontData is received here, and passed on to
     // gfxPlatformFontList::MakePlatformFont(), which must ensure the data
@@ -194,7 +194,7 @@ gfxPlatformMac::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 bool
-gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {
     // check for strange format flags
     NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
@@ -247,20 +247,20 @@ static const char kFontPlantagenetCherokee[] = "Plantagenet Cherokee";
 static const char kFontSTHeiti[] = "STHeiti";
 
 void
-gfxPlatformMac::GetCommonFallbackFonts(const PRUint32 aCh,
-                                       PRInt32 aRunScript,
+gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
+                                       int32_t aRunScript,
                                        nsTArray<const char*>& aFontList)
 {
     aFontList.AppendElement(kFontLucidaGrande);
 
     if (!IS_IN_BMP(aCh)) {
-        PRUint32 p = aCh >> 16;
+        uint32_t p = aCh >> 16;
         if (p == 1) {
             aFontList.AppendElement(kFontAppleSymbols);
             aFontList.AppendElement(kFontGeneva);
         }
     } else {
-        PRUint32 b = (aCh >> 8) & 0xff;
+        uint32_t b = (aCh >> 8) & 0xff;
 
         switch (b) {
         case 0x03:
@@ -336,7 +336,7 @@ gfxPlatformMac::GetCommonFallbackFonts(const PRUint32 aCh,
 }
 
 
-PRInt32 
+int32_t 
 gfxPlatformMac::OSXVersion()
 {
     if (!mOSXVersion) {
@@ -351,10 +351,10 @@ gfxPlatformMac::OSXVersion()
     return mOSXVersion;
 }
 
-PRUint32
+uint32_t
 gfxPlatformMac::ReadAntiAliasingThreshold()
 {
-    PRUint32 threshold = 0;  // default == no threshold
+    uint32_t threshold = 0;  // default == no threshold
     
     // first read prefs flag to determine whether to use the setting or not
     bool useAntiAliasingThreshold = Preferences::GetBool("gfx.use_text_smoothing_setting", false);

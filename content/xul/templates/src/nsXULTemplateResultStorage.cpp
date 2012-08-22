@@ -81,7 +81,7 @@ nsXULTemplateResultStorage::GetBindingFor(nsIAtom* aVar, nsAString& aValue)
         return NS_OK;
     }
 
-    PRInt32 idx = mResultSet->GetColumnIndex(aVar);
+    int32_t idx = mResultSet->GetColumnIndex(aVar);
     if (idx < 0) {
         return NS_OK;
     }
@@ -99,7 +99,7 @@ nsXULTemplateResultStorage::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aVa
     NS_ENSURE_ARG_POINTER(aVar);
 
     if (mResultSet) {
-        PRInt32 idx = mResultSet->GetColumnIndex(aVar);
+        int32_t idx = mResultSet->GetColumnIndex(aVar);
         if (idx >= 0) {
             *aValue = mValues[idx];
             NS_IF_ADDREF(*aValue);

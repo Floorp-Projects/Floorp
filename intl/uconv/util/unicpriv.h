@@ -14,36 +14,36 @@ extern "C" {
 #endif
 
 PRBool	uMapCode(const uTable *uT, 
-                    PRUint16 in, 
-                    PRUint16* out);
+                    uint16_t in, 
+                    uint16_t* out);
 
 PRBool 	uGenerate(uScanClassID scanClass,
-                  PRInt32* state, 
-                  PRUint16 in, 
+                  int32_t* state, 
+                  uint16_t in, 
                   unsigned char* out, 
-                  PRUint32 outbuflen, 
-                  PRUint32* outlen);
+                  uint32_t outbuflen, 
+                  uint32_t* outlen);
 
 PRBool 	uScan(uScanClassID scanClass,
-              PRInt32 *state, 
+              int32_t *state, 
               unsigned char *in,
-              PRUint16 *out, 
-              PRUint32 inbuflen, 
-              PRUint32* inscanlen);
+              uint16_t *out, 
+              uint32_t inbuflen, 
+              uint32_t* inscanlen);
 
 PRBool 	uGenerateShift(uShiftOutTable *shift,
-                       PRInt32* state, 
-                       PRUint16 in, 
+                       int32_t* state, 
+                       uint16_t in, 
                        unsigned char* out, 
-                       PRUint32 outbuflen, 
-                       PRUint32* outlen);
+                       uint32_t outbuflen, 
+                       uint32_t* outlen);
 
 PRBool 	uScanShift(uShiftInTable *shift, 
-                   PRInt32 *state, 
+                   int32_t *state, 
                    unsigned char *in,
-                   PRUint16 *out, 
-                   PRUint32 inbuflen, 
-                   PRUint32* inscanlen);
+                   uint16_t *out, 
+                   uint32_t inbuflen, 
+                   uint32_t* inscanlen);
 
 #ifdef __cplusplus
 }

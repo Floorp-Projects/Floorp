@@ -51,14 +51,14 @@ public:
      * Gets the number of app units in one CSS pixel; this number is global,
      * not unique to each device context.
      */
-    static PRInt32 AppUnitsPerCSSPixel() { return 60; }
+    static int32_t AppUnitsPerCSSPixel() { return 60; }
 
     /**
      * Gets the number of app units in one device pixel; this number
      * is usually a factor of AppUnitsPerCSSPixel(), although that is
      * not guaranteed.
      */
-    PRUint32 AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
+    uint32_t AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
 
     /**
      * Convert device pixels which is used for gfx/thebes to nearest
@@ -77,20 +77,20 @@ public:
      * Gets the number of app units in one physical inch; this is the
      * device's DPI times AppUnitsPerDevPixel().
      */
-    PRInt32 AppUnitsPerPhysicalInch() const
+    int32_t AppUnitsPerPhysicalInch() const
     { return mAppUnitsPerPhysicalInch; }
 
     /**
      * Gets the number of app units in one CSS inch; this is
      * 96 times AppUnitsPerCSSPixel.
      */
-    static PRInt32 AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
+    static int32_t AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
 
     /**
      * Get the unscaled ratio of app units to dev pixels; useful if something
      * needs to be converted from to unscaled pixels
      */
-    PRInt32 UnscaledAppUnitsPerDevPixel() const
+    int32_t UnscaledAppUnitsPerDevPixel() const
     { return mAppUnitsPerDevNotScaledPixel; }
 
     /**
@@ -122,7 +122,7 @@ public:
     /**
      * Return the bit depth of the device.
      */
-    nsresult GetDepth(PRUint32& aDepth);
+    nsresult GetDepth(uint32_t& aDepth);
 
     /**
      * Get the size of the displayable area of the output device
@@ -173,8 +173,8 @@ public:
      */
     nsresult BeginDocument(PRUnichar  *aTitle,
                            PRUnichar  *aPrintToFileName,
-                           PRInt32     aStartPage,
-                           PRInt32     aEndPage);
+                           int32_t     aStartPage,
+                           int32_t     aEndPage);
 
     /**
      * Inform the output device that output of a document is ending.
@@ -237,10 +237,10 @@ protected:
 
     nscoord  mWidth;
     nscoord  mHeight;
-    PRUint32 mDepth;
-    PRUint32  mAppUnitsPerDevPixel;
-    PRInt32  mAppUnitsPerDevNotScaledPixel;
-    PRInt32  mAppUnitsPerPhysicalInch;
+    uint32_t mDepth;
+    uint32_t  mAppUnitsPerDevPixel;
+    int32_t  mAppUnitsPerDevNotScaledPixel;
+    int32_t  mAppUnitsPerPhysicalInch;
     float    mPixelScale;
     float    mPrintingScale;
 

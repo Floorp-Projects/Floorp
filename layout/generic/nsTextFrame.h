@@ -101,7 +101,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
@@ -110,7 +110,7 @@ public:
   }
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
 #endif
@@ -127,34 +127,34 @@ public:
    * false otherwise
    * @param aType the type of selection added or removed
    */
-  void SetSelectedRange(PRUint32 aStart, PRUint32 aEnd, bool aSelected,
+  void SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
                         SelectionType aType);
 
-  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
-  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true);
   virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-                                PRInt32* aOffset, PeekWordState* aState);
+                                int32_t* aOffset, PeekWordState* aState);
 
-  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
+  NS_IMETHOD CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
   
   // Flags for aSetLengthFlags
   enum { ALLOW_FRAME_CREATION_AND_DESTRUCTION = 0x01 };
 
   // Update offsets to account for new length. This may clear mTextRun.
-  void SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
-                 PRUint32 aSetLengthFlags = 0);
+  void SetLength(int32_t aLength, nsLineLayout* aLineLayout,
+                 uint32_t aSetLengthFlags = 0);
   
-  NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
+  NS_IMETHOD GetOffsets(int32_t &start, int32_t &end)const;
   
-  virtual void AdjustOffsetsForBidi(PRInt32 start, PRInt32 end);
+  virtual void AdjustOffsetsForBidi(int32_t start, int32_t end);
   
-  NS_IMETHOD GetPointFromOffset(PRInt32                 inOffset,
+  NS_IMETHOD GetPointFromOffset(int32_t                 inOffset,
                                 nsPoint*                outPoint);
   
-  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+  NS_IMETHOD  GetChildFrameContainingOffset(int32_t     inContentOffset,
                                             bool                    inHint,
-                                            PRInt32*                outFrameContentOffset,
+                                            int32_t*                outFrameContentOffset,
                                             nsIFrame*               *outChildFrame);
   
   virtual bool IsVisibleInSelection(nsISelection* aSelection);
@@ -204,7 +204,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
@@ -229,8 +229,8 @@ public:
   virtual nsresult GetRenderedText(nsAString* aString = nullptr,
                                    gfxSkipChars* aSkipChars = nullptr,
                                    gfxSkipCharsIterator* aSkipIter = nullptr,
-                                   PRUint32 aSkippedStartOffset = 0,
-                                   PRUint32 aSkippedMaxLength = PR_UINT32_MAX);
+                                   uint32_t aSkippedStartOffset = 0,
+                                   uint32_t aSkippedMaxLength = PR_UINT32_MAX);
 
   nsOverflowAreas
     RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState);
@@ -271,7 +271,7 @@ public:
    */
   bool MeasureCharClippedText(PropertyProvider& aProvider,
                               nscoord aLeftEdge, nscoord aRightEdge,
-                              PRUint32* aStartOffset, PRUint32* aMaxLength,
+                              uint32_t* aStartOffset, uint32_t* aMaxLength,
                               nscoord* aSnappedLeftEdge,
                               nscoord* aSnappedRightEdge);
 
@@ -362,8 +362,8 @@ public:
                               const gfxPoint& aTextBaselinePt,
                               const gfxRect& aDirtyRect,
                               PropertyProvider& aProvider,
-                              PRUint32 aContentOffset,
-                              PRUint32 aContentLength,
+                              uint32_t aContentOffset,
+                              uint32_t aContentLength,
                               nsTextPaintStyle& aTextPaintStyle,
                               const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                               DrawPathCallbacks* aCallbacks);
@@ -377,8 +377,8 @@ public:
                                     const gfxPoint& aTextBaselinePt,
                                     const gfxRect& aDirtyRect,
                                     PropertyProvider& aProvider,
-                                    PRUint32 aContentOffset,
-                                    PRUint32 aContentLength,
+                                    uint32_t aContentOffset,
+                                    uint32_t aContentLength,
                                     nsTextPaintStyle& aTextPaintStyle,
                                     SelectionDetails* aDetails,
                                     SelectionType* aAllTypes,
@@ -390,38 +390,38 @@ public:
                                      const gfxPoint& aTextBaselinePt,
                                      const gfxRect& aDirtyRect,
                                      PropertyProvider& aProvider,
-                                     PRUint32 aContentOffset,
-                                     PRUint32 aContentLength,
+                                     uint32_t aContentOffset,
+                                     uint32_t aContentLength,
                                      nsTextPaintStyle& aTextPaintStyle,
                                      SelectionDetails* aDetails,
                                      SelectionType aSelectionType,
                                      DrawPathCallbacks* aCallbacks);
 
-  virtual nscolor GetCaretColorAt(PRInt32 aOffset);
+  virtual nscolor GetCaretColorAt(int32_t aOffset);
 
-  PRInt16 GetSelectionStatus(PRInt16* aSelectionFlags);
+  int16_t GetSelectionStatus(int16_t* aSelectionFlags);
 
 #ifdef DEBUG
-  void ToCString(nsCString& aBuf, PRInt32* aTotalContentLength) const;
+  void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
 #endif
 
-  PRInt32 GetContentOffset() const { return mContentOffset; }
-  PRInt32 GetContentLength() const
+  int32_t GetContentOffset() const { return mContentOffset; }
+  int32_t GetContentLength() const
   {
     NS_ASSERTION(GetContentEnd() - mContentOffset >= 0, "negative length");
     return GetContentEnd() - mContentOffset;
   }
-  PRInt32 GetContentEnd() const;
+  int32_t GetContentEnd() const;
   // This returns the length the frame thinks it *should* have after it was
   // last reflowed (0 if it hasn't been reflowed yet). This should be used only
   // when setting up the text offsets for a new continuation frame.
-  PRInt32 GetContentLengthHint() const { return mContentLengthHint; }
+  int32_t GetContentLengthHint() const { return mContentLengthHint; }
 
   // Compute the length of the content mapped by this frame
   // and all its in-flow siblings. Basically this means starting at mContentOffset
   // and going to the end of the text node or the next bidi continuation
   // boundary.
-  PRInt32 GetInFlowContentLength();
+  int32_t GetInFlowContentLength();
 
   /**
    * Acquires the text run for this content, if necessary.
@@ -442,7 +442,7 @@ public:
                                      gfxContext* aReferenceContext = nullptr,
                                      nsIFrame* aLineContainer = nullptr,
                                      const nsLineList::iterator* aLine = nullptr,
-                                     PRUint32* aFlowEndInTextRun = nullptr);
+                                     uint32_t* aFlowEndInTextRun = nullptr);
 
   gfxTextRun* GetTextRun(TextRunType aWhichTextRun) {
     if (aWhichTextRun == eInflated || !HasFontSizeInflation())
@@ -480,9 +480,9 @@ public:
   // whitespace subject to start-of-line and end-of-line trimming.
   // The textrun must have been created before calling this.
   struct TrimmedOffsets {
-    PRInt32 mStart;
-    PRInt32 mLength;
-    PRInt32 GetEnd() const { return mStart + mLength; }
+    int32_t mStart;
+    int32_t mLength;
+    int32_t GetEnd() const { return mStart + mLength; }
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
                                    bool aTrimAfter);
@@ -506,12 +506,12 @@ protected:
   // the length from the difference between this frame's offset and the next
   // frame's offset, or the text length if there is no next frame. This means
   // the frames always map the text node without overlapping or leaving any gaps.
-  PRInt32     mContentOffset;
+  int32_t     mContentOffset;
   // This does *not* indicate the length of text currently mapped by the frame;
   // instead it's a hint saying that this frame *wants* to map this much text
   // so if we create a new continuation, this is where that continuation should
   // start.
-  PRInt32     mContentLengthHint;
+  int32_t     mContentLengthHint;
   nscoord     mAscent;
   gfxTextRun* mTextRun;
 
@@ -532,8 +532,8 @@ protected:
                                nsRect* aVisualOverflowRect,
                                bool aIncludeTextDecorations);
 
-  void PaintOneShadow(PRUint32 aOffset,
-                      PRUint32 aLength,
+  void PaintOneShadow(uint32_t aOffset,
+                      uint32_t aLength,
                       nsCSSShadowItem* aShadowDetails,
                       PropertyProvider* aProvider,
                       const nsRect& aDirtyRect,
@@ -553,12 +553,12 @@ protected:
     nscoord mBaselineOffset;
 
     nscolor mColor;
-    PRUint8 mStyle;
+    uint8_t mStyle;
 
     LineDecoration(nsIFrame *const aFrame,
                    const nscoord aOff,
                    const nscolor aColor,
-                   const PRUint8 aStyle)
+                   const uint8_t aStyle)
       : mFrame(aFrame),
         mBaselineOffset(aOff),
         mColor(aColor),
@@ -607,8 +607,8 @@ protected:
 
   void DrawTextRun(gfxContext* const aCtx,
                    const gfxPoint& aTextBaselinePt,
-                   PRUint32 aOffset,
-                   PRUint32 aLength,
+                   uint32_t aOffset,
+                   uint32_t aLength,
                    PropertyProvider& aProvider,
                    nscolor aTextColor,
                    gfxFloat& aAdvanceWidth,
@@ -619,8 +619,8 @@ protected:
                                  const gfxRect& aDirtyRect,
                                  const gfxPoint& aFramePt,
                                  const gfxPoint& aTextBaselinePt,
-                                 PRUint32 aOffset,
-                                 PRUint32 aLength,
+                                 uint32_t aOffset,
+                                 uint32_t aLength,
                                  PropertyProvider& aProvider,
                                  const nsTextPaintStyle& aTextStyle,
                                  nscolor aTextColor,
@@ -635,8 +635,8 @@ protected:
                 const gfxRect& aDirtyRect,
                 const gfxPoint& aFramePt,
                 const gfxPoint& aTextBaselinePt,
-                PRUint32 aOffset,
-                PRUint32 aLength,
+                uint32_t aOffset,
+                uint32_t aLength,
                 PropertyProvider& aProvider,
                 const nsTextPaintStyle& aTextStyle,
                 nscolor aTextColor,

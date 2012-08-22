@@ -204,7 +204,7 @@ public:
    */
   nsresult List(FILE* out);
 
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  void SizeOf(nsISizeOfHandler* aHandler, uint32_t* aResult) const;
 #endif
 
 private:
@@ -225,7 +225,7 @@ private:
   struct BandRect : PRCListStr {
     nscoord   mLeft, mTop;
     nscoord   mRight, mBottom;
-    PRIntn    mNumFrames;    // number of frames occupying this rect
+    int32_t   mNumFrames;    // number of frames occupying this rect
     union {
       nsIFrame*    mFrame;   // single frame occupying the space
       nsVoidArray* mFrames;  // list of frames occupying the space
@@ -265,7 +265,7 @@ private:
     void    AddFrame(const nsIFrame*);
     void    RemoveFrame(const nsIFrame*);
     PRBool  HasSameFrameList(const BandRect* aBandRect) const;
-    PRInt32 Length() const;
+    int32_t Length() const;
   };
 
   // Circular linked list of band rects
@@ -310,7 +310,7 @@ private:
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;
 
-  static PRInt32 sCachedSpaceManagerCount;
+  static int32_t sCachedSpaceManagerCount;
   static void* sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
 
   nsSpaceManager(const nsSpaceManager&amp;);  // no implementation
@@ -489,7 +489,7 @@ terminated.
    */
   nsresult List(FILE* out);
 
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  void SizeOf(nsISizeOfHandler* aHandler, uint32_t* aResult) const;
 
 </pre>
  

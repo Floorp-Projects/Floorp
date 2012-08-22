@@ -22,8 +22,8 @@ class nsStringBuffer
     private:
       friend class CheckStaticAtomSizes;
 
-      PRInt32  mRefCount;
-      PRUint32 mStorageSize;
+      int32_t  mRefCount;
+      uint32_t mStorageSize;
 
     public:
       
@@ -90,7 +90,7 @@ class nsStringBuffer
        * This value is the same value that was originally passed to Alloc (or
        * Realloc).
        */
-      PRUint32 StorageSize() const
+      uint32_t StorageSize() const
         {
           return mStorageSize;
         }
@@ -133,9 +133,9 @@ class nsStringBuffer
        *       however, string length is always measured in storage units
        *       (2-byte units for wide strings).
        */
-      void ToString(PRUint32 len, nsAString &str,
+      void ToString(uint32_t len, nsAString &str,
                            bool aMoveOwnership = false);
-      void ToString(PRUint32 len, nsACString &str,
+      void ToString(uint32_t len, nsACString &str,
                            bool aMoveOwnership = false);
 
       /**

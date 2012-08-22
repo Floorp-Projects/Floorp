@@ -39,9 +39,9 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -95,7 +95,7 @@ private:
   bool mInUse;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor);
 };
 
 #endif

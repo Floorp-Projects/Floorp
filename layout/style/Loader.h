@@ -148,7 +148,7 @@ public:
    */
   nsresult LoadInlineStyle(nsIContent* aElement,
                            const nsAString& aBuffer,
-                           PRUint32 aLineNumber,
+                           uint32_t aLineNumber,
                            const nsAString& aTitle,
                            const nsAString& aMedia,
                            nsICSSLoaderObserver* aObserver,
@@ -460,7 +460,7 @@ private:
   // whole bunch at once (e.g. in one of the stop methods).  This is used to
   // make sure that HasPendingLoads() won't return false until we're notifying
   // on the last data we're working with.
-  PRUint32          mDatasToNotifyOn;
+  uint32_t          mDatasToNotifyOn;
 
   nsCompatibility   mCompatMode;
   nsString          mPreferredSheet;  // title of preferred sheet

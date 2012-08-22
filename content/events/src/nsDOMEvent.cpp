@@ -346,7 +346,7 @@ nsDOMEvent::SetTrusted(bool aTrusted)
 
 NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                       PRUint32 aArgc, jsval* aArgv)
+                       uint32_t aArgc, jsval* aArgv)
 {
   NS_ENSURE_TRUE(aArgc >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
@@ -392,7 +392,7 @@ nsDOMEvent::InitFromCtor(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
+nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
@@ -426,7 +426,7 @@ nsDOMEvent::GetCancelable(bool* aCancelable)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetTimeStamp(PRUint64* aTimeStamp)
+nsDOMEvent::GetTimeStamp(uint64_t* aTimeStamp)
 {
   *aTimeStamp = mEvent->time;
   return NS_OK;
@@ -584,7 +584,7 @@ nsDOMEvent::DuplicatePrivateData()
   }
 
   nsEvent* newEvent = nullptr;
-  PRUint32 msg = mEvent->message;
+  uint32_t msg = mEvent->message;
   bool isInputEvent = false;
 
   switch (mEvent->eventStructType) {
@@ -1029,7 +1029,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     break;
   case NS_KEY_EVENT :
     if (NS_IS_TRUSTED_EVENT(aEvent)) {
-      PRUint32 key = static_cast<nsKeyEvent *>(aEvent)->keyCode;
+      uint32_t key = static_cast<nsKeyEvent *>(aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
         // return key on focused button. see note at NS_MOUSE_CLICK.
@@ -1233,7 +1233,7 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
 // To be called ONLY by nsDOMEvent::GetType (which has the additional
 // logic for handling user-defined events).
 // static
-const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
+const char* nsDOMEvent::GetEventName(uint32_t aEventType)
 {
   switch(aEventType) {
   case NS_MOUSE_BUTTON_DOWN:

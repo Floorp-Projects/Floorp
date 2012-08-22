@@ -53,7 +53,7 @@ public:
    * @param aEvent   [in] accessible event type
    * @param aTarget  [in] target of accessible event
    */
-  virtual void FireAccessibleEvent(PRUint32 aEvent, Accessible* aTarget) = 0;
+  virtual void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAccessibilityService,

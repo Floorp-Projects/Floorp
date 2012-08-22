@@ -28,14 +28,14 @@ nsB2GProtocolHandler::GetScheme(nsACString &aResult)
 }
 
 NS_IMETHODIMP
-nsB2GProtocolHandler::GetDefaultPort(PRInt32 *aResult)
+nsB2GProtocolHandler::GetDefaultPort(int32_t *aResult)
 {
   *aResult = -1;        // no port for b2g-camera: URLs
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsB2GProtocolHandler::GetProtocolFlags(PRUint32 *aResult)
+nsB2GProtocolHandler::GetProtocolFlags(uint32_t *aResult)
 {
   *aResult = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
@@ -75,7 +75,7 @@ nsB2GProtocolHandler::NewChannel(nsIURI* aURI, nsIChannel **aResult)
 }
 
 NS_IMETHODIMP 
-nsB2GProtocolHandler::AllowPort(PRInt32 port,
+nsB2GProtocolHandler::AllowPort(int32_t port,
                                    const char *scheme,
                                    bool *aResult)
 {

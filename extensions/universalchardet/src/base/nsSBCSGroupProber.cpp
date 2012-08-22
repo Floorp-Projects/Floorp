@@ -38,7 +38,7 @@ nsSBCSGroupProber::nsSBCSGroupProber()
   }
   else // One or more is null. avoid any Hebrew probing, null them all
   {
-    for (PRUint32 i = 11; i <= 13; ++i)
+    for (uint32_t i = 11; i <= 13; ++i)
     { 
       delete mProbers[i]; 
       mProbers[i] = 0; 
@@ -55,7 +55,7 @@ nsSBCSGroupProber::nsSBCSGroupProber()
 
 nsSBCSGroupProber::~nsSBCSGroupProber()
 {
-  for (PRUint32 i = 0; i < NUM_OF_SBCS_PROBERS; i++)
+  for (uint32_t i = 0; i < NUM_OF_SBCS_PROBERS; i++)
   {
     delete mProbers[i];
   }
@@ -79,7 +79,7 @@ const char* nsSBCSGroupProber::GetCharSetName()
 void  nsSBCSGroupProber::Reset(void)
 {
   mActiveNum = 0;
-  for (PRUint32 i = 0; i < NUM_OF_SBCS_PROBERS; i++)
+  for (uint32_t i = 0; i < NUM_OF_SBCS_PROBERS; i++)
   {
     if (mProbers[i]) // not null
     {
@@ -95,12 +95,12 @@ void  nsSBCSGroupProber::Reset(void)
 }
 
 
-nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, uint32_t aLen)
 {
   nsProbingState st;
-  PRUint32 i;
+  uint32_t i;
   char *newBuf1 = 0;
-  PRUint32 newLen1 = 0;
+  uint32_t newLen1 = 0;
 
   //apply filter to original buffer, and we got new buffer back
   //depend on what script it is, we will feed them the new buffer 
@@ -145,7 +145,7 @@ done:
 
 float nsSBCSGroupProber::GetConfidence(void)
 {
-  PRUint32 i;
+  uint32_t i;
   float bestConf = 0.0, cf;
 
   switch (mState)
@@ -173,7 +173,7 @@ float nsSBCSGroupProber::GetConfidence(void)
 #ifdef DEBUG_chardet
 void nsSBCSGroupProber::DumpStatus()
 {
-  PRUint32 i;
+  uint32_t i;
   float cf;
   
   cf = GetConfidence();

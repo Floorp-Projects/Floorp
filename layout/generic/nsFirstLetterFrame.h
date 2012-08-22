@@ -34,7 +34,7 @@ public:
 
   bool IsFloating() const { return GetStateBits() & NS_FRAME_OUT_OF_FLOW; }
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     if (!IsFloating())
       aFlags = aFlags & ~(nsIFrame::eLineParticipant);
@@ -51,7 +51,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -61,9 +61,9 @@ public:
   virtual nscoord GetBaseline() const;
 
 //override of nsFrame method
-  NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
+  NS_IMETHOD GetChildFrameContainingOffset(int32_t inContentOffset,
                                            bool inHint,
-                                           PRInt32* outFrameContentOffset,
+                                           int32_t* outFrameContentOffset,
                                            nsIFrame **outChildFrame);
 
   nscoord GetFirstLetterBaseline() const { return mBaseline; }

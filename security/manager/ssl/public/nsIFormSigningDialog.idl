@@ -25,8 +25,8 @@ interface nsIFormSigningDialog : nsISupports
                           in AString signText,
                           [array, size_is(count)] in wstring certNickList,
                           [array, size_is(count)] in wstring certDetailsList,
-                          in PRUint32 count,
-                          out PRInt32 selectedIndex,
+                          in uint32_t count,
+                          out int32_t selectedIndex,
                           out AString password);
 };
 

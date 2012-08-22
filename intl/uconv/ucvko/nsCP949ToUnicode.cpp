@@ -23,7 +23,7 @@ static const uScanClassID g_CP949ScanClassIDs[] = {
 };
 
 // CP949(non-EUC-KR portion) to Unicode
-static const PRUint16 g_utCP949NoKSCHangulMapping[] = {
+static const uint16_t g_utCP949NoKSCHangulMapping[] = {
 #include "u20cp949hangul.ut"
 };
 
@@ -36,7 +36,7 @@ static const uRange g_CP949Ranges[] = {
   { 0x80, 0xA0 }
 };
 
-static const PRUint16 *g_CP949MappingTableSet [] ={
+static const uint16_t *g_CP949MappingTableSet [] ={
   g_ucvko_AsciiMapping,
   g_HangulNullMapping,
   g_utKSC5601Mapping,

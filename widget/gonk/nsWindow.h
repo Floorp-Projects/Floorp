@@ -58,24 +58,24 @@ public:
     NS_IMETHOD Show(bool aState);
     virtual bool IsVisible() const;
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 PRInt32 *aX,
-                                 PRInt32 *aY);
-    NS_IMETHOD Move(PRInt32 aX,
-                    PRInt32 aY);
-    NS_IMETHOD Resize(PRInt32 aWidth,
-                      PRInt32 aHeight,
+                                 int32_t *aX,
+                                 int32_t *aY);
+    NS_IMETHOD Move(int32_t aX,
+                    int32_t aY);
+    NS_IMETHOD Resize(int32_t aWidth,
+                      int32_t aHeight,
                       bool  aRepaint);
-    NS_IMETHOD Resize(PRInt32 aX,
-                      PRInt32 aY,
-                      PRInt32 aWidth,
-                      PRInt32 aHeight,
+    NS_IMETHOD Resize(int32_t aX,
+                      int32_t aY,
+                      int32_t aWidth,
+                      int32_t aHeight,
                       bool aRepaint);
     NS_IMETHOD Enable(bool aState);
     virtual bool IsEnabled() const;
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
     NS_IMETHOD Invalidate(const nsIntRect &aRect);
-    virtual void* GetNativeData(PRUint32 aDataType);
+    virtual void* GetNativeData(uint32_t aDataType);
     NS_IMETHOD SetTitle(const nsAString& aTitle)
     {
         return NS_OK;
@@ -104,7 +104,7 @@ public:
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
 
-    virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
+    virtual uint32_t GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
     virtual nsIntRect GetNaturalBounds() MOZ_OVERRIDE;
     virtual bool NeedsPaint();

@@ -28,8 +28,8 @@ public:
   virtual nsIDOMFile* File(ArchiveReader* aArchiveReader);
 
 public: // for the event
-  static PRUint32 StrToInt32(const PRUint8* aStr);
-  static PRUint16 StrToInt16(const PRUint8* aStr);
+  static uint32_t StrToInt32(const uint8_t* aStr);
+  static uint16_t StrToInt16(const uint8_t* aStr);
 
 private: // data
   nsCString mFilename;

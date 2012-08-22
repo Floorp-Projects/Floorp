@@ -79,7 +79,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsObjectFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
@@ -194,7 +194,7 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false);
+  bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false);
 
   // check attributes and optionally CSS to see if we should display anything
   bool IsHidden(bool aCheckVisibilityStyle = true) const;

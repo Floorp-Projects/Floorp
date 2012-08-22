@@ -33,8 +33,8 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
                                      const nsStringComparator& aComparator)
 {
   bool result;
-  PRUint32 selectorLen = aSelectorValue.Length();
-  PRUint32 attributeLen = aAttributeValue.Length();
+  uint32_t selectorLen = aSelectorValue.Length();
+  uint32_t attributeLen = aAttributeValue.Length();
   if (selectorLen > attributeLen) {
     result = false;
   }
@@ -151,12 +151,12 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
 
 /* static */ void
 nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
-                                   PRInt32 aMaskedValue,
-                                   PRInt32 aFirstMask,
-                                   PRInt32 aLastMask,
+                                   int32_t aMaskedValue,
+                                   int32_t aFirstMask,
+                                   int32_t aLastMask,
                                    nsAString& aResult)
 {
-  for (PRInt32 mask = aFirstMask; mask <= aLastMask; mask <<= 1) {
+  for (int32_t mask = aFirstMask; mask <= aLastMask; mask <<= 1) {
     if (mask & aMaskedValue) {
       AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask),
                          aResult);
@@ -173,7 +173,7 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
 nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
                                        nsAString& aResult)
 {
-  for (PRUint32 i = 0, numFeat = aFeatures.Length(); i < numFeat; i++) {
+  for (uint32_t i = 0, numFeat = aFeatures.Length(); i < numFeat; i++) {
     const gfxFontFeature& feat = aFeatures[i];
 
     if (i != 0) {
@@ -223,7 +223,7 @@ nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
 }
 
 /* static */ float
-nsStyleUtil::ColorComponentToFloat(PRUint8 aAlpha)
+nsStyleUtil::ColorComponentToFloat(uint8_t aAlpha)
 {
   // Alpha values are expressed as decimals, so we should convert
   // back, using as few decimal places as possible for

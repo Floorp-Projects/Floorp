@@ -40,30 +40,30 @@ protected:
   nsresult OpenPopup();
   nsresult ClosePopup();
 
-  nsresult StartSearch(PRUint16 aSearchType);
+  nsresult StartSearch(uint16_t aSearchType);
 
   nsresult BeforeSearches();
   nsresult StartSearches();
   void AfterSearches();
   nsresult ClearSearchTimer();
 
-  nsresult ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteResult *aResult);
+  nsresult ProcessResult(int32_t aSearchIndex, nsIAutoCompleteResult *aResult);
   nsresult PostSearchCleanup();
 
   nsresult EnterMatch(bool aIsPopupSelection);
   nsresult RevertTextValue();
 
-  nsresult CompleteDefaultIndex(PRInt32 aResultIndex);
+  nsresult CompleteDefaultIndex(int32_t aResultIndex);
   nsresult CompleteValue(nsString &aValue);
 
-  nsresult GetResultAt(PRInt32 aIndex, nsIAutoCompleteResult** aResult,
-                       PRInt32* aRowIndex);
-  nsresult GetResultValueAt(PRInt32 aIndex, bool aValueOnly,
+  nsresult GetResultAt(int32_t aIndex, nsIAutoCompleteResult** aResult,
+                       int32_t* aRowIndex);
+  nsresult GetResultValueAt(int32_t aIndex, bool aValueOnly,
                             nsAString & _retval);
-  nsresult GetResultLabelAt(PRInt32 aIndex, bool aValueOnly,
+  nsresult GetResultLabelAt(int32_t aIndex, bool aValueOnly,
                             nsAString & _retval);
 private:
-  nsresult GetResultValueLabelAt(PRInt32 aIndex, bool aValueOnly,
+  nsresult GetResultValueLabelAt(int32_t aIndex, bool aValueOnly,
                                  bool aGetValue, nsAString & _retval);
 protected:
 
@@ -79,9 +79,9 @@ protected:
    * @param _defaultIndex
    *        The defaultIndex relative to _result.
    */
-  nsresult GetDefaultCompleteResult(PRInt32 aResultIndex,
+  nsresult GetDefaultCompleteResult(int32_t aResultIndex,
                                     nsIAutoCompleteResult** _result,
-                                    PRInt32* _defaultIndex);
+                                    int32_t* _defaultIndex);
 
   /**
    * Gets the defaultComplete value to be suggested to the user.
@@ -93,7 +93,7 @@ protected:
    * @param _retval
    *        The value to be completed.
    */
-  nsresult GetDefaultCompleteValue(PRInt32 aResultIndex, bool aPreserveCasing,
+  nsresult GetDefaultCompleteValue(int32_t aResultIndex, bool aPreserveCasing,
                                    nsAString &_retval);
 
   /**
@@ -111,8 +111,8 @@ protected:
 
   nsresult ClearResults();
   
-  nsresult RowIndexToSearch(PRInt32 aRowIndex,
-                            PRInt32 *aSearchIndex, PRInt32 *aItemIndex);
+  nsresult RowIndexToSearch(int32_t aRowIndex,
+                            int32_t *aSearchIndex, int32_t *aItemIndex);
 
   // members //////////////////////////////////////////
   
@@ -122,7 +122,7 @@ protected:
   nsCOMArray<nsIAutoCompleteResult> mResults;
   // Caches the match counts for the current ongoing results to allow
   // incremental results to keep the rowcount up to date.
-  nsTArray<PRUint32> mMatchCounts;
+  nsTArray<uint32_t> mMatchCounts;
   // Temporarily keeps the results alive while invoking startSearch() for each
   // search.  This is needed to allow the searches to reuse the previous result,
   // since otherwise the first search clears mResults.
@@ -142,12 +142,12 @@ protected:
     eCompositionState_Committing
   };
   CompositionState mCompositionState;
-  PRUint16 mSearchStatus;
-  PRUint32 mRowCount;
-  PRUint32 mSearchesOngoing;
-  PRUint32 mSearchesFailed;
+  uint16_t mSearchStatus;
+  uint32_t mRowCount;
+  uint32_t mSearchesOngoing;
+  uint32_t mSearchesFailed;
   bool mFirstSearchResult;
-  PRUint32 mImmediateSearchesCount;
+  uint32_t mImmediateSearchesCount;
 };
 
 #endif /* __nsAutoCompleteController__ */

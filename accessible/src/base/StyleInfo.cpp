@@ -115,7 +115,7 @@ StyleInfo::FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue)
 }
 
 void
-StyleInfo::FormatTextDecorationStyle(PRUint8 aValue, nsAString& aFormattedValue)
+StyleInfo::FormatTextDecorationStyle(uint8_t aValue, nsAString& aFormattedValue)
 {
   nsCSSKeyword keyword =
     nsCSSProps::ValueToKeywordEnum(aValue,

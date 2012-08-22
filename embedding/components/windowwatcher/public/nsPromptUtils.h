@@ -22,11 +22,11 @@ inline void
 NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& user,
                const nsString& password)
 {
-  PRUint32 flags;
+  uint32_t flags;
   aAuthInfo->GetFlags(&flags);
   if (flags & nsIAuthInformation::NEED_DOMAIN) {
     // Domain is separated from username by a backslash
-    PRInt32 idx = user.FindChar(PRUnichar('\\'));
+    int32_t idx = user.FindChar(PRUnichar('\\'));
     if (idx == kNotFound) {
       aAuthInfo->SetUsername(user);
     } else {
@@ -54,7 +54,7 @@ NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& user,
  */
 inline void
 NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-                   bool machineProcessing, nsCString& host, PRInt32* port)
+                   bool machineProcessing, nsCString& host, int32_t* port)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
@@ -62,7 +62,7 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
     return;
 
   // Have to distinguish proxy auth and host auth here...
-  PRUint32 flags;
+  uint32_t flags;
   aAuthInfo->GetFlags(&flags);
   if (flags & nsIAuthInformation::AUTH_PROXY) {
     nsCOMPtr<nsIProxiedChannel> proxied(do_QueryInterface(aChannel));
@@ -119,7 +119,7 @@ NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
   // NOTE: For backwards-compatibility reasons, this must be the ASCII host.
   nsCString host;
-  PRInt32 port = -1;
+  int32_t port = -1;
 
   NS_GetAuthHostPort(aChannel, aAuthInfo, true, host, &port);
 

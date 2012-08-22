@@ -51,12 +51,12 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject *aObj, PRUint32 argc, jsval *argv);
+                        JSObject *aObj, uint32_t argc, jsval *argv);
 
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
+                                              int32_t aModType) const;
 
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);
 

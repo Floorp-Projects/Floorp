@@ -84,7 +84,7 @@ DOMSVGAnimatedTransformList::~DOMSVGAnimatedTransformList()
 
 void
 DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
-  PRUint32 aNewLength)
+  uint32_t aNewLength)
 {
   // When the number of items in our internal counterpart's baseVal changes,
   // we MUST keep our baseVal in sync. If we don't, script will either see a
@@ -115,7 +115,7 @@ DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
 
 void
 DOMSVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
-  PRUint32 aNewLength)
+  uint32_t aNewLength)
 {
   if (mAnimVal) {
     mAnimVal->InternalListLengthWillChange(aNewLength);

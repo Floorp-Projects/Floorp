@@ -32,7 +32,7 @@ public:
   FileReaderSyncPrivate();
   ~FileReaderSyncPrivate();
 
-  nsresult ReadAsArrayBuffer(nsIDOMBlob* aBlob, PRUint32 aLength,
+  nsresult ReadAsArrayBuffer(nsIDOMBlob* aBlob, uint32_t aLength,
                              uint8* aBuffer);
   nsresult ReadAsBinaryString(nsIDOMBlob* aBlob, nsAString& aResult);
   nsresult ReadAsText(nsIDOMBlob* aBlob, const nsAString& aEncoding,

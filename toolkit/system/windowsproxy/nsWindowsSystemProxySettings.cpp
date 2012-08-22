@@ -41,7 +41,7 @@ nsWindowsSystemProxySettings::Init()
 }
 
 static void SetProxyResult(const char* aType, const nsACString& aHost,
-                           PRInt32 aPort, nsACString& aResult)
+                           int32_t aPort, nsACString& aResult)
 {
     aResult.AssignASCII(aType);
     aResult.Append(' ');
@@ -55,7 +55,7 @@ static void SetProxyResult(const char* aType, const nsACString& aHostPort,
 {
     nsCOMPtr<nsIURI> uri;
     nsCAutoString host;
-    PRInt32 port;
+    int32_t port;
 
     // Try parsing it as a URI.
     if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aHostPort)) &&
@@ -75,7 +75,7 @@ static void SetProxyResultDirect(nsACString& aResult)
     aResult.AssignASCII("DIRECT");
 }
 
-static nsresult ReadInternetOption(PRUint32 aOption, PRUint32& aFlags,
+static nsresult ReadInternetOption(uint32_t aOption, uint32_t& aFlags,
                                    nsAString& aValue)
 {
     DWORD connFlags = 0;
@@ -112,7 +112,7 @@ bool
 nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
 {
     nsresult rv;
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
     nsAutoString buf;
 
     rv = ReadInternetOption(INTERNET_PER_CONN_PROXY_BYPASS, flags, buf);
@@ -122,8 +122,8 @@ nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
     NS_ConvertUTF16toUTF8 cbuf(buf);
 
     nsCAutoString host(aHost);
-    PRInt32 start = 0;
-    PRInt32 end = cbuf.Length();
+    int32_t start = 0;
+    int32_t end = cbuf.Length();
 
     // Windows formats its proxy override list in the form:
     // server;server;server where 'server' is a server name pattern or IP
@@ -133,7 +133,7 @@ nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
     // all other characters must match themselves; the whole pattern must match
     // the whole hostname.
     while (true) {
-        PRInt32 delimiter = cbuf.FindCharInSet(" ;", start);
+        int32_t delimiter = cbuf.FindCharInSet(" ;", start);
         if (delimiter == -1)
             delimiter = end;
 
@@ -164,13 +164,13 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
 {
     nsCAutoString host(aHost);
     nsCAutoString override(aOverride);
-    PRInt32 overrideLength = override.Length();
-    PRInt32 tokenStart = 0;
-    PRInt32 offset = 0;
+    int32_t overrideLength = override.Length();
+    int32_t tokenStart = 0;
+    int32_t offset = 0;
     bool star = false;
 
     while (tokenStart < overrideLength) {
-        PRInt32 tokenEnd = override.FindChar('*', tokenStart);
+        int32_t tokenEnd = override.FindChar('*', tokenStart);
         if (tokenEnd == tokenStart) {
             star = true;
             tokenStart++;
@@ -199,7 +199,7 @@ nsresult
 nsWindowsSystemProxySettings::GetPACURI(nsACString& aResult)
 {
     nsresult rv;
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
     nsAutoString buf;
 
     rv = ReadInternetOption(INTERNET_PER_CONN_AUTOCONFIG_URL, flags, buf);
@@ -217,7 +217,7 @@ nsresult
 nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 {
     nsresult rv;
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
     nsAutoString buf;
 
     rv = ReadInternetOption(INTERNET_PER_CONN_PROXY_SERVER, flags, buf);
@@ -249,11 +249,11 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
     nsCAutoString specificProxy;
     nsCAutoString defaultProxy;
     nsCAutoString socksProxy;
-    PRInt32 start = 0;
-    PRInt32 end = cbuf.Length();
+    int32_t start = 0;
+    int32_t end = cbuf.Length();
 
     while (true) {
-        PRInt32 delimiter = cbuf.FindCharInSet(" ;", start);
+        int32_t delimiter = cbuf.FindCharInSet(" ;", start);
         if (delimiter == -1)
             delimiter = end;
 

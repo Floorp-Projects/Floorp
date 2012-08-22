@@ -24,9 +24,9 @@ class nsSVGAngle
   friend class DOMSVGAngle;
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff,
+  void Init(uint8_t aAttrEnum = 0xff,
             float aValue = 0,
-            PRUint8 aUnitType = nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED) {
+            uint8_t aUnitType = nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED) {
     mAnimVal = mBaseVal = aValue;
     mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -45,10 +45,10 @@ public:
     { return mAnimVal * GetDegreesPerUnit(mAnimValUnit); }
 
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
-  void SetAnimValue(float aValue, PRUint8 aUnit, nsSVGElement *aSVGElement);
+  void SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement);
 
-  PRUint8 GetBaseValueUnit() const { return mBaseValUnit; }
-  PRUint8 GetAnimValueUnit() const { return mAnimValUnit; }
+  uint8_t GetBaseValueUnit() const { return mBaseValUnit; }
+  uint8_t GetAnimValueUnit() const { return mAnimValUnit; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
@@ -58,21 +58,21 @@ public:
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
 
-  static float GetDegreesPerUnit(PRUint8 aUnit);
+  static float GetDegreesPerUnit(uint8_t aUnit);
 
 private:
   
   float mAnimVal;
   float mBaseVal;
-  PRUint8 mAnimValUnit;
-  PRUint8 mBaseValUnit;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  uint8_t mAnimValUnit;
+  uint8_t mBaseValUnit;
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
-  nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
+  nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
-  nsresult ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);
+  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
   nsresult ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
   nsresult ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
 
@@ -88,7 +88,7 @@ public:
     nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
-    NS_IMETHOD GetUnitType(PRUint16* aResult)
+    NS_IMETHOD GetUnitType(uint16_t* aResult)
       { *aResult = mVal->mBaseValUnit; return NS_OK; }
 
     NS_IMETHOD GetValue(float* aResult)
@@ -107,12 +107,12 @@ public:
     NS_IMETHOD GetValueAsString(nsAString& aValue)
       { mVal->GetBaseValueString(aValue); return NS_OK; }
 
-    NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
                                       float valueInSpecifiedUnits)
       { return mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
                                      mSVGElement); }
 
-    NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
+    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
       { return mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); }
   };
 
@@ -127,7 +127,7 @@ public:
     nsSVGAngle* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
-    NS_IMETHOD GetUnitType(PRUint16* aResult)
+    NS_IMETHOD GetUnitType(uint16_t* aResult)
       { *aResult = mVal->mAnimValUnit; return NS_OK; }
 
     NS_IMETHOD GetValue(float* aResult)
@@ -145,11 +145,11 @@ public:
     NS_IMETHOD GetValueAsString(nsAString& aValue)
       { mVal->GetAnimValueString(aValue); return NS_OK; }
 
-    NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
                                       float valueInSpecifiedUnits)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
 
-    NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
+    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
 

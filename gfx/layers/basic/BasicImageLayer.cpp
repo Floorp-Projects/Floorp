@@ -261,7 +261,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   }
 
   if (mContainer->IsAsync()) {
-    PRUint32 containerID = mContainer->GetAsyncContainerID();
+    uint32_t containerID = mContainer->GetAsyncContainerID();
     BasicManager()->PaintedImage(BasicManager()->Hold(this), 
                                  SharedImageID(containerID));
     return;

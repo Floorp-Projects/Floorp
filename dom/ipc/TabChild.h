@@ -76,7 +76,7 @@ public:
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              const jsval& aObject,
                              JSContext* aCx,
-                             PRUint8 aArgc,
+                             uint8_t aArgc,
                              jsval* aRetval)
   {
     return mMessageManager
@@ -106,7 +106,7 @@ public:
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               bool aUseCapture, bool aWantsUntrusted,
-                              PRUint8 optional_argc)
+                              uint8_t optional_argc)
   {
     return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
                                                     aUseCapture,
@@ -155,11 +155,11 @@ public:
      * |aAppId| is the app id of the app containing this tab. If the tab isn't
      * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
      */
-    TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement, PRUint32 aAppId);
+    TabChild(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
     virtual ~TabChild();
     nsresult Init();
 
-    PRUint32 GetAppId() { return mAppId; }
+    uint32_t GetAppId() { return mAppId; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
@@ -182,18 +182,18 @@ public:
     virtual bool RecvMouseEvent(const nsString& aType,
                                 const float&    aX,
                                 const float&    aY,
-                                const PRInt32&  aButton,
-                                const PRInt32&  aClickCount,
-                                const PRInt32&  aModifiers,
+                                const int32_t&  aButton,
+                                const int32_t&  aClickCount,
+                                const int32_t&  aModifiers,
                                 const bool&     aIgnoreRootScrollFrame);
     virtual bool RecvRealMouseEvent(const nsMouseEvent& event);
     virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::widget::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const nsTouchEvent& event);
     virtual bool RecvKeyEvent(const nsString& aType,
-                              const PRInt32&  aKeyCode,
-                              const PRInt32&  aCharCode,
-                              const PRInt32&  aModifiers,
+                              const int32_t&  aKeyCode,
+                              const int32_t&  aCharCode,
+                              const int32_t&  aModifiers,
                               const bool&     aPreventDefault);
     virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
     virtual bool RecvTextEvent(const nsTextEvent& event);
@@ -206,18 +206,18 @@ public:
     virtual PDocumentRendererChild*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
                            const nsString& bgcolor,
-                           const PRUint32& renderFlags, const bool& flushLayout,
+                           const uint32_t& renderFlags, const bool& flushLayout,
                            const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
                                                   const gfxMatrix& transform,
                                                   const nsString& bgcolor,
-                                                  const PRUint32& renderFlags,
+                                                  const uint32_t& renderFlags,
                                                   const bool& flushLayout,
                                                   const nsIntSize& renderSize);
 
-    virtual PContentDialogChild* AllocPContentDialog(const PRUint32&,
+    virtual PContentDialogChild* AllocPContentDialog(const uint32_t&,
                                                      const nsCString&,
                                                      const nsCString&,
                                                      const InfallibleTArray<int>&,
@@ -310,14 +310,14 @@ private:
     nsCOMPtr<nsIWidget> mWidget;
     RenderFrameChild* mRemoteFrame;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
-    PRUint32 mChromeFlags;
+    uint32_t mChromeFlags;
     nsIntRect mOuterRect;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
     bool mDidFakeShow;
     bool mIsBrowserElement;
     bool mNotified;
-    PRUint32 mAppId;
+    uint32_t mAppId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

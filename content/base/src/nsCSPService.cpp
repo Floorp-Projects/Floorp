@@ -51,14 +51,14 @@ NS_IMPL_ISUPPORTS2(CSPService, nsIContentPolicy, nsIChannelEventSink)
 
 /* nsIContentPolicy implementation */
 NS_IMETHODIMP
-CSPService::ShouldLoad(PRUint32 aContentType,
+CSPService::ShouldLoad(uint32_t aContentType,
                        nsIURI *aContentLocation,
                        nsIURI *aRequestOrigin,
                        nsISupports *aRequestContext,
                        const nsACString &aMimeTypeGuess,
                        nsISupports *aExtra,
                        nsIPrincipal *aRequestPrincipal,
-                       PRInt16 *aDecision)
+                       int16_t *aDecision)
 {
     if (!aContentLocation)
         return NS_ERROR_FAILURE;
@@ -119,14 +119,14 @@ CSPService::ShouldLoad(PRUint32 aContentType,
 }
 
 NS_IMETHODIMP
-CSPService::ShouldProcess(PRUint32         aContentType,
+CSPService::ShouldProcess(uint32_t         aContentType,
                           nsIURI           *aContentLocation,
                           nsIURI           *aRequestOrigin,
                           nsISupports      *aRequestContext,
                           const nsACString &aMimeTypeGuess,
                           nsISupports      *aExtra,
                           nsIPrincipal     *aRequestPrincipal,
-                          PRInt16          *aDecision)
+                          int16_t          *aDecision)
 {
     if (!aContentLocation)
         return NS_ERROR_FAILURE;
@@ -180,7 +180,7 @@ CSPService::ShouldProcess(PRUint32         aContentType,
 NS_IMETHODIMP
 CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                    nsIChannel *newChannel,
-                                   PRUint32 flags,
+                                   uint32_t flags,
                                    nsIAsyncVerifyRedirectCallback *callback)
 {
   nsAsyncRedirectAutoCallback autoCallback(callback);
@@ -202,7 +202,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   channelPolicy->GetContentSecurityPolicy(getter_AddRefs(csp));
-  PRUint32 loadType;
+  uint32_t loadType;
   channelPolicy->GetLoadType(&loadType);
 
   // if no CSP in the channelPolicy, nothing for us to add to the channel
@@ -223,8 +223,8 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   newChannel->GetURI(getter_AddRefs(newUri));
   nsCOMPtr<nsIURI> originalUri;
   oldChannel->GetOriginalURI(getter_AddRefs(originalUri));
-  PRInt16 aDecision = nsIContentPolicy::ACCEPT;
-  csp->ShouldLoad(loadType,        // load type per nsIContentPolicy (PRUint32)
+  int16_t aDecision = nsIContentPolicy::ACCEPT;
+  csp->ShouldLoad(loadType,        // load type per nsIContentPolicy (uint32_t)
                   newUri,          // nsIURI
                   nullptr,          // nsIURI
                   nullptr,          // nsISupports

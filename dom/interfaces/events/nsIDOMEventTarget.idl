@@ -304,7 +304,7 @@ aClass::RemoveSystemEventListener(const nsAString& aType, \
   if (!listenerManager) { \
     return NS_OK; \
   } \
-  PRUint32 flags = NS_EVENT_FLAG_SYSTEM_EVENT; \
+  uint32_t flags = NS_EVENT_FLAG_SYSTEM_EVENT; \
   flags |= aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE; \
   listenerManager->RemoveEventListenerByType(aListener, aType, flags); \
   return NS_OK; \

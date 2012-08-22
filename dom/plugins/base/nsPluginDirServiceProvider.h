@@ -36,7 +36,7 @@ public:
 #ifdef XP_WIN
    static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
 private:
-   static nsresult GetPLIDDirectoriesWithRootKey(PRUint32 aKey,
+   static nsresult GetPLIDDirectoriesWithRootKey(uint32_t aKey,
      nsCOMArray<nsIFile> &aDirs);
 #endif
 

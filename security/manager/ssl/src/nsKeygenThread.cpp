@@ -57,7 +57,7 @@ void nsKeygenThread::SetParams(
     PK11AttrFlags a_flags,
     PK11SlotInfo *a_alternative_slot,
     PK11AttrFlags a_alternative_flags,
-    PRUint32 a_keyGenMechanism,
+    uint32_t a_keyGenMechanism,
     void *a_params,
     void *a_wincx )
 {

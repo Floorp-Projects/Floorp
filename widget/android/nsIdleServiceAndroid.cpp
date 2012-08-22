@@ -11,7 +11,7 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceAndroid, nsIdleService)
 
 bool
-nsIdleServiceAndroid::PollIdleTime(PRUint32 *aIdleTime)
+nsIdleServiceAndroid::PollIdleTime(uint32_t *aIdleTime)
 {
     return false;
 }

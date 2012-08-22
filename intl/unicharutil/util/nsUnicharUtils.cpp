@@ -16,7 +16,7 @@
 
 // We map x -> x, except for upper-case letters,
 // which we map to their lower-case equivalents.
-static const PRUint8 gASCIIToLower [128] = {
+static const uint8_t gASCIIToLower [128] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
     0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
@@ -33,11 +33,11 @@ static const PRUint8 gASCIIToLower [128] = {
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
 #define IS_ASCII_SPACE(u) (' ' == (u))
 
-// We want ToLowerCase(PRUint32) and ToLowerCaseASCII(PRUint32) to be fast
+// We want ToLowerCase(uint32_t) and ToLowerCaseASCII(uint32_t) to be fast
 // when they're called from within the case-insensitive comparators, so we
 // define inlined versions.
-static NS_ALWAYS_INLINE PRUint32
-ToLowerCase_inline(PRUint32 aChar)
+static NS_ALWAYS_INLINE uint32_t
+ToLowerCase_inline(uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
     return gASCIIToLower[aChar];
@@ -46,8 +46,8 @@ ToLowerCase_inline(PRUint32 aChar)
   return mozilla::unicode::GetLowercase(aChar);
 }
 
-static NS_ALWAYS_INLINE PRUint32
-ToLowerCaseASCII_inline(const PRUint32 aChar)
+static NS_ALWAYS_INLINE uint32_t
+ToLowerCaseASCII_inline(const uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
     return gASCIIToLower[aChar];
@@ -69,14 +69,14 @@ ToLowerCase(const nsAString& aSource,
 {
   const PRUnichar *in;
   PRUnichar *out;
-  PRUint32 len = NS_StringGetData(aSource, &in);
+  uint32_t len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
   NS_ASSERTION(out, "Uh...");
   ToLowerCase(in, out, len);
 }
 
-PRUint32
-ToLowerCaseASCII(const PRUint32 aChar)
+uint32_t
+ToLowerCaseASCII(const uint32_t aChar)
 {
   return ToLowerCaseASCII_inline(aChar);
 }
@@ -94,7 +94,7 @@ ToUpperCase(const nsAString& aSource,
 {
   const PRUnichar *in;
   PRUnichar *out;
-  PRUint32 len = NS_StringGetData(aSource, &in);
+  uint32_t len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
   NS_ASSERTION(out, "Uh...");
   ToUpperCase(in, out, len);
@@ -102,30 +102,30 @@ ToUpperCase(const nsAString& aSource,
 
 #ifdef MOZILLA_INTERNAL_API
 
-PRInt32
+int32_t
 nsCaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                               const PRUnichar* rhs,
-                                              PRUint32 lLength,
-                                              PRUint32 rLength) const
+                                              uint32_t lLength,
+                                              uint32_t rLength) const
 {
   return (lLength == rLength) ? CaseInsensitiveCompare(lhs, rhs, lLength) :
          (lLength > rLength) ? 1 : -1;
 }
 
-PRInt32
+int32_t
 nsCaseInsensitiveUTF8StringComparator::operator()(const char* lhs,
                                                   const char* rhs,
-                                                  PRUint32 lLength,
-                                                  PRUint32 rLength) const
+                                                  uint32_t lLength,
+                                                  uint32_t rLength) const
 {
   return CaseInsensitiveCompare(lhs, rhs, lLength, rLength);
 }
 
-PRInt32
+int32_t
 nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                                    const PRUnichar* rhs,
-                                                   PRUint32 lLength,
-                                                   PRUint32 rLength) const
+                                                   uint32_t lLength,
+                                                   uint32_t rLength) const
 {
   if (lLength != rLength) {
     if (lLength > rLength)
@@ -155,17 +155,17 @@ nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
 
 #endif // MOZILLA_INTERNAL_API
 
-PRUint32
-ToLowerCase(PRUint32 aChar)
+uint32_t
+ToLowerCase(uint32_t aChar)
 {
   return ToLowerCase_inline(aChar);
 }
 
 void
-ToLowerCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
+ToLowerCase(const PRUnichar *aIn, PRUnichar *aOut, uint32_t aLen)
 {
-  for (PRUint32 i = 0; i < aLen; i++) {
-    PRUint32 ch = aIn[i];
+  for (uint32_t i = 0; i < aLen; i++) {
+    uint32_t ch = aIn[i];
     if (NS_IS_HIGH_SURROGATE(ch) && i < aLen - 1 &&
         NS_IS_LOW_SURROGATE(aIn[i + 1])) {
       ch = mozilla::unicode::GetLowercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
@@ -178,8 +178,8 @@ ToLowerCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
   }
 }
 
-PRUint32
-ToUpperCase(PRUint32 aChar)
+uint32_t
+ToUpperCase(uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
     if (IS_ASCII_LOWER(aChar)) {
@@ -192,10 +192,10 @@ ToUpperCase(PRUint32 aChar)
 }
 
 void
-ToUpperCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
+ToUpperCase(const PRUnichar *aIn, PRUnichar *aOut, uint32_t aLen)
 {
-  for (PRUint32 i = 0; i < aLen; i++) {
-    PRUint32 ch = aIn[i];
+  for (uint32_t i = 0; i < aLen; i++) {
+    uint32_t ch = aIn[i];
     if (NS_IS_HIGH_SURROGATE(ch) && i < aLen - 1 &&
         NS_IS_LOW_SURROGATE(aIn[i + 1])) {
       ch = mozilla::unicode::GetUppercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
@@ -208,8 +208,8 @@ ToUpperCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
   }
 }
 
-PRUint32
-ToTitleCase(PRUint32 aChar)
+uint32_t
+ToTitleCase(uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
     return ToUpperCase(aChar);
@@ -218,17 +218,17 @@ ToTitleCase(PRUint32 aChar)
   return mozilla::unicode::GetTitlecaseForLower(aChar);
 }
 
-PRInt32
+int32_t
 CaseInsensitiveCompare(const PRUnichar *a,
                        const PRUnichar *b,
-                       PRUint32 len)
+                       uint32_t len)
 {
   NS_ASSERTION(a && b, "Do not pass in invalid pointers!");
 
   if (len) {
     do {
-      PRUint32 c1 = *a++;
-      PRUint32 c2 = *b++;
+      uint32_t c1 = *a++;
+      uint32_t c2 = *b++;
 
       // Unfortunately, we need to check for surrogates BEFORE we check
       // for equality, because we could have identical high surrogates
@@ -271,7 +271,7 @@ CaseInsensitiveCompare(const PRUnichar *a,
 // the end of the string (as marked by aEnd), returns -1 and does not set
 // aNext.  Note that this function doesn't check that aStr < aEnd -- it assumes
 // you've done that already.
-static NS_ALWAYS_INLINE PRUint32
+static NS_ALWAYS_INLINE uint32_t
 GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
 {
   // Convert to unsigned char so that stuffing chars into PRUint32s doesn't
@@ -287,9 +287,9 @@ GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
     // It's a two-byte sequence, so it looks like
     //  110XXXXX 10XXXXXX.
     // This is definitely in the BMP, so we can store straightaway into a
-    // PRUint16.
+    // uint16_t.
 
-    PRUint16 c;
+    uint16_t c;
     c  = (str[0] & 0x1F) << 6;
     c += (str[1] & 0x3F);
 
@@ -303,9 +303,9 @@ GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
   if (UTF8traits::is3byte(str[0]) && NS_LIKELY(aStr + 2 < aEnd)) {
     // It's a three-byte sequence, so it looks like
     //  1110XXXX 10XXXXXX 10XXXXXX.
-    // This will just barely fit into 16-bits, so store into a PRUint16.
+    // This will just barely fit into 16-bits, so store into a uint16_t.
 
-    PRUint16 c;
+    uint16_t c;
     c  = (str[0] & 0x0F) << 12;
     c += (str[1] & 0x3F) << 6;
     c += (str[2] & 0x3F);
@@ -319,7 +319,7 @@ GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
     // It's a four-byte sequence, so it looks like
     //   11110XXX 10XXXXXX 10XXXXXX 10XXXXXX.
 
-    PRUint32 c;
+    uint32_t c;
     c  = (str[0] & 0x07) << 18;
     c += (str[1] & 0x3F) << 12;
     c += (str[2] & 0x3F) << 6;
@@ -335,21 +335,21 @@ GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
   return -1;
 }
 
-PRInt32 CaseInsensitiveCompare(const char *aLeft,
+int32_t CaseInsensitiveCompare(const char *aLeft,
                                const char *aRight,
-                               PRUint32 aLeftBytes,
-                               PRUint32 aRightBytes)
+                               uint32_t aLeftBytes,
+                               uint32_t aRightBytes)
 {
   const char *leftEnd = aLeft + aLeftBytes;
   const char *rightEnd = aRight + aRightBytes;
 
   while (aLeft < leftEnd && aRight < rightEnd) {
-    PRUint32 leftChar = GetLowerUTF8Codepoint(aLeft, leftEnd, &aLeft);
-    if (NS_UNLIKELY(leftChar == PRUint32(-1)))
+    uint32_t leftChar = GetLowerUTF8Codepoint(aLeft, leftEnd, &aLeft);
+    if (NS_UNLIKELY(leftChar == uint32_t(-1)))
       return -1;
 
-    PRUint32 rightChar = GetLowerUTF8Codepoint(aRight, rightEnd, &aRight);
-    if (NS_UNLIKELY(rightChar == PRUint32(-1)))
+    uint32_t rightChar = GetLowerUTF8Codepoint(aRight, rightEnd, &aRight);
+    if (NS_UNLIKELY(rightChar == uint32_t(-1)))
       return -1;
 
     // Now leftChar and rightChar are lower-case, so we can compare them.
@@ -382,14 +382,14 @@ CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
   NS_ASSERTION(aLeft < aLeftEnd, "aLeft must be less than aLeftEnd.");
   NS_ASSERTION(aRight < aRightEnd, "aRight must be less than aRightEnd.");
 
-  PRUint32 leftChar = GetLowerUTF8Codepoint(aLeft, aLeftEnd, aLeftNext);
-  if (NS_UNLIKELY(leftChar == PRUint32(-1))) {
+  uint32_t leftChar = GetLowerUTF8Codepoint(aLeft, aLeftEnd, aLeftNext);
+  if (NS_UNLIKELY(leftChar == uint32_t(-1))) {
     *aErr = true;
     return false;
   }
 
-  PRUint32 rightChar = GetLowerUTF8Codepoint(aRight, aRightEnd, aRightNext);
-  if (NS_UNLIKELY(rightChar == PRUint32(-1))) {
+  uint32_t rightChar = GetLowerUTF8Codepoint(aRight, aRightEnd, aRightNext);
+  if (NS_UNLIKELY(rightChar == uint32_t(-1))) {
     *aErr = true;
     return false;
   }
@@ -402,10 +402,10 @@ CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
 
 namespace mozilla {
 
-PRUint32
-HashUTF8AsUTF16(const char* aUTF8, PRUint32 aLength, bool* aErr)
+uint32_t
+HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr)
 {
-  PRUint32 hash = 0;
+  uint32_t hash = 0;
   const char* s = aUTF8;
   const char* end = aUTF8 + aLength;
 
@@ -413,7 +413,7 @@ HashUTF8AsUTF16(const char* aUTF8, PRUint32 aLength, bool* aErr)
 
   while (s < end)
   {
-    PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&s, end, aErr);
+    uint32_t ucs4 = UTF8CharEnumerator::NextChar(&s, end, aErr);
     if (*aErr) {
       return 0;
     }

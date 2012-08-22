@@ -21,7 +21,7 @@ public:
                                char **aResponse, bool *aSucceeded);
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
                                    const char *aProfile,
-                                   PRInt32 argc, char **argv,
+                                   int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse, bool *aSucceeded);
   void Shutdown();
@@ -38,7 +38,7 @@ private:
                                    bool aSupportsCommandLine);
   nsresult     SendCommandInternal(const char *aProgram, const char *aUsername,
                                    const char *aProfile, const char *aCommand,
-                                   PRInt32 argc, char **argv,
+                                   int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse, bool *aWindowFound);
   nsresult       DoSendCommand    (Window aWindow,
@@ -47,7 +47,7 @@ private:
                                    char **aResponse,
                                    bool *aDestroyed);
   nsresult       DoSendCommandLine(Window aWindow,
-                                   PRInt32 argc, char **argv,
+                                   int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse,
                                    bool *aDestroyed);

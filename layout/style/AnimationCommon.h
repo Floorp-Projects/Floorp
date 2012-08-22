@@ -79,7 +79,7 @@ public:
   // nsIStyleRule implementation
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   void AddValue(nsCSSProperty aProperty, nsStyleAnimation::Value &aStartValue)
@@ -115,11 +115,11 @@ public:
     return &mTimingFunction;
   }
   Type GetType() const { return mType; }
-  PRUint32 GetSteps() const { return mSteps; }
+  uint32_t GetSteps() const { return mSteps; }
 private:
   Type mType;
   nsSMILKeySpline mTimingFunction;
-  PRUint32 mSteps;
+  uint32_t mSteps;
 };
 
 struct CommonElementAnimationData : public PRCList

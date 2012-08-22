@@ -339,7 +339,7 @@ ConvertArgsToArray(nsISupports* aArguments)
 
   nsCOMPtr<nsIArray> array = do_QueryInterface(aArguments);
   if (array) {
-    PRUint32 argc = 0;
+    uint32_t argc = 0;
     array->GetLength(&argc);
     if (argc == 0)
       return NULL;
@@ -349,7 +349,7 @@ ConvertArgsToArray(nsISupports* aArguments)
 
   nsCOMPtr<nsISupportsArray> supArray = do_QueryInterface(aArguments);
   if (supArray) {
-    PRUint32 argc = 0;
+    uint32_t argc = 0;
     supArray->Count(&argc);
     if (argc == 0) {
       return NULL;
@@ -359,7 +359,7 @@ ConvertArgsToArray(nsISupports* aArguments)
       do_CreateInstance(NS_ARRAY_CONTRACTID);
     NS_ENSURE_TRUE(mutableArray, NULL);
 
-    for (PRUint32 i = 0; i < argc; i++) {
+    for (uint32_t i = 0; i < argc; i++) {
       nsCOMPtr<nsISupports> elt = dont_AddRef(supArray->ElementAt(i));
       nsresult rv = mutableArray->AppendElement(elt, /* aWeak = */ false);
       NS_ENSURE_SUCCESS(rv, NULL);
@@ -388,7 +388,7 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
 
-  PRUint32 argc = 0;
+  uint32_t argc = 0;
   if (argv) {
     argv->GetLength(&argc);
   }
@@ -411,12 +411,12 @@ struct SizeSpec {
     mUseDefaultHeight(false)
   {}
   
-  PRInt32 mLeft;
-  PRInt32 mTop;
-  PRInt32 mOuterWidth;  // Total window width
-  PRInt32 mOuterHeight; // Total window height
-  PRInt32 mInnerWidth;  // Content area width
-  PRInt32 mInnerHeight; // Content area height
+  int32_t mLeft;
+  int32_t mTop;
+  int32_t mOuterWidth;  // Total window width
+  int32_t mOuterHeight; // Total window height
+  int32_t mInnerWidth;  // Content area width
+  int32_t mInnerHeight; // Content area height
 
   bool mLeftSpecified;
   bool mTopSpecified;
@@ -453,7 +453,7 @@ nsWindowWatcher::OpenWindow2(nsIDOMWindow *aParent,
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
 
-  PRUint32 argc = 0;
+  uint32_t argc = 0;
   if (argv) {
     argv->GetLength(&argc);
   }
@@ -491,7 +491,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
                                   windowIsModal = false,
                                   uriToLoadIsChrome = false,
                                   windowIsModalContentDialog = false;
-  PRUint32                        chromeFlags;
+  uint32_t                        chromeFlags;
   nsAutoString                    name;             // string version of aName
   nsCAutoString                   features;         // string version of aFeatures
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
@@ -707,7 +707,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
          that the new window is subject to popup control. */
       nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
       if (windowCreator2) {
-        PRUint32 contextFlags = 0;
+        uint32_t contextFlags = 0;
         bool popupConditions = false;
 
         // is the parent under popup conditions?
@@ -885,7 +885,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     rv = sm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
     if (NS_FAILED(rv) || isSystem) {
       // Don't pass this principal along to content windows
-      PRInt32 itemType;
+      int32_t itemType;
       rv = newDocShellItem->GetItemType(&itemType);
       if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
         newWindowPrincipal = nullptr;        
@@ -955,8 +955,8 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     newDocShell->LoadURI(uriToLoad,
                          loadInfo,
                          windowIsNew
-                           ? static_cast<PRUint32>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD)
-                           : static_cast<PRUint32>(nsIWebNavigation::LOAD_FLAGS_NONE),
+                           ? static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD)
+                           : static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_NONE),
                          true);
   }
 
@@ -1271,7 +1271,7 @@ nsWindowWatcher::FindWindowEntry(nsIDOMWindow *aWindow)
 
 nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
 {
-  PRUint32  ctr,
+  uint32_t  ctr,
             count = mEnumeratorList.Length();
 
   {
@@ -1435,7 +1435,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
  * @return the chrome bitmask
  */
 // static
-PRUint32 nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
+uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
                                                const char *aFeatures,
                                                bool aFeaturesSpecified,
                                                bool aDialog,
@@ -1459,7 +1459,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
      "OS's choice," and also support an "all" flag explicitly disallowed
      in the standards-compliant window.(normal)open. */
 
-  PRUint32 chromeFlags = 0;
+  uint32_t chromeFlags = 0;
   bool presenceFlag = false;
 
   chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_BORDERS;
@@ -1620,15 +1620,15 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
 }
 
 // static
-PRInt32
+int32_t
 nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
-                              PRInt32 aDefault, bool *aPresenceFlag)
+                              int32_t aDefault, bool *aPresenceFlag)
 {
   if (!aOptions)
     return 0;
 
   char *comma, *equal;
-  PRInt32 found = 0;
+  int32_t found = 0;
 
 #ifdef DEBUG
     nsCAutoString options(aOptions);
@@ -1845,7 +1845,7 @@ nsWindowWatcher::CalcSizeSpec(const char* aFeatures, SizeSpec& aResult)
 {
   // Parse position spec, if any, from aFeatures
   bool    present;
-  PRInt32 temp;
+  int32_t temp;
 
   present = false;
   if ((temp = WinHasOption(aFeatures, "left", 0, &present)) || present)
@@ -1913,12 +1913,12 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
                                         const SizeSpec & aSizeSpec)
 {
   // position and size of window
-  PRInt32 left = 0,
+  int32_t left = 0,
           top = 0,
           width = 100,
           height = 100;
   // difference between chrome and content size
-  PRInt32 chromeWidth = 0,
+  int32_t chromeWidth = 0,
           chromeHeight = 0;
   // whether the window size spec refers to chrome or content
   bool    sizeChromeWidth = true,
@@ -1958,7 +1958,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   { // scope shellWindow why not
     nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(aDocShellItem));
     if (shellWindow) {
-      PRInt32 cox, coy;
+      int32_t cox, coy;
       shellWindow->GetSize(&cox, &coy);
       chromeWidth = width - cox;
       chromeHeight = height - coy;
@@ -2036,7 +2036,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
 
     // Security check failed.  Ensure all args meet minimum reqs.
 
-    PRInt32 oldTop = top,
+    int32_t oldTop = top,
             oldLeft = left;
 
     // We'll also need the screen dimensions
@@ -2047,8 +2047,8 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
       screenMgr->ScreenForRect(left, top, width, height,
                                getter_AddRefs(screen));
     if (screen) {
-      PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
-      PRInt32 winWidth = width + (sizeChromeWidth ? 0 : chromeWidth),
+      int32_t screenLeft, screenTop, screenWidth, screenHeight;
+      int32_t winWidth = width + (sizeChromeWidth ? 0 : chromeWidth),
               winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
 
       screen->GetAvailRect(&screenLeft, &screenTop,

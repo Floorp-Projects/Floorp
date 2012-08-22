@@ -25,13 +25,13 @@ public:
   ~ChunkSet() {}
 
   nsresult Serialize(nsACString& aStr);
-  nsresult Set(PRUint32 aChunk);
-  nsresult Unset(PRUint32 aChunk);
+  nsresult Set(uint32_t aChunk);
+  nsresult Unset(uint32_t aChunk);
   void Clear();
   nsresult Merge(const ChunkSet& aOther);
   nsresult Remove(const ChunkSet& aOther);
 
-  bool Has(PRUint32 chunk) const;
+  bool Has(uint32_t chunk) const;
 
   uint32 Length() const { return mChunks.Length(); }
 
@@ -39,7 +39,7 @@ public:
     return WriteTArray(aOut, mChunks);
   }
 
-  nsresult Read(nsIInputStream* aIn, PRUint32 aNumElements) {
+  nsresult Read(nsIInputStream* aIn, uint32_t aNumElements) {
     return ReadTArray(aIn, &mChunks, aNumElements);
   }
 

@@ -56,7 +56,7 @@ nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 
 #ifdef DEBUG
 /* virtual */ void
-nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
+nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, int32_t aIndent) const
 {
 }
 #endif
@@ -66,7 +66,7 @@ NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
 
 #ifdef DEBUG
 /* virtual */ void
-nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
+nsHTMLStyleSheet::GenericTableRule::List(FILE* out, int32_t aIndent) const
 {
 }
 #endif
@@ -464,7 +464,7 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 
   NS_ASSERTION(mMappedAttrTable.ops, "table uninitialized");
 #ifdef DEBUG
-  PRUint32 entryCount = mMappedAttrTable.entryCount - 1;
+  uint32_t entryCount = mMappedAttrTable.entryCount - 1;
 #endif
 
   PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_REMOVE);
@@ -474,10 +474,10 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 
 #ifdef DEBUG
 /* virtual */ void
-nsHTMLStyleSheet::List(FILE* out, PRInt32 aIndent) const
+nsHTMLStyleSheet::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML Style Sheet: ", out);
   nsCAutoString urlSpec;

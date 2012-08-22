@@ -865,7 +865,7 @@ LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   nsCString msg;
   msg.Append(aMsg);
   msg.AppendLiteral(" Error code: ");
-  msg.AppendInt(PRUint32(aCode));
+  msg.AppendInt(uint32_t(aCode));
   NS_WARNING(msg.BeginReading());
 
   gfx::LogFailure(msg);
@@ -877,7 +877,7 @@ LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
 }
 
 ID3D10EffectTechnique*
-LayerD3D10::SelectShader(PRUint8 aFlags)
+LayerD3D10::SelectShader(uint8_t aFlags)
 {
   switch (aFlags) {
   case (SHADER_RGBA | SHADER_NON_PREMUL | SHADER_LINEAR | SHADER_MASK):
@@ -924,7 +924,7 @@ LayerD3D10::SelectShader(PRUint8 aFlags)
   }
 }
 
-PRUint8
+uint8_t
 LayerD3D10::LoadMaskTexture()
 {
   if (Layer* maskLayer = GetLayer()->GetMaskLayer()) {

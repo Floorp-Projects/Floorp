@@ -35,8 +35,8 @@ public:
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
   already_AddRefed<nsITransaction> GetTransaction();
   virtual nsresult GetIsBatch(bool *aIsBatch);
-  virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
-  virtual nsresult GetChild(PRInt32 aIndex, nsTransactionItem **aChild);
+  virtual nsresult GetNumberOfChildren(int32_t *aNumChildren);
+  virtual nsresult GetChild(int32_t aIndex, nsTransactionItem **aChild);
 
   virtual nsresult DoTransaction(void);
   virtual nsresult UndoTransaction(nsTransactionManager *aTxMgr);
@@ -50,8 +50,8 @@ private:
   virtual nsresult RecoverFromUndoError(nsTransactionManager *aTxMgr);
   virtual nsresult RecoverFromRedoError(nsTransactionManager *aTxMgr);
 
-  virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
-  virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
+  virtual nsresult GetNumberOfUndoItems(int32_t *aNumItems);
+  virtual nsresult GetNumberOfRedoItems(int32_t *aNumItems);
 };
 
 #endif // nsTransactionItem_h__

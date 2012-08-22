@@ -102,7 +102,7 @@ NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
                                bool aUseCapture, bool aWantsUntrusted,
-                               PRUint8 aOptionalArgc)
+                               uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
@@ -120,7 +120,7 @@ nsWindowRoot::AddSystemEventListener(const nsAString& aType,
                                      nsIDOMEventListener *aListener,
                                      bool aUseCapture,
                                      bool aWantsUntrusted,
-                                     PRUint8 aOptionalArgc)
+                                     uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "

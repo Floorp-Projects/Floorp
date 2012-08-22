@@ -20,7 +20,7 @@ public:
   NS_DECL_NSISERVERSOCKET
 
   // nsASocketHandler methods:
-  virtual void OnSocketReady(PRFileDesc *fd, PRInt16 outFlags);
+  virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags);
   virtual void OnSocketDetached(PRFileDesc *fd);
 
   nsServerSocket();

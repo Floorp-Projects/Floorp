@@ -108,7 +108,7 @@ nsGSettingsCollection::KeyExists(const nsACString& aKey)
   if (!mKeys)
     mKeys = g_settings_list_keys(mSettings);
 
-  for (PRUint32 i = 0; mKeys[i] != NULL; i++) {
+  for (uint32_t i = 0; mKeys[i] != NULL; i++) {
     if (aKey.Equals(mKeys[i]))
       return true;
   }
@@ -163,7 +163,7 @@ nsGSettingsCollection::SetBoolean(const nsACString& aKey,
 
 NS_IMETHODIMP
 nsGSettingsCollection::SetInt(const nsACString& aKey,
-                              PRInt32 aValue)
+                              int32_t aValue)
 {
   GVariant *value = g_variant_new_int32(aValue);
   if (!value)
@@ -221,7 +221,7 @@ nsGSettingsCollection::GetBoolean(const nsACString& aKey,
 
 NS_IMETHODIMP
 nsGSettingsCollection::GetInt(const nsACString& aKey,
-                              PRInt32* aResult)
+                              int32_t* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -308,7 +308,7 @@ nsGSettingsService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(kGSettingsSymbols); i++) {
+  for (uint32_t i = 0; i < ArrayLength(kGSettingsSymbols); i++) {
     *kGSettingsSymbols[i].function =
       PR_FindFunctionSymbol(gioLib, kGSettingsSymbols[i].functionName);
     if (!*kGSettingsSymbols[i].function) {
@@ -338,7 +338,7 @@ nsGSettingsService::GetCollectionForSchema(const nsACString& schema,
 
   const char * const *schemas = g_settings_list_schemas();
 
-  for (PRUint32 i = 0; schemas[i] != NULL; i++) {
+  for (uint32_t i = 0; schemas[i] != NULL; i++) {
     if (schema.Equals(schemas[i])) {
       GSettings *settings = g_settings_new(PromiseFlatCString(schema).get());
       nsGSettingsCollection *mozGSettings = new nsGSettingsCollection(settings);

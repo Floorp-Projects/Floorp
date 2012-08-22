@@ -23,28 +23,28 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
   NS_IMETHOD FormatDateTime(const PRUnichar *locale, 
                             nsDateFormatSelector dateFormatSelector, 
                             nsTimeFormatSelector timeFormatSelector, 
-                            PRInt32 year, 
-                            PRInt32 month, 
-                            PRInt32 day, 
-                            PRInt32 hour, 
-                            PRInt32 minute, 
-                            PRInt32 second, 
+                            int32_t year, 
+                            int32_t month, 
+                            int32_t day, 
+                            int32_t hour, 
+                            int32_t minute, 
+                            int32_t second, 
                             PRUnichar **dateTimeString);
 
   NS_IMETHOD FormatDate(const PRUnichar *locale, 
                         nsDateFormatSelector dateFormatSelector, 
-                        PRInt32 year, 
-                        PRInt32 month, 
-                        PRInt32 day, 
+                        int32_t year, 
+                        int32_t month, 
+                        int32_t day, 
                         PRUnichar **dateString)
                         {return FormatDateTime(locale, dateFormatSelector, kTimeFormatNone, 
                                                year, month, day, 0, 0, 0, dateString);}
 
   NS_IMETHOD FormatTime(const PRUnichar *locale, 
                         nsTimeFormatSelector timeFormatSelector, 
-                        PRInt32 hour, 
-                        PRInt32 minute, 
-                        PRInt32 second, 
+                        int32_t hour, 
+                        int32_t minute, 
+                        int32_t second, 
                         PRUnichar **timeString)
                         {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
                                                1999, 1, 1, hour, minute, second, timeString);}
@@ -61,12 +61,12 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             const PRUnichar *aLocale, 
                             nsDateFormatSelector dateFormatSelector, 
                             nsTimeFormatSelector timeFormatSelector, 
-                            PRInt32 year, 
-                            PRInt32 month, 
-                            PRInt32 day, 
-                            PRInt32 hour, 
-                            PRInt32 minute, 
-                            PRInt32 second, 
+                            int32_t year, 
+                            int32_t month, 
+                            int32_t day, 
+                            int32_t hour, 
+                            int32_t minute, 
+                            int32_t second, 
                             PRUnichar **dateTimeString)
 {
   // We can't have a valid date with the year, month or day

@@ -16,19 +16,19 @@ interface nsIDialogParamBlock:  nsISupports {
   /** Get or set an integer to pass.
    * Index must be in the range 0..7
    */
-  PRInt32 GetInt( in PRInt32 inIndex );
-  void SetInt( in PRInt32 inIndex, in PRInt32 inInt );
+  int32_t GetInt( in int32_t inIndex );
+  void SetInt( in int32_t inIndex, in int32_t inInt );
 
   /** Set the maximum number of strings to pass. Default is 16.
    * Use before setting any string (If you want to change it from the default).
    */
-  void SetNumberStrings( in PRInt32 inNumStrings );
+  void SetNumberStrings( in int32_t inNumStrings );
 
   /** Get or set an string to pass.
     * Index starts at 0
     */
-  wstring GetString( in PRInt32 inIndex );
-  void SetString( in PRInt32 inIndex, in wstring inString);
+  wstring GetString( in int32_t inIndex );
+  void SetString( in int32_t inIndex, in wstring inString);
   
   /**
    * A place where you can store an nsIMutableArray to pass nsISupports 

@@ -37,7 +37,7 @@ class PrefCallback : public PLDHashEntryHdr {
 
     static PLDHashNumber HashKey(const PrefCallback *aKey)
     {
-      PRUint32 hash = mozilla::HashString(aKey->mDomain);
+      uint32_t hash = mozilla::HashString(aKey->mDomain);
       return mozilla::AddToHash(hash, aKey->mCanonical);
     }
 
@@ -181,7 +181,7 @@ public:
   nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch);
   virtual ~nsPrefBranch();
 
-  PRInt32 GetRootLength() { return mPrefRootLength; }
+  int32_t GetRootLength() { return mPrefRootLength; }
 
   nsresult RemoveObserverFromMap(const char *aDomain, nsISupports *aObserver);
 
@@ -202,7 +202,7 @@ protected:
                      void *aArgs);
 
 private:
-  PRInt32               mPrefRootLength;
+  int32_t               mPrefRootLength;
   nsCString             mPrefRoot;
   bool                  mIsDefault;
 
@@ -227,7 +227,7 @@ public:
 private:
   NS_IMETHOD GetData(PRUnichar**);
   NS_IMETHOD SetData(const PRUnichar* aData);
-  NS_IMETHOD SetDataWithLength(PRUint32 aLength, const PRUnichar *aData);
+  NS_IMETHOD SetDataWithLength(uint32_t aLength, const PRUnichar *aData);
 
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };

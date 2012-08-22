@@ -11,11 +11,11 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// VisitInfo
 
-VisitInfo::VisitInfo(PRInt64 aVisitId,
+VisitInfo::VisitInfo(int64_t aVisitId,
                      PRTime aVisitDate,
-                     PRUint32 aTransitionType,
+                     uint32_t aTransitionType,
                      already_AddRefed<nsIURI> aReferrer,
-                     PRInt64 aSessionId)
+                     int64_t aSessionId)
 : mVisitId(aVisitId)
 , mVisitDate(aVisitDate)
 , mTransitionType(aTransitionType)
@@ -28,7 +28,7 @@ VisitInfo::VisitInfo(PRInt64 aVisitId,
 //// mozIVisitInfo
 
 NS_IMETHODIMP
-VisitInfo::GetVisitId(PRInt64* _visitId)
+VisitInfo::GetVisitId(int64_t* _visitId)
 {
   *_visitId = mVisitId;
   return NS_OK;
@@ -42,7 +42,7 @@ VisitInfo::GetVisitDate(PRTime* _visitDate)
 }
 
 NS_IMETHODIMP
-VisitInfo::GetTransitionType(PRUint32* _transitionType)
+VisitInfo::GetTransitionType(uint32_t* _transitionType)
 {
   *_transitionType = mTransitionType;
   return NS_OK;
@@ -56,7 +56,7 @@ VisitInfo::GetReferrerURI(nsIURI** _referrer)
 }
 
 NS_IMETHODIMP
-VisitInfo::GetSessionId(PRInt64* _sessionId)
+VisitInfo::GetSessionId(int64_t* _sessionId)
 {
   *_sessionId = mSessionId;
   return NS_OK;

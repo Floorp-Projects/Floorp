@@ -19,10 +19,10 @@ struct pref_saveArgs {
 };
 
 PLDHashOperator
-pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
+pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg);
 
 PLDHashOperator
-pref_MirrorPrefs(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
+pref_MirrorPrefs(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg);
 
 nsresult
 pref_SetPrefTuple(const PrefTuple &aPref,bool set_default = false);

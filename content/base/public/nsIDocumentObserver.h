@@ -20,7 +20,7 @@ class nsIDocument;
 { 0x900bc4bc, 0x8b6c, 0x4cba, \
  { 0x82, 0xfa, 0x56, 0x8a, 0x80, 0xff, 0xfd, 0x3e } }
 
-typedef PRUint32 nsUpdateType;
+typedef uint32_t nsUpdateType;
 
 #define UPDATE_CONTENT_MODEL 0x00000001
 #define UPDATE_STYLE         0x00000002

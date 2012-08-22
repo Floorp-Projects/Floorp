@@ -316,7 +316,7 @@ public: // construction, destruction
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
   // Helper methods
-  static PRInt32 GetChildIDFor(Accessible* aAccessible);
+  static int32_t GetChildIDFor(Accessible* aAccessible);
   static HWND GetHWNDFor(Accessible* aAccessible);
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
                                         BSTR *aIA2Attributes);

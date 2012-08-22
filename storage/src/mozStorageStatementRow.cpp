@@ -54,10 +54,10 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
     nsDependentCString jsid(idBytes.ptr());
 
-    PRUint32 idx;
+    uint32_t idx;
     nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt32 type;
+    int32_t type;
     rv = mStatement->GetTypeOfIndex(idx, &type);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -69,7 +69,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       *_vp = ::JS_NumberValue(dval);
     }
     else if (type == mozIStorageValueArray::VALUE_TYPE_TEXT) {
-      PRUint32 bytes;
+      uint32_t bytes;
       const jschar *sval = reinterpret_cast<const jschar *>(
         static_cast<mozIStorageStatement *>(mStatement)->
           AsSharedWString(idx, &bytes)
@@ -82,8 +82,8 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       *_vp = STRING_TO_JSVAL(str);
     }
     else if (type == mozIStorageValueArray::VALUE_TYPE_BLOB) {
-      PRUint32 length;
-      const PRUint8 *blob = static_cast<mozIStorageStatement *>(mStatement)->
+      uint32_t length;
+      const uint8_t *blob = static_cast<mozIStorageStatement *>(mStatement)->
         AsSharedBlob(idx, &length);
       JSObject *obj = ::JS_NewArrayObject(aCtx, length, nullptr);
       if (!obj) {
@@ -93,7 +93,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       *_vp = OBJECT_TO_JSVAL(obj);
 
       // Copy the blob over to the JS array.
-      for (PRUint32 i = 0; i < length; i++) {
+      for (uint32_t i = 0; i < length; i++) {
         jsval val = INT_TO_JSVAL(blob[i]);
         if (!::JS_SetElement(aCtx, aScopeObj, i, &val)) {
           *_retval = false;
@@ -117,7 +117,7 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                          JSContext *aCtx,
                          JSObject *aScopeObj,
                          jsid aId,
-                         PRUint32 aFlags,
+                         uint32_t aFlags,
                          JSObject **_objp,
                          bool *_retval)
 {
@@ -130,7 +130,7 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
     nsDependentCString name(idBytes.ptr());
 
-    PRUint32 idx;
+    uint32_t idx;
     nsresult rv = mStatement->GetColumnIndex(name, &idx);
     if (NS_FAILED(rv)) {
       // It's highly likely that the name doesn't exist, so let the JS engine

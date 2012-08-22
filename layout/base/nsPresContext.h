@@ -87,8 +87,8 @@ enum nsPresContext_CachedIntPrefType {
 
 // IDs for the default variable and fixed fonts (not to be changed, see nsFont.h)
 // To be used for Get/SetDefaultFont(). The other IDs in nsFont.h are also supported.
-const PRUint8 kPresContext_DefaultVariableFont_ID = 0x00; // kGenericFont_moz_variable
-const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fixed
+const uint8_t kPresContext_DefaultVariableFont_ID = 0x00; // kGenericFont_moz_variable
+const uint8_t kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fixed
 
 #ifdef DEBUG
 struct nsAutoLayoutPhase;
@@ -105,7 +105,7 @@ class nsInvalidateRequestList {
 public:
   struct Request {
     nsRect   mRect;
-    PRUint32 mFlags;
+    uint32_t mFlags;
   };
 
   nsTArray<Request> mRequests;
@@ -247,14 +247,14 @@ public:
   /**
    * Access the image animation mode for this context
    */
-  PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
-  virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(PRUint16 aMode);
-  NS_HIDDEN_(void) SetImageAnimationModeInternal(PRUint16 aMode);
+  uint16_t     ImageAnimationMode() const { return mImageAnimationMode; }
+  virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(uint16_t aMode);
+  NS_HIDDEN_(void) SetImageAnimationModeInternal(uint16_t aMode);
 #ifdef _IMPL_NS_LAYOUT
-  void SetImageAnimationMode(PRUint16 aMode)
+  void SetImageAnimationMode(uint16_t aMode)
   { SetImageAnimationModeInternal(aMode); }
 #else
-  void SetImageAnimationMode(PRUint16 aMode)
+  void SetImageAnimationMode(uint16_t aMode)
   { SetImageAnimationModeExternal(aMode); }
 #endif
 
@@ -296,7 +296,7 @@ public:
    * the user's preference for font size for that generic and the
    * given language.
    */
-  NS_HIDDEN_(const nsFont*) GetDefaultFont(PRUint8 aFontID,
+  NS_HIDDEN_(const nsFont*) GetDefaultFont(uint8_t aFontID,
                                            nsIAtom *aLanguage) const;
 
   /** Get a cached boolean pref, by its type */
@@ -321,7 +321,7 @@ public:
 
   /** Get a cached integer pref, by its type */
   // *  - initially created for bugs 30910, 61883, 74186, 84398
-  PRInt32 GetCachedIntPref(nsPresContext_CachedIntPrefType aPrefType) const
+  int32_t GetCachedIntPref(nsPresContext_CachedIntPrefType aPrefType) const
   {
     // If called with a constant parameter, the compiler should optimize
     // this switch statement away.
@@ -355,9 +355,9 @@ public:
   void SetBodyTextColor(nscolor aColor) { mBodyTextColor = aColor; }
 
   bool GetUseFocusColors() const { return mUseFocusColors; }
-  PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
+  uint8_t FocusRingWidth() const { return mFocusRingWidth; }
   bool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
-  PRUint8 GetFocusRingStyle() const { return mFocusRingStyle; }
+  uint8_t GetFocusRingStyle() const { return mFocusRingStyle; }
 
   NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
@@ -471,12 +471,12 @@ public:
    * Get the minimum font size for the specified language. If aLanguage
    * is nullptr, then the document's language is used.
    */
-  PRInt32 MinFontSize(nsIAtom *aLanguage) const {
+  int32_t MinFontSize(nsIAtom *aLanguage) const {
     const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage);
     return NS_MAX(mMinFontSize, prefs->mMinimumFontSize);
   }
 
-  void SetMinFontSize(PRInt32 aMinFontSize) {
+  void SetMinFontSize(int32_t aMinFontSize) {
     if (aMinFontSize == mMinFontSize)
       return;
 
@@ -507,11 +507,11 @@ public:
    */
   float ScreenWidthInchesForFontInflation(bool* aChanged = nullptr);
 
-  static PRInt32 AppUnitsPerCSSPixel() { return nsDeviceContext::AppUnitsPerCSSPixel(); }
-  PRUint32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
-  static PRInt32 AppUnitsPerCSSInch() { return nsDeviceContext::AppUnitsPerCSSInch(); }
+  static int32_t AppUnitsPerCSSPixel() { return nsDeviceContext::AppUnitsPerCSSPixel(); }
+  uint32_t AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
+  static int32_t AppUnitsPerCSSInch() { return nsDeviceContext::AppUnitsPerCSSInch(); }
 
-  static nscoord CSSPixelsToAppUnits(PRInt32 aPixels)
+  static nscoord CSSPixelsToAppUnits(int32_t aPixels)
   { return NSIntPixelsToAppUnits(aPixels,
                                  nsDeviceContext::AppUnitsPerCSSPixel()); }
 
@@ -519,7 +519,7 @@ public:
   { return NSFloatPixelsToAppUnits(aPixels,
              float(nsDeviceContext::AppUnitsPerCSSPixel())); }
 
-  static PRInt32 AppUnitsToIntCSSPixels(nscoord aAppUnits)
+  static int32_t AppUnitsToIntCSSPixels(nscoord aAppUnits)
   { return NSAppUnitsToIntPixels(aAppUnits,
              float(nsDeviceContext::AppUnitsPerCSSPixel())); }
 
@@ -527,15 +527,15 @@ public:
   { return NSAppUnitsToFloatPixels(aAppUnits,
              float(nsDeviceContext::AppUnitsPerCSSPixel())); }
 
-  nscoord DevPixelsToAppUnits(PRInt32 aPixels) const
+  nscoord DevPixelsToAppUnits(int32_t aPixels) const
   { return NSIntPixelsToAppUnits(aPixels,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
 
-  PRInt32 AppUnitsToDevPixels(nscoord aAppUnits) const
+  int32_t AppUnitsToDevPixels(nscoord aAppUnits) const
   { return NSAppUnitsToIntPixels(aAppUnits,
              float(mDeviceContext->AppUnitsPerDevPixel())); }
 
-  PRInt32 CSSPixelsToDevPixels(PRInt32 aPixels)
+  int32_t CSSPixelsToDevPixels(int32_t aPixels)
   { return AppUnitsToDevPixels(CSSPixelsToAppUnits(aPixels)); }
 
   float CSSPixelsToDevPixels(float aPixels)
@@ -544,10 +544,10 @@ public:
                                    float(mDeviceContext->AppUnitsPerDevPixel()));
   }
 
-  PRInt32 DevPixelsToIntCSSPixels(PRInt32 aPixels)
+  int32_t DevPixelsToIntCSSPixels(int32_t aPixels)
   { return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels)); }
 
-  float DevPixelsToFloatCSSPixels(PRInt32 aPixels)
+  float DevPixelsToFloatCSSPixels(int32_t aPixels)
   { return AppUnitsToFloatCSSPixels(DevPixelsToAppUnits(aPixels)); }
 
   // If there is a remainder, it is rounded to nearest app units.
@@ -584,8 +584,8 @@ public:
   struct ScrollbarStyles {
     // Always one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
     // or NS_STYLE_OVERFLOW_AUTO.
-    PRUint8 mHorizontal, mVertical;
-    ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
+    uint8_t mHorizontal, mVertical;
+    ScrollbarStyles(uint8_t h, uint8_t v) : mHorizontal(h), mVertical(v) {}
     ScrollbarStyles() {}
     bool operator==(const ScrollbarStyles& aStyles) const {
       return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
@@ -594,7 +594,7 @@ public:
       return aStyles.mHorizontal != mHorizontal || aStyles.mVertical != mVertical;
     }
   };
-  void SetViewportOverflowOverride(PRUint8 aX, PRUint8 aY)
+  void SetViewportOverflowOverride(uint8_t aX, uint8_t aY)
   {
     mViewportStyleOverflow.mHorizontal = aX;
     mViewportStyleOverflow.mVertical = aY;
@@ -673,7 +673,7 @@ public:
   /**
    * Set the Bidi options for the presentation context
    */  
-  NS_HIDDEN_(void) SetBidi(PRUint32 aBidiOptions,
+  NS_HIDDEN_(void) SetBidi(uint32_t aBidiOptions,
                            bool aForceRestyle = false);
 
   /**
@@ -681,7 +681,7 @@ public:
    * Not inline so consumers of nsPresContext are not forced to
    * include nsIDocument.
    */
-  NS_HIDDEN_(PRUint32) GetBidi() const;
+  NS_HIDDEN_(uint32_t) GetBidi() const;
 #endif // IBMBIDI
 
   /**
@@ -761,7 +761,7 @@ public:
 #endif
 
   // Public API for native theme code to get style internals.
-  virtual bool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
+  virtual bool HasAuthorSpecifiedRules(nsIFrame *aFrame, uint32_t ruleTypeMask) const;
 
   // Is it OK to let the page specify colors and backgrounds?
   bool UseDocumentColors() const {
@@ -792,7 +792,7 @@ public:
   // Returns true on success and false on failure (not safe).
   bool EnsureSafeToHandOutCSSRules();
 
-  void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
+  void NotifyInvalidation(const nsRect& aRect, uint32_t aFlags);
   void NotifyDidPaintForSubtree();
   void FireDOMPaintEvent();
 
@@ -914,9 +914,9 @@ protected:
   NS_HIDDEN_(void) ThemeChangedInternal();
   NS_HIDDEN_(void) SysColorChangedInternal();
 
-  NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
-  NS_HIDDEN_(void) SetSMILAnimations(nsIDocument *aDoc, PRUint16 aNewMode,
-                                     PRUint16 aOldMode);
+  NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, uint16_t aMode);
+  NS_HIDDEN_(void) SetSMILAnimations(nsIDocument *aDoc, uint16_t aNewMode,
+                                     uint16_t aOldMode);
   NS_HIDDEN_(void) GetDocumentColorPreferences();
 
   NS_HIDDEN_(void) PreferenceChanged(const char* aPrefName);
@@ -1064,14 +1064,14 @@ protected:
 
   PRCList               mDOMMediaQueryLists;
 
-  PRInt32               mMinFontSize;   // Min font size, defaults to 0
+  int32_t               mMinFontSize;   // Min font size, defaults to 0
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
 
   float                 mLastFontInflationScreenWidth;
 
-  PRInt32               mCurAppUnitsPerDevPixel;
-  PRInt32               mAutoQualityMinFontSizePixelsPref;
+  int32_t               mCurAppUnitsPerDevPixel;
+  int32_t               mAutoQualityMinFontSizePixelsPref;
 
   nsCOMPtr<nsITheme> mTheme;
   nsCOMPtr<nsILanguageAtomService> mLangService;
@@ -1103,16 +1103,16 @@ protected:
   nscolor               mBodyTextColor;
 
   ScrollbarStyles       mViewportStyleOverflow;
-  PRUint8               mFocusRingWidth;
+  uint8_t               mFocusRingWidth;
 
-  PRUint16              mImageAnimationMode;
-  PRUint16              mImageAnimationModePref;
+  uint16_t              mImageAnimationMode;
+  uint16_t              mImageAnimationModePref;
 
   LangGroupFontPrefs    mLangGroupFontPrefs;
 
   nscoord               mBorderWidthTable[3];
 
-  PRUint32              mInterruptChecksToSkip;
+  uint32_t              mInterruptChecksToSkip;
 
   mozilla::TimeStamp    mReflowStartTime;
 
@@ -1193,9 +1193,9 @@ protected:
 #ifdef DEBUG
 private:
   friend struct nsAutoLayoutPhase;
-  PRUint32 mLayoutPhaseCount[eLayoutPhase_COUNT];
+  uint32_t mLayoutPhaseCount[eLayoutPhase_COUNT];
 public:
-  PRUint32 LayoutPhaseCount(nsLayoutPhase aPhase) {
+  uint32_t LayoutPhaseCount(nsLayoutPhase aPhase) {
     return mLayoutPhaseCount[aPhase];
   }
 #endif
@@ -1295,7 +1295,7 @@ public:
    * See nsFrameManagerBase::GetGlobalGenerationNumber() for a
    * global generation number.
    */
-  PRUint32 GetDOMGeneration() { return mDOMGeneration; }
+  uint32_t GetDOMGeneration() { return mDOMGeneration; }
 
   /**
    * Add a runnable that will get called before the next paint. They will get
@@ -1344,7 +1344,7 @@ protected:
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
   nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
   nsIFrame* mUpdatePluginGeometryForFrame;
-  PRUint32 mDOMGeneration;
+  uint32_t mDOMGeneration;
   bool mNeedsToUpdatePluginGeometry;
 };
 

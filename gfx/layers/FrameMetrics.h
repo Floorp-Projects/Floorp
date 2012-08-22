@@ -23,7 +23,7 @@ namespace layers {
 struct THEBES_API FrameMetrics {
 public:
   // We use IDs to identify frames across processes.
-  typedef PRUint64 ViewID;
+  typedef uint64_t ViewID;
   static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
   static const ViewID ROOT_SCROLL_ID;   // This is the root scroll frame.
   static const ViewID START_SCROLL_ID;  // This is the ID that scrolling subframes

@@ -256,7 +256,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
     NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);         \
     return params->BindByName(aName, aValue);               \
   }                                                         \
-  NS_IMETHODIMP _class::BindByIndex(PRUint32 aIndex,        \
+  NS_IMETHODIMP _class::BindByIndex(uint32_t aIndex,        \
                                     nsIVariant *aValue)     \
   {                                                         \
     _optionalGuard                                          \
@@ -275,50 +275,50 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
                 UTF8String,                              \
                 (const nsACString &aWhere,               \
                  const nsACString &aValue),              \
-                (PRUint32 aWhere,                        \
+                (uint32_t aWhere,                        \
                  const nsACString &aValue),              \
                 (aWhere, aValue))                        \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 String,                                  \
                 (const nsACString &aWhere,               \
                  const nsAString  &aValue),              \
-                (PRUint32 aWhere,                        \
+                (uint32_t aWhere,                        \
                  const nsAString  &aValue),              \
                 (aWhere, aValue))                        \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 Double,                                  \
                 (const nsACString &aWhere,               \
                  double aValue),                         \
-                (PRUint32 aWhere,                        \
+                (uint32_t aWhere,                        \
                  double aValue),                         \
                 (aWhere, aValue))                        \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 Int32,                                   \
                 (const nsACString &aWhere,               \
-                 PRInt32 aValue),                        \
-                (PRUint32 aWhere,                        \
-                 PRInt32 aValue),                        \
+                 int32_t aValue),                        \
+                (uint32_t aWhere,                        \
+                 int32_t aValue),                        \
                 (aWhere, aValue))                        \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 Int64,                                   \
                 (const nsACString &aWhere,               \
-                 PRInt64 aValue),                        \
-                (PRUint32 aWhere,                        \
-                 PRInt64 aValue),                        \
+                 int64_t aValue),                        \
+                (uint32_t aWhere,                        \
+                 int64_t aValue),                        \
                 (aWhere, aValue))                        \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 Null,                                    \
                 (const nsACString &aWhere),              \
-                (PRUint32 aWhere),                       \
+                (uint32_t aWhere),                       \
                 (aWhere))                                \
   BIND_GEN_IMPL(_class, _optionalGuard,                  \
                 Blob,                                    \
                 (const nsACString &aWhere,               \
-                 const PRUint8 *aValue,                  \
-                 PRUint32 aValueSize),                   \
-                (PRUint32 aWhere,                        \
-                 const PRUint8 *aValue,                  \
-                 PRUint32 aValueSize),                   \
+                 const uint8_t *aValue,                  \
+                 uint32_t aValueSize),                   \
+                (uint32_t aWhere,                        \
+                 const uint8_t *aValue,                  \
+                 uint32_t aValueSize),                   \
                 (aWhere, aValue, aValueSize))
 
   

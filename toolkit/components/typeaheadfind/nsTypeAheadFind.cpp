@@ -178,7 +178,7 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::SetSelectionModeAndRepaint(PRInt16 aToggle)
+nsTypeAheadFind::SetSelectionModeAndRepaint(int16_t aToggle)
 {
   nsCOMPtr<nsISelectionController> selectionController = 
     do_QueryReferent(mSelectionController);
@@ -262,7 +262,7 @@ nsTypeAheadFind::PlayNotFoundSound()
 nsresult
 nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                            bool aIsFirstVisiblePreferred, bool aFindPrev,
-                           PRUint16* aResult)
+                           uint16_t* aResult)
 {
   *aResult = FIND_NOTFOUND;
   mFoundLink = nullptr;
@@ -353,7 +353,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
     return NS_ERROR_FAILURE;
   }
 
-  PRInt16 rangeCompareResult = 0;
+  int16_t rangeCompareResult = 0;
   mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, mSearchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning
   bool hasWrapped = (rangeCompareResult < 0);
@@ -681,7 +681,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   if (!rootNode)
     return NS_ERROR_FAILURE;
 
-  PRUint32 childCount = rootContent->GetChildCount();
+  uint32_t childCount = rootContent->GetChildCount();
 
   mSearchRange->SelectNodeContents(rootNode);
 
@@ -709,7 +709,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                    getter_AddRefs(mStartPointRange), nullptr);
   }
   else {
-    PRInt32 startOffset;
+    int32_t startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
     if (aFindPrev) {
       currentSelectionRange->GetStartContainer(getter_AddRefs(startNode));
@@ -750,7 +750,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIContent> startContent, origContent;
   aRange->GetStartContainer(getter_AddRefs(startNode));
-  PRInt32 startOffset;
+  int32_t startOffset;
   aRange->GetStartOffset(&startOffset);
 
   startContent = do_QueryInterface(startNode);
@@ -770,7 +770,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     const nsTextFragment *textFrag = startContent->GetText();
     if (textFrag) {
       // look for non whitespace character before start offset
-      for (PRInt32 index = 0; index < startOffset; index++) {
+      for (int32_t index = 0; index < startOffset; index++) {
         if (!XP_IS_SPACE(textFrag->CharAt(index))) {
           *aIsStartingLink = false;  // not at start of a node
 
@@ -841,7 +841,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 /* Find another match in the page. */
 NS_IMETHODIMP
 nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
-                           PRUint16* aResult)
+                           uint16_t* aResult)
 
 {
   *aResult = FIND_NOTFOUND;
@@ -856,7 +856,7 @@ nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
 
 NS_IMETHODIMP
 nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
-                      PRUint16* aResult)
+                      uint16_t* aResult)
 {
   *aResult = FIND_NOTFOUND;
 
@@ -929,7 +929,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   mSoundInterface = nullptr;
 #endif
 
-  PRInt32 bufferLength = mTypeAheadBuffer.Length();
+  int32_t bufferLength = mTypeAheadBuffer.Length();
 
   mTypeAheadBuffer = aSearchString;
 
@@ -1076,7 +1076,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return true; //  Don't need it to be on screen, just in rendering tree
 
   // Get the next in flow frame that contains the range start
-  PRInt32 startRangeOffset, startFrameOffset, endFrameOffset;
+  int32_t startRangeOffset, startFrameOffset, endFrameOffset;
   aRange->GetStartOffset(&startRangeOffset);
   while (true) {
     frame->GetOffsets(startFrameOffset, endFrameOffset);
@@ -1091,7 +1091,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   // Set up the variables we need, return true if we can't get at them all
-  const PRUint16 kMinPixels  = 12;
+  const uint16_t kMinPixels  = 12;
   nscoord minDistance = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
 
   // Get the bounds of the current frame, relative to the current view.

@@ -44,7 +44,7 @@ public:
                                   nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
                                   const nsIID *aProtoChainInterface,
                                   const nsIID **aInterfaces,
-                                  PRUint32 aScriptableFlags,
+                                  uint32_t aScriptableFlags,
                                   bool aHasClassInterface,
                                   const nsCID *aConstructorCID);
 };

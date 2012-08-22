@@ -35,8 +35,8 @@ namespace hal_impl {
 
 namespace {
 struct LockCount {
-  PRUint32 numLocks;
-  PRUint32 numHidden;
+  uint32_t numLocks;
+  uint32_t numHidden;
 };
 }
 

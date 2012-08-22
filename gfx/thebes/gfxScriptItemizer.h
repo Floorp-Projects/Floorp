@@ -60,12 +60,12 @@
 class gfxScriptItemizer
 {
 public:
-    gfxScriptItemizer(const PRUnichar *src, PRUint32 length);
+    gfxScriptItemizer(const PRUnichar *src, uint32_t length);
 
-    void SetText(const PRUnichar *src, PRUint32 length);
+    void SetText(const PRUnichar *src, uint32_t length);
 
-    bool Next(PRUint32& aRunStart, PRUint32& aRunLimit,
-              PRInt32& aRunScript);
+    bool Next(uint32_t& aRunStart, uint32_t& aRunLimit,
+              int32_t& aRunScript);
 
 protected:
     void reset() {
@@ -77,26 +77,26 @@ protected:
         fixupCount  =  0;
     }
 
-    void push(PRUint32 endPairChar, PRInt32 scriptCode);
+    void push(uint32_t endPairChar, int32_t scriptCode);
     void pop();
-    void fixup(PRInt32 scriptCode);
+    void fixup(int32_t scriptCode);
 
     struct ParenStackEntry {
-        PRUint32 endPairChar;
-        PRInt32  scriptCode;
+        uint32_t endPairChar;
+        int32_t  scriptCode;
     };
 
     const PRUnichar *textPtr;
-    PRUint32 textLength;
+    uint32_t textLength;
 
-    PRUint32 scriptStart;
-    PRUint32 scriptLimit;
-    PRInt32  scriptCode;
+    uint32_t scriptStart;
+    uint32_t scriptLimit;
+    int32_t  scriptCode;
 
     struct ParenStackEntry parenStack[PAREN_STACK_DEPTH];
-    PRUint32 parenSP;
-    PRUint32 pushCount;
-    PRUint32 fixupCount;
+    uint32_t parenSP;
+    uint32_t pushCount;
+    uint32_t fixupCount;
 };
 
 #endif /* GFX_SCRIPTITEMIZER_H */

@@ -31,7 +31,7 @@ public:
      * Synchronously launch the plugin process. If the process fails to launch
      * after timeoutMs, this method will return false.
      */
-    bool Launch(PRInt32 timeoutMs);
+    bool Launch(int32_t timeoutMs);
 
     void Delete();
 

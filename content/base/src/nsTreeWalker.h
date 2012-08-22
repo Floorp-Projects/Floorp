@@ -28,7 +28,7 @@ public:
     NS_DECL_NSIDOMTREEWALKER
 
     nsTreeWalker(nsINode *aRoot,
-                 PRUint32 aWhatToShow,
+                 uint32_t aWhatToShow,
                  nsIDOMNodeFilter *aFilter);
     virtual ~nsTreeWalker();
 

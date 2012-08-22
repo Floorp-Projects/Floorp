@@ -42,7 +42,7 @@ public:
   // nsIDOMHTMLVideoElement
   NS_DECL_NSIDOMHTMLVIDEOELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);

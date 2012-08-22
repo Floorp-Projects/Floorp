@@ -26,7 +26,7 @@ class nsXPathEvaluatorParseContext : public txIParseContext
 {
 public:
     nsXPathEvaluatorParseContext(nsIDOMXPathNSResolver* aResolver,
-                                 nsTArray<PRInt32> *aNamespaceIDs,
+                                 nsTArray<int32_t> *aNamespaceIDs,
                                  nsTArray<nsCString> *aContractIDs,
                                  nsCOMArray<nsISupports> *aState,
                                  bool aIsCaseSensitive)
@@ -47,15 +47,15 @@ public:
         return mLastError;
     }
 
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
-    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID);
+    nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
                                  FunctionCall** aFunction);
     bool caseInsensitiveNameTests();
-    void SetErrorOffset(PRUint32 aOffset);
+    void SetErrorOffset(uint32_t aOffset);
 
 private:
     nsIDOMXPathNSResolver* mResolver;
-    nsTArray<PRInt32> *mNamespaceIDs;
+    nsTArray<int32_t> *mNamespaceIDs;
     nsTArray<nsCString> *mContractIDs;
     nsCOMArray<nsISupports> *mState;
     nsresult mLastError;
@@ -89,7 +89,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    return CreateExpression(aExpression, aResolver, (nsTArray<PRInt32>*)nullptr,
+    return CreateExpression(aExpression, aResolver, (nsTArray<int32_t>*)nullptr,
                             nullptr, nullptr, aResult);
 }
 
@@ -112,7 +112,7 @@ NS_IMETHODIMP
 nsXPathEvaluator::Evaluate(const nsAString & aExpression,
                            nsIDOMNode *aContextNode,
                            nsIDOMXPathNSResolver *aResolver,
-                           PRUint16 aType,
+                           uint16_t aType,
                            nsISupports *aInResult,
                            nsISupports **aResult)
 {
@@ -140,9 +140,9 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsCOMArray<nsISupports> *aState,
                                    nsIDOMXPathExpression **aResult)
 {
-    nsTArray<PRInt32> namespaceIDs;
+    nsTArray<int32_t> namespaceIDs;
     if (aNamespaceURIs) {
-        PRUint32 count = aNamespaceURIs->Length();
+        uint32_t count = aNamespaceURIs->Length();
 
         if (!aContractIDs || aContractIDs->Length() != count) {
             return NS_ERROR_FAILURE;
@@ -152,7 +152,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        PRUint32 i;
+        uint32_t i;
         for (i = 0; i < count; ++i) {
             if (aContractIDs->ElementAt(i).IsEmpty()) {
                 return NS_ERROR_FAILURE;
@@ -170,7 +170,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 nsresult
 nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
-                                   nsTArray<PRInt32> *aNamespaceIDs,
+                                   nsTArray<int32_t> *aNamespaceIDs,
                                    nsTArray<nsCString> *aContractIDs,
                                    nsCOMArray<nsISupports> *aState,
                                    nsIDOMXPathExpression **aResult)
@@ -219,7 +219,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
  */
 
 nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
-    (nsIAtom* aPrefix, PRInt32& aID)
+    (nsIAtom* aPrefix, int32_t& aID)
 {
     aID = kNameSpaceID_Unknown;
 
@@ -251,18 +251,18 @@ nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
 }
 
 extern nsresult
-TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
+TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
                             nsIAtom *aName, nsISupports *aState,
                             FunctionCall **aFunction);
 
 nsresult
 nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
-                                                  PRInt32 aID,
+                                                  int32_t aID,
                                                   FunctionCall** aFn)
 {
     nsresult rv = NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 
-    PRUint32 i, count = mNamespaceIDs ? mNamespaceIDs->Length() : 0;
+    uint32_t i, count = mNamespaceIDs ? mNamespaceIDs->Length() : 0;
     for (i = 0; i < count; ++i) {
         if (mNamespaceIDs->ElementAt(i) == aID) {
             nsISupports *state = mState ? mState->SafeObjectAt(i) : nullptr;
@@ -283,6 +283,6 @@ bool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()
 }
 
 void
-nsXPathEvaluatorParseContext::SetErrorOffset(PRUint32 aOffset)
+nsXPathEvaluatorParseContext::SetErrorOffset(uint32_t aOffset)
 {
 }

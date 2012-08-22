@@ -43,7 +43,7 @@ localeCollationHelper8(void *aService,
                        const void *aStr1,
                        int aLen2,
                        const void *aStr2,
-                       PRInt32 aComparisonStrength)
+                       int32_t aComparisonStrength)
 {
   NS_ConvertUTF8toUTF16 str1(static_cast<const char *>(aStr1), aLen1);
   NS_ConvertUTF8toUTF16 str2(static_cast<const char *>(aStr2), aLen2);
@@ -78,7 +78,7 @@ localeCollationHelper16(void *aService,
                         const void *aStr1,
                         int aLen2,
                         const void *aStr2,
-                        PRInt32 aComparisonStrength)
+                        int32_t aComparisonStrength)
 {
   const PRUnichar *buf1 = static_cast<const PRUnichar *>(aStr1);
   const PRUnichar *buf2 = static_cast<const PRUnichar *>(aStr2);

@@ -31,7 +31,7 @@ nsresult
 nsTextFragment::Init()
 {
   // Create whitespace strings
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i <= TEXTFRAG_MAX_NEWLINES; ++i) {
     sSpaceSharedString[i] = new char[1 + i + TEXTFRAG_WHITE_AFTER_NEWLINE];
     sTabSharedString[i] = new char[1 + i + TEXTFRAG_WHITE_AFTER_NEWLINE];
@@ -39,7 +39,7 @@ nsTextFragment::Init()
                    NS_ERROR_OUT_OF_MEMORY);
     sSpaceSharedString[i][0] = ' ';
     sTabSharedString[i][0] = ' ';
-    PRUint32 j;
+    uint32_t j;
     for (j = 1; j < 1 + i; ++j) {
       sSpaceSharedString[i][j] = '\n';
       sTabSharedString[i][j] = '\n';
@@ -62,7 +62,7 @@ nsTextFragment::Init()
 void
 nsTextFragment::Shutdown()
 {
-  PRUint32  i;
+  uint32_t  i;
   for (i = 0; i <= TEXTFRAG_MAX_NEWLINES; ++i) {
     delete [] sSpaceSharedString[i];
     delete [] sTabSharedString[i];
@@ -114,34 +114,34 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
   return *this;
 }
 
-static inline PRInt32
+static inline int32_t
 FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 {
 #if PR_BYTES_PER_WORD == 4
   const size_t mask = 0xff00ff00;
-  const PRUint32 alignMask = 0x3;
-  const PRUint32 numUnicharsPerWord = 2;
+  const uint32_t alignMask = 0x3;
+  const uint32_t numUnicharsPerWord = 2;
 #elif PR_BYTES_PER_WORD == 8
   const size_t mask = 0xff00ff00ff00ff00;
-  const PRUint32 alignMask = 0x7;
-  const PRUint32 numUnicharsPerWord = 4;
+  const uint32_t alignMask = 0x7;
+  const uint32_t numUnicharsPerWord = 4;
 #else
 #error Unknown platform!
 #endif
 
-  const PRInt32 len = end - str;
-  PRInt32 i = 0;
+  const int32_t len = end - str;
+  int32_t i = 0;
 
   // Align ourselves to a word boundary.
-  PRInt32 alignLen =
-    NS_MIN(len, PRInt32(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
+  int32_t alignLen =
+    NS_MIN(len, int32_t(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
   for (; i < alignLen; i++) {
     if (str[i] > 255)
       return i;
   }
 
   // Check one word at a time.
-  const PRInt32 wordWalkEnd = ((len - i) / numUnicharsPerWord) * numUnicharsPerWord;
+  const int32_t wordWalkEnd = ((len - i) / numUnicharsPerWord) * numUnicharsPerWord;
   for (; i < wordWalkEnd; i += numUnicharsPerWord) {
     const size_t word = *reinterpret_cast<const size_t*>(str + i);
     if (word & mask)
@@ -160,7 +160,7 @@ FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
 namespace mozilla {
   namespace SSE2 {
-    PRInt32 FirstNon8Bit(const PRUnichar *str, const PRUnichar *end);
+    int32_t FirstNon8Bit(const PRUnichar *str, const PRUnichar *end);
   }
 }
 #endif
@@ -172,7 +172,7 @@ namespace mozilla {
  * position 25, it may return 25, or for example 24, or 16. But it guarantees
  * there is no non-8bit character before returned value.
  */
-static inline PRInt32
+static inline int32_t
 FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
@@ -185,7 +185,7 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 }
 
 void
-nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength, bool aUpdateBidi)
+nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi)
 {
   ReleaseText();
 
@@ -244,7 +244,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength, bool aUpdateBid
   }
 
   // See if we need to store the data in ucs2 or not
-  PRInt32 first16bit = FirstNon8Bit(ucp, uend);
+  int32_t first16bit = FirstNon8Bit(ucp, uend);
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // Use ucs2 storage because we have to
@@ -279,7 +279,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength, bool aUpdateBid
 }
 
 void
-nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
+nsTextFragment::CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount)
 {
   NS_ASSERTION(aOffset >= 0, "Bad offset passed to nsTextFragment::CopyTo()!");
   NS_ASSERTION(aCount >= 0, "Bad count passed to nsTextFragment::CopyTo()!");
@@ -288,7 +288,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
     aOffset = 0;
   }
 
-  if (PRUint32(aOffset + aCount) > GetLength()) {
+  if (uint32_t(aOffset + aCount) > GetLength()) {
     aCount = mState.mLength - aOffset;
   }
 
@@ -305,7 +305,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 }
 
 void
-nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength, bool aUpdateBidi)
+nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi)
 {
   // This is a common case because some callsites create a textnode
   // with a value by creating the node and then calling AppendData.
@@ -336,7 +336,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength, bool aUpdateB
   }
 
   // Current string is a 1-byte string, check if the new data fits in one byte too.
-  PRInt32 first16bit = FirstNon8Bit(aBuffer, aBuffer + aLength);
+  int32_t first16bit = FirstNon8Bit(aBuffer, aBuffer + aLength);
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // The old data was 1-byte, but the new is not so we have to expand it
@@ -414,14 +414,14 @@ nsTextFragment::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 // To save time we only do this when we really want to know, not during
 // every allocation
 void
-nsTextFragment::UpdateBidiFlag(const PRUnichar* aBuffer, PRUint32 aLength)
+nsTextFragment::UpdateBidiFlag(const PRUnichar* aBuffer, uint32_t aLength)
 {
   if (mState.mIs2b && !mState.mIsBidi) {
     const PRUnichar* cp = aBuffer;
     const PRUnichar* end = cp + aLength;
     while (cp < end) {
       PRUnichar ch1 = *cp++;
-      PRUint32 utf32Char = ch1;
+      uint32_t utf32Char = ch1;
       if (NS_IS_HIGH_SURROGATE(ch1) &&
           cp < end &&
           NS_IS_LOW_SURROGATE(*cp)) {

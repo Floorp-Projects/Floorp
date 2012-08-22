@@ -79,21 +79,21 @@ public:
 
     static nsresult  OpenInputStreamForEntry(nsCacheEntry *     entry,
                                              nsCacheAccessMode  mode,
-                                             PRUint32           offset,
+                                             uint32_t           offset,
                                              nsIInputStream **  result);
 
     static nsresult  OpenOutputStreamForEntry(nsCacheEntry *     entry,
                                               nsCacheAccessMode  mode,
-                                              PRUint32           offset,
+                                              uint32_t           offset,
                                               nsIOutputStream ** result);
 
-    static nsresult  OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
+    static nsresult  OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize);
 
     static nsresult  SetCacheElement(nsCacheEntry * entry, nsISupports * element);
 
     static nsresult  ValidateEntry(nsCacheEntry * entry);
 
-    static PRInt32   CacheCompressionLevel();
+    static int32_t   CacheCompressionLevel();
 
     /**
      * Methods called by any cache classes
@@ -102,7 +102,7 @@ public:
     static
     nsCacheService * GlobalInstance()   { return gService; }
 
-    static PRInt64   MemoryDeviceSize();
+    static int64_t   MemoryDeviceSize();
     
     static nsresult  DoomEntry(nsCacheEntry * entry);
 
@@ -125,7 +125,7 @@ public:
      * application's profile directory.
      */
     nsresult GetCustomOfflineDevice(nsIFile *aProfileDir,
-                                    PRInt32 aQuota,
+                                    int32_t aQuota,
                                     nsOfflineCacheDevice **aDevice);
 
     // This method may be called to release an object while the cache service
@@ -152,21 +152,21 @@ public:
 
     static void      SetDiskCacheEnabled(bool    enabled);
     // Sets the disk cache capacity (in kilobytes)
-    static void      SetDiskCacheCapacity(PRInt32  capacity);
+    static void      SetDiskCacheCapacity(int32_t  capacity);
     // Set max size for a disk-cache entry (in KB). -1 disables limit up to
     // 1/8th of disk cache size
-    static void      SetDiskCacheMaxEntrySize(PRInt32  maxSize);
+    static void      SetDiskCacheMaxEntrySize(int32_t  maxSize);
     // Set max size for a memory-cache entry (in kilobytes). -1 disables
     // limit up to 90% of memory cache size
-    static void      SetMemoryCacheMaxEntrySize(PRInt32  maxSize);
+    static void      SetMemoryCacheMaxEntrySize(int32_t  maxSize);
 
     static void      SetOfflineCacheEnabled(bool    enabled);
     // Sets the offline cache capacity (in kilobytes)
-    static void      SetOfflineCacheCapacity(PRInt32  capacity);
+    static void      SetOfflineCacheCapacity(int32_t  capacity);
 
     static void      SetMemoryCache();
 
-    static void      SetCacheCompressionLevel(PRInt32 level);
+    static void      SetCacheCompressionLevel(int32_t level);
 
     // Starts smart cache size computation if disk device is available
     static nsresult  SetDiskSmartSize();
@@ -203,7 +203,7 @@ private:
     nsresult         CreateDiskDevice();
     nsresult         CreateOfflineDevice();
     nsresult         CreateCustomOfflineDevice(nsIFile *aProfileDir,
-                                               PRInt32 aQuota,
+                                               int32_t aQuota,
                                                nsOfflineCacheDevice **aDevice);
     nsresult         CreateMemoryDevice();
 
@@ -254,12 +254,12 @@ private:
     static
     PLDHashOperator  DeactivateAndClearEntry(PLDHashTable *    table,
                                              PLDHashEntryHdr * hdr,
-                                             PRUint32          number,
+                                             uint32_t          number,
                                              void *            arg);
     static
     PLDHashOperator  RemoveActiveEntry(PLDHashTable *    table,
                                        PLDHashEntryHdr * hdr,
-                                       PRUint32          number,
+                                       uint32_t          number,
                                        void *            arg);
 
     static
@@ -306,16 +306,16 @@ private:
 
     // stats
     
-    PRUint32                        mTotalEntries;
-    PRUint32                        mCacheHits;
-    PRUint32                        mCacheMisses;
-    PRUint32                        mMaxKeyLength;
-    PRUint32                        mMaxDataSize;
-    PRUint32                        mMaxMetaSize;
+    uint32_t                        mTotalEntries;
+    uint32_t                        mCacheHits;
+    uint32_t                        mCacheMisses;
+    uint32_t                        mMaxKeyLength;
+    uint32_t                        mMaxDataSize;
+    uint32_t                        mMaxMetaSize;
 
     // Unexpected error totals
-    PRUint32                        mDeactivateFailures;
-    PRUint32                        mDeactivatedUnboundEntries;
+    uint32_t                        mDeactivateFailures;
+    uint32_t                        mDeactivatedUnboundEntries;
 };
 
 /******************************************************************************

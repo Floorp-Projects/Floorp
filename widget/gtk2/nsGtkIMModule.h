@@ -34,7 +34,7 @@ protected:
 public:
     nsrefcnt AddRef()
     {
-        NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "mRefCnt is negative");
+        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "mRefCnt is negative");
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "nsGtkIMModule", sizeof(*this));
         return mRefCnt;
@@ -131,7 +131,7 @@ protected:
     // current content.  When <textarea> or <input> have focus, it means offset
     // from the first character of them.  When a HTML editor has focus, it
     // means offset from the first character of the root element of the editor.
-    PRUint32 mCompositionStart;
+    uint32_t mCompositionStart;
 
     // mDispatchedCompositionString is the latest composition string which
     // was dispatched by compositionupdate event.
@@ -270,16 +270,16 @@ protected:
     void SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList);
 
     // Sets the offset's cursor position to IME.
-    void SetCursorPosition(PRUint32 aTargetOffset);
+    void SetCursorPosition(uint32_t aTargetOffset);
 
     // Queries the current selection offset of the window.
-    PRUint32 GetSelectionOffset(nsWindow* aWindow);
+    uint32_t GetSelectionOffset(nsWindow* aWindow);
 
     // Get current paragraph text content and cursor position
-    nsresult GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos);
+    nsresult GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos);
 
     // Delete text portion
-    nsresult DeleteText(const PRInt32 aOffset, const PRUint32 aNChars);
+    nsresult DeleteText(const int32_t aOffset, const uint32_t aNChars);
 
     // Initializes the GUI event.
     void InitEvent(nsGUIEvent& aEvent);

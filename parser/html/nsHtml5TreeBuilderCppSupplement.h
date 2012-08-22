@@ -43,7 +43,7 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 }
 
 nsIContent**
-nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes)
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes)
 {
   NS_PRECONDITION(aAttributes, "Got null attributes.");
   NS_PRECONDITION(aName, "Got null name.");
@@ -201,7 +201,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
 }
 
 nsIContent**
-nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes, nsIContent** aFormElement)
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes, nsIContent** aFormElement)
 {
   nsIContent** content = createElement(aNamespace, aName, aAttributes);
   if (aFormElement) {
@@ -257,7 +257,7 @@ nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContent** aOldParent, nsIConten
 }
 
 void
-nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength, nsIContent** aTable, nsIContent** aStackParent)
+nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, int32_t aStart, int32_t aLength, nsIContent** aTable, nsIContent** aStackParent)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aTable, "Null table");
@@ -284,7 +284,7 @@ nsHtml5TreeBuilder::insertFosterParentedChild(nsIContent** aChild, nsIContent** 
 }
 
 void
-nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
+nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, PRUnichar* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
@@ -309,7 +309,7 @@ nsHtml5TreeBuilder::appendIsindexPrompt(nsIContent** aParent)
 }
 
 void
-nsHtml5TreeBuilder::appendComment(nsIContent** aParent, PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
+nsHtml5TreeBuilder::appendComment(nsIContent** aParent, PRUnichar* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
@@ -326,7 +326,7 @@ nsHtml5TreeBuilder::appendComment(nsIContent** aParent, PRUnichar* aBuffer, PRIn
 }
 
 void
-nsHtml5TreeBuilder::appendCommentToDocument(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
+nsHtml5TreeBuilder::appendCommentToDocument(PRUnichar* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
 
@@ -394,7 +394,7 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
 }
 
 void
-nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent** aElement)
+nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent** aElement)
 {
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
@@ -458,7 +458,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 }
 
 void
-nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent** aElement)
+nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent** aElement)
 {
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
@@ -546,12 +546,12 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 }
 
 void
-nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, PRInt32 aStart, PRInt32 aLength)
+nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, int32_t aStart, int32_t aLength)
 {
-  PRInt32 newFillLen = charBufferLen + aLength;
+  int32_t newFillLen = charBufferLen + aLength;
   if (newFillLen > charBuffer.length) {
-    PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(newAllocLength);
+    int32_t newAllocLength = newFillLen + (newFillLen >> 1);
+    jArray<PRUnichar,int32_t> newBuf = jArray<PRUnichar,int32_t>::newJArray(newAllocLength);
     memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
     charBuffer = newBuf;
   }
@@ -576,7 +576,7 @@ nsHtml5TreeBuilder::AllocateContentHandle()
 bool
 nsHtml5TreeBuilder::HasScript()
 {
-  PRUint32 len = mOpQueue.Length();
+  uint32_t len = mOpQueue.Length();
   if (!len) {
     return false;
   }
@@ -619,7 +619,7 @@ nsHtml5TreeBuilder::FlushLoads()
 
 void
 nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset, 
-                                       PRInt32 aCharsetSource)
+                                       int32_t aCharsetSource)
 {
   if (mSpeculativeLoadStage) {
     mSpeculativeLoadQueue.AppendElement()->InitSetDocumentCharset(
@@ -647,8 +647,8 @@ nsHtml5TreeBuilder::StreamEnded()
 
 void
 nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
-                                         PRInt32 aCharsetSource,
-                                         PRInt32 aLineNumber)
+                                         int32_t aCharsetSource,
+                                         int32_t aLineNumber)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -661,13 +661,13 @@ nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
 void
 nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
                                               bool aError,
-                                              PRInt32 aLineNumber)
+                                              int32_t aLineNumber)
 {
   mOpQueue.AppendElement()->Init(aMsgId, aError, aLineNumber);
 }
 
 void
-nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine)
+nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine)
 {
   NS_PRECONDITION(HasScript(), "No script to add a snapshot to!");
   NS_PRECONDITION(aSnapshot, "Got null snapshot.");
@@ -696,11 +696,11 @@ nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
            false);
 
   // XUL will add the "Source of: " prefix.
-  PRUint32 length = aTitle.Length();
+  uint32_t length = aTitle.Length();
   if (length > PR_INT32_MAX) {
     length = PR_INT32_MAX;
   }
-  characters(aTitle.get(), 0, (PRInt32)length);
+  characters(aTitle.get(), 0, (int32_t)length);
   endTag(nsHtml5ElementName::ELT_TITLE);
 
   startTag(nsHtml5ElementName::ELT_LINK,
@@ -757,7 +757,7 @@ nsHtml5TreeBuilder::errStrayEndTag(nsIAtom* aName)
 }
 
 void
-nsHtml5TreeBuilder::errUnclosedElements(PRInt32 aIndex, nsIAtom* aName)
+nsHtml5TreeBuilder::errUnclosedElements(int32_t aIndex, nsIAtom* aName)
 {
   if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errUnclosedElements", aName);
@@ -765,7 +765,7 @@ nsHtml5TreeBuilder::errUnclosedElements(PRInt32 aIndex, nsIAtom* aName)
 }
 
 void
-nsHtml5TreeBuilder::errUnclosedElementsImplied(PRInt32 aIndex, nsIAtom* aName)
+nsHtml5TreeBuilder::errUnclosedElementsImplied(int32_t aIndex, nsIAtom* aName)
 {
   if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errUnclosedElementsImplied",
@@ -774,7 +774,7 @@ nsHtml5TreeBuilder::errUnclosedElementsImplied(PRInt32 aIndex, nsIAtom* aName)
 }
 
 void
-nsHtml5TreeBuilder::errUnclosedElementsCell(PRInt32 aIndex)
+nsHtml5TreeBuilder::errUnclosedElementsCell(int32_t aIndex)
 {
   if (NS_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errUnclosedElementsCell");

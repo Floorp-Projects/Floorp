@@ -83,7 +83,7 @@ public:
                       nsIURI*          aSheetURL,
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
-                      PRUint32         aLineNumber,
+                      uint32_t         aLineNumber,
                       bool             aAllowUnsafeRules);
 
   // Parse HTML style attribute or its equivalent in other markup
@@ -132,7 +132,7 @@ public:
    */
   nsresult ParseMediaList(const nsSubstring& aBuffer,
                           nsIURI*            aURL,
-                          PRUint32           aLineNumber,
+                          uint32_t           aLineNumber,
                           nsMediaList*       aMediaList,
                           bool               aHTMLMode);
 
@@ -144,7 +144,7 @@ public:
    */
   bool ParseColorString(const nsSubstring& aBuffer,
                         nsIURI*            aURL,
-                        PRUint32           aLineNumber,
+                        uint32_t           aLineNumber,
                         nsCSSValue&        aValue);
 
   /**
@@ -153,7 +153,7 @@ public:
    */
   nsresult ParseSelectorString(const nsSubstring&  aSelectorString,
                                nsIURI*             aURL,
-                               PRUint32            aLineNumber,
+                               uint32_t            aLineNumber,
                                nsCSSSelectorList** aSelectorList);
 
   /*
@@ -163,7 +163,7 @@ public:
   already_AddRefed<nsCSSKeyframeRule>
   ParseKeyframeRule(const nsSubstring& aBuffer,
                     nsIURI*            aURL,
-                    PRUint32           aLineNumber);
+                    uint32_t           aLineNumber);
 
   /*
    * Parse a selector list for a keyframe rule.  Return whether
@@ -171,7 +171,7 @@ public:
    */
   bool ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                    nsIURI*            aURL,
-                                   PRUint32           aLineNumber,
+                                   uint32_t           aLineNumber,
                                    InfallibleTArray<float>& aSelectorList);
 
 protected:

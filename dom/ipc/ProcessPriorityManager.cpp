@@ -213,7 +213,7 @@ ProcessPriorityManager::RecomputeNumVisibleWindows()
   // top-level content windows.
 
   bool allHidden = true;
-  for (PRUint32 i = 0; i < mWindows.Length(); i++) {
+  for (uint32_t i = 0; i < mWindows.Length(); i++) {
     nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindows[i]);
     if (!window) {
       mWindows.RemoveElementAt(i);
@@ -257,7 +257,7 @@ ProcessPriorityManager::SetPriority(ProcessPriority aPriority)
   if (aPriority == PROCESS_PRIORITY_BACKGROUND) {
     // If this is a foreground --> background transition, give ourselves a
     // grace period before informing hal.
-    PRUint32 gracePeriodMS = Preferences::GetUint("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
+    uint32_t gracePeriodMS = Preferences::GetUint("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
     if (mGracePeriodTimer) {
       LOG("Grace period timer already active.");
       return;

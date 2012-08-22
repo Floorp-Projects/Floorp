@@ -38,18 +38,18 @@ public:
    *  @param aIsSelected     [OUT] true if the frame that maps aCell is selected
    *                               in the presentation shell that owns this.
    */
-  NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
+  NS_IMETHOD GetCellDataAt(int32_t aRowIndex, int32_t aColIndex,
                            nsIDOMElement* &aCell,   //out params
-                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
-                           PRInt32& aRowSpan, PRInt32& aColSpan,
-                           PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
+                           int32_t& aStartRowIndex, int32_t& aStartColIndex, 
+                           int32_t& aRowSpan, int32_t& aColSpan,
+                           int32_t& aActualRowSpan, int32_t& aActualColSpan,
                            bool& aIsSelected)=0;
 
   /** Get the number of rows and column for a table from the frame's cellmap 
    *  Some rows may not have enough cells (the number returned is the maximum possible),
    *  which displays as a ragged-right edge table
    */
-  NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)=0;
+  NS_IMETHOD GetTableSize(int32_t& aRowCount, int32_t& aColCount)=0;
 
   /**
    * Retrieves the index of the cell at the given coordinates.
@@ -61,8 +61,8 @@ public:
    * @param aColumn  [in] the column the cell is in
    * @param aIndex   [out] the index to be returned
    */
-  NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
-                                    PRInt32 *aIndex) = 0;
+  NS_IMETHOD GetIndexByRowAndColumn(int32_t aRow, int32_t aColumn,
+                                    int32_t *aIndex) = 0;
 
   /**
    * Retrieves the coordinates of the cell at the given index.
@@ -73,8 +73,8 @@ public:
    * @param aRow    [out] the resulting row coordinate
    * @param aColumn [out] the resulting column coordinate
    */
-  NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex,
-                                    PRInt32 *aRow, PRInt32 *aColumn) = 0;
+  NS_IMETHOD GetRowAndColumnByIndex(int32_t aIndex,
+                                    int32_t *aRow, int32_t *aColumn) = 0;
 };
 
 #endif

@@ -22,7 +22,7 @@ struct WalkState
 
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsINodeList> childList;
-  PRUint32 childIdx;
+  uint32_t childIdx;
   WalkState *prevState;
 };
 
@@ -69,7 +69,7 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
   if (!mState->childList)
     mState->childList = mState->content->GetChildren(mChildFilter);
 
-  PRUint32 length = 0;
+  uint32_t length = 0;
   if (mState->childList)
     mState->childList->GetLength(&length);
 

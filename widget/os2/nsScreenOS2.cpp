@@ -20,7 +20,7 @@ nsScreenOS2 :: ~nsScreenOS2()
 
 
 NS_IMETHODIMP
-nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenOS2 :: GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   LONG alArray[2];
 
@@ -41,7 +41,7 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 
 
 NS_IMETHODIMP
-nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenOS2 :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   static APIRET rc = 0;
   static BOOL (APIENTRY * pfnQueryDesktopWorkArea)(HWND hwndDesktop, PWRECT pwrcWorkArea) = NULL;
@@ -88,7 +88,7 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 
 
 NS_IMETHODIMP 
-nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
+nsScreenOS2 :: GetPixelDepth(int32_t *aPixelDepth)
 {
   LONG lCap;
 
@@ -97,7 +97,7 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
 
   ::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
 
-  *aPixelDepth = (PRInt32)lCap;
+  *aPixelDepth = (int32_t)lCap;
 
   
   ::WinReleasePS(hps);
@@ -108,7 +108,7 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
 
 
 NS_IMETHODIMP 
-nsScreenOS2 :: GetColorDepth(PRInt32 *aColorDepth)
+nsScreenOS2 :: GetColorDepth(int32_t *aColorDepth)
 {
   return GetPixelDepth ( aColorDepth );
 

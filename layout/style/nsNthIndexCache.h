@@ -33,7 +33,7 @@ public:
   // is 1, and something other than 1 (maybe or maybe not a valid
   // result) otherwise.
   // This must only be called on nodes which have a non-null parent.
-  PRInt32 GetNthIndex(Element* aChild, bool aIsOfType, bool aIsFromEnd,
+  int32_t GetNthIndex(Element* aChild, bool aIsOfType, bool aIsFromEnd,
                       bool aCheckEdgeOnly);
 
   void Reset();
@@ -50,7 +50,7 @@ private:
   // If -2, needs to be computed.
   // If -1, needs to be computed but known not to be 1.
   // If 0, the node is not at any index in its parent.
-  typedef PRInt32 CacheEntry;
+  typedef int32_t CacheEntry;
 
   class SystemAllocPolicy {
   public:
@@ -79,7 +79,7 @@ private:
                                                  bool aIsOfType,
                                                  bool aIsFromEnd,
                                                  const Cache& aCache,
-                                                 PRInt32& aResult);
+                                                 int32_t& aResult);
 
   // Caches of indices for :nth-child(), :nth-last-child(),
   // :nth-of-type(), :nth-last-of-type(), keyed by Element*.

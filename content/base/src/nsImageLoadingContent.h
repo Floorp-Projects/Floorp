@@ -225,7 +225,7 @@ private:
    * @param aNewImageStatus the nsIContentPolicy status of the new image load
    */
   void CancelImageRequests(nsresult aReason, bool aEvenIfSizeAvailable,
-                           PRInt16 aNewImageStatus);
+                           int16_t aNewImageStatus);
 
   /**
    * Method to fire an event once we know what's going on with the image load.
@@ -260,7 +260,7 @@ protected:
    * Called when we would normally call PrepareNextRequest(), but the request was
    * blocked.
    */
-  void SetBlockedRequest(nsIURI* aURI, PRInt16 aContentDecision);
+  void SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision);
 
   /**
    * Returns a COMPtr reference to the current/pending image requests, cleaning
@@ -317,8 +317,8 @@ protected:
   /* MEMBERS */
   nsCOMPtr<imgIRequest> mCurrentRequest;
   nsCOMPtr<imgIRequest> mPendingRequest;
-  PRUint32 mCurrentRequestFlags;
-  PRUint32 mPendingRequestFlags;
+  uint32_t mCurrentRequestFlags;
+  uint32_t mPendingRequestFlags;
 
   enum {
     // Set if the request needs 
@@ -351,7 +351,7 @@ private:
    */
   nsEventStates mForcedImageState;
 
-  PRInt16 mImageBlockingStatus;
+  int16_t mImageBlockingStatus;
   bool mLoadingEnabled : 1;
 
   /**
@@ -381,7 +381,7 @@ protected:
 
 private:
   /* The number of nested AutoStateChangers currently tracking our state. */
-  PRUint8 mStateChangerDepth;
+  uint8_t mStateChangerDepth;
 
   // Flags to indicate whether each of the current and pending requests are
   // registered with the refresh driver.

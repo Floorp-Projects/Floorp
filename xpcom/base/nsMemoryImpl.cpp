@@ -79,7 +79,7 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, bool aImmediate)
         }
     }
 
-    PRInt32 lastVal = PR_ATOMIC_SET(&sIsFlushing, 1);
+    int32_t lastVal = PR_ATOMIC_SET(&sIsFlushing, 1);
     if (lastVal)
         return NS_OK;
 
@@ -148,7 +148,7 @@ nsMemoryImpl::FlushEvent::Run()
     return NS_OK;
 }
 
-PRInt32
+int32_t
 nsMemoryImpl::sIsFlushing = 0;
 
 PRIntervalTime

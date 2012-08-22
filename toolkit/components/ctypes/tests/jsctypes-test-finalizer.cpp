@@ -83,7 +83,7 @@ test_finalizer_rel_size_t_return_struct_t(size_t i)
   if (-- gFinalizerTestResources[i] < 0) {
     MOZ_NOT_REACHED("Assertion failed");
   }
-  const PRInt32 narrowed = (PRInt32)i;
+  const int32_t narrowed = (int32_t)i;
   RECT result = { narrowed, narrowed, narrowed, narrowed };
   return result;
 }

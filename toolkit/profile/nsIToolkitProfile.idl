@@ -34,7 +34,7 @@ interface nsIProfileLock : nsISupports
     /**
      * The timestamp of an existing profile lock at lock time.
      */
-    readonly attribute PRInt64 replacedLockTime;
+    readonly attribute int64_t replacedLockTime;
 
     /**
      * Unlock the profile.

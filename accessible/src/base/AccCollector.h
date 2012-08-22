@@ -23,28 +23,28 @@ public:
   /**
    * Return accessible count within the collection.
    */
-  PRUint32 Count();
+  uint32_t Count();
 
   /**
    * Return an accessible from the collection at the given index.
    */
-  Accessible* GetAccessibleAt(PRUint32 aIndex);
+  Accessible* GetAccessibleAt(uint32_t aIndex);
 
   /**
    * Return index of the given accessible within the collection.
    */
-  virtual PRInt32 GetIndexAt(Accessible* aAccessible);
+  virtual int32_t GetIndexAt(Accessible* aAccessible);
 
 protected:
   /**
    * Ensure accessible at the given index is stored and return it.
    */
-  Accessible* EnsureNGetObject(PRUint32 aIndex);
+  Accessible* EnsureNGetObject(uint32_t aIndex);
 
   /**
    * Ensure index for the given accessible is stored and return it.
    */
-  PRInt32 EnsureNGetIndex(Accessible* aAccessible);
+  int32_t EnsureNGetIndex(Accessible* aAccessible);
 
   /**
    * Append the object to collection.
@@ -53,7 +53,7 @@ protected:
 
   filters::FilterFuncPtr mFilterFunc;
   Accessible* mRoot;
-  PRUint32 mRootChildIdx;
+  uint32_t mRootChildIdx;
 
   nsTArray<Accessible*> mObjects;
 
@@ -73,7 +73,7 @@ public:
   virtual ~EmbeddedObjCollector() { };
 
 public:
-  virtual PRInt32 GetIndexAt(Accessible* aAccessible);
+  virtual int32_t GetIndexAt(Accessible* aAccessible);
 
 protected:
   // Make sure it's used by Accessible class only.

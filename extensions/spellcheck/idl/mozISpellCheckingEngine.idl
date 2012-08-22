@@ -64,7 +64,7 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * Get the list of dictionaries
    */
-  void getDictionaryList([array, size_is(count)] out wstring dictionaries, out PRUint32 count);
+  void getDictionaryList([array, size_is(count)] out wstring dictionaries, out uint32_t count);
 
   /**
    * check a word
@@ -80,7 +80,7 @@ interface mozISpellCheckingEngine : nsISupports {
    * The spellcheck engine will send a notification with
    * "spellcheck-dictionary-update" as topic when this changes.
    */
-  void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
+  void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out uint32_t count);
 
   /**
    * Load dictionaries from the specified dir

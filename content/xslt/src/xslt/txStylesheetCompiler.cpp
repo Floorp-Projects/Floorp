@@ -54,10 +54,10 @@ txStylesheetCompiler::setBaseURI(const nsString& aBaseURI)
 }
 
 nsresult
-txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
+txStylesheetCompiler::startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
                                    nsIAtom* aPrefix,
                                    txStylesheetAttr* aAttributes,
-                                   PRInt32 aAttrCount)
+                                   int32_t aAttrCount)
 {
     if (NS_FAILED(mStatus)) {
         // ignore content after failure
@@ -70,7 +70,7 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
 
     // look for new namespace mappings
     bool hasOwnNamespaceMap = false;
-    PRInt32 i;
+    int32_t i;
     for (i = 0; i < aAttrCount; ++i) {
         txStylesheetAttr* attr = aAttributes + i;
         if (attr->mNamespaceID == kNameSpaceID_XMLNS) {
@@ -102,7 +102,7 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
 nsresult
 txStylesheetCompiler::startElement(const PRUnichar *aName,
                                    const PRUnichar **aAttrs,
-                                   PRInt32 aAttrCount, PRInt32 aIDOffset)
+                                   int32_t aAttrCount, int32_t aIDOffset)
 {
     if (NS_FAILED(mStatus)) {
         // ignore content after failure
@@ -120,7 +120,7 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
     }
 
     bool hasOwnNamespaceMap = false;
-    PRInt32 i;
+    int32_t i;
     for (i = 0; i < aAttrCount; ++i) {
         rv = XMLUtils::splitExpatName(aAttrs[i * 2],
                                       getter_AddRefs(atts[i].mPrefix),
@@ -156,12 +156,12 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
     }
 
     nsCOMPtr<nsIAtom> prefix, localname;
-    PRInt32 namespaceID;
+    int32_t namespaceID;
     rv = XMLUtils::splitExpatName(aName, getter_AddRefs(prefix),
                                   getter_AddRefs(localname), &namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 idOffset = aIDOffset;
+    int32_t idOffset = aIDOffset;
     if (idOffset > 0) {
         idOffset /= 2;
     }
@@ -170,15 +170,15 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
 }
 
 nsresult
-txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
+txStylesheetCompiler::startElementInternal(int32_t aNamespaceID,
                                            nsIAtom* aLocalName,
                                            nsIAtom* aPrefix,
                                            txStylesheetAttr* aAttributes,
-                                           PRInt32 aAttrCount,
-                                           PRInt32 aIDOffset)
+                                           int32_t aAttrCount,
+                                           int32_t aIDOffset)
 {
     nsresult rv = NS_OK;
-    PRInt32 i;
+    int32_t i;
     for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
         ++mInScopeVariables[i]->mLevel;
     }
@@ -230,7 +230,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 
             nsWhitespaceTokenizer tok(attr->mValue);
             while (tok.hasMoreTokens()) {
-                PRInt32 namespaceID = mElementContext->mMappings->
+                int32_t namespaceID = mElementContext->mMappings->
                     lookupNamespaceWithDefault(tok.nextToken());
                 
                 if (namespaceID == kNameSpaceID_Unknown)
@@ -268,7 +268,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 
     // Find the right elementhandler and execute it
     bool isInstruction = false;
-    PRInt32 count = mElementContext->mInstructionNamespaces.Length();
+    int32_t count = mElementContext->mInstructionNamespaces.Length();
     for (i = 0; i < count; ++i) {
         if (mElementContext->mInstructionNamespaces[i] == aNamespaceID) {
             isInstruction = true;
@@ -329,7 +329,7 @@ txStylesheetCompiler::endElement()
     nsresult rv = flushCharacters();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 i;
+    int32_t i;
     for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
         txInScopeVariable* var = mInScopeVariables[i];
         if (!--(var->mLevel)) {
@@ -545,13 +545,13 @@ txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
                  "must provide insertposition if loading subsheet");
     mStylesheetURI = aStylesheetURI;
     // Check for fragment identifier of an embedded stylesheet.
-    PRInt32 fragment = aStylesheetURI.FindChar('#') + 1;
+    int32_t fragment = aStylesheetURI.FindChar('#') + 1;
     if (fragment > 0) {
-        PRInt32 fragmentLength = aStylesheetURI.Length() - fragment;
+        int32_t fragmentLength = aStylesheetURI.Length() - fragment;
         if (fragmentLength > 0) {
             // This is really an embedded stylesheet, not just a
             // "url#". We may want to unescape the fragment.
-            mTarget = Substring(aStylesheetURI, (PRUint32)fragment,
+            mTarget = Substring(aStylesheetURI, (uint32_t)fragment,
                                 fragmentLength);
             mEmbedStatus = eNeedEmbed;
             mHandlerTable = gTxEmbedHandler;
@@ -594,7 +594,7 @@ txStylesheetCompilerState::~txStylesheetCompilerState()
         delete popObject();
     }
     
-    PRInt32 i;
+    int32_t i;
     for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
         delete mInScopeVariables[i];
     }
@@ -679,7 +679,7 @@ txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType)
 void*
 txStylesheetCompilerState::popPtr(enumStackType aType)
 {
-    PRUint32 stacklen = mTypeStack.Length();
+    uint32_t stacklen = mTypeStack.Length();
     if (stacklen == 0) {
         NS_RUNTIMEABORT("Attempt to pop when type stack is empty");
     }
@@ -732,7 +732,7 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction> aInstruction)
     *mNextInstrPtr = aInstruction.forget();
     mNextInstrPtr = newInstr->mNext.StartAssignment();
     
-    PRUint32 i, count = mGotoTargetPointers.Length();
+    uint32_t i, count = mGotoTargetPointers.Length();
     for (i = 0; i < count; ++i) {
         *mGotoTargetPointers[i] = newInstr;
     }
@@ -844,7 +844,7 @@ txStylesheetCompilerState::addVariable(const txExpandedName& aName)
 
 nsresult
 txStylesheetCompilerState::resolveNamespacePrefix(nsIAtom* aPrefix,
-                                                  PRInt32& aID)
+                                                  int32_t& aID)
 {
     NS_ASSERTION(aPrefix && aPrefix != nsGkAtoms::_empty,
                  "caller should handle default namespace ''");
@@ -906,7 +906,7 @@ txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
 #endif
 
 static nsresult
-TX_ConstructXSLTFunction(nsIAtom* aName, PRInt32 aNamespaceID,
+TX_ConstructXSLTFunction(nsIAtom* aName, int32_t aNamespaceID,
                          txStylesheetCompilerState* aState,
                          FunctionCall** aFunction)
 {
@@ -955,19 +955,19 @@ TX_ConstructXSLTFunction(nsIAtom* aName, PRInt32 aNamespaceID,
 }
 
 typedef nsresult (*txFunctionFactory)(nsIAtom* aName,
-                                      PRInt32 aNamespaceID,
+                                      int32_t aNamespaceID,
                                       txStylesheetCompilerState* aState,
                                       FunctionCall** aResult);
 struct txFunctionFactoryMapping
 {
     const char* const mNamespaceURI;
-    PRInt32 mNamespaceID;
+    int32_t mNamespaceID;
     txFunctionFactory mFactory;
 };
 
 extern nsresult
 TX_ConstructEXSLTFunction(nsIAtom *aName,
-                          PRInt32 aNamespaceID,
+                          int32_t aNamespaceID,
                           txStylesheetCompilerState* aState,
                           FunctionCall **aResult);
 
@@ -986,24 +986,24 @@ static txFunctionFactoryMapping kExtensionFunctions[] = {
 };
 
 extern nsresult
-TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
+TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
                             nsIAtom *aName, nsISupports *aState,
                             FunctionCall **aFunction);
 
 struct txXPCOMFunctionMapping
 {
-    PRInt32 mNamespaceID;
+    int32_t mNamespaceID;
     nsCString mContractID;
 };
 
 static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nullptr;
 
 static nsresult
-findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
+findFunction(nsIAtom* aName, int32_t aNamespaceID,
              txStylesheetCompilerState* aState, FunctionCall** aResult)
 {
     if (kExtensionFunctions[0].mNamespaceID == kNameSpaceID_Unknown) {
-        PRUint32 i;
+        uint32_t i;
         for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
             txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
             NS_ConvertASCIItoUTF16 namespaceURI(mapping.mNamespaceURI);
@@ -1012,7 +1012,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
         }
     }
 
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
         const txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
         if (mapping.mNamespaceID == aNamespaceID) {
@@ -1028,7 +1028,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
     }
 
     txXPCOMFunctionMapping *map = nullptr;
-    PRUint32 count = sXPCOMFunctionMappings->Length();
+    uint32_t count = sXPCOMFunctionMappings->Length();
     for (i = 0; i < count; ++i) {
         map = &sXPCOMFunctionMappings->ElementAt(i);
         if (map->mNamespaceID == aNamespaceID) {
@@ -1069,7 +1069,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
 }
 
 extern bool
-TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
+TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID)
 {
     nsRefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(EmptyString(), nullptr);
@@ -1082,7 +1082,7 @@ TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
 }
 
 nsresult
-txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, int32_t aID,
                                                FunctionCall **aFunction)
 {
     *aFunction = nullptr;
@@ -1104,7 +1104,7 @@ txStylesheetCompilerState::caseInsensitiveNameTests()
 }
 
 void
-txStylesheetCompilerState::SetErrorOffset(PRUint32 aOffset)
+txStylesheetCompilerState::SetErrorOffset(uint32_t aOffset)
 {
     // XXX implement me
 }

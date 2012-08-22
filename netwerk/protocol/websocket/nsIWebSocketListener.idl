@@ -65,7 +65,7 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aSize number of bytes placed in OS send buffer
      */
-    void onAcknowledge(in nsISupports aContext, in PRUint32 aSize);
+    void onAcknowledge(in nsISupports aContext, in uint32_t aSize);
 
     /**
      * Called to inform receipt of WebSocket Close message from server.

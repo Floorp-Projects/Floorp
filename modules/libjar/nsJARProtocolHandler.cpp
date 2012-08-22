@@ -98,14 +98,14 @@ nsJARProtocolHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsJARProtocolHandler::GetDefaultPort(int32_t *result)
 {
     *result = -1;        // no port for JAR: URLs
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetProtocolFlags(PRUint32 *result)
+nsJARProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     // URI_LOADABLE_BY_ANYONE, since it's our inner URI that will matter
     // anyway.
@@ -159,7 +159,7 @@ nsJARProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 
 
 NS_IMETHODIMP
-nsJARProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsJARProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.
     *_retval = false;

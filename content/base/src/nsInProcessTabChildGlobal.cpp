@@ -35,8 +35,8 @@ bool SendSyncMessageToParent(void* aCallbackData,
   nsCOMPtr<nsIContent> owner = tabChild->mOwner;
   nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
   asyncMessages.SwapElements(tabChild->mASyncMessages);
-  PRUint32 len = asyncMessages.Length();
-  for (PRUint32 i = 0; i < len; ++i) {
+  uint32_t len = asyncMessages.Length();
+  for (uint32_t i = 0; i < len; ++i) {
     nsCOMPtr<nsIRunnable> async = asyncMessages[i];
     async->Run();
   }

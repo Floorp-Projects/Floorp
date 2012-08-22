@@ -46,9 +46,9 @@ public:
                   nsIFrame*        aPrevInFlow);
 #endif
 
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
   /**
    * Get the "type" of the frame
    *

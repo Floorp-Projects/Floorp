@@ -97,7 +97,7 @@ protected:
   nsIntPoint GetPagePoint();
 
   // Allow specializations.
-  virtual nsresult Which(PRUint32* aWhich)
+  virtual nsresult Which(uint32_t* aWhich)
   {
     NS_ENSURE_ARG_POINTER(aWhich);
     // Usually we never reach here, as this is reimplemented for mouse and keyboard events.
@@ -106,7 +106,7 @@ protected:
   }
 
   nsCOMPtr<nsIDOMWindow> mView;
-  PRInt32 mDetail;
+  int32_t mDetail;
   nsIntPoint mClientPoint;
   // Screenpoint is mEvent->refPoint.
   nsIntPoint mLayerPoint;

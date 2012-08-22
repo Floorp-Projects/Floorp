@@ -54,27 +54,27 @@ class GonkCameraInputStream : public nsIAsyncInputStream {
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 
-    void ReceiveFrame(char* frame, PRUint32 length);
+    void ReceiveFrame(char* frame, uint32_t length);
 
     static void  DataCallback(int32_t aMsgType, const sp<IMemory>& aDataPtr, void *aUser);
-    static PRUint32 getNumberOfCameras();
+    static uint32_t getNumberOfCameras();
 
   protected:
     void NotifyListeners();
     void doClose();
 
   private:
-    PRUint32 mAvailable;
+    uint32_t mAvailable;
     nsCString mContentType;
-    PRUint32 mWidth;
-    PRUint32 mHeight;
-    PRUint32 mFps;
-    PRUint32 mCamera;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    uint32_t mFps;
+    uint32_t mCamera;
     bool mHeaderSent;
     bool mClosed;
     bool mIs420p;
     nsDeque mFrameQueue;
-    PRUint32 mFrameSize;
+    uint32_t mFrameSize;
     mozilla::ReentrantMonitor mMonitor;
     nsCOMPtr<nsIInputStreamCallback> mCallback;
     nsCOMPtr<nsIEventTarget> mCallbackTarget;

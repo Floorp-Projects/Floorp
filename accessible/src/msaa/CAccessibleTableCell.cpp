@@ -85,7 +85,7 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  PRInt32 columnsSpanned = 0;
+  int32_t columnsSpanned = 0;
   nsresult rv = tableCell->GetColumnExtent(&columnsSpanned);
   if (NS_SUCCEEDED(rv)) {
     *nColumnsSpanned = columnsSpanned;
@@ -135,7 +135,7 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  PRInt32 colIdx = -1;
+  int32_t colIdx = -1;
   nsresult rv = tableCell->GetColumnIndex(&colIdx);
   if (NS_SUCCEEDED(rv)) {
     *columnIndex = colIdx;
@@ -161,7 +161,7 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  PRInt32 rowsSpanned = 0;
+  int32_t rowsSpanned = 0;
   nsresult rv = tableCell->GetRowExtent(&rowsSpanned);
   if (NS_SUCCEEDED(rv)) {
     *nRowsSpanned = rowsSpanned;
@@ -211,7 +211,7 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  PRInt32 rowIdx = -1;
+  int32_t rowIdx = -1;
   nsresult rv = tableCell->GetRowIndex(&rowIdx);
   if (NS_SUCCEEDED(rv)) {
     *rowIndex = rowIdx;
@@ -244,22 +244,22 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  PRInt32 rowIdx = -1;
+  int32_t rowIdx = -1;
   nsresult rv = tableCell->GetRowIndex(&rowIdx);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRInt32 columnIdx = -1;
+  int32_t columnIdx = -1;
   rv = tableCell->GetColumnIndex(&columnIdx);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRInt32 spannedRows = 0;
+  int32_t spannedRows = 0;
   rv = tableCell->GetRowExtent(&spannedRows);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRInt32 spannedColumns = 0;
+  int32_t spannedColumns = 0;
   rv = tableCell->GetColumnExtent(&spannedColumns);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

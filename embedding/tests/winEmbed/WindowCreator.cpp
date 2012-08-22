@@ -44,10 +44,10 @@ NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
 WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
-                                  PRUint32 chromeFlags,
+                                  uint32_t chromeFlags,
                                   nsIWebBrowserChrome **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    AppCallbacks::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
+    AppCallbacks::CreateBrowserWindow(int32_t(chromeFlags), parent, _retval);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }

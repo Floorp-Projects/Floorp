@@ -21,8 +21,8 @@ using namespace mozilla;
 
 struct txCoreFunctionDescriptor
 {
-    PRInt8 mMinParams;
-    PRInt8 mMaxParams;
+    int8_t mMinParams;
+    int8_t mMaxParams;
     Expr::ResultType mReturnType;
     nsIAtom** mName;
 };
@@ -110,7 +110,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 txNodeSet* nodes = static_cast<txNodeSet*>
                                               (static_cast<txAExprResult*>
                                                           (exprResult));
-                PRInt32 i;
+                int32_t i;
                 for (i = 0; i < nodes->size(); ++i) {
                     nsAutoString idList;
                     txXPathNodeUtils::appendNodeValue(nodes->get(i), idList);
@@ -225,7 +225,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRUint32 i, len = mParams.Length();
+            uint32_t i, len = mParams.Length();
             for (i = 0; i < len; ++i) {
                 rv = mParams[i]->evaluateToString(aContext, strRes->mValue);
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -275,7 +275,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             bool first = true;
             strRes->mValue.SetCapacity(resultStr.Length());
             PRUnichar c;
-            PRUint32 src;
+            uint32_t src;
             for (src = 0; src < resultStr.Length(); src++) {
                 c = resultStr.CharAt(src);
                 if (XMLUtils::isWhitespace(c)) {
@@ -405,7 +405,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
 
             return aContext->recycler()->getStringResult(
-                  Substring(src, (PRUint32)start, (PRUint32)(end - start)),
+                  Substring(src, (uint32_t)start, (uint32_t)(end - start)),
                   aResult);
         }
         case SUBSTRING_AFTER:
@@ -422,7 +422,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return aContext->recycler()->getStringResult(arg1, aResult);
             }
 
-            PRInt32 idx = arg1.Find(arg2);
+            int32_t idx = arg1.Find(arg2);
             if (idx == kNotFound) {
                 aContext->recycler()->getEmptyStringResult(aResult);
                 
@@ -448,7 +448,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[0]->evaluateToString(aContext, arg1);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRInt32 idx = arg1.Find(arg2);
+            int32_t idx = arg1.Find(arg2);
             if (idx == kNotFound) {
                 aContext->recycler()->getEmptyStringResult(aResult);
                 
@@ -483,13 +483,13 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[2]->evaluateToString(aContext, newChars);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRUint32 i;
-            PRInt32 newCharsLength = (PRInt32)newChars.Length();
+            uint32_t i;
+            int32_t newCharsLength = (int32_t)newChars.Length();
             for (i = 0; i < src.Length(); i++) {
-                PRInt32 idx = oldChars.FindChar(src.CharAt(i));
+                int32_t idx = oldChars.FindChar(src.CharAt(i));
                 if (idx != kNotFound) {
                     if (idx < newCharsLength)
-                        strRes->mValue.Append(newChars.CharAt((PRUint32)idx));
+                        strRes->mValue.Append(newChars.CharAt((uint32_t)idx));
                 }
                 else {
                     strRes->mValue.Append(src.CharAt(i));
@@ -574,7 +574,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             double res = 0;
-            PRInt32 i;
+            int32_t i;
             for (i = 0; i < nodes->size(); ++i) {
                 nsAutoString resultStr;
                 txXPathNodeUtils::appendNodeValue(nodes->get(i), resultStr);
@@ -725,7 +725,7 @@ txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 bool
 txCoreFunctionCall::getTypeFromAtom(nsIAtom* aName, eType& aType)
 {
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < ArrayLength(descriptTable); ++i) {
         if (aName == *descriptTable[i].mName) {
             aType = static_cast<eType>(i);

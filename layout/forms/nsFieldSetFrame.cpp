@@ -53,7 +53,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
@@ -67,7 +67,7 @@ public:
                               const nsDisplayListSet& aLists);
 
   void PaintBorderBackground(nsRenderingContext& aRenderingContext,
-    nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags);
+    nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags);
 
   NS_IMETHOD AppendFrames(ChildListID    aListID,
                           nsFrameList&   aFrameList);
@@ -243,7 +243,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
-    nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags)
+    nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags)
 {
   int skipSides = GetSkipSides();
   const nsStyleBorder* borderStyle = GetStyleBorder();
@@ -369,7 +369,7 @@ nsFieldSetFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags)
+                             uint32_t aFlags)
 {
   nsSize result =
     nsContainerFrame::ComputeSize(aRenderingContext, aCBSize, aAvailableWidth,
@@ -530,7 +530,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   if (mLegendFrame) {
     // if the content rect is larger then the  legend we can align the legend
     if (contentRect.width > mLegendRect.width) {
-      PRInt32 align = static_cast<nsLegendFrame*>
+      int32_t align = static_cast<nsLegendFrame*>
         (mLegendFrame->GetContentInsertionFrame())->GetAlign();
 
       switch(align) {

@@ -40,9 +40,9 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSwitchElementBase::)
 
   // nsINode
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;

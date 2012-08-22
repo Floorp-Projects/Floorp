@@ -66,7 +66,7 @@ nsNSSCertificateFakeTransport::GetEmailAddress(nsAString &aEmailAddress)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetEmailAddresses(PRUint32 *aLength, PRUnichar*** aAddresses)
+nsNSSCertificateFakeTransport::GetEmailAddresses(uint32_t *aLength, PRUnichar*** aAddresses)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -182,7 +182,7 @@ nsNSSCertificateFakeTransport::GetTokenName(nsAString &aTokenName)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetRawDER(PRUint32 *aLength, PRUint8 **aArray)
+nsNSSCertificateFakeTransport::GetRawDER(uint32_t *aLength, uint8_t **aArray)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -196,7 +196,7 @@ nsNSSCertificateFakeTransport::GetValidity(nsIX509CertValidity **aValidity)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
+nsNSSCertificateFakeTransport::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -204,8 +204,8 @@ nsNSSCertificateFakeTransport::VerifyForUsage(PRUint32 usage, PRUint32 *verifica
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetUsagesArray(bool localOnly,
-                                 PRUint32 *_verified,
-                                 PRUint32 *_count,
+                                 uint32_t *_verified,
+                                 uint32_t *_count,
                                  PRUnichar ***_usages)
 {
   NS_NOTREACHED("Unimplemented on content process");
@@ -214,7 +214,7 @@ nsNSSCertificateFakeTransport::GetUsagesArray(bool localOnly,
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetUsagesString(bool localOnly,
-                                  PRUint32   *_verified,
+                                  uint32_t   *_verified,
                                   nsAString &_usages)
 {
   NS_NOTREACHED("Unimplemented on content process");
@@ -254,7 +254,7 @@ nsNSSCertificateFakeTransport::Write(nsIObjectOutputStream* aStream)
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::Read(nsIObjectInputStream* aStream)
 {
-  PRUint32 len;
+  uint32_t len;
   nsresult rv = aStream->Read32(&len);
   if (NS_FAILED(rv)) {
     return rv;
@@ -279,7 +279,7 @@ nsNSSCertificateFakeTransport::Read(nsIObjectInputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetInterfaces(PRUint32 *count, nsIID * **array)
+nsNSSCertificateFakeTransport::GetInterfaces(uint32_t *count, nsIID * **array)
 {
   *count = 0;
   *array = nullptr;
@@ -287,7 +287,7 @@ nsNSSCertificateFakeTransport::GetInterfaces(PRUint32 *count, nsIID * **array)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+nsNSSCertificateFakeTransport::GetHelperForLanguage(uint32_t language, nsISupports **_retval)
 {
   *_retval = nullptr;
   return NS_OK;
@@ -317,14 +317,14 @@ nsNSSCertificateFakeTransport::GetClassID(nsCID * *aClassID)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+nsNSSCertificateFakeTransport::GetImplementationLanguage(uint32_t *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetFlags(PRUint32 *aFlags)
+nsNSSCertificateFakeTransport::GetFlags(uint32_t *aFlags)
 {
   *aFlags = nsIClassInfo::THREADSAFE;
   return NS_OK;

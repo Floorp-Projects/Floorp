@@ -74,7 +74,7 @@ NS_IMPL_ADDREF_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 
 bool
-nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
+nsDOMDocumentType::IsNodeOfType(uint32_t aFlags) const
 {
   // Don't claim to be eDATA_NODE since we're just inheriting
   // nsGenericDOMDataNode for convinience. Doctypes aren't really

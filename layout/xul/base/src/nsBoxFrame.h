@@ -87,9 +87,9 @@ public:
                    nsIFrame*        asPrevInFlow);
 
  
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
@@ -119,7 +119,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     // record that children that are ignorable whitespace should be excluded 
     // (When content was loaded via the XUL content sink, it's already
@@ -237,8 +237,8 @@ private:
     void PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels);
 
     void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
-    void GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
-    void DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, bool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
+    void GetValue(nsPresContext* aPresContext, int32_t a, int32_t b, char* value);
+    void DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, bool aHorizontal, int32_t flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif

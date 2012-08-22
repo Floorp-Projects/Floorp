@@ -158,7 +158,7 @@ nsTArray<ContentParent*>* ContentParent::gNonAppContentParents;
 nsTArray<ContentParent*>* ContentParent::gPrivateContent;
 
 // The first content child has ID 1, so the chrome process can have ID 0.
-static PRUint64 gContentChildID = 1;
+static uint64_t gContentChildID = 1;
 
 // Try to keep an app process always preallocated, to get
 // initialization off the critical path of app startup.
@@ -253,12 +253,12 @@ ContentParent::GetNewOrUsed()
     if (!gNonAppContentParents)
         gNonAppContentParents = new nsTArray<ContentParent*>();
 
-    PRInt32 maxContentProcesses = Preferences::GetInt("dom.ipc.processCount", 1);
+    int32_t maxContentProcesses = Preferences::GetInt("dom.ipc.processCount", 1);
     if (maxContentProcesses < 1)
         maxContentProcesses = 1;
 
-    if (gNonAppContentParents->Length() >= PRUint32(maxContentProcesses)) {
-        PRUint32 idx = rand() % gNonAppContentParents->Length();
+    if (gNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
+        uint32_t idx = rand() % gNonAppContentParents->Length();
         ContentParent* p = (*gNonAppContentParents)[idx];
         NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in gNonAppContentParents?");
         return p;
@@ -308,7 +308,7 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 
     // Send the local app ID to the new TabChild so it knows what app
     // it is.
-    PRUint32 appId;
+    uint32_t appId;
     if (NS_FAILED(appsService->GetAppLocalIdByManifestURL(manifestURL, &appId))) {
         NS_ERROR("Failed to get local app ID");
         return nullptr;
@@ -461,7 +461,7 @@ ContentParent::OnChannelConnected(int32 pid)
 
 #if defined(ANDROID) || defined(LINUX)
         // Check nice preference
-        PRInt32 nice = Preferences::GetInt("dom.ipc.content.nice", 0);
+        int32_t nice = Preferences::GetInt("dom.ipc.content.nice", 0);
 
         // Environment variable overrides preference
         char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
@@ -472,7 +472,7 @@ ContentParent::OnChannelConnected(int32 pid)
         /* make the GUI thread have higher priority on single-cpu devices */
         nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
         if (infoService) {
-            PRInt32 cpus;
+            int32_t cpus;
             nsresult rv = infoService->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
             if (NS_FAILED(rv)) {
                 cpus = 1;
@@ -775,11 +775,11 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
         perm->GetHost(host);
         nsCString type;
         perm->GetType(type);
-        PRUint32 capability;
+        uint32_t capability;
         perm->GetCapability(&capability);
-        PRUint32 expireType;
+        uint32_t expireType;
         perm->GetExpireType(&expireType);
-        PRInt64 expireTime;
+        int64_t expireTime;
         perm->GetExpireTime(&expireTime);
 
         aPermissions->AppendElement(IPC::Permission(host, type, capability,
@@ -796,7 +796,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
 bool
 ContentParent::RecvSetClipboardText(const nsString& text,
                                        const bool& isPrivateData,
-                                       const PRInt32& whichClipboard)
+                                       const int32_t& whichClipboard)
 {
     nsresult rv;
     nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
@@ -829,7 +829,7 @@ ContentParent::RecvSetClipboardText(const nsString& text,
 }
 
 bool
-ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text)
+ContentParent::RecvGetClipboardText(const int32_t& whichClipboard, nsString* text)
 {
     nsresult rv;
     nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
@@ -841,7 +841,7 @@ ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* tex
     
     clipboard->GetData(trans, whichClipboard);
     nsCOMPtr<nsISupports> tmp;
-    PRUint32 len;
+    uint32_t len;
     rv = trans->GetTransferData(kUnicodeMime, getter_AddRefs(tmp), &len);
     if (NS_FAILED(rv))
         return false;
@@ -879,7 +879,7 @@ ContentParent::RecvClipboardHasText(bool* hasText)
 }
 
 bool
-ContentParent::RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray<PRUint32>* colors)
+ContentParent::RecvGetSystemColors(const uint32_t& colorsCount, InfallibleTArray<uint32_t>* colors)
 {
 #ifdef MOZ_WIDGET_ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
@@ -898,7 +898,7 @@ ContentParent::RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray
 }
 
 bool
-ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits)
+ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const uint32_t& aIconSize, InfallibleTArray<uint8_t>* bits)
 {
 #ifdef MOZ_WIDGET_ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
@@ -1013,7 +1013,7 @@ ContentParent::Observe(nsISupports* aSubject,
 
         nsString volName;
         nsString mountPoint;
-        PRInt32  state;
+        int32_t  state;
 
         vol->GetName(volName);
         vol->GetMountPoint(mountPoint);
@@ -1042,7 +1042,7 @@ ContentParent::AllocPCompositor(mozilla::ipc::Transport* aTransport,
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser(const PRUint32& aChromeFlags,
+ContentParent::AllocPBrowser(const uint32_t& aChromeFlags,
                              const bool& aIsBrowserElement, const AppId& aApp)
 {
     // We only use this Alloc() method when the content processes asks
@@ -1141,7 +1141,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     nsresult rv = aBlob->GetType(contentType);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    PRUint64 length;
+    uint64_t length;
     rv = aBlob->GetSize(&length);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -1176,7 +1176,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 
 PCrashReporterParent*
 ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
-                                   const PRUint32& processType)
+                                   const uint32_t& processType)
 {
 #ifdef MOZ_CRASHREPORTER
   return new CrashReporterParent();
@@ -1188,7 +1188,7 @@ ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
 bool
 ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
                                              const NativeThreadId& tid,
-                                             const PRUint32& processType)
+                                             const uint32_t& processType)
 {
   static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
   return true;
@@ -1269,15 +1269,15 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
-    for (PRInt32 i = 0; i < mMemoryReporters.Count(); i++)
+    for (int32_t i = 0; i < mMemoryReporters.Count(); i++)
         mgr->UnregisterReporter(mMemoryReporters[i]);
 
-    for (PRUint32 i = 0; i < report.Length(); i++) {
+    for (uint32_t i = 0; i < report.Length(); i++) {
         nsCString process  = report[i].process();
         nsCString path     = report[i].path();
-        PRInt32   kind     = report[i].kind();
-        PRInt32   units    = report[i].units();
-        PRInt64   amount   = report[i].amount();
+        int32_t   kind     = report[i].kind();
+        int32_t   units    = report[i].units();
+        int64_t   amount   = report[i].amount();
         nsCString desc     = report[i].desc();
         
         nsRefPtr<nsMemoryReporter> r =
@@ -1307,9 +1307,9 @@ ContentParent::DeallocPTestShell(PTestShellParent* shell)
 }
  
 PAudioParent*
-ContentParent::AllocPAudio(const PRInt32& numChannels,
-                           const PRInt32& rate,
-                           const PRInt32& format)
+ContentParent::AllocPAudio(const int32_t& numChannels,
+                           const int32_t& rate,
+                           const int32_t& format)
 {
 #if defined(MOZ_SYDNEYAUDIO)
     AudioParent *parent = new AudioParent(numChannels, rate, format);
@@ -1348,7 +1348,7 @@ ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
                                        const nsCString& aMimeContentType,
                                        const nsCString& aContentDisposition,
                                        const bool& aForceSave,
-                                       const PRInt64& aContentLength,
+                                       const int64_t& aContentLength,
                                        const IPC::URI& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
@@ -1436,7 +1436,7 @@ ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
 bool
 ContentParent::RecvVisitURI(const IPC::URI& uri,
                                    const IPC::URI& referrer,
-                                   const PRUint32& flags)
+                                   const uint32_t& flags)
 {
     nsCOMPtr<nsIURI> ourURI(uri);
     nsCOMPtr<nsIURI> ourReferrer(referrer);
@@ -1463,8 +1463,8 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
 }
 
 bool
-ContentParent::RecvShowFilePicker(const PRInt16& mode,
-                                  const PRInt16& selectedType,
+ContentParent::RecvShowFilePicker(const int16_t& mode,
+                                  const int16_t& selectedType,
                                   const bool& addToRecentDocs,
                                   const nsString& title,
                                   const nsString& defaultFile,
@@ -1472,7 +1472,7 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const InfallibleTArray<nsString>& filters,
                                   const InfallibleTArray<nsString>& filterNames,
                                   InfallibleTArray<nsString>* files,
-                                  PRInt16* retValue,
+                                  int16_t* retValue,
                                   nsresult* result)
 {
     nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
@@ -1494,8 +1494,8 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
 
     filePicker->SetAddToRecentDocs(addToRecentDocs);
 
-    PRUint32 count = filters.Length();
-    for (PRUint32 i = 0; i < count; ++i) {
+    uint32_t count = filters.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         filePicker->AppendFilter(filterNames[i], filters[i]);
     }
 
@@ -1560,7 +1560,7 @@ ContentParent::OnDispatchedEvent(nsIThreadInternal *thread)
 NS_IMETHODIMP
 ContentParent::OnProcessNextEvent(nsIThreadInternal *thread,
                                   bool mayWait,
-                                  PRUint32 recursionDepth)
+                                  uint32_t recursionDepth)
 {
     if (mRunToCompletionDepth)
         ++mRunToCompletionDepth;
@@ -1571,7 +1571,7 @@ ContentParent::OnProcessNextEvent(nsIThreadInternal *thread,
 /* void afterProcessNextEvent (in nsIThreadInternal thread, in unsigned long recursionDepth); */
 NS_IMETHODIMP
 ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
-                                     PRUint32 recursionDepth)
+                                     uint32_t recursionDepth)
 {
     if (mRunToCompletionDepth &&
         !--mRunToCompletionDepth) {
@@ -1614,9 +1614,9 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
     cloneData.mData = buffer.data;
     cloneData.mDataLength = buffer.dataLength;
     if (!blobParents.IsEmpty()) {
-      PRUint32 length = blobParents.Length();
+      uint32_t length = blobParents.Length();
       cloneData.mClosure.mBlobs.SetCapacity(length);
-      for (PRUint32 index = 0; index < length; index++) {
+      for (uint32_t index = 0; index < length; index++) {
         BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
         MOZ_ASSERT(blobParent);
         nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
@@ -1642,9 +1642,9 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
     cloneData.mData = buffer.data;
     cloneData.mDataLength = buffer.dataLength;
     if (!blobParents.IsEmpty()) {
-      PRUint32 length = blobParents.Length();
+      uint32_t length = blobParents.Length();
       cloneData.mClosure.mBlobs.SetCapacity(length);
-      for (PRUint32 index = 0; index < length; index++) {
+      for (uint32_t index = 0; index < length; index++) {
         BlobParent* blobParent = static_cast<BlobParent*>(blobParents[index]);
         MOZ_ASSERT(blobParent);
         nsCOMPtr<nsIDOMBlob> blob = blobParent->GetBlob();
@@ -1710,9 +1710,9 @@ bool
 ContentParent::RecvScriptError(const nsString& aMessage,
                                       const nsString& aSourceName,
                                       const nsString& aSourceLine,
-                                      const PRUint32& aLineNumber,
-                                      const PRUint32& aColNumber,
-                                      const PRUint32& aFlags,
+                                      const uint32_t& aLineNumber,
+                                      const uint32_t& aColNumber,
+                                      const uint32_t& aFlags,
                                       const nsCString& aCategory)
 {
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));

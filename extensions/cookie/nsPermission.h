@@ -20,18 +20,18 @@ public:
 
   nsPermission(const nsACString &aHost,
                const nsACString &aType, 
-               PRUint32 aCapability,
-               PRUint32 aExpireType,
-               PRInt64 aExpireTime);
+               uint32_t aCapability,
+               uint32_t aExpireType,
+               int64_t aExpireTime);
 
   virtual ~nsPermission();
   
 protected:
   nsCString mHost;
   nsCString mType;
-  PRUint32  mCapability;
-  PRUint32  mExpireType;
-  PRInt64   mExpireTime;
+  uint32_t  mCapability;
+  uint32_t  mExpireType;
+  int64_t   mExpireTime;
 };
 
 #endif // nsPermission_h__

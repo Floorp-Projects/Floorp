@@ -30,7 +30,7 @@ public:
   // Empty interface
 
   // nsINode
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
@@ -39,8 +39,8 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 #ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent,bool aDumpAll) const;
+  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void DumpContent(FILE* out, int32_t aIndent,bool aDumpAll) const;
 #endif
 };
 
@@ -94,7 +94,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 
 
 bool
-nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
+nsXMLCDATASection::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
@@ -113,9 +113,9 @@ nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 
 #ifdef DEBUG
 void
-nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
+nsXMLCDATASection::List(FILE* out, int32_t aIndent) const
 {
-  PRInt32 index;
+  int32_t index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fprintf(out, "CDATASection refcount=%d<", mRefCnt.get());
@@ -128,7 +128,7 @@ nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 }
 
 void
-nsXMLCDATASection::DumpContent(FILE* out, PRInt32 aIndent,
+nsXMLCDATASection::DumpContent(FILE* out, int32_t aIndent,
                                bool aDumpAll) const {
 }
 #endif

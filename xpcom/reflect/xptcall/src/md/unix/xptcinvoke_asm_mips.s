@@ -68,7 +68,7 @@ _NS_InvokeByIndex_P:
 	move	fp, sp
 
 	# extern "C" uint32
-	# invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s);
+	# invoke_count_words(uint32_t paramCount, nsXPTCVariant* s);
 	la	t9, invoke_count_words
 	move	a0, a2
 	move	a1, a3
@@ -87,7 +87,7 @@ _NS_InvokeByIndex_P:
 	# let a0 point to the bottom of the variable stack, allocate
 	# another fixed stack for:
 	# extern "C" void
-	# invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
+	# invoke_copy_to_stack(uint32_t* d, uint32_t paramCount,
 	#		       nsXPTCVariant* s);
 	la	t9, invoke_copy_to_stack
 	move	a0, sp

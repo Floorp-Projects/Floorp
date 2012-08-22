@@ -68,12 +68,12 @@ public:
   virtual void ChildIsDirty(nsIFrame* aChild);
 
   virtual bool IsLeaf() const;
-  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
-  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true);
   
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
 #endif  
 
   // nsContainerFrame methods
@@ -135,7 +135,7 @@ public:
                                        nsIFrame*       aFrame,
                                        nsIView*        aView,
                                        const nsRect&   aVisualOverflowArea,
-                                       PRUint32        aFlags = 0);
+                                       uint32_t        aFlags = 0);
 
   // Syncs properties to the top level view and window, like transparency and
   // shadow.
@@ -154,7 +154,7 @@ public:
                                       nsIFrame*        aFrame,
                                       nsStyleContext*  aStyleContext,
                                       nsIView*         aView,
-                                      PRUint32         aFlags = 0);
+                                      uint32_t         aFlags = 0);
 
   /**
    * Converts the minimum and maximum sizes given in inner window app units to
@@ -201,7 +201,7 @@ public:
                        const nsHTMLReflowState&       aReflowState,
                        nscoord                        aX,
                        nscoord                        aY,
-                       PRUint32                       aFlags,
+                       uint32_t                       aFlags,
                        nsReflowStatus&                aStatus,
                        nsOverflowContinuationTracker* aTracker = nullptr);
 
@@ -228,7 +228,7 @@ public:
                                     const nsHTMLReflowMetrics& aDesiredSize,
                                     nscoord                    aX,
                                     nscoord                    aY,
-                                    PRUint32                   aFlags);
+                                    uint32_t                   aFlags);
 
   
   static void PositionChildViews(nsIFrame* aFrame);
@@ -299,7 +299,7 @@ public:
   nsresult ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                            const nsHTMLReflowState& aReflowState,
                                            nsOverflowAreas&         aOverflowRects,
-                                           PRUint32                 aFlags,
+                                           uint32_t                 aFlags,
                                            nsReflowStatus&          aStatus);
 
   /**
@@ -376,7 +376,7 @@ protected:
   nsresult BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
                                                const nsRect&           aDirtyRect,
                                                const nsDisplayListSet& aLists,
-                                               PRUint32                aFlags = 0);
+                                               uint32_t                aFlags = 0);
 
   /**
    * A version of BuildDisplayList that use DISPLAY_CHILD_INLINE.

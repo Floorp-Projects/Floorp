@@ -8,8 +8,8 @@ extrn invoke_copy_to_stack:PROC
 .CODE
 
 ;
-;XPTC__InvokebyIndex(nsISupports* that, PRUint32 methodIndex,
-;                   PRUint32 paramCount, nsXPTCVariant* params)
+;XPTC__InvokebyIndex(nsISupports* that, uint32_t methodIndex,
+;                   uint32_t paramCount, nsXPTCVariant* params)
 ;
 
 XPTC__InvokebyIndex PROC FRAME

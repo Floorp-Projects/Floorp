@@ -120,7 +120,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
     if (NS_FAILED(rv)) return rv;
 
     const char *name;
-    PRUint16 nameLen;
+    uint16_t nameLen;
     while ((rv = find->FindNext( &name, &nameLen )) == NS_OK) {
         // Must copy, to make it zero-terminated
         mArray.AppendElement(nsCString(name,nameLen));
@@ -146,7 +146,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
 }
 
 NS_IMETHODIMP 
-nsJARInputStream::Available(PRUint64 *_retval)
+nsJARInputStream::Available(uint64_t *_retval)
 {
     // A lot of callers don't check the error code.
     // They just use the _retval value.
@@ -173,7 +173,7 @@ nsJARInputStream::Available(PRUint64 *_retval)
 }
 
 NS_IMETHODIMP
-nsJARInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
+nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t *aBytesRead)
 {
     NS_ENSURE_ARG_POINTER(aBuffer);
     NS_ENSURE_ARG_POINTER(aBytesRead);
@@ -206,7 +206,7 @@ MOZ_WIN_MEM_TRY_BEGIN
 
       case MODE_COPY:
         if (mFd) {
-          PRUint32 count = NS_MIN(aCount, mOutSize - PRUint32(mZs.total_out));
+          uint32_t count = NS_MIN(aCount, mOutSize - uint32_t(mZs.total_out));
           if (count) {
               memcpy(aBuffer, mZs.next_in + mZs.total_out, count);
               mZs.total_out += count;
@@ -225,7 +225,7 @@ MOZ_WIN_MEM_TRY_CATCH(rv = NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
-nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint32_t count, uint32_t *_retval)
 {
     // don't have a buffer to read from, so this better not be called!
     NS_NOTREACHED("Consumers should be using Read()!");
@@ -251,15 +251,15 @@ nsJARInputStream::Close()
 }
 
 nsresult 
-nsJARInputStream::ContinueInflate(char* aBuffer, PRUint32 aCount,
-                                  PRUint32* aBytesRead)
+nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
+                                  uint32_t* aBytesRead)
 {
     // No need to check the args, ::Read did that, but assert them at least
     NS_ASSERTION(aBuffer,"aBuffer parameter must not be null");
     NS_ASSERTION(aBytesRead,"aBytesRead parameter must not be null");
 
     // Keep old total_out count
-    const PRUint32 oldTotalOut = mZs.total_out;
+    const uint32_t oldTotalOut = mZs.total_out;
     
     // make sure we aren't reading too much
     mZs.avail_out = NS_MIN(aCount, (mOutSize-oldTotalOut));
@@ -293,20 +293,20 @@ nsJARInputStream::ContinueInflate(char* aBuffer, PRUint32 aCount,
 }
 
 nsresult
-nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
+nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount, uint32_t *aBytesRead)
 {
     // No need to check the args, ::Read did that, but assert them at least
     NS_ASSERTION(aBuffer,"aBuffer parameter must not be null");
     NS_ASSERTION(aBytesRead,"aBytesRead parameter must not be null");
 
     // If the buffer contains data, copy what's there up to the desired amount
-    PRUint32 numRead = CopyDataToBuffer(aBuffer, aCount);
+    uint32_t numRead = CopyDataToBuffer(aBuffer, aCount);
 
     if (aCount > 0) {
         // empty the buffer and start writing directory entry lines to it
         mBuffer.Truncate();
         mCurPos = 0;
-        const PRUint32 arrayLen = mArray.Length();
+        const uint32_t arrayLen = mArray.Length();
 
         for ( ;aCount > mBuffer.Length(); mArrPos++) {
             // have we consumed all the directory contents?
@@ -314,7 +314,7 @@ nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytes
                 break;
 
             const char * entryName = mArray[mArrPos].get();
-            PRUint32 entryNameLen = mArray[mArrPos].Length();
+            uint32_t entryNameLen = mArray[mArrPos].Length();
             nsZipItem* ze = mJar->mZip->GetItem(entryName);
             NS_ENSURE_TRUE(ze, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
@@ -356,10 +356,10 @@ nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytes
     return NS_OK;
 }
 
-PRUint32
-nsJARInputStream::CopyDataToBuffer(char* &aBuffer, PRUint32 &aCount)
+uint32_t
+nsJARInputStream::CopyDataToBuffer(char* &aBuffer, uint32_t &aCount)
 {
-    const PRUint32 writeLength = NS_MIN(aCount, mBuffer.Length() - mCurPos);
+    const uint32_t writeLength = NS_MIN(aCount, mBuffer.Length() - mCurPos);
 
     if (writeLength > 0) {
         memcpy(aBuffer, mBuffer.get() + mCurPos, writeLength);

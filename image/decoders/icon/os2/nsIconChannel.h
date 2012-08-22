@@ -38,7 +38,7 @@ public:
 protected:
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
-  PRInt32          mContentLength;
+  int32_t          mContentLength;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 
@@ -46,7 +46,7 @@ protected:
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIStreamListener>  mListener;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension);
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, uint32_t * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension);
   nsresult MakeInputStream(nsIInputStream** _retval, bool nonBlocking);
 };
 

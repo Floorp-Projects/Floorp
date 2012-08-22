@@ -75,8 +75,8 @@ enum nsCSSTokenType {
 struct nsCSSToken {
   nsAutoString    mIdent NS_OKONHEAP;
   float           mNumber;
-  PRInt32         mInteger;
-  PRInt32         mInteger2;
+  int32_t         mInteger;
+  int32_t         mInteger2;
   nsCSSTokenType  mType;
   PRUnichar       mSymbol;
   bool            mIntegerValid; // for number, dimension, urange
@@ -104,7 +104,7 @@ class nsCSSScanner {
   // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
   // when the line number is unknown.
   void Init(const nsAString& aBuffer,
-            nsIURI* aURI, PRUint32 aLineNumber,
+            nsIURI* aURI, uint32_t aLineNumber,
             nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader);
   void Close();
 
@@ -130,10 +130,10 @@ class nsCSSScanner {
 private:
   void ReportUnexpectedParams(const char* aMessage,
                               const PRUnichar** aParams,
-                              PRUint32 aParamsLength);
+                              uint32_t aParamsLength);
 
 public:
-  template<PRUint32 N>                           
+  template<uint32_t N>                           
   void ReportUnexpectedParams(const char* aMessage,
                               const PRUnichar* (&aParams)[N])
     {
@@ -150,10 +150,10 @@ public:
   void ReportUnexpectedTokenParams(nsCSSToken& tok,
                                    const char* aMessage,
                                    const PRUnichar **aParams,
-                                   PRUint32 aParamsLength);
+                                   uint32_t aParamsLength);
 #endif
 
-  PRUint32 GetLineNumber() { return mLineNumber; }
+  uint32_t GetLineNumber() { return mLineNumber; }
 
   // Get the next token. Return false on EOF. aTokenResult
   // is filled in with the data for the token.
@@ -179,44 +179,44 @@ public:
   void StopRecording(nsString& aBuffer);
 
 protected:
-  PRInt32 Read();
-  PRInt32 Peek();
+  int32_t Read();
+  int32_t Peek();
   bool LookAhead(PRUnichar aChar);
   bool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
   void EatWhiteSpace();
 
   bool ParseAndAppendEscape(nsString& aOutput, bool aInString);
-  bool ParseIdent(PRInt32 aChar, nsCSSToken& aResult);
-  bool ParseAtKeyword(PRInt32 aChar, nsCSSToken& aResult);
-  bool ParseNumber(PRInt32 aChar, nsCSSToken& aResult);
-  bool ParseRef(PRInt32 aChar, nsCSSToken& aResult);
-  bool ParseString(PRInt32 aChar, nsCSSToken& aResult);
-  bool ParseURange(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseIdent(int32_t aChar, nsCSSToken& aResult);
+  bool ParseAtKeyword(int32_t aChar, nsCSSToken& aResult);
+  bool ParseNumber(int32_t aChar, nsCSSToken& aResult);
+  bool ParseRef(int32_t aChar, nsCSSToken& aResult);
+  bool ParseString(int32_t aChar, nsCSSToken& aResult);
+  bool ParseURange(int32_t aChar, nsCSSToken& aResult);
   bool SkipCComment();
 
-  bool GatherIdent(PRInt32 aChar, nsString& aIdent);
+  bool GatherIdent(int32_t aChar, nsString& aIdent);
 
   const PRUnichar *mReadPointer;
-  PRUint32 mOffset;
-  PRUint32 mCount;
+  uint32_t mOffset;
+  uint32_t mCount;
   PRUnichar* mPushback;
-  PRInt32 mPushbackCount;
-  PRInt32 mPushbackSize;
+  int32_t mPushbackCount;
+  int32_t mPushbackSize;
   PRUnichar mLocalPushback[4];
 
-  PRUint32 mLineNumber;
+  uint32_t mLineNumber;
   // True if we are in SVG mode; false in "normal" CSS
   bool mSVGMode;
   bool mRecording;
-  PRUint32 mRecordStartOffset;
+  uint32_t mRecordStartOffset;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
   nsCOMPtr<nsIURI> mURI;  // Cached so we know to not refetch mFileName
-  PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
+  uint32_t mErrorLineNumber, mColNumber, mErrorColNumber;
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
-  PRUint64 mInnerWindowID;
+  uint64_t mInnerWindowID;
   bool mWindowIDCached;
   nsCSSStyleSheet* mSheet;
   mozilla::css::Loader* mLoader;

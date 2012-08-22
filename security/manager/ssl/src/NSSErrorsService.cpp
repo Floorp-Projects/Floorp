@@ -51,7 +51,7 @@ NSSErrorsService::Init()
 #endif
 
 NS_IMETHODIMP
-NSSErrorsService::IsNSSErrorCode(PRInt32 aNSPRCode, bool *_retval)
+NSSErrorsService::IsNSSErrorCode(int32_t aNSPRCode, bool *_retval)
 {
   if (!_retval)
     return NS_ERROR_FAILURE;
@@ -61,7 +61,7 @@ NSSErrorsService::IsNSSErrorCode(PRInt32 aNSPRCode, bool *_retval)
 }
 
 NS_IMETHODIMP
-NSSErrorsService::GetXPCOMFromNSSError(PRInt32 aNSPRCode, nsresult *aXPCOMErrorCode)
+NSSErrorsService::GetXPCOMFromNSSError(int32_t aNSPRCode, nsresult *aXPCOMErrorCode)
 {
   if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
     return NS_ERROR_FAILURE;
@@ -80,7 +80,7 @@ NSSErrorsService::GetXPCOMFromNSSError(PRInt32 aNSPRCode, nsresult *aXPCOMErrorC
 }
 
 NS_IMETHODIMP
-NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode, PRUint32 *aErrorClass)
+NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode, uint32_t *aErrorClass)
 {
   NS_ENSURE_ARG(aErrorClass);
 
@@ -88,7 +88,7 @@ NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode, PRUint32 *aErrorClass)
       || NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR)
     return NS_ERROR_FAILURE;
   
-  PRInt32 aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
+  int32_t aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
 
   if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
     return NS_ERROR_FAILURE;
@@ -120,7 +120,7 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
       || NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR)
     return NS_ERROR_FAILURE;
   
-  PRInt32 aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
+  int32_t aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
 
   if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
     return NS_ERROR_FAILURE;

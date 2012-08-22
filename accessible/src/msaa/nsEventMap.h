@@ -8,10 +8,10 @@
 #include <winuser.h>
 #include "AccessibleEventId.h"
 
-const PRUint32 kEVENT_WIN_UNKNOWN = 0x00000000;
-const PRUint32 kEVENT_LAST_ENTRY  = 0xffffffff;
+const uint32_t kEVENT_WIN_UNKNOWN = 0x00000000;
+const uint32_t kEVENT_LAST_ENTRY  = 0xffffffff;
 
-static const PRUint32 gWinEventMap[] = {
+static const uint32_t gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent doesn't have 0 constant
   EVENT_OBJECT_SHOW,                                 // nsIAccessibleEvent::EVENT_SHOW
   EVENT_OBJECT_HIDE,                                 // nsIAccessibleEvent::EVENT_HIDE

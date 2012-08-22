@@ -150,8 +150,8 @@ NS_IMETHODIMP nsSound::Beep()
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 dataLen,
-                                        const PRUint8 *data)
+                                        uint32_t dataLen,
+                                        const uint8_t *data)
 {
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   if (data && dataLen > 0) {
     DWORD flags = SND_MEMORY | SND_NODEFAULT;
     // We try to make a copy so we can play it async.
-    mLastSound = (PRUint8 *) malloc(dataLen);
+    mLastSound = (uint8_t *) malloc(dataLen);
     if (mLastSound) {
       memcpy(mLastSound, data, dataLen);
       data = mLastSound;
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 
   NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
 
-  PRUint32 eventId;
+  uint32_t eventId;
   if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
     eventId = EVENT_NEW_MAIL_RECEIVED;
   else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
@@ -260,7 +260,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   return PlayEventSound(eventId);
 }
 
-NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 {
   ShutdownOldPlayerThread();
   PurgeLastSound();

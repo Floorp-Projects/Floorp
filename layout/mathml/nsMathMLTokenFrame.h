@@ -57,12 +57,12 @@ public:
   virtual void MarkIntrinsicWidthsDirty();
 
   NS_IMETHOD
-  AttributeChanged(PRInt32         aNameSpaceID,
+  AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   PRInt32         aModType);
+                   int32_t         aModType);
 
   virtual nsresult
-  ChildListChanged(PRInt32 aModType)
+  ChildListChanged(int32_t aModType)
   {
     ProcessTextData();
     return nsMathMLContainerFrame::ChildListChanged(aModType);

@@ -206,16 +206,16 @@ class nsTrivialFunctor : public nsBoolDomIterFunctor
 struct NS_STACK_CLASS DOMPoint
 {
   nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
+  int32_t offset;
   
   DOMPoint() : node(0),offset(0) {}
-  DOMPoint(nsIDOMNode *aNode, PRInt32 aOffset) : 
+  DOMPoint(nsIDOMNode *aNode, int32_t aOffset) : 
                  node(aNode),offset(aOffset) {}
-  void SetPoint(nsIDOMNode *aNode, PRInt32 aOffset)
+  void SetPoint(nsIDOMNode *aNode, int32_t aOffset)
   {
     node = aNode; offset = aOffset;
   }
-  void GetPoint(nsCOMPtr<nsIDOMNode> &aNode, PRInt32 &aOffset)
+  void GetPoint(nsCOMPtr<nsIDOMNode> &aNode, int32_t &aOffset)
   {
     aNode = node; aOffset = offset;
   }
@@ -225,7 +225,7 @@ struct NS_STACK_CLASS DOMPoint
 class nsEditorUtils
 {
   public:
-    static bool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset = 0);
+    static bool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t *aOffset = 0);
     static bool IsLeafNode(nsIDOMNode *aNode);
 };
 

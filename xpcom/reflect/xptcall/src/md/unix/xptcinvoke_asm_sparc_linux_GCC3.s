@@ -10,8 +10,8 @@
  */
         .global NS_InvokeByIndex_P
 /*
- *  NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
- *                 PRUint32 paramCount, nsXPTCVariant* params);
+ *  NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+ *                 uint32_t paramCount, nsXPTCVariant* params);
  *   
  */
 NS_InvokeByIndex_P:

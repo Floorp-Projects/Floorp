@@ -248,7 +248,7 @@ nsHTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 }
 
 nsresult
-nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+nsHTMLLabelElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, bool aNotify)
 {
   return nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -256,7 +256,7 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
 }
 
 nsresult
-nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsHTMLLabelElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                               bool aNotify)
 {
   return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);

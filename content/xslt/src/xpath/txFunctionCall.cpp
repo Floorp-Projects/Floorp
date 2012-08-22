@@ -61,11 +61,11 @@ FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
     return NS_OK;
 }
 
-bool FunctionCall::requireParams(PRInt32 aParamCountMin,
-                                   PRInt32 aParamCountMax,
+bool FunctionCall::requireParams(int32_t aParamCountMin,
+                                   int32_t aParamCountMax,
                                    txIEvalContext* aContext)
 {
-    PRInt32 argc = mParams.Length();
+    int32_t argc = mParams.Length();
     if (argc < aParamCountMin ||
         (aParamCountMax > -1 && argc > aParamCountMax)) {
         nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function"));
@@ -82,13 +82,13 @@ bool FunctionCall::requireParams(PRInt32 aParamCountMin,
 }
 
 Expr*
-FunctionCall::getSubExprAt(PRUint32 aPos)
+FunctionCall::getSubExprAt(uint32_t aPos)
 {
     return mParams.SafeElementAt(aPos);
 }
 
 void
-FunctionCall::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+FunctionCall::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     NS_ASSERTION(aPos < mParams.Length(),
                  "setting bad subexpression index");
@@ -98,7 +98,7 @@ FunctionCall::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 bool
 FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
 {
-    PRUint32 i, len = mParams.Length();
+    uint32_t i, len = mParams.Length();
     for (i = 0; i < len; ++i) {
         if (mParams[i]->isSensitiveTo(aContext)) {
             return true;
@@ -122,7 +122,7 @@ FunctionCall::toString(nsAString& aDest)
 
     aDest.Append(nsDependentAtomString(functionNameAtom) +
                  NS_LITERAL_STRING("("));
-    for (PRUint32 i = 0; i < mParams.Length(); ++i) {
+    for (uint32_t i = 0; i < mParams.Length(); ++i) {
         if (i != 0) {
             aDest.Append(PRUnichar(','));
         }
