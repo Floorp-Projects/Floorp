@@ -154,6 +154,10 @@ public:
         return true;
     }
 
+    virtual bool IsCurrent() {
+        return [NSOpenGLContext currentContext] == mContext;
+    }
+
     bool SetupLookupFunction()
     {
         return false;

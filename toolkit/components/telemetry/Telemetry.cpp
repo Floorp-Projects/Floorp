@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include "base/histogram.h"
 #include "base/pickle.h"
 #include "nsIComponentManager.h"
@@ -22,6 +23,7 @@
 #include "nsBaseHashtable.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ProcessedStack.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
@@ -102,8 +104,7 @@ public:
                                   uint32_t delay);
 #if defined(MOZ_ENABLE_PROFILER_SPS)
   static void RecordChromeHang(uint32_t duration,
-                               const Telemetry::HangStack &callStack,
-                               SharedLibraryInfo &moduleMap);
+                               Telemetry::ProcessedStack &aStack);
 #endif
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
   struct Stat {
@@ -117,10 +118,7 @@ public:
   typedef nsBaseHashtableET<nsCStringHashKey, StmtStats> SlowSQLEntryType;
   struct HangReport {
     uint32_t duration;
-    Telemetry::HangStack callStack;
-#if defined(MOZ_ENABLE_PROFILER_SPS)
-    SharedLibraryInfo moduleMap;
-#endif
+    Telemetry::ProcessedStack mStack;
   };
 
 private:
@@ -1021,6 +1019,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 
   // Each hang report is an object in the 'chromeHangs' array
   for (size_t i = 0; i < mHangReports.Length(); ++i) {
+    Telemetry::ProcessedStack &stack = mHangReports[i].mStack;
     JSObject *reportObj = JS_NewObject(cx, NULL, NULL, NULL);
     if (!reportObj) {
       return NS_ERROR_FAILURE;
@@ -1050,10 +1049,11 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       return NS_ERROR_FAILURE;
     }
 
-    const uint32_t pcCount = mHangReports[i].callStack.Length();
+    const uint32_t pcCount = stack.GetStackSize();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
       nsCAutoString pcString;
-      pcString.AppendPrintf("0x%p", mHangReports[i].callStack[pcIndex]);
+      const Telemetry::ProcessedStack::Frame &Frame = stack.GetFrame(pcIndex);
+      pcString.AppendPrintf("0x%p", Frame.mOffset);
       JSString *str = JS_NewStringCopyZ(cx, pcString.get());
       if (!str) {
         return NS_ERROR_FAILURE;
@@ -1076,12 +1076,11 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       return NS_ERROR_FAILURE;
     }
 
-#if defined(MOZ_ENABLE_PROFILER_SPS)
-    const uint32_t moduleCount = mHangReports[i].moduleMap.GetSize();
+    const uint32_t moduleCount = stack.GetNumModules();
     for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
       // Current module
-      const SharedLibrary &module =
-        mHangReports[i].moduleMap.GetEntry(moduleIndex);
+      const Telemetry::ProcessedStack::Module &module =
+        stack.GetModule(moduleIndex);
 
       JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
       if (!moduleInfoArray) {
@@ -1094,7 +1093,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 
       // Start address
       nsCAutoString addressString;
-      addressString.AppendPrintf("0x%p", module.GetStart());
+      addressString.AppendPrintf("0x%p", module.mStart);
       JSString *str = JS_NewStringCopyZ(cx, addressString.get());
       if (!str) {
         return NS_ERROR_FAILURE;
@@ -1105,7 +1104,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       }
 
       // Module name
-      str = JS_NewStringCopyZ(cx, module.GetName());
+      str = JS_NewStringCopyZ(cx, module.mName.c_str());
       if (!str) {
         return NS_ERROR_FAILURE;
       }
@@ -1115,26 +1114,19 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       }
 
       // Module size in memory
-      val = INT_TO_JSVAL(int32_t(module.GetEnd() - module.GetStart()));
+      val = INT_TO_JSVAL(int32_t(module.mMappingSize));
       if (!JS_SetElement(cx, moduleInfoArray, 2, &val)) {
         return NS_ERROR_FAILURE;
       }
 
       // "PDB Age" identifier
-      val = INT_TO_JSVAL(0);
-#if defined(MOZ_PROFILING) && defined(XP_WIN)
-      val = INT_TO_JSVAL(module.GetPdbAge());
-#endif
+      val = INT_TO_JSVAL(module.mPdbAge);
       if (!JS_SetElement(cx, moduleInfoArray, 3, &val)) {
         return NS_ERROR_FAILURE;
       }
 
       // "PDB Signature" GUID
-      char guidString[NSID_LENGTH] = { 0 };
-#if defined(MOZ_PROFILING) && defined(XP_WIN)
-      module.GetPdbSignature().ToProvidedString(guidString);
-#endif
-      str = JS_NewStringCopyZ(cx, guidString);
+      str = JS_NewStringCopyZ(cx, module.mPdbSignature.c_str());
       if (!str) {
         return NS_ERROR_FAILURE;
       }
@@ -1144,11 +1136,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       }
 
       // Name of associated PDB file
-      const char *pdbName = "";
-#if defined(MOZ_PROFILING) && defined(XP_WIN)
-      pdbName = module.GetPdbName();
-#endif
-      str = JS_NewStringCopyZ(cx, pdbName);
+      str = JS_NewStringCopyZ(cx, module.mPdbName.c_str());
       if (!str) {
         return NS_ERROR_FAILURE;
       }
@@ -1157,7 +1145,6 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
         return NS_ERROR_FAILURE;
       }
     }
-#endif
   }
 
   return NS_OK;
@@ -1424,8 +1411,7 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 void
 TelemetryImpl::RecordChromeHang(uint32_t duration,
-                                const Telemetry::HangStack &callStack,
-                                SharedLibraryInfo &moduleMap)
+                                Telemetry::ProcessedStack &aStack)
 {
   MOZ_ASSERT(sTelemetry);
   if (!sTelemetry->mCanRecord) {
@@ -1436,17 +1422,19 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
 
   // Only report the modules which changed since the first hang report
   if (sTelemetry->mHangReports.Length()) {
-    SharedLibraryInfo &firstModuleMap =
-      sTelemetry->mHangReports[0].moduleMap;
-    for (size_t i = 0; i < moduleMap.GetSize(); ++i) {
-      if (firstModuleMap.Contains(moduleMap.GetEntry(i))) {
-        moduleMap.RemoveEntries(i, i + 1);
+    Telemetry::ProcessedStack &firstStack =
+      sTelemetry->mHangReports[0].mStack;
+    const uint32_t moduleCount = aStack.GetNumModules();
+    for (size_t i = 0; i < moduleCount; ++i) {
+      const Telemetry::ProcessedStack::Module &module = aStack.GetModule(i);
+      if (firstStack.HasModule(module)) {
+        aStack.RemoveModule(i);
         --i;
       }
     }
   }
 
-  HangReport newReport = { duration, callStack, moduleMap };
+  HangReport newReport = { duration, aStack };
   sTelemetry->mHangReports.AppendElement(newReport);
 }
 #endif
@@ -1534,12 +1522,194 @@ void Init()
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 void RecordChromeHang(uint32_t duration,
-                      const Telemetry::HangStack &callStack,
-                      SharedLibraryInfo &moduleMap)
+                      ProcessedStack &aStack)
 {
-  TelemetryImpl::RecordChromeHang(duration, callStack, moduleMap);
+  TelemetryImpl::RecordChromeHang(duration, aStack);
 }
 #endif
+
+ProcessedStack::ProcessedStack()
+{
+}
+
+size_t ProcessedStack::GetStackSize() const
+{
+  return mStack.size();
+}
+
+const ProcessedStack::Frame &ProcessedStack::GetFrame(unsigned aIndex) const
+{
+  MOZ_ASSERT(aIndex < mStack.size());
+  return mStack[aIndex];
+}
+
+void ProcessedStack::AddFrame(const Frame &aFrame)
+{
+  mStack.push_back(aFrame);
+}
+
+size_t ProcessedStack::GetNumModules() const
+{
+  return mModules.size();
+}
+
+const ProcessedStack::Module &ProcessedStack::GetModule(unsigned aIndex) const
+{
+  MOZ_ASSERT(aIndex < mModules.size());
+  return mModules[aIndex];
+}
+
+bool ProcessedStack::HasModule(const Module &aModule) const {
+  return mModules.end() !=
+    std::find(mModules.begin(), mModules.end(), aModule);
+}
+
+void ProcessedStack::RemoveModule(unsigned aIndex) {
+  mModules.erase(mModules.begin() + aIndex);
+}
+
+void ProcessedStack::AddModule(const Module &aModule)
+{
+  mModules.push_back(aModule);
+}
+
+void ProcessedStack::Clear() {
+  mModules.clear();
+  mStack.clear();
+}
+
+bool ProcessedStack::Module::operator==(const Module& aOther) const {
+  return  mName == aOther.mName &&
+    mStart == aOther.mStart &&
+    mMappingSize == aOther.mMappingSize &&
+    mPdbAge == aOther.mPdbAge &&
+    mPdbSignature == aOther.mPdbSignature &&
+    mPdbName == aOther.mPdbName;
+}
+
+struct StackFrame
+{
+  uintptr_t mPC;      // The program counter at this position in the call stack.
+  uint16_t mIndex;    // The number of this frame in the call stack.
+  uint16_t mModIndex; // The index of module that has this program counter.
+};
+
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+static bool CompareByPC(const StackFrame &a, const StackFrame &b)
+{
+  return a.mPC < b.mPC;
+}
+
+static bool CompareByIndex(const StackFrame &a, const StackFrame &b)
+{
+  return a.mIndex < b.mIndex;
+}
+#endif
+
+ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs, bool aRelative)
+{
+  std::vector<StackFrame> rawStack;
+  for (std::vector<uintptr_t>::const_iterator i = aPCs.begin(),
+         e = aPCs.end(); i != e; ++i) {
+    uintptr_t aPC = *i;
+    StackFrame Frame = {aPC, static_cast<uint16_t>(rawStack.size()),
+                        std::numeric_limits<uint16_t>::max()};
+    rawStack.push_back(Frame);
+  }
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  // Remove all modules not referenced by a PC on the stack
+  std::sort(rawStack.begin(), rawStack.end(), CompareByPC);
+
+  size_t moduleIndex = 0;
+  size_t stackIndex = 0;
+  size_t stackSize = rawStack.size();
+
+  SharedLibraryInfo rawModules = SharedLibraryInfo::GetInfoForSelf();
+  rawModules.SortByAddress();
+
+  while (moduleIndex < rawModules.GetSize()) {
+    const SharedLibrary& module = rawModules.GetEntry(moduleIndex);
+    uintptr_t moduleStart = module.GetStart();
+    uintptr_t moduleEnd = module.GetEnd() - 1;
+    // the interval is [moduleStart, moduleEnd)
+
+    bool moduleReferenced = false;
+    for (;stackIndex < stackSize; ++stackIndex) {
+      uintptr_t pc = rawStack[stackIndex].mPC;
+      if (pc >= moduleEnd)
+        break;
+
+      if (pc >= moduleStart) {
+        // If the current PC is within the current module, mark
+        // module as used
+        moduleReferenced = true;
+        if (aRelative)
+          rawStack[stackIndex].mPC -= moduleStart;
+        rawStack[stackIndex].mModIndex = moduleIndex;
+      } else {
+        // PC does not belong to any module. It is probably from
+        // the JIT. Use a fixed mPC so that we don't get different
+        // stacks on different runs.
+        rawStack[stackIndex].mPC =
+          std::numeric_limits<uintptr_t>::max();
+      }
+    }
+
+    if (moduleReferenced) {
+      ++moduleIndex;
+    } else {
+      // Remove module if no PCs within its address range
+      rawModules.RemoveEntries(moduleIndex, moduleIndex + 1);
+    }
+  }
+
+  for (;stackIndex < stackSize; ++stackIndex) {
+    // These PCs are past the last module.
+    rawStack[stackIndex].mPC = std::numeric_limits<uintptr_t>::max();
+  }
+
+  std::sort(rawStack.begin(), rawStack.end(), CompareByIndex);
+#endif
+
+  // Copy the information to the return value.
+  ProcessedStack Ret;
+  for (std::vector<StackFrame>::iterator i = rawStack.begin(),
+         e = rawStack.end(); i != e; ++i) {
+    const StackFrame &rawFrame = *i;
+    ProcessedStack::Frame frame = { rawFrame.mPC, rawFrame.mModIndex };
+    Ret.AddFrame(frame);
+  }
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  for (unsigned i = 0, n = rawModules.GetSize(); i != n; ++i) {
+    const SharedLibrary &info = rawModules.GetEntry(i);
+    ProcessedStack::Module module = {
+      info.GetName(),
+      info.GetStart(),
+      info.GetEnd() - info.GetStart(),
+#ifdef XP_WIN
+      info.GetPdbAge(),
+      "", // mPdbSignature
+      info.GetPdbName(),
+#else
+      0, // mPdbAge
+      "", // mPdbSignature
+      "" // mPdbName
+#endif
+    };
+#ifdef XP_WIN
+    char guidString[NSID_LENGTH] = { 0 };
+    info.GetPdbSignature().ToProvidedString(guidString);
+    module.mPdbSignature = guidString;
+#endif
+    Ret.AddModule(module);
+  }
+#endif
+
+  return Ret;
+}
 
 } // namespace Telemetry
 } // namespace mozilla

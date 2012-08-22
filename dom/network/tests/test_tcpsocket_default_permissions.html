@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure TCPSocket permission is disabled by default</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test to ensure TCPSocket permission is disabled by default **/
+
+try {
+  navigator.mozTCPSocket;
+  throw new Error("Error: navigator.mozTCPSocket should not exist by default");
+} catch (e) {
+  ok(true, "navigator.mozTCPSocket should not exist by default");  
+}
+
+</script>
+</pre>
+</body>
+</html>

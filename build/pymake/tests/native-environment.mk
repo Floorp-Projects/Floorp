@@ -1,10 +1,11 @@
 #T gmake skip
 export EXPECTED := some data
 
-CMD = %pycmd writeenvtofile
 PYCOMMANDPATH = $(TESTPATH)
 
 all:
-	$(CMD) results EXPECTED
+	%pycmd writeenvtofile results EXPECTED
+	test "$$(cat results)" = "$(EXPECTED)"
+	%pycmd writesubprocessenvtofile results EXPECTED
 	test "$$(cat results)" = "$(EXPECTED)"
 	@echo TEST-PASS
