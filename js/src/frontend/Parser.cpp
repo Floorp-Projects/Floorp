@@ -400,18 +400,11 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
     level(pc->staticLevel),
     ndefaults(0),
     strictModeState(sms),
-    inLoop(false),
     inWith(!!pc->innermostWith),
     inGenexpLambda(false),
     cxFlags(pc->sc->context)     // the cxFlags are set in LeaveFunction
 {
     isFunctionBox = true;
-    for (StmtInfoPC *stmt = pc->topStmt; stmt; stmt = stmt->down) {
-        if (stmt->isLoop()) {
-            inLoop = true;
-            break;
-        }
-    }
     if (!pc->sc->inFunction()) {
         JSObject *scope = pc->sc->scopeChain();
         while (scope) {

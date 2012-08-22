@@ -301,7 +301,6 @@ struct FunctionBox : public ObjectBox
     uint16_t        level;
     uint16_t        ndefaults;
     StrictMode::StrictModeState strictModeState;
-    bool            inLoop:1;               /* in a loop in parent function */
     bool            inWith:1;               /* some enclosing scope is a with-statement
                                                or E4X filter-expression */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
