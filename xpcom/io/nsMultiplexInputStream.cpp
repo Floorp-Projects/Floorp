@@ -9,6 +9,7 @@
  */
 
 #include "IPC/IPCMessageUtils.h"
+#include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/Attributes.h"
 
 #include "nsMultiplexInputStream.h"
@@ -26,6 +27,7 @@ using namespace mozilla::ipc;
 
 class nsMultiplexInputStream MOZ_FINAL : public nsIMultiplexInputStream,
                                          public nsISeekableStream,
+                                         public nsIIPCSerializableObsolete,
                                          public nsIIPCSerializableInputStream
 {
 public:
@@ -35,6 +37,7 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMULTIPLEXINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
 private:
@@ -64,10 +67,11 @@ NS_IMPL_THREADSAFE_RELEASE(nsMultiplexInputStream)
 NS_IMPL_CLASSINFO(nsMultiplexInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_MULTIPLEXINPUTSTREAM_CID)
 
-NS_IMPL_QUERY_INTERFACE4_CI(nsMultiplexInputStream,
+NS_IMPL_QUERY_INTERFACE5_CI(nsMultiplexInputStream,
                             nsIMultiplexInputStream,
                             nsIInputStream,
                             nsISeekableStream,
+                            nsIIPCSerializableObsolete,
                             nsIIPCSerializableInputStream)
 NS_IMPL_CI_INTERFACE_GETTER3(nsMultiplexInputStream,
                              nsIMultiplexInputStream,
@@ -590,6 +594,52 @@ nsMultiplexInputStreamConstructor(nsISupports *outer,
     NS_RELEASE(inst);
 
     return rv;
+}
+
+bool
+nsMultiplexInputStream::Read(const IPC::Message *aMsg, void **aIter)
+{
+    using IPC::ReadParam;
+
+    uint32_t count;
+    if (!ReadParam(aMsg, aIter, &count))
+        return false;
+
+    for (uint32_t i = 0; i < count; i++) {
+        IPC::InputStream inputStream;
+        if (!ReadParam(aMsg, aIter, &inputStream))
+            return false;
+
+        nsCOMPtr<nsIInputStream> stream(inputStream);
+        nsresult rv = AppendStream(stream);
+        if (NS_FAILED(rv))
+            return false;
+    }
+
+    if (!ReadParam(aMsg, aIter, &mCurrentStream) ||
+        !ReadParam(aMsg, aIter, &mStartedReadingCurrent) ||
+        !ReadParam(aMsg, aIter, &mStatus))
+        return false;
+
+    return true;
+}
+
+void
+nsMultiplexInputStream::Write(IPC::Message *aMsg)
+{
+    using IPC::WriteParam;
+
+    uint32_t count = mStreams.Length();
+    WriteParam(aMsg, count);
+
+    for (uint32_t i = 0; i < count; i++) {
+        IPC::InputStream inputStream(mStreams[i]);
+        WriteParam(aMsg, inputStream);
+    }
+
+    WriteParam(aMsg, mCurrentStream);
+    WriteParam(aMsg, mStartedReadingCurrent);
+    WriteParam(aMsg, mStatus);
 }
 
 void
