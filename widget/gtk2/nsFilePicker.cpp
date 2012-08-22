@@ -542,7 +542,7 @@ nsFilePicker::Done(GtkWidget* file_chooser, gint response)
 {
   mRunning = false;
 
-  PRInt16 result;
+  int16_t result;
   switch (response) {
     case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:

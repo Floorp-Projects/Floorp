@@ -57,9 +57,9 @@ protected:
   nsCOMPtr<nsIFilePickerShownCallback> mCallback;
   nsCOMArray<nsIFile> mFiles;
 
-  PRInt16   mMode;
-  PRInt16   mSelectedType;
-  PRInt16   mResult;
+  int16_t   mMode;
+  int16_t   mSelectedType;
+  int16_t   mResult;
   bool      mRunning;
   bool      mAllowURLs;
   nsCString mFileURL;

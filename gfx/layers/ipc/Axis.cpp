@@ -186,7 +186,7 @@ Axis::Overscroll Axis::DisplacementWillOverscroll(int32_t aDisplacement) {
   return OVERSCROLL_NONE;
 }
 
-float Axis::DisplacementWillOverscrollAmount(PRInt32 aDisplacement) {
+float Axis::DisplacementWillOverscrollAmount(int32_t aDisplacement) {
   switch (DisplacementWillOverscroll(aDisplacement)) {
   case OVERSCROLL_MINUS: return (GetOrigin() + aDisplacement) - GetPageStart();
   case OVERSCROLL_PLUS: return (GetViewportEnd() + aDisplacement) - GetPageEnd();
@@ -196,7 +196,7 @@ float Axis::DisplacementWillOverscrollAmount(PRInt32 aDisplacement) {
   }
 }
 
-Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, PRInt32 aFocus) {
+Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, int32_t aFocus) {
   float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
 
   bool both = ScaleWillOverscrollBothSides(aScale);
@@ -215,7 +215,7 @@ Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, PRInt32 aFocus) {
   return OVERSCROLL_NONE;
 }
 
-float Axis::ScaleWillOverscrollAmount(float aScale, PRInt32 aFocus) {
+float Axis::ScaleWillOverscrollAmount(float aScale, int32_t aFocus) {
   float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
   switch (ScaleWillOverscroll(aScale, aFocus)) {
   case OVERSCROLL_MINUS: return originAfterScale - GetPageStart() * aScale;
