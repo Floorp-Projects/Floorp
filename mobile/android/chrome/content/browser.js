@@ -383,20 +383,28 @@ var BrowserApp = {
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyPhoneNumber"),
-      NativeWindow.contextmenus.phoneNumberLinkCopyableContext,
+      NativeWindow.contextmenus.phoneNumberLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
-    });
+      });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
       NativeWindow.contextmenus.linkShareableContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title;
-        let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
-        sharing.shareWithDefault(url, "text/plain", title);
+        NativeWindow.contextmenus._shareStringWithDefault(url, title);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.sharePhoneNumber"),
+      NativeWindow.contextmenus.phoneNumberLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(phoneNumber, title);
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
@@ -1274,7 +1282,7 @@ var NativeWindow = {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontOpen = /^(mailto|javascript|news|snews)$/;
+          let dontOpen = /^(javascript|mailto|news|snews|tel)$/;
           return (scheme && !dontOpen.test(scheme));
         }
         return false;
@@ -1303,22 +1311,12 @@ var NativeWindow = {
       }
     },
 
-    phoneNumberLinkCopyableContext: {
-      matches: function phoneNumberLinkCopyableContextMatches(aElement) {
-        let uri = NativeWindow.contextmenus._getLink(aElement);
-        if (uri) {
-          return uri.schemeIs("tel");
-        }
-        return false;
-      }
-    },
-
     linkShareableContext: {
       matches: function linkShareableContextMatches(aElement) {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontShare = /^(chrome|about|file|javascript|resource)$/;
+          let dontShare = /^(about|chrome|file|javascript|resource|tel)$/;
           return (scheme && !dontShare.test(scheme));
         }
         return false;
@@ -1330,9 +1328,18 @@ var NativeWindow = {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontBookmark = /^(mailto)$/;
+          let dontBookmark = /^(mailto|tel)$/;
           return (scheme && !dontBookmark.test(scheme));
         }
+        return false;
+      }
+    },
+
+    phoneNumberLinkContext: {
+      matches: function phoneNumberLinkContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri)
+          return uri.schemeIs("tel");
         return false;
       }
     },
@@ -1495,6 +1502,11 @@ var NativeWindow = {
     _copyStringToDefaultClipboard: function(aString) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(aString);
+    },
+
+    _shareStringWithDefault: function(aSharedString, aTitle) {
+      let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
+      sharing.shareWithDefault(aSharedString, "text/plain", aTitle);
     },
 
     _stripScheme: function(aString) {
