@@ -12,6 +12,8 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 
+#include "math.h"
+
 #include "Layers.h"
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
@@ -5172,12 +5174,38 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
     autoSize = true;
   }
 
-  uint32_t width = widthStr.ToInteger(&errorCode);
-  if (NS_FAILED(errorCode)) {
-    if (autoSize) {
-      width = aDisplayWidth;
-    } else {
-      width = Preferences::GetInt("browser.viewport.desktopWidth", 0);
+  // Now convert the scale into device pixels per CSS pixel.
+  nsIWidget *widget = WidgetForDocument(aDocument);
+  double pixelRatio = widget ? GetDevicePixelsPerMetaViewportPixel(widget) : 1.0;
+  scaleFloat *= pixelRatio;
+  scaleMinFloat *= pixelRatio;
+  scaleMaxFloat *= pixelRatio;
+
+  uint32_t width, height;
+  if (autoSize) {
+    // aDisplayWidth and aDisplayHeight are in device pixels; convert them to
+    // CSS pixels for the viewport size.
+    width = aDisplayWidth / pixelRatio;
+    height = aDisplayHeight / pixelRatio;
+  } else {
+    nsresult widthErrorCode, heightErrorCode;
+    width = widthStr.ToInteger(&widthErrorCode);
+    height = heightStr.ToInteger(&heightErrorCode);
+
+    // If width or height has not been set to a valid number by this point,
+    // fall back to a default value.
+    bool validWidth = (!widthStr.IsEmpty() && NS_SUCCEEDED(widthErrorCode) && width > 0);
+    bool validHeight = (!heightStr.IsEmpty() && NS_SUCCEEDED(heightErrorCode) && height > 0);
+    if (!validWidth) {
+      if (validHeight) {
+        width = (uint32_t) ((height * aDisplayWidth) / aDisplayHeight);
+      } else {
+        width = Preferences::GetInt("browser.viewport.desktopWidth",
+            kViewportDefaultScreenWidth);
+      }
+    }
+    if (!validHeight) {
+      height = (uint32_t) ((width * aDisplayHeight) / aDisplayWidth);
     }
   }
 
@@ -5187,19 +5215,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
   // Also recalculate the default zoom, if it wasn't specified in the metadata,
   // and the width is specified.
   if (scaleStr.IsEmpty() && !widthStr.IsEmpty()) {
-    scaleFloat = NS_MAX(scaleFloat, (float)(aDisplayWidth/width));
-  }
-
-  uint32_t height = heightStr.ToInteger(&errorCode);
-
-  if (NS_FAILED(errorCode)) {
-    height = width * ((float)aDisplayHeight / aDisplayWidth);
-  }
-
-  // If height was provided by the user, but width wasn't, then we should
-  // calculate the width.
-  if (widthStr.IsEmpty() && !heightStr.IsEmpty()) {
-    width = (uint32_t) ((height * aDisplayWidth) / aDisplayHeight);
+    scaleFloat = NS_MAX(scaleFloat, ((float)aDisplayWidth) / (float)width);
   }
 
   height = NS_MIN(height, kViewportMaxHeight);
@@ -5233,6 +5249,24 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument, uint32_t aDisplayWidth, 
   ret.maxZoom = scaleMaxFloat;
   ret.autoSize = autoSize;
   return ret;
+}
+
+/* static */
+double
+nsContentUtils::GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget)
+{
+  int prefValue = Preferences::GetInt("browser.viewport.scaleRatio", 0);
+  if (prefValue > 0)
+    return double(prefValue) / 100.0;
+
+  float dpi = aWidget->GetDPI();
+  if (dpi < 200.0) // Includes desktop displays, and LDPI and MDPI Android devices
+    return 1.0;
+  else if (dpi < 300.0) // Includes Nokia N900, and HDPI Android devices
+    return 1.5;
+
+  // For very high-density displays like the iPhone 4, calculate an integer ratio.
+  return floor(dpi / 150.0);
 }
 
 /* static */
