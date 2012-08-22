@@ -675,10 +675,12 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
+#ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest
 @BINPATH@/components/marionettecomponent.js
+#endif
 @BINPATH@/components/AlertsService.js
 @BINPATH@/components/ContentPermissionPrompt.js
 #ifdef MOZ_UPDATER
