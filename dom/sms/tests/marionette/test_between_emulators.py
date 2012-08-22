@@ -11,8 +11,8 @@ class SMSTest(MarionetteTestCase):
         sender = self.get_new_emulator()
         receiver = self.marionette
 
-        self.set_up_test_page(sender, "test.html", ["dom.sms.whitelist"])
-        self.set_up_test_page(receiver, "test.html", ["dom.sms.whitelist"])
+        self.set_up_test_page(sender, "test.html", ["sms"])
+        self.set_up_test_page(receiver, "test.html", ["sms"])
 
         # Setup the event listsener on the receiver, which should store
         # a global variable when an SMS is received.
@@ -21,7 +21,7 @@ class SMSTest(MarionetteTestCase):
         receiver.execute_script("""
 global.smsreceived = null;
 window.navigator.mozSms.addEventListener("received", function(e) {
-    global.smsreceived = e.message;
+    global.smsreceived = e.message.body;
 });
 """, new_sandbox=False)
 
