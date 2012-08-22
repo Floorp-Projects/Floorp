@@ -207,13 +207,13 @@ nsContentBlocker::ShouldProcess(uint32_t          aContentType,
 
     bool shouldLoad, fromPrefs;
     nsresult rv = TestPermission(aContentLocation, aRequestingLocation,
-				 aContentType, &shouldLoad, &fromPrefs);
+                                 aContentType, &shouldLoad, &fromPrefs);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!shouldLoad) {
       if (fromPrefs) {
-	*aDecision = nsIContentPolicy::REJECT_TYPE;
+        *aDecision = nsIContentPolicy::REJECT_TYPE;
       } else {
-	*aDecision = nsIContentPolicy::REJECT_SERVER;
+        *aDecision = nsIContentPolicy::REJECT_SERVER;
       }
     }
     return NS_OK;
