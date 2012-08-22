@@ -114,15 +114,7 @@ TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const PRUnichar *aData)
 {
-  if (!strcmp(aTopic, "dom-touch-listener-added")) {
-    nsCOMPtr<nsIDOMWindow> subject(do_QueryInterface(aSubject));
-    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mWebNav));
-    nsCOMPtr<nsIDOMWindow> topSubject;
-    subject->GetTop(getter_AddRefs(topSubject));
-    if (win == topSubject) {
-      SendNotifyDOMTouchListenerAdded();
-    }
-  } else if (!strcmp(aTopic, "cancel-default-pan-zoom")) {
+  if (!strcmp(aTopic, "cancel-default-pan-zoom")) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
     nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
     if (tabChild == this) {
@@ -163,9 +155,6 @@ TabChild::Init()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
   if (observerService) {
-    observerService->AddObserver(this,
-                                 "dom-touch-listener-added",
-                                 false);
     observerService->AddObserver(this,
                                  "cancel-default-pan-zoom",
                                  false);
