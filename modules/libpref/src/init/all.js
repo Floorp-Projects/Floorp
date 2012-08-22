@@ -725,8 +725,6 @@ pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 pref("javascript.options.mem.gc_dynamic_heap_growth", true);
 pref("javascript.options.mem.gc_dynamic_mark_slice", true);
 
-pref("javascript.options.mem.analysis_purge_mb", 100);
-
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
