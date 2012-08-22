@@ -1122,10 +1122,22 @@ JITChunk::rootedRegExps() const
     return (RegExpShared **)&rootedTemplates()[nRootedTemplates];
 }
 
+uint32_t *
+JITChunk::monitoredBytecodes() const
+{
+    return (uint32_t *)&rootedRegExps()[nRootedRegExps];
+}
+
+uint32_t *
+JITChunk::typeBarrierBytecodes() const
+{
+    return (uint32_t *)&monitoredBytecodes()[nMonitoredBytecodes];
+}
+
 char *
 JITChunk::commonSectionLimit() const
 {
-    return (char *)&rootedRegExps()[nRootedRegExps];
+    return (char *)&typeBarrierBytecodes()[nTypeBarrierBytecodes];
 }
 
 #ifdef JS_MONOIC
@@ -1257,6 +1269,9 @@ JITScript::destroy(FreeOp *fop)
     for (unsigned i = 0; i < nchunks; i++)
         destroyChunk(fop, i);
 
+    if (liveness)
+        fop->free_(liveness);
+
     if (shimPool)
         shimPool->release();
 }
@@ -1384,6 +1399,8 @@ size_t
 mjit::JITScript::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
     size_t n = mallocSizeOf(this);
+    if (liveness)
+        n += mallocSizeOf(liveness);
     for (unsigned i = 0; i < nchunks; i++) {
         const ChunkDescriptor &desc = chunkDescriptor(i);
         if (desc.chunk)
@@ -1402,6 +1419,8 @@ mjit::JITChunk::computedSizeOfIncludingThis()
            sizeof(CallSite) * nCallSites +
            sizeof(JSObject*) * nRootedTemplates +
            sizeof(RegExpShared*) * nRootedRegExps +
+           sizeof(uint32_t) * nMonitoredBytecodes +
+           sizeof(uint32_t) * nTypeBarrierBytecodes +
 #if defined JS_MONOIC
            sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +

@@ -687,6 +687,7 @@ struct JSRuntime : js::RuntimeFriendFields
     bool needZealousGC() {
         if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
             if (gcZeal() == js::gc::ZealAllocValue ||
+                gcZeal() == js::gc::ZealPurgeAnalysisValue ||
                 (gcZeal() >= js::gc::ZealIncrementalRootsThenFinish &&
                  gcZeal() <= js::gc::ZealIncrementalMultipleSlices))
             {
@@ -706,6 +707,9 @@ struct JSRuntime : js::RuntimeFriendFields
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
+
+    js::AnalysisPurgeCallback analysisPurgeCallback;
+    uint64_t            analysisPurgeTriggerBytes;
 
   private:
     /*
@@ -1292,6 +1296,7 @@ struct JSContext : js::ContextFriendFields
     bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
+    inline js::LifoAlloc &analysisLifoAlloc();
     inline js::LifoAlloc &typeLifoAlloc();
 
     inline js::PropertyTree &propertyTree();
