@@ -9,20 +9,26 @@
 #include "nsIObserver.h"
 
 struct GrowlDelegateWrapper;
+struct NotificationCenterDelegateWrapper;
 
-class nsGrowlAlertsService : public nsIAlertsService,
-                             public nsIObserver
+class nsMacAlertsService : public nsIAlertsService,
+                           public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_NSIOBSERVER
 
-  nsGrowlAlertsService();
+  nsMacAlertsService();
   nsresult Init();
+
 private:
-  GrowlDelegateWrapper* mDelegate;
-  virtual ~nsGrowlAlertsService();
+  virtual ~nsMacAlertsService();
+  nsresult InitGrowl();
+  nsresult InitNotificationCenter();
+
+  GrowlDelegateWrapper* mGrowlDelegate;
+  NotificationCenterDelegateWrapper* mNCDelegate;
 };
 
 #endif // nsGrowlAlertsService_h_
