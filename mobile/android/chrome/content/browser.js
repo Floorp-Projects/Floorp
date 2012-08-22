@@ -1384,7 +1384,7 @@ var NativeWindow = {
 
       while (element) {
         for each (let item in this.items) {
-          if (!this.menuitems[item.id] && item.matches(element)) {
+          if (!this.menuitems[item.id] && item.matches(element, aX, aY)) {
             this.menuitems[item.id] = item;
             menuitemsSet = true;
           }
