@@ -291,6 +291,7 @@ struct AutoEnterCompilation
       : cx(cx),
         info(cx->compartment->types.compiledInfo)
     {
+        JS_ASSERT(cx->compartment->activeAnalysis);
         JS_ASSERT(info.outputIndex == RecompileInfo::NoCompilerRunning);
     }
 
