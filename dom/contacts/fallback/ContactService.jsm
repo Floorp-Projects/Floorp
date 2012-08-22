@@ -4,11 +4,8 @@
 
 "use strict";
 
-let DEBUG = 0;
-if (DEBUG)
-  debug = function (s) { dump("-*- Fallback ContactService component: " + s + "\n"); }
-else
-  debug = function (s) {}
+const DEBUG = false;
+function debug(s) { dump("-*- Fallback ContactService component: " + s + "\n"); }
 
 const Cu = Components.utils; 
 const Cc = Components.classes;
@@ -28,7 +25,7 @@ let myGlobal = this;
 
 let DOMContactManager = {
   init: function() {
-    debug("Init");
+    if (DEBUG) debug("Init");
     this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove"];
     this._messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
@@ -56,7 +53,7 @@ let DOMContactManager = {
   },
 
   receiveMessage: function(aMessage) {
-    debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
+    if (DEBUG) debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
     let mm = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
     let msg = aMessage.data;
 
@@ -112,14 +109,14 @@ let DOMContactManager = {
             if (msg.options && msg.options.findOptions) {
               let findOptions = msg.options.findOptions;
               if (findOptions.sortOrder !== 'undefined' && findOptions.sortBy !== 'undefined') {
-                debug('sortBy: ' + findOptions.sortBy + ', sortOrder: ' + findOptions.sortOrder );
+                if (DEBUG) debug('sortBy: ' + findOptions.sortBy + ', sortOrder: ' + findOptions.sortOrder );
                 result.sort(sortfunction);
                 if (findOptions.filterLimit)
                   result = result.slice(0, findOptions.filterLimit);
               }
             }
 
-            debug("result:" + JSON.stringify(result));
+            if (DEBUG) debug("result:" + JSON.stringify(result));
             mm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
           }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this),
@@ -145,7 +142,7 @@ let DOMContactManager = {
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
       default:
-        debug("WRONG MESSAGE NAME: " + aMessage.name);
+        if (DEBUG) debug("WRONG MESSAGE NAME: " + aMessage.name);
     }
   }
 }
