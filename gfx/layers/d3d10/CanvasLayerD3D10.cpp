@@ -77,7 +77,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   mUsingSharedTexture = false;
 
   HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nullptr;
-  if (shareHandle) {
+  if (shareHandle && !mForceReadback) {
     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
     if (SUCCEEDED(hr))
       mUsingSharedTexture = true;
