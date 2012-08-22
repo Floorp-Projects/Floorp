@@ -763,6 +763,24 @@ struct ParamTraits<nsIntSize>
 };
 
 template<>
+struct ParamTraits<mozilla::gfx::Point>
+{
+  typedef mozilla::gfx::Point paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y));
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::gfx::Size>
 {
   typedef mozilla::gfx::Size paramType;

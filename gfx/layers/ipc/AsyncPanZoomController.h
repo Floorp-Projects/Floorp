@@ -280,7 +280,7 @@ protected:
   /**
    * Scrolls the viewport by an X,Y offset.
    */
-  void ScrollBy(const nsIntPoint& aOffset);
+  void ScrollBy(const gfx::Point& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to

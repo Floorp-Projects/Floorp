@@ -2338,11 +2338,24 @@ Tab.prototype = {
     aDisplayPort = this._dirtiestHackEverToWorkAroundGeckoRounding(aDisplayPort, geckoScrollX, geckoScrollY);
 
     cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - geckoScrollX,
-                                 (aDisplayPort.top / resolution) - geckoScrollY,
-                                 (aDisplayPort.right - aDisplayPort.left) / resolution,
-                                 (aDisplayPort.bottom - aDisplayPort.top) / resolution,
-                                 element);
+
+    let displayPort = {
+      x: (aDisplayPort.left / resolution) - geckoScrollX,
+      y: (aDisplayPort.top / resolution) - geckoScrollY,
+      width: (aDisplayPort.right - aDisplayPort.left) / resolution,
+      height: (aDisplayPort.bottom - aDisplayPort.top) / resolution
+    };
+
+    let epsilon = 0.001;
+    if (this._oldDisplayPort == null ||
+        Math.abs(displayPort.x - this._oldDisplayPort.x) > epsilon ||
+        Math.abs(displayPort.y - this._oldDisplayPort.y) > epsilon ||
+        Math.abs(displayPort.width - this._oldDisplayPort.width) > epsilon ||
+        Math.abs(displayPort.height - this._oldDisplayPort.height) > epsilon) {
+      cwu.setDisplayPortForElement(displayPort.x, displayPort.y, displayPort.width, displayPort.height, element);
+    }
+
+    this._oldDisplayPort = displayPort;
   },
 
   /*
