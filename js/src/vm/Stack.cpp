@@ -893,7 +893,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
 
         if (fun) {
             AutoCompartment ac(cx, fun);
-            (void) ac.enter();
             fun->script()->uninlineable = true;
             types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
         }

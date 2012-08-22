@@ -107,7 +107,7 @@ class Debugger {
      * do some things in the debugger compartment and some things in the
      * debuggee compartment.
      */
-    JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
+    JSTrapStatus handleUncaughtException(Maybe<AutoCompartment> &ac, Value *vp, bool callHook);
 
     /*
      * Handle the result of a hook that is expected to return a resumption
@@ -134,8 +134,8 @@ class Debugger {
      *     anything else - Make a new TypeError the pending exception and
      *         return handleUncaughtException(ac, vp, callHook).
      */
-    JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
-                                      bool callHook = true);
+    JSTrapStatus parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value &rv,
+                                      Value *vp, bool callHook = true);
 
     JSObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
 
@@ -330,7 +330,7 @@ class Debugger {
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool receiveCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
+    bool receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val, Value *vp);
 
     /*
      * Return the Debugger.Script object for |script|, or create a new one if

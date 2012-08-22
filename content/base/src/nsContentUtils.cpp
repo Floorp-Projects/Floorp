@@ -1775,10 +1775,7 @@ nsContentUtils::GetDocumentFromCaller()
   sXPConnect->GetCaller(&cx, &obj);
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, obj)) {
-    return nullptr;
-  }
+  JSAutoCompartment ac(cx, obj);
 
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
@@ -6887,10 +6884,7 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
   }
   
   JSObject* obj = &aJSArray.toObject();
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(aCx, obj)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
+  JSAutoCompartment ac(aCx, obj);
   
   uint32_t length;
   if (!JS_IsArrayObject(aCx, obj) || !JS_GetArrayLength(aCx, obj, &length)) {

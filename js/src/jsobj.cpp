@@ -3146,16 +3146,12 @@ JSObject::swap(JSContext *cx, JSObject *other)
     JSObject *otherClone;
     {
         AutoCompartment ac(cx, other);
-        if (!ac.enter())
-            return false;
         thisClone = JS_CloneObject(cx, this, other->getProto(), other->getParent());
         if (!thisClone || !JS_CopyPropertiesFrom(cx, thisClone, this))
             return false;
     }
     {
         AutoCompartment ac(cx, this);
-        if (!ac.enter())
-            return false;
         otherClone = JS_CloneObject(cx, other, other->getProto(), other->getParent());
         if (!otherClone || !JS_CopyPropertiesFrom(cx, otherClone, other))
             return false;

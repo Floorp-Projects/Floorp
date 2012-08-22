@@ -220,10 +220,6 @@ JSRuntime::initSelfHosting(JSContext *cx)
         return false;
     JS_SetGlobalObject(cx, selfHostedGlobal_);
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, cx->global()))
-        return false;
-
     const char *src = selfhosted::raw_sources;
     uint32_t srcLen = selfhosted::GetRawScriptsSize();
 
@@ -266,8 +262,8 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, jsid id, HandleObject holder,
     Value funVal;
     {
         RootedObject shg(cx, selfHostedGlobal_);
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, shg) || !JS_GetPropertyById(cx, shg, id, &funVal) || !funVal.isObject())
+        AutoCompartment ac(cx, shg);
+        if (!JS_GetPropertyById(cx, shg, id, &funVal) || !funVal.isObject())
             return false;
     }
 

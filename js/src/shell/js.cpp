@@ -896,10 +896,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     {
-        JSAutoEnterCompartment aec;
-        if (!aec.enter(cx, global))
-            return false;
-
+        JSAutoCompartment ac(cx, global);
         uint32_t saved = JS_GetOptions(cx);
         uint32_t options = saved & ~(JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         if (compileAndGo)
@@ -2307,13 +2304,12 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 
     jsval *argv = JS_ARGV(cx, vp);
     {
-        JSAutoEnterCompartment ac;
+        Maybe<JSAutoCompartment> ac;
         RootedObject obj(cx, JSVAL_IS_PRIMITIVE(argv[0]) ? NULL : JSVAL_TO_OBJECT(argv[0]));
 
         if (obj && IsCrossCompartmentWrapper(obj)) {
             obj = UnwrapObject(obj);
-            if (!ac.enter(cx, obj))
-                return false;
+            ac.construct(cx, obj);
             argv[0] = ObjectValue(*obj);
         }
         if (obj && obj->isFunction()) {
@@ -2540,10 +2536,7 @@ NewSandbox(JSContext *cx, bool lazy)
         return NULL;
 
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, obj))
-            return NULL;
-
+        JSAutoCompartment ac(cx, obj);
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
@@ -2597,13 +2590,12 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     JS_DescribeScriptedCaller(cx, &script, &lineno);
     jsval rval;
     {
-        JSAutoEnterCompartment ac;
+        Maybe<JSAutoCompartment> ac;
         unsigned flags;
         JSObject *unwrapped = UnwrapObject(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
-            if (!ac.enter(cx, sobj))
-                return false;
+            ac.construct(cx, sobj);
         }
 
         sobj = GetInnerObject(cx, sobj);
@@ -4682,9 +4674,7 @@ NewGlobalObject(JSContext *cx)
         return NULL;
 
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, glob))
-            return NULL;
+        JSAutoCompartment ac(cx, glob);
 
 #ifndef LAZY_STANDARD_CLASSES
         if (!JS_InitStandardClasses(cx, glob))

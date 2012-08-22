@@ -224,7 +224,7 @@ IsArrayLike(JSContext* cx, JSObject* obj)
   // For simplicity, check for security wrappers up front.  In case we
   // have a security wrapper, don't forget to enter the compartment of
   // the underlying object after unwrapping.
-  JSAutoEnterCompartment ac;
+  Maybe<JSAutoCompartment> ac;
   if (js::IsWrapper(obj)) {
     obj = xpc::Unwrap(cx, obj, false);
     if (!obj) {
@@ -232,9 +232,7 @@ IsArrayLike(JSContext* cx, JSObject* obj)
       return false;
     }
 
-    if (!ac.enter(cx, obj)) {
-      return false;
-    }
+    ac.construct(cx, obj);
   }
 
   // XXXbz need to detect platform objects (including listbinding
@@ -440,14 +438,14 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope, T* value,
   // We try to wrap in the compartment of the underlying object of "scope"
   JSObject* obj;
   {
-    // scope for the JSAutoEnterCompartment so that we restore the
-    // compartment before we call JS_WrapValue.
-    JSAutoEnterCompartment ac;
+    // scope for the JSAutoCompartment so that we restore the compartment
+    // before we call JS_WrapValue.
+    Maybe<JSAutoCompartment> ac;
     if (js::IsWrapper(scope)) {
       scope = xpc::Unwrap(cx, scope, false);
-      if (!scope || !ac.enter(cx, scope)) {
+      if (!scope)
         return false;
-      }
+      ac.construct(cx, scope);
     }
 
     obj = value->WrapObject(cx, scope);

@@ -34,9 +34,8 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
         return true;
 
     // If not, try doing the lookup on the prototype.
-    JSAutoEnterCompartment ac;
-    return ac.enter(cx, wrapper) &&
-           JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc);
+    JSAutoCompartment ac(cx, wrapper);
+    return JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc);
 }
 
 bool
@@ -52,13 +51,10 @@ ChromeObjectWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
         return true;
 
     // Try the prototype if that failed.
-    JSAutoEnterCompartment ac;
+    JSAutoCompartment ac(cx, wrapper);
     JSPropertyDescriptor desc;
-    if (!ac.enter(cx, wrapper) ||
-        !JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, &desc))
-    {
+    if (!JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, &desc))
         return false;
-    }
     *bp = !!desc.obj;
     return true;
 }
@@ -77,9 +73,7 @@ ChromeObjectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
         return true;
 
     // Try the prototype.
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, wrapper))
-        return false;
+    JSAutoCompartment ac(cx, wrapper);
     return js::GetGeneric(cx, wrapperProto, receiver, id, vp);
 }
 

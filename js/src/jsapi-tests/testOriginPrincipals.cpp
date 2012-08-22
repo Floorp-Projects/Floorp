@@ -63,8 +63,7 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
 
     JS::RootedObject global(cx, JS_NewGlobalObject(cx, getGlobalClass(), principals));
     CHECK(global);
-    JSAutoEnterCompartment ac;
-    CHECK(ac.enter(cx, global));
+    JSAutoCompartment ac(cx, global);
     CHECK(JS_InitStandardClasses(cx, global));
     bool ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(cx, global,
                                                             principals,

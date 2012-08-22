@@ -3872,6 +3872,7 @@ public:
      */
 
     bool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nullptr);
+
     /**
      * Does the post script evaluation and resets the error reporter
      */
@@ -3882,7 +3883,7 @@ private:
     bool mErrorReporterSet;
     bool mEvaluated;
     intptr_t mContextHasThread;
-    JSAutoEnterCompartment mEnterCompartment;
+    mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
