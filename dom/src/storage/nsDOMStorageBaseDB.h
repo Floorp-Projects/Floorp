@@ -35,16 +35,16 @@ public:
   bool IsScopeDirty(DOMStorageImpl* aStorage);
 
 protected:
-  nsDataHashtable<nsCStringHashKey, PRUint64> mScopesVersion;
+  nsDataHashtable<nsCStringHashKey, uint64_t> mScopesVersion;
 
-  static PRUint64 NextGlobalVersion();
-  PRUint64 CachedScopeVersion(DOMStorageImpl* aStorage);
+  static uint64_t NextGlobalVersion();
+  uint64_t CachedScopeVersion(DOMStorageImpl* aStorage);
 
   void MarkScopeDirty(DOMStorageImpl* aStorage);
   void MarkAllScopesDirty();
 
 private:
-  static PRUint64 sGlobalVersion;
+  static uint64_t sGlobalVersion;
 };
 
 #endif /* nsDOMStorageDB_h___ */

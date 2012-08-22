@@ -81,17 +81,17 @@ NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
-  PRInt32 initialHeight = 100, initialWidth = 100;
+  int32_t initialHeight = 100, initialWidth = 100;
     
 #ifdef XP_MACOSX
-  PRUint32    chromeMask = 0;
+  uint32_t    chromeMask = 0;
   nsAdoptingCString prefVal =
       Preferences::GetCString("browser.hiddenWindowChromeURL");
   const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
   mApplicationProvidedHiddenWindow = prefVal.get() ? true : false;
 #else
   static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
-  PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
+  uint32_t    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
 #endif
 
   nsCOMPtr<nsIURI> url;
@@ -129,9 +129,9 @@ nsAppShellService::DestroyHiddenWindow()
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
                                         nsIURI *aUrl, 
-                                        PRUint32 aChromeMask,
-                                        PRInt32 aInitialWidth,
-                                        PRInt32 aInitialHeight,
+                                        uint32_t aChromeMask,
+                                        int32_t aInitialWidth,
+                                        int32_t aInitialHeight,
                                         nsIXULWindow **aResult)
 
 {
@@ -158,11 +158,11 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
   return rv;
 }
 
-PRUint32
+uint32_t
 nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
-                                         PRUint32      aChromeMask)
+                                         uint32_t      aChromeMask)
 {
-  PRUint32 zLevel;
+  uint32_t zLevel;
 
   zLevel = nsIXULWindow::normalZ;
   if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
@@ -177,7 +177,7 @@ nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
 
      On Mac OS X, bind modality to parent window instead of app (ala Mac OS 9)
   */
-  PRUint32 modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
+  uint32_t modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
                           nsIWebBrowserChrome::CHROME_DEPENDENT;
   if (aParent && (aChromeMask & modalDepMask)) {
     aParent->GetZLevel(&zLevel);
@@ -220,7 +220,7 @@ CheckForFullscreenWindow()
     windowList->GetNext(getter_AddRefs(supportsWindow));
     nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(supportsWindow));
     if (baseWin) {
-      PRInt32 sizeMode;
+      int32_t sizeMode;
       nsCOMPtr<nsIWidget> widget;
       baseWin->GetMainWidget(getter_AddRefs(widget));
       if (widget && NS_SUCCEEDED(widget->GetSizeMode(&sizeMode)) && 
@@ -239,9 +239,9 @@ CheckForFullscreenWindow()
 nsresult
 nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                        nsIURI *aUrl, 
-                                       PRUint32 aChromeMask,
-                                       PRInt32 aInitialWidth,
-                                       PRInt32 aInitialHeight,
+                                       uint32_t aChromeMask,
+                                       int32_t aInitialWidth,
+                                       int32_t aInitialHeight,
                                        bool aIsHiddenWindow,
                                        nsWebShellWindow **aResult)
 {
@@ -284,7 +284,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   // windows opened from nsPromptService::DoDialog() still are sheets.  This
   // fixes bmo bug 395465 (see nsCocoaWindow::StandardCreate() and
   // nsCocoaWindow::SetModal()).
-  PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+  uint32_t sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                        nsIWebBrowserChrome::CHROME_MODAL |
                        nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
   if (parent && ((aChromeMask & sheetMask) == sheetMask))

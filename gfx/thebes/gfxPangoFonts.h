@@ -31,14 +31,14 @@ public:
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
-    virtual gfxFont *GetFontAt(PRInt32 i);
+    virtual gfxFont *GetFontAt(int32_t i);
 
     virtual void UpdateFontList();
 
     virtual already_AddRefed<gfxFont>
-        FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRInt32 aRunScript,
+        FindFontForChar(uint32_t aCh, uint32_t aPrevCh, int32_t aRunScript,
                         gfxFont *aPrevMatchedFont,
-                        PRUint8 *aMatchType);
+                        uint8_t *aMatchType);
 
     static void Shutdown();
 
@@ -47,8 +47,8 @@ public:
                                       const nsAString &aFullname);
     // Used for @font-face { src: url(); }
     static gfxFontEntry *NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                                      const PRUint8 *aFontData,
-                                      PRUint32 aLength);
+                                      const uint8_t *aFontData,
+                                      uint32_t aLength);
 
     // Interfaces used internally
     // (but public so that they can be accessed from non-member functions):

@@ -45,16 +45,16 @@ public:
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter);
+                                        uint32_t aFilter);
   virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
 
   // nsIFormControlFrame
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   virtual bool IsLeaf() const;
 
@@ -65,7 +65,7 @@ protected:
 
   nsresult GetLabel(nsXPIDLString& aLabel);
 
-  bool IsFileBrowseButton(PRInt32 type); // Browse button of file input
+  bool IsFileBrowseButton(int32_t type); // Browse button of file input
 
   virtual bool IsInput() { return true; }
 private:

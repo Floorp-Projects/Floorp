@@ -17,11 +17,11 @@
 #define STATE_ODD_SURROGATE_PAIR 4
 
 static nsresult
-UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aOddByte,
+UTF16ConvertToUnicode(uint8_t& aState, uint8_t& aOddByte,
                       PRUnichar& aOddHighSurrogate, PRUnichar& aOddLowSurrogate,
                       const char * aSrc,
-                      PRInt32 * aSrcLength, PRUnichar * aDest,
-                      PRInt32 * aDestLength,
+                      int32_t * aSrcLength, PRUnichar * aDest,
+                      int32_t * aDestLength,
                       bool aSwapBytes)
 {
   const char* src = aSrc;
@@ -170,8 +170,8 @@ nsUTF16ToUnicodeBase::Reset()
 }
 
 NS_IMETHODIMP
-nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-                                   PRInt32 * aDestLength)
+nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, int32_t aSrcLength, 
+                                   int32_t * aDestLength)
 {
   // the left-over data of the previous run have to be taken into account.
   *aDestLength = (aSrcLength + ((STATE_HALF_CODE_POINT == mState) ? 1 : 0)) / 2;
@@ -184,8 +184,8 @@ nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
 
 
 NS_IMETHODIMP
-nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
-                            PRUnichar * aDest, PRInt32 * aDestLength)
+nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
+                            PRUnichar * aDest, int32_t * aDestLength)
 {
     if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
     {
@@ -224,8 +224,8 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
 }
 
 NS_IMETHODIMP
-nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
-                            PRUnichar * aDest, PRInt32 * aDestLength)
+nsUTF16LEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
+                            PRUnichar * aDest, int32_t * aDestLength)
 {
     if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
     {
@@ -272,8 +272,8 @@ nsUTF16ToUnicode::Reset()
 }
 
 NS_IMETHODIMP
-nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
-                          PRUnichar * aDest, PRInt32 * aDestLength)
+nsUTF16ToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
+                          PRUnichar * aDest, int32_t * aDestLength)
 {
     if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
     {
@@ -287,12 +287,12 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
       mState = STATE_NORMAL;
       // check if BOM (0xFEFF) is at the beginning, remove it if found, and
       // set mEndian accordingly.
-      if(0xFF == PRUint8(aSrc[0]) && 0xFE == PRUint8(aSrc[1])) {
+      if(0xFF == uint8_t(aSrc[0]) && 0xFE == uint8_t(aSrc[1])) {
         mState = STATE_FOUND_BOM;
         mEndian = kLittleEndian;
         mFoundBOM = true;
       }
-      else if(0xFE == PRUint8(aSrc[0]) && 0xFF == PRUint8(aSrc[1])) {
+      else if(0xFE == uint8_t(aSrc[0]) && 0xFF == uint8_t(aSrc[1])) {
         mState = STATE_FOUND_BOM;
         mEndian = kBigEndian;
         mFoundBOM = true;

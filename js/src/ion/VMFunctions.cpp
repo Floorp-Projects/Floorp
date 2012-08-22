@@ -230,12 +230,12 @@ IteratorMore(JSContext *cx, HandleObject obj, JSBool *res)
 JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 {
-    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    RootedObject obj(cx, NewDenseAllocatedArray(cx, count));
     if (!obj)
         return NULL;
 
     if (!type) {
-        if (!obj->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, obj))
             return NULL;
 
         types::TypeScript::Monitor(cx, ObjectValue(*obj));
@@ -255,7 +255,7 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
         return NULL;
 
     if (templateObject->hasSingletonType()) {
-        if (!obj->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, obj))
             return NULL;
 
         types::TypeScript::Monitor(cx, ObjectValue(*obj));
@@ -325,7 +325,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         return baseops::SetPropertyHelper(cx, obj, obj, id, defineHow, &v, strict);
     }
 
-    return obj->setGeneric(cx, obj, id, &v, strict);
+    return JSObject::setGeneric(cx, obj, obj, id, &v, strict);
 }
 
 bool

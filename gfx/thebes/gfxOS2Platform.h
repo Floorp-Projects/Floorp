@@ -47,10 +47,10 @@ public:
     // supports the most code points and most closely resembles aFont.
     // This simple version involves looking at the fonts on the machine to see
     // which code points they support.
-    already_AddRefed<gfxOS2Font> FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont);
+    already_AddRefed<gfxOS2Font> FindFontForChar(uint32_t aCh, gfxOS2Font *aFont);
 
     // return true if it's already known that we don't have a font for this char
-    bool noFontWithChar(PRUint32 aCh) {
+    bool noFontWithChar(uint32_t aCh) {
         return mCodepointsWithNoFonts.test(aCh);
     }
 

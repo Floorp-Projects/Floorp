@@ -159,7 +159,7 @@ private:
    * @param aError
    *        The error object to notify the caller with.
    */
-  nsresult notifyError(PRInt32 aErrorCode, const char *aMessage);
+  nsresult notifyError(int32_t aErrorCode, const char *aMessage);
   nsresult notifyError(mozIStorageError *aError);
 
   /**

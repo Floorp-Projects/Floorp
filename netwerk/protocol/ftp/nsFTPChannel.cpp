@@ -25,10 +25,10 @@ extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
 ////////////// this needs to move to nspr
-static inline PRUint32
+static inline uint32_t
 PRTimeToSeconds(PRTime t_usec)
 {
-    return PRUint32(t_usec / PR_USEC_PER_SEC);
+    return uint32_t(t_usec / PR_USEC_PER_SEC);
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
@@ -57,7 +57,7 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsFtpChannel,
 NS_IMETHODIMP
 nsFtpChannel::SetUploadStream(nsIInputStream *stream,
                               const nsACString &contentType,
-                              PRInt32 contentLength)
+                              int32_t contentLength)
 {
     NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
 
@@ -80,7 +80,7 @@ nsFtpChannel::GetUploadStream(nsIInputStream **stream)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFtpChannel::ResumeAt(PRUint64 aStartPos, const nsACString& aEntityID)
+nsFtpChannel::ResumeAt(uint64_t aStartPos, const nsACString& aEntityID)
 {
     NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
     mEntityID = aEntityID;

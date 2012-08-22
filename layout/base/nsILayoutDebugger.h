@@ -33,13 +33,13 @@ public:
   NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult) = 0;
 
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
-                            PRInt32* aSizeInBytesResult) = 0;
+                            int32_t* aSizeInBytesResult) = 0;
 
   NS_IMETHOD GetFrameSize(nsIPresShell* aPresentation,
-                          PRInt32* aSizeInBytesResult) = 0;
+                          int32_t* aSizeInBytesResult) = 0;
 
   NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
-                          PRInt32* aSizeInBytesResult) = 0;
+                          int32_t* aSizeInBytesResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutDebugger, NS_ILAYOUT_DEBUGGER_IID)

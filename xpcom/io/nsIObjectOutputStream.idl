@@ -54,8 +54,8 @@ interface nsIObjectOutputStream : nsIBinaryOutputStream
     /**
      * Optimized serialization support -- see nsIStreamBufferAccess.idl.
      */
-    [notxpcom] charPtr getBuffer(in PRUint32 aLength, in PRUint32 aAlignMask);
-    [notxpcom] void    putBuffer(in charPtr aBuffer, in PRUint32 aLength);
+    [notxpcom] charPtr getBuffer(in uint32_t aLength, in uint32_t aAlignMask);
+    [notxpcom] void    putBuffer(in charPtr aBuffer, in uint32_t aLength);
 };
 
 %{C++

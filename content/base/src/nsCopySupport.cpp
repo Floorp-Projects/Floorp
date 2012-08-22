@@ -69,8 +69,8 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 // share common code.
 static nsresult
 SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
-                    bool doPutOnClipboard, PRInt16 aClipboardID,
-                    PRUint32 aFlags, nsITransferable ** aTransferable)
+                    bool doPutOnClipboard, int16_t aClipboardID,
+                    uint32_t aFlags, nsITransferable ** aTransferable)
 {
   // Clear the output parameter for the transferable, if provided.
   if (aTransferable) {
@@ -105,7 +105,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
   // we want preformatted for the case where the selection is inside input/textarea
   // and we don't want pretty printing for others cases, to not have additionnal
   // line breaks which are then converted into spaces by the htmlConverter (see bug #524975)
-  PRUint32 flags = aFlags | nsIDocumentEncoder::OutputPreformatted
+  uint32_t flags = aFlags | nsIDocumentEncoder::OutputPreformatted
                           | nsIDocumentEncoder::OutputRaw;
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
@@ -264,7 +264,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
 
 nsresult
 nsCopySupport::HTMLCopy(nsISelection* aSel, nsIDocument* aDoc,
-                        PRInt16 aClipboardID)
+                        int16_t aClipboardID)
 {
   return SelectionCopyHelper(aSel, aDoc, true, aClipboardID,
                              nsIDocumentEncoder::SkipInvisibleContent,
@@ -298,7 +298,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   rv = selection->AddRange(range);
   NS_ENSURE_SUCCESS(rv, rv);
   // It's not the primary selection - so don't skip invisible content.
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
   return SelectionCopyHelper(selection, aDoc, false, 0, flags,
                              aTransferable);
 }
@@ -357,7 +357,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
   
   nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsIDOMNode> commonParent;
-  PRInt32 count = 0;
+  int32_t count = 0;
 
   rv = aSel->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -422,7 +422,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
 }
 
 nsresult
-nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata)
+nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata)
 {
   nsresult rv = NS_OK;
   
@@ -434,7 +434,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
   docEncoder = do_CreateInstance(encoderContractID.get());
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  PRUint32 flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
+  uint32_t flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
   
   if (aMimeType.Equals("text/plain"))
     flags |= nsIDocumentEncoder::OutputPreformatted;
@@ -461,7 +461,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
 nsresult
 nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
                          nsILoadContext* aLoadContext,
-                         PRInt32 aCopyFlags)
+                         int32_t aCopyFlags)
 {
   nsresult rv;
 
@@ -653,7 +653,7 @@ nsCopySupport::CanCopy(nsIDocument* aDocument)
 }
 
 bool
-nsCopySupport::FireClipboardEvent(PRInt32 aType, nsIPresShell* aPresShell, nsISelection* aSelection)
+nsCopySupport::FireClipboardEvent(int32_t aType, nsIPresShell* aPresShell, nsISelection* aSelection)
 {
   NS_ASSERTION(aType == NS_CUT || aType == NS_COPY || aType == NS_PASTE,
                "Invalid clipboard event type");

@@ -43,15 +43,15 @@ public:
 #endif
 
   // nsIFrame interface:
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   // nsISVGChildFrame interface:
-  virtual void NotifySVGChanged(PRUint32 aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags);
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor);
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
 };

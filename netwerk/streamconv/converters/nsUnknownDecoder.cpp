@@ -110,15 +110,15 @@ NS_IMETHODIMP
 nsUnknownDecoder::OnDataAvailable(nsIRequest* request, 
                                   nsISupports *aCtxt,
                                   nsIInputStream *aStream, 
-                                  PRUint32 aSourceOffset, 
-                                  PRUint32 aCount)
+                                  uint32_t aSourceOffset, 
+                                  uint32_t aCount)
 {
   nsresult rv = NS_OK;
 
   if (!mNextListener) return NS_ERROR_FAILURE;
 
   if (mContentType.IsEmpty()) {
-    PRUint32 count, len;
+    uint32_t count, len;
 
     // If the buffer has not been allocated by now, just fail...
     if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
@@ -227,8 +227,8 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
 // ----
 NS_IMETHODIMP
 nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
-                                         const PRUint8* aData,
-                                         PRUint32 aLength,
+                                         const uint8_t* aData,
+                                         uint32_t aLength,
                                          nsACString& type)
 {
   mBuffer = const_cast<char*>(reinterpret_cast<const char*>(aData));
@@ -298,7 +298,7 @@ nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
   SNIFFER_ENTRY_WITH_FUNC("<?xml", &nsUnknownDecoder::SniffForXML)
 };
 
-PRUint32 nsUnknownDecoder::sSnifferEntryNum =
+uint32_t nsUnknownDecoder::sSnifferEntryNum =
   sizeof(nsUnknownDecoder::sSnifferEntries) /
     sizeof(nsUnknownDecoder::nsSnifferEntry);
 
@@ -309,7 +309,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
 
   // First, run through all the types we can detect reliably based on
   // magic numbers
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < sSnifferEntryNum; ++i) {
     if (mBufferLen >= sSnifferEntries[i].mByteLen &&  // enough data
         memcmp(mBuffer, sSnifferEntries[i].mBytes, sSnifferEntries[i].mByteLen) == 0) {  // and type matches
@@ -392,7 +392,7 @@ bool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
       continue;
     }
 
-    rv = sniffer->GetMIMETypeFromContent(aRequest, (const PRUint8*)mBuffer,
+    rv = sniffer->GetMIMETypeFromContent(aRequest, (const uint8_t*)mBuffer,
                                          mBufferLen, mContentType);
     if (NS_SUCCEEDED(rv)) {
       return true;
@@ -433,7 +433,7 @@ bool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
     return true;
   }
   
-  PRUint32 bufSize = end - str;
+  uint32_t bufSize = end - str;
   // We use sizeof(_tagstr) below because that's the length of _tagstr
   // with the one char " " or ">" appended.
 #define MATCHES_TAG(_tagstr)                                              \
@@ -548,7 +548,7 @@ bool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
   // Now see whether the buffer has any non-text chars.  If not, then let's
   // just call it text/plain...
   //
-  PRUint32 i;
+  uint32_t i;
   for (i=0; i<mBufferLen && IS_TEXT_CHAR(mBuffer[i]); i++);
 
   if (i == mBufferLen) {
@@ -606,7 +606,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   // Fire the first OnDataAvailable for the data that was read from the
   // stream into the sniffer buffer...
   if (NS_SUCCEEDED(rv) && (mBufferLen > 0)) {
-    PRUint32 len = 0;
+    uint32_t len = 0;
     nsCOMPtr<nsIInputStream> in;
     nsCOMPtr<nsIOutputStream> out;
 

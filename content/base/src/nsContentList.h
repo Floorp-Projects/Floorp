@@ -35,7 +35,7 @@
 // match the list, while aNamespaceID, aAtom, and aData are whatever
 // was passed to the list's constructor.
 typedef bool (*nsContentListMatchFunc)(nsIContent* aContent,
-                                         PRInt32 aNamespaceID,
+                                         int32_t aNamespaceID,
                                          nsIAtom* aAtom,
                                          void* aData);
 
@@ -63,9 +63,9 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList
-  virtual PRInt32 IndexOf(nsIContent* aContent);
+  virtual int32_t IndexOf(nsIContent* aContent);
   
-  PRUint32 Length() const { 
+  uint32_t Length() const { 
     return mElements.Length();
   }
 
@@ -87,7 +87,7 @@ public:
    * @param aContent Element to insert, must not be null
    * @param aIndex Index to insert the element at.
    */
-  void InsertElementAt(nsIContent* aContent, PRInt32 aIndex)
+  void InsertElementAt(nsIContent* aContent, int32_t aIndex)
   {
     NS_ASSERTION(aContent, "Element to insert must not be null");
     mElements.InsertElementAt(aIndex, aContent);
@@ -102,7 +102,7 @@ public:
     mElements.Clear();
   }
 
-  virtual PRInt32 IndexOf(nsIContent *aContent, bool aDoFlush);
+  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush);
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap) = 0;
@@ -153,7 +153,7 @@ public:
 struct nsContentListKey
 {
   nsContentListKey(nsINode* aRootNode,
-                   PRInt32 aMatchNameSpaceId,
+                   int32_t aMatchNameSpaceId,
                    const nsAString& aTagname)
     : mRootNode(aRootNode),
       mMatchNameSpaceId(aMatchNameSpaceId),
@@ -168,14 +168,14 @@ struct nsContentListKey
   {
   }
 
-  inline PRUint32 GetHash(void) const
+  inline uint32_t GetHash(void) const
   {
-    PRUint32 hash = mozilla::HashString(mTagname);
+    uint32_t hash = mozilla::HashString(mTagname);
     return mozilla::AddToHash(hash, mRootNode, mMatchNameSpaceId);
   }
   
   nsINode* const mRootNode; // Weak ref
-  const PRInt32 mMatchNameSpaceId;
+  const int32_t mMatchNameSpaceId;
   const nsAString& mTagname;
 };
 
@@ -227,7 +227,7 @@ public:
    *              our root.
    */  
   nsContentList(nsINode* aRootNode,
-                PRInt32 aMatchNameSpaceId,
+                int32_t aMatchNameSpaceId,
                 nsIAtom* aHTMLMatchAtom,
                 nsIAtom* aXMLMatchAtom,
                 bool aDeep = true);
@@ -254,7 +254,7 @@ public:
                 void* aData,
                 bool aDeep = true,
                 nsIAtom* aMatchAtom = nullptr,
-                PRInt32 aMatchNameSpaceId = kNameSpaceID_None,
+                int32_t aMatchNameSpaceId = kNameSpaceID_None,
                 bool aFuncMayDependOnAttr = true);
   virtual ~nsContentList();
 
@@ -266,16 +266,16 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   // nsBaseContentList overrides
-  virtual PRInt32 IndexOf(nsIContent *aContent, bool aDoFlush);
-  virtual PRInt32 IndexOf(nsIContent* aContent);
+  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush);
+  virtual int32_t IndexOf(nsIContent* aContent);
   virtual nsINode* GetParentObject()
   {
     return mRootNode;
   }
 
   // nsContentList public methods
-  NS_HIDDEN_(PRUint32) Length(bool aDoFlush);
-  NS_HIDDEN_(nsIContent*) Item(PRUint32 aIndex, bool aDoFlush);
+  NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
+  NS_HIDDEN_(nsIContent*) Item(uint32_t aIndex, bool aDoFlush);
   NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver
@@ -340,7 +340,7 @@ protected:
    * @param aNeededLength the length the list should have when we are
    *        done (unless it exhausts the document)   
    */
-  void PopulateSelf(PRUint32 aNeededLength);
+  void PopulateSelf(uint32_t aNeededLength);
 
   /**
    * @param  aContainer a content node which must be a descendant of
@@ -385,7 +385,7 @@ protected:
   }
 
   nsINode* mRootNode; // Weak ref
-  PRInt32 mMatchNameSpaceId;
+  int32_t mMatchNameSpaceId;
   nsCOMPtr<nsIAtom> mHTMLMatchAtom;
   nsCOMPtr<nsIAtom> mXMLMatchAtom;
 
@@ -406,9 +406,9 @@ protected:
    * The current state of the list (possible values are:
    * LIST_UP_TO_DATE, LIST_LAZY, LIST_DIRTY
    */
-  PRUint8 mState;
+  uint8_t mState;
 
-  // The booleans have to use PRUint8 to pack with mState, because MSVC won't
+  // The booleans have to use uint8_t to pack with mState, because MSVC won't
   // pack different typedefs together.  Once we no longer have to worry about
   // flushes in XML documents, we can go back to using bool for the
   // booleans.
@@ -416,21 +416,21 @@ protected:
   /**
    * True if we are looking for elements named "*"
    */
-  PRUint8 mMatchAll : 1;
+  uint8_t mMatchAll : 1;
   /**
    * Whether to actually descend the tree.  If this is false, we won't
    * consider grandkids of mRootNode.
    */
-  PRUint8 mDeep : 1;
+  uint8_t mDeep : 1;
   /**
    * Whether the return value of mFunc could depend on the values of
    * attributes.
    */
-  PRUint8 mFuncMayDependOnAttr : 1;
+  uint8_t mFuncMayDependOnAttr : 1;
   /**
    * Whether we actually need to flush to get our state correct.
    */
-  PRUint8 mFlushesNeeded : 1;
+  uint8_t mFlushesNeeded : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
@@ -452,9 +452,9 @@ public:
     mString(aString)
     {}
 
-  PRUint32 GetHash(void) const
+  uint32_t GetHash(void) const
   {
-    PRUint32 hash = mozilla::HashString(mString);
+    uint32_t hash = mozilla::HashString(mString);
     return mozilla::AddToHash(hash, mRootNode, mFunc);
   }
 
@@ -512,7 +512,7 @@ protected:
 // aTagname against all elements.
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode,
-                  PRInt32 aMatchNameSpaceId,
+                  int32_t aMatchNameSpaceId,
                   const nsAString& aTagname);
 
 already_AddRefed<nsContentList>

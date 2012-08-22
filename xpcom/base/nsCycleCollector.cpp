@@ -181,7 +181,7 @@ struct nsCycleCollectorParams
 #ifdef DEBUG_CC
     bool mReportStats;
     bool mLogPointers;
-    PRUint32 mShutdownCollections;
+    uint32_t mShutdownCollections;
 #endif
     
     nsCycleCollectorParams() :
@@ -212,23 +212,23 @@ struct nsCycleCollectorParams
 
 struct nsCycleCollectorStats
 {
-    PRUint32 mFailedQI;
-    PRUint32 mSuccessfulQI;
+    uint32_t mFailedQI;
+    uint32_t mSuccessfulQI;
 
-    PRUint32 mVisitedNode;
-    PRUint32 mWalkedGraph;
-    PRUint32 mFreedBytes;
+    uint32_t mVisitedNode;
+    uint32_t mWalkedGraph;
+    uint32_t mFreedBytes;
 
-    PRUint32 mSetColorBlack;
-    PRUint32 mSetColorWhite;
+    uint32_t mSetColorBlack;
+    uint32_t mSetColorWhite;
 
-    PRUint32 mFailedUnlink;
-    PRUint32 mCollectedNode;
+    uint32_t mFailedUnlink;
+    uint32_t mCollectedNode;
 
-    PRUint32 mSuspectNode;
-    PRUint32 mForgetNode;
+    uint32_t mSuspectNode;
+    uint32_t mForgetNode;
   
-    PRUint32 mCollection;
+    uint32_t mCollection;
 
     nsCycleCollectorStats()
     {
@@ -275,7 +275,7 @@ public:
     Checkpoint(const char* aEvent)
     {
         TimeStamp now = TimeStamp::Now();
-        PRUint32 dur = (PRUint32) ((now - mLastCheckpoint).ToMilliseconds());
+        uint32_t dur = (uint32_t) ((now - mLastCheckpoint).ToMilliseconds());
         if (dur > 0) {
             printf("cc: %s took %dms\n", aEvent, dur);
         }
@@ -367,7 +367,7 @@ private:
     // Store the null sentinel so that we can have valid iterators
     // before adding any edges and without adding any blocks.
     PtrInfoOrBlock mSentinelAndBlocks[2];
-    PRUint32 mNumBlocks;
+    uint32_t mNumBlocks;
 
     Block*& Blocks() { return mSentinelAndBlocks[1].block; }
 
@@ -440,7 +440,7 @@ public:
         // mBlockEnd points to space for null sentinel
         PtrInfoOrBlock *mCurrent, *mBlockEnd;
         Block **mNextBlockPtr;
-        PRUint32 &mNumBlocks;
+        uint32_t &mNumBlocks;
     };
 
     size_t BlocksSize() const {
@@ -459,9 +459,9 @@ struct PtrInfo
 {
     void *mPointer;
     nsCycleCollectionParticipant *mParticipant;
-    PRUint32 mColor : 2;
-    PRUint32 mInternalRefs : 30;
-    PRUint32 mRefCount;
+    uint32_t mColor : 2;
+    uint32_t mInternalRefs : 30;
+    uint32_t mRefCount;
 private:
     EdgePool::Iterator mFirstChild;
 
@@ -609,7 +609,7 @@ public:
         Block **mNextBlock;
         PtrInfo *&mNext;
         PtrInfo *mBlockEnd;
-        PRUint32 &mNumBlocks;
+        uint32_t &mNumBlocks;
     };
 
     class Enumerator;
@@ -660,7 +660,7 @@ public:
 private:
     Block *mBlocks;
     PtrInfo *mLast;
-    PRUint32 mNumBlocks;
+    uint32_t mNumBlocks;
 };
 
 
@@ -679,7 +679,7 @@ struct GCGraph
     NodePool mNodes;
     EdgePool mEdges;
     nsTArray<WeakMapping> mWeakMaps;
-    PRUint32 mRootCount;
+    uint32_t mRootCount;
 
     GCGraph() : mRootCount(0) {
     }
@@ -713,8 +713,8 @@ public:
     // buffer.
 
     nsCycleCollectorParams &mParams;
-    PRUint32 mNumBlocksAlloced;
-    PRUint32 mCount;
+    uint32_t mNumBlocksAlloced;
+    uint32_t mCount;
     Block mFirstBlock;
     nsPurpleBufferEntry *mFreeList;
 
@@ -764,7 +764,7 @@ public:
         // Put all the entries in the block on the free list.
         nsPurpleBufferEntry *entries = aBlock->mEntries;
         mFreeList = entries;
-        for (PRUint32 i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
+        for (uint32_t i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
             entries[i - 1].mNextInFreeList =
                 (nsPurpleBufferEntry*)(uintptr_t(entries + i) | 1);
         }
@@ -895,7 +895,7 @@ public:
         mCompatObjects.RemoveEntry(p);
     }
 
-    PRUint32 Count() const
+    uint32_t Count() const
     {
         return mCount;
     }
@@ -938,7 +938,7 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
 {
 #ifdef DEBUG_CC
     // Can't use mCount here, since it may include null entries.
-    PRUint32 realCount = 0;
+    uint32_t realCount = 0;
     for (Block *b = &mFirstBlock; b; b = b->mNext) {
         for (nsPurpleBufferEntry *e = b->mEntries,
                               *eEnd = ArrayEnd(b->mEntries);
@@ -1006,11 +1006,11 @@ struct nsCycleCollector
     nsCycleCollectorParams mParams;
 
     nsTArray<PtrInfo*> *mWhiteNodes;
-    PRUint32 mWhiteNodeCount;
+    uint32_t mWhiteNodeCount;
 
     // mVisitedRefCounted and mVisitedGCed are only used for telemetry
-    PRUint32 mVisitedRefCounted;
-    PRUint32 mVisitedGCed;
+    uint32_t mVisitedRefCounted;
+    uint32_t mVisitedGCed;
 
     CC_BeforeUnlinkCallback mBeforeUnlinkCB;
     CC_ForgetSkippableCallback mForgetSkippableCB;
@@ -1042,7 +1042,7 @@ struct nsCycleCollector
 
     void Collect(bool aMergeCompartments,
                  nsCycleCollectorResults *aResults,
-                 PRUint32 aTryCollections,
+                 uint32_t aTryCollections,
                  nsICycleCollectorListener *aListener);
 
     // Prepare for and cleanup after one or more collection(s).
@@ -1055,7 +1055,7 @@ struct nsCycleCollector
     bool BeginCollection(bool aMergeCompartments, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
-    PRUint32 SuspectedCount();
+    uint32_t SuspectedCount();
     void Shutdown();
 
     void ClearGraph()
@@ -1209,7 +1209,7 @@ GraphWalker<Visitor>::WalkFromRoots(GCGraph& aGraph)
 {
     nsDeque queue;
     NodePool::Enumerator etor(aGraph.mNodes);
-    for (PRUint32 i = 0; i < aGraph.mRootCount; ++i) {
+    for (uint32_t i = 0; i < aGraph.mRootCount; ++i) {
         PtrInfo *pi = etor.GetNext();
         CC_AbortIfNull(pi);
         queue.Push(pi);
@@ -1262,7 +1262,7 @@ struct CCGraphDescriber
   nsCString mAddress;
   nsCString mToAddress;
   nsCString mName;
-  PRUint32 mCnt;
+  uint32_t mCnt;
   Type mType;
 };
 
@@ -1373,7 +1373,7 @@ public:
 
         return NS_OK;
     }
-    NS_IMETHOD NoteRefCountedObject(PRUint64 aAddress, PRUint32 refCount,
+    NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t refCount,
                                     const char *aObjectDescription)
     {
         if (!mDisableLog) {
@@ -1392,7 +1392,7 @@ public:
         }                     
         return NS_OK;
     }
-    NS_IMETHOD NoteGCedObject(PRUint64 aAddress, bool aMarked,
+    NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
                               const char *aObjectDescription)
     {
         if (!mDisableLog) {
@@ -1411,7 +1411,7 @@ public:
         }
         return NS_OK;
     }
-    NS_IMETHOD NoteEdge(PRUint64 aToAddress, const char *aEdgeName)
+    NS_IMETHOD NoteEdge(uint64_t aToAddress, const char *aEdgeName)
     {
         if (!mDisableLog) {
             fprintf(mStream, "> %p %s\n", (void*)aToAddress, aEdgeName);
@@ -1433,7 +1433,7 @@ public:
         }                     
         return NS_OK;
     }
-    NS_IMETHOD DescribeRoot(PRUint64 aAddress, PRUint32 aKnownEdges)
+    NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges)
     {
         if (!mDisableLog) {
             fprintf(mStream, "%p [known=%u]\n", (void*)aAddress, aKnownEdges);
@@ -1447,7 +1447,7 @@ public:
         }
         return NS_OK;
     }
-    NS_IMETHOD DescribeGarbage(PRUint64 aAddress)
+    NS_IMETHOD DescribeGarbage(uint64_t aAddress)
     {
         if (!mDisableLog) {
             fprintf(mStream, "%p [garbage]\n", (void*)aAddress);
@@ -1519,13 +1519,13 @@ private:
     bool mWantAfterProcessing;
     nsCString mCurrentAddress; 
     nsTArray<CCGraphDescriber> mDescribers;
-    PRUint32 mNextIndex;
-    static PRUint32 gLogCounter;
+    uint32_t mNextIndex;
+    static uint32_t gLogCounter;
 };
 
 NS_IMPL_ISUPPORTS1(nsCycleCollectorLogger, nsICycleCollectorListener)
 
-PRUint32 nsCycleCollectorLogger::gLogCounter = 0;
+uint32_t nsCycleCollectorLogger::gLogCounter = 0;
 
 nsresult
 nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
@@ -1591,7 +1591,7 @@ public:
     ~GCGraphBuilder();
     bool Initialized();
 
-    PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
+    uint32_t Count() const { return mPtrToNodeMap.entryCount; }
 
     PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
     PtrInfo* AddWeakMapNode(void* node);
@@ -1599,7 +1599,7 @@ public:
     void SetLastChild();
 
 private:
-    void DescribeNode(PRUint32 refCount,
+    void DescribeNode(uint32_t refCount,
                       size_t objSz,
                       const char *objName)
     {
@@ -1650,7 +1650,7 @@ private:
             return;
         mEdgeBuilder.Add(childPi);
         if (mListener) {
-            mListener->NoteEdge((PRUint64)child, edgeName.get());
+            mListener->NoteEdge((uint64_t)child, edgeName.get());
         }
         ++childPi->mInternalRefs;
     }
@@ -1687,7 +1687,7 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
         mJSParticipant = aJSRuntime->GetParticipant();
     }
 
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
 #ifdef DEBUG_CC
     flags = nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
             nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
@@ -1813,7 +1813,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
     sCollector->mVisitedRefCounted++;
 
     if (mListener) {
-        mListener->NoteRefCountedObject((PRUint64)mCurrPi->mPointer, refCount,
+        mListener->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, refCount,
                                         objName);
     }
 
@@ -1824,11 +1824,11 @@ NS_IMETHODIMP_(void)
 GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
                                  const char *objName)
 {
-    PRUint32 refCount = isMarked ? PR_UINT32_MAX : 0;
+    uint32_t refCount = isMarked ? PR_UINT32_MAX : 0;
     sCollector->mVisitedGCed++;
 
     if (mListener) {
-        mListener->NoteGCedObject((PRUint64)mCurrPi->mPointer, isMarked,
+        mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, isMarked,
                                   objName);
     }
 
@@ -2095,7 +2095,7 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
 
 struct ScanBlackVisitor
 {
-    ScanBlackVisitor(PRUint32 &aWhiteNodeCount)
+    ScanBlackVisitor(uint32_t &aWhiteNodeCount)
         : mWhiteNodeCount(aWhiteNodeCount)
     {
     }
@@ -2115,13 +2115,13 @@ struct ScanBlackVisitor
 #endif
     }
 
-    PRUint32 &mWhiteNodeCount;
+    uint32_t &mWhiteNodeCount;
 };
 
 
 struct scanVisitor
 {
-    scanVisitor(PRUint32 &aWhiteNodeCount) : mWhiteNodeCount(aWhiteNodeCount)
+    scanVisitor(uint32_t &aWhiteNodeCount) : mWhiteNodeCount(aWhiteNodeCount)
     {
     }
 
@@ -2148,7 +2148,7 @@ struct scanVisitor
         }
     }
 
-    PRUint32 &mWhiteNodeCount;
+    uint32_t &mWhiteNodeCount;
 };
 
 // Iterate over the WeakMaps.  If we mark anything while iterating
@@ -2159,7 +2159,7 @@ nsCycleCollector::ScanWeakMaps()
     bool anyChanged;
     do {
         anyChanged = false;
-        for (PRUint32 i = 0; i < mGraph.mWeakMaps.Length(); i++) {
+        for (uint32_t i = 0; i < mGraph.mWeakMaps.Length(); i++) {
             WeakMapping *wm = &mGraph.mWeakMaps[i];
 
             // If mMap or mKey are null, the original object was marked black.
@@ -2238,7 +2238,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
                  "FinishCollection wasn't called?");
 
     mWhiteNodes->SetCapacity(mWhiteNodeCount);
-    PRUint32 numWhiteGCed = 0;
+    uint32_t numWhiteGCed = 0;
 
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone())
@@ -2256,7 +2256,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
         }
     }
 
-    PRUint32 count = mWhiteNodes->Length();
+    uint32_t count = mWhiteNodes->Length();
     NS_ASSERTION(numWhiteGCed <= count,
                  "More freed GCed nodes than total freed nodes.");
     if (mResults) {
@@ -2276,14 +2276,14 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
 #endif
 
     if (aListener) {
-        for (PRUint32 i = 0; i < count; ++i) {
+        for (uint32_t i = 0; i < count; ++i) {
             PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-            aListener->DescribeGarbage((PRUint64)pinfo->mPointer);
+            aListener->DescribeGarbage((uint64_t)pinfo->mPointer);
         }
         aListener->End();
     }
 
-    for (PRUint32 i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
         rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
         if (NS_FAILED(rv)) {
@@ -2300,7 +2300,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     }
     timeLog.Checkpoint("CollectWhite::Unlink");
 
-    for (PRUint32 i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
         if (NS_FAILED(rv))
@@ -2685,7 +2685,7 @@ nsCycleCollector::CleanupAfterCollection()
     _heapmin();
 #endif
 
-    PRUint32 interval = (PRUint32) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
+    uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: total cycle collector time was %ums\n", interval);
     if (mResults) {
@@ -2712,7 +2712,7 @@ nsCycleCollector::CleanupAfterCollection()
 void
 nsCycleCollector::Collect(bool aMergeCompartments,
                           nsCycleCollectorResults *aResults,
-                          PRUint32 aTryCollections,
+                          uint32_t aTryCollections,
                           nsICycleCollectorListener *aListener)
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
@@ -2720,7 +2720,7 @@ nsCycleCollector::Collect(bool aMergeCompartments,
     if (!PrepareForCollection(aResults, &whiteNodes))
         return;
 
-    PRUint32 totalCollections = 0;
+    uint32_t totalCollections = 0;
     while (aTryCollections > totalCollections) {
         // Synchronous cycle collection. Always force a JS GC beforehand.
         GCIfNeeded(true);
@@ -2756,18 +2756,18 @@ nsCycleCollector::BeginCollection(bool aMergeCompartments,
     }
 
 #ifdef DEBUG_CC
-    PRUint32 purpleStart = builder.Count();
+    uint32_t purpleStart = builder.Count();
 #endif
     mScanInProgress = true;
     SelectPurple(builder);
 #ifdef DEBUG_CC
-    PRUint32 purpleEnd = builder.Count();
+    uint32_t purpleEnd = builder.Count();
 
     if (purpleStart != purpleEnd) {
         if (mParams.mLogPointers && !mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
 
-        PRUint32 i = 0;
+        uint32_t i = 0;
         NodePool::Enumerator queue(mGraph.mNodes);
         while (i++ < purpleStart) {
             queue.GetNext();
@@ -2802,7 +2802,7 @@ nsCycleCollector::BeginCollection(bool aMergeCompartments,
                 if (pi->mColor == black &&
                     pi->mRefCount > 0 && pi->mRefCount < PR_UINT32_MAX &&
                     pi->mInternalRefs != pi->mRefCount) {
-                    aListener->DescribeRoot((PRUint64)pi->mPointer,
+                    aListener->DescribeRoot((uint64_t)pi->mPointer,
                                             pi->mInternalRefs);
                 }
             }
@@ -2810,7 +2810,7 @@ nsCycleCollector::BeginCollection(bool aMergeCompartments,
 
 #ifdef DEBUG_CC
         if (mFollowupCollection && purpleStart != purpleEnd) {
-            PRUint32 i = 0;
+            uint32_t i = 0;
             NodePool::Enumerator queue(mGraph.mNodes);
             while (i++ < purpleStart) {
                 queue.GetNext();
@@ -2854,7 +2854,7 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
     mFollowupCollection = true;
 
 #ifdef DEBUG_CC
-    PRUint32 i, count = mWhiteNodes->Length();
+    uint32_t i, count = mWhiteNodes->Length();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
         if (mPurpleBuf.Exists(pinfo->mPointer)) {
@@ -2876,7 +2876,7 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
     return collected;
 }
 
-PRUint32
+uint32_t
 nsCycleCollector::SuspectedCount()
 {
     return mPurpleBuf.Count();
@@ -2931,12 +2931,12 @@ nsCycleCollector::WasFreed(nsISupports *n)
 // Memory reporter
 ////////////////////////
 
-static PRInt64
+static int64_t
 GetCycleCollectorSize()
 {
     if (!sCollector)
         return 0;
-    PRInt64 size = sizeof(nsCycleCollector) + 
+    int64_t size = sizeof(nsCycleCollector) + 
         sCollector->mPurpleBuf.BlocksSize() +
         sCollector->mGraph.BlocksSize();
     if (sCollector->mWhiteNodes)
@@ -3009,7 +3009,7 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
     return sCollector ? sCollector->Forget2(e) : true;
 }
 
-PRUint32
+uint32_t
 nsCycleCollector_suspectedCount()
 {
     return sCollector ? sCollector->SuspectedCount() : 0;

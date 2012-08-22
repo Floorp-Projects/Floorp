@@ -41,7 +41,7 @@ private:
   bool          mIsContent;
   bool          mUsePrivateBrowsing;
   bool          mIsInBrowserElement;
-  PRUint32      mAppId;
+  uint32_t      mAppId;
 };
 
 } // namespace mozilla

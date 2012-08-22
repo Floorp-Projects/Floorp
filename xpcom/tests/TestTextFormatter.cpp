@@ -29,7 +29,7 @@ int main()
                                 0x20, 0x33, 0x33, 0x33, 0x20, 0x33,
                                 0x33, 0x33, 0x20, 0x48, 0x65, 0x6C,
                                 0x6C, 0x6F};
-  for(PRUint32 i=0;i<out.Length();i++) 
+  for(uint32_t i=0;i<out.Length();i++) 
     if(uout[i] != expected[i]) 
       test_ok = false;
   printf(test_ok? "nsTextFormatter: OK\n": "nsTextFormatter: FAIL\n");

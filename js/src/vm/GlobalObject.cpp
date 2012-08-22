@@ -264,7 +264,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * prototype of the created object.
      */
     objectProto = NewObjectWithGivenProto(cx, &ObjectClass, NULL, self);
-    if (!objectProto || !objectProto->setSingletonType(cx))
+    if (!objectProto || !JSObject::setSingletonType(cx, objectProto))
         return NULL;
 
     /*
@@ -325,7 +325,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         functionProto->getType(cx)->interpretedFunction = functionProto;
         script->setFunction(functionProto);
 
-        if (!functionProto->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, functionProto))
             return NULL;
 
         /*
@@ -399,10 +399,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (!setter)
         return NULL;
     RootedValue undefinedValue(cx, UndefinedValue());
-    if (!objectProto->defineProperty(cx, cx->runtime->atomState.protoAtom, undefinedValue,
-                                     JS_DATA_TO_FUNC_PTR(PropertyOp, getter.get()),
-                                     JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setter.get()),
-                                     JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))
+    if (!JSObject::defineProperty(cx, objectProto,
+                                  cx->runtime->atomState.protoAtom, undefinedValue,
+                                  JS_DATA_TO_FUNC_PTR(PropertyOp, getter.get()),
+                                  JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setter.get()),
+                                  JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))
     {
         return NULL;
     }
@@ -482,9 +483,9 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 
     cx->compartment->initGlobal(*global);
 
-    if (!global->setSingletonType(cx) || !global->setVarObj(cx))
+    if (!JSObject::setSingletonType(cx, global) || !global->setVarObj(cx))
         return NULL;
-    if (!obj->setDelegate(cx))
+    if (!global->setDelegate(cx))
         return NULL;
 
     /* Construct a regexp statics object for this global object. */
@@ -504,8 +505,8 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 
     /* Define a top-level property 'undefined' with the undefined value. */
     RootedValue undefinedValue(cx, UndefinedValue());
-    if (!global->defineProperty(cx, state.typeAtoms[JSTYPE_VOID], undefinedValue,
-                                JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, global, state.typeAtoms[JSTYPE_VOID], undefinedValue,
+                                  JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -620,7 +621,7 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
     JS_ASSERT(clasp != &FunctionClass);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global));
-    if (!blankProto || !blankProto->setSingletonType(cx))
+    if (!blankProto || !JSObject::setSingletonType(cx, blankProto))
         return NULL;
 
     return blankProto;
@@ -651,11 +652,11 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue ctorVal(cx, ObjectValue(*ctor));
 
-    return ctor->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
-                                protoVal, JS_PropertyStub, JS_StrictPropertyStub,
-                                JSPROP_PERMANENT | JSPROP_READONLY) &&
-           proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
-                                 ctorVal, JS_PropertyStub, JS_StrictPropertyStub, 0);
+    return JSObject::defineProperty(cx, ctor, cx->runtime->atomState.classPrototypeAtom,
+                                    protoVal, JS_PropertyStub, JS_StrictPropertyStub,
+                                    JSPROP_PERMANENT | JSPROP_READONLY) &&
+           JSObject::defineProperty(cx, proto, cx->runtime->atomState.constructorAtom,
+                                    ctorVal, JS_PropertyStub, JS_StrictPropertyStub, 0);
 }
 
 bool

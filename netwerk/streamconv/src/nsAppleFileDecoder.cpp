@@ -60,7 +60,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Close(void)
   nsresult rv;
   rv = m_output->Close();
 
-  PRInt32 i;
+  int32_t i;
 
   if (m_rfRefNum != -1)
     FSClose(m_rfRefNum);
@@ -150,12 +150,12 @@ NS_IMETHODIMP nsAppleFileDecoder::Flush(void)
   return m_output->Flush();
 } 
 
-NS_IMETHODIMP nsAppleFileDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+NS_IMETHODIMP nsAppleFileDecoder::WriteFrom(nsIInputStream *inStr, uint32_t count, uint32_t *_retval)
 {
   return m_output->WriteFrom(inStr, count, _retval);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+NS_IMETHODIMP nsAppleFileDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, uint32_t count, uint32_t *_retval)
 {
   return m_output->WriteSegments(reader, closure, count, _retval);
 }
@@ -165,14 +165,14 @@ NS_IMETHODIMP nsAppleFileDecoder::IsNonBlocking(bool *aNonBlocking)
   return m_output->IsNonBlocking(aNonBlocking);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize, PRUint32* writeCount)
+NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, uint32_t bufferSize, uint32_t* writeCount)
 {
   /* WARNING: to simplify my life, I presume that I should get all appledouble headers in the first block,
               else I would have to implement a buffer */
 
   const char * buffPtr = buffer;
-  PRUint32 dataCount;
-  PRInt32 i;
+  uint32_t dataCount;
+  int32_t i;
   nsresult rv = NS_OK;
 
   *writeCount = 0;
@@ -191,11 +191,11 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         if (m_dataBufferLength == sizeof(ap_header))
         {
           memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
-          m_headers.magic   = (PRInt32)PR_ntohl((PRUint32)m_headers.magic);
-          m_headers.version = (PRInt32)PR_ntohl((PRUint32)m_headers.version);
+          m_headers.magic   = (int32_t)PR_ntohl((uint32_t)m_headers.magic);
+          m_headers.version = (int32_t)PR_ntohl((uint32_t)m_headers.version);
           // m_headers.fill is required to be all zeroes; no endian issues
           m_headers.entriesCount =
-            (PRInt16)PR_ntohs((PRUint16)m_headers.entriesCount);
+            (int16_t)PR_ntohs((uint16_t)m_headers.entriesCount);
 
           /* Check header to be sure we are dealing with the right kind of data, else just write it to the data fork. */
           if ((m_headers.magic == APPLEDOUBLE_MAGIC || m_headers.magic == APPLESINGLE_MAGIC) && 
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
           if (!m_entries)
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        PRUint32 entriesSize = sizeof(ap_entry) * m_headers.entriesCount;
+        uint32_t entriesSize = sizeof(ap_entry) * m_headers.entriesCount;
         dataCount = entriesSize - m_dataBufferLength;
         if (dataCount > bufferSize)
           dataCount = bufferSize;
@@ -237,14 +237,14 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
           for (i = 0; i < m_headers.entriesCount; i ++)
           {
             memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
-            m_entries[i].id     = (PRInt32)PR_ntohl((PRUint32)m_entries[i].id);
+            m_entries[i].id     = (int32_t)PR_ntohl((uint32_t)m_entries[i].id);
             m_entries[i].offset =
-              (PRInt32)PR_ntohl((PRUint32)m_entries[i].offset);
+              (int32_t)PR_ntohl((uint32_t)m_entries[i].offset);
             m_entries[i].length =
-              (PRInt32)PR_ntohl((PRUint32)m_entries[i].length);
+              (int32_t)PR_ntohl((uint32_t)m_entries[i].length);
             if (m_headers.magic == APPLEDOUBLE_MAGIC)
             {
-              PRUint32 offset = m_entries[i].offset + m_entries[i].length;
+              uint32_t offset = m_entries[i].offset + m_entries[i].length;
               if (offset > m_dataForkOffset)
                 m_dataForkOffset = offset;
             }
@@ -315,10 +315,10 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
             case ENT_DATES    :
               if (m_currentPartLength == sizeof(m_dates)) {
                 memcpy(&m_dates, buffPtr, m_currentPartLength);
-                m_dates.create = (PRInt32)PR_ntohl((PRUint32)m_dates.create);
-                m_dates.modify = (PRInt32)PR_ntohl((PRUint32)m_dates.modify);
-                m_dates.backup = (PRInt32)PR_ntohl((PRUint32)m_dates.backup);
-                m_dates.access = (PRInt32)PR_ntohl((PRUint32)m_dates.access);
+                m_dates.create = (int32_t)PR_ntohl((uint32_t)m_dates.create);
+                m_dates.modify = (int32_t)PR_ntohl((uint32_t)m_dates.modify);
+                m_dates.backup = (int32_t)PR_ntohl((uint32_t)m_dates.backup);
+                m_dates.access = (int32_t)PR_ntohl((uint32_t)m_dates.access);
               }
               break;
             case ENT_FINFO    :
@@ -327,33 +327,33 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
                 memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
                 // OSType (four character codes) are still integers; swap them.
                 m_finderInfo.fdType =
-                  (OSType)PR_ntohl((PRUint32)m_finderInfo.fdType);
+                  (OSType)PR_ntohl((uint32_t)m_finderInfo.fdType);
                 m_finderInfo.fdCreator =
-                  (OSType)PR_ntohl((PRUint32)m_finderInfo.fdCreator);
+                  (OSType)PR_ntohl((uint32_t)m_finderInfo.fdCreator);
                 m_finderInfo.fdFlags =
-                  (UInt16)PR_ntohs((PRUint16)m_finderInfo.fdFlags);
+                  (UInt16)PR_ntohs((uint16_t)m_finderInfo.fdFlags);
                 m_finderInfo.fdLocation.v =
-                  (short)PR_ntohs((PRUint16)m_finderInfo.fdLocation.v);
+                  (short)PR_ntohs((uint16_t)m_finderInfo.fdLocation.v);
                 m_finderInfo.fdLocation.h =
-                  (short)PR_ntohs((PRUint16)m_finderInfo.fdLocation.h);
+                  (short)PR_ntohs((uint16_t)m_finderInfo.fdLocation.h);
                 m_finderInfo.fdFldr =
-                  (SInt16)PR_ntohs((PRUint16)m_finderInfo.fdFldr);
+                  (SInt16)PR_ntohs((uint16_t)m_finderInfo.fdFldr);
 
                 memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo), sizeof(m_finderExtraInfo));
                 m_finderExtraInfo.fdIconID =
-                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdIconID);
+                  (SInt16)PR_ntohs((uint16_t)m_finderExtraInfo.fdIconID);
                 m_finderExtraInfo.fdReserved[0] =
-                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[0]);
+                  (SInt16)PR_ntohs((uint16_t)m_finderExtraInfo.fdReserved[0]);
                 m_finderExtraInfo.fdReserved[1] =
-                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[1]);
+                  (SInt16)PR_ntohs((uint16_t)m_finderExtraInfo.fdReserved[1]);
                 m_finderExtraInfo.fdReserved[2] =
-                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[2]);
+                  (SInt16)PR_ntohs((uint16_t)m_finderExtraInfo.fdReserved[2]);
                 // fdScript is a byte
                 // fdXFlags is a byte
                 m_finderExtraInfo.fdComment =
-                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdComment);
+                  (SInt16)PR_ntohs((uint16_t)m_finderExtraInfo.fdComment);
                 m_finderExtraInfo.fdPutAway =
-                  (SInt32)PR_ntohl((PRUint32)m_finderExtraInfo.fdPutAway);
+                  (SInt32)PR_ntohl((uint32_t)m_finderExtraInfo.fdPutAway);
               }
               break;
           }
@@ -383,7 +383,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         
         if (m_output)
         {
-          PRUint32 writeCount;
+          uint32_t writeCount;
           rv = m_output->Write((const char *)buffPtr, dataCount, &writeCount);
           if (dataCount != writeCount)
             rv = NS_ERROR_FAILURE;
@@ -417,7 +417,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         dataCount = bufferSize;
         if (m_output)
         {
-          PRUint32 writeCount;
+          uint32_t writeCount;
           rv = m_output->Write((const char *)buffPtr, dataCount, &writeCount);
           if (dataCount != writeCount)
             rv = NS_ERROR_FAILURE;

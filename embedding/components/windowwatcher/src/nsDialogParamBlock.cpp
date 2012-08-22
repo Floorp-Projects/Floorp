@@ -11,7 +11,7 @@ NS_IMPL_ISUPPORTS1(nsDialogParamBlock, nsIDialogParamBlock)
 
 nsDialogParamBlock::nsDialogParamBlock() : mNumStrings(0), mString(NULL)
 {
-  for(PRInt32 i = 0; i < kNumInts; i++)
+  for(int32_t i = 0; i < kNumInts; i++)
     mInt[i] = 0;
 }
 
@@ -20,7 +20,7 @@ nsDialogParamBlock::~nsDialogParamBlock()
   delete [] mString;
 }
 
-NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings(PRInt32 inNumStrings)
+NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings(int32_t inNumStrings)
 {
   if (mString != NULL)
     return NS_ERROR_ALREADY_INITIALIZED;
@@ -33,7 +33,7 @@ NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings(PRInt32 inNumStrings)
 }
 
 
-NS_IMETHODIMP nsDialogParamBlock::GetInt(PRInt32 inIndex, PRInt32 *_retval)
+NS_IMETHODIMP nsDialogParamBlock::GetInt(int32_t inIndex, int32_t *_retval)
 {
   nsresult rv = InBounds(inIndex, kNumInts);
   if (rv == NS_OK)
@@ -41,7 +41,7 @@ NS_IMETHODIMP nsDialogParamBlock::GetInt(PRInt32 inIndex, PRInt32 *_retval)
   return rv;
 }
 
-NS_IMETHODIMP nsDialogParamBlock::SetInt(PRInt32 inIndex, PRInt32 inInt)
+NS_IMETHODIMP nsDialogParamBlock::SetInt(int32_t inIndex, int32_t inInt)
 {
   nsresult rv = InBounds(inIndex, kNumInts);
   if (rv == NS_OK)
@@ -50,7 +50,7 @@ NS_IMETHODIMP nsDialogParamBlock::SetInt(PRInt32 inIndex, PRInt32 inInt)
 }
 
   
-NS_IMETHODIMP nsDialogParamBlock::GetString(PRInt32 inIndex, PRUnichar **_retval)
+NS_IMETHODIMP nsDialogParamBlock::GetString(int32_t inIndex, PRUnichar **_retval)
 {
   if (mNumStrings == 0)
     SetNumberStrings(kNumStrings);
@@ -60,7 +60,7 @@ NS_IMETHODIMP nsDialogParamBlock::GetString(PRInt32 inIndex, PRUnichar **_retval
   return rv;
 }
 
-NS_IMETHODIMP nsDialogParamBlock::SetString(PRInt32 inIndex, const PRUnichar *inString)
+NS_IMETHODIMP nsDialogParamBlock::SetString(int32_t inIndex, const PRUnichar *inString)
 {
   if (mNumStrings == 0)
     SetNumberStrings(kNumStrings);

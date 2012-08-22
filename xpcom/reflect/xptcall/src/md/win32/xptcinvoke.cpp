@@ -12,7 +12,7 @@
 #endif
 
 static void __fastcall
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 {
     for(; paramCount > 0; paramCount--, d++, s++)
     {
@@ -23,14 +23,14 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         }
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt8*)  d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt16*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((PRUint8*) d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint16*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I8     : *((int8_t*)  d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int16_t*) d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U8     : *((uint8_t*) d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint16_t*)d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
         case nsXPTType::T_BOOL   : *((bool*)  d) = s->val.b;           break;
@@ -49,8 +49,8 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 // a custom FPO program.
 #pragma optimize( "y", off )
 extern "C" NS_EXPORT nsresult NS_FROZENCALL
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                 uint32_t paramCount, nsXPTCVariant* params)
 {
     __asm {
         mov     edx,paramCount      // Save paramCount for later

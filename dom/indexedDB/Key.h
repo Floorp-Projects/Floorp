@@ -33,7 +33,7 @@ public:
     return *this;
   }
 
-  Key& operator=(PRInt64 aInt)
+  Key& operator=(int64_t aInt)
   {
     SetFromInteger(aInt);
     return *this;
@@ -119,7 +119,7 @@ public:
     TrimBuffer();
   }
 
-  void SetFromInteger(PRInt64 aInt)
+  void SetFromInteger(int64_t aInt)
   {
     mBuffer.Truncate();
     EncodeNumber(double(aInt), eFloat);
@@ -191,30 +191,30 @@ public:
                            const nsACString& aParamName) const
   {
     nsresult rv = aStatement->BindBlobByName(aParamName,
-      reinterpret_cast<const PRUint8*>(mBuffer.get()), mBuffer.Length());
+      reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
 
     return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsresult SetFromStatement(mozIStorageStatement* aStatement,
-                            PRUint32 aIndex)
+                            uint32_t aIndex)
   {
-    PRUint8* data;
-    PRUint32 dataLength = 0;
+    uint8_t* data;
+    uint32_t dataLength = 0;
 
     nsresult rv = aStatement->GetBlob(aIndex, &dataLength, &data);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     mBuffer.Adopt(
-      reinterpret_cast<char*>(const_cast<PRUint8*>(data)), dataLength);
+      reinterpret_cast<char*>(const_cast<uint8_t*>(data)), dataLength);
 
     return NS_OK;
   }
 
   static
-  PRInt16 CompareKeys(Key& aFirst, Key& aSecond)
+  int16_t CompareKeys(Key& aFirst, Key& aSecond)
   {
-    PRInt32 result = Compare(aFirst.mBuffer, aSecond.mBuffer);
+    int32_t result = Compare(aFirst.mBuffer, aSecond.mBuffer);
 
     if (result < 0) {
       return -1;
@@ -261,18 +261,18 @@ private:
 
   // Encoding functions. These append the encoded value to the end of mBuffer
   inline nsresult EncodeJSVal(JSContext* aCx, const jsval aVal,
-                              PRUint8 aTypeOffset)
+                              uint8_t aTypeOffset)
   {
     return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
   }
-  void EncodeString(const nsAString& aString, PRUint8 aTypeOffset);
-  void EncodeNumber(double aFloat, PRUint8 aType);
+  void EncodeString(const nsAString& aString, uint8_t aTypeOffset);
+  void EncodeNumber(double aFloat, uint8_t aType);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
   // past the consumed value.
   static inline nsresult DecodeJSVal(const unsigned char*& aPos,
                                      const unsigned char* aEnd, JSContext* aCx,
-                                     PRUint8 aTypeOffset, jsval* aVal)
+                                     uint8_t aTypeOffset, jsval* aVal)
   {
     return DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset, aVal, 0);
   }
@@ -287,12 +287,12 @@ private:
 
 private:
   nsresult EncodeJSValInternal(JSContext* aCx, const jsval aVal,
-                               PRUint8 aTypeOffset, PRUint16 aRecursionDepth);
+                               uint8_t aTypeOffset, uint16_t aRecursionDepth);
 
   static nsresult DecodeJSValInternal(const unsigned char*& aPos,
                                       const unsigned char* aEnd,
-                                      JSContext* aCx, PRUint8 aTypeOffset,
-                                      jsval* aVal, PRUint16 aRecursionDepth);
+                                      JSContext* aCx, uint8_t aTypeOffset,
+                                      jsval* aVal, uint16_t aRecursionDepth);
 };
 
 END_INDEXEDDB_NAMESPACE

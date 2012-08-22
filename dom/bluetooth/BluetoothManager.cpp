@@ -287,7 +287,7 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
 
-  PRUint32 permission;
+  uint32_t permission;
   nsresult rv =
     permMgr->TestPermissionFromPrincipal(principal, "mozBluetooth", &permission);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -136,7 +136,7 @@ private:
     nsresult SaveDocumentWithFixup(
         nsIDOMDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
         nsIURI *aFile, bool aReplaceExisting, const nsACString &aFormatType,
-        const nsCString &aSaveCharset, PRUint32  aFlags);
+        const nsCString &aSaveCharset, uint32_t  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
@@ -177,7 +177,7 @@ private:
     nsCOMPtr<nsIURI>          mCurrentBaseURI;
     nsCString                 mCurrentCharset;
     nsCOMPtr<nsIURI>          mTargetBaseURI;
-    PRUint32                  mCurrentThingsToPersist;
+    uint32_t                  mCurrentThingsToPersist;
 
     nsCOMPtr<nsIMIMEService>  mMIMEService;
     nsCOMPtr<nsIURI>          mURI;
@@ -202,12 +202,12 @@ private:
     bool                      mStartSaving;
     bool                      mReplaceExisting;
     bool                      mSerializingOutput;
-    PRUint32                  mPersistFlags;
+    uint32_t                  mPersistFlags;
     nsresult                  mPersistResult;
-    PRInt64                   mTotalCurrentProgress;
-    PRInt64                   mTotalMaxProgress;
-    PRInt16                   mWrapColumn;
-    PRUint32                  mEncodingFlags;
+    int64_t                   mTotalCurrentProgress;
+    int64_t                   mTotalMaxProgress;
+    int16_t                   mWrapColumn;
+    uint32_t                  mEncodingFlags;
     nsString                  mContentType;
 };
 

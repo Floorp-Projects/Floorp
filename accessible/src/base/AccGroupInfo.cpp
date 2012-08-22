@@ -17,19 +17,19 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
   if (!parent)
     return;
 
-  PRInt32 indexInParent = aItem->IndexInParent();
-  PRUint32 siblingCount = parent->ChildCount();
+  int32_t indexInParent = aItem->IndexInParent();
+  uint32_t siblingCount = parent->ChildCount();
   if (indexInParent == -1 ||
-      indexInParent >= static_cast<PRInt32>(siblingCount)) {
+      indexInParent >= static_cast<int32_t>(siblingCount)) {
     NS_ERROR("Wrong index in parent! Tree invalidation problem.");
     return;
   }
 
-  PRInt32 level = nsAccUtils::GetARIAOrDefaultLevel(aItem);
+  int32_t level = nsAccUtils::GetARIAOrDefaultLevel(aItem);
 
   // Compute position in set.
   mPosInSet = 1;
-  for (PRInt32 idx = indexInParent - 1; idx >= 0 ; idx--) {
+  for (int32_t idx = indexInParent - 1; idx >= 0 ; idx--) {
     Accessible* sibling = parent->GetChildAt(idx);
     roles::Role siblingRole = sibling->Role();
 
@@ -45,7 +45,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
     // level is lesser than this one then group is ended, if the sibling level
     // is greater than this one then the group is split by some child elements
     // (group will be continued).
-    PRInt32 siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level) {
       mParent = sibling;
       break;
@@ -70,7 +70,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
   // Compute set size.
   mSetSize = mPosInSet;
 
-  for (PRUint32 idx = indexInParent + 1; idx < siblingCount; idx++) {
+  for (uint32_t idx = indexInParent + 1; idx < siblingCount; idx++) {
     Accessible* sibling = parent->GetChildAt(idx);
 
     roles::Role siblingRole = sibling->Role();
@@ -84,7 +84,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
       continue;
 
     // and check if it's hierarchical flatten structure.
-    PRInt32 siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level)
       break;
 

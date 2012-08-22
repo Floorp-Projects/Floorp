@@ -93,10 +93,10 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
 
     if (!name.IsEmpty()) {
       // Try to only provide the executable name, as it is much simpler than with the path and arguments
-      PRInt32 firstSpace = name.FindChar(' ');
+      int32_t firstSpace = name.FindChar(' ');
       if (firstSpace != kNotFound) {
         name.Truncate(firstSpace);
-        PRInt32 lastSlash = name.RFindChar('/');
+        int32_t lastSlash = name.RFindChar('/');
         if (lastSlash != kNotFound) {
           name.Cut(0, lastSlash + 1);
         }

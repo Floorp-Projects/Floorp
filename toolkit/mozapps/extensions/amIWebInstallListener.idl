@@ -49,7 +49,7 @@ interface amIWebInstallListener : nsISupports
    */
   void onWebInstallDisabled(in nsIDOMWindow aWindow, in nsIURI aUri,
                             [array, size_is(aCount)] in nsIVariant aInstalls,
-                            [optional] in PRUint32 aCount);
+                            [optional] in uint32_t aCount);
 
   /**
    * Called when the website is not allowed to directly prompt the user to
@@ -67,7 +67,7 @@ interface amIWebInstallListener : nsISupports
    */
   boolean onWebInstallBlocked(in nsIDOMWindow aWindow, in nsIURI aUri,
                               [array, size_is(aCount)] in nsIVariant aInstalls,
-                              [optional] in PRUint32 aCount);
+                              [optional] in uint32_t aCount);
 
   /**
    * Called when a website wants to ask the user to install add-ons.
@@ -84,7 +84,7 @@ interface amIWebInstallListener : nsISupports
    */
   boolean onWebInstallRequested(in nsIDOMWindow aWindow, in nsIURI aUri,
                                 [array, size_is(aCount)] in nsIVariant aInstalls,
-                                [optional] in PRUint32 aCount);
+                                [optional] in uint32_t aCount);
 };
 
 /**
@@ -109,5 +109,5 @@ interface amIWebInstallPrompt : nsISupports
    */
   void confirm(in nsIDOMWindow aWindow, in nsIURI aUri,
                [array, size_is(aCount)] in nsIVariant aInstalls,
-               [optional] in PRUint32 aCount);
+               [optional] in uint32_t aCount);
 };

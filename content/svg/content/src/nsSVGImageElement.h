@@ -44,7 +44,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGImageElementBase::)
 
   // nsIContent interface
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

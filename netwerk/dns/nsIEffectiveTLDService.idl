@@ -76,7 +76,7 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * @see    getPublicSuffix()
      */
-    ACString getBaseDomain(in nsIURI aURI, [optional] in PRUint32 aAdditionalParts);
+    ACString getBaseDomain(in nsIURI aURI, [optional] in uint32_t aAdditionalParts);
 
     /**
      * NOTE: It is strongly recommended to use getPublicSuffix() above if a suitable
@@ -106,6 +106,6 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * @see     getBaseDomain()
      */
-    ACString getBaseDomainFromHost(in AUTF8String aHost, [optional] in PRUint32 aAdditionalParts);
+    ACString getBaseDomainFromHost(in AUTF8String aHost, [optional] in uint32_t aAdditionalParts);
 };
 

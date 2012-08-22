@@ -46,11 +46,11 @@ __try {
     return CO_E_OBJNOTCONNECTED;
 
   // If the object is not on any screen the returned position is (0,0).
-  PRUint64 state = acc->State();
+  uint64_t state = acc->State();
   if (state & states::INVISIBLE)
     return S_OK;
 
-  PRInt32 x = 0, y = 0, width = 0, height = 0;
+  int32_t x = 0, y = 0, width = 0, height = 0;
   nsresult rv = acc->GetBounds(&x, &y, &width, &height);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -68,7 +68,7 @@ __try {
 
   // The coordinates of the bounding box are given relative to the parent's
   // coordinate system.
-  PRInt32 parentx = 0, parenty = 0;
+  int32_t parentx = 0, parenty = 0;
   rv = acc->GetBounds(&parentx, &parenty, &width, &height);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

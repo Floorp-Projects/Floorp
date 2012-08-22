@@ -55,7 +55,7 @@ nsresult
 NS_RemoveWeakElementBase(isupports_array_type *aArray,
                          nsISupports *aElement)
 {
-  PRUint32 index = aArray->IndexOf(aElement);
+  uint32_t index = aArray->IndexOf(aElement);
   if (index != aArray->NoIndex) {
     aArray->RemoveElementAt(index);
     return NS_OK;

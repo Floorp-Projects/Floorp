@@ -137,7 +137,7 @@ gfxOS2Platform::CreateFontGroup(const nsAString &aFamilies,
 }
 
 already_AddRefed<gfxOS2Font>
-gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
+gfxOS2Platform::FindFontForChar(uint32_t aCh, gfxOS2Font *aFont)
 {
 #ifdef DEBUG_thebes
     printf("gfxOS2Platform::FindFontForChar(%d, ...)\n", aCh);
@@ -157,7 +157,7 @@ gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
     nsresult rv = GetFontList(aFont->GetStyle()->language, generic, fontList);
     if (NS_SUCCEEDED(rv)) {
         // start at 3 to skip over the generic entries
-        for (PRUint32 i = 3; i < fontList.Length(); i++) {
+        for (uint32_t i = 3; i < fontList.Length(); i++) {
 #ifdef DEBUG_thebes
             printf("searching in entry i=%d (%s)\n",
                    i, NS_LossyConvertUTF16toASCII(fontList[i]).get());

@@ -73,7 +73,7 @@ public:
    */
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
                                    const char *aProfile,
-                                   PRInt32 argc, char **argv,
+                                   int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse, bool *aSucceeded) = 0;
 };

@@ -44,7 +44,7 @@ nsNetworkLinkService::GetLinkStatusKnown(bool *aIsUp)
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
+nsNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 

@@ -18,7 +18,7 @@ nsThebesFontEnumerator::nsThebesFontEnumerator()
 }
 
 NS_IMETHODIMP
-nsThebesFontEnumerator::EnumerateAllFonts(PRUint32 *aCount,
+nsThebesFontEnumerator::EnumerateAllFonts(uint32_t *aCount,
                                           PRUnichar ***aResult)
 {
     return EnumerateFonts (nullptr, nullptr, aCount, aResult);
@@ -27,7 +27,7 @@ nsThebesFontEnumerator::EnumerateAllFonts(PRUint32 *aCount,
 NS_IMETHODIMP
 nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
                                        const char *aGeneric,
-                                       PRUint32 *aCount,
+                                       uint32_t *aCount,
                                        PRUnichar ***aResult)
 {
     NS_ENSURE_ARG_POINTER(aCount);
@@ -60,7 +60,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     PRUnichar **fs = static_cast<PRUnichar **>
                                 (nsMemory::Alloc(fontList.Length() * sizeof(PRUnichar*)));
-    for (PRUint32 i = 0; i < fontList.Length(); i++) {
+    for (uint32_t i = 0; i < fontList.Length(); i++) {
         fs[i] = ToNewUnicode(fontList[i]);
     }
 

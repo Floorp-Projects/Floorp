@@ -149,7 +149,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 
 nsChangeHint
 nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType) const
+                                            int32_t aModType) const
 {
   nsChangeHint retval =
     nsSVGGraphicElementBase::GetAttributeChangeHint(aAttribute, aModType);
@@ -238,7 +238,7 @@ nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
 }
 
 SVGAnimatedTransformList*
-nsSVGGraphicElement::GetAnimatedTransformList(PRUint32 aFlags)
+nsSVGGraphicElement::GetAnimatedTransformList(uint32_t aFlags)
 {
   if (!mTransforms && (aFlags & DO_ALLOCATE)) {
     mTransforms = new SVGAnimatedTransformList();

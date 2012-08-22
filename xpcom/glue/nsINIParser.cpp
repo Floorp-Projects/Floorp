@@ -264,7 +264,7 @@ nsINIParser::GetString(const char *aSection, const char *aKey,
 
 nsresult
 nsINIParser::GetString(const char *aSection, const char *aKey, 
-                       char *aResult, PRUint32 aResultLen)
+                       char *aResult, uint32_t aResultLen)
 {
     INIValue *val;
     mSections.Get(aSection, &val);

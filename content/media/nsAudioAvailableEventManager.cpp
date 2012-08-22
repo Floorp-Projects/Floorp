@@ -19,7 +19,7 @@ private:
   nsAutoArrayPtr<float> mFrameBuffer;
 public:
   nsAudioAvailableEventRunner(nsBuiltinDecoder* aDecoder, float* aFrameBuffer,
-                              PRUint32 aFrameBufferLength, float aTime) :
+                              uint32_t aFrameBufferLength, float aTime) :
     mDecoder(aDecoder),
     mFrameBuffer(aFrameBuffer),
     mFrameBufferLength(aFrameBufferLength),
@@ -38,7 +38,7 @@ public:
     return NS_OK;
   }
 
-  const PRUint32 mFrameBufferLength;
+  const uint32_t mFrameBufferLength;
 
   // Start time of the buffer data (in seconds).
   const float mTime;
@@ -62,13 +62,13 @@ nsAudioAvailableEventManager::~nsAudioAvailableEventManager()
   MOZ_COUNT_DTOR(nsAudioAvailableEventManager);
 }
 
-void nsAudioAvailableEventManager::Init(PRUint32 aChannels, PRUint32 aRate)
+void nsAudioAvailableEventManager::Init(uint32_t aChannels, uint32_t aRate)
 {
   NS_ASSERTION(aChannels != 0 && aRate != 0, "Audio metadata not known.");
   mSamplesPerSecond = static_cast<float>(aChannels * aRate);
 }
 
-void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
+void nsAudioAvailableEventManager::DispatchPendingEvents(uint64_t aCurrentTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -89,8 +89,8 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
 }
 
 void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioData,
-                                                         PRUint32 aAudioDataLength,
-                                                         PRUint64 aEndTimeSampleOffset)
+                                                         uint32_t aAudioDataLength,
+                                                         uint64_t aEndTimeSampleOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -98,7 +98,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
     return;
   }
 
-  PRUint32 currentBufferSize = mNewSignalBufferLength;
+  uint32_t currentBufferSize = mNewSignalBufferLength;
   if (currentBufferSize == 0) {
     NS_WARNING("Decoder framebuffer length not set.");
     return;
@@ -113,8 +113,8 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
     mSignalBufferLength = currentBufferSize;
   }
   AudioDataValue* audioData = aAudioData;
-  PRUint32 audioDataLength = aAudioDataLength;
-  PRUint32 signalBufferTail = mSignalBufferLength - mSignalBufferPosition;
+  uint32_t audioDataLength = aAudioDataLength;
+  uint32_t signalBufferTail = mSignalBufferLength - mSignalBufferPosition;
 
   // Group audio samples into optimal size for event dispatch, and queue.
   while (signalBufferTail <= audioDataLength) {
@@ -126,7 +126,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
     }
 
     // Fill the signalBuffer.
-    PRUint32 i;
+    uint32_t i;
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     if (audioData) {
       for (i = 0; i < signalBufferTail; ++i) {
@@ -175,7 +175,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
 
   if (audioDataLength > 0) {
     // Add data to the signalBuffer.
-    PRUint32 i;
+    uint32_t i;
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     if (audioData) {
       for (i = 0; i < audioDataLength; ++i) {
@@ -196,7 +196,7 @@ void nsAudioAvailableEventManager::Clear()
   mSignalBufferPosition = 0;
 }
 
-void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
+void nsAudioAvailableEventManager::Drain(uint64_t aEndTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -205,7 +205,7 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
   }
 
   // Force all pending events to go now.
-  for (PRUint32 i = 0; i < mPendingEvents.Length(); ++i) {
+  for (uint32_t i = 0; i < mPendingEvents.Length(); ++i) {
     nsCOMPtr<nsIRunnable> event = mPendingEvents[i];
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
@@ -230,7 +230,7 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
   mSignalBufferPosition = 0;
 }
 
-void nsAudioAvailableEventManager::SetSignalBufferLength(PRUint32 aLength)
+void nsAudioAvailableEventManager::SetSignalBufferLength(uint32_t aLength)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 

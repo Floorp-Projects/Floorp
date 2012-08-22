@@ -28,7 +28,7 @@ namespace storage {
 static
 JSBool
 stepFunc(JSContext *aCtx,
-         PRUint32,
+         uint32_t,
          jsval *_vp)
 {
   nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
@@ -87,7 +87,7 @@ StatementJSHelper::getRow(Statement *aStatement,
   nsresult rv;
 
 #ifdef DEBUG
-  PRInt32 state;
+  int32_t state;
   (void)aStatement->GetState(&state);
   NS_ASSERTION(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING,
                "Invalid state to get the row object - all calls will fail!");
@@ -125,7 +125,7 @@ StatementJSHelper::getParams(Statement *aStatement,
   nsresult rv;
 
 #ifdef DEBUG
-  PRInt32 state;
+  int32_t state;
   (void)aStatement->GetState(&state);
   NS_ASSERTION(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY,
                "Invalid state to get the params object - all calls will fail!");
@@ -211,7 +211,7 @@ StatementJSHelper::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                               JSContext *aCtx,
                               JSObject *aScopeObj,
                               jsid aId,
-                              PRUint32 aFlags,
+                              uint32_t aFlags,
                               JSObject **_objp,
                               bool *_retval)
 {

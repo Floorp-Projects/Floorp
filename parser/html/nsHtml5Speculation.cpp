@@ -5,8 +5,8 @@
 #include "nsHtml5Speculation.h"
 
 nsHtml5Speculation::nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
-                                       PRInt32 aStart, 
-                                       PRInt32 aStartLineNumber, 
+                                       int32_t aStart, 
+                                       int32_t aStartLineNumber, 
                                        nsAHtml5TreeBuilderState* aSnapshot)
   : mBuffer(aBuffer)
   , mStart(aStart)

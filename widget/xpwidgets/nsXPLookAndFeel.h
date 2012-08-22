@@ -15,7 +15,7 @@ struct nsLookAndFeelIntPref
   const char* name;
   mozilla::LookAndFeel::IntID id;
   bool isSet;
-  PRInt32 intVar;
+  int32_t intVar;
 };
 
 struct nsLookAndFeelFloatPref
@@ -53,7 +53,7 @@ public:
   // platform-specific nsLookAndFeel should use its own values instead.
   //
   nsresult GetColorImpl(ColorID aID, nscolor &aResult);
-  virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
+  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
 
   // This one is different: there are no override prefs (fixme?), so
@@ -73,7 +73,7 @@ public:
     return false;
   }
 
-  virtual PRUint32 GetPasswordMaskDelayImpl()
+  virtual uint32_t GetPasswordMaskDelayImpl()
   {
     return 600;
   }
@@ -86,7 +86,7 @@ protected:
   static void ColorPrefChanged(unsigned int index, const char *prefName);
   void InitFromPref(nsLookAndFeelIntPref* aPref);
   void InitFromPref(nsLookAndFeelFloatPref* aPref);
-  void InitColorFromPref(PRInt32 aIndex);
+  void InitColorFromPref(int32_t aIndex);
   virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) = 0;
   bool IsSpecialColor(ColorID aID, nscolor &aColor);
 
@@ -99,8 +99,8 @@ protected:
    * see nsXPLookAndFeel.cpp
    */
   static const char sColorPrefs[][38];
-  static PRInt32 sCachedColors[LookAndFeel::eColorID_LAST_COLOR];
-  static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
+  static int32_t sCachedColors[LookAndFeel::eColorID_LAST_COLOR];
+  static int32_t sCachedColorBits[COLOR_CACHE_SIZE];
   static bool sUseNativeColors;
 
   static nsLookAndFeel* sInstance;

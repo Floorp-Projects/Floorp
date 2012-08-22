@@ -13,21 +13,21 @@
 /***************************************************************************/
 /* Forward declarations. */
 
-static PRUint32
+static uint32_t
 SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id);
 
-static PRUint32
+static uint32_t
 SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id);
 
-static PRUint32
+static uint32_t
 SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id);
 
-static PRUint32
+static uint32_t
 SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id);
 
 static PRBool
 DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
-                          XPTInterfaceDirectoryEntry *ide, PRUint16 entry_index);
+                          XPTInterfaceDirectoryEntry *ide, uint16_t entry_index);
 
 static PRBool
 DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
@@ -56,11 +56,11 @@ DoParamDescriptor(XPTArena *arena, XPTCursor *cursor, XPTParamDescriptor *pd,
 
 /***************************************************************************/
 
-XPT_PUBLIC_API(PRUint32)
+XPT_PUBLIC_API(uint32_t)
 XPT_SizeOfHeader(XPTHeader *header)
 {
     XPTAnnotation *ann, *last;
-    PRUint32 size = 16 /* magic */ +
+    uint32_t size = 16 /* magic */ +
         1 /* major */ + 1 /* minor */ +
         2 /* num_interfaces */ + 4 /* file_length */ +
         4 /* interface_directory */ + 4 /* data_pool */;
@@ -77,17 +77,17 @@ XPT_SizeOfHeader(XPTHeader *header)
     return size;
 }
 
-XPT_PUBLIC_API(PRUint32)
+XPT_PUBLIC_API(uint32_t)
 XPT_SizeOfHeaderBlock(XPTHeader *header)
 {
-    PRUint32 ide_size = 16 /* IID */ + 4 /* name */ +
+    uint32_t ide_size = 16 /* IID */ + 4 /* name */ +
         4 /* namespace */ + 4 /* descriptor */;
 
     return XPT_SizeOfHeader(header) + header->num_interfaces * ide_size;
 }
 
 XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces, PRUint8 major_version, PRUint8 minor_version)
+XPT_NewHeader(XPTArena *arena, uint16_t num_interfaces, uint8_t major_version, uint8_t minor_version)
 {
     XPTHeader *header = XPT_NEWZAP(arena, XPTHeader);
     if (!header)
@@ -138,7 +138,7 @@ XPT_FreeHeader(XPTArena *arena, XPTHeader* aHeader)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, PRUint32 * ide_offset)
+XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, uint32_t * ide_offset)
 {
     XPTMode mode = cursor->state->mode;
     unsigned int i;
@@ -210,7 +210,7 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
     const int HEADER_SIZE = 24;
     XPTMode mode = cursor->state->mode;
     XPTHeader * header;
-    PRUint32 ide_offset;
+    uint32_t ide_offset;
     int i;
     XPTAnnotation *ann, *next, **annp;
 
@@ -271,7 +271,7 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
     for (i = 0; i < header->num_interfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor, 
                                        &header->interface_directory[i],
-                                       (PRUint16)(i + 1)))
+                                       (uint16_t)(i + 1)))
             goto error;
     }
     
@@ -308,7 +308,7 @@ XPT_DestroyInterfaceDirectoryEntry(XPTArena *arena,
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
 DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
-                          XPTInterfaceDirectoryEntry *ide, PRUint16 entry_index)
+                          XPTInterfaceDirectoryEntry *ide, uint16_t entry_index)
 {
     XPTMode mode = cursor->state->mode;
     
@@ -338,8 +338,8 @@ DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
 
 XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(XPTArena *arena, 
-                           PRUint16 parent_interface, PRUint16 num_methods,
-                           PRUint16 num_constants, PRUint8 flags)
+                           uint16_t parent_interface, uint16_t num_methods,
+                           uint16_t num_constants, uint8_t flags)
 {
 
     XPTInterfaceDescriptor *id = XPT_NEWZAP(arena, XPTInterfaceDescriptor);
@@ -413,7 +413,7 @@ XPT_FreeInterfaceDescriptor(XPTArena *arena, XPTInterfaceDescriptor* id)
 
 XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                PRUint16 num)
+                                uint16_t num)
 {
     XPTTypeDescriptor *old = id->additional_types;
     XPTTypeDescriptor *new;
@@ -436,7 +436,7 @@ XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
 
 XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                  PRUint16 num)
+                                  uint16_t num)
 {
     XPTMethodDescriptor *old = id->method_descriptors;
     XPTMethodDescriptor *new;
@@ -459,7 +459,7 @@ XPT_InterfaceDescriptorAddMethods(XPTArena *arena, XPTInterfaceDescriptor *id,
 
 XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddConsts(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                 PRUint16 num)
+                                 uint16_t num)
 {
     XPTConstDescriptor *old = id->const_descriptors;
     XPTConstDescriptor *new;
@@ -480,10 +480,10 @@ XPT_InterfaceDescriptorAddConsts(XPTArena *arena, XPTInterfaceDescriptor *id,
     return PR_TRUE;
 }
 
-PRUint32
+uint32_t
 SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
 {
-    PRUint32 size = 1; /* prefix */
+    uint32_t size = 1; /* prefix */
 
     switch (XPT_TDP_TAG(td->prefix)) {
       case TD_INTERFACE_TYPE:
@@ -509,10 +509,10 @@ SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
     return size;
 }
 
-PRUint32
+uint32_t
 SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id)
 {
-    PRUint32 i, size =  1 /* flags */ + 4 /* name */ + 1 /* num_args */;
+    uint32_t i, size =  1 /* flags */ + 4 /* name */ + 1 /* num_args */;
 
     for (i = 0; i < md->num_args; i++) 
         size += 1 + SizeOfTypeDescriptor(&md->params[i].type, id);
@@ -521,10 +521,10 @@ SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id)
     return size;
 }
 
-PRUint32
+uint32_t
 SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id)
 {
-    PRUint32 size = 4 /* name */ + SizeOfTypeDescriptor(&cd->type, id);
+    uint32_t size = 4 /* name */ + SizeOfTypeDescriptor(&cd->type, id);
 
     switch (XPT_TDP_TAG(cd->type.prefix)) {
       case TD_INT8:
@@ -555,10 +555,10 @@ SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id)
     return size;
 }
 
-PRUint32
+uint32_t
 SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id)
 {
-    PRUint32 size = 2 /* parent interface */ + 2 /* num_methods */
+    uint32_t size = 2 /* parent interface */ + 2 /* num_methods */
         + 2 /* num_constants */ + 1 /* flags */, i;
     for (i = 0; i < id->num_methods; i++)
         size += SizeOfMethodDescriptor(&id->method_descriptors[i], id);
@@ -574,7 +574,7 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     XPTMode mode = outer->state->mode;
     XPTInterfaceDescriptor *id;
     XPTCursor curs, *cursor = &curs;
-    PRUint32 i, id_sz = 0;
+    uint32_t i, id_sz = 0;
 
     if (mode == XPT_DECODE) {
         id = XPT_NEWZAP(arena, XPTInterfaceDescriptor);
@@ -656,13 +656,13 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
 
     switch(XPT_TDP_TAG(cd->type.prefix)) {
       case TD_INT8:
-        ok = XPT_Do8(cursor, (PRUint8*) &cd->value.i8);
+        ok = XPT_Do8(cursor, (uint8_t*) &cd->value.i8);
         break;
       case TD_INT16:
-        ok = XPT_Do16(cursor, (PRUint16*) &cd->value.i16);
+        ok = XPT_Do16(cursor, (uint16_t*) &cd->value.i16);
         break;
       case TD_INT32:
-        ok = XPT_Do32(cursor, (PRUint32*) &cd->value.i32);
+        ok = XPT_Do32(cursor, (uint32_t*) &cd->value.i32);
         break;
       case TD_INT64:
         ok = XPT_Do64(cursor, &cd->value.i64);
@@ -677,10 +677,10 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
         ok = XPT_Do32(cursor, &cd->value.ui32);
         break;
       case TD_UINT64:
-        ok = XPT_Do64(cursor, (PRInt64 *)&cd->value.ui64);
+        ok = XPT_Do64(cursor, (int64_t *)&cd->value.ui64);
         break;
       case TD_CHAR:
-        ok = XPT_Do8(cursor, (PRUint8*) &cd->value.ch);
+        ok = XPT_Do8(cursor, (uint8_t*) &cd->value.ch);
         break;
       case TD_WCHAR:
         ok = XPT_Do16(cursor, &cd->value.wch);
@@ -697,7 +697,7 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
 
 XPT_PUBLIC_API(PRBool)
 XPT_FillMethodDescriptor(XPTArena *arena, XPTMethodDescriptor *meth, 
-                         PRUint8 flags, char *name, PRUint8 num_args)
+                         uint8_t flags, char *name, uint8_t num_args)
 {
     meth->flags = flags & XPT_MD_FLAGMASK;
     meth->name = XPT_STRDUP(arena, name);
@@ -762,7 +762,7 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_FillParamDescriptor(XPTArena *arena, XPTParamDescriptor *pd, PRUint8 flags,
+XPT_FillParamDescriptor(XPTArena *arena, XPTParamDescriptor *pd, uint8_t flags,
                         XPTTypeDescriptor *type)
 {
     pd->flags = flags & XPT_PD_FLAGMASK;
@@ -837,7 +837,7 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
 }
 
 XPT_PUBLIC_API(XPTAnnotation *)
-XPT_NewAnnotation(XPTArena *arena, PRUint8 flags, XPTString *creator, 
+XPT_NewAnnotation(XPTArena *arena, uint8_t flags, XPTString *creator, 
                   XPTString *private_data)
 {
     XPTAnnotation *ann = XPT_NEWZAP(arena, XPTAnnotation);
@@ -887,8 +887,8 @@ DoAnnotation(XPTArena *arena, XPTCursor *cursor, XPTAnnotation **annp)
 
 PRBool
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            PRUint16 num_interfaces, char *name, 
-                            PRUint16 *indexp) 
+                            uint16_t num_interfaces, char *name, 
+                            uint16_t *indexp) 
 {
     int i;
     
@@ -906,8 +906,8 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
 static XPT_TYPELIB_VERSIONS_STRUCT versions[] = XPT_TYPELIB_VERSIONS;
 #define XPT_TYPELIB_VERSIONS_COUNT (sizeof(versions) / sizeof(versions[0]))
 
-XPT_PUBLIC_API(PRUint16)
-XPT_ParseVersionString(const char* str, PRUint8* major, PRUint8* minor)
+XPT_PUBLIC_API(uint16_t)
+XPT_ParseVersionString(const char* str, uint8_t* major, uint8_t* minor)
 {
     unsigned int i;
     for (i = 0; i < XPT_TYPELIB_VERSIONS_COUNT; i++) {

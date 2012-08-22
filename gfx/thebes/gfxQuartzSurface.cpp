@@ -136,7 +136,7 @@ gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
 	return cairo_quartz_get_cg_context_with_clip(ctx->GetCairo());
 }
 
-PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
+int32_t gfxQuartzSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)
         return gfxContext::FLAG_DISABLE_SNAPPING |

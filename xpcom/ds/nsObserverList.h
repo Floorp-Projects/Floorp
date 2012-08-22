@@ -79,7 +79,7 @@ public:
 private:
     ~nsObserverEnumerator() { }
 
-    PRInt32 mIndex; // Counts up from 0
+    int32_t mIndex; // Counts up from 0
     nsCOMArray<nsIObserver> mObservers;
 };
 

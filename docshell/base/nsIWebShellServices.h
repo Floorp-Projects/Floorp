@@ -21,7 +21,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEB_SHELL_SERVICES_IID)
 
   NS_IMETHOD ReloadDocument(const char* aCharset = nullptr , 
-                            PRInt32 aSource = kCharsetUninitialized) = 0;
+                            int32_t aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
 };
 
@@ -29,7 +29,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIWebShellServices, NS_IWEB_SHELL_SERVICES_IID)
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBSHELLSERVICES \
-  NS_IMETHOD ReloadDocument(const char *aCharset=nullptr, PRInt32 aSource=kCharsetUninitialized); \
+  NS_IMETHOD ReloadDocument(const char *aCharset=nullptr, int32_t aSource=kCharsetUninitialized); \
   NS_IMETHOD StopDocumentLoad(void); \
 
 #endif /* nsIWebShellServices_h___ */

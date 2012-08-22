@@ -52,7 +52,7 @@
 using namespace mozilla;
 
 static PLDHashOperator
-RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *arg)
+RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, uint32_t number, void *arg)
 {
   return (PLDHashOperator) (PL_DHASH_NEXT | PL_DHASH_REMOVE);
 }
@@ -173,7 +173,7 @@ nsChromeRegistryChrome::Init()
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForOSAccessibility()
 {
-  PRInt32 useAccessibilityTheme =
+  int32_t useAccessibilityTheme =
     LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
 
   if (useAccessibilityTheme) {
@@ -253,7 +253,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
   nsXPIDLCString dir;
   prefBranch->GetCharPref(prefString.get(), getter_Copies(dir));
   if (dir.IsEmpty()) {
-    PRInt32 hyphen = prefString.FindChar('-');
+    int32_t hyphen = prefString.FindChar('-');
     if (hyphen >= 1) {
       nsCAutoString shortPref(Substring(prefString, 0, hyphen));
       prefBranch->GetCharPref(shortPref.get(), getter_Copies(dir));
@@ -470,7 +470,7 @@ nsChromeRegistryChrome::SendRegisteredChrome(
 PLDHashOperator
 nsChromeRegistryChrome::CollectPackages(PLDHashTable *table,
                                   PLDHashEntryHdr *entry,
-                                  PRUint32 number,
+                                  uint32_t number,
                                   void *arg)
 {
   EnumerationArgs* args = static_cast<EnumerationArgs*>(arg);
@@ -539,7 +539,7 @@ nsChromeRegistryChrome::GetBaseURIFromPackage(const nsCString& aPackage,
 
 nsresult
 nsChromeRegistryChrome::GetFlagsFromPackage(const nsCString& aPackage,
-                                            PRUint32* aFlags)
+                                            uint32_t* aFlags)
 {
   PackageEntry* entry =
       static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
@@ -600,7 +600,7 @@ nsChromeRegistryChrome::kTableOps = {
 nsChromeRegistryChrome::ProviderEntry*
 nsChromeRegistryChrome::nsProviderArray::GetProvider(const nsACString& aPreferred, MatchType aType)
 {
-  PRInt32 i = mArray.Count();
+  int32_t i = mArray.Count();
   if (!i)
     return nullptr;
 
@@ -673,7 +673,7 @@ nsChromeRegistryChrome::nsProviderArray::SetBase(const nsACString& aProvider, ns
 void
 nsChromeRegistryChrome::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a)
 {
-  PRInt32 i = mArray.Count();
+  int32_t i = mArray.Count();
   while (i--) {
     ProviderEntry *entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
     a->AppendElement(entry->provider);
@@ -683,7 +683,7 @@ nsChromeRegistryChrome::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a
 void
 nsChromeRegistryChrome::nsProviderArray::Clear()
 {
-  PRInt32 i = mArray.Count();
+  int32_t i = mArray.Count();
   while (i--) {
     ProviderEntry* entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
     delete entry;
@@ -695,7 +695,7 @@ nsChromeRegistryChrome::nsProviderArray::Clear()
 void
 nsChromeRegistryChrome::OverlayListEntry::AddURI(nsIURI* aURI)
 {
-  PRInt32 i = mArray.Count();
+  int32_t i = mArray.Count();
   while (i--) {
     bool equals;
     if (NS_SUCCEEDED(aURI->Equals(mArray[i], &equals)) && equals)

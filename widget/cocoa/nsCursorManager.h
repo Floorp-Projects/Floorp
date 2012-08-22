@@ -38,7 +38,7 @@
  @param aHotSpotX the x coordinate of the cursor's hotspot
  @param aHotSpotY the y coordinate of the cursor's hotspot
  */
-- (nsresult) setCursorWithImage: (imgIContainer*) aCursorImage hotSpotX: (PRUint32) aHotspotX hotSpotY: (PRUint32) aHotspotY;
+- (nsresult) setCursorWithImage: (imgIContainer*) aCursorImage hotSpotX: (uint32_t) aHotspotX hotSpotY: (uint32_t) aHotspotY;
 
 
 /*! @method     sharedInstance

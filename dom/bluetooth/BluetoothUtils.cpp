@@ -35,7 +35,7 @@ mozilla::dom::bluetooth::StringArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
     uint32_t valLength = aSourceArray.Length();
     mozilla::ScopedDeleteArray<jsval> valArray(new jsval[valLength]);
     JS::AutoArrayRooter tvr(aCx, 0, valArray);
-    for (PRUint32 index = 0; index < valLength; index++) {
+    for (uint32_t index = 0; index < valLength; index++) {
       JSString* s = JS_NewUCStringCopyN(aCx, aSourceArray[index].BeginReading(),
                                         aSourceArray[index].Length());
       if(!s) {
@@ -85,7 +85,7 @@ mozilla::dom::bluetooth::BluetoothDeviceArrayToJSArray(JSContext* aCx, JSObject*
     uint32_t valLength = aSourceArray.Length();
     mozilla::ScopedDeleteArray<jsval> valArray(new jsval[valLength]);
     JS::AutoArrayRooter tvr(aCx, 0, valArray);
-    for (PRUint32 index = 0; index < valLength; index++) {
+    for (uint32_t index = 0; index < valLength; index++) {
       nsISupports* obj = aSourceArray[index]->ToISupports();
       nsresult rv =
         nsContentUtils::WrapNative(aCx, aGlobal, obj, &valArray[index]);

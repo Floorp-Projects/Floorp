@@ -13,7 +13,7 @@
  * corresponding charactersin aBreakBefore[] on return.
  */
 void
-NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
-                        PRUint8* aBreakBefore);
+NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
+                        uint8_t* aBreakBefore);
 
 #endif  /* nsComplexBreaker_h__ */

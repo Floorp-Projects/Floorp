@@ -45,7 +45,7 @@ using namespace mozilla;
 static void
 SendJSWarning(nsIDocument* aDocument,
               const char* aWarningName,
-              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
+              const PRUnichar** aWarningArgs, uint32_t aWarningArgsLen)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "HTML", aDocument,
@@ -65,7 +65,7 @@ public:
    *        NS_FORM_METHOD_POST).
    */
   nsFSURLEncoded(const nsACString& aCharset,
-                 PRInt32 aMethod,
+                 int32_t aMethod,
                  nsIDocument* aDocument,
                  nsIContent* aOriginatingElement)
     : nsEncodingFormSubmission(aCharset, aOriginatingElement),
@@ -106,7 +106,7 @@ private:
    * The method of the submit (either NS_FORM_METHOD_GET or
    * NS_FORM_METHOD_POST).
    */
-  PRInt32 mMethod;
+  int32_t mMethod;
 
   /** The query string so far (the part after the ?) */
   nsCString mQueryString;
@@ -186,14 +186,14 @@ HandleMailtoSubject(nsCString& aPath) {
   // Walk through the string and see if we have a subject already.
   bool hasSubject = false;
   bool hasParams = false;
-  PRInt32 paramSep = aPath.FindChar('?');
-  while (paramSep != kNotFound && paramSep < (PRInt32)aPath.Length()) {
+  int32_t paramSep = aPath.FindChar('?');
+  while (paramSep != kNotFound && paramSep < (int32_t)aPath.Length()) {
     hasParams = true;
 
     // Get the end of the name at the = op.  If it is *after* the next &,
     // assume that someone made a parameter without an = in it
-    PRInt32 nameEnd = aPath.FindChar('=', paramSep+1);
-    PRInt32 nextParamSep = aPath.FindChar('&', paramSep+1);
+    int32_t nameEnd = aPath.FindChar('=', paramSep+1);
+    int32_t nextParamSep = aPath.FindChar('&', paramSep+1);
     if (nextParamSep == kNotFound) {
       nextParamSep = aPath.Length();
     }
@@ -322,7 +322,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       rv = aURI->GetPath(path);
       NS_ENSURE_SUCCESS(rv, rv);
       // Bug 42616: Trim off named anchor and save it to add later
-      PRInt32 namedAnchorPos = path.FindChar('#');
+      int32_t namedAnchorPos = path.FindChar('#');
       nsCAutoString namedAnchor;
       if (kNotFound != namedAnchorPos) {
         path.Right(namedAnchor, (path.Length() - namedAnchorPos));
@@ -331,7 +331,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
       // Chop off old query string (bug 25330, 57333)
       // Only do this for GET not POST (bug 41585)
-      PRInt32 queryStart = path.FindChar('?');
+      int32_t queryStart = path.FindChar('?');
       if (kNotFound != queryStart) {
         path.Truncate(queryStart);
       }
@@ -752,14 +752,14 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
   aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::acceptcharset,
                  acceptCharsetValue);
 
-  PRInt32 charsetLen = acceptCharsetValue.Length();
+  int32_t charsetLen = acceptCharsetValue.Length();
   if (charsetLen > 0) {
-    PRInt32 offset=0;
-    PRInt32 spPos=0;
+    int32_t offset=0;
+    int32_t spPos=0;
     // get charset from charsets one by one
     do {
       spPos = acceptCharsetValue.FindChar(PRUnichar(' '), offset);
-      PRInt32 cnt = ((-1==spPos)?(charsetLen-offset):(spPos-offset));
+      int32_t cnt = ((-1==spPos)?(charsetLen-offset):(spPos-offset));
       if (cnt > 0) {
         nsAutoString uCharset;
         acceptCharsetValue.Mid(uCharset, offset, cnt);
@@ -781,7 +781,7 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
 
 static void
 GetEnumAttr(nsGenericHTMLElement* aContent,
-            nsIAtom* atom, PRInt32* aValue)
+            nsIAtom* atom, int32_t* aValue)
 {
   const nsAttrValue* value = aContent->GetParsedAttr(atom);
   if (value && value->Type() == nsAttrValue::eEnum) {
@@ -799,7 +799,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                "Should have doc if we're building submission!");
 
   // Get encoding type (default: urlencoded)
-  PRInt32 enctype = NS_FORM_ENCTYPE_URLENCODED;
+  int32_t enctype = NS_FORM_ENCTYPE_URLENCODED;
   if (aOriginatingElement &&
       aOriginatingElement->HasAttr(kNameSpaceID_None, nsGkAtoms::formenctype)) {
     GetEnumAttr(aOriginatingElement, nsGkAtoms::formenctype, &enctype);
@@ -808,7 +808,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   }
 
   // Get method (default: GET)
-  PRInt32 method = NS_FORM_METHOD_GET;
+  int32_t method = NS_FORM_METHOD_GET;
   if (aOriginatingElement &&
       aOriginatingElement->HasAttr(kNameSpaceID_None, nsGkAtoms::formmethod)) {
     GetEnumAttr(aOriginatingElement, nsGkAtoms::formmethod, &method);

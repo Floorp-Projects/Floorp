@@ -90,9 +90,9 @@ nsSVGForeignObjectFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
                                           nsIAtom *aAttribute,
-                                          PRInt32  aModType)
+                                          int32_t  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
@@ -182,7 +182,7 @@ void
 nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
                                             nscoord aX, nscoord aY,
                                             nsIFrame* aForChild,
-                                            PRUint32 aFlags)
+                                            uint32_t aFlags)
 {
   // This is called by our descendants when they change.
 
@@ -296,7 +296,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
 
     // XXX after bug 614732 is fixed, we will compare mRect with aDirtyRect,
     // not with kidDirtyRect. I.e.
-    // PRInt32 appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
+    // int32_t appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     // mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect)
     if (kidDirtyRect.IsEmpty())
       return NS_OK;
@@ -326,7 +326,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
 
   gfx->Multiply(canvasTMForChildren);
 
-  PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
+  uint32_t flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
   if (SVGAutoRenderState::IsPaintingToWindow(aContext)) {
     flags |= nsLayoutUtils::PAINT_TO_WINDOW;
   }
@@ -471,7 +471,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
 }
 
 void
-nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -542,7 +542,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
 
 SVGBBox
 nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                             PRUint32 aFlags)
+                                             uint32_t aFlags)
 {
   nsSVGForeignObjectElement *content =
     static_cast<nsSVGForeignObjectElement*>(mContent);
@@ -563,7 +563,7 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 //----------------------------------------------------------------------
 
 gfxMatrix
-nsSVGForeignObjectFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor)
 {
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
@@ -658,7 +658,7 @@ nsSVGForeignObjectFrame::DoReflow()
 
 void
 nsSVGForeignObjectFrame::InvalidateDirtyRect(const nsRect& aRect,
-                                             PRUint32 aFlags,
+                                             uint32_t aFlags,
                                              bool aDuringReflowSVG)
 {
   if (aRect.IsEmpty())
@@ -673,7 +673,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(const nsRect& aRect,
 }
 
 void
-nsSVGForeignObjectFrame::FlushDirtyRegion(PRUint32 aFlags,
+nsSVGForeignObjectFrame::FlushDirtyRegion(uint32_t aFlags,
                                           bool aDuringReflowSVG)
 {
   NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),

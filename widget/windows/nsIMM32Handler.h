@@ -220,7 +220,7 @@ protected:
   bool SetIMERelatedWindowsPos(nsWindow* aWindow,
                                  const nsIMEContext &aIMEContext);
   bool GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
-                                          PRUint32 aOffset,
+                                          uint32_t aOffset,
                                           nsIntRect &aCharRect);
   bool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
   void GetCompositionString(const nsIMEContext &aIMEContext, DWORD aIndex);
@@ -236,13 +236,13 @@ protected:
    *  The aOffset value is offset in the contents.  So, when you need offset
    *  in the composition string, you need to subtract mCompositionStart from it.
    */
-  bool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nullptr);
+  bool GetTargetClauseRange(uint32_t *aOffset, uint32_t *aLength = nullptr);
   void DispatchTextEvent(nsWindow* aWindow, const nsIMEContext &aIMEContext,
                          bool aCheckAttr = true);
   void SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList);
 
-  nsresult EnsureClauseArray(PRInt32 aCount);
-  nsresult EnsureAttributeArray(PRInt32 aCount);
+  nsresult EnsureClauseArray(int32_t aCount);
+  nsresult EnsureAttributeArray(int32_t aCount);
 
   /**
    * When WM_IME_CHAR is received and passed to DefWindowProc, we need to
@@ -282,11 +282,11 @@ protected:
   nsWindow* mComposingWindow;
   nsString  mCompositionString;
   nsString  mLastDispatchedCompositionString;
-  nsTArray<PRUint32> mClauseArray;
-  nsTArray<PRUint8> mAttributeArray;
+  nsTArray<uint32_t> mClauseArray;
+  nsTArray<uint8_t> mAttributeArray;
 
-  PRInt32 mCursorPosition;
-  PRUint32 mCompositionStart;
+  int32_t mCursorPosition;
+  uint32_t mCompositionStart;
 
   bool mIsComposing;
   bool mIsComposingOnPlugin;

@@ -52,7 +52,7 @@ class nsCaseInsensitiveCStringComparator
       nsCaseInsensitiveCStringComparator() {}
       typedef char char_type;
 
-      virtual int operator()( const char_type*, const char_type*, PRUint32, PRUint32 ) const;
+      virtual int operator()( const char_type*, const char_type*, uint32_t, uint32_t ) const;
   };
 
 class nsCaseInsensitiveCStringArrayComparator

@@ -77,7 +77,7 @@ getExtentsHelper(AccessibleWrap* aAccWrap,
   if (!aAccWrap || aAccWrap->IsDefunct())
     return;
 
-  PRInt32 x = 0, y = 0, width = 0, height = 0;
+  int32_t x = 0, y = 0, width = 0, height = 0;
   // Returned in screen coordinates
   nsresult rv = aAccWrap->GetBounds(&x, &y, &width, &height);
   if (NS_FAILED(rv))

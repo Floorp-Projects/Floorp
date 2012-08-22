@@ -34,10 +34,10 @@ public:
                                     const nsIntSize& aDisplay);
 
   // Sample rate.
-  PRUint32 mAudioRate;
+  uint32_t mAudioRate;
 
   // Number of audio channels.
-  PRUint32 mAudioChannels;
+  uint32_t mAudioChannels;
 
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
@@ -53,29 +53,25 @@ public:
   bool mHasVideo;
 };
 
-#ifdef MOZ_TREMOR
+#ifdef MOZ_SAMPLE_TYPE_S16LE
 #include <ogg/os_types.h>
 typedef ogg_int32_t VorbisPCMValue;
 typedef short AudioDataValue;
 
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16_LE)
 #define MOZ_CLIP_TO_15(x) ((x)<-32768?-32768:(x)<=32767?(x):32767)
 // Convert the output of vorbis_synthesis_pcmout to a AudioDataValue
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) \
  (static_cast<AudioDataValue>(MOZ_CLIP_TO_15((x)>>9)))
 // Convert a AudioDataValue to a float for the Audio API
 #define MOZ_CONVERT_AUDIO_SAMPLE(x) ((x)*(1.F/32768))
-#define MOZ_SAMPLE_TYPE_S16LE 1
 
-#else /*MOZ_VORBIS*/
+#else /* MOZ_SAMPLE_TYPE_FLOAT32 */
 
 typedef float VorbisPCMValue;
 typedef float AudioDataValue;
 
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) (x)
 #define MOZ_CONVERT_AUDIO_SAMPLE(x) (x)
-#define MOZ_SAMPLE_TYPE_FLOAT32 1
 
 #endif
 
@@ -84,12 +80,12 @@ class AudioData {
 public:
   typedef mozilla::SharedBuffer SharedBuffer;
 
-  AudioData(PRInt64 aOffset,
-            PRInt64 aTime,
-            PRInt64 aDuration,
-            PRUint32 aFrames,
+  AudioData(int64_t aOffset,
+            int64_t aTime,
+            int64_t aDuration,
+            uint32_t aFrames,
             AudioDataValue* aData,
-            PRUint32 aChannels)
+            uint32_t aChannels)
   : mOffset(aOffset),
     mTime(aTime),
     mDuration(aDuration),
@@ -108,16 +104,16 @@ public:
   // If mAudioBuffer is null, creates it from mAudioData.
   void EnsureAudioBuffer();
 
-  PRInt64 GetEnd() { return mTime + mDuration; }
+  int64_t GetEnd() { return mTime + mDuration; }
 
   // Approximate byte offset of the end of the page on which this chunk
   // ends.
-  const PRInt64 mOffset;
+  const int64_t mOffset;
 
-  PRInt64 mTime; // Start time of data in usecs.
-  const PRInt64 mDuration; // In usecs.
-  const PRUint32 mFrames;
-  const PRUint32 mChannels;
+  int64_t mTime; // Start time of data in usecs.
+  const int64_t mDuration; // In usecs.
+  const uint32_t mFrames;
+  const uint32_t mChannels;
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames
   nsRefPtr<SharedBuffer> mAudioBuffer;
@@ -137,12 +133,12 @@ public:
   //   2 = Cr
   struct YCbCrBuffer {
     struct Plane {
-      PRUint8* mData;
-      PRUint32 mWidth;
-      PRUint32 mHeight;
-      PRUint32 mStride;
-      PRUint32 mOffset;
-      PRUint32 mSkip;
+      uint8_t* mData;
+      uint32_t mWidth;
+      uint32_t mHeight;
+      uint32_t mStride;
+      uint32_t mOffset;
+      uint32_t mSkip;
     };
 
     Plane mPlanes[3];
@@ -156,28 +152,28 @@ public:
   // negative stride).
   static VideoData* Create(nsVideoInfo& aInfo,
                            ImageContainer* aContainer,
-                           PRInt64 aOffset,
-                           PRInt64 aTime,
-                           PRInt64 aEndTime,
+                           int64_t aOffset,
+                           int64_t aTime,
+                           int64_t aEndTime,
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
-                           PRInt64 aTimecode,
+                           int64_t aTimecode,
                            nsIntRect aPicture);
 
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
   // frame is played; this frame is identical to the previous.
-  static VideoData* CreateDuplicate(PRInt64 aOffset,
-                                    PRInt64 aTime,
-                                    PRInt64 aEndTime,
-                                    PRInt64 aTimecode)
+  static VideoData* CreateDuplicate(int64_t aOffset,
+                                    int64_t aTime,
+                                    int64_t aEndTime,
+                                    int64_t aTimecode)
   {
     return new VideoData(aOffset, aTime, aEndTime, aTimecode);
   }
 
   ~VideoData();
 
-  PRInt64 GetEnd() { return mEndTime; }
+  int64_t GetEnd() { return mEndTime; }
 
   // Dimensions at which to display the video frame. The picture region
   // will be scaled to this size. This is should be the picture region's
@@ -185,17 +181,17 @@ public:
   nsIntSize mDisplay;
 
   // Approximate byte offset of the end of the frame in the media.
-  PRInt64 mOffset;
+  int64_t mOffset;
 
   // Start time of frame in microseconds.
-  PRInt64 mTime;
+  int64_t mTime;
 
   // End time of frame in microseconds.
-  PRInt64 mEndTime;
+  int64_t mEndTime;
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
-  PRInt64 mTimecode;
+  int64_t mTimecode;
 
   // This frame's image.
   nsRefPtr<Image> mImage;
@@ -206,13 +202,13 @@ public:
   bool mKeyframe;
 
 public:
-  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aEndTime, PRInt64 aTimecode);
+  VideoData(int64_t aOffset, int64_t aTime, int64_t aEndTime, int64_t aTimecode);
 
-  VideoData(PRInt64 aOffset,
-            PRInt64 aTime,
-            PRInt64 aEndTime,
+  VideoData(int64_t aOffset,
+            int64_t aTime,
+            int64_t aEndTime,
             bool aKeyframe,
-            PRInt64 aTimecode,
+            int64_t aTimecode,
             nsIntSize aDisplay);
 
 };
@@ -241,7 +237,7 @@ template <class T> class MediaQueue : private nsDeque {
     Reset();
   }
 
-  inline PRInt32 GetSize() { 
+  inline int32_t GetSize() { 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return nsDeque::GetSize();
   }
@@ -315,7 +311,7 @@ template <class T> class MediaQueue : private nsDeque {
   }
 
   // Returns the approximate number of microseconds of items in the queue.
-  PRInt64 Duration() {
+  int64_t Duration() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (GetSize() < 2) {
       return 0;
@@ -332,11 +328,11 @@ template <class T> class MediaQueue : private nsDeque {
 
   // Extracts elements from the queue into aResult, in order.
   // Elements whose start time is before aTime are ignored.
-  void GetElementsAfter(PRInt64 aTime, nsTArray<T*>* aResult) {
+  void GetElementsAfter(int64_t aTime, nsTArray<T*>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (!GetSize())
       return;
-    PRInt32 i;
+    int32_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
       if (v->GetEnd() < aTime)
@@ -387,7 +383,7 @@ public:
   // than aTimeThreshold will be decoded (unless they're not keyframes
   // and aKeyframeSkip is true), but will not be added to the queue.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                PRInt64 aTimeThreshold) = 0;
+                                int64_t aTimeThreshold) = 0;
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
@@ -402,15 +398,15 @@ public:
   // Stores the presentation time of the first frame we'd be able to play if
   // we started playback at the current position. Returns the first video
   // frame, if we have video.
-  VideoData* FindStartTime(PRInt64& aOutStartTime);
+  VideoData* FindStartTime(int64_t& aOutStartTime);
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
-  virtual nsresult Seek(PRInt64 aTime,
-                        PRInt64 aStartTime,
-                        PRInt64 aEndTime,
-                        PRInt64 aCurrentTime) = 0;
+  virtual nsresult Seek(int64_t aTime,
+                        int64_t aStartTime,
+                        int64_t aEndTime,
+                        int64_t aCurrentTime) = 0;
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
@@ -425,7 +421,7 @@ public:
   // the media time corresponding to playback time/position 0. This function
   // should only be called on the main thread.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
-                               PRInt64 aStartTime) = 0;
+                               int64_t aStartTime) = 0;
 
   // True if we can seek using only buffered ranges. This is backend dependant.
   virtual bool IsSeekableInBufferedRanges() = 0;
@@ -436,10 +432,10 @@ public:
 
     virtual void* operator()(void* anObject);
 
-    PRInt64 mResult;
+    int64_t mResult;
   };
 
-  PRInt64 VideoQueueMemoryInUse() {
+  int64_t VideoQueueMemoryInUse() {
     VideoQueueMemoryFunctor functor;
     mVideoQueue.LockedForEach(functor);
     return functor.mResult;
@@ -455,10 +451,10 @@ public:
       return nullptr;
     }
 
-    PRInt64 mResult;
+    int64_t mResult;
   };
 
-  PRInt64 AudioQueueMemoryInUse() {
+  int64_t AudioQueueMemoryInUse() {
     AudioQueueMemoryFunctor functor;
     mAudioQueue.LockedForEach(functor);
     return functor.mResult;
@@ -466,13 +462,13 @@ public:
 
   // Only used by nsWebMReader for now, so stub here rather than in every
   // reader than inherits from nsBuiltinDecoderReader.
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) {}
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {}
 
 protected:
 
   // Pumps the decode until we reach frames required to play at time aTarget
   // (usecs).
-  nsresult DecodeToTarget(PRInt64 aTarget);
+  nsresult DecodeToTarget(int64_t aTarget);
 
   // Reader decode function. Matches DecodeVideoFrame() and
   // DecodeAudioData().
@@ -484,7 +480,7 @@ protected:
   Data* DecodeToFirstData(DecodeFn aDecodeFn,
                           MediaQueue<Data>& aQueue);
 
-  // Wrapper so that DecodeVideoFrame(bool&,PRInt64) can be called from
+  // Wrapper so that DecodeVideoFrame(bool&,int64_t) can be called from
   // DecodeToFirstData().
   bool DecodeVideoFrame() {
     bool f = false;

@@ -317,14 +317,14 @@ drawToDC(InstanceData* instanceData, HDC dc,
 	0, 0, // unused colors used/important
 	0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000, // ARGB masks
       };
-      PRUint32 *pixelData;
+      uint32_t *pixelData;
       HBITMAP offscreenBitmap =
 	::CreateDIBSection(dc, reinterpret_cast<const BITMAPINFO*>(&bitmapheader),
 			   0, reinterpret_cast<void**>(&pixelData), 0, 0);
       if (!offscreenBitmap)
 	return;
 
-      PRUint32 rgba = instanceData->scriptableObject->drawColor;
+      uint32_t rgba = instanceData->scriptableObject->drawColor;
       unsigned int alpha = ((rgba & 0xFF000000) >> 24);
       BYTE r = ((rgba & 0xFF0000) >> 16);
       BYTE g = ((rgba & 0xFF00) >> 8);
@@ -334,10 +334,10 @@ drawToDC(InstanceData* instanceData, HDC dc,
       r = BYTE(float(alpha * r) / 0xFF);
       g = BYTE(float(alpha * g) / 0xFF);
       b = BYTE(float(alpha * b) / 0xFF);
-      PRUint32 premultiplied =
+      uint32_t premultiplied =
 	(alpha << 24) +	(r << 16) + (g << 8) + b;
 
-      for (PRUint32* lastPixel = pixelData + width * height;
+      for (uint32_t* lastPixel = pixelData + width * height;
 	   pixelData < lastPixel;
 	   ++pixelData)
 	*pixelData = premultiplied;
@@ -728,7 +728,7 @@ pluginDrawAsyncDxgiColor(InstanceData* id)
   ID3D10RenderTargetView *rtView;
   dev->CreateRenderTargetView(pd->backBuffer, NULL, &rtView);
 
-  PRUint32 rgba = id->scriptableObject->drawColor;
+  uint32_t rgba = id->scriptableObject->drawColor;
 
   unsigned char subpixels[4];
   subpixels[0] = rgba & 0xFF;

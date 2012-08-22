@@ -20,7 +20,7 @@
 
 
 #define COST_RESOLUTION 1000
-#define COST_PRINTABLE(cost) ((PRFloat64)(cost) / (PRFloat64)COST_RESOLUTION)
+#define COST_PRINTABLE(cost) ((double)(cost) / (double)COST_RESOLUTION)
 
 
 typedef struct __struct_Options
@@ -96,8 +96,8 @@ typedef struct _struct_VarianceState
 */
 {
     unsigned mCount;
-    PRUint64 mSum;
-    PRUint64 mSquaredSum;
+    uint64_t mSum;
+    uint64_t mSquaredSum;
 }
 VarianceState;
 
@@ -413,8 +413,8 @@ void addVariance(VarianceState* inVariance, unsigned inValue)
 **  Add a value to a variance state.
 */
 {
-    PRUint64 squared;
-    PRUint64 bigValue;
+    uint64_t squared;
+    uint64_t bigValue;
     
     LL_UI2L(bigValue, inValue);
 
@@ -427,25 +427,25 @@ void addVariance(VarianceState* inVariance, unsigned inValue)
 }
 
 
-PRFloat64 getAverage(VarianceState* inVariance)
+double getAverage(VarianceState* inVariance)
 /*
 **  Determine the mean/average based on the given state.
 */
 {
-    PRFloat64 retval = 0.0;
+    double retval = 0.0;
 
     if(NULL != inVariance && 0 < inVariance->mCount)
     {
-        PRFloat64 count;
-        PRFloat64 sum;
-        PRInt64 isum;
+        double count;
+        double sum;
+        int64_t isum;
 
         /*
         **  Avoids a compiler error (not impl) under MSVC.
         */
         isum = inVariance->mSum;
 
-        count = (PRFloat64)inVariance->mCount;
+        count = (double)inVariance->mCount;
         LL_L2F(sum, isum);
 
         retval = sum / count;
@@ -455,27 +455,27 @@ PRFloat64 getAverage(VarianceState* inVariance)
 }
 
 
-PRFloat64 getVariance(VarianceState* inVariance)
+double getVariance(VarianceState* inVariance)
 /*
 **  Determine the variance based on the given state.
 */
 {
-    PRFloat64 retval = 0.0;
+    double retval = 0.0;
 
     if(NULL != inVariance && 1 < inVariance->mCount)
     {
-        PRFloat64 count;
-        PRFloat64 squaredSum;
-        PRFloat64 avg;
-        PRFloat64 squaredAvg;
-        PRInt64 isquaredSum;
+        double count;
+        double squaredSum;
+        double avg;
+        double squaredAvg;
+        int64_t isquaredSum;
 
         /*
         **  Avoids a compiler error (not impl) under MSVC.
         */
         isquaredSum = inVariance->mSquaredSum;
 
-        count = (PRFloat64)inVariance->mCount;
+        count = (double)inVariance->mCount;
         LL_L2F(squaredSum, isquaredSum);
 
         avg = getAverage(inVariance);
@@ -488,13 +488,13 @@ PRFloat64 getVariance(VarianceState* inVariance)
 }
 
 
-PRFloat64 getStdDev(VarianceState* inVariance)
+double getStdDev(VarianceState* inVariance)
 /*
 **  Determine the standard deviation based on the given state.
 */
 {
-    PRFloat64 retval = 0.0;
-    PRFloat64 variance;
+    double retval = 0.0;
+    double variance;
 
     variance = getVariance(inVariance);
     retval = sqrt(variance);
@@ -526,15 +526,15 @@ unsigned actualByteSize(Options* inOptions, unsigned retval)
 }
 
 
-PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
+uint32_t ticks2xsec(tmreader* aReader, uint32_t aTicks, uint32_t aResolution)
 /*
 ** Convert platform specific ticks to second units
 ** Returns 0 on success.
 */
 {
-    PRUint32 retval = 0;
-    PRUint64 bigone;
-    PRUint64 tmp64;
+    uint32_t retval = 0;
+    uint64_t bigone;
+    uint64_t tmp64;
 
     LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);
@@ -561,7 +561,7 @@ void tmEventHandler(tmreader* inReader, tmevent* inEvent)
     unsigned size = inEvent->u.alloc.size;
     unsigned actualSize = 0;
     unsigned actualOldSize = 0;
-    PRUint32 interval = 0;
+    uint32_t interval = 0;
 
     /*
     **  To match spacetrace stats, reallocs of size zero are frees.
@@ -710,7 +710,7 @@ int report_stats(Options* inOptions, TMStats* inStats)
     fprintf(inOptions->mOutput, "Objects Leaked:                      %11d\n", inStats->uObjectsInUse);
     if(0 != inOptions->mAverages && 0 != inStats->uObjectsInUse)
     {
-        fprintf(inOptions->mOutput, "Average Leaked Object Size:          %11.4f\n", (PRFloat64)inStats->uMemoryInUse / (PRFloat64)inStats->uObjectsInUse);
+        fprintf(inOptions->mOutput, "Average Leaked Object Size:          %11.4f\n", (double)inStats->uMemoryInUse / (double)inStats->uObjectsInUse);
     }
     fprintf(inOptions->mOutput, "\n");
 

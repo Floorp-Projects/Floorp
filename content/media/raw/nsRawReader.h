@@ -20,7 +20,7 @@ public:
   virtual bool DecodeAudioData();
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  PRInt64 aTimeThreshold);
+                                  int64_t aTimeThreshold);
 
   virtual bool HasAudio()
   {
@@ -34,8 +34,8 @@ public:
 
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
                                 nsHTMLMediaElement::MetadataTags** aTags);
-  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
+  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
 
   // By seeking in the media resource, it is possible to seek.
   bool IsSeekableInBufferedRanges() {
@@ -43,12 +43,12 @@ public:
   }
 
 private:
-  bool ReadFromResource(MediaResource *aResource, PRUint8 *aBuf, PRUint32 aLength);
+  bool ReadFromResource(MediaResource *aResource, uint8_t *aBuf, uint32_t aLength);
 
   nsRawVideoHeader mMetadata;
-  PRUint32 mCurrentFrame;
+  uint32_t mCurrentFrame;
   double mFrameRate;
-  PRUint32 mFrameSize;
+  uint32_t mFrameSize;
   nsIntRect mPicture;
 };
 

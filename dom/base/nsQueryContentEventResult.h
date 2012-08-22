@@ -22,9 +22,9 @@ public:
   void SetEventResult(nsIWidget* aWidget, const nsQueryContentEvent &aEvent);
 
 protected:
-  PRUint32 mEventID;
+  uint32_t mEventID;
 
-  PRUint32 mOffset;
+  uint32_t mOffset;
   nsString mString;
   nsIntRect mRect;
 

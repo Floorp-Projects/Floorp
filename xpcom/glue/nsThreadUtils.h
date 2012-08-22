@@ -73,7 +73,7 @@ NS_SetThreadName(nsIThread *thread, const char (&name)[LEN])
 extern NS_COM_GLUE NS_METHOD
 NS_NewThread(nsIThread **result,
              nsIRunnable *initialEvent = nullptr,
-             PRUint32 stackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
+             uint32_t stackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 /**
  * Creates a named thread, otherwise the same as NS_NewThread
@@ -83,7 +83,7 @@ inline NS_METHOD
 NS_NewNamedThread(const char (&name)[LEN],
                   nsIThread **result,
                   nsIRunnable *initialEvent = nullptr,
-                  PRUint32 stackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
+                  uint32_t stackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
 {
     nsresult rv = NS_NewThread(result, initialEvent, stackSize);
     NS_SetThreadName<LEN>(*result, name);
@@ -153,7 +153,7 @@ NS_DispatchToCurrentThread(nsIRunnable *event);
  */
 extern NS_COM_GLUE NS_METHOD
 NS_DispatchToMainThread(nsIRunnable *event,
-                        PRUint32 dispatchFlags = NS_DISPATCH_NORMAL);
+                        uint32_t dispatchFlags = NS_DISPATCH_NORMAL);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -488,7 +488,7 @@ public:
                          nsIThread * aThread = nullptr);
 
 private:
-  volatile PRUint32 mCounter;
+  volatile uint32_t mCounter;
 
   nsThreadPoolNaming(const nsThreadPoolNaming &) MOZ_DELETE;
   void operator=(const nsThreadPoolNaming &) MOZ_DELETE;

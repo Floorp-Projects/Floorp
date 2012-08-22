@@ -81,7 +81,7 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
 }
 
 NS_IMETHODIMP
-nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, PRUint32 aFlags)
+nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
 {
   if (!aURI)
     return NS_OK;

@@ -33,19 +33,19 @@ public:
 
 protected:
 
-  PRInt32                   mCharset;       // current character set
+  int32_t                   mCharset;       // current character set
 
-  nsresult ChangeCharset(PRInt32 aCharset, char * aDest, 
-      PRInt32 * aDestLength);
-  nsresult ConvertHankaku(const PRUnichar *aSrc, PRInt32 * aSrcLength,
-                          char *aDest, PRInt32 * aDestLength);
+  nsresult ChangeCharset(int32_t aCharset, char * aDest, 
+      int32_t * aDestLength);
+  nsresult ConvertHankaku(const PRUnichar *aSrc, int32_t * aSrcLength,
+                          char *aDest, int32_t * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
 
-  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, int32_t * aSrcLength, 
+      char * aDest, int32_t * aDestLength);
+  NS_IMETHOD FinishNoBuff(char * aDest, int32_t * aDestLength);
   NS_IMETHOD Reset();
 };
 

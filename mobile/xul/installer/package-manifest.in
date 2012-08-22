@@ -438,6 +438,9 @@
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
 
+@BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPSocket.manifest
+
 ; Modules
 @BINPATH@/modules/*
 

@@ -31,8 +31,8 @@ private:
   nsCOMPtr<nsIMutableArray> mASN1Objects;
   nsString mDisplayName;
   nsString mDisplayValue;
-  PRUint32 mType;
-  PRUint32 mTag;
+  uint32_t mType;
+  uint32_t mTag;
   bool     mIsValidContainer;
   bool     mIsExpanded;
 };
@@ -50,10 +50,10 @@ public:
 private:
   nsString mDisplayName;
   nsString mValue;
-  PRUint32 mType;
-  PRUint32 mTag;
+  uint32_t mType;
+  uint32_t mTag;
   unsigned char *mData;
-  PRUint32       mLen;
+  uint32_t       mLen;
 };
 
 nsresult CreateFromDER(unsigned char *data,

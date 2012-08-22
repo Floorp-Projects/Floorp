@@ -76,7 +76,7 @@ private:
    * is non-null and mOwningArray also holds a statement reference.
    */
   Statement *mOwningStatement;
-  PRUint32 mParamCount;
+  uint32_t mParamCount;
 };
 
 /**
@@ -93,7 +93,7 @@ class AsyncBindingParams : public BindingParams
 public:
   NS_IMETHOD BindByName(const nsACString & aName,
                                       nsIVariant *aValue);
-  NS_IMETHOD BindByIndex(PRUint32 aIndex, nsIVariant *aValue);
+  NS_IMETHOD BindByIndex(uint32_t aIndex, nsIVariant *aValue);
 
   virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt * aStatement);
 

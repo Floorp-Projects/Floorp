@@ -12,11 +12,11 @@ extern "C" {
 
 // Remember that these 'words' are 32bit DWORDS
 
-PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    uint32_t result = 0;
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -37,9 +37,9 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 void
-invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
+invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 {
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -57,8 +57,8 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
         switch(s->type)
         {
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
         }
     }

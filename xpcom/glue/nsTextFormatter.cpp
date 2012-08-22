@@ -49,11 +49,11 @@
 typedef struct SprintfStateStr SprintfState;
 
 struct SprintfStateStr {
-    int (*stuff)(SprintfState *ss, const PRUnichar *sp, PRUint32 len);
+    int (*stuff)(SprintfState *ss, const PRUnichar *sp, uint32_t len);
 
     PRUnichar *base;
     PRUnichar *cur;
-    PRUint32 maxlen;
+    uint32_t maxlen;
 
     void *stuffclosure;
 };
@@ -269,13 +269,13 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec,
 /*
 ** Convert a 64-bit integer into its printable form
 */
-static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec,
+static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
                   int radix, int type, int flags, const PRUnichar *hexp)
 {
     PRUnichar cvtbuf[100];
     PRUnichar *cvt;
     int digits;
-    PRInt64 rad;
+    int64_t rad;
 
     /* according to the man page this needs to happen */
     if ((prec == 0) && (LL_IS_ZERO(num))) {
@@ -291,8 +291,8 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec,
     cvt = &cvtbuf[0] + ELEMENTS_OF(cvtbuf);
     digits = 0;
     while (!LL_IS_ZERO(num)) {
-	PRInt32 digit;
-	PRInt64 quot, rem;
+	int32_t digit;
+	int64_t quot, rem;
 	LL_UDIVMOD(&quot, &rem, num, rad);
 	LL_L2I(digit, rem);
 	*--cvt = hexp[digit & 0xf];
@@ -704,9 +704,9 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 
 	case 'p':
 	    /* XXX should use cpp */
-	    if (sizeof(void *) == sizeof(PRInt32)) {
+	    if (sizeof(void *) == sizeof(int32_t)) {
 		nas[cn].type = TYPE_UINT32;
-	    } else if (sizeof(void *) == sizeof(PRInt64)) {
+	    } else if (sizeof(void *) == sizeof(int64_t)) {
 	        nas[cn].type = TYPE_UINT64;
 	    } else if (sizeof(void *) == sizeof(int)) {
 	        nas[cn].type = TYPE_UINTN;
@@ -773,13 +773,13 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	case TYPE_INTN:
 	case TYPE_UINTN:     (void)va_arg(ap, int);         break;
 
-	case TYPE_INT32:     (void)va_arg(ap, PRInt32);     break;
+	case TYPE_INT32:     (void)va_arg(ap, int32_t);     break;
 
-	case TYPE_UINT32:    (void)va_arg(ap, PRUint32);    break;
+	case TYPE_UINT32:    (void)va_arg(ap, uint32_t);    break;
 
-	case TYPE_INT64:     (void)va_arg(ap, PRInt64);     break;
+	case TYPE_INT64:     (void)va_arg(ap, int64_t);     break;
 
-	case TYPE_UINT64:    (void)va_arg(ap, PRUint64);    break;
+	case TYPE_UINT64:    (void)va_arg(ap, uint64_t);    break;
 
 	case TYPE_STRING:    (void)va_arg(ap, char*);       break;
 
@@ -812,7 +812,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	PRUnichar ch;
 	int i;
 	long l;
-	PRInt64 ll;
+	int64_t ll;
 	double d;
 	const char *s;
 	const PRUnichar *S;
@@ -1008,14 +1008,14 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 		goto do_long;
 
             case TYPE_INT32:
-		u.l = va_arg(ap, PRInt32);
+		u.l = va_arg(ap, int32_t);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
             case TYPE_UINT32:
-		u.l = (long)va_arg(ap, PRUint32);
+		u.l = (long)va_arg(ap, uint32_t);
             do_long:
 		rv = cvt_l(ss, u.l, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -1024,14 +1024,14 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 		break;
 
             case TYPE_INT64:
-		u.ll = va_arg(ap, PRInt64);
+		u.ll = va_arg(ap, int64_t);
 		if (!LL_GE_ZERO(u.ll)) {
 		    LL_NEG(u.ll, u.ll);
 		    flags |= _NEG;
 		}
 		goto do_longlong;
             case TYPE_UINT64:
-		u.ll = va_arg(ap, PRUint64);
+		u.ll = va_arg(ap, uint64_t);
             do_longlong:
 		rv = cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -1078,9 +1078,9 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    break;
 
         case 'p':
-	    if (sizeof(void *) == sizeof(PRInt32)) {
+	    if (sizeof(void *) == sizeof(int32_t)) {
 	    	type = TYPE_UINT32;
-	    } else if (sizeof(void *) == sizeof(PRInt64)) {
+	    } else if (sizeof(void *) == sizeof(int64_t)) {
 	    	type = TYPE_UINT64;
 	    } else if (sizeof(void *) == sizeof(int)) {
 		type = TYPE_UINTN;
@@ -1153,7 +1153,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 /************************************************************************/
 
 static int
-StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
+StringStuff(SprintfState* ss, const PRUnichar* sp, uint32_t len)
 {
     if (*sp == '\0')
       return 0;
@@ -1173,11 +1173,11 @@ StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
 ** Stuff routine that automatically grows the malloc'd output buffer
 ** before it overflows.
 */
-static int GrowStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
+static int GrowStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
 {
     ptrdiff_t off;
     PRUnichar *newbase;
-    PRUint32 newlen;
+    uint32_t newlen;
 
     off = ss->cur - ss->base;
     if (off + len >= ss->maxlen) {
@@ -1202,7 +1202,7 @@ static int GrowStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 	--len;
 	*ss->cur++ = *sp++;
     }
-    PR_ASSERT((PRUint32)(ss->cur - ss->base) <= ss->maxlen);
+    PR_ASSERT((uint32_t)(ss->cur - ss->base) <= ss->maxlen);
     return 0;
 }
 
@@ -1220,10 +1220,10 @@ PRUnichar * nsTextFormatter::smprintf(const PRUnichar *fmt, ...)
     return rv;
 }
 
-PRUint32 nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
+uint32_t nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
 {
     va_list ap;
-    PRUint32 rv;
+    uint32_t rv;
 
     va_start(ap, fmt);
     rv = nsTextFormatter::vssprintf(out, fmt, ap);
@@ -1231,7 +1231,7 @@ PRUint32 nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
     return rv;
 }
 
-PRUint32 nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_list ap)
+uint32_t nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_list ap)
 {
     SprintfState ss;
     ss.stuff = StringStuff;
@@ -1267,9 +1267,9 @@ PRUnichar * nsTextFormatter::vsmprintf(const PRUnichar *fmt, va_list ap)
 /*
 ** Stuff routine that discards overflow data
 */
-static int LimitStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
+static int LimitStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
 {
-    PRUint32 limit = ss->maxlen - (ss->cur - ss->base);
+    uint32_t limit = ss->maxlen - (ss->cur - ss->base);
 
     if (len > limit) {
 	len = limit;
@@ -1285,13 +1285,13 @@ static int LimitStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 ** sprintf into a fixed size buffer. Make sure there is a NUL at the end
 ** when finished.
 */
-PRUint32 nsTextFormatter::snprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt, ...)
+uint32_t nsTextFormatter::snprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, ...)
 {
     va_list ap;
-    PRUint32 rv;
+    uint32_t rv;
 
-    PR_ASSERT((PRInt32)outlen > 0);
-    if ((PRInt32)outlen <= 0) {
+    PR_ASSERT((int32_t)outlen > 0);
+    if ((int32_t)outlen <= 0) {
 	return 0;
     }
 
@@ -1301,14 +1301,14 @@ PRUint32 nsTextFormatter::snprintf(PRUnichar *out, PRUint32 outlen, const PRUnic
     return rv;
 }
 
-PRUint32 nsTextFormatter::vsnprintf(PRUnichar *out, PRUint32 outlen,const PRUnichar *fmt,
+uint32_t nsTextFormatter::vsnprintf(PRUnichar *out, uint32_t outlen,const PRUnichar *fmt,
                                     va_list ap)
 {
     SprintfState ss;
-    PRUint32 n;
+    uint32_t n;
 
-    PR_ASSERT((PRInt32)outlen > 0);
-    if ((PRInt32)outlen <= 0) {
+    PR_ASSERT((int32_t)outlen > 0);
+    if ((int32_t)outlen <= 0) {
 	return 0;
     }
 

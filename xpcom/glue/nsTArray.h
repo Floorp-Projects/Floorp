@@ -98,9 +98,9 @@ struct NS_COM_GLUE nsTArrayHeader
 {
   static nsTArrayHeader sEmptyHdr;
 
-  PRUint32 mLength;
-  PRUint32 mCapacity : 31;
-  PRUint32 mIsAutoArray : 1;
+  uint32_t mLength;
+  uint32_t mCapacity : 31;
+  uint32_t mIsAutoArray : 1;
 };
 
 // This class provides a SafeElementAt method to nsTArray<T*> which does
@@ -109,7 +109,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper
 {
   typedef E*       elem_type;
-  typedef PRUint32 index_type;
+  typedef uint32_t index_type;
 
   // No implementation is provided for these two methods, and that is on
   // purpose, since we don't support these functions on non-pointer type
@@ -122,7 +122,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper<E*, Derived>
 {
   typedef E*       elem_type;
-  typedef PRUint32 index_type;
+  typedef uint32_t index_type;
 
   elem_type SafeElementAt(index_type i) {
     return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
@@ -139,7 +139,7 @@ template <class E, class Derived>
 struct nsTArray_SafeElementAtSmartPtrHelper
 {
   typedef E*       elem_type;
-  typedef PRUint32 index_type;
+  typedef uint32_t index_type;
 
   elem_type SafeElementAt(index_type i) {
     return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
@@ -184,8 +184,8 @@ protected:
   typedef nsTArrayHeader Header;
 
 public:
-  typedef PRUint32 size_type;
-  typedef PRUint32 index_type;
+  typedef uint32_t size_type;
+  typedef uint32_t index_type;
 
   // @return The number of elements in the array.
   size_type Length() const {
@@ -241,7 +241,7 @@ protected:
   // Note that mHdr may actually be sEmptyHdr in the case where a
   // zero-length array is inserted into our array. But then n should
   // always be 0.
-  void IncrementLength(PRUint32 n) {
+  void IncrementLength(uint32_t n) {
     MOZ_ASSERT(mHdr != EmptyHdr() || n == 0, "bad data pointer");
     mHdr->mLength += n;
   }
@@ -1287,7 +1287,7 @@ public:
 };
 #endif
 
-template<class TArrayBase, PRUint32 N>
+template<class TArrayBase, uint32_t N>
 class nsAutoArrayBase : public TArrayBase
 {
 public:
@@ -1341,7 +1341,7 @@ private:
   };
 };
 
-template<class E, PRUint32 N, class Alloc=nsTArrayDefaultAllocator>
+template<class E, uint32_t N, class Alloc=nsTArrayDefaultAllocator>
 class nsAutoTArray : public nsAutoArrayBase<nsTArray<E, Alloc>, N>
 {
   typedef nsAutoArrayBase<nsTArray<E, Alloc>, N> Base;
@@ -1358,22 +1358,22 @@ public:
 // Assert that nsAutoTArray doesn't have any extra padding inside.
 //
 // It's important that the data stored in this auto array takes up a multiple of
-// 8 bytes; e.g. nsAutoTArray<PRUint32, 1> wouldn't work.  Since nsAutoTArray
+// 8 bytes; e.g. nsAutoTArray<uint32_t, 1> wouldn't work.  Since nsAutoTArray
 // contains a pointer, its size must be a multiple of alignof(void*).  (This is
 // because any type may be placed into an array, and there's no padding between
 // elements of an array.)  The compiler pads the end of the structure to
 // enforce this rule.
 //
-// If we used nsAutoTArray<PRUint32, 1> below, this assertion would fail on a
+// If we used nsAutoTArray<uint32_t, 1> below, this assertion would fail on a
 // 64-bit system, where the compiler inserts 4 bytes of padding at the end of
 // the auto array to make its size a multiple of alignof(void*) == 8 bytes.
 
-MOZ_STATIC_ASSERT(sizeof(nsAutoTArray<PRUint32, 2>) ==
-                  sizeof(void*) + sizeof(nsTArrayHeader) + sizeof(PRUint32) * 2,
+MOZ_STATIC_ASSERT(sizeof(nsAutoTArray<uint32_t, 2>) ==
+                  sizeof(void*) + sizeof(nsTArrayHeader) + sizeof(uint32_t) * 2,
                   "nsAutoTArray shouldn't contain any extra padding, "
                   "see the comment");
 
-template<class E, PRUint32 N>
+template<class E, uint32_t N>
 class AutoFallibleTArray : public nsAutoArrayBase<FallibleTArray<E>, N>
 {
   typedef nsAutoArrayBase<FallibleTArray<E>, N> Base;
@@ -1388,7 +1388,7 @@ public:
 };
 
 #if defined(MOZALLOC_HAVE_XMALLOC)
-template<class E, PRUint32 N>
+template<class E, uint32_t N>
 class AutoInfallibleTArray : public nsAutoArrayBase<InfallibleTArray<E>, N>
 {
   typedef nsAutoArrayBase<InfallibleTArray<E>, N> Base;

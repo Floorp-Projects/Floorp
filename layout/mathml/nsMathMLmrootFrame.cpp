@@ -173,7 +173,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   //////////////////
   // Reflow Children
 
-  PRInt32 count = 0;
+  int32_t count = 0;
   nsIFrame* baseFrame = nullptr;
   nsIFrame* indexFrame = nullptr;
   nsHTMLReflowMetrics baseSize;
@@ -392,7 +392,7 @@ nsMathMLmrootFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
 nsStyleContext*
-nsMathMLmrootFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
+nsMathMLmrootFrame::GetAdditionalStyleContext(int32_t aIndex) const
 {
   switch (aIndex) {
   case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
@@ -404,7 +404,7 @@ nsMathMLmrootFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 }
 
 void
-nsMathMLmrootFrame::SetAdditionalStyleContext(PRInt32          aIndex, 
+nsMathMLmrootFrame::SetAdditionalStyleContext(int32_t          aIndex, 
                                               nsStyleContext*  aStyleContext)
 {
   switch (aIndex) {

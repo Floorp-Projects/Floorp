@@ -28,7 +28,7 @@ public:
         NS_ASSERTION(mPosition < size(), "Out of bounds.");
         mPosition++;
     }
-    void setPosition(PRUint32 aPosition)
+    void setPosition(uint32_t aPosition)
     {
         NS_ASSERTION(aPosition > 0 &&
                      aPosition <= size(), "Out of bounds.");
@@ -39,7 +39,7 @@ public:
 
 protected:
     nsRefPtr<txNodeSet> mContextSet;
-    PRUint32 mPosition;
+    uint32_t mPosition;
     txIMatchContext* mInner;
 };
 

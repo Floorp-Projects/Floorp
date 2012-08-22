@@ -47,7 +47,7 @@ nsTableColFrame::SetColType(nsTableColType aType)
                 GetPrevContinuation()->GetNextContinuation() == this &&
                 GetPrevContinuation()->GetNextSibling() == this),
                "spanned content cols must be continuations");
-  PRUint32 type = aType - eColContent;
+  uint32_t type = aType - eColContent;
   mState |= (type << COL_TYPE_OFFSET);
 }
 
@@ -67,7 +67,7 @@ nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 }
 
-void nsTableColFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+void nsTableColFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
                                                  BCPixelSize aPixelValue)
 {
   switch (aForSide) {
@@ -105,17 +105,17 @@ NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-PRInt32 nsTableColFrame::GetSpan()
+int32_t nsTableColFrame::GetSpan()
 {
   return GetStyleTable()->mSpan;
 }
 
 #ifdef DEBUG
-void nsTableColFrame::Dump(PRInt32 aIndent)
+void nsTableColFrame::Dump(int32_t aIndent)
 {
   char* indent = new char[aIndent + 1];
   if (!indent) return;
-  for (PRInt32 i = 0; i < aIndent + 1; i++) {
+  for (int32_t i = 0; i < aIndent + 1; i++) {
     indent[i] = ' ';
   }
   indent[aIndent] = 0;
@@ -138,11 +138,11 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
     break;
   }
   printf("\nm:%d c:%d(%c) p:%f sm:%d sc:%d sp:%f f:%d",
-         PRInt32(mMinCoord), PRInt32(mPrefCoord),
+         int32_t(mMinCoord), int32_t(mPrefCoord),
          mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
-         PRInt32(mSpanMinCoord), PRInt32(mSpanPrefCoord),
+         int32_t(mSpanMinCoord), int32_t(mSpanPrefCoord),
          mSpanPrefPercent,
-         PRInt32(GetFinalWidth()));
+         int32_t(GetFinalWidth()));
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;
 }

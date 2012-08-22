@@ -55,7 +55,7 @@ NSSSignBegin(const char *certName,
              SGNContext **ctx, 
              SECKEYPrivateKey **privKey, 
              CERTCertificate **cert,
-             PRUint32 *signatureLength) 
+             uint32_t *signatureLength) 
 {
   secuPWData pwdata = { PW_NONE, 0 };
   if (!certName || !ctx || !privKey || !cert || !signatureLength) {
@@ -122,7 +122,7 @@ NSSSignBegin(const char *certName,
 */
 int
 WriteAndUpdateSignature(FILE *fpDest, void *buffer, 
-                        PRUint32 size, SGNContext *ctx,
+                        uint32_t size, SGNContext *ctx,
                         const char *err) 
 {
   if (!size) { 
@@ -149,20 +149,20 @@ WriteAndUpdateSignature(FILE *fpDest, void *buffer,
  * @param offsetAmount The amount to adjust each index entry by
 */
 void
-AdjustIndexContentOffsets(char *indexBuf, PRUint32 indexLength, PRUint32 offsetAmount) 
+AdjustIndexContentOffsets(char *indexBuf, uint32_t indexLength, uint32_t offsetAmount) 
 {
-  PRUint32 *offsetToContent;
+  uint32_t *offsetToContent;
   char *indexBufLoc = indexBuf;
 
   /* Consume the index and adjust each index by the specified amount */
   while (indexBufLoc != (indexBuf + indexLength)) {
     /* Adjust the offset */
-    offsetToContent = (PRUint32 *)indexBufLoc; 
+    offsetToContent = (uint32_t *)indexBufLoc; 
     *offsetToContent = ntohl(*offsetToContent);
     *offsetToContent += offsetAmount;
     *offsetToContent = htonl(*offsetToContent);
     /* Skip past the offset, length, and flags */
-    indexBufLoc += 3 * sizeof(PRUint32);
+    indexBufLoc += 3 * sizeof(uint32_t);
     indexBufLoc += strlen(indexBufLoc) + 1;
   }
 }
@@ -183,7 +183,7 @@ AdjustIndexContentOffsets(char *indexBuf, PRUint32 indexLength, PRUint32 offsetA
 */
 int
 ReadWriteAndUpdateSignature(FILE *fpSrc, FILE *fpDest, void *buffer, 
-                            PRUint32 size, SGNContext *ctx,
+                            uint32_t size, SGNContext *ctx,
                             const char *err) 
 {
   if (!size) { 
@@ -213,7 +213,7 @@ ReadWriteAndUpdateSignature(FILE *fpSrc, FILE *fpDest, void *buffer,
 */
 int
 ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer, 
-             PRUint32 size, const char *err) 
+             uint32_t size, const char *err) 
 {
   if (!size) { 
     return 0;
@@ -244,10 +244,10 @@ ReadAndWrite(FILE *fpSrc, FILE *fpDest, void *buffer,
 int
 strip_signature_block(const char *src, const char * dest)
 {
-  PRUint32 offsetToIndex, dstOffsetToIndex, indexLength, 
+  uint32_t offsetToIndex, dstOffsetToIndex, indexLength, 
     numSignatures = 0, leftOver;
-  PRInt32 stripAmount = 0;
-  PRInt64 oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR, numBytesToCopy,
+  int32_t stripAmount = 0;
+  int64_t oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR, numBytesToCopy,
     numChunks, i;
   FILE *fpSrc = NULL, *fpDest = NULL;
   int rv = -1, hasSignatureBlock;
@@ -322,15 +322,15 @@ strip_signature_block(const char *src, const char * dest)
     numSignatures = ntohl(numSignatures);
 
     for (i = 0; i < numSignatures; i++) {
-      PRUint32 signatureLen;
+      uint32_t signatureLen;
 
       /* Skip past the signature algorithm ID */
-      if (fseeko(fpSrc, sizeof(PRUint32), SEEK_CUR)) {
+      if (fseeko(fpSrc, sizeof(uint32_t), SEEK_CUR)) {
         fprintf(stderr, "ERROR: Could not skip past signature algorithm ID\n");
       }
 
       /* Read in the length of the signature so we know how far to skip */
-      if (fread(&signatureLen, sizeof(PRUint32), 1, fpSrc) != 1) {
+      if (fread(&signatureLen, sizeof(uint32_t), 1, fpSrc) != 1) {
         fprintf(stderr, "ERROR: Could not read signatures length.\n");
         return CryptoX_Error;
       }
@@ -341,7 +341,7 @@ strip_signature_block(const char *src, const char * dest)
         fprintf(stderr, "ERROR: Could not skip past signature algorithm ID\n");
       }
 
-      stripAmount += sizeof(PRUint32) + sizeof(PRUint32) + signatureLen; 
+      stripAmount += sizeof(uint32_t) + sizeof(uint32_t) + signatureLen; 
     }
 
   } else {
@@ -349,7 +349,7 @@ strip_signature_block(const char *src, const char * dest)
     numSignatures = 0;
   }
 
-  if (((PRInt64)offsetToIndex) > sizeOfEntireMAR) {
+  if (((int64_t)offsetToIndex) > sizeOfEntireMAR) {
     fprintf(stderr, "ERROR: Offset to index is larger than the file size.\n");
     goto failure;
   }
@@ -392,11 +392,11 @@ strip_signature_block(const char *src, const char * dest)
   /* Write out the rest of the MAR excluding the index header and index
      offsetToIndex unfortunately has to remain 32-bit because for backwards
      compatibility with the old MAR file format. */
-  if (ftello(fpSrc) > ((PRInt64)offsetToIndex)) {
+  if (ftello(fpSrc) > ((int64_t)offsetToIndex)) {
     fprintf(stderr, "ERROR: Index offset is too small.\n");
     goto failure;
   }
-  numBytesToCopy = ((PRInt64)offsetToIndex) - ftello(fpSrc);
+  numBytesToCopy = ((int64_t)offsetToIndex) - ftello(fpSrc);
   numChunks = numBytesToCopy / BLOCKSIZE;
   leftOver = numBytesToCopy % BLOCKSIZE;
 
@@ -485,10 +485,10 @@ mar_repackage_and_sign(const char *NSSConfigDir,
                        const char *src, 
                        const char *dest) 
 {
-  PRUint32 offsetToIndex, dstOffsetToIndex, indexLength, 
+  uint32_t offsetToIndex, dstOffsetToIndex, indexLength, 
     numSignatures = 0, signatureLength, leftOver,
     signatureAlgorithmID, signatureSectionLength;
-  PRInt64 oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR, 
+  int64_t oldPos, sizeOfEntireMAR = 0, realSizeOfSrcMAR, 
     signaturePlaceholderOffset, numBytesToCopy, 
     numChunks, i;
   FILE *fpSrc = NULL, *fpDest = NULL;
@@ -590,7 +590,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     sizeOfEntireMAR = realSizeOfSrcMAR;
   }
 
-  if (((PRInt64)offsetToIndex) > sizeOfEntireMAR) {
+  if (((int64_t)offsetToIndex) > sizeOfEntireMAR) {
     fprintf(stderr, "ERROR: Offset to index is larger than the file size.\n");
     goto failure;
   }
@@ -667,11 +667,11 @@ mar_repackage_and_sign(const char *NSSConfigDir,
   /* Write out the rest of the MAR excluding the index header and index
      offsetToIndex unfortunately has to remain 32-bit because for backwards
      compatibility with the old MAR file format. */
-  if (ftello(fpSrc) > ((PRInt64)offsetToIndex)) {
+  if (ftello(fpSrc) > ((int64_t)offsetToIndex)) {
     fprintf(stderr, "ERROR: Index offset is too small.\n");
     goto failure;
   }
-  numBytesToCopy = ((PRInt64)offsetToIndex) - ftello(fpSrc);
+  numBytesToCopy = ((int64_t)offsetToIndex) - ftello(fpSrc);
   numChunks = numBytesToCopy / BLOCKSIZE;
   leftOver = numBytesToCopy % BLOCKSIZE;
 

@@ -31,7 +31,7 @@ private:
                                            gpointer data);
 
     int mPipeFDs[2];
-    PRUintn mTag;
+    unsigned mTag;
 };
 
 #endif /* nsAppShell_h__ */

@@ -57,9 +57,9 @@ public:
   virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
@@ -98,7 +98,7 @@ public:
 
   void PaintCellBackground(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, nsPoint aPt,
-                           PRUint32 aFlags);
+                           uint32_t aFlags);
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
@@ -128,7 +128,7 @@ public:
    * table cell, which means the result is always
    * NS_STYLE_VERTICAL_ALIGN_{TOP,MIDDLE,BOTTOM,BASELINE}.
    */
-  PRUint8 GetVerticalAlign() const;
+  uint8_t GetVerticalAlign() const;
 
   bool HasVerticalAlignBaseline() const {
     return GetVerticalAlign() == NS_STYLE_VERTICAL_ALIGN_BASELINE;
@@ -150,7 +150,7 @@ public:
    * to get the effective row span (the actual value that applies), use GetEffectiveRowSpan()
    * @see nsTableFrame::GetEffectiveRowSpan()
    */
-  virtual PRInt32 GetRowSpan();
+  virtual int32_t GetRowSpan();
 
   // there is no set row index because row index depends on the cell's parent row only
 
@@ -161,10 +161,10 @@ public:
    * for continued cell frames the row index is that of the cell's first-in-flow
    * and the column index (starting at 0 for the first column
    */
-  NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex);
+  NS_IMETHOD GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex);
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
-  virtual nsresult GetRowIndex(PRInt32 &aRowIndex) const;
+  virtual nsresult GetRowIndex(int32_t &aRowIndex) const;
 
   /**
    * return the cell's specified col span. this is what was specified in the
@@ -172,11 +172,11 @@ public:
    * to get the effective col span (the actual value that applies), use GetEffectiveColSpan()
    * @see nsTableFrame::GetEffectiveColSpan()
    */
-  virtual PRInt32 GetColSpan();
+  virtual int32_t GetColSpan();
 
   /** return the cell's column index (starting at 0 for the first column) */
-  virtual nsresult GetColIndex(PRInt32 &aColIndex) const;
-  void SetColIndex(PRInt32 aColIndex);
+  virtual nsresult GetColIndex(int32_t &aColIndex) const;
+  void SetColIndex(int32_t aColIndex);
 
   /** return the available width given to this frame during its last reflow */
   inline nscoord GetPriorAvailWidth();
@@ -203,7 +203,7 @@ public:
   virtual void PaintBackground(nsRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
                                nsPoint              aPt,
-                               PRUint32             aFlags);
+                               uint32_t             aFlags);
 
   void DecorateForSelection(nsRenderingContext& aRenderingContext,
                             nsPoint              aPt);
@@ -225,7 +225,7 @@ protected:
 
   friend class nsTableRowFrame;
 
-  PRUint32     mColIndex;             // the starting column for this cell
+  uint32_t     mColIndex;             // the starting column for this cell
 
   nscoord      mPriorAvailWidth;      // the avail width during the last reflow
   nsSize       mDesiredSize;          // the last desired width & height
@@ -309,7 +309,7 @@ public:
   virtual void PaintBackground(nsRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
                                nsPoint              aPt,
-                               PRUint32             aFlags);
+                               uint32_t             aFlags);
 
 private:
 

@@ -28,11 +28,11 @@ public:
   // SelectAccessible
   virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
-  virtual PRUint32 SelectedItemCount();
-  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
-  virtual bool IsItemSelected(PRUint32 aIndex);
-  virtual bool AddItemToSelection(PRUint32 aIndex);
-  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual uint32_t SelectedItemCount();
+  virtual Accessible* GetSelectedItem(uint32_t aIndex);
+  virtual bool IsItemSelected(uint32_t aIndex);
+  virtual bool AddItemToSelection(uint32_t aIndex);
+  virtual bool RemoveItemFromSelection(uint32_t aIndex);
   virtual bool SelectAll();
   virtual bool UnselectAll();
 

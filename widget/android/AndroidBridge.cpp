@@ -47,7 +47,7 @@ using namespace mozilla;
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
 
 AndroidBridge *AndroidBridge::sBridge = 0;
-static PRUintn sJavaEnvThreadIndex = 0;
+static unsigned sJavaEnvThreadIndex = 0;
 static void JavaThreadDetachFunc(void *arg);
 
 // This is a dummy class that can be used in the template for android::sp
@@ -254,7 +254,7 @@ AndroidBridge::NotifyIME(int aType, int aState)
                               sBridge->jNotifyIME,  aType, aState);
 }
 
-jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, PRUint32 len) {
+jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, uint32_t len) {
     jstring ret = frame->GetEnv()->NewString( string, len);
     if (frame->CheckForException())
         return NULL;
@@ -283,7 +283,7 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
     args[2].l = NewJavaString(&jniFrame, actionHint.get(), actionHint.Length());
     args[3].z = false;
 
-    PRInt32 landscapeFS;
+    int32_t landscapeFS;
     if (NS_SUCCEEDED(Preferences::GetInt(IME_FULLSCREEN_PREF, &landscapeFS))) {
         if (landscapeFS == 1) {
             args[3].z = true;
@@ -307,7 +307,7 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
 }
 
 void
-AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
+AndroidBridge::NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen,
                                int aStart, int aEnd, int aNewEnd)
 {
     ALOG_BRIDGE("AndroidBridge::NotifyIMEChange");
@@ -390,7 +390,7 @@ AndroidBridge::DisableSensor(int aSensorType)
 }
 
 void
-AndroidBridge::ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen,
+AndroidBridge::ReturnIMEQueryResult(const PRUnichar *aResult, uint32_t aLen,
                                     int aSelStart, int aSelLen)
 {
     ALOG_BRIDGE("AndroidBridge::ReturnIMEQueryResult");
@@ -734,8 +734,8 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
 
 void
 AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
-                                                 PRInt64 aProgress,
-                                                 PRInt64 aProgressMax,
+                                                 int64_t aProgress,
+                                                 int64_t aProgressMax,
                                                  const nsAString& aAlertText)
 {
     ALOG_BRIDGE("AlertsProgressListener_OnProgress");
@@ -887,7 +887,7 @@ AndroidBridge::PerformHapticFeedback(bool aIsLongPress)
 }
 
 void
-AndroidBridge::Vibrate(const nsTArray<PRUint32>& aPattern)
+AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
 {
     ALOG_BRIDGE("AndroidBridge::Vibrate");
     JNIEnv *env = GetJNIEnv();
@@ -895,7 +895,7 @@ AndroidBridge::Vibrate(const nsTArray<PRUint32>& aPattern)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    PRUint32 len = aPattern.Length();
+    uint32_t len = aPattern.Length();
     if (!len) {
         ALOG_BRIDGE("  invalid 0-length array");
         return;
@@ -924,7 +924,7 @@ AndroidBridge::Vibrate(const nsTArray<PRUint32>& aPattern)
 
     jlong* elts = env->GetLongArrayElements(array, nullptr);
     elts[0] = 0;
-    for (PRUint32 i = 0; i < aPattern.Length(); ++i) {
+    for (uint32_t i = 0; i < aPattern.Length(); ++i) {
         jlong d = aPattern[i];
         if (d < 0) {
             ALOG_BRIDGE("  invalid vibration duration < 0");
@@ -1022,20 +1022,20 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
     if (!arr)
         return;
 
-    PRUint32 len = static_cast<PRUint32>(env->GetArrayLength(arr));
+    uint32_t len = static_cast<uint32_t>(env->GetArrayLength(arr));
     jint *elements = env->GetIntArrayElements(arr, 0);
 
-    PRUint32 colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
+    uint32_t colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
     if (len < colorsCount)
         colorsCount = len;
 
     // Convert Android colors to nscolor by switching R and B in the ARGB 32 bit value
     nscolor *colors = (nscolor*)aColors;
 
-    for (PRUint32 i = 0; i < colorsCount; i++) {
-        PRUint32 androidColor = static_cast<PRUint32>(elements[i]);
-        PRUint8 r = (androidColor & 0x00ff0000) >> 16;
-        PRUint8 b = (androidColor & 0x000000ff);
+    for (uint32_t i = 0; i < colorsCount; i++) {
+        uint32_t androidColor = static_cast<uint32_t>(elements[i]);
+        uint8_t r = (androidColor & 0x00ff0000) >> 16;
+        uint8_t b = (androidColor & 0x000000ff);
         colors[i] = (androidColor & 0xff00ff00) | (b << 16) | r;
     }
 
@@ -1043,7 +1043,7 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
 }
 
 void
-AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf)
+AndroidBridge::GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSize, uint8_t * const aBuf)
 {
     ALOG_BRIDGE("AndroidBridge::GetIconForExtension");
     NS_ASSERTION(aBuf != nullptr, "AndroidBridge::GetIconForExtension: aBuf is null!");
@@ -1069,10 +1069,10 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSiz
     if (!arr)
         return;
 
-    PRUint32 len = static_cast<PRUint32>(env->GetArrayLength(arr));
+    uint32_t len = static_cast<uint32_t>(env->GetArrayLength(arr));
     jbyte *elements = env->GetByteArrayElements(arr, 0);
 
-    PRUint32 bufSize = aIconSize * aIconSize * 4;
+    uint32_t bufSize = aIconSize * aIconSize * 4;
     NS_ASSERTION(len == bufSize, "AndroidBridge::GetIconForExtension: Pixels array is incomplete!");
     if (len == bufSize)
         memcpy(aBuf, elements, bufSize);
@@ -1228,7 +1228,7 @@ AndroidBridge::ProvideEGLSurface()
 }
 
 bool
-AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt, JNIEnv* env /* = nullptr */)
+AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, int32_t* aInt, JNIEnv* env /* = nullptr */)
 {
     ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
 
@@ -1247,7 +1247,7 @@ AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, P
     if (!field)
         return false;
 
-    *aInt = static_cast<PRInt32>(env->GetStaticIntField(cls, field));
+    *aInt = static_cast<int32_t>(env->GetStaticIntField(cls, field));
 
     return true;
 }
@@ -1565,7 +1565,7 @@ AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
 }
 
 bool
-AndroidBridge::InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps)
+AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps)
 {
     JNIEnv *env = GetJNIEnv();
     if (!env)
@@ -1712,7 +1712,7 @@ AndroidBridge::MarkURIVisited(const nsAString& aURI)
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkUriVisited, jstrURI);
 }
 
-PRUint16
+uint16_t
 AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
 {
     ALOG_BRIDGE("AndroidBridge::GetNumberOfMessagesForText");
@@ -1723,7 +1723,7 @@ AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
 
     AutoLocalJNIFrame jniFrame(env);
     jstring jText = NewJavaString(&jniFrame, PromiseFlatString(aText).get(), aText.Length());
-    PRUint16 ret = env->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
+    uint16_t ret = env->CallStaticIntMethod(mGeckoAppShellClass, jNumberOfMessages, jText);
     if (jniFrame.CheckForException())
         return 0;
 
@@ -1731,7 +1731,7 @@ AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
 }
 
 void
-AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, PRInt32 aRequestId, PRUint64 aProcessId)
+AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, int32_t aRequestId, uint64_t aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::SendMessage");
 
@@ -1746,9 +1746,9 @@ AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage, aRequestId, aProcessId);
 }
 
-PRInt32
+int32_t
 AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
-                               const nsAString& aBody, PRUint64 aDate)
+                               const nsAString& aBody, uint64_t aDate)
 {
     ALOG_BRIDGE("AndroidBridge::SaveSentMessage");
 
@@ -1759,7 +1759,7 @@ AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
     AutoLocalJNIFrame jniFrame(env);
     jstring jRecipient = NewJavaString(&jniFrame, PromiseFlatString(aRecipient).get(), aRecipient.Length());
     jstring jBody = NewJavaString(&jniFrame, PromiseFlatString(aBody).get(), aBody.Length());
-    PRInt32 ret = env->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
+    int32_t ret = env->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
     if (jniFrame.CheckForException())
         return 0;
 
@@ -1767,7 +1767,7 @@ AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
 }
 
 void
-AndroidBridge::GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId)
+AndroidBridge::GetMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::GetMessage");
 
@@ -1780,7 +1780,7 @@ AndroidBridge::GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProc
 }
 
 void
-AndroidBridge::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId)
+AndroidBridge::DeleteMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::DeleteMessage");
 
@@ -1794,7 +1794,7 @@ AndroidBridge::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aP
 
 void
 AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse,
-                                 PRInt32 aRequestId, PRUint64 aProcessId)
+                                 int32_t aRequestId, uint64_t aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::CreateMessageList");
 
@@ -1809,7 +1809,7 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
                                           jStringClass,
                                           env->NewStringUTF(""));
 
-    for (PRUint32 i = 0; i < aFilter.numbers().Length(); ++i) {
+    for (uint32_t i = 0; i < aFilter.numbers().Length(); ++i) {
         env->SetObjectArrayElement(numbers, i,
                                    env->NewStringUTF(NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
     }
@@ -1822,7 +1822,7 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
 }
 
 void
-AndroidBridge::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId)
+AndroidBridge::GetNextMessageInList(int32_t aListId, int32_t aRequestId, uint64_t aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::GetNextMessageInList");
 
@@ -1835,7 +1835,7 @@ AndroidBridge::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint6
 }
 
 void
-AndroidBridge::ClearMessageList(PRInt32 aListId)
+AndroidBridge::ClearMessageList(int32_t aListId)
 {
     ALOG_BRIDGE("AndroidBridge::ClearMessageList");
 
@@ -2432,7 +2432,7 @@ jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
 
-nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstX, PRInt32 dstY, PRInt32 dstW, PRInt32 dstH, PRInt32 bufW, PRInt32 bufH, PRInt32 tabId, PRInt32 token, jobject buffer)
+nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32_t srcY, int32_t srcW, int32_t srcH, int32_t dstX, int32_t dstY, int32_t dstW, int32_t dstH, int32_t bufW, int32_t bufH, int32_t tabId, int32_t token, jobject buffer)
 {
     nsresult rv;
     float scale = 1.0;
@@ -2492,14 +2492,14 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt
         return NS_ERROR_FAILURE;
     nscolor bgColor = NS_RGB(255, 255, 255);
     nsIPresShell* presShell = presContext->PresShell();
-    PRUint32 renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                                nsIPresShell::RENDER_DOCUMENT_RELATIVE);
     nsRect r(nsPresContext::CSSPixelsToAppUnits(srcX / scale),
              nsPresContext::CSSPixelsToAppUnits(srcY / scale),
              nsPresContext::CSSPixelsToAppUnits(srcW / scale),
              nsPresContext::CSSPixelsToAppUnits(srcH / scale));
 
-    PRUint32 stride = bufW * 2 /* 16 bpp */;
+    uint32_t stride = bufW * 2 /* 16 bpp */;
 
     void* data = env->GetDirectBufferAddress(buffer);
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride, gfxASurface::ImageFormatRGB16_565);

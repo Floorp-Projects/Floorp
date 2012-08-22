@@ -84,9 +84,9 @@ using namespace js::types;
 
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *
-CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
+CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
 {
-    JSObject *thisp = obj->thisObject(cx);
+    JSObject *thisp = JSObject::thisObject(cx, obj);
     if (!thisp)
         return NULL;
     argv[-1].setObject(*thisp);
@@ -124,7 +124,8 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 #endif
 
     if (thisv.isNullOrUndefined()) {
-        JSObject *thisp = call.callee().global().thisObject(cx);
+        Rooted<GlobalObject*> global(cx, &call.callee().global());
+        JSObject *thisp = JSObject::thisObject(cx, global);
         if (!thisp)
             return false;
         call.setThis(ObjectValue(*thisp));
@@ -408,7 +409,8 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
          */
-        JSObject *thisp = args.thisv().toObject().thisObject(cx);
+        RootedObject thisObj(cx, &args.thisv().toObject());
+        JSObject *thisp = JSObject::thisObject(cx, thisObj);
         if (!thisp)
              return false;
         args.setThis(ObjectValue(*thisp));
@@ -544,7 +546,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     }
 
     /* Use the scope chain as 'this', modulo outerization. */
-    JSObject *thisObj = scopeChain->thisObject(cx);
+    JSObject *thisObj = JSObject::thisObject(cx, scopeChain);
     if (!thisObj)
         return false;
     Value thisv = ObjectValue(*thisObj);
@@ -727,8 +729,10 @@ js::TypeOfValue(JSContext *cx, const Value &vref)
         return JSTYPE_OBJECT;
     if (v.isUndefined())
         return JSTYPE_VOID;
-    if (v.isObject())
-        return v.toObject().typeOf(cx);
+    if (v.isObject()) {
+        RootedObject obj(cx, &v.toObject());
+        return JSObject::typeOf(cx, obj);
+    }
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
 }
@@ -972,16 +976,9 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
 
     RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
-
-    RootedObject obj(cx);
     RootedObject pobj(cx);
     RootedShape prop(cx);
-    JSBool ok;
-
-    if (JOF_OPMODE(*pc) == JOF_NAME)
-        ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
-    else
-        ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
+    bool ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -1749,7 +1746,7 @@ BEGIN_CASE(JSOP_IN)
     FETCH_ELEMENT_ID(obj, -2, id);
     RootedObject &obj2 = rootObject1;
     RootedShape &prop = rootShape0;
-    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
+    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
     TRY_BRANCH_AFTER_COND(cond, 2);
@@ -1847,10 +1844,11 @@ BEGIN_CASE(JSOP_SETCONST)
     RootedValue &rval = rootValue0;
     rval = regs.sp[-1];
 
-    JSObject &obj = regs.fp()->varObj();
-    if (!obj.defineProperty(cx, name, rval,
-                            JS_PropertyStub, JS_StrictPropertyStub,
-                            JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+    RootedObject &obj = rootObject0;
+    obj = &regs.fp()->varObj();
+    if (!JSObject::defineProperty(cx, obj, name, rval,
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
 }
@@ -1862,13 +1860,13 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     RootedValue &rval = rootValue0;
     rval = regs.sp[-3];
 
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
-    if (!obj->defineGeneric(cx, id, rval,
-                            JS_PropertyStub, JS_StrictPropertyStub,
-                            JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!JSObject::defineGeneric(cx, obj, id, rval,
+                                 JS_PropertyStub, JS_StrictPropertyStub,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
     regs.sp -= 3;
@@ -1882,39 +1880,17 @@ END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
 {
-    JSObject *obj;
-    do {
-        /*
-         * We can skip the property lookup for the global object. If the
-         * property does not exist anywhere on the scope chain, JSOP_SETNAME
-         * adds the property to the global.
-         *
-         * As a consequence of this optimization for the global object we run
-         * its JSRESOLVE_ASSIGNING-tolerant resolve hooks only in JSOP_SETNAME,
-         * after the interpreter evaluates the right- hand-side of the
-         * assignment, and not here.
-         *
-         * This should be transparent to the hooks because the script, instead
-         * of name = rhs, could have used global.name = rhs given a global
-         * object reference, which also calls the hooks only after evaluating
-         * the rhs. We desire such resolve hook equivalence between the two
-         * forms.
-         */
-        obj = regs.fp()->scopeChain();
-        if (obj->isGlobal())
-            break;
+    RootedObject &scopeChain = rootObject0;
+    scopeChain = regs.fp()->scopeChain();
 
-        RootedPropertyName &name = rootName0;
-        name = script->getName(regs.pc);
+    RootedPropertyName &name = rootName0;
+    name = script->getName(regs.pc);
 
-        RootedObject &scopeChain = rootObject0;
-        scopeChain = regs.fp()->scopeChain();
+    RootedObject &scope = rootObject1;
+    if (!LookupNameForSet(cx, name, scopeChain, &scope))
+        goto error;
 
-        obj = FindIdentifierBase(cx, scopeChain, name);
-        if (!obj)
-            goto error;
-    } while (0);
-    PUSH_OBJECT(*obj);
+    PUSH_OBJECT(*scope);
 }
 END_CASE(JSOP_BINDNAME)
 
@@ -2201,10 +2177,10 @@ BEGIN_CASE(JSOP_DELNAME)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    RootedObject &obj = rootObject1;
-    RootedObject &obj2 = rootObject2;
+    RootedObject &scope = rootObject1;
+    RootedObject &pobj = rootObject2;
     RootedShape &prop = rootShape0;
-    if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -2214,7 +2190,7 @@ BEGIN_CASE(JSOP_DELNAME)
     PUSH_BOOLEAN(true);
     if (prop) {
         MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-        if (!obj->deleteProperty(cx, name, res, false))
+        if (!JSObject::deleteProperty(cx, scope, name, res, false))
             goto error;
     }
 }
@@ -2225,11 +2201,11 @@ BEGIN_CASE(JSOP_DELPROP)
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
 
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -1, obj);
 
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-    if (!obj->deleteProperty(cx, name, res, script->strictModeCode))
+    if (!JSObject::deleteProperty(cx, obj, name, res, script->strictModeCode))
         goto error;
 }
 END_CASE(JSOP_DELPROP)
@@ -2237,14 +2213,14 @@ END_CASE(JSOP_DELPROP)
 BEGIN_CASE(JSOP_DELELEM)
 {
     /* Fetch the left part and resolve it to a non-null object. */
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
 
     RootedValue &propval = rootValue0;
     propval = regs.sp[-1];
 
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
-    if (!obj->deleteByValue(cx, propval, res, script->strictModeCode))
+    if (!JSObject::deleteByValue(cx, obj, propval, res, script->strictModeCode))
         goto error;
 
     regs.sp--;
@@ -2371,6 +2347,20 @@ END_CASE(JSOP_GETPROP)
 
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
+{
+    RootedObject &scope = rootObject0;
+    scope = &regs.sp[-2].toObject();
+
+    HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    if (!SetNameOperation(cx, regs.pc, scope, value))
+        goto error;
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
+}
+END_CASE(JSOP_SETNAME)
+
 BEGIN_CASE(JSOP_SETPROP)
 {
     HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
@@ -2422,7 +2412,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
-    if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -2570,14 +2560,14 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    RootedObject &obj = rootObject1;
-    RootedObject &obj2 = rootObject2;
+    RootedObject &scope = rootObject1;
+    RootedObject &pobj = rootObject2;
     RootedShape &prop = rootShape0;
-    if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
+    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &prop))
         goto error;
 
     Value v;
-    if (!ComputeImplicitThis(cx, obj, &v))
+    if (!ComputeImplicitThis(cx, scope, &v))
         goto error;
     PUSH_COPY(v);
 }
@@ -2949,7 +2939,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     name = fun->atom->asPropertyName();
     RootedShape &shape = rootShape0;
     RootedObject &pobj = rootObject1;
-    if (!parent->lookupProperty(cx, name, &pobj, &shape))
+    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
         goto error;
 
     RootedValue &rval = rootValue0;
@@ -2958,8 +2948,8 @@ BEGIN_CASE(JSOP_DEFFUN)
     do {
         /* Steps 5d, 5f. */
         if (!shape || pobj != parent) {
-            if (!parent->defineProperty(cx, name, rval,
-                                        JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            if (!JSObject::defineProperty(cx, parent, name, rval,
+                                          JS_PropertyStub, JS_StrictPropertyStub, attrs))
             {
                 goto error;
             }
@@ -2970,8 +2960,8 @@ BEGIN_CASE(JSOP_DEFFUN)
         JS_ASSERT(parent->isNative());
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, name, rval,
-                                            JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                if (!JSObject::defineProperty(cx, parent, name, rval,
+                                              JS_PropertyStub, JS_StrictPropertyStub, attrs))
                 {
                     goto error;
                 }
@@ -2996,7 +2986,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, &rval, script->strictModeCode))
+        if (!JSObject::setProperty(cx, parent, parent, name, &rval, script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -3101,7 +3091,7 @@ BEGIN_CASE(JSOP_SETTER)
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
 
     scratch.setUndefined();
-    if (!obj->defineGeneric(cx, id, scratch, getter, setter, attrs))
+    if (!JSObject::defineGeneric(cx, obj, id, scratch, getter, setter, attrs))
         goto error;
 
     regs.sp += i;
@@ -3230,11 +3220,12 @@ BEGIN_CASE(JSOP_INITELEM)
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (JSOp(regs.pc[JSOP_INITELEM_LENGTH]) == JSOP_ENDINIT &&
-            !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1))) {
+            !SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
+        {
             goto error;
         }
     } else {
-        if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
     if (op == JSOP_INITELEM_INC) {
@@ -3266,7 +3257,7 @@ BEGIN_CASE(JSOP_SPREAD)
             goto error;
         }
         iterVal = iter.value();
-        if (!arr->defineElement(cx, count++, iterVal, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineElement(cx, arr, count++, iterVal, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
     if (!iter.close())
@@ -3510,7 +3501,7 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     rval = regs.sp[-1];
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
-    if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;
@@ -3529,7 +3520,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;
     RootedValue &rval = rootValue0;
-    if (!obj->getGeneric(cx, id, &rval))
+    if (!JSObject::getGeneric(cx, obj, obj, id, &rval))
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME) {
@@ -4015,19 +4006,18 @@ js::GetProperty(JSContext *cx, HandleValue v, PropertyName *name, MutableHandleV
             return true;
     }
 
-    JSObject *obj = ToObjectFromStack(cx, v);
+    RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
-    return obj->getProperty(cx, name, vp);
+    return JSObject::getProperty(cx, obj, obj, name, vp);
 }
 
 bool
 js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
 {
-    RootedObject obj(cx);
-    RootedObject obj2(cx);
     RootedShape shape(cx);
-    if (!FindPropertyHelper(cx, name, false, scopeChain, &obj, &obj2, &shape))
+    RootedObject obj(cx), pobj(cx);
+    if (!LookupName(cx, name, scopeChain, &obj, &pobj, &shape))
         return false;
 
     if (!shape) {
@@ -4037,7 +4027,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
         return false;
     }
 
-    return obj->getProperty(cx, name, vp);
+    return JSObject::getProperty(cx, obj, obj, name, vp);
 }
 
 /*
@@ -4048,10 +4038,9 @@ bool
 js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandlePropertyName name,
                           MutableHandleValue vp)
 {
-    RootedObject obj(cx);
-    RootedObject obj2(cx);
     RootedShape shape(cx);
-    if (!FindPropertyHelper(cx, name, false, scopeChain, &obj, &obj2, &shape))
+    RootedObject obj(cx), pobj(cx);
+    if (!LookupName(cx, name, scopeChain, &obj, &pobj, &shape))
         return false;
 
     if (!shape) {
@@ -4059,7 +4048,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
         return true;
     }
 
-    return obj->getProperty(cx, name, vp);
+    return JSObject::getProperty(cx, obj, obj, name, vp);
 }
 
 JSObject *
@@ -4078,7 +4067,7 @@ bool
 js::SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value)
 {
     RootedValue v(cx, value);
-    return obj->setGeneric(cx, obj, id, &v, strict);
+    return JSObject::setGeneric(cx, obj, obj, id, &v, strict);
 }
 
 template bool js::SetProperty<true> (JSContext *cx, HandleObject obj, HandleId id, const Value &value);
@@ -4092,13 +4081,13 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool
     *bp = true;
 
     // convert value to JSObject pointer
-    JSObject *obj = ToObjectFromStack(cx, v);
+    RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
     // Call deleteProperty on obj
     RootedValue result(cx, NullValue());
-    bool delprop_ok = obj->deleteProperty(cx, name, &result, strict);
+    bool delprop_ok = JSObject::deleteProperty(cx, obj, name, &result, strict);
     if (!delprop_ok)
         return false;
 

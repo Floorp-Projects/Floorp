@@ -21,7 +21,7 @@ interface amIInstallCallback : nsISupports
    * @param  aStatus
    *         0 if the install was successful or negative if not
    */
-  void onInstallEnded(in AString aUrl, in PRInt32 aStatus);
+  void onInstallEnded(in AString aUrl, in int32_t aStatus);
 };
 
 /**
@@ -33,10 +33,10 @@ interface amIInstallTrigger : nsISupports
   /**
    * Retained for backwards compatibility.
    */
-  const PRUint32 SKIN    = 1;
-  const PRUint32 LOCALE  = 2;
-  const PRUint32 CONTENT = 4;
-  const PRUint32 PACKAGE = 7;
+  const uint32_t SKIN    = 1;
+  const uint32_t LOCALE  = 2;
+  const uint32_t CONTENT = 4;
+  const uint32_t PACKAGE = 7;
 
   /**
    * Tests if installation is enabled.
@@ -79,7 +79,7 @@ interface amIInstallTrigger : nsISupports
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
-  boolean installChrome(in PRUint32 aType, in AString aUrl, in AString aSkin);
+  boolean installChrome(in uint32_t aType, in AString aUrl, in AString aSkin);
 
   /**
    * Starts installing a new add-on.
@@ -92,5 +92,5 @@ interface amIInstallTrigger : nsISupports
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
-  [deprecated] boolean startSoftwareUpdate(in AString aUrl, [optional] in PRInt32 aFlags);
+  [deprecated] boolean startSoftwareUpdate(in AString aUrl, [optional] in int32_t aFlags);
 };

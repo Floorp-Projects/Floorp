@@ -103,7 +103,7 @@ size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 
 
 #ifdef JS_THREADSAFE
-static PRUintn gStackBaseThreadIndex;
+static unsigned gStackBaseThreadIndex;
 #else
 static uintptr_t gStackBase;
 #endif
@@ -2739,13 +2739,14 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupGeneric(cx, id, objp, &shape))
+        if (!JSObject::lookupGeneric(cx, referent, id, objp, &shape))
             return false;
         if (objp != referent)
             return true;
         RootedValue value(cx);
-        if (!referent->getGeneric(cx, id, &value) ||
-            !referent->getGenericAttributes(cx, id, &desc.attrs)) {
+        if (!JSObject::getGeneric(cx, referent, referent, id, &value) ||
+            !JSObject::getGenericAttributes(cx, referent, id, &desc.attrs))
+        {
             return false;
         }
         desc.value = value;

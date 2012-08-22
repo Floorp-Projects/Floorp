@@ -25,9 +25,9 @@ int main()
   SHOW_TYPE(unsigned short);
   SHOW_TYPE(int);
   SHOW_TYPE(long);
-  SHOW_TYPE(PRUint8);
-  SHOW_TYPE(PRInt16);
-  SHOW_TYPE(PRUint32);
+  SHOW_TYPE(uint8_t);
+  SHOW_TYPE(int16_t);
+  SHOW_TYPE(uint32_t);
   SHOW_TYPE(void*);
   SHOW_TYPE(double);
   SHOW_TYPE(short[7]);

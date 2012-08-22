@@ -29,9 +29,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD GetActionDescription(PRUint8 aIndex, nsAString& aDescription);
-  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription);
+  NS_IMETHOD DoAction(uint8_t aIndex);
 
   // nsAccessNode
   virtual void Shutdown();
@@ -39,7 +39,7 @@ public:
   // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
@@ -47,7 +47,7 @@ public:
   virtual bool RemoveChild(Accessible* aAccessible);
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
 protected:
   // Accessible

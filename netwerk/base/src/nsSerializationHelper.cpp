@@ -46,7 +46,7 @@ NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
   // multiply by 3 and then divide by 4 (making sure this is an integer
   // division).
 
-  PRUint32 size = str.Length();
+  uint32_t size = str.Length();
   if (size > 0 && str[size-1] == '=') {
     if (size > 1 && str[size-2] == '=') {
       size -= 2;

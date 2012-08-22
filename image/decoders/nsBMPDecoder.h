@@ -33,20 +33,20 @@ public:
     // retrieved from the 4th byte of image data per pixel 
     void SetUseAlphaData(bool useAlphaData);
     // Obtains the bits per pixel from the internal BIH header
-    PRInt32 GetBitsPerPixel() const;
+    int32_t GetBitsPerPixel() const;
     // Obtains the width from the internal BIH header
-    PRInt32 GetWidth() const;
+    int32_t GetWidth() const;
     // Obtains the abs-value of the height from the internal BIH header
-    PRInt32 GetHeight() const;
+    int32_t GetHeight() const;
     // Obtains the internal output image buffer
-    PRUint32* GetImageData();
+    uint32_t* GetImageData();
     // Obtains the size of the compressed image resource
-    PRInt32 GetCompressedImageSize() const;
+    int32_t GetCompressedImageSize() const;
     // Obtains whether or not a BMP file had alpha data in its 4th byte
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
     bool HasAlphaData() const;
 
-    virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+    virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
     virtual void FinishInternal();
 
 private:
@@ -55,28 +55,28 @@ private:
      * the bitmasks from mBitFields */
     NS_METHOD CalcBitShift();
 
-    PRUint32 mPos;
+    uint32_t mPos;
 
     BMPFILEHEADER mBFH;
     BITMAPV5HEADER mBIH;
     char mRawBuf[WIN_V3_INTERNAL_BIH_LENGTH];
 
-    PRUint32 mLOH; ///< Length of the header
+    uint32_t mLOH; ///< Length of the header
 
-    PRUint32 mNumColors; ///< The number of used colors, i.e. the number of entries in mColors
+    uint32_t mNumColors; ///< The number of used colors, i.e. the number of entries in mColors
     colorTable *mColors;
 
     bitFields mBitFields;
 
-    PRUint32 *mImageData; ///< Pointer to the image data for the frame
-    PRUint8 *mRow;      ///< Holds one raw line of the image
-    PRUint32 mRowBytes; ///< How many bytes of the row were already received
-    PRInt32 mCurLine;   ///< Index of the line of the image that's currently being decoded: [height,1]
-    PRInt32 mOldLine;   ///< Previous index of the line 
-    PRInt32 mCurPos;    ///< Index in the current line of the image
+    uint32_t *mImageData; ///< Pointer to the image data for the frame
+    uint8_t *mRow;      ///< Holds one raw line of the image
+    uint32_t mRowBytes; ///< How many bytes of the row were already received
+    int32_t mCurLine;   ///< Index of the line of the image that's currently being decoded: [height,1]
+    int32_t mOldLine;   ///< Previous index of the line 
+    int32_t mCurPos;    ///< Index in the current line of the image
 
     ERLEState mState;   ///< Maintains the current state of the RLE decoding
-    PRUint32 mStateData;///< Decoding information that is needed depending on mState
+    uint32_t mStateData;///< Decoding information that is needed depending on mState
 
     /** Set mBFH from the raw data in mRawBuf, converting from little-endian
      * data to native data as necessary */
@@ -101,12 +101,12 @@ private:
 /** Sets the pixel data in aDecoded to the given values.
  * @param aDecoded pointer to pixel to be set, will be incremented to point to the next pixel.
  */
-static inline void SetPixel(PRUint32*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
+static inline void SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aAlpha = 0xFF)
 {
     *aDecoded++ = GFX_PACKED_PIXEL(aAlpha, aRed, aGreen, aBlue);
 }
 
-static inline void SetPixel(PRUint32*& aDecoded, PRUint8 idx, colorTable* aColors)
+static inline void SetPixel(uint32_t*& aDecoded, uint8_t idx, colorTable* aColors)
 {
     SetPixel(aDecoded, aColors[idx].red, aColors[idx].green, aColors[idx].blue);
 }
@@ -117,10 +117,10 @@ static inline void SetPixel(PRUint32*& aDecoded, PRUint8 idx, colorTable* aColor
  * @param aData The values for the two pixels
  * @param aCount Current count. Is decremented by one or two.
  */
-inline void Set4BitPixel(PRUint32*& aDecoded, PRUint8 aData,
-                         PRUint32& aCount, colorTable* aColors)
+inline void Set4BitPixel(uint32_t*& aDecoded, uint8_t aData,
+                         uint32_t& aCount, colorTable* aColors)
 {
-    PRUint8 idx = aData >> 4;
+    uint8_t idx = aData >> 4;
     SetPixel(aDecoded, idx, aColors);
     if (--aCount > 0) {
         idx = aData & 0xF;

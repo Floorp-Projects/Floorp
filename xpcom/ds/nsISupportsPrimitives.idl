@@ -93,7 +93,7 @@ interface nsISupportsPRBool : nsISupportsPrimitive
 [scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint8 : nsISupportsPrimitive
 {
-    attribute PRUint8 data;
+    attribute uint8_t data;
     string toString();
 };
 
@@ -104,7 +104,7 @@ interface nsISupportsPRUint8 : nsISupportsPrimitive
 [scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint16 : nsISupportsPrimitive
 {
-    attribute PRUint16 data;
+    attribute uint16_t data;
     string toString();
 };
 
@@ -115,7 +115,7 @@ interface nsISupportsPRUint16 : nsISupportsPrimitive
 [scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint32 : nsISupportsPrimitive
 {
-    attribute PRUint32 data;
+    attribute uint32_t data;
     string toString();
 };
 
@@ -126,7 +126,7 @@ interface nsISupportsPRUint32 : nsISupportsPrimitive
 [scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint64 : nsISupportsPrimitive
 {
-    attribute PRUint64 data;
+    attribute uint64_t data;
     string toString();
 };
 
@@ -160,7 +160,7 @@ interface nsISupportsChar : nsISupportsPrimitive
 [scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt16 : nsISupportsPrimitive
 {
-    attribute PRInt16 data;
+    attribute int16_t data;
     string toString();
 };
 
@@ -171,7 +171,7 @@ interface nsISupportsPRInt16 : nsISupportsPrimitive
 [scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt32 : nsISupportsPrimitive
 {
-    attribute PRInt32 data;
+    attribute int32_t data;
     string toString();
 };
 
@@ -182,7 +182,7 @@ interface nsISupportsPRInt32 : nsISupportsPrimitive
 [scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt64 : nsISupportsPrimitive
 {
-    attribute PRInt64 data;
+    attribute int64_t data;
     string toString();
 };
 

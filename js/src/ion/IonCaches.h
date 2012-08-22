@@ -337,7 +337,7 @@ class IonCacheGetElement : public IonCache
         u.getelem.hasDenseArrayStub = true;
     }
 
-    bool attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name);
+    bool attachGetProp(JSContext *cx, HandleObject obj, const Value &idval, PropertyName *name);
     bool attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval);
 };
 
@@ -412,7 +412,7 @@ SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue
                  bool isSetName);
 
 bool
-GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, HandleValue idval,
+GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                 MutableHandleValue vp);
 
 JSObject *

@@ -291,7 +291,7 @@ nsFrameList::ExtractTail(FrameLinkEnumerator& aLink)
 }
 
 nsIFrame*
-nsFrameList::FrameAt(PRInt32 aIndex) const
+nsFrameList::FrameAt(int32_t aIndex) const
 {
   NS_PRECONDITION(aIndex >= 0, "invalid arg");
   if (aIndex < 0) return nullptr;
@@ -302,10 +302,10 @@ nsFrameList::FrameAt(PRInt32 aIndex) const
   return frame;
 }
 
-PRInt32
+int32_t
 nsFrameList::IndexOf(nsIFrame* aFrame) const
 {
-  PRInt32 count = 0;
+  int32_t count = 0;
   for (nsIFrame* f = mFirstChild; f; f = f->GetNextSibling()) {
     if (f == aFrame)
       return count;
@@ -329,10 +329,10 @@ nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
   return false;
 }
 
-PRInt32
+int32_t
 nsFrameList::GetLength() const
 {
-  PRInt32 count = 0;
+  int32_t count = 0;
   nsIFrame* frame = mFirstChild;
   while (frame) {
     count++;
@@ -401,7 +401,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   // Parent is a block frame, so use the LineIterator to find the previous visual 
   // sibling on this line, or the last one on the previous line.
 
-  PRInt32 thisLine;
+  int32_t thisLine;
   if (aFrame) {
     thisLine = iter->FindLineContaining(aFrame);
     if (thisLine < 0)
@@ -412,9 +412,9 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 
   nsIFrame* frame = nullptr;
   nsIFrame* firstFrameOnLine;
-  PRInt32 numFramesOnLine;
+  int32_t numFramesOnLine;
   nsRect lineBounds;
-  PRUint32 lineFlags;
+  uint32_t lineFlags;
 
   if (aFrame) {
     iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
@@ -475,7 +475,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   // Parent is a block frame, so use the LineIterator to find the next visual 
   // sibling on this line, or the first one on the next line.
   
-  PRInt32 thisLine;
+  int32_t thisLine;
   if (aFrame) {
     thisLine = iter->FindLineContaining(aFrame);
     if (thisLine < 0)
@@ -486,9 +486,9 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 
   nsIFrame* frame = nullptr;
   nsIFrame* firstFrameOnLine;
-  PRInt32 numFramesOnLine;
+  int32_t numFramesOnLine;
   nsRect lineBounds;
-  PRUint32 lineFlags;
+  uint32_t lineFlags;
 
   if (aFrame) {
     iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
@@ -500,7 +500,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     }
   }
   
-  PRInt32 numLines = iter->GetNumLines();
+  int32_t numLines = iter->GetNumLines();
   if (!frame && thisLine < numLines - 1) {
     // Get the first frame of the next line
     iter->GetLine(thisLine + 1, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);

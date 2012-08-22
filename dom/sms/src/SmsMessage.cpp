@@ -24,9 +24,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(SmsMessage)
 NS_IMPL_RELEASE(SmsMessage)
 
-SmsMessage::SmsMessage(PRInt32 aId, DeliveryState aDelivery,
+SmsMessage::SmsMessage(int32_t aId, DeliveryState aDelivery,
                        const nsString& aSender, const nsString& aReceiver,
-                       const nsString& aBody, PRUint64 aTimestamp, bool aRead)
+                       const nsString& aBody, uint64_t aTimestamp, bool aRead)
   : mData(aId, aDelivery, aSender, aReceiver, aBody, aTimestamp, aRead)
 {
 }
@@ -37,7 +37,7 @@ SmsMessage::SmsMessage(const SmsMessageData& aData)
 }
 
 /* static */ nsresult
-SmsMessage::Create(PRInt32 aId,
+SmsMessage::Create(int32_t aId,
                    const nsAString& aDelivery,
                    const nsAString& aSender,
                    const nsAString& aReceiver,
@@ -78,10 +78,10 @@ SmsMessage::Create(PRInt32 aId,
       return NS_ERROR_INVALID_ARG;
     }
     double number = aTimestamp.toNumber();
-    if (static_cast<PRUint64>(number) != number) {
+    if (static_cast<uint64_t>(number) != number) {
       return NS_ERROR_INVALID_ARG;
     }
-    data.timestamp() = static_cast<PRUint64>(number);
+    data.timestamp() = static_cast<uint64_t>(number);
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(data);
@@ -96,7 +96,7 @@ SmsMessage::GetData() const
 }
 
 NS_IMETHODIMP
-SmsMessage::GetId(PRInt32* aId)
+SmsMessage::GetId(int32_t* aId)
 {
   *aId = mData.id();
   return NS_OK;

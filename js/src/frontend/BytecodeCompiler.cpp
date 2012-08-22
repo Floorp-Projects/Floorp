@@ -11,7 +11,6 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
-#include "frontend/SemanticAnalysis.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
@@ -193,8 +192,6 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         if (!FoldConstants(cx, pn, &parser))
             return NULL;
 
-        if (!AnalyzeFunctions(&parser))
-            return NULL;
         pc.functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
@@ -332,9 +329,6 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, /* callerFrame = */ NULL,
                            /* hasGlobalScope = */ false, options.lineno);
     if (!funbce.init())
-        return false;
-
-    if (!AnalyzeFunctions(&parser))
         return false;
 
     if (fn->pn_body) {

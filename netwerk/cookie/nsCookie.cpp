@@ -49,10 +49,10 @@ StrBlockCopy(const nsACString &aSource1,
 // necessary to enforce ordering among cookies whose creation times would
 // otherwise overlap, since it's possible two cookies may be created at the same
 // time, or that the system clock isn't monotonic.
-static PRInt64 gLastCreationTime;
+static int64_t gLastCreationTime;
 
-PRInt64
-nsCookie::GenerateUniqueCreationTime(PRInt64 aCreationTime)
+int64_t
+nsCookie::GenerateUniqueCreationTime(int64_t aCreationTime)
 {
   // Check if the creation time given to us is greater than the running maximum
   // (it should always be monotonically increasing).
@@ -70,15 +70,15 @@ nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
                  const nsACString &aHost,
                  const nsACString &aPath,
-                 PRInt64           aExpiry,
-                 PRInt64           aLastAccessed,
-                 PRInt64           aCreationTime,
+                 int64_t           aExpiry,
+                 int64_t           aLastAccessed,
+                 int64_t           aCreationTime,
                  bool              aIsSession,
                  bool              aIsSecure,
                  bool              aIsHttpOnly)
 {
   // find the required string buffer size, adding 4 for the terminating nulls
-  const PRUint32 stringLength = aName.Length() + aValue.Length() +
+  const uint32_t stringLength = aName.Length() + aValue.Length() +
                                 aHost.Length() + aPath.Length() + 4;
 
   // allocate contiguous space for the nsCookie and its strings -
@@ -115,20 +115,20 @@ NS_IMETHODIMP nsCookie::GetValue(nsACString &aValue)       { aValue = Value();  
 NS_IMETHODIMP nsCookie::GetHost(nsACString &aHost)         { aHost = Host();            return NS_OK; }
 NS_IMETHODIMP nsCookie::GetRawHost(nsACString &aHost)      { aHost = RawHost();         return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPath(nsACString &aPath)         { aPath = Path();            return NS_OK; }
-NS_IMETHODIMP nsCookie::GetExpiry(PRInt64 *aExpiry)        { *aExpiry = Expiry();       return NS_OK; }
+NS_IMETHODIMP nsCookie::GetExpiry(int64_t *aExpiry)        { *aExpiry = Expiry();       return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsSession(bool *aIsSession)   { *aIsSession = IsSession(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsDomain(bool *aIsDomain)     { *aIsDomain = IsDomain();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsSecure(bool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsHttpOnly(bool *aHttpOnly)   { *aHttpOnly = IsHttpOnly(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = 0;              return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = 0;              return NS_OK; }
-NS_IMETHODIMP nsCookie::GetCreationTime(PRInt64 *aCreation){ *aCreation = CreationTime(); return NS_OK; }
-NS_IMETHODIMP nsCookie::GetLastAccessed(PRInt64 *aTime)    { *aTime = LastAccessed();   return NS_OK; }
+NS_IMETHODIMP nsCookie::GetCreationTime(int64_t *aCreation){ *aCreation = CreationTime(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetLastAccessed(int64_t *aTime)    { *aTime = LastAccessed();   return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
 // here, expires == 0 denotes a session cookie.
 NS_IMETHODIMP
-nsCookie::GetExpires(PRUint64 *aExpires)
+nsCookie::GetExpires(uint64_t *aExpires)
 {
   if (IsSession()) {
     *aExpires = 0;

@@ -57,7 +57,7 @@ public:
 private:
   CERTCertificate *mCert;
   bool             mPermDelete;
-  PRUint32         mCertType;
+  uint32_t         mCertType;
   nsCOMPtr<nsIASN1Object> mASN1Structure;
   nsresult CreateASN1Struct();
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,

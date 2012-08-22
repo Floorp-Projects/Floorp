@@ -55,7 +55,7 @@ namespace js {
  * common and future-friendly cases.
  */
 inline bool
-ComputeImplicitThis(JSContext *cx, JSObject *obj, Value *vp)
+ComputeImplicitThis(JSContext *cx, HandleObject obj, Value *vp)
 {
     vp->setUndefined();
 
@@ -65,11 +65,11 @@ ComputeImplicitThis(JSContext *cx, JSObject *obj, Value *vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    obj = obj->thisObject(cx);
-    if (!obj)
+    RawObject nobj = JSObject::thisObject(cx, obj);
+    if (!nobj)
         return false;
 
-    vp->setObject(*obj);
+    vp->setObject(*nobj);
     return true;
 }
 
@@ -201,7 +201,7 @@ GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleI
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
 
-    return obj->getGeneric(cx, id, vp);
+    return JSObject::getGeneric(cx, obj, obj, id, vp);
 }
 
 inline bool
@@ -296,12 +296,11 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
 inline bool
 SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValue rval)
 {
+    JS_ASSERT(*pc == JSOP_SETPROP);
+
     RootedObject obj(cx, ToObjectFromStack(cx, lval));
     if (!obj)
         return false;
-
-    JS_ASSERT_IF(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME, lval.isObject());
-    JS_ASSERT_IF(*pc == JSOP_SETGNAME, obj == &cx->fp()->global());
 
     PropertyCacheEntry *entry;
     JSObject *obj2;
@@ -350,17 +349,12 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
     bool strict = cx->stack.currentScript()->strictModeCode;
     RootedValue rref(cx, rval);
 
-    JSOp op = JSOp(*pc);
-
     RootedId id(cx, NameToId(name));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
-        unsigned defineHow = (op == JSOP_SETNAME)
-                             ? DNP_CACHE_RESULT | DNP_UNQUALIFIED
-                             : DNP_CACHE_RESULT;
-        if (!baseops::SetPropertyHelper(cx, obj, obj, id, defineHow, &rref, strict))
+        if (!baseops::SetPropertyHelper(cx, obj, obj, id, DNP_CACHE_RESULT, &rref, strict))
             return false;
     } else {
-        if (!obj->setGeneric(cx, obj, id, &rref, strict))
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, strict))
             return false;
     }
 
@@ -385,7 +379,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
     /* Take the slow path if shape was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
         Rooted<jsid> id(cx, NameToId(name));
-        if (!obj->getGeneric(cx, id, vp))
+        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
             return false;
     } else {
         Rooted<JSObject*> normalized(cx, obj);
@@ -411,6 +405,7 @@ inline bool
 NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 {
     RootedObject obj(cx, cx->stack.currentScriptedScopeChain());
+    RootedPropertyName name(cx, cx->stack.currentScript()->getName(pc));
 
     /*
      * Skip along the scope chain to the enclosing global object. This is
@@ -421,29 +416,44 @@ NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
      * the actual behavior even if the id could be found on the scope chain
      * before the global object.
      */
-    if (js_CodeSpec[*pc].format & JOF_GNAME)
+    if (IsGlobalOp(JSOp(*pc)))
         obj = &obj->global();
 
-    PropertyCacheEntry *entry;
-    RootedObject obj2(cx);
-    RootedPropertyName name(cx);
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.get(), obj2.get(), entry, name.get());
-    if (!name) {
-        AssertValidPropertyCacheHit(cx, obj, obj2, entry);
-        if (!NativeGet(cx, obj, obj2, entry->prop, 0, vp))
-            return false;
-        return true;
-    }
-
     RootedShape shape(cx);
-    if (!FindPropertyHelper(cx, name, true, obj, &obj, &obj2, &shape))
+    RootedObject scope(cx), pobj(cx);
+    if (!LookupName(cx, name, obj, &scope, &pobj, &shape))
         return false;
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, obj, obj2, name, shape, vp);
-    return FetchName<false>(cx, obj, obj2, name, shape, vp);
+        return FetchName<true>(cx, scope, pobj, name, shape, vp);
+    return FetchName<false>(cx, scope, pobj, name, shape, vp);
+}
+
+inline bool
+SetNameOperation(JSContext *cx, jsbytecode *pc, HandleObject scope, HandleValue val)
+{
+    JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
+    JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
+
+    JSScript *script = cx->fp()->script();
+    bool strict = script->strictModeCode;
+    RootedPropertyName name(cx, script->getName(pc));
+    RootedValue valCopy(cx, val);
+
+    /*
+     * In strict-mode, we need to trigger an error when trying to assign to an
+     * undeclared global variable. To do this, we call SetPropertyHelper
+     * directly and pass DNP_UNQUALIFIED.
+     */
+    if (scope->isGlobal()) {
+        JS_ASSERT(!scope->getOps()->setProperty);
+        RootedId id(cx, NameToId(name));
+        return baseops::SetPropertyHelper(cx, scope, scope, id, DNP_UNQUALIFIED, &valCopy, strict);
+    }
+
+    return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);
 }
 
 inline bool
@@ -454,14 +464,14 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
     RootedShape prop(cx);
     RootedObject obj2(cx);
-    if (!varobj->lookupProperty(cx, dn, &obj2, &prop))
+    if (!JSObject::lookupProperty(cx, varobj, dn, &obj2, &prop))
         return false;
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->isGlobal())) {
         RootedValue value(cx, UndefinedValue());
-        if (!varobj->defineProperty(cx, dn, value, JS_PropertyStub,
-                                    JS_StrictPropertyStub, attrs)) {
+        if (!JSObject::defineProperty(cx, varobj, dn, value, JS_PropertyStub,
+                                      JS_StrictPropertyStub, attrs)) {
             return false;
         }
     } else {
@@ -470,7 +480,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
          * see a redeclaration that's |const|, we consider it a conflict.
          */
         unsigned oldAttrs;
-        if (!varobj->getPropertyAttributes(cx, dn, &oldAttrs))
+        if (!JSObject::getPropertyAttributes(cx, varobj, dn, &oldAttrs))
             return false;
         if (attrs & JSPROP_READONLY) {
             JSAutoByteString bytes;
@@ -687,7 +697,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 if (obj->asArguments().maybeGetElement(index, res))
                     break;
             }
-            if (!obj->getElement(cx, index, res))
+            if (!JSObject::getElement(cx, obj, obj, index, res))
                 return false;
         } while(0);
     } else {
@@ -705,7 +715,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
         SpecialId special;
         res.set(rref);
         if (ValueIsSpecial(obj, res, &special, cx)) {
-            if (!obj->getSpecial(cx, obj, special, res))
+            if (!JSObject::getSpecial(cx, obj, obj, special, res))
                 return false;
         } else {
             JSAtom *name = ToAtom(cx, res);
@@ -713,10 +723,10 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                 return false;
 
             if (name->isIndex(&index)) {
-                if (!obj->getElement(cx, index, res))
+                if (!JSObject::getElement(cx, obj, obj, index, res))
                     return false;
             } else {
-                if (!obj->getProperty(cx, name->asPropertyName(), res))
+                if (!JSObject::getProperty(cx, obj, obj, name->asPropertyName(), res))
                     return false;
             }
         }
@@ -809,7 +819,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
     } while (0);
 
     RootedValue tmp(cx, value);
-    return obj->setGeneric(cx, obj, id, &tmp, strict);
+    return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
 }
 
 static JS_ALWAYS_INLINE JSString *

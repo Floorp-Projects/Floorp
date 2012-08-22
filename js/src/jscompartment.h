@@ -245,6 +245,7 @@ struct JSCompartment
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;
+    JSCompartment                *gcNextCompartment;
 
     bool                         hold;
     bool                         isSystemCompartment;

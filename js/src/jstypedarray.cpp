@@ -340,7 +340,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
     if (!delegate)
         return false;
 
-    JSBool delegateResult = delegate->lookupGeneric(cx, id, objp, propp);
+    JSBool delegateResult = JSObject::lookupGeneric(cx, delegate, id, objp, propp);
 
     /* If false, there was an error, so propagate it.
      * Otherwise, if propp is non-null, the property
@@ -356,14 +356,14 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
         return true;
     }
 
-    JSObject *proto = obj->getProto();
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         objp.set(NULL);
         propp.set(NULL);
         return true;
     }
 
-    return proto->lookupGeneric(cx, id, objp, propp);
+    return JSObject::lookupGeneric(cx, proto, id, objp, propp);
 }
 
 JSBool
@@ -388,7 +388,7 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
      * was found. Otherwise it was not
      * found so look in the prototype chain.
      */
-    if (!delegate->lookupElement(cx, index, objp, propp))
+    if (!JSObject::lookupElement(cx, delegate, index, objp, propp))
         return false;
 
     if (propp) {
@@ -397,8 +397,9 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
         return true;
     }
 
-    if (JSObject *proto = obj->getProto())
-        return proto->lookupElement(cx, index, objp, propp);
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::lookupElement(cx, proto, index, objp, propp);
 
     objp.set(NULL);
     propp.set(NULL);
@@ -508,7 +509,7 @@ ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, Hand
     RootedObject delegate(cx, ArrayBufferDelegate(cx, buffer));
     if (!delegate)
         return false;
-    return delegate->getElementIfPresent(cx, receiver, index, vp, present);
+    return JSObject::getElementIfPresent(cx, delegate, receiver, index, vp, present);
 }
 
 JSBool
@@ -723,14 +724,14 @@ TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject tarray, HandleId id,
         return true;
     }
 
-    JSObject *proto = tarray->getProto();
+    RootedObject proto(cx, tarray->getProto());
     if (!proto) {
         objp.set(NULL);
         propp.set(NULL);
         return true;
     }
 
-    return proto->lookupGeneric(cx, id, objp, propp);
+    return JSObject::lookupGeneric(cx, proto, id, objp, propp);
 }
 
 JSBool
@@ -753,8 +754,9 @@ TypedArray::obj_lookupElement(JSContext *cx, HandleObject tarray, uint32_t index
         return true;
     }
 
-    if (JSObject *proto = tarray->getProto())
-        return proto->lookupElement(cx, index, objp, propp);
+    RootedObject proto(cx, tarray->getProto());
+    if (proto)
+        return JSObject::lookupElement(cx, proto, index, objp, propp);
 
     objp.set(NULL);
     propp.set(NULL);
@@ -932,13 +934,13 @@ class TypedArrayTemplate
     obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
                     MutableHandleValue vp)
     {
-        JSObject *proto = obj->getProto();
+        RootedObject proto(cx, obj->getProto());
         if (!proto) {
             vp.setUndefined();
             return true;
         }
 
-        return proto->getProperty(cx, receiver, name, vp);
+        return JSObject::getProperty(cx, proto, receiver, name, vp);
     }
 
     static JSBool
@@ -952,26 +954,26 @@ class TypedArrayTemplate
             return true;
         }
 
-        JSObject *proto = tarray->getProto();
+        RootedObject proto(cx, tarray->getProto());
         if (!proto) {
             vp.setUndefined();
             return true;
         }
 
-        return proto->getElement(cx, receiver, index, vp);
+        return JSObject::getElement(cx, proto, receiver, index, vp);
     }
 
     static JSBool
     obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid,
                    MutableHandleValue vp)
     {
-        JSObject *proto = obj->getProto();
+        RootedObject proto(cx, obj->getProto());
         if (!proto) {
             vp.setUndefined();
             return true;
         }
 
-        return proto->getSpecial(cx, receiver, sid, vp);
+        return JSObject::getSpecial(cx, proto, receiver, sid, vp);
     }
 
     static JSBool
@@ -1013,13 +1015,13 @@ class TypedArrayTemplate
             return true;
         }
 
-        JSObject *proto = tarray->getProto();
+        RootedObject proto(cx, tarray->getProto());
         if (!proto) {
             vp.setUndefined();
             return true;
         }
 
-        return proto->getElementIfPresent(cx, receiver, index, vp, present);
+        return JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present);
     }
 
     static bool
@@ -1256,7 +1258,7 @@ class TypedArrayTemplate
             obj->setType(type);
         } else if (cx->typeInferenceEnabled()) {
             if (len * sizeof(NativeType) >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH) {
-                if (!obj->setSingletonType(cx))
+                if (!JSObject::setSingletonType(cx, obj))
                     return NULL;
             } else {
                 jsbytecode *pc;
@@ -1600,7 +1602,7 @@ class TypedArrayTemplate
                 return false;
         } else {
             uint32_t len;
-            if (!js_GetLengthProperty(cx, arg0, &len))
+            if (!GetLengthProperty(cx, arg0, &len))
                 return false;
 
             // avoid overflow; we know that offset <= length
@@ -1737,7 +1739,7 @@ class TypedArrayTemplate
     fromArray(JSContext *cx, HandleObject other)
     {
         uint32_t len;
-        if (!js_GetLengthProperty(cx, other, &len))
+        if (!GetLengthProperty(cx, other, &len))
             return NULL;
 
         RootedObject bufobj(cx, createBufferWithSizeAndCount(cx, len));
@@ -1851,7 +1853,7 @@ class TypedArrayTemplate
             RootedValue v(cx);
 
             for (unsigned i = 0; i < len; ++i) {
-                if (!ar->getElement(cx, i, &v))
+                if (!JSObject::getElement(cx, ar, ar, i, &v))
                     return false;
                 *dest++ = nativeFromValue(cx, v);
             }
@@ -3038,12 +3040,14 @@ InitTypedArrayClass(JSContext *cx)
 
     RootedValue bytesValue(cx, Int32Value(ArrayType::BYTES_PER_ELEMENT));
 
-    if (!ctor->defineProperty(cx, cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
-                              JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
-                               JS_PropertyStub, JS_StrictPropertyStub,
-                               JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, ctor,
+                                  cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !JSObject::defineProperty(cx, proto,
+                                  cx->runtime->atomState.BYTES_PER_ELEMENTAtom, bytesValue,
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return NULL;
     }

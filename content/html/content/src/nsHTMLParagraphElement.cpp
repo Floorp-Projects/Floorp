@@ -39,7 +39,7 @@ public:
   // nsIDOMHTMLParagraphElement
   NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -88,7 +88,7 @@ NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
 
 
 bool
-nsHTMLParagraphElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLParagraphElement::ParseAttribute(int32_t aNamespaceID,
                                        nsIAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsAttrValue& aResult)

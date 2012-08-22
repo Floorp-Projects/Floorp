@@ -42,7 +42,7 @@ xptiInterfaceInfoManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 }
 
 // static
-PRInt64
+int64_t
 xptiInterfaceInfoManager::GetXPTIWorkingSetSize()
 {
     size_t n = XPT_SizeOfArena(gXPTIStructArena, XPTMallocSizeOf);
@@ -101,7 +101,7 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 }
 
 void
-xptiInterfaceInfoManager::RegisterBuffer(char *buf, PRUint32 length)
+xptiInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
 {
     XPTState *state = XPT_NewXDRState(XPT_DECODE, buf, length);
     if (!state)
@@ -132,13 +132,13 @@ xptiInterfaceInfoManager::RegisterXPTHeader(XPTHeader* aHeader)
     xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    for(PRUint16 k = 0; k < aHeader->num_interfaces; k++)
+    for(uint16_t k = 0; k < aHeader->num_interfaces; k++)
         VerifyAndAddEntryIfNew(aHeader->interface_directory + k, k, typelib);
 }
 
 void
 xptiInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* iface,
-                                                 PRUint16 idx,
+                                                 uint16_t idx,
                                                  xptiTypelibGuts* typelib)
 {
     if (!iface->interface_descriptor)
@@ -299,7 +299,7 @@ struct ArrayAndPrefix
 {
     nsISupportsArray* array;
     const char*       prefix;
-    PRUint32          length;
+    uint32_t          length;
 };
 
 static PLDHashOperator
@@ -388,7 +388,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnu
 
     nsCOMArray<nsISupports> managerArray(mAdditionalManagers);
     /* Resolve all the weak references in the array. */
-    for(PRInt32 i = managerArray.Count(); i--; ) {
+    for(int32_t i = managerArray.Count(); i--; ) {
         nsISupports *raw = managerArray.ObjectAt(i);
         if (!raw)
             return NS_ERROR_FAILURE;

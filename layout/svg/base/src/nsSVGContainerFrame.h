@@ -50,7 +50,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
-  virtual gfxMatrix GetCanvasTM(PRUint32 aFor) {
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor) {
     return gfxMatrix();
   }
 
@@ -74,7 +74,7 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsSVGContainerFrameBase::IsFrameOfType(
             aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
@@ -131,9 +131,9 @@ public:
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   virtual void ReflowSVG();
-  virtual void NotifySVGChanged(PRUint32 aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags);
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags);
+                                      uint32_t aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
 };
 

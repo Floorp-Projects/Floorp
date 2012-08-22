@@ -28,7 +28,7 @@ namespace {
 
 IDBTransaction* gCurrentTransaction = nullptr;
 
-const PRUint32 kProgressHandlerGranularity = 1000;
+const uint32_t kProgressHandlerGranularity = 1000;
 
 class TransactionPoolEventTarget : public StackBasedEventTarget
 {
@@ -543,7 +543,7 @@ AsyncConnectionHelper::ConvertCloneReadInfosToArray(
 
   nsresult rv = ConvertCloneReadInfosToArrayInternal(aCx, aReadInfos, aResult);
 
-  for (PRUint32 index = 0; index < aReadInfos.Length(); index++) {
+  for (uint32_t index = 0; index < aReadInfos.Length(); index++) {
     aReadInfos[index].mCloneBuffer.clear();
   }
   aReadInfos.Clear();
@@ -575,7 +575,7 @@ StackBasedEventTarget::QueryInterface(REFNSIID aIID,
 
 NS_IMETHODIMP
 MainThreadEventTarget::Dispatch(nsIRunnable* aRunnable,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
   NS_ASSERTION(aRunnable, "Null pointer!");
 
@@ -592,7 +592,7 @@ MainThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 
 NS_IMETHODIMP
 TransactionPoolEventTarget::Dispatch(nsIRunnable* aRunnable,
-                                     PRUint32 aFlags)
+                                     uint32_t aFlags)
 {
   NS_ASSERTION(aRunnable, "Null pointer!");
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "Unsupported!");
@@ -615,7 +615,7 @@ TransactionPoolEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 
 NS_IMETHODIMP
 NoDispatchEventTarget::Dispatch(nsIRunnable* aRunnable,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
   return NS_OK;

@@ -95,9 +95,9 @@ interface nsIXULWindow : nsISupports
   /**
    * contextFlags are from nsIWindowCreator2
    */
-  attribute PRUint32 contextFlags;
+  attribute uint32_t contextFlags;
 
-  attribute PRUint32 chromeFlags;
+  attribute uint32_t chromeFlags;
 
   /**
    * Begin assuming |chromeFlags| don't change hereafter, and assert
@@ -110,7 +110,7 @@ interface nsIXULWindow : nsISupports
    * @param aChromeFlags see nsIWebBrowserChrome
    * @return the newly minted window
    */
-  nsIXULWindow createNewWindow(in PRInt32 aChromeFlags);
+  nsIXULWindow createNewWindow(in int32_t aChromeFlags);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 

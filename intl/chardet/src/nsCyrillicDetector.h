@@ -27,7 +27,7 @@
 #define NS_UK_STRING_PROBDETECTOR_CID \
 { 0x2002f784, 0x3960, 0x11d3, { 0xb3, 0xc3, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
-static const PRUint8 *gCyrillicCls[5] =
+static const uint8_t *gCyrillicCls[5] =
 {
    CP1251Map,
    KOI8Map,
@@ -57,29 +57,29 @@ static const char * gUkrainian[5] = {
 class nsCyrillicDetector 
 {
   public:
-    nsCyrillicDetector(PRUint8 aItems, 
-                      const PRUint8 ** aCyrillicClass, 
+    nsCyrillicDetector(uint8_t aItems, 
+                      const uint8_t ** aCyrillicClass, 
                       const char **aCharsets) {
       mItems = aItems;
       mCyrillicClass = aCyrillicClass;
       mCharsets = aCharsets;
-      for(PRUintn i=0;i<mItems;i++)
+      for(unsigned i=0;i<mItems;i++)
         mProb[i] = mLastCls[i] =0;
       mDone = false;
     }
     virtual ~nsCyrillicDetector() {}
-    virtual void HandleData(const char* aBuf, PRUint32 aLen);
+    virtual void HandleData(const char* aBuf, uint32_t aLen);
     virtual void   DataEnd();
   protected:
     virtual void Report(const char* aCharset) = 0;
     bool    mDone;
 
   private:
-    PRUint8  mItems;
-    const PRUint8 ** mCyrillicClass;
+    uint8_t  mItems;
+    const uint8_t ** mCyrillicClass;
     const char** mCharsets;
-    PRUint32 mProb[NUM_CYR_CHARSET];
-    PRUint8 mLastCls[NUM_CYR_CHARSET];
+    uint32_t mProb[NUM_CYR_CHARSET];
+    uint8_t mLastCls[NUM_CYR_CHARSET];
 };
 
 class nsCyrXPCOMDetector :  
@@ -89,12 +89,12 @@ class nsCyrXPCOMDetector :
   public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    nsCyrXPCOMDetector(PRUint8 aItems, 
-                      const PRUint8 ** aCyrillicClass, 
+    nsCyrXPCOMDetector(uint8_t aItems, 
+                      const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
     virtual ~nsCyrXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
-    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, bool *oDontFeedMe);
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe);
     NS_IMETHOD Done();
   protected:
     virtual void Report(const char* aCharset);
@@ -109,11 +109,11 @@ class nsCyrXPCOMStringDetector :
   public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    nsCyrXPCOMStringDetector(PRUint8 aItems, 
-                      const PRUint8 ** aCyrillicClass, 
+    nsCyrXPCOMStringDetector(uint8_t aItems, 
+                      const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
     virtual ~nsCyrXPCOMStringDetector();
-    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
                      const char** oCharset, nsDetectionConfident &oConf);
   protected:
     virtual void Report(const char* aCharset);

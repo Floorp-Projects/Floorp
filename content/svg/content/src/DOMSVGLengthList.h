@@ -84,7 +84,7 @@ public:
    * This will normally be the same as InternalList().Length(), except if we've
    * hit OOM in which case our length will be zero.
    */
-  PRUint32 Length() const {
+  uint32_t Length() const {
     NS_ABORT_IF_FALSE(mItems.Length() == 0 ||
                       mItems.Length() == InternalList().Length(),
                       "DOM wrapper's list length is out of sync");
@@ -92,7 +92,7 @@ public:
   }
 
   /// Called to notify us to syncronize our length and detach excess items.
-  void InternalListLengthWillChange(PRUint32 aNewLength);
+  void InternalListLengthWillChange(uint32_t aNewLength);
 
 private:
 
@@ -100,11 +100,11 @@ private:
     return mAList->mElement;
   }
 
-  PRUint8 AttrEnum() const {
+  uint8_t AttrEnum() const {
     return mAList->mAttrEnum;
   }
 
-  PRUint8 Axis() const {
+  uint8_t Axis() const {
     return mAList->mAxis;
   }
 
@@ -126,10 +126,10 @@ private:
   SVGLengthList& InternalList() const;
 
   /// Creates a DOMSVGLength for aIndex, if it doesn't already exist.
-  void EnsureItemAt(PRUint32 aIndex);
+  void EnsureItemAt(uint32_t aIndex);
 
-  void MaybeInsertNullInAnimValListAt(PRUint32 aIndex);
-  void MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex);
+  void MaybeInsertNullInAnimValListAt(uint32_t aIndex);
+  void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex);
 
   // Weak refs to our DOMSVGLength items. The items are friends and take care
   // of clearing our pointer to them when they die.

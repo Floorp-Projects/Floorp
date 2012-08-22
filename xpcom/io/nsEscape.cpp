@@ -73,7 +73,7 @@ static char* nsEscapeCount(
 
     // fail if we need more than 4GB
     // size_t is likely to be long unsigned int but nsMemory::Alloc(size_t)
-    // calls NS_Alloc_P(size_t) which calls PR_Malloc(PRUint32), so there is
+    // calls NS_Alloc_P(size_t) which calls PR_Malloc(uint32_t), so there is
     // no chance to allocate more than 4GB using nsMemory::Alloc()
     if (dstSize > PR_UINT32_MAX)
         return 0;
@@ -141,7 +141,7 @@ char* nsUnescape(char * str)
 }
 
 //----------------------------------------------------------------------------------------
-PRInt32 nsUnescapeCount(char * str)
+int32_t nsUnescapeCount(char * str)
 //----------------------------------------------------------------------------------------
 {
     register char *src = str;
@@ -192,7 +192,7 @@ nsEscapeHTML(const char * string)
 {
     char *rv = nullptr;
     /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
-    PRUint32 len = PL_strlen(string);
+    uint32_t len = PL_strlen(string);
     if (len >= (PR_UINT32_MAX / 6))
       return nullptr;
 
@@ -254,7 +254,7 @@ nsEscapeHTML(const char * string)
 }
 
 PRUnichar *
-nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
+nsEscapeHTML2(const PRUnichar *aSourceBuffer, int32_t aSourceBufferLen)
 {
   // Calculate the length, if the caller didn't.
   if (aSourceBufferLen < 0) {
@@ -262,7 +262,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
   }
 
   /* XXX Hardcoded max entity len. */
-  if (PRUint32(aSourceBufferLen) >=
+  if (uint32_t(aSourceBufferLen) >=
       ((PR_UINT32_MAX - sizeof(PRUnichar)) / (6 * sizeof(PRUnichar))) )
     return nullptr;
 
@@ -271,7 +271,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
   PRUnichar *ptr = resultBuffer;
 
   if (resultBuffer) {
-    PRInt32 i;
+    int32_t i;
 
     for(i = 0; i < aSourceBufferLen; i++) {
       if(aSourceBuffer[i] == '<') {
@@ -360,8 +360,8 @@ const int EscapeChars[256] =
 */
 
 bool NS_EscapeURL(const char *part,
-                           PRInt32 partLen,
-                           PRUint32 flags,
+                           int32_t partLen,
+                           uint32_t flags,
                            nsACString &result)
 {
     if (!part) {
@@ -445,7 +445,7 @@ bool NS_EscapeURL(const char *part,
 
 #define ISHEX(c) memchr(hexChars, c, sizeof(hexChars)-1)
 
-bool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &result)
+bool NS_UnescapeURL(const char *str, int32_t len, uint32_t flags, nsACString &result)
 {
     if (!str) {
         NS_NOTREACHED("null pointer");

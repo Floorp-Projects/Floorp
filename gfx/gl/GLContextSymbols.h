@@ -145,6 +145,8 @@ struct GLContextSymbols
     PFNGLGETVERTEXATTRIBFVPROC fGetVertexAttribfv;
     typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBIVPROC) (GLuint, GLenum, GLint*);
     PFNGLGETVERTEXATTRIBIVPROC fGetVertexAttribiv;
+    typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBPOINTERVPROC) (GLuint, GLenum, GLvoid**);
+    PFNGLGETVERTEXATTRIBPOINTERVPROC fGetVertexAttribPointerv;
     typedef void (GLAPIENTRY * PFNGLHINTPROC) (GLenum target, GLenum mode);
     PFNGLHINTPROC fHint;
     typedef realGLboolean (GLAPIENTRY * PFNGLISBUFFERPROC) (GLuint buffer);

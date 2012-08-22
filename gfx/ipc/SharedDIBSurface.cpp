@@ -15,7 +15,7 @@ static const cairo_user_data_key_t SHAREDDIB_KEY = {0};
 static const long kBytesPerPixel = 4;
 
 bool
-SharedDIBSurface::Create(HDC adc, PRUint32 aWidth, PRUint32 aHeight,
+SharedDIBSurface::Create(HDC adc, uint32_t aWidth, uint32_t aHeight,
                          bool aTransparent)
 {
   nsresult rv = mSharedDIB.Create(adc, aWidth, aHeight, aTransparent);
@@ -27,7 +27,7 @@ SharedDIBSurface::Create(HDC adc, PRUint32 aWidth, PRUint32 aHeight,
 }
 
 bool
-SharedDIBSurface::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight,
+SharedDIBSurface::Attach(Handle aHandle, uint32_t aWidth, uint32_t aHeight,
                          bool aTransparent)
 {
   nsresult rv = mSharedDIB.Attach(aHandle, aWidth, aHeight, aTransparent);
@@ -39,7 +39,7 @@ SharedDIBSurface::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight,
 }
 
 void
-SharedDIBSurface::InitSurface(PRUint32 aWidth, PRUint32 aHeight,
+SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
                               bool aTransparent)
 {
   long stride = long(aWidth * kBytesPerPixel);

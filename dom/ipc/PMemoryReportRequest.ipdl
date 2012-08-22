@@ -11,9 +11,9 @@ namespace dom {
 struct MemoryReport {
   nsCString process;
   nsCString path;
-  PRInt32 kind;
-  PRInt32 units;
-  PRInt64 amount;
+  int32_t kind;
+  int32_t units;
+  int64_t amount;
   nsCString desc;
 };
 

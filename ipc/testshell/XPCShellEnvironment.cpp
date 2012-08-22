@@ -120,7 +120,7 @@ ScriptErrorReporter(JSContext *cx,
         if (cc) {
             nsAXPCNativeCallContext *prev = cc;
             while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
-                PRUint16 lang;
+                uint16_t lang;
                 if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
                     lang == nsAXPCNativeCallContext::LANG_JS) {
                     return;
@@ -395,7 +395,7 @@ GCZeal(JSContext *cx,
   if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
     return JS_FALSE;
 
-  JS_SetGCZeal(cx, PRUint8(zeal), JS_DEFAULT_ZEAL_FREQ);
+  JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
   return JS_TRUE;
 }
 #endif
@@ -676,7 +676,7 @@ FullTrustSecMan::CanGetService(JSContext * aJSContext,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::CanAccess(PRUint32 aAction,
+FullTrustSecMan::CanAccess(uint32_t aAction,
                            nsAXPCNativeCallContext *aCallContext,
                            JSContext * aJSContext,
                            JSObject * aJSObject,
@@ -693,7 +693,7 @@ FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
                                      JSObject * aJSObject,
                                      const char *aClassName,
                                      jsid aProperty,
-                                     PRUint32 aAction)
+                                     uint32_t aAction)
 {
     return NS_OK;
 }
@@ -708,7 +708,7 @@ FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx,
 NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
                                            nsIURI *uri,
-                                           PRUint32 flags)
+                                           uint32_t flags)
 {
     return NS_OK;
 }
@@ -716,7 +716,7 @@ FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
 NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
                                               const nsACString & uri,
-                                              PRUint32 flags)
+                                              uint32_t flags)
 {
     return NS_OK;
 }
@@ -781,7 +781,7 @@ FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI,
 
 NS_IMETHODIMP
 FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI,
-                                         PRUint32 aAppId,
+                                         uint32_t aAppId,
                                          bool aInMozBrowser,
                                          nsIPrincipal **_retval)
 {
@@ -799,7 +799,7 @@ FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI,
 NS_IMETHODIMP
 FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
                                    const char *capability,
-                                   PRInt16 *_retval)
+                                   int16_t *_retval)
 {
     *_retval = nsIPrincipal::ENABLE_GRANTED;
     return NS_OK;
@@ -889,7 +889,7 @@ FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId,
+FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, uint32_t aAppId,
                                    bool aInMozBrowser,
                                    nsACString& aExtendedOrigin)
 {

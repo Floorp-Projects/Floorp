@@ -17,10 +17,10 @@ namespace mozilla {
 namespace net {
 
 ASpdySession *
-ASpdySession::NewSpdySession(PRUint32 version,
+ASpdySession::NewSpdySession(uint32_t version,
                              nsAHttpTransaction *aTransaction,
                              nsISocketTransport *aTransport,
-                             PRInt32 aPriority)
+                             int32_t aPriority)
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
@@ -54,7 +54,7 @@ SpdyInformation::SpdyInformation()
 }
 
 bool
-SpdyInformation::ProtocolEnabled(PRUint32 index)
+SpdyInformation::ProtocolEnabled(uint32_t index)
 {
   if (index == 0)
     return gHttpHandler->IsSpdyV3Enabled();
@@ -68,7 +68,7 @@ SpdyInformation::ProtocolEnabled(PRUint32 index)
 
 nsresult
 SpdyInformation::GetNPNVersionIndex(const nsACString &npnString,
-                                    PRUint8 *result)
+                                    uint8_t *result)
 {
   if (npnString.IsEmpty())
     return NS_ERROR_FAILURE;
@@ -85,7 +85,7 @@ SpdyInformation::GetNPNVersionIndex(const nsACString &npnString,
 
 nsresult
 SpdyInformation::GetAlternateProtocolVersionIndex(const char *val,
-                                                  PRUint8 *result)
+                                                  uint8_t *result)
 {
   if (!val || !val[0])
     return NS_ERROR_FAILURE;

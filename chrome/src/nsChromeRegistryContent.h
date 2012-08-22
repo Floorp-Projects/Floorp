@@ -49,7 +49,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
     nsCOMPtr<nsIURI> contentBaseURI;
     nsCOMPtr<nsIURI> localeBaseURI;
     nsCOMPtr<nsIURI> skinBaseURI;
-    PRUint32         flags;
+    uint32_t         flags;
   };
   
   void RegisterPackage(const ChromePackage& aPackage);
@@ -60,7 +60,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
   nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                      const nsCString& aProvider,
                      const nsCString& aPath) MOZ_OVERRIDE;
-  nsresult GetFlagsFromPackage(const nsCString& aPackage, PRUint32* aFlags) MOZ_OVERRIDE;
+  nsresult GetFlagsFromPackage(const nsCString& aPackage, uint32_t* aFlags) MOZ_OVERRIDE;
 
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
   nsCString mLocale;

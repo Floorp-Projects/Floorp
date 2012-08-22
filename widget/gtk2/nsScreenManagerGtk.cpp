@@ -202,8 +202,8 @@ nsScreenManagerGtk :: Init()
 // The coordinates are in pixels (not app units) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
-                                      PRInt32 aWidth, PRInt32 aHeight,
+nsScreenManagerGtk :: ScreenForRect ( int32_t aX, int32_t aY,
+                                      int32_t aWidth, int32_t aHeight,
                                       nsIScreen **aOutScreen )
 {
   nsresult rv;
@@ -213,23 +213,23 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
     return rv;
   }
   // which screen ( index from zero ) should we return?
-  PRUint32 which = 0;
+  uint32_t which = 0;
   // Optimize for the common case.  If the number of screens is only
   // one then this will fall through with which == 0 and will get the
   // primary screen.
   if (mCachedScreenArray.Count() > 1) {
     // walk the list of screens and find the one that has the most
     // surface area.
-    PRUint32 area = 0;
+    uint32_t area = 0;
     nsIntRect windowRect(aX, aY, aWidth, aHeight);
-    for (PRInt32 i = 0, i_end = mCachedScreenArray.Count(); i < i_end; ++i) {
-      PRInt32  x, y, width, height;
+    for (int32_t i = 0, i_end = mCachedScreenArray.Count(); i < i_end; ++i) {
+      int32_t  x, y, width, height;
       x = y = width = height = 0;
       mCachedScreenArray[i]->GetRect(&x, &y, &width, &height);
       // calculate the surface area
       nsIntRect screenRect(x, y, width, height);
       screenRect.IntersectRect(screenRect, windowRect);
-      PRUint32 tempArea = screenRect.width * screenRect.height;
+      uint32_t tempArea = screenRect.width * screenRect.height;
       if (tempArea >= area) {
         which = i;
         area = tempArea;
@@ -271,7 +271,7 @@ nsScreenManagerGtk :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen)
 // Returns how many physical screens are available.
 //
 NS_IMETHODIMP
-nsScreenManagerGtk :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+nsScreenManagerGtk :: GetNumberOfScreens(uint32_t *aNumberOfScreens)
 {
   nsresult rv;
   rv = EnsureInit();

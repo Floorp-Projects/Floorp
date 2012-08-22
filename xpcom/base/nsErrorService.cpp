@@ -25,7 +25,7 @@ nsInt2StrHashtable::nsInt2StrHashtable()
 }
 
 nsresult
-nsInt2StrHashtable::Put(PRUint32 key, const char* aData)
+nsInt2StrHashtable::Put(uint32_t key, const char* aData)
 {
   char* value = NS_strdup(aData);
   if (value == nullptr)
@@ -38,7 +38,7 @@ nsInt2StrHashtable::Put(PRUint32 key, const char* aData)
 }
 
 char* 
-nsInt2StrHashtable::Get(PRUint32 key)
+nsInt2StrHashtable::Get(uint32_t key)
 {
   nsPRUint32Key k(key);
   const char* value = (const char*)mHashtable.Get(&k);
@@ -48,7 +48,7 @@ nsInt2StrHashtable::Get(PRUint32 key)
 }
 
 nsresult
-nsInt2StrHashtable::Remove(PRUint32 key)
+nsInt2StrHashtable::Remove(uint32_t key)
 {
   nsPRUint32Key k(key);
   char* oldValue = (char*)mHashtable.Remove(&k);
@@ -75,19 +75,19 @@ nsErrorService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePt
 }
 
 NS_IMETHODIMP
-nsErrorService::RegisterErrorStringBundle(PRInt16 errorModule, const char *stringBundleURL)
+nsErrorService::RegisterErrorStringBundle(int16_t errorModule, const char *stringBundleURL)
 {
     return mErrorStringBundleURLMap.Put(errorModule, stringBundleURL);
 }
 
 NS_IMETHODIMP
-nsErrorService::UnregisterErrorStringBundle(PRInt16 errorModule)
+nsErrorService::UnregisterErrorStringBundle(int16_t errorModule)
 {
     return mErrorStringBundleURLMap.Remove(errorModule);
 }
 
 NS_IMETHODIMP
-nsErrorService::GetErrorStringBundle(PRInt16 errorModule, char **result)
+nsErrorService::GetErrorStringBundle(int16_t errorModule, char **result)
 {
     char* value = mErrorStringBundleURLMap.Get(errorModule);
     if (value == nullptr)
@@ -99,20 +99,20 @@ nsErrorService::GetErrorStringBundle(PRInt16 errorModule, char **result)
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundleKey(nsresult error, const char *stringBundleKey)
 {
-    return mErrorStringBundleKeyMap.Put(static_cast<PRUint32>(error),
+    return mErrorStringBundleKeyMap.Put(static_cast<uint32_t>(error),
                                         stringBundleKey);
 }
 
 NS_IMETHODIMP
 nsErrorService::UnregisterErrorStringBundleKey(nsresult error)
 {
-    return mErrorStringBundleKeyMap.Remove(static_cast<PRUint32>(error));
+    return mErrorStringBundleKeyMap.Remove(static_cast<uint32_t>(error));
 }
 
 NS_IMETHODIMP
 nsErrorService::GetErrorStringBundleKey(nsresult error, char **result)
 {
-    char* value = mErrorStringBundleKeyMap.Get(static_cast<PRUint32>(error));
+    char* value = mErrorStringBundleKeyMap.Get(static_cast<uint32_t>(error));
     if (value == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     *result = value;
