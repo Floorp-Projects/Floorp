@@ -268,15 +268,6 @@ JSShortString::new_(JSContext *cx)
 }
 
 JS_ALWAYS_INLINE void
-JSShortString::initAtOffsetInBuffer(const jschar *chars, size_t length)
-{
-    JS_ASSERT(lengthFits(length + (chars - d.inlineStorage)));
-    JS_ASSERT(chars >= d.inlineStorage && chars < d.inlineStorage + MAX_SHORT_LENGTH);
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-    d.u1.chars = chars;
-}
-
-JS_ALWAYS_INLINE void
 JSExternalString::init(const jschar *chars, size_t length, const JSStringFinalizer *fin)
 {
     JS_ASSERT(fin);
@@ -430,10 +421,6 @@ JSFlatString::finalize(js::FreeOp *fop)
 {
     JS_ASSERT(!isShort());
 
-    /*
-     * This check depends on the fact that 'chars' is only initialized to the
-     * beginning of inlineStorage. E.g., this is not the case for short strings.
-     */
     if (chars() != d.inlineStorage)
         fop->free_(const_cast<jschar *>(chars()));
 }
@@ -441,17 +428,20 @@ JSFlatString::finalize(js::FreeOp *fop)
 inline void
 JSShortString::finalize(js::FreeOp *fop)
 {
-    JS_ASSERT(JSString::isShort());
+    JS_ASSERT(isShort());
+
+    if (chars() != d.inlineStorage)
+        fop->free_(const_cast<jschar *>(chars()));
 }
 
 inline void
 JSAtom::finalize(js::FreeOp *fop)
 {
     JS_ASSERT(JSString::isAtom());
-    if (getAllocKind() == js::gc::FINALIZE_STRING)
-        JSFlatString::finalize(fop);
-    else
-        JS_ASSERT(getAllocKind() == js::gc::FINALIZE_SHORT_STRING);
+    JS_ASSERT(JSString::isFlat());
+
+    if (chars() != d.inlineStorage)
+        fop->free_(const_cast<jschar *>(chars()));
 }
 
 inline void
