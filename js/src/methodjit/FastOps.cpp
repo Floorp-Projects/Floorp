@@ -387,8 +387,8 @@ mjit::Compiler::jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused)
      * special equality operator on either object, if that passes then
      * this is a pointer comparison.
      */
-    types::TypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
-    types::TypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
+    types::StackTypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
+    types::StackTypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
     if (!lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) &&
         !rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY)) {
         /* :TODO: Merge with jsop_relational_int? */
@@ -896,8 +896,8 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32_t slot)
 {
     restoreVarType();
 
-    types::TypeSet *types = pushedTypeSet(0);
-    JSValueType type = types ? types->getKnownTypeTag(cx) : JSVAL_TYPE_UNKNOWN;
+    types::StackTypeSet *types = pushedTypeSet(0);
+    JSValueType type = types ? types->getKnownTypeTag() : JSVAL_TYPE_UNKNOWN;
 
     int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? 1 : -1;
 
@@ -959,8 +959,8 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
 {
     restoreVarType();
 
-    types::TypeSet *types = pushedTypeSet(0);
-    JSValueType type = types ? types->getKnownTypeTag(cx) : JSVAL_TYPE_UNKNOWN;
+    types::StackTypeSet *types = pushedTypeSet(0);
+    JSValueType type = types ? types->getKnownTypeTag() : JSVAL_TYPE_UNKNOWN;
 
     int amt = (op == JSOP_ARGINC || op == JSOP_INCARG) ? 1 : -1;
 
@@ -1169,7 +1169,7 @@ mjit::Compiler::jsop_setelem_dense()
      * because in that case the slot we're overwriting was previously
      * undefined.
      */
-    types::TypeSet *types = frame.extra(obj).types;
+    types::StackTypeSet *types = frame.extra(obj).types;
     if (cx->compartment->compileBarriers() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
         Label barrierStart = stubcc.masm.label();
         stubcc.linkExitDirect(masm.jump(), barrierStart);
@@ -1538,6 +1538,9 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     FrameEntry *value = frame.peek(-1);
 
     if (!IsCacheableSetElem(obj, id, value) || monitored(PC)) {
+        if (monitored(PC) && script == outerScript)
+            monitoredBytecodes.append(PC - script->code);
+
         jsop_setelem_slow();
         return true;
     }
@@ -1545,7 +1548,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     // If the object is definitely a dense array or a typed array we can generate
     // code directly without using an inline cache.
     if (cx->typeInferenceEnabled()) {
-        types::TypeSet *types = analysis->poppedTypes(PC, 2);
+        types::StackTypeSet *types = analysis->poppedTypes(PC, 2);
 
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !types::ArrayPrototypeHasIndexedProperty(cx, outerScript)) {
@@ -1558,7 +1561,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         if ((value->mightBeType(JSVAL_TYPE_INT32) || value->mightBeType(JSVAL_TYPE_DOUBLE)) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             // Inline typed array path.
-            int atype = types->getTypedArrayType(cx);
+            int atype = types->getTypedArrayType();
             if (atype != TypedArray::TYPE_MAX) {
                 jsop_setelem_typed(atype);
                 return true;
@@ -2145,8 +2148,8 @@ mjit::Compiler::jsop_getelem()
     // If the object is definitely an arguments object, a dense array or a typed array
     // we can generate code directly without using an inline cache.
     if (cx->typeInferenceEnabled() && !id->isType(JSVAL_TYPE_STRING)) {
-        types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (types->isMagicArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
+        types::StackTypeSet *types = analysis->poppedTypes(PC, 1);
+        if (types->isMagicArguments() && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
             jsop_getelem_args();
             return true;
@@ -2165,7 +2168,7 @@ mjit::Compiler::jsop_getelem()
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             // Inline typed array path.
-            int atype = types->getTypedArrayType(cx);
+            int atype = types->getTypedArrayType();
             if (atype != TypedArray::TYPE_MAX) {
                 if (jsop_getelem_typed(atype))
                     return true;
@@ -2686,6 +2689,9 @@ mjit::Compiler::jsop_initprop()
     RootedObject baseobj(cx, frame.extra(obj).initObject);
 
     if (!baseobj || monitored(PC) || cx->compartment->compileBarriers()) {
+        if (monitored(PC) && script == outerScript)
+            monitoredBytecodes.append(PC - script->code);
+
         prepareStubCall(Uses(2));
         masm.move(ImmPtr(name), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::InitProp, REJOIN_FALLTHROUGH);

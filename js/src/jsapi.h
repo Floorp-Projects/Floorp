@@ -4096,7 +4096,10 @@ typedef enum JSGCParamKey {
     JSGC_DYNAMIC_HEAP_GROWTH = 17,
 
     /* If true, high-frequency GCs will use a longer mark slice. */
-    JSGC_DYNAMIC_MARK_SLICE = 18
+    JSGC_DYNAMIC_MARK_SLICE = 18,
+
+    /* Number of megabytes of analysis data to allocate before purging. */
+    JSGC_ANALYSIS_PURGE_TRIGGER = 19
 } JSGCParamKey;
 
 typedef enum JSGCMode {
