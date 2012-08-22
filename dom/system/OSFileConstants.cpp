@@ -74,6 +74,10 @@ Paths* gPaths = NULL;
 
 /**
  * Return the path to one of the special directories.
+ *
+ * @param aKey The key to the special directory (e.g. "TmpD", "ProfD", ...)
+ * @param aOutPath The path to the special directory. In case of error,
+ * the string is set to void.
  */
 nsresult GetPathToSpecialDir(const char *aKey, nsString& aOutPath)
 {
@@ -83,7 +87,11 @@ nsresult GetPathToSpecialDir(const char *aKey, nsString& aOutPath)
     return rv;
   }
 
-  return file->GetPath(aOutPath);
+  rv = file->GetPath(aOutPath);
+  if (NS_FAILED(rv)) {
+    aOutPath.SetIsVoid(true);
+  }
+  return rv;
 }
 
 /**
@@ -119,15 +127,11 @@ nsresult InitOSFileConstants()
     return rv;
   }
 
-  rv = GetPathToSpecialDir(NS_OS_TEMP_DIR, paths->tmpDir);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  // For other directories, ignore errors (they may be undefined on
+  // some platforms or in non-Firefox embeddings of Gecko).
 
-  rv = GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, paths->profileDir);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  GetPathToSpecialDir(NS_OS_TEMP_DIR, paths->tmpDir);
+  GetPathToSpecialDir(NS_APP_USER_PROFILE_50_DIR, paths->profileDir);
 
   gPaths = paths.forget();
   return NS_OK;
@@ -527,10 +531,15 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JSObject *aObject,
 
 /**
  * Set a property of an object from a nsString.
+ *
+ * If the nsString is void (i.e. IsVoid is true), do nothing.
  */
 bool SetStringProperty(JSContext *cx, JSObject *aObject, const char *aProperty,
                        const nsString aValue)
 {
+  if (aValue.IsVoid()) {
+    return true;
+  }
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   jsval valValue = STRING_TO_JSVAL(strValue);
   return JS_SetProperty(cx, aObject, aProperty, &valValue);
