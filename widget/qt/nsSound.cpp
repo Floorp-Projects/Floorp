@@ -7,6 +7,7 @@
 #include <QApplication>
 
 #include <string.h>
+#include <unistd.h>
 
 #include "nscore.h"
 #include "plstr.h"
