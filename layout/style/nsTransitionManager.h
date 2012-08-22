@@ -81,16 +81,6 @@ struct ElementTransitions : public mozilla::css::CommonElementAnimationData
   bool CanPerformOnCompositorThread() const;
   // Either zero or one for each CSS property:
   nsTArray<ElementPropertyTransition> mPropertyTransitions;
-
-  // This style rule overrides style data with the currently
-  // transitioning value for an element that is executing a transition.
-  // It only matches when styling with animation.  When we style without
-  // animation, we need to not use it so that we can detect any new
-  // changes; if necessary we restyle immediately afterwards with
-  // animation.
-  nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
-  // The refresh time associated with mStyleRule.
-  mozilla::TimeStamp mStyleRuleRefreshTime;
 };
 
 
