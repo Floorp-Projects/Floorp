@@ -52,7 +52,7 @@ protected:
                              const uint32_t&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
-                             const OptionalInputStreamParams& uploadStream,
+                             const IPC::InputStream&    uploadStream,
                              const bool&              uploadStreamHasHeaders,
                              const uint16_t&            priority,
                              const uint8_t&             redirectionLimit,

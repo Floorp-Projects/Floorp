@@ -12,19 +12,8 @@
 namespace mozilla {
 namespace ipc {
 
-void
-SerializeInputStream(nsIInputStream* aInputStream,
-                     InputStreamParams& aParams);
-
-void
-SerializeInputStream(nsIInputStream* aInputStream,
-                     OptionalInputStreamParams& aParams);
-
 already_AddRefed<nsIInputStream>
 DeserializeInputStream(const InputStreamParams& aParams);
-
-already_AddRefed<nsIInputStream>
-DeserializeInputStream(const OptionalInputStreamParams& aParams);
 
 } // namespace ipc
 } // namespace mozilla

@@ -12,9 +12,6 @@
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsFtpProtocolHandler.h"
 #include "mozilla/LoadContext.h"
-#include "mozilla/ipc/InputStreamUtils.h"
-
-using namespace mozilla::ipc;
 
 #undef LOG
 #define LOG(args) PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
@@ -61,7 +58,7 @@ bool
 FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
                                 const uint64_t& aStartPos,
                                 const nsCString& aEntityID,
-                                const OptionalInputStreamParams& aUploadStream,
+                                const IPC::InputStream& aUploadStream,
                                 const IPC::SerializedLoadContext& loadContext)
 {
   nsCOMPtr<nsIURI> uri(aURI);
@@ -85,7 +82,7 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
 
   mChannel = static_cast<nsFtpChannel*>(chan.get());
   
-  nsCOMPtr<nsIInputStream> upload = DeserializeInputStream(aUploadStream);
+  nsCOMPtr<nsIInputStream> upload(aUploadStream);
   if (upload) {
     // contentType and contentLength are ignored
     rv = mChannel->SetUploadStream(upload, EmptyCString(), 0);

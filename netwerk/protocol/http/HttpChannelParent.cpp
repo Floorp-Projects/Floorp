@@ -24,9 +24,6 @@
 #include "nsIRedirectChannelRegistrar.h"
 #include "mozilla/LoadContext.h"
 #include "prinit.h"
-#include "mozilla/ipc/InputStreamUtils.h"
-
-using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -111,7 +108,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const uint32_t&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
-                                 const OptionalInputStreamParams& uploadStream,
+                                 const IPC::InputStream&    uploadStream,
                                  const bool&              uploadStreamHasHeaders,
                                  const uint16_t&            priority,
                                  const uint8_t&             redirectionLimit,
@@ -175,7 +172,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
 
-  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(uploadStream);
+  nsCOMPtr<nsIInputStream> stream(uploadStream);
   if (stream) {
     httpChan->InternalSetUploadStream(stream);
     httpChan->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
