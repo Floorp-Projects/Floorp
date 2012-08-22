@@ -1658,8 +1658,8 @@ var gBrowserInit = {
                          'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
     var element;
 
-  for (let disabledItem of disabledItems) {
-    element = document.getElementById(disabledItem);
+    for (let disabledItem of disabledItems) {
+      element = document.getElementById(disabledItem);
       if (element)
         element.setAttribute("disabled", "true");
     }
@@ -1668,8 +1668,8 @@ var gBrowserInit = {
     // and zoom menu commands as well
     if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
       var hiddenWindowDisabledItems = ['cmd_close', 'minimizeWindow', 'zoomWindow'];
-    for (let hiddenWindowDisabledItem of hiddenWindowDisabledItems) {
-      element = document.getElementById(hiddenWindowDisabledItem);
+      for (let hiddenWindowDisabledItem of hiddenWindowDisabledItems) {
+        element = document.getElementById(hiddenWindowDisabledItem);
         if (element)
           element.setAttribute("disabled", "true");
       }
