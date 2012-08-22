@@ -8,6 +8,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsISmsService.h"
 #include "nsIObserverService.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "Constants.h"
 #include "SmsEvent.h"
@@ -18,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsISmsDatabaseService.h"
 #include "nsIXPConnect.h"
+#include "nsIPermissionManager.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -58,6 +60,45 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(SmsManager, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SmsManager, nsDOMEventTargetHelper)
+
+/* static */already_AddRefed<SmsManager>
+SmsManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
+{
+  NS_ASSERTION(aWindow, "Null pointer!");
+
+  // First of all, the general pref has to be turned on.
+  bool enabled = false;
+  Preferences::GetBool("dom.sms.enabled", &enabled);
+  NS_ENSURE_TRUE(enabled, nullptr);
+
+  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
+    aWindow :
+    aWindow->GetCurrentInnerWindow();
+
+  // Need the document for security check.
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(innerWindow->GetExtantDocument());
+  NS_ENSURE_TRUE(document, nullptr);
+
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  NS_ENSURE_TRUE(principal, nullptr);
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, nullptr);
+
+  PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestPermissionFromPrincipal(principal, "sms", &permission);
+
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    return nullptr;
+  }
+
+  nsRefPtr<SmsManager> smsMgr = new SmsManager();
+  smsMgr->Init(aWindow);
+
+  return smsMgr.forget();
+}
 
 void
 SmsManager::Init(nsPIDOMWindow *aWindow)
