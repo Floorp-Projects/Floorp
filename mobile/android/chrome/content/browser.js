@@ -3079,16 +3079,16 @@ Tab.prototype = {
       aMetadata.allowZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
-    if (aMetadata && aMetadata.autoScale) {
-      let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
 
-      if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
-        aMetadata.defaultZoom *= scaleRatio;
-      if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
-        aMetadata.minZoom *= scaleRatio;
-      if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
-        aMetadata.maxZoom *= scaleRatio;
-    }
+    let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
+
+    if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
+      aMetadata.defaultZoom *= scaleRatio;
+    if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
+      aMetadata.minZoom *= scaleRatio;
+    if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
+      aMetadata.maxZoom *= scaleRatio;
+
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth);
     this.sendViewportMetadata();
@@ -4547,12 +4547,8 @@ var ViewportHandler = {
    *   height (optional int): The CSS viewport height in px.
    *   autoSize (boolean): Resize the CSS viewport when the window resizes.
    *   allowZoom (boolean): Let the user zoom in or out.
-   *   autoScale (boolean): Adjust the viewport properties to account for display density.
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
-    if (aWindow.document instanceof XULDocument)
-      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
-
     let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // viewport details found here
@@ -4577,11 +4573,11 @@ var ViewportHandler = {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
       let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
       if (handheldFriendly == "true")
-        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
 
       let doctype = aWindow.document.doctype;
       if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
     }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
@@ -4599,8 +4595,7 @@ var ViewportHandler = {
       width: width,
       height: height,
       autoSize: autoSize,
-      allowZoom: allowZoom,
-      autoScale: true
+      allowZoom: allowZoom
     };
   },
 
@@ -4653,7 +4648,6 @@ var ViewportHandler = {
     return {
       autoSize: false,
       allowZoom: true,
-      autoScale: true,
       scaleRatio: ViewportHandler.getScaleRatio()
     };
   }
