@@ -8,9 +8,9 @@
 include protocol PNecko;
 
 include "mozilla/net/NeckoMessageUtils.h";
-include IPCSerializableParams;
 
 using IPC::URI;
+using IPC::InputStream;
 using IPC::SerializedLoadContext;
 using PRTime;
 
@@ -27,7 +27,7 @@ parent:
   AsyncOpen(URI uri,
             uint64_t startPos,
             nsCString entityID,
-            OptionalInputStreamParams uploadStream,
+            InputStream uploadStream,
             SerializedLoadContext loadContext);
 
   ConnectChannel(uint32_t channelId);

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPC/IPCMessageUtils.h"
+#include "mozilla/net/NeckoMessageUtils.h"
 
 #include "nsAlgorithm.h"
 #include "nsBufferedStreams.h"
@@ -11,8 +12,6 @@
 #include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
-#include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
 
 #ifdef DEBUG_brendan
 # define METERING
@@ -38,8 +37,6 @@ static struct {
 #else
 # define METER(x)       /* nothing */
 #endif
-
-using namespace mozilla::ipc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedStream
@@ -255,15 +252,16 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
-NS_IMPL_CI_INTERFACE_GETTER4(nsBufferedInputStream,
+NS_IMPL_CI_INTERFACE_GETTER5(nsBufferedInputStream,
                              nsIInputStream,
                              nsIBufferedInputStream,
                              nsISeekableStream,
-                             nsIStreamBufferAccess)
+                             nsIStreamBufferAccess,
+                             nsIIPCSerializableObsolete)
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -486,62 +484,34 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
     return NS_OK;
 }
 
-void
-nsBufferedInputStream::Serialize(InputStreamParams& aParams)
-{
-    BufferedInputStreamParams params;
-
-    if (mStream) {
-        nsCOMPtr<nsIIPCSerializableInputStream> stream =
-            do_QueryInterface(mStream);
-        NS_ASSERTION(stream, "Wrapped stream is not serializable!");
-
-        InputStreamParams wrappedParams;
-        stream->Serialize(wrappedParams);
-
-        NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
-                     "Wrapped stream failed to serialize!");
-
-        params.optionalStream() = wrappedParams;
-    }
-    else {
-        params.optionalStream() = mozilla::void_t();
-    }
-
-    params.bufferSize() = mBufferSize;
-
-    aParams = params;
-}
-
 bool
-nsBufferedInputStream::Deserialize(const InputStreamParams& aParams)
+nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-    if (aParams.type() != InputStreamParams::TBufferedInputStreamParams) {
-        NS_ERROR("Received unknown parameters from the other process!");
+    using IPC::ReadParam;
+
+    uint32_t bufferSize;
+    IPC::InputStream inputStream;
+    if (!ReadParam(aMsg, aIter, &bufferSize) ||
+        !ReadParam(aMsg, aIter, &inputStream))
         return false;
-    }
 
-    const BufferedInputStreamParams& params =
-        aParams.get_BufferedInputStreamParams();
-    const OptionalInputStreamParams& wrappedParams = params.optionalStream();
-
-    nsCOMPtr<nsIInputStream> stream;
-    if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
-        stream = DeserializeInputStream(wrappedParams.get_InputStreamParams());
-        if (!stream) {
-            NS_WARNING("Failed to deserialize wrapped stream!");
-            return false;
-        }
-    }
-    else {
-        NS_ASSERTION(wrappedParams.type() == OptionalInputStreamParams::Tvoid_t,
-                     "Unknown type for OptionalInputStreamParams!");
-    }
-
-    nsresult rv = Init(stream, params.bufferSize());
-    NS_ENSURE_SUCCESS(rv, false);
+    nsCOMPtr<nsIInputStream> stream(inputStream);
+    nsresult rv = Init(stream, bufferSize);
+    if (NS_FAILED(rv))
+        return false;
 
     return true;
+}
+
+void
+nsBufferedInputStream::Write(IPC::Message *aMsg)
+{
+    using IPC::WriteParam;
+
+    WriteParam(aMsg, mBufferSize);
+
+    IPC::InputStream inputStream(Source());
+    WriteParam(aMsg, inputStream);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
