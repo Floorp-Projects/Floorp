@@ -44,7 +44,7 @@ function runTests() {
 
   // clear last 10 mins of history
   yield clearHistory(true);
-  yield whenFileRemoved();
+  ok(!copy.exists(), "copy of thumbnail has been removed");
 }
 
 function clearHistory(aUseRange) {
@@ -65,12 +65,10 @@ function clearHistory(aUseRange) {
   if (aUseRange) {
     let usec = Date.now() * 1000;
     s.range = [usec - 10 * 60 * 1000 * 1000, usec];
-    s.ignoreTimespan = false;
   }
 
   s.sanitize();
   s.range = null;
-  s.ignoreTimespan = true;
 
   executeSoon(function () {
     if (PageThumbsStorage.getFileForURL(URL).exists())
@@ -85,16 +83,6 @@ function whenFileExists() {
 
   let file = PageThumbsStorage.getFileForURL(URL);
   if (file.exists() && file.fileSize)
-    callback = next;
-
-  executeSoon(callback);
-}
-
-function whenFileRemoved() {
-  let callback = whenFileRemoved;
-
-  let file = PageThumbsStorage.getFileForURL(URL);
-  if (!file.exists())
     callback = next;
 
   executeSoon(callback);
