@@ -26,14 +26,14 @@ public:
   virtual nsresult ResetDecode();
   virtual bool DecodeAudioData();
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                PRInt64 aTimeThreshold);
+                                int64_t aTimeThreshold);
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
                                 nsHTMLMediaElement::MetadataTags** aTags);
-  virtual nsresult Seek(PRInt64 aTime,
-                        PRInt64 aStartTime,
-                        PRInt64 aEndTime,
-                        PRInt64 aCurrentTime);
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
+  virtual nsresult Seek(int64_t aTime,
+                        int64_t aStartTime,
+                        int64_t aEndTime,
+                        int64_t aCurrentTime);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
 
   virtual bool IsSeekableInBufferedRanges() {
     return true;
@@ -52,7 +52,7 @@ private:
   void ReadAndPushData(guint aLength);
   bool WaitForDecodedData(int *counter);
   void NotifyBytesConsumed();
-  PRInt64 QueryDuration();
+  int64_t QueryDuration();
 
   /* Gst callbacks */
 

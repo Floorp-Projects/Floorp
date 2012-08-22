@@ -14,13 +14,13 @@
 
 nsNullPrincipalURI::nsNullPrincipalURI(const nsCString &aSpec)
 {
-  PRInt32 dividerPosition = aSpec.FindChar(':');
+  int32_t dividerPosition = aSpec.FindChar(':');
   NS_ASSERTION(dividerPosition != -1, "Malformed URI!");
 
-  PRInt32 n = aSpec.Left(mScheme, dividerPosition);
+  int32_t n = aSpec.Left(mScheme, dividerPosition);
   NS_ASSERTION(n == dividerPosition, "Storing the scheme failed!");
 
-  PRInt32 count = aSpec.Length() - dividerPosition - 1;
+  int32_t count = aSpec.Length() - dividerPosition - 1;
   n = aSpec.Mid(mPath, dividerPosition + 1, count);
   NS_ASSERTION(n == count, "Storing the path failed!");
 
@@ -139,13 +139,13 @@ nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetPort(PRInt32 *_port)
+nsNullPrincipalURI::GetPort(int32_t *_port)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetPort(PRInt32 aPort)
+nsNullPrincipalURI::SetPort(int32_t aPort)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -782,7 +782,7 @@ DisableAlarm()
 }
 
 bool
-SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds)
+SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
   if (!sAlarmData) {
     HAL_LOG(("We should have enabled the alarm."));
@@ -827,7 +827,7 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   // Notice that you can disable oom_adj and renice by deleting the prefs
   // hal.processPriorityManager{foreground,background,master}{OomAdjust,Nice}.
 
-  PRInt32 oomAdj = 0;
+  int32_t oomAdj = 0;
   nsresult rv = Preferences::GetInt(nsPrintfCString(
     "hal.processPriorityManager.gonk.%sOomAdjust", priorityStr).get(), &oomAdj);
   if (NS_SUCCEEDED(rv)) {
@@ -836,7 +836,7 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
                 nsPrintfCString("%d", oomAdj).get());
   }
 
-  PRInt32 nice = 0;
+  int32_t nice = 0;
   rv = Preferences::GetInt(nsPrintfCString(
     "hal.processPriorityManager.gonk.%sNice", priorityStr).get(), &nice);
   if (NS_SUCCEEDED(rv)) {

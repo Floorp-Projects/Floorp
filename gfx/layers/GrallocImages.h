@@ -51,7 +51,7 @@ public:
    */
   virtual void SetData(const Data& aData);
 
-  virtual PRUint32 GetDataSize() { return 0; }
+  virtual uint32_t GetDataSize() { return 0; }
 
   virtual bool IsValid() { return mSurfaceDescriptor.type() != SurfaceDescriptor::T__None; }
 

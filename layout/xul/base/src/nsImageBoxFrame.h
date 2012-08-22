@@ -55,9 +55,9 @@ public:
                    nsIFrame*        aParent,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
@@ -100,7 +100,7 @@ public:
 
   void  PaintImage(nsRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
-                   nsPoint aPt, PRUint32 aFlags);
+                   nsPoint aPt, uint32_t aFlags);
 
 protected:
   nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
@@ -120,7 +120,7 @@ private:
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
-  PRInt32 mLoadFlags;
+  int32_t mLoadFlags;
 
   bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;

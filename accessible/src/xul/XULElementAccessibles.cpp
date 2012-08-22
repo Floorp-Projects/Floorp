@@ -47,7 +47,7 @@ XULLabelAccessible::NativeRole()
   return roles::LABEL;
 }
 
-PRUint64
+uint64_t
 XULLabelAccessible::NativeState()
 {
   // Labels and description have read only state
@@ -56,7 +56,7 @@ XULLabelAccessible::NativeState()
 }
 
 Relation
-XULLabelAccessible::RelationByType(PRUint32 aType)
+XULLabelAccessible::RelationByType(uint32_t aType)
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
@@ -83,7 +83,7 @@ XULTooltipAccessible::
 {
 }
 
-PRUint64
+uint64_t
 XULTooltipAccessible::NativeState()
 {
   return LeafAccessible::NativeState() | states::READONLY;
@@ -138,20 +138,20 @@ XULLinkAccessible::NativeRole()
 }
 
 
-PRUint64
+uint64_t
 XULLinkAccessible::NativeLinkState() const
 {
   return states::LINKED;
 }
 
-PRUint8
+uint8_t
 XULLinkAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-XULLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+XULLinkAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -163,7 +163,7 @@ XULLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-XULLinkAccessible::DoAction(PRUint8 aIndex)
+XULLinkAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Jump)
     return NS_ERROR_INVALID_ARG;
@@ -185,7 +185,7 @@ XULLinkAccessible::IsLink()
   return true;
 }
 
-PRUint32
+uint32_t
 XULLinkAccessible::StartOffset()
 {
   // If XUL link accessible is not contained by hypertext accessible then
@@ -198,7 +198,7 @@ XULLinkAccessible::StartOffset()
   return IndexInParent();
 }
 
-PRUint32
+uint32_t
 XULLinkAccessible::EndOffset()
 {
   if (Accessible::IsLink())
@@ -207,7 +207,7 @@ XULLinkAccessible::EndOffset()
 }
 
 already_AddRefed<nsIURI>
-XULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
+XULLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
   if (aAnchorIndex != 0)
     return nullptr;

@@ -9,8 +9,8 @@
 #include "nsCRT.h"
 #include "gfxFont.h"
 
-nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
-               PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
+nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
+               uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
                nscoord aSize, float aSizeAdjust,
                const nsString* aLanguageOverride)
 {
@@ -30,8 +30,8 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
   }
 }
 
-nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
-               PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
+nsFont::nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
+               uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
                nscoord aSize, float aSizeAdjust,
                const nsString* aLanguageOverride)
   : name(aName)
@@ -123,7 +123,7 @@ nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
 
 static bool IsGenericFontFamily(const nsString& aFamily)
 {
-  PRUint8 generic;
+  uint8_t generic;
   nsFont::GetGenericID(aFamily, &generic);
   return generic != kGenericFont_NONE;
 }
@@ -196,7 +196,7 @@ void nsFont::GetFirstFamily(nsString& aFamily) const
 }
 
 /*static*/
-void nsFont::GetGenericID(const nsString& aGeneric, PRUint8* aID)
+void nsFont::GetGenericID(const nsString& aGeneric, uint8_t* aID)
 {
   *aID = kGenericFont_NONE;
   if (aGeneric.LowerCaseEqualsLiteral("-moz-fixed"))      *aID = kGenericFont_moz_fixed;

@@ -84,7 +84,7 @@ nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsProgressFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                          PRUint32 aFilter)
+                                          uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mBarDiv);
 }
@@ -214,9 +214,9 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
 }
 
 NS_IMETHODIMP
-nsProgressFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsProgressFrame::AttributeChanged(int32_t  aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  PRInt32  aModType)
+                                  int32_t  aModType)
 {
   NS_ASSERTION(mBarDiv, "Progress bar div must exist!");
 

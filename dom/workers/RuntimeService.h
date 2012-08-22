@@ -37,11 +37,11 @@ class RuntimeService MOZ_FINAL : public nsIObserver
     nsCString mDomain;
     nsTArray<WorkerPrivate*> mActiveWorkers;
     nsTArray<WorkerPrivate*> mQueuedWorkers;
-    PRUint32 mChildWorkerCount;
+    uint32_t mChildWorkerCount;
 
     WorkerDomainInfo() : mActiveWorkers(1), mChildWorkerCount(0) { }
 
-    PRUint32
+    uint32_t
     ActiveWorkerCount() const
     {
       return mActiveWorkers.Length() + mChildWorkerCount;
@@ -71,12 +71,12 @@ class RuntimeService MOZ_FINAL : public nsIObserver
   nsCString mDetectorName;
   nsCString mSystemCharset;
 
-  static PRUint32 sDefaultJSContextOptions;
-  static PRUint32 sDefaultJSRuntimeHeapSize;
-  static PRInt32 sCloseHandlerTimeoutSeconds;
+  static uint32_t sDefaultJSContextOptions;
+  static uint32_t sDefaultJSRuntimeHeapSize;
+  static int32_t sCloseHandlerTimeoutSeconds;
 
 #ifdef JS_GC_ZEAL
-  static PRUint8 sDefaultGCZeal;
+  static uint8_t sDefaultGCZeal;
 #endif
 
 public:
@@ -142,7 +142,7 @@ public:
   void
   NoteIdleThread(nsIThread* aThread);
 
-  static PRUint32
+  static uint32_t
   GetDefaultJSContextOptions()
   {
     AssertIsOnMainThread();
@@ -150,7 +150,7 @@ public:
   }
 
   static void
-  SetDefaultJSContextOptions(PRUint32 aOptions)
+  SetDefaultJSContextOptions(uint32_t aOptions)
   {
     AssertIsOnMainThread();
     sDefaultJSContextOptions = aOptions;
@@ -159,7 +159,7 @@ public:
   void
   UpdateAllWorkerJSContextOptions();
 
-  static PRUint32
+  static uint32_t
   GetDefaultJSRuntimeHeapSize()
   {
     AssertIsOnMainThread();
@@ -167,7 +167,7 @@ public:
   }
 
   static void
-  SetDefaultJSRuntimeHeapSize(PRUint32 aMaxBytes)
+  SetDefaultJSRuntimeHeapSize(uint32_t aMaxBytes)
   {
     AssertIsOnMainThread();
     sDefaultJSRuntimeHeapSize = aMaxBytes;
@@ -176,14 +176,14 @@ public:
   void
   UpdateAllWorkerJSRuntimeHeapSize();
 
-  static PRUint32
+  static uint32_t
   GetCloseHandlerTimeoutSeconds()
   {
     return sCloseHandlerTimeoutSeconds > 0 ? sCloseHandlerTimeoutSeconds : 0;
   }
 
 #ifdef JS_GC_ZEAL
-  static PRUint8
+  static uint8_t
   GetDefaultGCZeal()
   {
     AssertIsOnMainThread();
@@ -191,7 +191,7 @@ public:
   }
 
   static void
-  SetDefaultGCZeal(PRUint8 aGCZeal)
+  SetDefaultGCZeal(uint8_t aGCZeal)
   {
     AssertIsOnMainThread();
     sDefaultGCZeal = aGCZeal;

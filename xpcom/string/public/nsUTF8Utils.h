@@ -37,7 +37,7 @@ class UTF8traits
 class UTF8CharEnumerator
 {
 public:
-  static PRUint32 NextChar(const char **buffer, const char *end,
+  static uint32_t NextChar(const char **buffer, const char *end,
                            bool *err)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
@@ -60,9 +60,9 @@ public:
         return c;
       }
 
-    PRUint32 ucs4;
-    PRUint32 minUcs4;
-    PRInt32 state = 0;
+    uint32_t ucs4;
+    uint32_t minUcs4;
+    int32_t state = 0;
 
     if (!CalcState(c, ucs4, minUcs4, state)) {
         NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
@@ -107,36 +107,36 @@ public:
   }
 
 private:
-  static bool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
-                          PRInt32& state)
+  static bool CalcState(char c, uint32_t& ucs4, uint32_t& minUcs4,
+                          int32_t& state)
   {
     if ( UTF8traits::is2byte(c) )
       {
-        ucs4 = (PRUint32(c) << 6) & 0x000007C0L;
+        ucs4 = (uint32_t(c) << 6) & 0x000007C0L;
         state = 1;
         minUcs4 = 0x00000080;
       }
     else if ( UTF8traits::is3byte(c) )
       {
-        ucs4 = (PRUint32(c) << 12) & 0x0000F000L;
+        ucs4 = (uint32_t(c) << 12) & 0x0000F000L;
         state = 2;
         minUcs4 = 0x00000800;
       }
     else if ( UTF8traits::is4byte(c) )
       {
-        ucs4 = (PRUint32(c) << 18) & 0x001F0000L;
+        ucs4 = (uint32_t(c) << 18) & 0x001F0000L;
         state = 3;
         minUcs4 = 0x00010000;
       }
     else if ( UTF8traits::is5byte(c) )
       {
-        ucs4 = (PRUint32(c) << 24) & 0x03000000L;
+        ucs4 = (uint32_t(c) << 24) & 0x03000000L;
         state = 4;
         minUcs4 = 0x00200000;
       }
     else if ( UTF8traits::is6byte(c) )
       {
-        ucs4 = (PRUint32(c) << 30) & 0x40000000L;
+        ucs4 = (uint32_t(c) << 30) & 0x40000000L;
         state = 5;
         minUcs4 = 0x04000000;
       }
@@ -148,12 +148,12 @@ private:
     return true;
   }
 
-  static bool AddByte(char c, PRInt32 state, PRUint32& ucs4)
+  static bool AddByte(char c, int32_t state, uint32_t& ucs4)
   {
     if ( UTF8traits::isInSeq(c) )
       {
-        PRInt32 shift = state * 6;
-        ucs4 |= (PRUint32(c) & 0x3F) << shift;
+        int32_t shift = state * 6;
+        ucs4 |= (uint32_t(c) & 0x3F) << shift;
         return true;
       }
 
@@ -172,7 +172,7 @@ private:
 class UTF16CharEnumerator
 {
 public:
-  static PRUint32 NextChar(const PRUnichar **buffer, const PRUnichar *end,
+  static uint32_t NextChar(const PRUnichar **buffer, const PRUnichar *end,
                            bool *err = nullptr)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
@@ -222,7 +222,7 @@ public:
           {
             // DC00- DFFF - Low Surrogate
             // N = (H - D800) *400 + 10000 + (L - DC00)
-            PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
+            uint32_t ucs4 = SURROGATE_TO_UCS4(h, c);
             if (err)
               *err = false;
             *buffer = p;
@@ -286,7 +286,7 @@ class ConvertUTF8toUTF16
 
     bool ErrorEncountered() const { return mErrorEncountered; }
 
-    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         if ( mErrorEncountered )
           return;
@@ -299,7 +299,7 @@ class ConvertUTF8toUTF16
         for ( ; p != end /* && *p */; )
           {
             bool err;
-            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err);
+            uint32_t ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err);
 
             if ( err )
               {
@@ -345,7 +345,7 @@ class CalculateUTF8Length
 
     size_t Length() const { return mLength; }
 
-    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
           // ignore any further requests
         if ( mErrorEncountered )
@@ -398,8 +398,8 @@ class CalculateUTF8Length
                 // characters will be written in that case either.
 
                 if (p + 4 <= end) {
-                  PRUint32 c = ((PRUint32)(p[0] & 0x07)) << 6 |
-                               ((PRUint32)(p[1] & 0x30));
+                  uint32_t c = ((uint32_t)(p[0] & 0x07)) << 6 |
+                               ((uint32_t)(p[1] & 0x30));
                   if (c >= 0x010 && c < 0x110)
                     ++mLength;
                 }
@@ -449,7 +449,7 @@ class ConvertUTF16toUTF8
 
     size_t Size() const { return mBuffer - mStart; }
 
-    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         buffer_type *out = mBuffer; // gcc isn't smart enough to do this!
 
@@ -496,7 +496,7 @@ class ConvertUTF16toUTF8
                   {
                     // DC00- DFFF - Low Surrogate
                     // N = (H - D800) *400 + 10000 + ( L - DC00 )
-                    PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
+                    uint32_t ucs4 = SURROGATE_TO_UCS4(h, c);
 
                     // 0001 0000-001F FFFF
                     *out++ = 0xF0 | (char)(ucs4 >> 18);
@@ -566,7 +566,7 @@ class CalculateUTF8Size
 
     size_t Size() const { return mSize; }
 
-    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         // Assume UCS2 surrogate pairs won't be spread across fragments.
         for (const value_type *p = start, *end = start + N; p < end; ++p )
@@ -647,7 +647,7 @@ class LossyConvertEncoding8to16
         mDestination(aDestination) { }
 
       void
-      write( const char* aSource, PRUint32 aSourceLength )
+      write( const char* aSource, uint32_t aSourceLength )
         {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
           if (mozilla::supports_sse2())
@@ -662,7 +662,7 @@ class LossyConvertEncoding8to16
         }
 
       void
-      write_sse2( const char* aSource, PRUint32 aSourceLength );
+      write_sse2( const char* aSource, uint32_t aSourceLength );
 
       void
       write_terminator()
@@ -688,7 +688,7 @@ class LossyConvertEncoding16to8
       LossyConvertEncoding16to8( char* aDestination ) : mDestination(aDestination) { }
 
       void
-      write( const PRUnichar* aSource, PRUint32 aSourceLength)
+      write( const PRUnichar* aSource, uint32_t aSourceLength)
         {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
           if (mozilla::supports_sse2())
@@ -704,7 +704,7 @@ class LossyConvertEncoding16to8
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
       void
-      write_sse2( const PRUnichar* aSource, PRUint32 aSourceLength );
+      write_sse2( const PRUnichar* aSource, uint32_t aSourceLength );
 #endif
 
       void

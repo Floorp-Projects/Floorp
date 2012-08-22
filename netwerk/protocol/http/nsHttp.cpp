@@ -269,12 +269,12 @@ nsHttp::FindToken(const char *input, const char *token, const char *seps)
 }
 
 bool
-nsHttp::ParseInt64(const char *input, const char **next, PRInt64 *r)
+nsHttp::ParseInt64(const char *input, const char **next, int64_t *r)
 {
     const char *start = input;
     *r = 0;
     while (*input >= '0' && *input <= '9') {
-        PRInt64 next = 10 * (*r) + (*input - '0');
+        int64_t next = 10 * (*r) + (*input - '0');
         if (next < *r) // overflow?
             return false;
         *r = next;

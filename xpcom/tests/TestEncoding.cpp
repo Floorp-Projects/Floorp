@@ -12,7 +12,7 @@ nsresult TestGoodSurrogatePair()
   const PRUnichar goodPairData[] = {  0xD800, 0xDF02, 0x65, 0x78, 0x0 };
   nsDependentString goodPair16(goodPairData);
 
-  PRUint32 byteCount = 0;
+  uint32_t byteCount = 0;
   char* goodPair8 = ToNewUTF8String(goodPair16, &byteCount);
   if (!goodPair8)
   {
@@ -56,7 +56,7 @@ nsresult TestBackwardsSurrogatePair()
   const PRUnichar backwardsPairData[] = { 0xDDDD, 0xD863, 0x65, 0x78, 0x0 };
   nsDependentString backwardsPair16(backwardsPairData);
 
-  PRUint32 byteCount = 0;
+  uint32_t byteCount = 0;
   char* backwardsPair8 = ToNewUTF8String(backwardsPair16, &byteCount);
   if (!backwardsPair8)
   {
@@ -100,7 +100,7 @@ nsresult TestMalformedUTF16OrphanHighSurrogate()
   const PRUnichar highSurrogateData[] = { 0xD863, 0x74, 0x65, 0x78, 0x74, 0x0 };
   nsDependentString highSurrogate16(highSurrogateData);
 
-  PRUint32 byteCount = 0;
+  uint32_t byteCount = 0;
   char* highSurrogate8 = ToNewUTF8String(highSurrogate16, &byteCount);
   if (!highSurrogate8)
   {
@@ -144,7 +144,7 @@ nsresult TestMalformedUTF16OrphanLowSurrogate()
   const PRUnichar lowSurrogateData[] = { 0xDDDD, 0x74, 0x65, 0x78, 0x74, 0x0 };
   nsDependentString lowSurrogate16(lowSurrogateData);
 
-  PRUint32 byteCount = 0;
+  uint32_t byteCount = 0;
   char* lowSurrogate8 = ToNewUTF8String(lowSurrogate16, &byteCount);
   if (!lowSurrogate8)
   {

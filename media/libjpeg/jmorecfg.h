@@ -133,19 +133,19 @@ typedef char JOCTET;
 
 /* UINT8 must hold at least the values 0..255. */
 
-typedef PRUint8 UINT8;
+typedef uint8_t UINT8;
 
 /* UINT16 must hold at least the values 0..65535. */
 
-typedef PRUint16 UINT16;
+typedef uint16_t UINT16;
 
 /* INT16 must hold at least the values -32768..32767. */
 
-typedef PRInt16 INT16;
+typedef int16_t INT16;
 
 /* INT32 must hold at least signed 32-bit values. */
 
-typedef PRInt32 INT32;
+typedef int32_t INT32;
 
 /* Datatype used for image dimensions.  The JPEG standard only supports
  * images up to 64K*64K due to 16-bit fields in SOF markers.  Therefore

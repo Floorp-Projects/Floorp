@@ -30,8 +30,8 @@ public:
                     bool aIsPrintPreview);
     NS_IMETHOD BeginDocument(PRUnichar* aTitle,
                              PRUnichar* aPrintToFileName,
-                             PRInt32 aStartPage,
-                             PRInt32 aEndPage);
+                             int32_t aStartPage,
+                             int32_t aEndPage);
     NS_IMETHOD EndDocument();
     NS_IMETHOD BeginPage() { return NS_OK; }
     NS_IMETHOD EndPage() { return NS_OK; }

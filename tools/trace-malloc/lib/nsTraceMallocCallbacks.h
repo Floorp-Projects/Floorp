@@ -36,10 +36,10 @@ struct tm_thread {
 tm_thread * tm_get_thread(void);
 
 /* implemented in nsTraceMalloc.c */
-PR_EXTERN(void) MallocCallback(void *aPtr, size_t aSize, PRUint32 start, PRUint32 end, tm_thread *t);
-PR_EXTERN(void) CallocCallback(void *aPtr, size_t aCount, size_t aSize, PRUint32 start, PRUint32 end, tm_thread *t);
-PR_EXTERN(void) ReallocCallback(void *aPin, void* aPout, size_t aSize, PRUint32 start, PRUint32 end, tm_thread *t);
-PR_EXTERN(void) FreeCallback(void *aPtr, PRUint32 start, PRUint32 end, tm_thread *t);
+PR_EXTERN(void) MallocCallback(void *aPtr, size_t aSize, uint32_t start, uint32_t end, tm_thread *t);
+PR_EXTERN(void) CallocCallback(void *aPtr, size_t aCount, size_t aSize, uint32_t start, uint32_t end, tm_thread *t);
+PR_EXTERN(void) ReallocCallback(void *aPin, void* aPout, size_t aSize, uint32_t start, uint32_t end, tm_thread *t);
+PR_EXTERN(void) FreeCallback(void *aPtr, uint32_t start, uint32_t end, tm_thread *t);
 
 #ifdef XP_WIN32
 /* implemented in nsTraceMalloc.c */

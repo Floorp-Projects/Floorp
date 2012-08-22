@@ -32,13 +32,13 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #define SJIS_UNMAPPED	0x30fb
 #define UNICODE_REPLACEMENT_CHARACTER 0xfffd
 #define IN_GR_RANGE(b) \
-  ((PRUint8(0xa1) <= PRUint8(b)) && (PRUint8(b) <= PRUint8(0xfe)))
+  ((uint8_t(0xa1) <= uint8_t(b)) && (uint8_t(b) <= uint8_t(0xfe)))
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
-   const char * aSrc, PRInt32 * aSrcLen,
-     PRUnichar * aDest, PRInt32 * aDestLen)
+   const char * aSrc, int32_t * aSrcLen,
+     PRUnichar * aDest, int32_t * aDestLen)
 {
-   static const PRUint8 sbIdx[256] =
+   static const uint8_t sbIdx[256] =
    {
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  /* 0x00 */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  /* 0x08 */
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           case 1: // Index to table
           {
             MOZ_ASSERT(mData < 0xE000);
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
 
             // Error handling: in the case where the second octet is not in the
             // valid ranges 0x40-0x7E 0x80-0xFC, unconsume the invalid octet and
@@ -135,7 +135,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           case 2: // EUDC
           {
             MOZ_ASSERT(0xE000 <= mData && mData < 0xF000);
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
 
             // Error handling as in case 1
             if(0xFF == off) {
@@ -179,10 +179,10 @@ nsShiftJISToUnicode::GetCharacterForUnMapped()
 }
 
 NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
-   const char * aSrc, PRInt32 * aSrcLen,
-     PRUnichar * aDest, PRInt32 * aDestLen)
+   const char * aSrc, int32_t * aSrcLen,
+     PRUnichar * aDest, int32_t * aDestLen)
 {
-   static const PRUint8 sbIdx[256] =
+   static const uint8_t sbIdx[256] =
    {
 /* 0x0X */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
 
           case 1: // Index to table
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
               if (mErrBehavior == kOnError_Signal)
                 goto error_invalidchar;
@@ -283,7 +283,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
                // if the first byte is valid for EUC-JP but the second 
                // is not while being a valid US-ASCII, save it
                // instead of eating it up !
-              if ( (PRUint8)*src < (PRUint8)0x7f )
+              if ( (uint8_t)*src < (uint8_t)0x7f )
                 --src;
             } else {
                *dest++ = gJapaneseMap[mData+off];
@@ -304,7 +304,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
               *dest++ = 0xFFFD;             
               // if 0x8e is not followed by a valid JIS X 0201 byte
               // but by a valid US-ASCII, save it instead of eating it up.
-              if ( (PRUint8)*src < (PRUint8)0x7f )
+              if ( (uint8_t)*src < (uint8_t)0x7f )
                 --src;
             }
             mState = 0;
@@ -338,7 +338,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
           break;
           case 4:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF != off) {
               *dest++ = gJapaneseMap[mData+off];
               mState = 0;
@@ -385,10 +385,10 @@ error1:
 
 
 NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
-   const char * aSrc, PRInt32 * aSrcLen,
-     PRUnichar * aDest, PRInt32 * aDestLen)
+   const char * aSrc, int32_t * aSrcLen,
+     PRUnichar * aDest, int32_t * aDestLen)
 {
-   static const PRUint16 fbIdx[128] =
+   static const uint16_t fbIdx[128] =
    {
 /* 0x8X */
      0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
      94*79,  94*80,  94*81,  94*82,  94*83,  94*84,  94*85,  94*86,
      94*87,  94*88,  94*89,  94*90,  94*91,  94*92,  94*93,  0xFFFD,
    };
-   static const PRUint8 sbIdx[256] =
+   static const uint8_t sbIdx[256] =
    {
 /* 0x0X */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -698,7 +698,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
           case mState_JISX0208_1978_2ndbyte:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
                goto error2;
             } else {
@@ -715,7 +715,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
           case mState_GB2312_1980_2ndbyte:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
                goto error2;
             } else {
@@ -735,7 +735,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                   goto error1;
                 unsigned char gb[2];
                 PRUnichar uni;
-                PRInt32 gbLen = 2, uniLen = 1;
+                int32_t gbLen = 2, uniLen = 1;
                 // ((mData/94)+0x21) is the original 1st byte.
                 // *src is the present 2nd byte.
                 // Put 2 bytes (one character) to gb[] with GB2312 encoding.
@@ -754,7 +754,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
           case mState_JISX0208_1983_2ndbyte:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
                goto error2;
             } else {
@@ -769,7 +769,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
           case mState_KSC5601_1987_2ndbyte:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
                goto error2;
             } else {
@@ -789,7 +789,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                   goto error1;
                 unsigned char ksc[2];
                 PRUnichar uni;
-                PRInt32 kscLen = 2, uniLen = 1;
+                int32_t kscLen = 2, uniLen = 1;
                 // ((mData/94)+0x21) is the original 1st byte.
                 // *src is the present 2nd byte.
                 // Put 2 bytes (one character) to ksc[] with EUC-KR encoding.
@@ -808,7 +808,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
           case mState_JISX0212_1990_2ndbyte:
           {
-            PRUint8 off = sbIdx[*src];
+            uint8_t off = sbIdx[*src];
             if(0xFF == off) {
                goto error2;
             } else {
@@ -868,7 +868,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                   // Put one character with ISO-8859-7 encoding.
                   unsigned char gr = *src | 0x80;
                   PRUnichar uni;
-                  PRInt32 grLen = 1, uniLen = 1;
+                  int32_t grLen = 1, uniLen = 1;
                   // Convert ISO-8859-7 to unicode.
                   mISO88597Decoder->Convert((const char *)&gr, &grLen,
                                             &uni, &uniLen);

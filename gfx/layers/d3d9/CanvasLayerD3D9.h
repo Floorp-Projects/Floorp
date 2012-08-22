@@ -58,13 +58,13 @@ protected:
   bool mNeedsYFlip;
   bool mHasAlpha;
 
-  nsAutoArrayPtr<PRUint8> mCachedTempBlob;
-  PRUint32 mCachedTempBlob_Size;
+  nsAutoArrayPtr<uint8_t> mCachedTempBlob;
+  uint32_t mCachedTempBlob_Size;
 
-  PRUint8* GetTempBlob(const PRUint32 aSize)
+  uint8_t* GetTempBlob(const uint32_t aSize)
   {
       if (!mCachedTempBlob || aSize != mCachedTempBlob_Size) {
-          mCachedTempBlob = new PRUint8[aSize];
+          mCachedTempBlob = new uint8_t[aSize];
           mCachedTempBlob_Size = aSize;
       }
 

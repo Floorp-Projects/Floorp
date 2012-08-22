@@ -12,16 +12,16 @@
 #endif
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double *fprData)
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s, double *fprData)
 {
 /*
     We need to copy the parameters for this function to locals and use them
     from there since the parameters occupy the same stack space as the stack
     we're trying to populate.
 */
-    PRUint32 *l_d = d;
+    uint32_t *l_d = d;
     nsXPTCVariant *l_s = s;
-    PRUint32 l_paramCount = paramCount, fpCount = 0;
+    uint32_t l_paramCount = paramCount, fpCount = 0;
     double *l_fprData = fprData;
 
     typedef struct {

@@ -48,7 +48,7 @@ private:
   nsCOMPtr<nsIDOMWindow> mWindow;
   bool mPromptAllowed;
   bool mHasPrompted;
-  PRUint32 mPromptResult;
+  uint32_t mPromptResult;
 };
 
 END_INDEXEDDB_NAMESPACE

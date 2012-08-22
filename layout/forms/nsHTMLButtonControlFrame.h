@@ -55,8 +55,8 @@ public:
                    nsIFrame*        aParent,
                    nsIFrame*        asPrevInFlow);
 
-  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
-  virtual void SetAdditionalStyleContext(PRInt32 aIndex, 
+  virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const;
+  virtual void SetAdditionalStyleContext(int32_t aIndex, 
                                          nsStyleContext* aStyleContext);
  
   NS_IMETHOD AppendFrames(ChildListID     aListID,
@@ -93,7 +93,7 @@ public:
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));

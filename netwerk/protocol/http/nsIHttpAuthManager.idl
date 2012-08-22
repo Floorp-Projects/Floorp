@@ -48,7 +48,7 @@ interface nsIHttpAuthManager : nsISupports
      */
     void getAuthIdentity(in ACString aScheme,
                          in ACString aHost,
-                         in PRInt32  aPort,
+                         in int32_t  aPort,
                          in ACString aAuthType,
                          in ACString aRealm,
                          in ACString aPath,
@@ -82,7 +82,7 @@ interface nsIHttpAuthManager : nsISupports
      */
     void setAuthIdentity(in ACString aScheme,
                          in ACString aHost,
-                         in PRInt32  aPort,
+                         in int32_t  aPort,
                          in ACString aAuthType,
                          in ACString aRealm,
                          in ACString aPath,

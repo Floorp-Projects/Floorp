@@ -21,26 +21,26 @@ class AudioChild : public PAudioChild
 
     AudioChild();
     virtual ~AudioChild();
-    virtual bool RecvPositionInFramesUpdate(const PRInt64&, const PRInt64&);
+    virtual bool RecvPositionInFramesUpdate(const int64_t&, const int64_t&);
     virtual bool RecvDrainDone();
-    virtual PRInt32 WaitForMinWriteSize();
-    virtual bool RecvMinWriteSizeDone(const PRInt32& frameCount);
+    virtual int32_t WaitForMinWriteSize();
+    virtual bool RecvMinWriteSizeDone(const int32_t& frameCount);
     virtual void WaitForDrain();
     virtual bool RecvWriteDone();
     virtual void WaitForWrite();
     virtual void ActorDestroy(ActorDestroyReason);
 
-    PRInt64 GetLastKnownPosition();
-    PRInt64 GetLastKnownPositionTimestamp();
+    int64_t GetLastKnownPosition();
+    int64_t GetLastKnownPositionTimestamp();
 
     bool IsIPCOpen() { return mIPCOpen; };
  private:
     nsAutoRefCnt mRefCnt;
     NS_DECL_OWNINGTHREAD
-    PRInt64 mLastPosition;
-    PRInt64 mLastPositionTimestamp;
-    PRUint64 mWriteCounter;
-    PRInt32 mMinWriteSize;
+    int64_t mLastPosition;
+    int64_t mLastPositionTimestamp;
+    uint64_t mWriteCounter;
+    int32_t mMinWriteSize;
     mozilla::ReentrantMonitor mAudioReentrantMonitor;
     bool mIPCOpen;
     bool mDrained;

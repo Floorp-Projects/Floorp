@@ -27,7 +27,7 @@ Row::initialize(sqlite3_stmt *aStatement)
   mNumCols = ::sqlite3_column_count(aStatement);
 
   // Start copying over values
-  for (PRUint32 i = 0; i < mNumCols; i++) {
+  for (uint32_t i = 0; i < mNumCols; i++) {
     // Store the value
     nsIVariant *variant = nullptr;
     int type = ::sqlite3_column_type(aStatement, i);
@@ -88,7 +88,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 //// mozIStorageRow
 
 NS_IMETHODIMP
-Row::GetResultByIndex(PRUint32 aIndex,
+Row::GetResultByIndex(uint32_t aIndex,
                       nsIVariant **_result)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
@@ -100,7 +100,7 @@ NS_IMETHODIMP
 Row::GetResultByName(const nsACString &aName,
                      nsIVariant **_result)
 {
-  PRUint32 index;
+  uint32_t index;
   NS_ENSURE_TRUE(mNameHashtable.Get(aName, &index), NS_ERROR_NOT_AVAILABLE);
   return GetResultByIndex(index, _result);
 }
@@ -109,19 +109,19 @@ Row::GetResultByName(const nsACString &aName,
 //// mozIStorageValueArray
 
 NS_IMETHODIMP
-Row::GetNumEntries(PRUint32 *_entries)
+Row::GetNumEntries(uint32_t *_entries)
 {
   *_entries = mNumCols;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Row::GetTypeOfIndex(PRUint32 aIndex,
-                    PRInt32 *_type)
+Row::GetTypeOfIndex(uint32_t aIndex,
+                    int32_t *_type)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
 
-  PRUint16 type;
+  uint16_t type;
   (void)mData.ObjectAt(aIndex)->GetDataType(&type);
   switch (type) {
     case nsIDataType::VTYPE_INT32:
@@ -145,23 +145,23 @@ Row::GetTypeOfIndex(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-Row::GetInt32(PRUint32 aIndex,
-              PRInt32 *_value)
+Row::GetInt32(uint32_t aIndex,
+              int32_t *_value)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
   return mData.ObjectAt(aIndex)->GetAsInt32(_value);
 }
 
 NS_IMETHODIMP
-Row::GetInt64(PRUint32 aIndex,
-              PRInt64 *_value)
+Row::GetInt64(uint32_t aIndex,
+              int64_t *_value)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
   return mData.ObjectAt(aIndex)->GetAsInt64(_value);
 }
 
 NS_IMETHODIMP
-Row::GetDouble(PRUint32 aIndex,
+Row::GetDouble(uint32_t aIndex,
                double *_value)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
@@ -169,7 +169,7 @@ Row::GetDouble(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-Row::GetUTF8String(PRUint32 aIndex,
+Row::GetUTF8String(uint32_t aIndex,
                    nsACString &_value)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
@@ -177,7 +177,7 @@ Row::GetUTF8String(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-Row::GetString(PRUint32 aIndex,
+Row::GetString(uint32_t aIndex,
                nsAString &_value)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
@@ -185,51 +185,51 @@ Row::GetString(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-Row::GetBlob(PRUint32 aIndex,
-             PRUint32 *_size,
-             PRUint8 **_blob)
+Row::GetBlob(uint32_t aIndex,
+             uint32_t *_size,
+             uint8_t **_blob)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
 
-  PRUint16 type;
+  uint16_t type;
   nsIID interfaceIID;
   return mData.ObjectAt(aIndex)->GetAsArray(&type, &interfaceIID, _size,
                                             reinterpret_cast<void **>(_blob));
 }
 
 NS_IMETHODIMP
-Row::GetIsNull(PRUint32 aIndex,
+Row::GetIsNull(uint32_t aIndex,
                bool *_isNull)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
   NS_ENSURE_ARG_POINTER(_isNull);
 
-  PRUint16 type;
+  uint16_t type;
   (void)mData.ObjectAt(aIndex)->GetDataType(&type);
   *_isNull = type == nsIDataType::VTYPE_EMPTY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Row::GetSharedUTF8String(PRUint32,
-                         PRUint32 *,
+Row::GetSharedUTF8String(uint32_t,
+                         uint32_t *,
                          char const **)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-Row::GetSharedString(PRUint32,
-                     PRUint32 *,
+Row::GetSharedString(uint32_t,
+                     uint32_t *,
                      const PRUnichar **)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-Row::GetSharedBlob(PRUint32,
-                   PRUint32 *,
-                   const PRUint8 **)
+Row::GetSharedBlob(uint32_t,
+                   uint32_t *,
+                   const uint8_t **)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

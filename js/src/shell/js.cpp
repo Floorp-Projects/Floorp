@@ -98,7 +98,7 @@ size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 
 
 #ifdef JS_THREADSAFE
-static PRUintn gStackBaseThreadIndex;
+static unsigned gStackBaseThreadIndex;
 #else
 static uintptr_t gStackBase;
 #endif

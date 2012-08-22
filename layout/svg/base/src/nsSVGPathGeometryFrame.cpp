@@ -100,9 +100,9 @@ nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGPathGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
                                          nsIAtom*        aAttribute,
-                                         PRInt32         aModType)
+                                         int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (static_cast<nsSVGPathGeometryElement*>
@@ -194,7 +194,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
       static_cast<nsSVGPathGeometryElement*>
                  (mContent)->GetMarkPoints(&marks);
         
-      PRUint32 num = marks.Length();
+      uint32_t num = marks.Length();
 
       if (num) {
         nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
@@ -203,7 +203,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
 
         frame = properties.GetMarkerMidFrame();
         if (frame) {
-          for (PRUint32 i = 1; i < num - 1; i++)
+          for (uint32_t i = 1; i < num - 1; i++)
             frame->PaintMark(aContext, this, &marks[i], strokeWidth);
         }
 
@@ -224,7 +224,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (canvasTM.IsSingular()) {
     return nullptr;
   }
-  PRUint16 fillRule, hitTestFlags;
+  uint16_t fillRule, hitTestFlags;
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     hitTestFlags = SVG_HIT_TEST_FILL;
     fillRule = GetClipRule();
@@ -288,7 +288,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
     return;
   }
 
-  PRUint32 flags = nsSVGUtils::eBBoxIncludeFill |
+  uint32_t flags = nsSVGUtils::eBBoxIncludeFill |
                    nsSVGUtils::eBBoxIncludeStroke |
                    nsSVGUtils::eBBoxIncludeMarkers;
   // Our "visual" overflow rect needs to be valid for building display lists
@@ -296,7 +296,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
   // it needs to include the geometry of the fill or stroke even when the fill/
   // stroke don't actually render (e.g. when stroke="none" or
   // stroke-opacity="0"). GetHitTestFlags() accounts for 'pointer-events'.
-  PRUint16 hitTestFlags = GetHitTestFlags();
+  uint16_t hitTestFlags = GetHitTestFlags();
   if ((hitTestFlags & SVG_HIT_TEST_FILL)) {
    flags |= nsSVGUtils::eBBoxIncludeFillGeometry;
   }
@@ -337,7 +337,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
 }
 
 void
-nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -352,7 +352,7 @@ nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
 
 SVGBBox
 nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                            PRUint32 aFlags)
+                                            uint32_t aFlags)
 {
   SVGBBox bbox;
 
@@ -421,7 +421,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     if (properties.MarkersExist()) {
       nsTArray<nsSVGMark> marks;
       static_cast<nsSVGPathGeometryElement*>(mContent)->GetMarkPoints(&marks);
-      PRUint32 num = marks.Length();
+      uint32_t num = marks.Length();
 
       if (num) {
         nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
@@ -434,7 +434,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
         frame = properties.GetMarkerMidFrame();
         if (frame) {
-          for (PRUint32 i = 1; i < num - 1; i++) {
+          for (uint32_t i = 1; i < num - 1; i++) {
             SVGBBox mbbox =
               frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
                                              &marks[i], strokeWidth);
@@ -460,7 +460,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGGeometryFrame methods:
 
 gfxMatrix
-nsSVGPathGeometryFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor)
 {
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
@@ -531,7 +531,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext)
 {
   gfxContext *gfx = aContext->ThebesContext();
 
-  PRUint16 renderMode = SVGAutoRenderState::GetRenderMode(aContext);
+  uint16_t renderMode = SVGAutoRenderState::GetRenderMode(aContext);
 
   switch (GetStyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:

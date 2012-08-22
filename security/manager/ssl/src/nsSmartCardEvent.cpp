@@ -147,7 +147,7 @@ NS_IMETHODIMP nsSmartCardEvent::GetCurrentTarget(nsIDOMEventTarget * *aCurrentTa
   return mInner->GetCurrentTarget(aCurrentTarget);
 }
 
-NS_IMETHODIMP nsSmartCardEvent::GetEventPhase(PRUint16 *aEventPhase)
+NS_IMETHODIMP nsSmartCardEvent::GetEventPhase(uint16_t *aEventPhase)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
   return mInner->GetEventPhase(aEventPhase);

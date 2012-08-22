@@ -185,7 +185,7 @@ public:
 
     virtual GLuint GetTextureID() = 0;
 
-    virtual PRUint32 GetTileCount() {
+    virtual uint32_t GetTileCount() {
         return 1;
     }
 
@@ -407,7 +407,7 @@ public:
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual void Resize(const nsIntSize& aSize);
-    virtual PRUint32 GetTileCount();
+    virtual uint32_t GetTileCount();
     virtual void BeginTileIteration();
     virtual bool NextTile();
     virtual void SetIterationCallback(TileIterationCallback aCallback,
@@ -1737,8 +1737,8 @@ protected:
     bool mHasRobustness;
     bool mContextLost;
 
-    PRInt32 mVendor;
-    PRInt32 mRenderer;
+    int32_t mVendor;
+    int32_t mRenderer;
 
 public:
     enum {
@@ -1747,9 +1747,9 @@ public:
         DebugAbortOnError = 1 << 2
     };
 
-    static PRUint32 sDebugMode;
+    static uint32_t sDebugMode;
 
-    static PRUint32 DebugMode() {
+    static uint32_t DebugMode() {
 #ifdef DEBUG
         return sDebugMode;
 #else
@@ -1773,7 +1773,7 @@ protected:
     // thread.
     // Store the current context when binding to thread local
     // storage to support DebugMode on an arbitrary thread.
-    static PRUintn sCurrentGLContextTLS;
+    static unsigned sCurrentGLContextTLS;
 #endif
 
     void UpdateActualFormat();
@@ -1895,8 +1895,8 @@ protected:
     }
 
     bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const {
-        PRInt32 biggerDimension = NS_MAX(aSize.width, aSize.height);
-        PRInt32 maxAllowed = NS_MIN(mMaxRenderbufferSize, mMaxTextureSize);
+        int32_t biggerDimension = NS_MAX(aSize.width, aSize.height);
+        int32_t maxAllowed = NS_MIN(mMaxRenderbufferSize, mMaxTextureSize);
         return biggerDimension <= maxAllowed;
     }
 

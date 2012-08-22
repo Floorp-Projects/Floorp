@@ -59,7 +59,7 @@ public:
 
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
-                                       PRUint8 capabilities,
+                                       uint8_t capabilities,
                                        bool useProxy);
     bool     IsAcceptableEncoding(const char *encoding);
 
@@ -67,19 +67,19 @@ public:
 
     nsHttpVersion  HttpVersion()             { return mHttpVersion; }
     nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
-    PRUint8        ReferrerLevel()           { return mReferrerLevel; }
+    uint8_t        ReferrerLevel()           { return mReferrerLevel; }
     bool           SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
-    PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
+    uint8_t        RedirectionLimit()        { return mRedirectionLimit; }
     PRIntervalTime IdleTimeout()             { return mIdleTimeout; }
     PRIntervalTime SpdyTimeout()             { return mSpdyTimeout; }
-    PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
+    uint16_t       MaxRequestAttempts()      { return mMaxRequestAttempts; }
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
-    PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
-    PRUint8        GetQoSBits()              { return mQoSBits; }
-    PRUint16       GetIdleSynTimeout()       { return mIdleSynTimeout; }
+    uint32_t       PhishyUserPassLength()    { return mPhishyUserPassLength; }
+    uint8_t        GetQoSBits()              { return mQoSBits; }
+    uint16_t       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
-    PRUint32       MaxSocketCount();
+    uint32_t       MaxSocketCount();
     bool           EnforceAssocReq()         { return mEnforceAssocReq; }
 
     bool           IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
@@ -91,10 +91,10 @@ public:
     bool           IsSpdyV3Enabled() { return mSpdyV3; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
     bool           UseAlternateProtocol() { return mUseAlternateProtocol; }
-    PRUint32       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
+    uint32_t       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
     PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
-    PRUint32       ConnectTimeout()  { return mConnectTimeout; }
+    uint32_t       ConnectTimeout()  { return mConnectTimeout; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -103,8 +103,8 @@ public:
 
     // cache support
     bool UseCache() const { return mUseCache; }
-    PRUint32 GenerateUniqueID() { return ++mLastUniqueID; }
-    PRUint32 SessionStartTime() { return mSessionStartTime; }
+    uint32_t GenerateUniqueID() { return ++mLastUniqueID; }
+    uint32_t SessionStartTime() { return mSessionStartTime; }
 
     //
     // Connection management methods:
@@ -119,14 +119,14 @@ public:
     // Called to kick-off a new transaction, by default the transaction
     // will be put on the pending transaction queue if it cannot be 
     // initiated at this time.  Callable from any thread.
-    nsresult InitiateTransaction(nsHttpTransaction *trans, PRInt32 priority)
+    nsresult InitiateTransaction(nsHttpTransaction *trans, int32_t priority)
     {
         return mConnMgr->AddTransaction(trans, priority);
     }
 
     // Called to change the priority of an existing transaction that has
     // already been initiated.
-    nsresult RescheduleTransaction(nsHttpTransaction *trans, PRInt32 priority)
+    nsresult RescheduleTransaction(nsHttpTransaction *trans, int32_t priority)
     {
         return mConnMgr->RescheduleTransaction(trans, priority);
     }
@@ -172,7 +172,7 @@ public:
     nsIStrictTransportSecurityService * GetSTSService();
 
     // callable from socket thread only
-    PRUint32 Get32BitsOfPseudoRandom();
+    uint32_t Get32BitsOfPseudoRandom();
 
     // Called by the channel before writing a request
     void OnModifyRequest(nsIHttpChannel *chan)
@@ -195,7 +195,7 @@ public:
     // Called by channels before a redirect happens. This notifies both the
     // channel's and the global redirect observers.
     nsresult AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                               PRUint32 flags);
+                               uint32_t flags);
 
     // Called by the channel when the response is read from the cache without
     // communicating with the server.
@@ -206,11 +206,11 @@ public:
 
     // Generates the host:port string for use in the Host: header as well as the
     // CONNECT line for proxies. This handles IPv6 literals correctly.
-    static nsresult GenerateHostPort(const nsCString& host, PRInt32 port,
+    static nsresult GenerateHostPort(const nsCString& host, int32_t port,
                                      nsCString& hostLine);
 
     bool GetPipelineAggressive()     { return mPipelineAggressive; }
-    void GetMaxPipelineObjectSize(PRInt64 *outVal)
+    void GetMaxPipelineObjectSize(int64_t *outVal)
     {
         *outVal = mMaxPipelineObjectSize;
     }
@@ -271,41 +271,41 @@ private:
     // prefs
     //
 
-    PRUint8  mHttpVersion;
-    PRUint8  mProxyHttpVersion;
-    PRUint8  mCapabilities;
-    PRUint8  mProxyCapabilities;
-    PRUint8  mReferrerLevel;
+    uint8_t  mHttpVersion;
+    uint8_t  mProxyHttpVersion;
+    uint8_t  mCapabilities;
+    uint8_t  mProxyCapabilities;
+    uint8_t  mReferrerLevel;
 
     bool mFastFallbackToIPv4;
 
     PRIntervalTime mIdleTimeout;
     PRIntervalTime mSpdyTimeout;
 
-    PRUint16 mMaxRequestAttempts;
-    PRUint16 mMaxRequestDelay;
-    PRUint16 mIdleSynTimeout;
+    uint16_t mMaxRequestAttempts;
+    uint16_t mMaxRequestDelay;
+    uint16_t mIdleSynTimeout;
 
-    PRUint16 mMaxConnections;
-    PRUint8  mMaxPersistentConnectionsPerServer;
-    PRUint8  mMaxPersistentConnectionsPerProxy;
-    PRUint16 mMaxPipelinedRequests;
-    PRUint16 mMaxOptimisticPipelinedRequests;
+    uint16_t mMaxConnections;
+    uint8_t  mMaxPersistentConnectionsPerServer;
+    uint8_t  mMaxPersistentConnectionsPerProxy;
+    uint16_t mMaxPipelinedRequests;
+    uint16_t mMaxOptimisticPipelinedRequests;
     bool     mPipelineAggressive;
-    PRInt64  mMaxPipelineObjectSize;
+    int64_t  mMaxPipelineObjectSize;
     bool     mPipelineRescheduleOnTimeout;
     PRIntervalTime mPipelineRescheduleTimeout;
     PRIntervalTime mPipelineReadTimeout;
 
-    PRUint8  mRedirectionLimit;
+    uint8_t  mRedirectionLimit;
 
     // we'll warn the user if we load an URL containing a userpass field
     // unless its length is less than this threshold.  this warning is
     // intended to protect the user against spoofing attempts that use
     // the userpass field of the URL to obscure the actual origin server.
-    PRUint8  mPhishyUserPassLength;
+    uint8_t  mPhishyUserPassLength;
 
-    PRUint8  mQoSBits;
+    uint8_t  mQoSBits;
 
     bool mPipeliningOverSSL;
     bool mEnforceAssocReq;
@@ -317,8 +317,8 @@ private:
     nsXPIDLCString mDefaultSocketType;
 
     // cache support
-    PRUint32                  mLastUniqueID;
-    PRUint32                  mSessionStartTime;
+    uint32_t                  mLastUniqueID;
+    uint32_t                  mSessionStartTime;
 
     // useragent components
     nsCString      mLegacyAppName;
@@ -364,13 +364,13 @@ private:
     bool           mSpdyV3;
     bool           mCoalesceSpdy;
     bool           mUseAlternateProtocol;
-    PRUint32       mSpdySendingChunkSize;
+    uint32_t       mSpdySendingChunkSize;
     PRIntervalTime mSpdyPingThreshold;
     PRIntervalTime mSpdyPingTimeout;
 
     // The maximum amount of time to wait for socket transport to be
     // established. In milliseconds.
-    PRUint32       mConnectTimeout;
+    uint32_t       mConnectTimeout;
 };
 
 //-----------------------------------------------------------------------------

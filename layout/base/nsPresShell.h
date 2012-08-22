@@ -80,10 +80,10 @@ public:
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
   virtual nsISelection* GetCurrentSelection(SelectionType aType);
 
-  NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
-  NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
+  NS_IMETHOD SetDisplaySelection(int16_t aToggle);
+  NS_IMETHOD GetDisplaySelection(int16_t *aToggle);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
-                                     PRInt16 aFlags);
+                                     int16_t aFlags);
   NS_IMETHOD RepaintSelection(SelectionType aType);
 
   virtual NS_HIDDEN_(void) BeginObservingDocument();
@@ -122,12 +122,12 @@ public:
   virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
                                                      ScrollAxis  aVertical,
                                                      ScrollAxis  aHorizontal,
-                                                     PRUint32    aFlags);
+                                                     uint32_t    aFlags);
   virtual bool ScrollFrameRectIntoView(nsIFrame*     aFrame,
                                        const nsRect& aRect,
                                        ScrollAxis    aVertical,
                                        ScrollAxis    aHorizontal,
-                                       PRUint32      aFlags);
+                                       uint32_t      aFlags);
   virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
                                              const nsRect &aRect,
                                              nscoord aMinTwips) const;
@@ -159,7 +159,7 @@ public:
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
-  virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, PRUint32 aFlags,
+  virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, uint32_t aFlags,
                                               nscolor aBackgroundColor,
                                               gfxContext* aThebesContext);
 
@@ -215,8 +215,8 @@ public:
   virtual void SetCaret(nsCaret *aNewCaret);
   virtual void RestoreCaret();
 
-  NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
-  NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
+  NS_IMETHOD SetSelectionFlags(int16_t aInEnable);
+  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable);
 
   // nsISelectionController
 
@@ -234,9 +234,9 @@ public:
   NS_IMETHOD CompleteScroll(bool aForward);
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
   NS_IMETHOD SelectAll();
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval);
-  virtual nsresult CheckVisibilityContent(nsIContent* aNode, PRInt16 aStartOffset,
-                                          PRInt16 aEndOffset, bool* aRetval);
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool *_retval);
+  virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
+                                          int16_t aEndOffset, bool* aRetval);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
@@ -270,16 +270,16 @@ public:
                                       nsPresContext* aPresContext,
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,
-                                      PRUint32 aColor);
+                                      uint32_t aColor);
   virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn);
   virtual bool IsPaintingFrameCounts();
 #endif
 
 #ifdef DEBUG
   virtual void ListStyleContexts(nsIFrame *aRootFrame, FILE *out,
-                                 PRInt32 aIndent = 0);
+                                 int32_t aIndent = 0);
 
-  virtual void ListStyleSheets(FILE *out, PRInt32 aIndent = 0);
+  virtual void ListStyleSheets(FILE *out, int32_t aIndent = 0);
   virtual void VerifyStyleTree();
 #endif
 
@@ -296,7 +296,7 @@ public:
                                                 nsIFrame* aFrame,
                                                 const nsRect& aBounds,
                                                 nscolor aBackstopColor,
-                                                PRUint32 aFlags);
+                                                uint32_t aFlags);
 
   virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                                  nsDisplayList& aList,
@@ -328,7 +328,7 @@ public:
   struct ScrollIntoViewData {
     ScrollAxis mContentScrollVAxis;
     ScrollAxis mContentScrollHAxis;
-    PRUint32   mContentToScrollToFlags;
+    uint32_t   mContentToScrollToFlags;
   };
 
 protected:
@@ -699,7 +699,7 @@ protected:
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
   nsIFrame*                 mCurrentReflowRoot;
-  PRUint32                  mUpdateCount;
+  uint32_t                  mUpdateCount;
 #endif
 
 #ifdef MOZ_REFLOW_PERF
@@ -763,7 +763,7 @@ protected:
   // This is used to protect ourselves from triggering reflow while in the
   // middle of frame construction and the like... it really shouldn't be
   // needed, one hopes, but it is for now.
-  PRUint16                  mChangeNestCount;
+  uint16_t                  mChangeNestCount;
   
   bool                      mDocumentLoading : 1;
   bool                      mIgnoreFrameDestruction : 1;

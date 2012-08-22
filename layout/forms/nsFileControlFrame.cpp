@@ -225,7 +225,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
   nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
   if (fileContent && browseControl) {
-    PRInt32 tabIndex;
+    int32_t tabIndex;
     nsAutoString accessKey;
 
     fileContent->GetAccessKey(accessKey);
@@ -253,7 +253,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                             PRUint32 aFilter)
+                                             uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mBrowse);
@@ -281,12 +281,12 @@ bool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
     return false;
   }
 
-  PRUint16 whichButton;
+  uint16_t whichButton;
   if (NS_FAILED(mouseEvent->GetButton(&whichButton)) || whichButton != 0) {
     return false;
   }
 
-  PRInt32 clickCount;
+  int32_t clickCount;
   if (NS_FAILED(mouseEvent->GetDetail(&clickCount)) || clickCount > 1) {
     return false;
   }
@@ -338,7 +338,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Show dialog
-  PRUint32 result;
+  uint32_t result;
   rv = capturePicker->Show(&result);
   NS_ENSURE_SUCCESS(rv, rv);
   if (result == nsICapturePicker::RETURN_CANCEL)
@@ -484,8 +484,8 @@ nsFileControlFrame::GetSkipSides() const
 }
 
 void
-nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRInt32 aWhichControls)
+nsFileControlFrame::SyncAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             int32_t aWhichControls)
 {
   nsAutoString value;
   if (mContent->GetAttr(aNameSpaceID, aAttribute, value)) {
@@ -521,9 +521,9 @@ nsFileControlFrame::SyncDisabledState()
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsFileControlFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
+                                     int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
@@ -646,10 +646,10 @@ nsFileControlFrame::CreateAccessible()
 }
 #endif
 
-PRUint32
+uint32_t
 nsFileControlFrame::GetCaptureMode(const CaptureCallbackData& aData)
 {
-  PRInt32 filters = nsHTMLInputElement::FromContent(mContent)->GetFilterFromAccept();
+  int32_t filters = nsHTMLInputElement::FromContent(mContent)->GetFilterFromAccept();
   nsresult rv;
   bool captureEnabled;
 

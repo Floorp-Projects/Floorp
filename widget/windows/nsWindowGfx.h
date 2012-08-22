@@ -33,14 +33,14 @@ public:
     kRegularIcon
   };
   static gfxIntSize GetIconMetrics(IconSizeType aSizeType);
-  static nsresult CreateIcon(imgIContainer *aContainer, bool aIsCursor, PRUint32 aHotspotX, PRUint32 aHotspotY, gfxIntSize aScaledSize, HICON *aIcon);
+  static nsresult CreateIcon(imgIContainer *aContainer, bool aIsCursor, uint32_t aHotspotX, uint32_t aHotspotY, gfxIntSize aScaledSize, HICON *aIcon);
 
 private:
   /**
    * Cursor helpers
    */
-  static PRUint8*         Data32BitTo1Bit(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-  static HBITMAP          DataToBitmap(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
+  static uint8_t*         Data32BitTo1Bit(uint8_t* aImageData, uint32_t aWidth, uint32_t aHeight);
+  static HBITMAP          DataToBitmap(uint8_t* aImageData, uint32_t aWidth, uint32_t aHeight, uint32_t aDepth);
 };
 
 #endif // WindowGfx_h__

@@ -122,7 +122,7 @@ protected:
                                          LONG aExpectedSelEnd,
                                          nsString& aReferenceString);
   bool TestNotificationTextChange(nsIWidget* aWidget,
-                                    PRUint32 aCode,
+                                    uint32_t aCode,
                                     const nsAString& aCharacter,
                                     LONG aStart,
                                     LONG aOldEnd,
@@ -145,10 +145,10 @@ protected:
 NS_IMETHODIMP
 TestApp::OnProgressChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest,
-                           PRInt32 aCurSelfProgress,
-                           PRInt32 aMaxSelfProgress,
-                           PRInt32 aCurTotalProgress,
-                           PRInt32 aMaxTotalProgress)
+                           int32_t aCurSelfProgress,
+                           int32_t aMaxSelfProgress,
+                           int32_t aCurTotalProgress,
+                           int32_t aMaxTotalProgress)
 {
   return NS_OK;
 }
@@ -157,7 +157,7 @@ NS_IMETHODIMP
 TestApp::OnLocationChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest,
                            nsIURI *aLocation,
-                           PRUint32 aFlags)
+                           uint32_t aFlags)
 {
   return NS_OK;
 }
@@ -174,7 +174,7 @@ TestApp::OnStatusChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 TestApp::OnSecurityChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest,
-                           PRUint32 aState)
+                           uint32_t aState)
 {
   return NS_OK;
 }
@@ -428,7 +428,7 @@ class TSFEnumRangeImpl : public IEnumTfRanges
 {
 private:
   ULONG mRefCnt;
-  PRUint32 mCurrentIndex;
+  uint32_t mCurrentIndex;
 
 public:
   nsTArray<nsRefPtr<TSFRangeImpl> > mRanges;
@@ -481,7 +481,7 @@ public: // IEnumTfRanges
       *pcFetched = 0;
     if (mCurrentIndex + ulCount - 1 >= mRanges.Length())
       return E_FAIL;
-    for (PRUint32 i = 0; i < ulCount; i++) {
+    for (uint32_t i = 0; i < ulCount; i++) {
       ppRange[i] = mRanges[mCurrentIndex++];
       ppRange[i]->AddRef();
       if (pcFetched)
@@ -690,7 +690,7 @@ public: // ITfReadOnlyProperty
     }
     nsRefPtr<TSFEnumRangeImpl> er = new TSFEnumRangeImpl();
     NS_ENSURE_TRUE(er, E_OUTOFMEMORY);
-    for (PRUint32 i = 0; i < mRanges.Length(); i++) {
+    for (uint32_t i = 0; i < mRanges.Length(); i++) {
       LONG start, end;
       HRESULT hr = GetRegularExtent(mRanges[i], start, end);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -719,7 +719,7 @@ public: // ITfReadOnlyProperty
     LONG givenStart, givenEnd;
     HRESULT hr = GetRegularExtent(pRange, givenStart, givenEnd);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-    for (PRUint32 i = 0; i < mRanges.Length(); i++) {
+    for (uint32_t i = 0; i < mRanges.Length(); i++) {
       LONG start, end;
       HRESULT hr = GetRegularExtent(mRanges[i], start, end);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -916,7 +916,7 @@ public: // ITfCompositionView
     NS_ENSURE_TRUE(ppRange, E_INVALIDARG);
     NS_ENSURE_TRUE(mAttrProp->mRanges.Length() > 0, E_FAIL);
     LONG start = LONG_MAX, end = 0;
-    for (PRUint32 i = 0; i < mAttrProp->mRanges.Length(); i++) {
+    for (uint32_t i = 0; i < mAttrProp->mRanges.Length(); i++) {
       LONG tmpStart, tmpEnd;
       HRESULT hr = GetRegularExtent(mAttrProp->mRanges[i], tmpStart, tmpEnd);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -1121,7 +1121,7 @@ public:
   TestApp::test_type mTest;
   bool mDeactivated;
   TSFDocumentMgrImpl* mFocusedDocument; // Must be raw pointer, but strong.
-  PRInt32 mFocusCount;
+  int32_t mFocusCount;
 
   TSFMgrImpl(TestApp* test) : mTestApp(test), mTest(nullptr), mRefCnt(0),
     mDeactivated(false), mFocusedDocument(nullptr), mFocusCount(0)
@@ -1622,7 +1622,7 @@ TestApp::RunTest(test_type aTest, bool aLock)
 NS_IMETHODIMP
 TestApp::OnStateChange(nsIWebProgress *aWebProgress,
                         nsIRequest *aRequest,
-                        PRUint32 aStateFlags,
+                        uint32_t aStateFlags,
                         nsresult aStatus)
 {
   NS_ASSERTION(aStateFlags & nsIWebProgressListener::STATE_IS_WINDOW &&
@@ -1703,7 +1703,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
 bool
 TestApp::TestFocus(void)
 {
-  PRUint32 focus = mMgr->mFocusCount;
+  uint32_t focus = mMgr->mFocusCount;
   nsresult rv;
 
   /* If these fail the cause is probably one or more of:
@@ -1748,7 +1748,7 @@ bool
 TestApp::TestClustering(void)
 {
   // Text for testing
-  const PRUint32 STRING_LENGTH = 2;
+  const uint32_t STRING_LENGTH = 2;
   PRUnichar string[3];
   string[0] = 'e';
   string[1] = 0x0301; // U+0301 'acute accent'
@@ -1946,8 +1946,8 @@ TestApp::TestSelection(void)
 bool
 TestApp::TestText(void)
 {
-  const PRUint32 BUFFER_SIZE  = (0x100);
-  const PRUint32 RUNINFO_SIZE = (0x10);
+  const uint32_t BUFFER_SIZE  = (0x100);
+  const uint32_t RUNINFO_SIZE = (0x10);
 
   bool succeeded = true, continueTest;
   PRUnichar buffer[BUFFER_SIZE];
@@ -1991,9 +1991,9 @@ TestApp::TestText(void)
   }
 
   // Get text from GETTEXT2_START to GETTEXT2_END
-  const PRUint32 GETTEXT2_START       = (18);
-  const PRUint32 GETTEXT2_END         = (mTestString.Length() - 16);
-  const PRUint32 GETTEXT2_BUFFER_SIZE = (0x10);
+  const uint32_t GETTEXT2_START       = (18);
+  const uint32_t GETTEXT2_END         = (mTestString.Length() - 16);
+  const uint32_t GETTEXT2_BUFFER_SIZE = (0x10);
 
   hr = mMgr->GetFocusedStore()->GetText(GETTEXT2_START, GETTEXT2_END,
                                         buffer, GETTEXT2_BUFFER_SIZE,
@@ -2015,9 +2015,9 @@ TestApp::TestText(void)
   }
 
   // Replace text from SETTEXT1_START to SETTEXT1_END with insertString
-  const PRUint32 SETTEXT1_START        = (8);
-  const PRUint32 SETTEXT1_TAIL_LENGTH  = (40);
-  const PRUint32 SETTEXT1_END          = (mTestString.Length() -
+  const uint32_t SETTEXT1_START        = (8);
+  const uint32_t SETTEXT1_TAIL_LENGTH  = (40);
+  const uint32_t SETTEXT1_END          = (mTestString.Length() -
                                           SETTEXT1_TAIL_LENGTH);
   NS_NAMED_LITERAL_STRING(insertString, "(Inserted string)");
 
@@ -2034,7 +2034,7 @@ TestApp::TestText(void)
     continueTest = succeeded = false;
   }
 
-  const PRUint32 SETTEXT1_FINAL_LENGTH = (SETTEXT1_START +
+  const uint32_t SETTEXT1_FINAL_LENGTH = (SETTEXT1_START +
                                           SETTEXT1_TAIL_LENGTH +
                                           insertString.Length());
 
@@ -2154,7 +2154,7 @@ TestApp::TestExtents(void)
   }
   RECT windowRect, screenRect, textRect1, textRect2;
   BOOL clipped;
-  PRInt32 val;
+  int32_t val;
   TsViewCookie view;
   HRESULT hr;
 
@@ -2319,7 +2319,7 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
     return false;
   }
 
-  const PRUint32 bufferSize = 0x100, runInfoSize = 0x10;
+  const uint32_t bufferSize = 0x100, runInfoSize = 0x10;
   PRUnichar buffer[bufferSize];
   TS_RUNINFO runInfo[runInfoSize];
   ULONG bufferRet, runInfoRet;
@@ -2571,7 +2571,7 @@ TestApp::TestComposition(void)
 
 bool
 TestApp::TestNotificationTextChange(nsIWidget* aWidget,
-                                    PRUint32 aCode,
+                                    uint32_t aCode,
                                     const nsAString& aCharacter,
                                     LONG aStart,
                                     LONG aOldEnd,
@@ -2695,7 +2695,7 @@ TestApp::TestEditMessages(void)
   // 0         1         2          3         4         5
 
   // The native text string is increased by converting \n to \r\n.
-  PRUint32 testStringLength = mTestString.Length() + 1;
+  uint32_t testStringLength = mTestString.Length() + 1;
 
   mTextArea->SetValue(mTestString);
   mTextArea->Focus();
@@ -2876,7 +2876,7 @@ TestApp::TestScrollMessages(void)
 {
   NS_NAMED_LITERAL_STRING(kLine, "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n");
   mTestString.Truncate();
-  for (PRUint32 i = 0; i < 30; i++) {
+  for (uint32_t i = 0; i < 30; i++) {
     mTestString.Append(kLine);
   }
 
@@ -2920,7 +2920,7 @@ TestApp::TestScrollMessages(void)
     return false;
   }
 
-  PRInt32 x, y, prevX, prevY;
+  int32_t x, y, prevX, prevY;
   textArea->GetScrollTop(&y);
   textArea->GetScrollLeft(&x);
 
@@ -2938,8 +2938,8 @@ TestApp::TestScrollMessages(void)
   textArea->GetScrollTop(&y);
   textArea->GetScrollLeft(&x);
 
-  const PRInt32 kLineWidth  = x;
-  const PRInt32 kLineHeight = y;
+  const int32_t kLineWidth  = x;
+  const int32_t kLineHeight = y;
 
   DO_CHECK(x == 0,     "TestScrollMessages: SendMessage WM_HSCROLL #1");
   DO_CHECK(y != prevY, "TestScrollMessages: SendMessage WM_HSCROLL #1");
@@ -3000,8 +3000,8 @@ TestApp::TestScrollMessages(void)
   DO_CHECK(x <= kLineWidth, "TestScrollMessages: SendMessage WM_HSCROLL #3");
   DO_CHECK(y != prevY,      "TestScrollMessages: SendMessage WM_HSCROLL #3");
 
-  const PRInt32 kPageWidth  = x;
-  const PRInt32 kPageHeight = y;
+  const int32_t kPageWidth  = x;
+  const int32_t kPageHeight = y;
 
   ::SendMessage(wnd, WM_VSCROLL, SB_LINEDOWN, 0);
   ::SendMessage(wnd, WM_VSCROLL, SB_LINEUP, 0);

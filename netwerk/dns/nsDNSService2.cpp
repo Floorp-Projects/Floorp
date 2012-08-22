@@ -93,7 +93,7 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
+nsDNSRecord::GetNextAddr(uint16_t port, PRNetAddr *addr)
 {
     // not a programming error to poke the DNS record when it has no more
     // entries.  just fail without any debug warnings.  this enables consumers
@@ -205,7 +205,7 @@ nsDNSRecord::Rewind()
 }
 
 NS_IMETHODIMP
-nsDNSRecord::ReportUnusable(PRUint16 aPort)
+nsDNSRecord::ReportUnusable(uint16_t aPort)
 {
     // right now we don't use the port in the blacklist
 
@@ -240,8 +240,8 @@ public:
     nsDNSAsyncRequest(nsHostResolver   *res,
                       const nsACString &host,
                       nsIDNSListener   *listener,
-                      PRUint16          flags,
-                      PRUint16          af)
+                      uint16_t          flags,
+                      uint16_t          af)
         : mResolver(res)
         , mHost(host)
         , mListener(listener)
@@ -258,8 +258,8 @@ public:
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
     nsCOMPtr<nsIDNSListener> mListener;
-    PRUint16                 mFlags;
-    PRUint16                 mAF;
+    uint16_t                 mFlags;
+    uint16_t                 mAF;
 };
 
 void
@@ -368,9 +368,9 @@ nsDNSService::Init()
     NS_ENSURE_TRUE(!mResolver, NS_ERROR_ALREADY_INITIALIZED);
 
     // prefs
-    PRUint32 maxCacheEntries  = 400;
-    PRUint32 maxCacheLifetime = 2; // minutes
-    PRUint32 lifetimeGracePeriod = 1;
+    uint32_t maxCacheEntries  = 400;
+    uint32_t maxCacheLifetime = 2; // minutes
+    uint32_t lifetimeGracePeriod = 1;
     bool     enableIDN        = true;
     bool     disableIPv6      = false;
     bool     disablePrefetch  = false;
@@ -382,9 +382,9 @@ nsDNSService::Init()
     // read prefs
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-        PRInt32 val;
+        int32_t val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheEntries, &val)))
-            maxCacheEntries = (PRUint32) val;
+            maxCacheEntries = (uint32_t) val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheExpiration, &val)))
             maxCacheLifetime = val / 60; // convert from seconds to minutes
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheGrace, &val)))
@@ -557,7 +557,7 @@ DNSListenerProxy::OnLookupCompleteRunnable::Run()
 
 NS_IMETHODIMP
 nsDNSService::AsyncResolve(const nsACString  &hostname,
-                           PRUint32           flags,
+                           uint32_t           flags,
                            nsIDNSListener    *listener,
                            nsIEventTarget    *target,
                            nsICancelable    **result)
@@ -597,7 +597,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
       listener = new DNSListenerProxy(listener, target);
     }
 
-    PRUint16 af = GetAFForLookup(*hostPtr, flags);
+    uint16_t af = GetAFForLookup(*hostPtr, flags);
 
     nsDNSAsyncRequest *req =
             new nsDNSAsyncRequest(res, *hostPtr, listener, flags, af);
@@ -617,7 +617,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
 
 NS_IMETHODIMP
 nsDNSService::CancelAsyncResolve(const nsACString  &aHostname,
-                                 PRUint32           aFlags,
+                                 uint32_t           aFlags,
                                  nsIDNSListener    *aListener,
                                  nsresult           aReason)
 {
@@ -645,7 +645,7 @@ nsDNSService::CancelAsyncResolve(const nsACString  &aHostname,
             hostname = hostACE;
     }
 
-    PRUint16 af = GetAFForLookup(hostname, aFlags);
+    uint16_t af = GetAFForLookup(hostname, aFlags);
 
     res->CancelAsyncRequest(hostname.get(), aFlags, af, aListener, aReason);
     return NS_OK;
@@ -653,7 +653,7 @@ nsDNSService::CancelAsyncResolve(const nsACString  &aHostname,
 
 NS_IMETHODIMP
 nsDNSService::Resolve(const nsACString &hostname,
-                      PRUint32          flags,
+                      uint32_t          flags,
                       nsIDNSRecord    **result)
 {
     // grab reference to global host resolver and IDN service.  beware
@@ -697,7 +697,7 @@ nsDNSService::Resolve(const nsACString &hostname,
     PR_EnterMonitor(mon);
     nsDNSSyncRequest syncReq(mon);
 
-    PRUint16 af = GetAFForLookup(*hostPtr, flags);
+    uint16_t af = GetAFForLookup(*hostPtr, flags);
 
     rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), flags, af, &syncReq);
     if (NS_SUCCEEDED(rv)) {
@@ -756,19 +756,19 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const PRUnichar *
     return NS_OK;
 }
 
-PRUint16
-nsDNSService::GetAFForLookup(const nsACString &host, PRUint32 flags)
+uint16_t
+nsDNSService::GetAFForLookup(const nsACString &host, uint32_t flags)
 {
     if (mDisableIPv6 || (flags & RESOLVE_DISABLE_IPV6))
         return PR_AF_INET;
 
     MutexAutoLock lock(mLock);
 
-    PRUint16 af = PR_AF_UNSPEC;
+    uint16_t af = PR_AF_UNSPEC;
 
     if (!mIPv4OnlyDomains.IsEmpty()) {
         const char *domain, *domainEnd, *end;
-        PRUint32 hostLen, domainLen;
+        uint32_t hostLen, domainLen;
 
         // see if host is in one of the IPv4-only domains
         domain = mIPv4OnlyDomains.BeginReading();

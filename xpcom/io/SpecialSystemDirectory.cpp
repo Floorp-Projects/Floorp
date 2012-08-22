@@ -345,7 +345,7 @@ static const char xdg_user_dirs[] =
     "TEMPLATES\0"
     "VIDEOS";
 
-static const PRUint8 xdg_user_dir_offsets[] = {
+static const uint8_t xdg_user_dir_offsets[] = {
     0,
     8,
     18,
@@ -456,7 +456,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case OS_DriveDirectory:
 #if defined (XP_WIN)
         {
-            PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
+            int32_t len = ::GetWindowsDirectoryW(path, MAX_PATH);
             if (len == 0)
                 break;
             if (path[1] == PRUnichar(':') && path[2] == PRUnichar('\\'))
@@ -542,7 +542,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {
-            PRInt32 len = ::GetSystemDirectoryW(path, MAX_PATH);
+            int32_t len = ::GetSystemDirectoryW(path, MAX_PATH);
 
             // Need enough space to add the trailing backslash
             if (!len || len > MAX_PATH - 2)
@@ -557,7 +557,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Win_WindowsDirectory:
         {
-            PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
+            int32_t len = ::GetWindowsDirectoryW(path, MAX_PATH);
 
             // Need enough space to add the trailing backslash
             if (!len || len > MAX_PATH - 2)
@@ -582,7 +582,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             if (NS_SUCCEEDED(rv))
                 return rv;
 
-            PRInt32 len;
+            int32_t len;
             if ((len = ::GetEnvironmentVariableW(L"HOME", path, MAX_PATH)) > 0)
             {
                 // Need enough space to add the trailing backslash

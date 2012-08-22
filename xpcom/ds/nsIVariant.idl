@@ -14,34 +14,34 @@ interface nsIDataType : nsISupports
     // These MUST match the declarations in xpt_struct.h. 
     // Otherwise the world is likely to explode.   
                                                    // From xpt_struct.h ...
-    const PRUint16 VTYPE_INT8                =  0; // TD_INT8              = 0,
-    const PRUint16 VTYPE_INT16               =  1; // TD_INT16             = 1,
-    const PRUint16 VTYPE_INT32               =  2; // TD_INT32             = 2,
-    const PRUint16 VTYPE_INT64               =  3; // TD_INT64             = 3,
-    const PRUint16 VTYPE_UINT8               =  4; // TD_UINT8             = 4,
-    const PRUint16 VTYPE_UINT16              =  5; // TD_UINT16            = 5,
-    const PRUint16 VTYPE_UINT32              =  6; // TD_UINT32            = 6,
-    const PRUint16 VTYPE_UINT64              =  7; // TD_UINT64            = 7,
-    const PRUint16 VTYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
-    const PRUint16 VTYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
-    const PRUint16 VTYPE_BOOL                = 10; // TD_BOOL              = 10,
-    const PRUint16 VTYPE_CHAR                = 11; // TD_CHAR              = 11,
-    const PRUint16 VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
-    const PRUint16 VTYPE_VOID                = 13; // TD_VOID              = 13,
-    const PRUint16 VTYPE_ID                  = 14; // TD_PNSIID            = 14,
-    const PRUint16 VTYPE_DOMSTRING           = 15; // TD_DOMSTRING         = 15,
-    const PRUint16 VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
-    const PRUint16 VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
-    const PRUint16 VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
-    const PRUint16 VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
-    const PRUint16 VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
-    const PRUint16 VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
-    const PRUint16 VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22,
-    const PRUint16 VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
-    const PRUint16 VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
-    const PRUint16 VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
-    const PRUint16 VTYPE_EMPTY_ARRAY         = 254;
-    const PRUint16 VTYPE_EMPTY               = 255;
+    const uint16_t VTYPE_INT8                =  0; // TD_INT8              = 0,
+    const uint16_t VTYPE_INT16               =  1; // TD_INT16             = 1,
+    const uint16_t VTYPE_INT32               =  2; // TD_INT32             = 2,
+    const uint16_t VTYPE_INT64               =  3; // TD_INT64             = 3,
+    const uint16_t VTYPE_UINT8               =  4; // TD_UINT8             = 4,
+    const uint16_t VTYPE_UINT16              =  5; // TD_UINT16            = 5,
+    const uint16_t VTYPE_UINT32              =  6; // TD_UINT32            = 6,
+    const uint16_t VTYPE_UINT64              =  7; // TD_UINT64            = 7,
+    const uint16_t VTYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
+    const uint16_t VTYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
+    const uint16_t VTYPE_BOOL                = 10; // TD_BOOL              = 10,
+    const uint16_t VTYPE_CHAR                = 11; // TD_CHAR              = 11,
+    const uint16_t VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
+    const uint16_t VTYPE_VOID                = 13; // TD_VOID              = 13,
+    const uint16_t VTYPE_ID                  = 14; // TD_PNSIID            = 14,
+    const uint16_t VTYPE_DOMSTRING           = 15; // TD_DOMSTRING         = 15,
+    const uint16_t VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
+    const uint16_t VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
+    const uint16_t VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
+    const uint16_t VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
+    const uint16_t VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
+    const uint16_t VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
+    const uint16_t VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22,
+    const uint16_t VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
+    const uint16_t VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
+    const uint16_t VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
+    const uint16_t VTYPE_EMPTY_ARRAY         = 254;
+    const uint16_t VTYPE_EMPTY               = 255;
 };
 
 /**
@@ -55,16 +55,16 @@ interface nsIDataType : nsISupports
 [scriptable, uuid(81e4c2de-acac-4ad6-901a-b5fb1b851a0d)]
 interface nsIVariant : nsISupports
 {
-    [noscript] readonly attribute PRUint16     dataType;
+    [noscript] readonly attribute uint16_t     dataType;
 
-    [noscript] PRUint8      getAsInt8();
-    [noscript] PRInt16      getAsInt16();
-    [noscript] PRInt32      getAsInt32();
-    [noscript] PRInt64      getAsInt64();
-    [noscript] PRUint8      getAsUint8();
-    [noscript] PRUint16     getAsUint16();
-    [noscript] PRUint32     getAsUint32();
-    [noscript] PRUint64     getAsUint64();
+    [noscript] uint8_t      getAsInt8();
+    [noscript] int16_t      getAsInt16();
+    [noscript] int32_t      getAsInt32();
+    [noscript] int64_t      getAsInt64();
+    [noscript] uint8_t      getAsUint8();
+    [noscript] uint16_t     getAsUint16();
+    [noscript] uint32_t     getAsUint32();
+    [noscript] uint64_t     getAsUint64();
     [noscript] float        getAsFloat();
     [noscript] double       getAsDouble();
     [noscript] boolean      getAsBool();
@@ -83,13 +83,13 @@ interface nsIVariant : nsISupports
     [noscript] void getAsInterface(out nsIIDPtr iid, 
                                    [iid_is(iid), retval] out nsQIResult iface);
 
-    [notxpcom] nsresult getAsArray(out PRUint16 type, out nsIID iid,
-                                   out PRUint32 count, out voidPtr ptr);
+    [notxpcom] nsresult getAsArray(out uint16_t type, out nsIID iid,
+                                   out uint32_t count, out voidPtr ptr);
 
-    [noscript] void getAsStringWithSize(out PRUint32 size, 
+    [noscript] void getAsStringWithSize(out uint32_t size, 
                                         [size_is(size), retval] out string str);
     
-    [noscript] void getAsWStringWithSize(out PRUint32 size, 
+    [noscript] void getAsWStringWithSize(out uint32_t size, 
                                          [size_is(size), retval] out wstring str);
 };
 
@@ -108,14 +108,14 @@ interface nsIWritableVariant : nsIVariant
 {
     attribute boolean writable;
 
-    void setAsInt8(in PRUint8 aValue);
-    void setAsInt16(in PRInt16 aValue);
-    void setAsInt32(in PRInt32 aValue);
-    void setAsInt64(in PRInt64 aValue);
-    void setAsUint8(in PRUint8 aValue);
-    void setAsUint16(in PRUint16 aValue);
-    void setAsUint32(in PRUint32 aValue);
-    void setAsUint64(in PRUint64 aValue);
+    void setAsInt8(in uint8_t aValue);
+    void setAsInt16(in int16_t aValue);
+    void setAsInt32(in int32_t aValue);
+    void setAsInt64(in int64_t aValue);
+    void setAsUint8(in uint8_t aValue);
+    void setAsUint16(in uint16_t aValue);
+    void setAsUint32(in uint32_t aValue);
+    void setAsUint64(in uint64_t aValue);
     void setAsFloat(in float aValue);
     void setAsDouble(in double aValue);
     void setAsBool(in boolean aValue);
@@ -133,13 +133,13 @@ interface nsIWritableVariant : nsIVariant
     void setAsInterface(in nsIIDRef iid, 
                         [iid_is(iid)] in nsQIResult iface);
 
-    [noscript] void setAsArray(in PRUint16 type, in nsIIDPtr iid,
-                               in PRUint32 count, in voidPtr ptr);
+    [noscript] void setAsArray(in uint16_t type, in nsIIDPtr iid,
+                               in uint32_t count, in voidPtr ptr);
 
-    void setAsStringWithSize(in PRUint32 size, 
+    void setAsStringWithSize(in uint32_t size, 
                              [size_is(size)] in string str);
     
-    void setAsWStringWithSize(in PRUint32 size, 
+    void setAsWStringWithSize(in uint32_t size, 
                               [size_is(size)] in wstring str);
 
     void setAsVoid();

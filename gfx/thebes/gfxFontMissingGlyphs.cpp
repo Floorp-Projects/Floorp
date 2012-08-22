@@ -10,7 +10,7 @@
    (b20 << 6) | (b21 << 7) | (b22 << 8) | (b30 << 9) | (b31 << 10) | (b32 << 11) | \
    (b40 << 12) | (b41 << 13) | (b42 << 14))
 
-static const PRUint16 glyphMicroFont[16] = {
+static const uint16_t glyphMicroFont[16] = {
   CHAR_BITS(0, 1, 0,
             1, 0, 1,
             1, 0, 1,
@@ -145,10 +145,10 @@ static const gfxFloat BOX_BORDER_OPACITY = 0.5;
  * So for now we just paint a bunch of rectangles...
  */
 static void
-DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, PRUint32 aDigit)
+DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, uint32_t aDigit)
 {
     aContext->NewPath();
-    PRUint32 glyphBits = glyphMicroFont[aDigit];
+    uint32_t glyphBits = glyphMicroFont[aDigit];
     int x, y;
     for (y = 0; y < MINIFONT_HEIGHT; ++y) {
         for (x = 0; x < MINIFONT_WIDTH; ++x) {
@@ -163,7 +163,7 @@ DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, PRUint32 aDigit)
 
 void
 gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRect,
-                                       PRUint32 aChar)
+                                       uint32_t aChar)
 {
     aContext->Save();
 
@@ -248,7 +248,7 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
 }
 
 gfxFloat
-gfxFontMissingGlyphs::GetDesiredMinWidth(PRUint32 aChar)
+gfxFontMissingGlyphs::GetDesiredMinWidth(uint32_t aChar)
 {
 /**
  * The minimum desired width for a missing-glyph glyph box. I've laid it out

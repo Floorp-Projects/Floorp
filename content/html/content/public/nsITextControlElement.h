@@ -63,18 +63,18 @@ public:
    * Get the cols attribute (if textarea) or a default
    * @return the number of columns to use
    */
-  NS_IMETHOD_(PRInt32) GetCols() = 0;
+  NS_IMETHOD_(int32_t) GetCols() = 0;
 
   /**
    * Get the column index to wrap at, or -1 if we shouldn't wrap
    */
-  NS_IMETHOD_(PRInt32) GetWrapCols() = 0;
+  NS_IMETHOD_(int32_t) GetWrapCols() = 0;
 
   /**
    * Get the rows attribute (if textarea) or a default
    * @return the number of rows to use
    */
-  NS_IMETHOD_(PRInt32) GetRows() = 0;
+  NS_IMETHOD_(int32_t) GetRows() = 0;
 
   /**
    * Get the default value of the text control
@@ -160,10 +160,10 @@ public:
    */
   NS_IMETHOD_(void) OnValueChanged(bool aNotify) = 0;
 
-  static const PRInt32 DEFAULT_COLS = 20;
-  static const PRInt32 DEFAULT_ROWS = 1;
-  static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
-  static const PRInt32 DEFAULT_UNDO_CAP = 1000;
+  static const int32_t DEFAULT_COLS = 20;
+  static const int32_t DEFAULT_ROWS = 1;
+  static const int32_t DEFAULT_ROWS_TEXTAREA = 2;
+  static const int32_t DEFAULT_UNDO_CAP = 1000;
 
   // wrap can be one of these three values.  
   typedef enum {

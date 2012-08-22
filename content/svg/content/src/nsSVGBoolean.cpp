@@ -175,7 +175,7 @@ nsSVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue)
   NS_ASSERTION(aValue.mType == &SMILBoolType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SMILBoolType::sSingleton) {
-    mVal->SetAnimValue(PRUint16(aValue.mU.mBool), mSVGElement);
+    mVal->SetAnimValue(uint16_t(aValue.mU.mBool), mSVGElement);
   }
   return NS_OK;
 }

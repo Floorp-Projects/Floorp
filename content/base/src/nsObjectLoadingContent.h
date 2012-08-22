@@ -196,7 +196,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * The default implementation supports all types but not
      * eSupportClassID or eAllowPluginSkipChannel
      */
-    virtual PRUint32 GetCapabilities() const;
+    virtual uint32_t GetCapabilities() const;
 
     /**
      * Destroys all loaded documents/plugins and releases references
@@ -297,7 +297,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *
      * @return true if call succeeded and NS_CP_ACCEPTED(*aContentPolicy)
      */
-    bool CheckLoadPolicy(PRInt16 *aContentPolicy);
+    bool CheckLoadPolicy(int16_t *aContentPolicy);
 
     /**
      * Helper to check if the object passes process policy. Assumes we have a
@@ -307,7 +307,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *
      * @return true if call succeeded and NS_CP_ACCEPTED(*aContentPolicy)
      */
-    bool CheckProcessPolicy(PRInt16 *aContentPolicy);
+    bool CheckProcessPolicy(int16_t *aContentPolicy);
 
     /**
      * Checks whether the given type is a supported document type

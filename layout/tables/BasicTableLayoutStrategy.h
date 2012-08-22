@@ -41,8 +41,8 @@ private:
 
     // Distribute a colspanning cell's percent width (if any) to its columns.
     void DistributePctWidthToColumns(float aSpanPrefPct,
-                                     PRInt32 aFirstCol,
-                                     PRInt32 aColCount);
+                                     int32_t aFirstCol,
+                                     int32_t aColCount);
 
     // Distribute a width of some BltsWidthType type to a set of columns.
     //  aWidth: The amount of width to be distributed
@@ -60,8 +60,8 @@ private:
     //                             pref or min width to its columns
     //                           - The colspanning cell has a specified width.
     void DistributeWidthToColumns(nscoord aWidth, 
-                                  PRInt32 aFirstCol, 
-                                  PRInt32 aColCount,
+                                  int32_t aFirstCol, 
+                                  int32_t aColCount,
                                   BtlsWidthType aWidthType,
                                   bool aSpanHasSpecifiedWidth);
  

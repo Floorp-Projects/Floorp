@@ -57,8 +57,8 @@ NS_IMETHODIMP
 nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
                                      nsISupports *context,
                                      nsIInputStream *input,
-                                     PRUint32 offset,
-                                     PRUint32 count)
+                                     uint32_t offset,
+                                     uint32_t count)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);

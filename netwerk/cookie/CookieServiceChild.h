@@ -55,7 +55,7 @@ protected:
   bool RequireThirdPartyCheck();
 
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
-  PRUint8 mCookieBehavior;
+  uint8_t mCookieBehavior;
   bool mThirdPartySession;
 };
 

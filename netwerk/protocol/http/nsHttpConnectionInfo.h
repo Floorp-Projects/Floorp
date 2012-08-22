@@ -22,7 +22,7 @@
 class nsHttpConnectionInfo
 {
 public:
-    nsHttpConnectionInfo(const nsACString &host, PRInt32 port,
+    nsHttpConnectionInfo(const nsACString &host, int32_t port,
                          nsProxyInfo* proxyInfo,
                          bool usingSSL=false)
         : mRef(0)
@@ -36,7 +36,7 @@ public:
 
         if (mUsingHttpProxy) {
             mUsingConnect = mUsingSSL;  // SSL always uses CONNECT
-            PRUint32 resolveFlags = 0;
+            uint32_t resolveFlags = 0;
             if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
                 resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
                 mUsingConnect = true;
@@ -69,9 +69,9 @@ public:
 
     const nsAFlatCString &HashKey() const { return mHashKey; }
 
-    void SetOriginServer(const nsACString &host, PRInt32 port);
+    void SetOriginServer(const nsACString &host, int32_t port);
 
-    void SetOriginServer(const char *host, PRInt32 port)
+    void SetOriginServer(const char *host, int32_t port)
     {
         SetOriginServer(nsDependentCString(host), port);
     }
@@ -80,7 +80,7 @@ public:
     nsHttpConnectionInfo* Clone() const;
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
-    PRInt32     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
+    int32_t     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
     const char *ProxyType() const { return mProxyInfo ? mProxyInfo->Type() : nullptr; }
 
     // Compare this connection info to another...
@@ -96,12 +96,12 @@ public:
     }
 
     const char   *Host() const           { return mHost.get(); }
-    PRInt32       Port() const           { return mPort; }
+    int32_t       Port() const           { return mPort; }
     nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
     bool          UsingHttpProxy() const { return mUsingHttpProxy; }
     bool          UsingSSL() const       { return mUsingSSL; }
     bool          UsingConnect() const   { return mUsingConnect; }
-    PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
+    int32_t       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
     void          SetAnonymous(bool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
     bool          GetAnonymous() const   { return mHashKey.CharAt(2) == 'A'; }
@@ -114,7 +114,7 @@ private:
     nsrefcnt               mRef;
     nsCString              mHashKey;
     nsCString              mHost;
-    PRInt32                mPort;
+    int32_t                mPort;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingSSL;

@@ -321,7 +321,7 @@ gfxASurface::CairoStatus()
 
 /* static */
 bool
-gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
+gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, int32_t limit)
 {
     if (sz.width < 0 || sz.height < 0) {
         NS_WARNING("Surface width or height < 0!");
@@ -343,8 +343,8 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     }
 #endif
 
-    // make sure the surface area doesn't overflow a PRInt32
-    CheckedInt<PRInt32> tmp = sz.width;
+    // make sure the surface area doesn't overflow a int32_t
+    CheckedInt<int32_t> tmp = sz.width;
     tmp *= sz.height;
     if (!tmp.isValid()) {
         NS_WARNING("Surface size too large (would overflow)!");
@@ -352,7 +352,7 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     }
 
     // assuming 4-byte stride, make sure the allocation size
-    // doesn't overflow a PRInt32 either
+    // doesn't overflow a int32_t either
     tmp *= 4;
     if (!tmp.isValid()) {
         NS_WARNING("Allocation too large (would overflow)!");
@@ -363,8 +363,8 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
 }
 
 /* static */
-PRInt32
-gfxASurface::FormatStrideForWidth(gfxImageFormat format, PRInt32 width)
+int32_t
+gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
 {
     return cairo_format_stride_for_width((cairo_format_t)format, (int)width);
 }
@@ -447,7 +447,7 @@ gfxASurface::GetMemoryLocation() const
     return MEMORY_IN_PROCESS_HEAP;
 }
 
-PRInt32
+int32_t
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {
     switch (format) {
@@ -555,15 +555,15 @@ static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
                  gfxASurface::SurfaceTypeMax);
 #ifdef CAIRO_HAS_D2D_SURFACE
-PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_D2D) ==
-                 PRUint32(gfxASurface::SurfaceTypeD2D));
+PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_D2D) ==
+                 uint32_t(gfxASurface::SurfaceTypeD2D));
 #endif
-PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_SKIA) ==
-                 PRUint32(gfxASurface::SurfaceTypeSkia));
+PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
+                 uint32_t(gfxASurface::SurfaceTypeSkia));
 
 /* Surface size memory reporting */
 
-static PRInt64 gSurfaceMemoryUsed[gfxASurface::SurfaceTypeMax] = { 0 };
+static int64_t gSurfaceMemoryUsed[gfxASurface::SurfaceTypeMax] = { 0 };
 
 class SurfaceMemoryReporter MOZ_FINAL :
     public nsIMemoryMultiReporter
@@ -585,7 +585,7 @@ public:
     {
         size_t len = NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs);
         for (size_t i = 0; i < len; i++) {
-            PRInt64 amount = gSurfaceMemoryUsed[i];
+            int64_t amount = gSurfaceMemoryUsed[i];
 
             if (amount != 0) {
                 const char *path = sSurfaceMemoryReporterAttrs[i].path;
@@ -606,7 +606,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD GetExplicitNonHeap(PRInt64 *n)
+    NS_IMETHOD GetExplicitNonHeap(int64_t *n)
     {
         *n = 0; // this reporter makes neither "explicit" non NONHEAP reports
         return NS_OK;
@@ -617,7 +617,7 @@ NS_IMPL_ISUPPORTS1(SurfaceMemoryReporter, nsIMemoryMultiReporter)
 
 void
 gfxASurface::RecordMemoryUsedForSurfaceType(gfxASurface::gfxSurfaceType aType,
-                                            PRInt32 aBytes)
+                                            int32_t aBytes)
 {
     if (aType < 0 || aType >= SurfaceTypeMax) {
         NS_WARNING("Invalid type to RecordMemoryUsedForSurfaceType!");
@@ -634,7 +634,7 @@ gfxASurface::RecordMemoryUsedForSurfaceType(gfxASurface::gfxSurfaceType aType,
 }
 
 void
-gfxASurface::RecordMemoryUsed(PRInt32 aBytes)
+gfxASurface::RecordMemoryUsed(int32_t aBytes)
 {
     RecordMemoryUsedForSurfaceType(GetType(), aBytes);
     mBytesRecorded += aBytes;
@@ -723,12 +723,12 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   nsCOMPtr<imgIEncoder> encoder =
     do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
   if (!encoder) {
-    PRInt32 w = NS_MIN(size.width, 8);
-    PRInt32 h = NS_MIN(size.height, 8);
+    int32_t w = NS_MIN(size.width, 8);
+    int32_t h = NS_MIN(size.height, 8);
     printf("Could not create encoder. Printing %dx%d pixels.\n", w, h);
-    for (PRInt32 y = 0; y < h; ++y) {
-      for (PRInt32 x = 0; x < w; ++x) {
-        printf("%x ", reinterpret_cast<PRUint32*>(imgsurf->Data())[y*imgsurf->Stride()+ x]);
+    for (int32_t y = 0; y < h; ++y) {
+      for (int32_t x = 0; x < w; ++x) {
+        printf("%x ", reinterpret_cast<uint32_t*>(imgsurf->Data())[y*imgsurf->Stride()+ x]);
       }
     }
     return;
@@ -749,7 +749,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   if (!imgStream)
     return;
 
-  PRUint64 bufSize64;
+  uint64_t bufSize64;
   rv = imgStream->Available(&bufSize64);
   if (NS_FAILED(rv))
     return;
@@ -757,16 +757,16 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   if (bufSize64 > PR_UINT32_MAX - 16)
     return;
 
-  PRUint32 bufSize = (PRUint32)bufSize64;
+  uint32_t bufSize = (uint32_t)bufSize64;
 
   // ...leave a little extra room so we can call read again and make sure we
   // got everything. 16 bytes for better padding (maybe)
   bufSize += 16;
-  PRUint32 imgSize = 0;
+  uint32_t imgSize = 0;
   char* imgData = (char*)PR_Malloc(bufSize);
   if (!imgData)
     return;
-  PRUint32 numReadThisTime = 0;
+  uint32_t numReadThisTime = 0;
   while ((rv = imgStream->Read(&imgData[imgSize],
                                bufSize - imgSize,
                                &numReadThisTime)) == NS_OK && numReadThisTime > 0)

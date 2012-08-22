@@ -11,12 +11,12 @@
 // We must ensure that the entity is unsigned
 // otherwise, if it is signed/negative, the MSB will be
 // propagated when we shift
-#define LITTLE_TO_NATIVE16(x) (((((PRUint16) x) & 0xFF) << 8) | \
-                               (((PRUint16) x) >> 8))
-#define LITTLE_TO_NATIVE32(x) (((((PRUint32) x) & 0xFF) << 24) | \
-                               (((((PRUint32) x) >> 8) & 0xFF) << 16) | \
-                               (((((PRUint32) x) >> 16) & 0xFF) << 8) | \
-                               (((PRUint32) x) >> 24))
+#define LITTLE_TO_NATIVE16(x) (((((uint16_t) x) & 0xFF) << 8) | \
+                               (((uint16_t) x) >> 8))
+#define LITTLE_TO_NATIVE32(x) (((((uint32_t) x) & 0xFF) << 24) | \
+                               (((((uint32_t) x) >> 8) & 0xFF) << 16) | \
+                               (((((uint32_t) x) >> 16) & 0xFF) << 8) | \
+                               (((uint32_t) x) >> 24))
 #define NATIVE32_TO_LITTLE LITTLE_TO_NATIVE32
 #define NATIVE16_TO_LITTLE LITTLE_TO_NATIVE16
 #else

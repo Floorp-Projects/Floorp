@@ -102,7 +102,7 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
   // this may be a comma separated list of extensions...just take the 
   // first one for now...
 
-  PRInt32 pos = aFileExtension.FindChar(PRUnichar(','));
+  int32_t pos = aFileExtension.FindChar(PRUnichar(','));
   if (pos > 0) {
     // we have a comma separated list of types...
     // truncate everything after the first comma (including the comma)
@@ -276,14 +276,14 @@ static void CleanupHandlerPath(nsString& aPath)
   // 3) C:\Windows\some.dll,-foo -bar
   // 4) C:\Windows\some.cpl,-foo -bar
 
-  PRInt32 lastCommaPos = aPath.RFindChar(',');
+  int32_t lastCommaPos = aPath.RFindChar(',');
   if (lastCommaPos != kNotFound)
     aPath.Truncate(lastCommaPos);
 
   aPath.AppendLiteral(" ");
 
   // case insensitive
-  PRUint32 index = aPath.Find(".exe ", true);
+  uint32_t index = aPath.Find(".exe ", true);
   if (index == kNotFound)
     index = aPath.Find(".dll ", true);
   if (index == kNotFound)
@@ -308,15 +308,15 @@ static void StripRundll32(nsString& aCommandString)
   NS_NAMED_LITERAL_STRING(rundllSegmentShort, "rundll32 ");
 
   // case insensitive
-  PRInt32 strLen = rundllSegment.Length();
-  PRInt32 index = aCommandString.Find(rundllSegment, true);
+  int32_t strLen = rundllSegment.Length();
+  int32_t index = aCommandString.Find(rundllSegment, true);
   if (index == kNotFound) {
     strLen = rundllSegmentShort.Length();
     index = aCommandString.Find(rundllSegmentShort, true);
   }
 
   if (index != kNotFound) {
-    PRUint32 rundllSegmentLength = index + strLen;
+    uint32_t rundllSegmentLength = index + strLen;
     aCommandString.Cut(0, rundllSegmentLength);
   }
 }
@@ -345,7 +345,7 @@ static void StripRundll32(nsString& aCommandString)
   //    Viewer.dll", var var
 
   // Expand environment variables so we have full path strings.
-  PRUint32 bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
+  uint32_t bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
                                                    L"", 0);
   if (bufLength == 0) // Error
     return false;

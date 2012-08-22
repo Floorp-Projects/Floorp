@@ -12,14 +12,14 @@
 
 #include "nsString.h"
 
-gfxWindowsSurface::gfxWindowsSurface(HWND wnd, PRUint32 flags) :
+gfxWindowsSurface::gfxWindowsSurface(HWND wnd, uint32_t flags) :
     mOwnsDC(true), mForPrinting(false), mWnd(wnd)
 {
     mDC = ::GetDC(mWnd);
     InitWithDC(flags);
 }
 
-gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
+gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags) :
     mOwnsDC(false), mForPrinting(false), mDC(dc), mWnd(nullptr)
 {
     if (flags & FLAG_TAKE_DC)
@@ -99,7 +99,7 @@ gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
 }
 
 void
-gfxWindowsSurface::InitWithDC(PRUint32 flags)
+gfxWindowsSurface::InitWithDC(uint32_t flags)
 {
     if (flags & FLAG_IS_TRANSPARENT) {
         Init(cairo_win32_surface_create_with_alpha(mDC));
@@ -296,7 +296,7 @@ gfxWindowsSurface::EndPage()
 #endif
 }
 
-PRInt32
+int32_t
 gfxWindowsSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)

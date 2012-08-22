@@ -54,14 +54,14 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Size of MD5 hash in bytes
-  static const PRUint32 CHECKSUM_SIZE = 16;
+  static const uint32_t CHECKSUM_SIZE = 16;
 
   nsCheckSummedOutputStream() {}
   virtual ~nsCheckSummedOutputStream() { nsSafeFileOutputStream::Close(); }
 
   NS_IMETHOD Finish();
-  NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *result);
-  NS_IMETHOD Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags);
+  NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result);
+  NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags);
 
 protected:
   nsCOMPtr<nsICryptoHash> mHash;
@@ -72,9 +72,9 @@ protected:
 inline nsresult
 NS_NewCheckSummedOutputStream(nsIOutputStream **result,
                               nsIFile         *file,
-                              PRInt32         ioFlags       = -1,
-                              PRInt32         perm          = -1,
-                              PRInt32         behaviorFlags =  0)
+                              int32_t         ioFlags       = -1,
+                              int32_t         perm          = -1,
+                              int32_t         behaviorFlags =  0)
 {
     nsCOMPtr<nsIFileOutputStream> out = new nsCheckSummedOutputStream();
     nsresult rv = out->Init(file, ioFlags, perm, behaviorFlags);

@@ -93,7 +93,7 @@ struct _HashEnumerateArgs {
 };
 
 static PLDHashOperator
-hashEnumerate(PLDHashTable* table, PLDHashEntryHdr* hdr, PRUint32 i, void *arg)
+hashEnumerate(PLDHashTable* table, PLDHashEntryHdr* hdr, uint32_t i, void *arg)
 {
     _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
     HTEntry* entry = static_cast<HTEntry*>(hdr);
@@ -119,7 +119,7 @@ nsHashKey::Write(nsIObjectOutputStream* aStream) const
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsHashtable::nsHashtable(PRUint32 aInitSize, bool threadSafe)
+nsHashtable::nsHashtable(uint32_t aInitSize, bool threadSafe)
   : mLock(NULL), mEnumerating(false)
 {
     MOZ_COUNT_CTOR(nsHashtable);
@@ -253,7 +253,7 @@ void *nsHashtable::Remove(nsHashKey *aKey)
 // nor refcounted.
 static PLDHashOperator
 hashEnumerateShare(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                   PRUint32 i, void *arg)
+                   uint32_t i, void *arg)
 {
     nsHashtable *newHashtable = (nsHashtable *)arg;
     HTEntry * entry = static_cast<HTEntry*>(hdr);
@@ -287,7 +287,7 @@ void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* aClosure)
 }
 
 static PLDHashOperator
-hashEnumerateRemove(PLDHashTable*, PLDHashEntryHdr* hdr, PRUint32 i, void *arg)
+hashEnumerateRemove(PLDHashTable*, PLDHashEntryHdr* hdr, uint32_t i, void *arg)
 {
     HTEntry* entry = static_cast<HTEntry*>(hdr);
     _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
@@ -339,7 +339,7 @@ nsHashtable::nsHashtable(nsIObjectInputStream* aStream,
         }
 
         if (NS_SUCCEEDED(rv)) {
-            PRUint32 count;
+            uint32_t count;
             rv = aStream->Read32(&count);
 
             if (NS_SUCCEEDED(rv)) {
@@ -350,7 +350,7 @@ nsHashtable::nsHashtable(nsIObjectInputStream* aStream,
                     mHashtable.ops = nullptr;
                     rv = NS_ERROR_OUT_OF_MEMORY;
                 } else {
-                    for (PRUint32 i = 0; i < count; i++) {
+                    for (uint32_t i = 0; i < count; i++) {
                         nsHashKey* key;
                         void *data;
 
@@ -400,7 +400,7 @@ nsHashtable::Write(nsIObjectOutputStream* aStream,
     if (NS_FAILED(rv)) return rv;
 
     // Write the entry count first, so we know how many key/value pairs to read.
-    PRUint32 count = mHashtable.entryCount;
+    uint32_t count = mHashtable.entryCount;
     rv = aStream->Write32(count);
     if (NS_FAILED(rv)) return rv;
 
@@ -440,7 +440,7 @@ nsCStringKey::nsCStringKey(const nsCStringKey& aKey)
     : mStr(aKey.mStr), mStrLen(aKey.mStrLen), mOwnership(aKey.mOwnership)
 {
     if (mOwnership != NEVER_OWN) {
-      PRUint32 len = mStrLen * sizeof(char);
+      uint32_t len = mStrLen * sizeof(char);
       char* str = reinterpret_cast<char*>(nsMemory::Alloc(len + sizeof(char)));
       if (!str) {
         // Pray we don't dangle!
@@ -483,11 +483,11 @@ nsCStringKey::nsCStringKey(const nsACString& str)
     MOZ_COUNT_CTOR(nsCStringKey);
 }
 
-nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, Ownership own)
+nsCStringKey::nsCStringKey(const char* str, int32_t strLen, Ownership own)
     : mStr((char*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
-    if (mStrLen == PRUint32(-1))
+    if (mStrLen == uint32_t(-1))
         mStrLen = strlen(str);
 #ifdef DEBUG
     mKeyType = CStringKey;
@@ -502,7 +502,7 @@ nsCStringKey::~nsCStringKey(void)
     MOZ_COUNT_DTOR(nsCStringKey);
 }
 
-PRUint32
+uint32_t
 nsCStringKey::HashCode(void) const
 {
     return HashString(mStr, mStrLen);
@@ -513,8 +513,8 @@ nsCStringKey::Equals(const nsHashKey* aKey) const
 {
     NS_ASSERTION(aKey->GetKeyType() == CStringKey, "mismatched key types");
     nsCStringKey* other = (nsCStringKey*)aKey;
-    NS_ASSERTION(mStrLen != PRUint32(-1), "never called HashCode");
-    NS_ASSERTION(other->mStrLen != PRUint32(-1), "never called HashCode");
+    NS_ASSERTION(mStrLen != uint32_t(-1), "never called HashCode");
+    NS_ASSERTION(other->mStrLen != uint32_t(-1), "never called HashCode");
     if (mStrLen != other->mStrLen)
         return false;
     return memcmp(mStr, other->mStr, mStrLen * sizeof(char)) == 0;
@@ -530,7 +530,7 @@ nsCStringKey::Clone() const
     // clone string is zero terminated, but don't assume that the source
     // string was so terminated.
 
-    PRUint32 len = mStrLen * sizeof(char);
+    uint32_t len = mStrLen * sizeof(char);
     char* str = (char*)nsMemory::Alloc(len + sizeof(char));
     if (str == NULL)
         return NULL;
@@ -567,7 +567,7 @@ nsStringKey::nsStringKey(const nsStringKey& aKey)
     : mStr(aKey.mStr), mStrLen(aKey.mStrLen), mOwnership(aKey.mOwnership)
 {
     if (mOwnership != NEVER_OWN) {
-        PRUint32 len = mStrLen * sizeof(PRUnichar);
+        uint32_t len = mStrLen * sizeof(PRUnichar);
         PRUnichar* str = reinterpret_cast<PRUnichar*>(nsMemory::Alloc(len + sizeof(PRUnichar)));
         if (!str) {
             // Pray we don't dangle!
@@ -610,11 +610,11 @@ nsStringKey::nsStringKey(const nsAString& str)
     MOZ_COUNT_CTOR(nsStringKey);
 }
 
-nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, Ownership own)
+nsStringKey::nsStringKey(const PRUnichar* str, int32_t strLen, Ownership own)
     : mStr((PRUnichar*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
-    if (mStrLen == PRUint32(-1))
+    if (mStrLen == uint32_t(-1))
         mStrLen = NS_strlen(str);
 #ifdef DEBUG
     mKeyType = StringKey;
@@ -629,7 +629,7 @@ nsStringKey::~nsStringKey(void)
     MOZ_COUNT_DTOR(nsStringKey);
 }
 
-PRUint32
+uint32_t
 nsStringKey::HashCode(void) const
 {
     return HashString(mStr, mStrLen);
@@ -640,8 +640,8 @@ nsStringKey::Equals(const nsHashKey* aKey) const
 {
     NS_ASSERTION(aKey->GetKeyType() == StringKey, "mismatched key types");
     nsStringKey* other = (nsStringKey*)aKey;
-    NS_ASSERTION(mStrLen != PRUint32(-1), "never called HashCode");
-    NS_ASSERTION(other->mStrLen != PRUint32(-1), "never called HashCode");
+    NS_ASSERTION(mStrLen != uint32_t(-1), "never called HashCode");
+    NS_ASSERTION(other->mStrLen != uint32_t(-1), "never called HashCode");
     if (mStrLen != other->mStrLen)
         return false;
     return memcmp(mStr, other->mStr, mStrLen * sizeof(PRUnichar)) == 0;
@@ -653,7 +653,7 @@ nsStringKey::Clone() const
     if (mOwnership == NEVER_OWN)
         return new nsStringKey(mStr, mStrLen, NEVER_OWN);
 
-    PRUint32 len = (mStrLen+1) * sizeof(PRUnichar);
+    uint32_t len = (mStrLen+1) * sizeof(PRUnichar);
     PRUnichar* str = (PRUnichar*)nsMemory::Alloc(len);
     if (str == NULL)
         return NULL;
@@ -687,7 +687,7 @@ nsObjectHashtable::nsObjectHashtable(nsHashtableCloneElementFunc cloneElementFun
                                      void* cloneElementClosure,
                                      nsHashtableEnumFunc destroyElementFun,
                                      void* destroyElementClosure,
-                                     PRUint32 aSize, bool threadSafe)
+                                     uint32_t aSize, bool threadSafe)
     : nsHashtable(aSize, threadSafe),
       mCloneElementFun(cloneElementFun),
       mCloneElementClosure(cloneElementClosure),
@@ -705,7 +705,7 @@ nsObjectHashtable::~nsObjectHashtable()
 PLDHashOperator
 nsObjectHashtable::CopyElement(PLDHashTable* table,
                                PLDHashEntryHdr* hdr,
-                               PRUint32 i, void *arg)
+                               uint32_t i, void *arg)
 {
     nsObjectHashtable *newHashtable = (nsObjectHashtable *)arg;
     HTEntry *entry = static_cast<HTEntry*>(hdr);
@@ -810,7 +810,7 @@ nsSupportsHashtable::Remove(nsHashKey *aKey, nsISupports **value)
 PLDHashOperator
 nsSupportsHashtable::EnumerateCopy(PLDHashTable*,
                                    PLDHashEntryHdr* hdr,
-                                   PRUint32 i, void *arg)
+                                   uint32_t i, void *arg)
 {
     nsHashtable *newHashtable = (nsHashtable *)arg;
     HTEntry* entry = static_cast<HTEntry*>(hdr);

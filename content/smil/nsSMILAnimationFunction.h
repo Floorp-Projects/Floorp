@@ -78,7 +78,7 @@ public:
    */
   void SampleAt(nsSMILTime aSampleTime,
                 const nsSMILTimeValue& aSimpleDuration,
-                PRUint32 aRepeatIteration);
+                uint32_t aRepeatIteration);
 
   /**
    * Indicate to sample using the last value defined for the animation function.
@@ -89,7 +89,7 @@ public:
    * @param aRepeatIteration  The repeat iteration for this sample. The first
    *                          iteration has a value of 0.
    */
-  void SampleLastValue(PRUint32 aRepeatIteration);
+  void SampleLastValue(uint32_t aRepeatIteration);
 
   /**
    * Indicate that this animation is now active. This is used to instruct the
@@ -135,7 +135,7 @@ public:
    *
    * This method should never return any other value, including 0.
    */
-  PRInt8 CompareTo(const nsSMILAnimationFunction* aOther) const;
+  int8_t CompareTo(const nsSMILAnimationFunction* aOther) const;
 
   /*
    * The following methods are provided so that the compositor can optimize its
@@ -303,7 +303,7 @@ protected:
    * Adjust the progress within an interval, that is, between two animation
    * values, by applying any keySplines.
    */
-  double   ScaleIntervalProgress(double aProgress, PRUint32 aIntervalIndex);
+  double   ScaleIntervalProgress(double aProgress, uint32_t aIntervalIndex);
 
   // Convenience attribute getters -- use these instead of querying
   // mAnimationElement as these may need to be overridden by subclasses
@@ -319,9 +319,9 @@ protected:
   virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
                              nsSMILValueArray& aResult);
 
-  virtual void CheckValueListDependentAttrs(PRUint32 aNumValues);
-  void         CheckKeyTimes(PRUint32 aNumValues);
-  void         CheckKeySplines(PRUint32 aNumValues);
+  virtual void CheckValueListDependentAttrs(uint32_t aNumValues);
+  void         CheckKeyTimes(uint32_t aNumValues);
+  void         CheckKeySplines(uint32_t aNumValues);
 
   virtual bool IsToAnimation() const {
     return !HasAttr(nsGkAtoms::values) &&
@@ -405,7 +405,7 @@ protected:
   // that it determines will not contribute to the final result.
   nsSMILTime                    mSampleTime; // sample time within simple dur
   nsSMILTimeValue               mSimpleDuration;
-  PRUint32                      mRepeatIteration;
+  uint32_t                      mRepeatIteration;
 
   nsSMILTime                    mBeginTime; // document time
 
@@ -418,7 +418,7 @@ protected:
   // Which attributes have been set but have had errors. This is not used for
   // all attributes but only those which have specified error behaviour
   // associated with them.
-  PRUint16                      mErrorFlags;
+  uint16_t                      mErrorFlags;
 
   // Allows us to check whether an animation function has changed target from
   // sample to sample (because if neither target nor animated value have

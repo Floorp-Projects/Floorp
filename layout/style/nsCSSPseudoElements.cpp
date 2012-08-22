@@ -38,7 +38,7 @@ static const nsStaticAtom CSSPseudoElements_info[] = {
 // nsAtomListUtils::IsMember), but with corresponding indices (so the
 // i-th element of this array is the flags for the i-th pseudo-element
 // in the previous array).
-static const PRUint32 CSSPseudoElements_flags[] = {
+static const uint32_t CSSPseudoElements_flags[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
   flags_,
 #include "nsCSSPseudoElementList.h"
@@ -78,7 +78,7 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
 /* static */ nsCSSPseudoElements::Type
 nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 {
-  for (PRUint32 i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
       return Type(i);
     }
@@ -105,10 +105,10 @@ nsCSSPseudoElements::GetPseudoAtom(Type aType)
   return *CSSPseudoElements_info[aType].mAtom;
 }
 
-/* static */ PRUint32
+/* static */ uint32_t
 nsCSSPseudoElements::FlagsForPseudoElement(nsIAtom *aAtom)
 {
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
       break;

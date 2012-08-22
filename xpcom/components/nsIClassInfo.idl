@@ -35,7 +35,7 @@ interface nsIClassInfo : nsISupports
      * Should set *count = 0 and *array = null and return NS_OK if getting the 
      * list is not supported.
      */
-    void getInterfaces(out PRUint32 count, 
+    void getInterfaces(out uint32_t count, 
                        [array, size_is(count), retval] out nsIIDPtr array);
 
     /**
@@ -50,7 +50,7 @@ interface nsIClassInfo : nsISupports
      *
      * Should return null if no helper available for given language.
      */
-    nsISupports getHelperForLanguage(in PRUint32 language);
+    nsISupports getHelperForLanguage(in uint32_t language);
 
     /**
      * A contract ID through which an instance of this class can be created
@@ -73,31 +73,31 @@ interface nsIClassInfo : nsISupports
      * Return language type from list in nsIProgrammingLanguage
      */
 
-    readonly attribute PRUint32 implementationLanguage;
+    readonly attribute uint32_t implementationLanguage;
 
     /**
      * Bitflags for 'flags' attribute.
      */
-    const PRUint32 SINGLETON            = 1 << 0;
-    const PRUint32 THREADSAFE           = 1 << 1;
-    const PRUint32 MAIN_THREAD_ONLY     = 1 << 2;
-    const PRUint32 DOM_OBJECT           = 1 << 3;
-    const PRUint32 PLUGIN_OBJECT        = 1 << 4;
-    const PRUint32 SINGLETON_CLASSINFO  = 1 << 5;
+    const uint32_t SINGLETON            = 1 << 0;
+    const uint32_t THREADSAFE           = 1 << 1;
+    const uint32_t MAIN_THREAD_ONLY     = 1 << 2;
+    const uint32_t DOM_OBJECT           = 1 << 3;
+    const uint32_t PLUGIN_OBJECT        = 1 << 4;
+    const uint32_t SINGLETON_CLASSINFO  = 1 << 5;
 
     /**
      * 'flags' attribute bitflag: whether objects of this type implement
      * nsIContent.
      */
-    const PRUint32 CONTENT_NODE         = 1 << 6;
+    const uint32_t CONTENT_NODE         = 1 << 6;
     
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
     // with this bit set.
-    const PRUint32 RESERVED             = 1 << 31;
+    const uint32_t RESERVED             = 1 << 31;
 
 
-    readonly attribute PRUint32 flags;
+    readonly attribute uint32_t flags;
 
     /**
      * Also a class ID through which an instance of this class can be created

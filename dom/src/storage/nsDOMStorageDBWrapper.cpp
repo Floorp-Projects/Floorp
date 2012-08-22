@@ -124,9 +124,9 @@ nsDOMStorageDBWrapper::SetKey(DOMStorageImpl* aStorage,
                               const nsAString& aKey,
                               const nsAString& aValue,
                               bool aSecure,
-                              PRInt32 aQuota,
+                              int32_t aQuota,
                               bool aExcludeOfflineFromUsage,
-                              PRInt32 *aNewUsage)
+                              int32_t *aNewUsage)
 {
   IMPL_FORWARDER(SetKey(aStorage, aKey, aValue, aSecure,
                         aQuota, aExcludeOfflineFromUsage, aNewUsage));
@@ -144,7 +144,7 @@ nsresult
 nsDOMStorageDBWrapper::RemoveKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  bool aExcludeOfflineFromUsage,
-                                 PRInt32 aKeyUsage)
+                                 int32_t aKeyUsage)
 {
   IMPL_FORWARDER(RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage));
 }
@@ -218,14 +218,14 @@ nsDOMStorageDBWrapper::RemoveOwners(const nsTArray<nsString> &aOwners,
 
 nsresult
 nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage,
-                                bool aExcludeOfflineFromUsage, PRInt32 *aUsage)
+                                bool aExcludeOfflineFromUsage, int32_t *aUsage)
 {
   IMPL_FORWARDER(GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage));
 }
 
 nsresult
 nsDOMStorageDBWrapper::GetUsage(const nsACString& aDomain,
-                                bool aIncludeSubDomains, PRInt32 *aUsage, bool aPrivate)
+                                bool aIncludeSubDomains, int32_t *aUsage, bool aPrivate)
 {
   if (aPrivate)
     return mPrivateBrowsingDB.GetUsage(aDomain, aIncludeSubDomains, aUsage);
@@ -258,7 +258,7 @@ nsDOMStorageDBWrapper::CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey)
   aKey.AppendLiteral(":");
   aKey.Append(scheme);
 
-  PRInt32 port = NS_GetRealPort(aUri);
+  int32_t port = NS_GetRealPort(aUri);
   if (port != -1) {
     aKey.AppendLiteral(":");
     aKey.Append(nsPrintfCString("%d", port));

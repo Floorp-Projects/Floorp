@@ -149,7 +149,7 @@ RestyleTracker::DoProcessRestyles()
       nsAutoTArray<nsRefPtr<Element>, RESTYLE_ARRAY_STACKSIZE> laterSiblingArr;
       LaterSiblingCollector siblingCollector = { this, &laterSiblingArr };
       mPendingRestyles.Enumerate(CollectLaterSiblings, &siblingCollector);
-      for (PRUint32 i = 0; i < laterSiblingArr.Length(); ++i) {
+      for (uint32_t i = 0; i < laterSiblingArr.Length(); ++i) {
         Element* element = laterSiblingArr[i];
         for (nsIContent* sibling = element->GetNextSibling();
              sibling;
@@ -165,7 +165,7 @@ RestyleTracker::DoProcessRestyles()
       }
 
       // Now remove all those eRestyle_LaterSiblings bits
-      for (PRUint32 i = 0; i < laterSiblingArr.Length(); ++i) {
+      for (uint32_t i = 0; i < laterSiblingArr.Length(); ++i) {
         Element* element = laterSiblingArr[i];
         NS_ASSERTION(element->HasFlag(RestyleBit()), "How did that happen?");
         RestyleData data;
@@ -183,7 +183,7 @@ RestyleTracker::DoProcessRestyles()
       mHaveLaterSiblingRestyles = false;
     }
 
-    PRUint32 rootCount;
+    uint32_t rootCount;
     while ((rootCount = mRestyleRoots.Length())) {
       // Make sure to pop the element off our restyle root array, so
       // that we can freely append to the array as we process this

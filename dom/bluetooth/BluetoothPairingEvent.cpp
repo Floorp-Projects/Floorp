@@ -13,7 +13,7 @@ USING_BLUETOOTH_NAMESPACE
 
 // static
 already_AddRefed<BluetoothPairingEvent>
-BluetoothPairingEvent::Create(const nsAString& aDeviceAddress, const PRUint32& aPasskey)
+BluetoothPairingEvent::Create(const nsAString& aDeviceAddress, const uint32_t& aPasskey)
 {
   nsRefPtr<BluetoothPairingEvent> event = new BluetoothPairingEvent();
 
@@ -56,7 +56,7 @@ NS_IMPL_RELEASE_INHERITED(BluetoothPairingEvent, nsDOMEvent)
 DOMCI_DATA(BluetoothPairingEvent, BluetoothPairingEvent)
 
 NS_IMETHODIMP
-BluetoothPairingEvent::GetPasskey(PRUint32* aPasskey)
+BluetoothPairingEvent::GetPasskey(uint32_t* aPasskey)
 {
   *aPasskey = mPasskey;
   return NS_OK;

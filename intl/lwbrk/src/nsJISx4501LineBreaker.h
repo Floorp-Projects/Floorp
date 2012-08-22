@@ -16,20 +16,20 @@ public:
   nsJISx4051LineBreaker();
   virtual ~nsJISx4051LineBreaker();
 
-  PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+  int32_t Next( const PRUnichar* aText, uint32_t aLen, uint32_t aPos);
 
-  PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+  int32_t Prev( const PRUnichar* aText, uint32_t aLen, uint32_t aPos);
 
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRUint8 aBreakMode,
-                                 PRUint8* aBreakBefore);
-  virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
-                                 PRUint8 aBreakMode,
-                                 PRUint8* aBreakBefore);
+  virtual void GetJISx4051Breaks(const PRUnichar* aText, uint32_t aLength,
+                                 uint8_t aBreakMode,
+                                 uint8_t* aBreakBefore);
+  virtual void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
+                                 uint8_t aBreakMode,
+                                 uint8_t* aBreakBefore);
 
 private:
-  PRInt32 WordMove(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRInt8 aDirection);
+  int32_t WordMove(const PRUnichar* aText, uint32_t aLen, uint32_t aPos,
+                   int8_t aDirection);
 };
 
 #endif  /* nsJISx4501LineBreaker_h__ */

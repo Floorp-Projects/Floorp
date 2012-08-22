@@ -505,10 +505,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
-                                                      PRInt32         aLastIndex,
-                                                      PRUint32        aFlagsValues,
-                                                      PRUint32        aFlagsToUpdate)
+nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(int32_t         aFirstIndex,
+                                                      int32_t         aLastIndex,
+                                                      uint32_t        aFlagsValues,
+                                                      uint32_t        aFlagsToUpdate)
 {
   // The REC says "The <mfrac> element sets displaystyle to "false" within
   // numerator and denominator"

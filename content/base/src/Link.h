@@ -137,7 +137,7 @@ private:
   // can disappear.
   nsCOMPtr<IHistory> mHistory;
 
-  PRUint16 mLinkState;
+  uint16_t mLinkState;
 
   bool mRegistered;
 };

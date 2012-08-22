@@ -35,9 +35,9 @@ public:
   void RegisterForContentChanges(nsIContent* aContent,
                                  nsChangeObserver* aMenuObject);
   void UnregisterForContentChanges(nsIContent* aContent);
-  PRUint32 RegisterForCommand(nsMenuItemX* aItem);
-  void UnregisterCommand(PRUint32 aCommandID);
-  nsMenuItemX* GetMenuItemForCommandID(PRUint32 inCommandID);
+  uint32_t RegisterForCommand(nsMenuItemX* aItem);
+  void UnregisterCommand(uint32_t aCommandID);
+  nsMenuItemX* GetMenuItemForCommandID(uint32_t inCommandID);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
@@ -45,7 +45,7 @@ public:
 protected:
   nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
 
-  PRUint32  mCurrentCommandID;  // unique command id (per menu-bar) to
+  uint32_t  mCurrentCommandID;  // unique command id (per menu-bar) to
                                 // give to next item that asks
   nsIDocument* mDocument;       // pointer to document
 

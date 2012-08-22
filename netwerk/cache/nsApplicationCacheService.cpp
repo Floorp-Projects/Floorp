@@ -37,7 +37,7 @@ nsApplicationCacheService::CreateApplicationCache(const nsACString &group,
 NS_IMETHODIMP
 nsApplicationCacheService::CreateCustomApplicationCache(const nsACString & group,
                                                         nsIFile *profileDir,
-                                                        PRInt32 quota,
+                                                        int32_t quota,
                                                         nsIApplicationCache **out)
 {
     if (!mCacheService)
@@ -116,7 +116,7 @@ nsApplicationCacheService::CacheOpportunistically(nsIApplicationCache* cache,
 }
 
 NS_IMETHODIMP
-nsApplicationCacheService::GetGroups(PRUint32 *count,
+nsApplicationCacheService::GetGroups(uint32_t *count,
                                      char ***keys)
 {
     if (!mCacheService)
@@ -129,7 +129,7 @@ nsApplicationCacheService::GetGroups(PRUint32 *count,
 }
 
 NS_IMETHODIMP
-nsApplicationCacheService::GetGroupsTimeOrdered(PRUint32 *count,
+nsApplicationCacheService::GetGroupsTimeOrdered(uint32_t *count,
                                                 char ***keys)
 {
     if (!mCacheService)

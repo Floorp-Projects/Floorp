@@ -91,7 +91,7 @@ nsNotifyAddrListener::GetLinkStatusKnown(bool *aIsUp)
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetLinkType(PRUint32 *aLinkType)
+nsNotifyAddrListener::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 

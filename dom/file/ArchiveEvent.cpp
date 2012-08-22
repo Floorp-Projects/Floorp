@@ -89,10 +89,10 @@ ArchiveReaderEvent::ShareMainThread()
 
   if (!NS_FAILED(mStatus)) {
     // This extra step must run in the main thread:
-    for (PRUint32 index = 0; index < mFileList.Length(); ++index) {
+    for (uint32_t index = 0; index < mFileList.Length(); ++index) {
       nsRefPtr<ArchiveItem> item = mFileList[index];
 
-      PRInt32 offset = item->GetFilename().RFindChar('.');
+      int32_t offset = item->GetFilename().RFindChar('.');
       if (offset != kNotFound) {
         nsCString ext(item->GetFilename());
         ext.Cut(0, offset + 1);

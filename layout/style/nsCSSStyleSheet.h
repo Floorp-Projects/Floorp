@@ -126,27 +126,27 @@ public:
   virtual void SetOwningDocument(nsIDocument* aDocument);
 
   // Find the ID of the owner inner window.
-  PRUint64 FindOwningWindowInnerID() const;
+  uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   void AppendStyleSheet(nsCSSStyleSheet* aSheet);
-  void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
+  void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, int32_t aIndex);
 
   // XXX do these belong here or are they generic?
   void PrependStyleRule(mozilla::css::Rule* aRule);
   void AppendStyleRule(mozilla::css::Rule* aRule);
   void ReplaceStyleRule(mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
 
-  PRInt32 StyleRuleCount() const;
-  nsresult GetStyleRuleAt(PRInt32 aIndex, mozilla::css::Rule*& aRule) const;
+  int32_t StyleRuleCount() const;
+  nsresult GetStyleRuleAt(int32_t aIndex, mozilla::css::Rule*& aRule) const;
 
-  nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, PRUint32 aIndex);
-  nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, uint32_t aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
   nsresult ReplaceRuleInGroup(mozilla::css::GroupRule* aGroup, mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
 
-  PRInt32 StyleSheetCount() const;
+  int32_t StyleSheetCount() const;
 
   /**
    * SetURIs must be called on all sheets before parsing into them.
@@ -197,7 +197,7 @@ public:
    * Like the DOM insertRule() method, but doesn't do any security checks
    */
   nsresult InsertRuleInternal(const nsAString& aRule,
-                              PRUint32 aIndex, PRUint32* aReturn);
+                              uint32_t aIndex, uint32_t* aReturn);
 
   /* Get the URI this sheet was originally loaded from, if any.  Can
      return null */

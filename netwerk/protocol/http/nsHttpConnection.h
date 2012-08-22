@@ -57,7 +57,7 @@ public:
     //  maxHangTime - limits the amount of time this connection can spend on a
     //                single transaction before it should no longer be kept 
     //                alive.  a value of 0xffff indicates no limit.
-    nsresult Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime,
+    nsresult Init(nsHttpConnectionInfo *info, uint16_t maxHangTime,
                   nsISocketTransport *, nsIAsyncInputStream *,
                   nsIAsyncOutputStream *, nsIInterfaceRequestor *,
                   nsIEventTarget *, PRIntervalTime);
@@ -65,7 +65,7 @@ public:
     // Activate causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction unless
     // a multiplexing protocol such as SPDY is being used
-    nsresult Activate(nsAHttpTransaction *, PRUint8 caps, PRInt32 pri);
+    nsresult Activate(nsAHttpTransaction *, uint8_t caps, int32_t pri);
 
     // Close the underlying socket transport.
     void Close(nsresult reason);
@@ -80,7 +80,7 @@ public:
     bool     CanDirectlyActivate();
 
     // Returns time in seconds for how long connection can be reused.
-    PRUint32 TimeToLive();
+    uint32_t TimeToLive();
 
     void     DontReuse();
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
@@ -114,15 +114,15 @@ public:
     void     GetSecurityInfo(nsISupports **);
     bool     IsPersistent() { return IsKeepAlive(); }
     bool     IsReused();
-    void     SetIsReusedAfter(PRUint32 afterMilliseconds);
+    void     SetIsReusedAfter(uint32_t afterMilliseconds);
     void     SetIdleTimeout(PRIntervalTime val) {mIdleTimeout = val;}
-    nsresult PushBack(const char *data, PRUint32 length);
+    nsresult PushBack(const char *data, uint32_t length);
     nsresult ResumeSend();
     nsresult ResumeRecv();
-    PRInt64  MaxBytesRead() {return mMaxBytesRead;}
+    int64_t  MaxBytesRead() {return mMaxBytesRead;}
 
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
-                                    PRUint32, PRUint32, PRUint32 *);
+                                    uint32_t, uint32_t, uint32_t *);
 
     // When a persistent connection is in the connection manager idle 
     // connection pool, the nsHttpConnection still reads errors and hangups
@@ -150,7 +150,7 @@ public:
     // When the connection is active this is called every second
     void  ReadTimeoutTick();
 
-    PRInt64 BytesWritten() { return mTotalBytesWritten; }
+    int64_t BytesWritten() { return mTotalBytesWritten; }
 
     void    PrintDiagnostics(nsCString &log);
 
@@ -171,17 +171,17 @@ private:
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
     bool     EnsureNPNComplete();
-    void     SetupNPN(PRUint8 caps);
+    void     SetupNPN(uint8_t caps);
 
     // Inform the connection manager of any SPDY Alternate-Protocol
     // redirections
     void     HandleAlternateProtocol(nsHttpResponseHead *);
 
     // Start the Spdy transaction handler when NPN indicates spdy/*
-    void     StartSpdy(PRUint8 versionLevel);
+    void     StartSpdy(uint8_t versionLevel);
 
     // Directly Add a transaction to an active connection for SPDY
-    nsresult AddTransaction(nsAHttpTransaction *, PRInt32);
+    nsresult AddTransaction(nsAHttpTransaction *, int32_t);
 
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
@@ -208,10 +208,10 @@ private:
     PRIntervalTime                  mIdleTimeout;    // value of keep-alive: timeout=
     PRIntervalTime                  mConsiderReusedAfterInterval;
     PRIntervalTime                  mConsiderReusedAfterEpoch;
-    PRInt64                         mCurrentBytesRead;   // data read per activation
-    PRInt64                         mMaxBytesRead;       // max read in 1 activation
-    PRInt64                         mTotalBytesRead;     // total data read
-    PRInt64                         mTotalBytesWritten;  // does not include CONNECT tunnel
+    int64_t                         mCurrentBytesRead;   // data read per activation
+    int64_t                         mMaxBytesRead;       // max read in 1 activation
+    int64_t                         mTotalBytesRead;     // total data read
+    int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
@@ -229,12 +229,12 @@ private:
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
-    PRUint32                        mHttp1xTransactionCount;
+    uint32_t                        mHttp1xTransactionCount;
 
     // Keep-Alive: max="mRemainingConnectionUses" provides the number of future
     // transactions (including the current one) that the server expects to allow
     // on this persistent connection.
-    PRUint32                        mRemainingConnectionUses;
+    uint32_t                        mRemainingConnectionUses;
 
     nsAHttpTransaction::Classifier  mClassification;
 
@@ -243,10 +243,10 @@ private:
     bool                            mSetupNPNCalled;
 
     // version level in use, 0 if unused
-    PRUint8                         mUsingSpdyVersion;
+    uint8_t                         mUsingSpdyVersion;
 
     nsRefPtr<mozilla::net::ASpdySession> mSpdySession;
-    PRInt32                         mPriority;
+    int32_t                         mPriority;
     bool                            mReportedSpdy;
 
     // mUsingSpdyVersion is cleared when mSpdySession is freed, this is permanent

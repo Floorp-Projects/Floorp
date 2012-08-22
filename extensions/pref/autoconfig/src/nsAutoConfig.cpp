@@ -96,10 +96,10 @@ NS_IMETHODIMP
 nsAutoConfig::OnDataAvailable(nsIRequest *request, 
                               nsISupports *context,
                               nsIInputStream *aIStream, 
-                              PRUint32 aSourceOffset,
-                              PRUint32 aLength)
+                              uint32_t aSourceOffset,
+                              uint32_t aLength)
 {    
-    PRUint32 amt, size;
+    uint32_t amt, size;
     nsresult rv;
     char buf[1024];
     
@@ -130,7 +130,7 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
     // Checking for the http response, if failure go read the failover file.
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
-        PRUint32 httpStatus;
+        uint32_t httpStatus;
         pHTTPCon->GetResponseStatus(&httpStatus);
         if (httpStatus != 200) 
         {
@@ -223,7 +223,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     // in the previous read, we need to remove it when timer kicks in and 
     // downloads the autoconfig file again. 
     // If necessary, the email address will be added again as an argument.
-    PRInt32 index = mConfigURL.RFindChar((PRUnichar)'?');
+    int32_t index = mConfigURL.RFindChar((PRUnichar)'?');
     if (index != -1)
         mConfigURL.Truncate(index);
 
@@ -328,7 +328,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
         while (!mLoaded)
             NS_ENSURE_STATE(NS_ProcessNextEvent(thread));
         
-        PRInt32 minutes;
+        int32_t minutes;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 
                                      &minutes);
         if (NS_SUCCEEDED(rv) && minutes > 0) {
@@ -417,8 +417,8 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file)
     if (NS_FAILED(rv)) 
         return rv;
         
-    PRInt64 fileSize;
-    PRUint32 fs, amt=0;
+    int64_t fileSize;
+    uint32_t fs, amt=0;
     file->GetFileSize(&fileSize);
     LL_L2UI(fs, fileSize); // Converting 64 bit structure to unsigned int
     char *buf = (char *)PR_Malloc(fs * sizeof(char));
@@ -440,7 +440,7 @@ nsresult nsAutoConfig::writeFailoverFile()
     nsresult rv;
     nsCOMPtr<nsIFile> failoverFile; 
     nsCOMPtr<nsIOutputStream> outStr;
-    PRUint32 amt;
+    uint32_t amt;
     
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(failoverFile));
@@ -479,7 +479,7 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
                                       getter_Copies(prefValue));
         if (NS_FAILED(rv) || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
-        PRInt32 commandIndex = prefValue.FindChar(',');
+        int32_t commandIndex = prefValue.FindChar(',');
         if (commandIndex != kNotFound)
           prefValue.Truncate(commandIndex);
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") +

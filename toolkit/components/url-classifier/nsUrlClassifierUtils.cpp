@@ -13,7 +13,7 @@
 #include "prmem.h"
 #include "prprf.h"
 
-static char int_to_hex_digit(PRInt32 i)
+static char int_to_hex_digit(int32_t i)
 {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
   return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
@@ -22,7 +22,7 @@ static char int_to_hex_digit(PRInt32 i)
 static bool
 IsDecimal(const nsACString & num)
 {
-  for (PRUint32 i = 0; i < num.Length(); i++) {
+  for (uint32_t i = 0; i < num.Length(); i++) {
     if (!isdigit(num[i])) {
       return false;
     }
@@ -42,7 +42,7 @@ IsHex(const nsACString & num)
     return false;
   }
 
-  for (PRUint32 i = 2; i < num.Length(); i++) {
+  for (uint32_t i = 2; i < num.Length(); i++) {
     if (!isxdigit(num[i])) {
       return false;
     }
@@ -62,7 +62,7 @@ IsOctal(const nsACString & num)
     return false;
   }
 
-  for (PRUint32 i = 1; i < num.Length(); i++) {
+  for (uint32_t i = 1; i < num.Length(); i++) {
     if (!isdigit(num[i]) || num[i] == '8' || num[i] == '9') {
       return false;
     }
@@ -113,7 +113,7 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // strip out anchors
-  PRInt32 ref = path.FindChar('#');
+  int32_t ref = path.FindChar('#');
   if (ref != kNotFound)
     path.SetLength(ref);
 
@@ -243,12 +243,12 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
   // XXX: this came from the old javascript implementation, is it really
   // supposed to be like this?
   bool allowOctal = true;
-  PRUint32 i;
+  uint32_t i;
 
   for (i = 0; i < parts.Length(); i++) {
     const nsCString& part = parts[i];
     if (part[0] == '0') {
-      for (PRUint32 j = 1; j < part.Length(); j++) {
+      for (uint32_t j = 1; j < part.Length(); j++) {
         if (part[j] == 'x') {
           break;
         }
@@ -286,7 +286,7 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
 
 void
 nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
-                                   PRUint32 bytes,
+                                   uint32_t bytes,
                                    bool allowOctal,
                                    nsACString& _retval)
 {
@@ -296,7 +296,7 @@ nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
     return;
   }
 
-  PRUint32 val;
+  uint32_t val;
   if (allowOctal && IsOctal(num)) {
     if (PR_sscanf(PromiseFlatCString(num).get(), "%o", &val) != 1) {
       return;
@@ -392,7 +392,7 @@ nsUrlClassifierUtils::DecodeClientKey(const nsACString &key,
 
   // PL_Base64Decode doesn't null-terminate unless we let it allocate,
   // so we need to calculate the length ourselves.
-  PRUint32 destLength;
+  uint32_t destLength;
   destLength = base64.Length();
   if (destLength > 0 && base64[destLength - 1] == '=') {
     if (destLength > 1 && base64[destLength - 2] == '=') {

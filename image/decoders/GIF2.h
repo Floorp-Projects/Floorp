@@ -50,42 +50,42 @@ typedef enum {
 typedef struct gif_struct {
     /* Parsing state machine */
     gstate state;                   /* Curent decoder master state */
-    PRUint32 bytes_to_consume;      /* Number of bytes to accumulate */
-    PRUint32 bytes_in_hold;         /* bytes accumulated so far*/
+    uint32_t bytes_to_consume;      /* Number of bytes to accumulate */
+    uint32_t bytes_in_hold;         /* bytes accumulated so far*/
 
     /* LZW decoder state machine */
-    PRUint8 *stackp;              /* Current stack pointer */
+    uint8_t *stackp;              /* Current stack pointer */
     int datasize;
     int codesize;
     int codemask;
     int avail;                  /* Index of next available slot in dictionary */
     int oldcode;
-    PRUint8 firstchar;
+    uint8_t firstchar;
     int count;                  /* Remaining # bytes in sub-block */
     int bits;                   /* Number of unread bits in "datum" */
-    PRInt32 datum;              /* 32-bit input buffer */
+    int32_t datum;              /* 32-bit input buffer */
 
     /* Output state machine */
     int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
-    PRUintn rows_remaining;        /* Rows remaining to be output */
-    PRUintn irow;                  /* Current output row, starting at zero */
-    PRUint8 *rowp;                 /* Current output pointer */
+    unsigned rows_remaining;        /* Rows remaining to be output */
+    unsigned irow;                  /* Current output row, starting at zero */
+    uint8_t *rowp;                 /* Current output pointer */
 
     /* Parameters for image frame currently being decoded*/
-    PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
-    PRUintn height, width;
+    unsigned x_offset, y_offset;    /* With respect to "screen" origin */
+    unsigned height, width;
     int tpixel;                 /* Index of transparent pixel */
-    PRInt32 disposal_method;    /* Restore to background, leave in place, etc.*/
-    PRUint32 *local_colormap;   /* Per-image colormap */
+    int32_t disposal_method;    /* Restore to background, leave in place, etc.*/
+    uint32_t *local_colormap;   /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
-    PRUint32 delay_time;        /* Display time, in milliseconds,
+    uint32_t delay_time;        /* Display time, in milliseconds,
                                    for this image in a multi-image GIF */
 
     /* Global (multi-image) state */
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
-    PRUintn screen_width;       /* Logical screen width & height */
-    PRUintn screen_height;
-    PRUint32 global_colormap_depth;  /* Depth of global colormap array. */
+    unsigned screen_width;       /* Logical screen width & height */
+    unsigned screen_height;
+    uint32_t global_colormap_depth;  /* Depth of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
@@ -94,11 +94,11 @@ typedef struct gif_struct {
     bool interlaced;             /* TRUE, if scanlines arrive interlaced order */
     bool is_transparent;         /* TRUE, if tpixel is valid */
 
-    PRUint16  prefix[MAX_BITS];          /* LZW decoding tables */
-    PRUint8   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */
-    PRUint32  global_colormap[MAX_COLORS];   /* Default colormap if local not supplied */
-    PRUint8   suffix[MAX_BITS];          /* LZW decoding tables */
-    PRUint8   stack[MAX_BITS];           /* Base of LZW decoder stack */
+    uint16_t  prefix[MAX_BITS];          /* LZW decoding tables */
+    uint8_t   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */
+    uint32_t  global_colormap[MAX_COLORS];   /* Default colormap if local not supplied */
+    uint8_t   suffix[MAX_BITS];          /* LZW decoding tables */
+    uint8_t   stack[MAX_BITS];           /* Base of LZW decoder stack */
 
 } gif_struct;
 

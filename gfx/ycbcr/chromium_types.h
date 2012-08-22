@@ -7,9 +7,9 @@
 
 #include "prtypes.h"
 
-typedef PRUint8 uint8;
-typedef PRInt8 int8;
-typedef PRInt16 int16;
+typedef uint8_t uint8;
+typedef int8_t int8;
+typedef int16_t int16;
 
 // From Chromium build_config.h:
 // Processor architecture detection.  For more info on what's defined, see:

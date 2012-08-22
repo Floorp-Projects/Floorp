@@ -50,30 +50,30 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                          bool aNotify);
-  void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  void RemoveChildAt(uint32_t aIndex, bool aNotify);
   nsIAtom *GetIDAttributeName() const;
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    nsIAtom* aPrefix, const nsAString& aValue,
                    bool aNotify);
-  bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName, 
                  nsAString& aResult) const;
-  bool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-  virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+  bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
+  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,
                              nsCaseTreatment aCaseSensitive) const;
-  virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aValue,
                              nsCaseTreatment aCaseSensitive) const;
-  virtual PRInt32 FindAttrValueIn(PRInt32 aNameSpaceID,
+  virtual int32_t FindAttrValueIn(int32_t aNameSpaceID,
                                   nsIAtom* aName,
                                   AttrValuesArray* aValues,
                                   nsCaseTreatment aCaseSensitive) const;
-  nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
+  nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr, 
                      bool aNotify);
-  const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
-  PRUint32 GetAttrCount() const;
+  const nsAttrName* GetAttrNameAt(uint32_t aIndex) const;
+  uint32_t GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   virtual nsEventStates IntrinsicState() const;
@@ -107,7 +107,7 @@ public:
       ci->PreserveWrapper(aNative);
     }
   }
-  virtual PRUint32 GetInterfacesBitmap()
+  virtual uint32_t GetInterfacesBitmap()
   {
     nsXPCClassInfo *ci = GetBaseXPCClassInfo();
     return ci ? ci->GetInterfacesBitmap() :  0;
@@ -148,7 +148,7 @@ protected:
 
   nsCOMPtr<nsIXTFElement> mXTFElement;
 
-  PRUint32 mNotificationMask;
+  uint32_t mNotificationMask;
   nsCOMPtr<nsIXTFAttributeHandler> mAttributeHandler;
 
   /*
@@ -186,7 +186,7 @@ public:
     }
   }
 
-  virtual PRUint32 GetInterfacesBitmap()
+  virtual uint32_t GetInterfacesBitmap()
   {
     return mWrapper ? mWrapper->GetInterfacesBitmap() : 0;
   }

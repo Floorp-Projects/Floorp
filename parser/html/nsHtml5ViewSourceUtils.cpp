@@ -20,7 +20,7 @@ nsHtml5ViewSourceUtils::NewBodyAttributes()
     bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS, klass);
   }
 
-  PRInt32 tabSize = mozilla::Preferences::GetInt("view_source.tab_size", 4);
+  int32_t tabSize = mozilla::Preferences::GetInt("view_source.tab_size", 4);
   if (tabSize > 0) {
     nsString* style = new nsString(NS_LITERAL_STRING("-moz-tab-size: "));
     style->AppendInt(tabSize);

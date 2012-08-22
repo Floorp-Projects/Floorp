@@ -182,8 +182,8 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 nsresult
 nsMIMEInfoUnix::LaunchDefaultWithDBus(const char *aFilePath)
 {
-  const PRInt32 kHILDON_SUCCESS = 1;
-  PRInt32 result = 0;
+  const int32_t kHILDON_SUCCESS = 1;
+  int32_t result = 0;
   DBusError err;
   dbus_error_init(&err);
   

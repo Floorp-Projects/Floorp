@@ -98,9 +98,9 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
+nsFirstLetterFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
                                                   bool inHint,
-                                                  PRInt32* outFrameContentOffset,
+                                                  int32_t* outFrameContentOffset,
                                                   nsIFrame **outChildFrame)
 {
   nsIFrame *kid = mFrames.FirstChild();
@@ -148,7 +148,7 @@ nsFirstLetterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
   if (GetPrevInFlow()) {
     // We're wrapping the text *after* the first letter, so behave like an
@@ -198,7 +198,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // from the resolved paragraph level of the child, not the block frame,
     // because the block frame could be split by hard line breaks into
     // multiple paragraphs with different base direction
-    PRUint8 direction;
+    uint8_t direction;
     nsIFrame* containerFrame = ll.GetLineContainerFrame();
     if (containerFrame->GetStyleTextReset()->mUnicodeBidi &
         NS_STYLE_UNICODE_BIDI_PLAINTEXT) {

@@ -390,7 +390,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     updaters.AppendObject(content);
   }
 
-  for (PRInt32 u = 0; u < updaters.Count(); u++) {
+  for (int32_t u = 0; u < updaters.Count(); u++) {
     nsIContent* content = updaters[u];
 
     nsCOMPtr<nsIDocument> document = content->GetDocument();
@@ -433,7 +433,7 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
   if (aList.EqualsLiteral("*"))
     return true; // match _everything_!
 
-  PRInt32 indx = aList.Find(PromiseFlatString(aElement));
+  int32_t indx = aList.Find(PromiseFlatString(aElement));
   if (indx == -1)
     return false; // not in the list at all
 

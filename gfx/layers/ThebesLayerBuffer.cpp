@@ -116,8 +116,8 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds)
   nsRefPtr<gfxContext> ctx = new gfxContext(mBuffer);
 
   // Figure out which quadrant to draw in
-  PRInt32 xBoundary = mBufferRect.XMost() - mBufferRotation.x;
-  PRInt32 yBoundary = mBufferRect.YMost() - mBufferRotation.y;
+  int32_t xBoundary = mBufferRect.XMost() - mBufferRotation.x;
+  int32_t yBoundary = mBufferRect.YMost() - mBufferRotation.y;
   XSide sideX = aBounds.XMost() <= xBoundary ? RIGHT : LEFT;
   YSide sideY = aBounds.YMost() <= yBoundary ? BOTTOM : TOP;
   nsIntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
@@ -128,7 +128,7 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds)
 }
 
 static void
-WrapRotationAxis(PRInt32* aRotationPoint, PRInt32 aSize)
+WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
 {
   if (*aRotationPoint < 0) {
     *aRotationPoint += aSize;
@@ -139,7 +139,7 @@ WrapRotationAxis(PRInt32* aRotationPoint, PRInt32 aSize)
 
 ThebesLayerBuffer::PaintState
 ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
-                              PRUint32 aFlags)
+                              uint32_t aFlags)
 {
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
@@ -207,7 +207,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
 
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsRefPtr<gfxASurface> destBuffer;
-  PRUint32 bufferFlags = canHaveRotation ? ALLOW_REPEAT : 0;
+  uint32_t bufferFlags = canHaveRotation ? ALLOW_REPEAT : 0;
   if (canReuseBuffer) {
     nsIntRect keepArea;
     if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
@@ -220,8 +220,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       WrapRotationAxis(&newRotation.y, mBufferRect.height);
       NS_ASSERTION(nsIntRect(nsIntPoint(0,0), mBufferRect.Size()).Contains(newRotation),
                    "newRotation out of bounds");
-      PRInt32 xBoundary = destBufferRect.XMost() - newRotation.x;
-      PRInt32 yBoundary = destBufferRect.YMost() - newRotation.y;
+      int32_t xBoundary = destBufferRect.XMost() - newRotation.x;
+      int32_t yBoundary = destBufferRect.YMost() - newRotation.y;
       if ((drawBounds.x < xBoundary && xBoundary < drawBounds.XMost()) ||
           (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost()) ||
           (newRotation != nsIntPoint(0,0) && !canHaveRotation)) {

@@ -42,7 +42,7 @@ interface nsIPrintOptions : nsISupports
   /**
    * Get a prefixed integer pref 
    */
-  PRInt32 getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring
+  int32_t getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring
                             aPrefName);
 
   /**

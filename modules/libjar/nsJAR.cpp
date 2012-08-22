@@ -46,7 +46,7 @@ public:
   bool                entryVerified;
   
   // Not signed, valid, or failure code
-  PRInt16             status;
+  int16_t             status;
   
   // Internal storage of digests
   nsCString           calculatedSectionDigest;
@@ -360,7 +360,7 @@ nsJAR::GetCertificatePrincipal(const nsACString &aFilename, nsIPrincipal** aPrin
   if (mGlobalStatus == JAR_NO_MANIFEST)
     return NS_OK;
 
-  PRInt16 requestedStatus;
+  int16_t requestedStatus;
   if (!aFilename.IsEmpty())
   {
     //-- Find the item
@@ -372,7 +372,7 @@ nsJAR::GetCertificatePrincipal(const nsACString &aFilename, nsIPrincipal** aPrin
     if (!manItem->entryVerified)
     {
       nsXPIDLCString entryData;
-      PRUint32 entryDataLen;
+      uint32_t entryDataLen;
       rv = LoadEntry(aFilename, getter_Copies(entryData), &entryDataLen);
       if (NS_FAILED(rv)) return rv;
       rv = VerifyEntry(manItem, entryData, entryDataLen);
@@ -394,7 +394,7 @@ nsJAR::GetCertificatePrincipal(const nsACString &aFilename, nsIPrincipal** aPrin
 }
 
 NS_IMETHODIMP 
-nsJAR::GetManifestEntriesCount(PRUint32* count)
+nsJAR::GetManifestEntriesCount(uint32_t* count)
 {
   *count = mTotalItemsInManifest;
   return NS_OK;
@@ -412,7 +412,7 @@ nsJAR::GetJarPath(nsACString& aResult)
 // nsJAR private implementation
 //----------------------------------------------
 nsresult 
-nsJAR::LoadEntry(const nsACString &aFilename, char** aBuf, PRUint32* aBufLen)
+nsJAR::LoadEntry(const nsACString &aFilename, char** aBuf, uint32_t* aBufLen)
 {
   //-- Get a stream for reading the file
   nsresult rv;
@@ -422,14 +422,14 @@ nsJAR::LoadEntry(const nsACString &aFilename, char** aBuf, PRUint32* aBufLen)
   
   //-- Read the manifest file into memory
   char* buf;
-  PRUint64 len64;
+  uint64_t len64;
   rv = manifestStream->Available(&len64);
   if (NS_FAILED(rv)) return rv;
   NS_ENSURE_TRUE(len64 < PR_UINT32_MAX, NS_ERROR_FILE_CORRUPTED); // bug 164695
-  PRUint32 len = (PRUint32)len64;
+  uint32_t len = (uint32_t)len64;
   buf = (char*)malloc(len+1);
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
-  PRUint32 bytesRead;
+  uint32_t bytesRead;
   rv = manifestStream->Read(buf, len, &bytesRead);
   if (bytesRead != len) 
     rv = NS_ERROR_FILE_CORRUPTED;
@@ -445,12 +445,12 @@ nsJAR::LoadEntry(const nsACString &aFilename, char** aBuf, PRUint32* aBufLen)
 }
 
 
-PRInt32
+int32_t
 nsJAR::ReadLine(const char** src)
 {
   //--Moves pointer to beginning of next line and returns line length
   //  not including CR/LF.
-  PRInt32 length;
+  int32_t length;
   char* eol = PL_strpbrk(*src, "\r\n");
 
   if (eol == nullptr) // Probably reached end of file before newline
@@ -518,7 +518,7 @@ nsJAR::ParseManifest()
   }
 
   nsXPIDLCString manifestBuffer;
-  PRUint32 manifestLen;
+  uint32_t manifestLen;
   rv = LoadEntry(manifestFilename, getter_Copies(manifestBuffer), &manifestLen);
   if (NS_FAILED(rv)) return rv;
 
@@ -548,11 +548,11 @@ nsJAR::ParseManifest()
   
   //-- Get its corresponding signature file
   nsCAutoString sigFilename(manifestFilename);
-  PRInt32 extension = sigFilename.RFindChar('.') + 1;
+  int32_t extension = sigFilename.RFindChar('.') + 1;
   NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
   (void)sigFilename.Cut(extension, 2);
   nsXPIDLCString sigBuffer;
-  PRUint32 sigLen;
+  uint32_t sigLen;
   {
     nsCAutoString tempFilename(sigFilename); tempFilename.Append("rsa", 3);
     rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
@@ -580,7 +580,7 @@ nsJAR::ParseManifest()
   }
 
   //-- Verify that the signature file is a valid signature of the SF file
-  PRInt32 verifyError;
+  int32_t verifyError;
   rv = verifier->VerifySignature(sigBuffer, sigLen, manifestBuffer, manifestLen, 
                                  &verifyError, getter_AddRefs(mPrincipal));
   if (NS_FAILED(rv)) return rv;
@@ -602,12 +602,12 @@ nsJAR::ParseManifest()
 }
 
 nsresult
-nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
+nsJAR::ParseOneFile(const char* filebuf, int16_t aFileType)
 {
   //-- Check file header
   const char* nextLineStart = filebuf;
   nsCAutoString curLine;
-  PRInt32 linelen;
+  int32_t linelen;
   linelen = ReadLine(&nextLineStart);
   curLine.Assign(filebuf, linelen);
 
@@ -671,7 +671,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
           delete curItemMF;
         else //-- calculate section digest
         {
-          PRUint32 sectionLength = curPos - sectionStart;
+          uint32_t sectionLength = curPos - sectionStart;
           CalculateDigest(sectionStart, sectionLength,
                           curItemMF->calculatedSectionDigest);
           //-- Save item in the hashtable
@@ -726,14 +726,14 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
     while(*nextLineStart == ' ')
     {
       curPos = nextLineStart;
-      PRInt32 continuationLen = ReadLine(&nextLineStart) - 1;
+      int32_t continuationLen = ReadLine(&nextLineStart) - 1;
       nsCAutoString continuation(curPos+1, continuationLen);
       curLine += continuation;
       linelen += continuationLen;
     }
 
     //-- Find colon in current line, this separates name from value
-    PRInt32 colonPos = curLine.FindChar(':');
+    int32_t colonPos = curLine.FindChar(':');
     if (colonPos == -1)    // No colon on line, ignore line
       continue;
     //-- Break down the line
@@ -779,7 +779,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 
 nsresult
 nsJAR::VerifyEntry(nsJARManifestItem* aManItem, const char* aEntryData,
-                   PRUint32 aLen)
+                   uint32_t aLen)
 {
   if (aManItem->status == JAR_VALID_MANIFEST)
   {
@@ -800,7 +800,7 @@ nsJAR::VerifyEntry(nsJARManifestItem* aManItem, const char* aEntryData,
   return NS_OK;
 }
 
-void nsJAR::ReportError(const nsACString &aFilename, PRInt16 errorCode)
+void nsJAR::ReportError(const nsACString &aFilename, int16_t errorCode)
 {
   //-- Generate error message
   nsAutoString message; 
@@ -849,7 +849,7 @@ void nsJAR::ReportError(const nsACString &aFilename, PRInt16 errorCode)
 }
 
 
-nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
+nsresult nsJAR::CalculateDigest(const char* aInBuf, uint32_t aLen,
                                 nsCString& digest)
 {
   nsresult rv;
@@ -860,7 +860,7 @@ nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
   rv = hasher->Init(nsICryptoHash::SHA1);
   if (NS_FAILED(rv)) return rv;
 
-  rv = hasher->Update((const PRUint8*) aInBuf, aLen);
+  rv = hasher->Update((const uint8_t*) aInBuf, aLen);
   if (NS_FAILED(rv)) return rv;
 
   return hasher->Finish(true, digest);
@@ -925,7 +925,7 @@ nsJARItem::nsJARItem(nsZipItem* aZipItem)
 // nsJARItem::GetCompression
 //------------------------------------------
 NS_IMETHODIMP
-nsJARItem::GetCompression(PRUint16 *aCompression)
+nsJARItem::GetCompression(uint16_t *aCompression)
 {
     NS_ENSURE_ARG_POINTER(aCompression);
 
@@ -937,7 +937,7 @@ nsJARItem::GetCompression(PRUint16 *aCompression)
 // nsJARItem::GetSize
 //------------------------------------------
 NS_IMETHODIMP
-nsJARItem::GetSize(PRUint32 *aSize)
+nsJARItem::GetSize(uint32_t *aSize)
 {
     NS_ENSURE_ARG_POINTER(aSize);
 
@@ -949,7 +949,7 @@ nsJARItem::GetSize(PRUint32 *aSize)
 // nsJARItem::GetRealSize
 //------------------------------------------
 NS_IMETHODIMP
-nsJARItem::GetRealSize(PRUint32 *aRealsize)
+nsJARItem::GetRealSize(uint32_t *aRealsize)
 {
     NS_ENSURE_ARG_POINTER(aRealsize);
 
@@ -961,7 +961,7 @@ nsJARItem::GetRealSize(PRUint32 *aRealsize)
 // nsJARItem::GetCrc32
 //------------------------------------------
 NS_IMETHODIMP
-nsJARItem::GetCRC32(PRUint32 *aCrc32)
+nsJARItem::GetCRC32(uint32_t *aCrc32)
 {
     NS_ENSURE_ARG_POINTER(aCrc32);
 
@@ -1024,7 +1024,7 @@ nsZipReaderCache::nsZipReaderCache()
 }
 
 NS_IMETHODIMP
-nsZipReaderCache::Init(PRUint32 cacheSize)
+nsZipReaderCache::Init(uint32_t cacheSize)
 {
   mCacheSize = cacheSize; 
   

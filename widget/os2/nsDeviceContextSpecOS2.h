@@ -64,7 +64,7 @@ public:
 
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface);
   NS_IMETHOD BeginDocument(PRUnichar* aTitle, PRUnichar* aPrintToFileName,
-                           PRInt32 aStartPage, PRInt32 aEndPage);
+                           int32_t aStartPage, int32_t aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();

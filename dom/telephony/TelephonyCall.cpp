@@ -17,7 +17,7 @@ USING_TELEPHONY_NAMESPACE
 // static
 already_AddRefed<TelephonyCall>
 TelephonyCall::Create(Telephony* aTelephony, const nsAString& aNumber,
-                      PRUint16 aCallState, PRUint32 aCallIndex)
+                      uint16_t aCallState, uint32_t aCallIndex)
 {
   NS_ASSERTION(aTelephony, "Null pointer!");
   NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
@@ -38,7 +38,7 @@ TelephonyCall::Create(Telephony* aTelephony, const nsAString& aNumber,
 }
 
 void
-TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
+TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
 {
   nsRefPtr<TelephonyCall> kungFuDeathGrip(this);
 

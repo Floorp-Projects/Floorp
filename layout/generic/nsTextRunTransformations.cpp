@@ -107,8 +107,8 @@ enum GreekCasingState {
   kDiaeresis
 };
 
-static PRUint32
-GreekUpperCase(PRUint32 aCh, GreekCasingState* aState)
+static uint32_t
+GreekUpperCase(uint32_t aCh, GreekCasingState* aState)
 {
   switch (aCh) {
   case GREEK_UPPER_ALPHA:
@@ -198,31 +198,31 @@ GreekUpperCase(PRUint32 aCh, GreekCasingState* aState)
     switch (*aState) {
     case kAlpha:
       *aState = kAlphaAcc;
-      return PRUint32(-1); // omit this char from result string
+      return uint32_t(-1); // omit this char from result string
     case kEpsilon:
       *aState = kEpsilonAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kEta:
       *aState = kEtaAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kIota:
       *aState = kIotaAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kOmicron:
       *aState = kOmicronAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kUpsilon:
       *aState = kUpsilonAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kOmicronUpsilon:
       *aState = kStart; // this completed a diphthong
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kOmega:
       *aState = kOmegaAcc;
-      return PRUint32(-1);
+      return uint32_t(-1);
     case kDiaeresis:
       *aState = kStart;
-      return PRUint32(-1);
+      return uint32_t(-1);
     default:
       break;
     }
@@ -312,8 +312,8 @@ nsTransformedTextRun *
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
-                             const PRUnichar* aString, PRUint32 aLength,
-                             const PRUint32 aFlags, nsStyleContext** aStyles,
+                             const PRUnichar* aString, uint32_t aLength,
+                             const uint32_t aFlags, nsStyleContext** aStyles,
                              bool aOwnsFactory)
 {
   NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
@@ -330,7 +330,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
 }
 
 void
-nsTransformedTextRun::SetCapitalization(PRUint32 aStart, PRUint32 aLength,
+nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
                                         bool* aCapitalization,
                                         gfxContext* aRefContext)
 {
@@ -344,8 +344,8 @@ nsTransformedTextRun::SetCapitalization(PRUint32 aStart, PRUint32 aLength,
 }
 
 bool
-nsTransformedTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                             PRUint8* aBreakBefore,
+nsTransformedTextRun::SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
+                                             uint8_t* aBreakBefore,
                                              gfxContext* aRefContext)
 {
   bool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
@@ -375,9 +375,9 @@ nsTransformedTextRun::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 }
 
 nsTransformedTextRun*
-nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
+nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, PRUint32 aFlags,
+                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
                                           nsStyleContext** aStyles, bool aOwnsFactory)
 {
   return nsTransformedTextRun::Create(aParams, this, aFontGroup,
@@ -385,9 +385,9 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLe
 }
 
 nsTransformedTextRun*
-nsTransformingTextRunFactory::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
+nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
-                                          gfxFontGroup* aFontGroup, PRUint32 aFlags,
+                                          gfxFontGroup* aFontGroup, uint32_t aFlags,
                                           nsStyleContext** aStyles, bool aOwnsFactory)
 {
   // We'll only have a Unicode code path to minimize the amount of code needed
@@ -435,7 +435,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   aDest->ResetGlyphRuns();
 
   gfxTextRun::GlyphRunIterator iter(aSrc, 0, aSrc->GetLength());
-  PRUint32 offset = 0;
+  uint32_t offset = 0;
   nsAutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
   while (iter.NextRun()) {
     gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
@@ -445,11 +445,11 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       return;
 
     bool anyMissing = false;
-    PRUint32 mergeRunStart = iter.GetStringStart();
+    uint32_t mergeRunStart = iter.GetStringStart();
     const gfxTextRun::CompressedGlyph *srcGlyphs = aSrc->GetCharacterGlyphs();
     gfxTextRun::CompressedGlyph mergedGlyph = srcGlyphs[mergeRunStart];
-    PRUint32 stringEnd = iter.GetStringEnd();
-    for (PRUint32 k = iter.GetStringStart(); k < stringEnd; ++k) {
+    uint32_t stringEnd = iter.GetStringEnd();
+    for (uint32_t k = iter.GetStringStart(); k < stringEnd; ++k) {
       const gfxTextRun::CompressedGlyph g = srcGlyphs[k];
       if (g.IsSimpleGlyph()) {
         if (!anyMissing) {
@@ -515,7 +515,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 }
 
 static gfxTextRunFactory::Parameters
-GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags,
+GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
     gfxContext* aRefContext)
 {
   gfxTextRunFactory::Parameters params =
@@ -537,11 +537,11 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (!smallFont)
     return;
 
-  PRUint32 flags;
+  uint32_t flags;
   gfxTextRunFactory::Parameters innerParams =
       GetParametersForInner(aTextRun, &flags, aRefContext);
 
-  PRUint32 length = aTextRun->GetLength();
+  uint32_t length = aTextRun->GetLength();
   const PRUnichar* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
   // Create a textrun so we can check cluster-start properties
@@ -553,9 +553,9 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
   aTextRun->ResetGlyphRuns();
 
-  PRUint32 runStart = 0;
+  uint32_t runStart = 0;
   nsAutoTArray<nsStyleContext*,50> styleArray;
-  nsAutoTArray<PRUint8,50> canBreakBeforeArray;
+  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
 
   enum RunCaseState {
     kUpperOrCaseless, // will be untouched by font-variant:small-caps
@@ -570,7 +570,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   // The last iteration, when i==length, must not attempt to look at the
   // character position [i] or the style data for styles[i], as this would
   // be beyond the valid length of the textrun or its style array.
-  for (PRUint32 i = 0; i <= length; ++i) {
+  for (uint32_t i = 0; i <= length; ++i) {
     RunCaseState chCase = kUpperOrCaseless;
     // Unless we're at the end, figure out what treatment the current
     // character will need.
@@ -582,11 +582,11 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         chCase = runCase;
       } else {
         if (styleContext->GetStyleFont()->mFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS) {
-          PRUint32 ch = str[i];
+          uint32_t ch = str[i];
           if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 && NS_IS_LOW_SURROGATE(str[i + 1])) {
             ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
           }
-          PRUint32 ch2 = ToUpperCase(ch);
+          uint32_t ch2 = ToUpperCase(ch);
           if (ch != ch2 || mozilla::unicode::SpecialUpper(ch)) {
             chCase = kLowercase;
           } else if (styleContext->GetStyleFont()->mLanguage == nsGkAtoms::el) {
@@ -668,7 +668,7 @@ void
 nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     gfxContext* aRefContext)
 {
-  PRUint32 length = aTextRun->GetLength();
+  uint32_t length = aTextRun->GetLength();
   const PRUnichar* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
 
@@ -676,7 +676,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoTArray<bool,50> charsToMergeArray;
   nsAutoTArray<bool,50> deletedCharsArray;
   nsAutoTArray<nsStyleContext*,50> styleArray;
-  nsAutoTArray<PRUint8,50> canBreakBeforeArray;
+  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
   bool mergeNeeded = false;
 
   // Some languages have special casing conventions that differ from the
@@ -694,15 +694,15 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   const nsIAtom* lang = nullptr;
   bool capitalizeDutchIJ = false;
   bool prevIsLetter = false;
-  PRUint32 sigmaIndex = PRUint32(-1);
+  uint32_t sigmaIndex = uint32_t(-1);
   nsIUGenCategory::nsUGenCategory cat;
   GreekCasingState greekState = kStart;
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < length; ++i) {
-    PRUint32 ch = str[i];
+    uint32_t ch = str[i];
     nsStyleContext* styleContext = styles[i];
 
-    PRUint8 style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
+    uint8_t style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
       : styleContext->GetStyleText()->mTextTransform;
     int extraChars = 0;
     const mozilla::unicode::MultiCharMapping *mcm;
@@ -733,13 +733,13 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         if (ch == 'I') {
           ch = LATIN_SMALL_LETTER_DOTLESS_I;
           prevIsLetter = true;
-          sigmaIndex = PRUint32(-1);
+          sigmaIndex = uint32_t(-1);
           break;
         }
         if (ch == LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE) {
           ch = 'i';
           prevIsLetter = true;
-          sigmaIndex = PRUint32(-1);
+          sigmaIndex = uint32_t(-1);
           break;
         }
       }
@@ -767,7 +767,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       // If sigmaIndex is not -1, it marks where we have provisionally mapped
       // a CAPITAL SIGMA to FINAL SIGMA; if we now find another letter, we
       // need to change it to SMALL SIGMA.
-      if (sigmaIndex != PRUint32(-1)) {
+      if (sigmaIndex != uint32_t(-1)) {
         if (cat == nsIUGenCategory::kLetter) {
           convertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
         }
@@ -784,7 +784,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
           // CAPITAL SIGMA not preceded by a letter is unconditionally mapped
           // to SMALL SIGMA
           ch = GREEK_SMALL_LETTER_SIGMA;
-          sigmaIndex = PRUint32(-1);
+          sigmaIndex = uint32_t(-1);
         }
         prevIsLetter = true;
         break;
@@ -795,7 +795,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       // sigmaIndex marker
       if (cat != nsIUGenCategory::kMark) {
         prevIsLetter = (cat == nsIUGenCategory::kLetter);
-        sigmaIndex = PRUint32(-1);
+        sigmaIndex = uint32_t(-1);
       }
 
       mcm = mozilla::unicode::SpecialLower(ch);
@@ -877,7 +877,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       break;
     }
 
-    if (ch == PRUint32(-1)) {
+    if (ch == uint32_t(-1)) {
       deletedCharsArray.AppendElement(true);
       mergeNeeded = true;
     } else {
@@ -906,7 +906,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     }
   }
 
-  PRUint32 flags;
+  uint32_t flags;
   gfxTextRunFactory::Parameters innerParams =
       GetParametersForInner(aTextRun, &flags, aRefContext);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();

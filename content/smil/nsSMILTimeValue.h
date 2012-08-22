@@ -102,7 +102,7 @@ public:
     mMilliseconds = aMillis;
   }
 
-  PRInt8 CompareTo(const nsSMILTimeValue& aOther) const;
+  int8_t CompareTo(const nsSMILTimeValue& aOther) const;
 
   bool operator==(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) == 0; }

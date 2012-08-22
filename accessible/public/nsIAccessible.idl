@@ -246,23 +246,23 @@ interface nsIAccessible : nsISupports
   /**
    * The number of accessible actions associated with this accessible
    */
-  readonly attribute PRUint8 actionCount;
+  readonly attribute uint8_t actionCount;
 
   /**
    * The name of the accessible action at the given zero-based index
    */
-  AString getActionName(in PRUint8 index);
+  AString getActionName(in uint8_t index);
 
   /**
    * The description of the accessible action at the given zero-based index
    */
-  AString getActionDescription(in PRUint8 aIndex);
+  AString getActionDescription(in uint8_t aIndex);
 
   /**
    * Perform the accessible action at the given zero-based index
    * Action number 0 is the default action
    */
-  void doAction(in PRUint8 index);   
+  void doAction(in uint8_t index);   
 
   /**
    * Makes an object visible on screen.

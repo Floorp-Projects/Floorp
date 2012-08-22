@@ -84,7 +84,7 @@ nsFilePicker::ReleaseGlobals()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
+NS_IMETHODIMP nsFilePicker::Show(int16_t *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
 
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     filedlg.ulUser = (ULONG)pmydata;
     filedlg.pfnDlgProc = FileDialogProc;
 
-    PRUint32 i;
+    uint32_t i;
 
     PSZ *apszTypeList;
     apszTypeList = (PSZ *)malloc(mTitles.Length()*sizeof(PSZ)+1);
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     {
       const nsString& typeWide = mTitles[i];
       nsAutoCharBuffer buffer;
-      PRInt32 bufLength;
+      int32_t bufLength;
       WideCharToMultiByte(0, typeWide.get(), typeWide.Length(),
                           buffer, bufLength);
       apszTypeList[i] = ToNewCString(nsDependentCString(buffer.Elements()));
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       } else {
         mFile.Assign(filedlg.szFullFile);
       }
-      mSelectedType = (PRInt16)pmydata->ulCurExt;
+      mSelectedType = (int16_t)pmydata->ulCurExt;
     }
 
     for (i = 0; i < mTitles.Length(); i++)
@@ -305,7 +305,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     nsMemory::Free( title );
 
   if (result) {
-    PRInt16 returnOKorReplace = returnOK;
+    int16_t returnOKorReplace = returnOK;
 
     nsresult rv;
     // Remember last used directory.
@@ -391,8 +391,8 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
   mDefault = aString;
 
   //First, make sure the file name is not too long!
-  PRInt32 nameLength;
-  PRInt32 nameIndex = mDefault.RFind("\\");
+  int32_t nameLength;
+  int32_t nameIndex = mDefault.RFind("\\");
   if (nameIndex == kNotFound)
     nameIndex = 0;
   else
@@ -400,12 +400,12 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
   nameLength = mDefault.Length() - nameIndex;
   
   if (nameLength > CCHMAXPATH) {
-    PRInt32 extIndex = mDefault.RFind(".");
+    int32_t extIndex = mDefault.RFind(".");
     if (extIndex == kNotFound)
       extIndex = mDefault.Length();
 
     //Let's try to shave the needed characters from the name part
-    PRInt32 charsToRemove = nameLength - CCHMAXPATH;
+    int32_t charsToRemove = nameLength - CCHMAXPATH;
     if (extIndex - nameIndex >= charsToRemove) {
       mDefault.Cut(extIndex - charsToRemove, charsToRemove);
     }
@@ -453,13 +453,13 @@ NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 // Set the filter index
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+NS_IMETHODIMP nsFilePicker::GetFilterIndex(int32_t *aFilterIndex)
 {
   *aFilterIndex = mSelectedType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+NS_IMETHODIMP nsFilePicker::SetFilterIndex(int32_t aFilterIndex)
 {
   mSelectedType = aFilterIndex;
   return NS_OK;
@@ -468,7 +468,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 //-------------------------------------------------------------------------
 void nsFilePicker::InitNative(nsIWidget *aParent,
                               const nsAString& aTitle,
-                              PRInt16 aMode)
+                              int16_t aMode)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.Assign(aTitle);
@@ -514,11 +514,11 @@ char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
 
   // converts from unicode to the file system charset
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = inString.Length();
+    int32_t inLength = inString.Length();
 
     const nsAFlatString& flatInString = PromiseFlatString(inString);
 
-    PRInt32 outLength;
+    int32_t outLength;
     rv = mUnicodeEncoder->GetMaxLength(flatInString.get(), inLength,
                                        &outLength);
     if (NS_SUCCEEDED(rv)) {
@@ -557,8 +557,8 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   // converts from the file system charset to unicode
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = strlen(inString);
-    PRInt32 outLength;
+    int32_t inLength = strlen(inString);
+    int32_t outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
       outString = static_cast<PRUnichar*>(nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ));

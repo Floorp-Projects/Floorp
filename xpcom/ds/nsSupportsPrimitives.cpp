@@ -21,7 +21,7 @@ nsSupportsIDImpl::nsSupportsIDImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsIDImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsIDImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_ID;
@@ -77,7 +77,7 @@ NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
 NS_IMPL_ISUPPORTS2(nsSupportsCStringImpl, nsISupportsCString,
                    nsISupportsPrimitive)
 
-NS_IMETHODIMP nsSupportsCStringImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsCStringImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
 
@@ -114,7 +114,7 @@ NS_IMETHODIMP nsSupportsCStringImpl::SetData(const nsACString& aData)
 NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
                    nsISupportsPrimitive)
 
-NS_IMETHODIMP nsSupportsStringImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsStringImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
 
@@ -154,7 +154,7 @@ nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRBoolImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRBoolImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRBOOL;
@@ -195,7 +195,7 @@ nsSupportsPRUint8Impl::nsSupportsPRUint8Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRUint8Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRUint8Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRUINT8;
@@ -203,14 +203,14 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint8Impl::GetData(PRUint8 *aData)
+NS_IMETHODIMP nsSupportsPRUint8Impl::GetData(uint8_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint8Impl::SetData(PRUint8 aData)
+NS_IMETHODIMP nsSupportsPRUint8Impl::SetData(uint8_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::ToString(char **_retval)
     static const int size = 8;
     char buf[size];
 
-    PR_snprintf(buf, size, "%u", (PRUint16) mData);
+    PR_snprintf(buf, size, "%u", (uint16_t) mData);
 
     char* result = (char*) nsMemory::Clone(buf,
                                 (strlen(buf)+1)*sizeof(char));
@@ -240,7 +240,7 @@ nsSupportsPRUint16Impl::nsSupportsPRUint16Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRUint16Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRUint16Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRUINT16;
@@ -248,14 +248,14 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint16Impl::GetData(PRUint16 *aData)
+NS_IMETHODIMP nsSupportsPRUint16Impl::GetData(uint16_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint16Impl::SetData(PRUint16 aData)
+NS_IMETHODIMP nsSupportsPRUint16Impl::SetData(uint16_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -285,7 +285,7 @@ nsSupportsPRUint32Impl::nsSupportsPRUint32Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRUint32Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRUint32Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRUINT32;
@@ -293,14 +293,14 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint32Impl::GetData(PRUint32 *aData)
+NS_IMETHODIMP nsSupportsPRUint32Impl::GetData(uint32_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint32Impl::SetData(PRUint32 aData)
+NS_IMETHODIMP nsSupportsPRUint32Impl::SetData(uint32_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -330,7 +330,7 @@ nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRUint64Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRUint64Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRUINT64;
@@ -338,14 +338,14 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint64Impl::GetData(PRUint64 *aData)
+NS_IMETHODIMP nsSupportsPRUint64Impl::GetData(uint64_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint64Impl::SetData(PRUint64 aData)
+NS_IMETHODIMP nsSupportsPRUint64Impl::SetData(uint64_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -375,7 +375,7 @@ nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRTimeImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRTimeImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRTIME;
@@ -420,7 +420,7 @@ nsSupportsCharImpl::nsSupportsCharImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsCharImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsCharImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_CHAR;
@@ -465,7 +465,7 @@ nsSupportsPRInt16Impl::nsSupportsPRInt16Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRInt16Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRInt16Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRINT16;
@@ -473,14 +473,14 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt16Impl::GetData(PRInt16 *aData)
+NS_IMETHODIMP nsSupportsPRInt16Impl::GetData(int16_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt16Impl::SetData(PRInt16 aData)
+NS_IMETHODIMP nsSupportsPRInt16Impl::SetData(int16_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -510,7 +510,7 @@ nsSupportsPRInt32Impl::nsSupportsPRInt32Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRInt32Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRInt32Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRINT32;
@@ -518,14 +518,14 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt32Impl::GetData(PRInt32 *aData)
+NS_IMETHODIMP nsSupportsPRInt32Impl::GetData(int32_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt32Impl::SetData(PRInt32 aData)
+NS_IMETHODIMP nsSupportsPRInt32Impl::SetData(int32_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -555,7 +555,7 @@ nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
 {
 }
 
-NS_IMETHODIMP nsSupportsPRInt64Impl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsPRInt64Impl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_PRINT64;
@@ -563,14 +563,14 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt64Impl::GetData(PRInt64 *aData)
+NS_IMETHODIMP nsSupportsPRInt64Impl::GetData(int64_t *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt64Impl::SetData(PRInt64 aData)
+NS_IMETHODIMP nsSupportsPRInt64Impl::SetData(int64_t aData)
 {
     mData = aData;
     return NS_OK;
@@ -600,7 +600,7 @@ nsSupportsFloatImpl::nsSupportsFloatImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsFloatImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsFloatImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_FLOAT;
@@ -645,7 +645,7 @@ nsSupportsDoubleImpl::nsSupportsDoubleImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsDoubleImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsDoubleImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_DOUBLE;
@@ -691,7 +691,7 @@ nsSupportsVoidImpl::nsSupportsVoidImpl()
 {
 }
 
-NS_IMETHODIMP nsSupportsVoidImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsVoidImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_VOID;
@@ -741,7 +741,7 @@ nsSupportsInterfacePointerImpl::~nsSupportsInterfacePointerImpl()
     }
 }
 
-NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetType(uint16_t *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
     *aType = TYPE_INTERFACE_POINTER;
@@ -813,7 +813,7 @@ nsSupportsDependentCString::nsSupportsDependentCString(const char* aStr)
 { }
 
 NS_IMETHODIMP
-nsSupportsDependentCString::GetType(PRUint16 *aType)
+nsSupportsDependentCString::GetType(uint16_t *aType)
 {
     NS_ENSURE_ARG_POINTER(aType);
 

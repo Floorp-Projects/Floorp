@@ -12,8 +12,8 @@
 struct findIndexOfClosure
 {
     nsISupports *targetElement;
-    PRUint32 startIndex;
-    PRUint32 resultIndex;
+    uint32_t startIndex;
+    uint32_t resultIndex;
 };
 
 static bool FindElementCallback(void* aElement, void* aClosure);
@@ -51,14 +51,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsArrayCC)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
-nsArray::GetLength(PRUint32* aLength)
+nsArray::GetLength(uint32_t* aLength)
 {
     *aLength = mArray.Count();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsArray::QueryElementAt(PRUint32 aIndex,
+nsArray::QueryElementAt(uint32_t aIndex,
                         const nsIID& aIID,
                         void ** aResult)
 {
@@ -71,12 +71,12 @@ nsArray::QueryElementAt(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
-                 PRUint32* aResult)
+nsArray::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
+                 uint32_t* aResult)
 {
     // optimize for the common case by forwarding to mArray
     if (aStartIndex == 0) {
-        PRUint32 idx = mArray.IndexOf(aElement);
+        uint32_t idx = mArray.IndexOf(aElement);
         if (idx == PR_UINT32_MAX)
             return NS_ERROR_FAILURE;
 
@@ -123,14 +123,14 @@ nsArray::AppendElement(nsISupports* aElement, bool aWeak)
 }
 
 NS_IMETHODIMP
-nsArray::RemoveElementAt(PRUint32 aIndex)
+nsArray::RemoveElementAt(uint32_t aIndex)
 {
     bool result = mArray.RemoveObjectAt(aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, bool aWeak)
+nsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
@@ -148,7 +148,7 @@ nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, bool aWeak)
 }
 
 NS_IMETHODIMP
-nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, bool aWeak)
+nsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {

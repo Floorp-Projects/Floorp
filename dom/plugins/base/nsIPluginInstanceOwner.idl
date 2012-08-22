@@ -41,7 +41,7 @@ interface nsIPluginInstanceOwner : nsISupports
   /**
    * Get the display mode for the plugin instance.
    */
-  readonly attribute PRInt32 mode;
+  readonly attribute int32_t mode;
 
   /**
    * Create a place for the plugin to live in the owner's
@@ -59,7 +59,7 @@ interface nsIPluginInstanceOwner : nsISupports
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, 
          nsIInputStream *aPostStream,
-         void *aHeadersData, PRUint32 aHeadersDataLen) = 0;
+         void *aHeadersData, uint32_t aHeadersDataLen) = 0;
 %}
 
   /**
@@ -109,7 +109,7 @@ interface nsIPluginInstanceOwner : nsISupports
   virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) = 0;
 %}
 
-  void setEventModel(in PRInt32 eventModel);
+  void setEventModel(in int32_t eventModel);
 
 %{C++
   virtual void SendIdleEvent() = 0;

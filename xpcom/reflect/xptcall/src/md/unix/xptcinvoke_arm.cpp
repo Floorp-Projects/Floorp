@@ -26,12 +26,12 @@
  * Returns a pointer to the second 32-bits word copied (to accomodate
  * the invoke_copy_to_stack loop).
  */
-static PRUint32 *
-copy_double_word(PRUint32 *start, PRUint32 *current, PRUint32 *end, PRUint64 *dw)
+static uint32_t *
+copy_double_word(uint32_t *start, uint32_t *current, uint32_t *end, uint64_t *dw)
 {
 #ifdef __ARM_EABI__
     /* Aligning the pointer for EABI */
-    current = (PRUint32 *)(((PRUint32)current + 7) & ~7);
+    current = (uint32_t *)(((uint32_t)current + 7) & ~7);
     /* Wrap when reaching the end of the buffer */
     if (current == end) current = start;
 #else
@@ -39,13 +39,13 @@ copy_double_word(PRUint32 *start, PRUint32 *current, PRUint32 *end, PRUint64 *dw
      * of the buffer, we need to write half of the data at the end, and the
      * other half at the beginning. */
     if (current == end - 1) {
-        *current = ((PRUint32*)dw)[0];
-        *start = ((PRUint32*)dw)[1];
+        *current = ((uint32_t*)dw)[0];
+        *start = ((uint32_t*)dw)[1];
         return start;
     }
 #endif
 
-    *((PRUint64*) current) = *dw;
+    *((uint64_t*) current) = *dw;
     return current + 1;
 }
 
@@ -55,8 +55,8 @@ copy_double_word(PRUint32 *start, PRUint32 *current, PRUint32 *end, PRUint64 *dw
 static
 #endif
 void
-invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
-                     PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint32_t* stk, uint32_t *end,
+                     uint32_t paramCount, nsXPTCVariant* s)
 {
     /* The stack buffer is 64-bits aligned. The end argument points to its end.
      * The caller is assumed to create a stack buffer of at least four 32-bits
@@ -64,8 +64,8 @@ invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
      * We use the last three 32-bit words to store the values for r1, r2 and r3
      * for the method call, i.e. the first words for arguments passing.
      */
-    PRUint32 *d = end - 3;
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    uint32_t *d = end - 3;
+    for(uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         /* Wrap when reaching the end of the stack buffer */
         if (d == end) d = stk;
@@ -81,25 +81,25 @@ invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
 
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt32*) d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt32*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
+        case nsXPTType::T_I8     : *((int32_t*) d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int32_t*) d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
         case nsXPTType::T_I64    :
-            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.i64);
+            d = copy_double_word(stk, d, end, (uint64_t *)&s->val.i64);
             break;
-        case nsXPTType::T_U8     : *((PRUint32*)d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint32*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
+        case nsXPTType::T_U8     : *((uint32_t*)d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint32_t*)d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
         case nsXPTType::T_U64    :
-            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.u64);
+            d = copy_double_word(stk, d, end, (uint64_t *)&s->val.u64);
             break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
         case nsXPTType::T_DOUBLE :
-            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.d);
+            d = copy_double_word(stk, d, end, (uint64_t *)&s->val.d);
             break;
-        case nsXPTType::T_BOOL   : *((PRInt32*) d) = s->val.b;           break;
-        case nsXPTType::T_CHAR   : *((PRInt32*) d) = s->val.c;           break;
-        case nsXPTType::T_WCHAR  : *((PRInt32*) d) = s->val.wc;          break;
+        case nsXPTType::T_BOOL   : *((int32_t*) d) = s->val.b;           break;
+        case nsXPTType::T_CHAR   : *((int32_t*) d) = s->val.c;           break;
+        case nsXPTType::T_WCHAR  : *((int32_t*) d) = s->val.wc;          break;
         default:
             // all the others are plain pointer types
             *((void**)d) = s->val.p;
@@ -108,11 +108,11 @@ invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
     }
 }
 
-typedef PRUint32 (*vtable_func)(nsISupports *, PRUint32, PRUint32, PRUint32);
+typedef uint32_t (*vtable_func)(nsISupports *, uint32_t, uint32_t, uint32_t);
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params)
 {
 
 /* This is to call a given method of class that.
@@ -147,7 +147,7 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  * end of this function. More generally, any function call requiring stack
  * allocation of arguments is unsafe to be inlined in this function.
  */
-  PRUint32 *stack_space = (PRUint32 *) __builtin_alloca(base_size * 8);
+  uint32_t *stack_space = (uint32_t *) __builtin_alloca(base_size * 8);
 
   invoke_copy_to_stack(stack_space, &stack_space[base_size * 2],
                        paramCount, params);
@@ -194,10 +194,10 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  *                buffer (it is guaranteed to be 8-bytes aligned)
  */
 
-static inline void copy_word(PRUint32* &ireg_args,
-                             PRUint32* &stack_args,
-                             PRUint32* end,
-                             PRUint32  data)
+static inline void copy_word(uint32_t* &ireg_args,
+                             uint32_t* &stack_args,
+                             uint32_t* end,
+                             uint32_t  data)
 {
   if (ireg_args < end) {
     *ireg_args = data;
@@ -208,22 +208,22 @@ static inline void copy_word(PRUint32* &ireg_args,
   }
 }
 
-static inline void copy_dword(PRUint32* &ireg_args,
-                              PRUint32* &stack_args,
-                              PRUint32* end,
-                              PRUint64  data)
+static inline void copy_dword(uint32_t* &ireg_args,
+                              uint32_t* &stack_args,
+                              uint32_t* end,
+                              uint64_t  data)
 {
   if (ireg_args + 1 < end) {
-    if ((PRUint32)ireg_args & 4) {
+    if ((uint32_t)ireg_args & 4) {
       ireg_args++;
     }
-    *(PRUint64 *)ireg_args = data;
+    *(uint64_t *)ireg_args = data;
     ireg_args += 2;
   } else {
-    if ((PRUint32)stack_args & 4) {
+    if ((uint32_t)stack_args & 4) {
       stack_args++;
     }
-    *(PRUint64 *)stack_args = data;
+    *(uint64_t *)stack_args = data;
     stack_args += 2;
   }
 }
@@ -295,17 +295,17 @@ static inline bool copy_vfp_double(float* &vfp_s_args, double* &vfp_d_args,
 }
 
 static void
-invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
-                     PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint32_t* stk, uint32_t *end,
+                     uint32_t paramCount, nsXPTCVariant* s)
 {
-  PRUint32 *ireg_args  = end - 3;
+  uint32_t *ireg_args  = end - 3;
   float    *vfp_s_args = (float *)end;
   double   *vfp_d_args = (double *)end;
   float    *vfp_end    = vfp_s_args + 16;
 
-  for (PRUint32 i = 0; i < paramCount; i++, s++) {
+  for (uint32_t i = 0; i < paramCount; i++, s++) {
     if (s->IsPtrData()) {
-      copy_word(ireg_args, stk, end, (PRUint32)s->ptr);
+      copy_word(ireg_args, stk, end, (uint32_t)s->ptr);
       continue;
     }
     // According to the ARM EABI, integral types that are smaller than a word
@@ -314,12 +314,12 @@ invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
     {
       case nsXPTType::T_FLOAT:
         if (!copy_vfp_single(vfp_s_args, vfp_d_args, vfp_end, s->val.f)) {
-          copy_word(end, stk, end, reinterpret_cast<PRUint32&>(s->val.f));
+          copy_word(end, stk, end, reinterpret_cast<uint32_t&>(s->val.f));
         }
         break;
       case nsXPTType::T_DOUBLE:
         if (!copy_vfp_double(vfp_s_args, vfp_d_args, vfp_end, s->val.d)) {
-          copy_dword(end, stk, end, reinterpret_cast<PRUint64&>(s->val.d));
+          copy_dword(end, stk, end, reinterpret_cast<uint64_t&>(s->val.d));
         }
         break;
       case nsXPTType::T_I8:  copy_word(ireg_args, stk, end, s->val.i8);   break;
@@ -335,23 +335,23 @@ invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
       case nsXPTType::T_WCHAR: copy_word(ireg_args, stk, end, s->val.wc); break;
       default:
         // all the others are plain pointer types
-        copy_word(ireg_args, stk, end, reinterpret_cast<PRUint32>(s->val.p));
+        copy_word(ireg_args, stk, end, reinterpret_cast<uint32_t>(s->val.p));
         break;
     }
   }
 }
 
-typedef PRUint32 (*vtable_func)(nsISupports *, PRUint32, PRUint32, PRUint32);
+typedef uint32_t (*vtable_func)(nsISupports *, uint32_t, uint32_t, uint32_t);
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params)
 {
   vtable_func *vtable = *reinterpret_cast<vtable_func **>(that);
   vtable_func func = vtable[methodIndex];
-  // 'register PRUint32 result asm("r0")' could be used here, but it does not
+  // 'register uint32_t result asm("r0")' could be used here, but it does not
   //  seem to be reliable in all cases: http://gcc.gnu.org/PR46164
-  PRUint32 result;
+  uint32_t result;
   asm (
     "mov    r3, sp\n"
     "mov    %[stack_space_size], %[param_count_plus_2], lsl #3\n"

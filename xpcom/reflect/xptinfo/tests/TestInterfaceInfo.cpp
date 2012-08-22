@@ -107,7 +107,7 @@ int main (int argc, char **argv) {
     // lets see what arg this refers to
     uint8 argnum;
     info5->GetInterfaceIsArgNumberForParam(6, &param3, &argnum);
-    fprintf(stderr, "param 3 referrs to param %d of method 6 - createInstanceByContractID\n", (PRUint32)argnum);
+    fprintf(stderr, "param 3 referrs to param %d of method 6 - createInstanceByContractID\n", (uint32_t)argnum);
     // Get the type of the parameter referred to
     const nsXPTParamInfo& arg_param = mi->GetParam(argnum);
     const nsXPTType& arg_type = arg_param.GetType();

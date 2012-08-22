@@ -38,7 +38,7 @@ TestProps()
   while (et < end) {
     char tagName[100];
     PL_strcpy(tagName, *et);
-    index = nsCSSProperty(PRInt32(index) + 1);
+    index = nsCSSProperty(int32_t(index) + 1);
 
     id = nsCSSProps::LookupProperty(nsCString(tagName), nsCSSProps::eAny);
     if (id == eCSSProperty_UNKNOWN) {
@@ -109,7 +109,7 @@ TestKeywords()
       }
       underscore++;
     }
-    index = nsCSSKeyword(PRInt32(index) + 1);
+    index = nsCSSKeyword(int32_t(index) + 1);
 
     id = nsCSSKeywords::LookupKeyword(nsCString(tagName));
     if (id <= eCSSKeyword_UNKNOWN) {

@@ -297,7 +297,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 }
 
 nsresult
-nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
+nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 {
     nsresult rv = nsXPLookAndFeel::GetIntImpl(aID, aResult);
     if (NS_SUCCEEDED(rv))

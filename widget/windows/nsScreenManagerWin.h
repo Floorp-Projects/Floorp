@@ -40,7 +40,7 @@ private:
 
   nsIScreen* CreateNewScreenObject ( HMONITOR inScreen ) ;
 
-  PRUint32 mNumberOfScreens;
+  uint32_t mNumberOfScreens;
 
     // cache the screens to avoid the memory allocations
   nsAutoTArray<ScreenListItem, 8> mScreenList;

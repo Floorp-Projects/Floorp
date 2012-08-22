@@ -60,13 +60,13 @@ nsHZToUnicode::nsHZToUnicode() : nsBufferDecoderSupport(1)
 //Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
 NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(
   const char* aSrc, 
-  PRInt32 * aSrcLength, 
+  int32_t * aSrcLength, 
   PRUnichar *aDest, 
-  PRInt32 * aDestLength)
+  int32_t * aDestLength)
 {
-  PRInt32 i=0;
-  PRInt32 iSrcLength = *aSrcLength;
-  PRInt32 iDestlen = 0;
+  int32_t i=0;
+  int32_t iSrcLength = *aSrcLength;
+  int32_t iDestlen = 0;
   *aSrcLength=0;
   nsresult res = NS_OK;
   char oddByte = mOddByte;

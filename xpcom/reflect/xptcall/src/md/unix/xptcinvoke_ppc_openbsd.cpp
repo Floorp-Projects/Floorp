@@ -22,27 +22,27 @@
 // promoted to doubles when passed in registers
 #define FPR_COUNT     8
 
-extern "C" PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+extern "C" uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-  return PRUint32(((paramCount * 2) + 3) & ~3);
+  return uint32_t(((paramCount * 2) + 3) & ~3);
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d,
-                     PRUint32 paramCount,
+invoke_copy_to_stack(uint32_t* d,
+                     uint32_t paramCount,
                      nsXPTCVariant* s, 
-                     PRUint32* gpregs,
+                     uint32_t* gpregs,
                      double* fpregs)
 {
-    PRUint32 gpr = 1; // skip one GP reg for 'that'
-    PRUint32 fpr = 0;
-    PRUint32 tempu32;
-    PRUint64 tempu64;
+    uint32_t gpr = 1; // skip one GP reg for 'that'
+    uint32_t fpr = 0;
+    uint32_t tempu32;
+    uint64_t tempu64;
     
     for(uint32 i = 0; i < paramCount; i++, s++) {
         if(s->IsPtrData())
-            tempu32 = (PRUint32) s->ptr;
+            tempu32 = (uint32_t) s->ptr;
         else {
             switch(s->type) {
             case nsXPTType::T_FLOAT:                                  break;
@@ -58,7 +58,7 @@ invoke_copy_to_stack(PRUint32* d,
             case nsXPTType::T_BOOL:   tempu32 = s->val.b;             break;
             case nsXPTType::T_CHAR:   tempu32 = s->val.c;             break;
             case nsXPTType::T_WCHAR:  tempu32 = s->val.wc;            break;
-            default:                  tempu32 = (PRUint32) s->val.p;  break;
+            default:                  tempu32 = (uint32_t) s->val.p;  break;
             }
         }
 
@@ -66,7 +66,7 @@ invoke_copy_to_stack(PRUint32* d,
             if (fpr < FPR_COUNT)
                 fpregs[fpr++]    = s->val.d;
             else {
-                if ((PRUint32) d & 4) d++; // doubles are 8-byte aligned on stack
+                if ((uint32_t) d & 4) d++; // doubles are 8-byte aligned on stack
                 *((double*) d) = s->val.d;
                 d += 2;
             }
@@ -81,12 +81,12 @@ invoke_copy_to_stack(PRUint32* d,
                                      || s->type == nsXPTType::T_U64)) {
             if ((gpr + 1) < GPR_COUNT) {
                 if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
-                *((PRUint64*) &gpregs[gpr]) = tempu64;
+                *((uint64_t*) &gpregs[gpr]) = tempu64;
                 gpr += 2;
             }
             else {
-                if ((PRUint32) d & 4) d++; // longlongs are 8-byte aligned on stack
-                *((PRUint64*) d)            = tempu64;
+                if ((uint32_t) d & 4) d++; // longlongs are 8-byte aligned on stack
+                *((uint64_t*) d)            = tempu64;
                 d += 2;
             }
         }
@@ -102,5 +102,5 @@ invoke_copy_to_stack(PRUint32* d,
 
 extern "C"
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params);
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                 uint32_t paramCount, nsXPTCVariant* params);

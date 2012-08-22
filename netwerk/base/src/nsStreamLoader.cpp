@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS3(nsStreamLoader, nsIStreamLoader,
                    nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP 
-nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
+nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)
 {
   *aNumBytes = mLength;
   return NS_OK;
@@ -68,11 +68,11 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
   if (chan) {
-    PRInt32 contentLength = -1;
+    int32_t contentLength = -1;
     chan->GetContentLength(&contentLength);
     if (contentLength >= 0) {
       // preallocate buffer
-      mData = static_cast<PRUint8*>(NS_Alloc(contentLength));
+      mData = static_cast<uint8_t*>(NS_Alloc(contentLength));
       if (!mData) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -112,9 +112,9 @@ NS_METHOD
 nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
                                 void *closure,
                                 const char *fromSegment,
-                                PRUint32 toOffset,
-                                PRUint32 count,
-                                PRUint32 *writeCount)
+                                uint32_t toOffset,
+                                uint32_t count,
+                                uint32_t *writeCount)
 {
   nsStreamLoader *self = (nsStreamLoader *) closure;
 
@@ -123,7 +123,7 @@ nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
   }
 
   if (self->mLength + count > self->mAllocated) {
-    self->mData = static_cast<PRUint8*>(NS_Realloc(self->mData,
+    self->mData = static_cast<uint8_t*>(NS_Realloc(self->mData,
                                                    self->mLength + count));
     if (!self->mData) {
       self->mLength = 0;
@@ -144,8 +144,8 @@ nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
 NS_IMETHODIMP 
 nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, 
                                 nsIInputStream *inStr, 
-                                PRUint32 sourceOffset, PRUint32 count)
+                                uint32_t sourceOffset, uint32_t count)
 {
-  PRUint32 countRead;
+  uint32_t countRead;
   return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
 }

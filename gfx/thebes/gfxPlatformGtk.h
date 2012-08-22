@@ -67,21 +67,21 @@ public:
      *
      */
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const PRUint8 *aFontData,
-                                           PRUint32 aLength);
+                                           const uint8_t *aFontData,
+                                           uint32_t aLength);
 
     /**
      * Check whether format is supported on a platform or not (if unclear,
      * returns true).
      */
     virtual bool IsFontFormatSupported(nsIURI *aFontURI,
-                                         PRUint32 aFormatFlags);
+                                         uint32_t aFormatFlags);
 #endif
 
 #ifndef MOZ_PANGO
     FontFamily *FindFontFamily(const nsAString& aName);
     FontEntry *FindFontEntry(const nsAString& aFamilyName, const gfxFontStyle& aFontStyle);
-    already_AddRefed<gfxFont> FindFontForChar(PRUint32 aCh, gfxFont *aFont);
+    already_AddRefed<gfxFont> FindFontForChar(uint32_t aCh, gfxFont *aFont);
     bool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
     void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
 #endif
@@ -96,7 +96,7 @@ public:
     static GdkDrawable *GetGdkDrawable(gfxASurface *target);
 #endif
 
-    static PRInt32 GetDPI();
+    static int32_t GetDPI();
 
     static bool UseXRender() {
 #if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)

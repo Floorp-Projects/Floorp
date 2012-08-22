@@ -227,10 +227,10 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Begins a new transaction with the given type.
    */
-  const PRInt32 TRANSACTION_DEFERRED = 0;
-  const PRInt32 TRANSACTION_IMMEDIATE = 1;
-  const PRInt32 TRANSACTION_EXCLUSIVE = 2;
-  void beginTransactionAs(in PRInt32 transactionType);
+  const int32_t TRANSACTION_DEFERRED = 0;
+  const int32_t TRANSACTION_IMMEDIATE = 1;
+  const int32_t TRANSACTION_EXCLUSIVE = 2;
+  void beginTransactionAs(in int32_t transactionType);
 
   /**
    * Commits the current transaction.  If no transaction is active,
@@ -329,7 +329,7 @@ interface mozIStorageConnection : nsISupports {
    *        The instance of mozIStorageProgressHandler.
    * @return previous registered handler.
    */
-  mozIStorageProgressHandler setProgressHandler(in PRInt32 aGranularity,
+  mozIStorageProgressHandler setProgressHandler(in int32_t aGranularity,
                                                 in mozIStorageProgressHandler aHandler);
 
   /**
@@ -353,7 +353,7 @@ interface mozIStorageConnection : nsISupports {
    * @throws NS_ERROR_FILE_TOO_BIG
    *         If the system is short on storage space.
    */
-  void setGrowthIncrement(in PRInt32 aIncrement, in AUTF8String aDatabaseName);
+  void setGrowthIncrement(in int32_t aIncrement, in AUTF8String aDatabaseName);
 
   /**
    * Enable a predefined virtual table implementation.

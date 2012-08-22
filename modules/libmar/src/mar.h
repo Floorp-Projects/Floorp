@@ -7,7 +7,7 @@
 #ifndef MAR_H__
 #define MAR_H__
 
-/* We use NSPR here just to import the definition of PRUint32 */
+/* We use NSPR here just to import the definition of uint32_t */
 #include "prtypes.h"
 
 #ifdef __cplusplus
@@ -24,9 +24,9 @@ struct ProductInformationBlock {
  */
 typedef struct MarItem_ {
   struct MarItem_ *next;  /* private field */
-  PRUint32 offset;        /* offset into archive */
-  PRUint32 length;        /* length of data in bytes */
-  PRUint32 flags;         /* contains file mode bits */
+  uint32_t offset;        /* offset into archive */
+  uint32_t length;        /* length of data in bytes */
+  uint32_t flags;         /* contains file mode bits */
   char name[1];           /* file path */
 } MarItem;
 
@@ -137,7 +137,7 @@ int mar_extract(const char *path);
 #ifdef XP_WIN
 int mar_verify_signatureW(MarFile *mar, 
                           const char *certData,
-                          PRUint32 sizeOfCertData);
+                          uint32_t sizeOfCertData);
 #endif
 
 /** 

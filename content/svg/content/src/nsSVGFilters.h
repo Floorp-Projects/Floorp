@@ -97,7 +97,7 @@ protected:
 
 public:
   ColorModel
-  GetInputColorModel(nsSVGFilterInstance* aInstance, PRInt32 aInputIndex,
+  GetInputColorModel(nsSVGFilterInstance* aInstance, int32_t aInputIndex,
                      Image* aImage) {
     return ColorModel(
           (OperatesOnSRGB(aInstance, aInputIndex, aImage) ?
@@ -177,7 +177,7 @@ public:
   // returns true if changes to the attribute should cause us to
   // repaint the filter
   virtual bool AttributeAffectsRendering(
-          PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
   static nsIntRect GetMaxRect() {
     // Try to avoid overflow errors dealing with this rect. It will
@@ -188,13 +188,13 @@ public:
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
   
 protected:
-  virtual bool OperatesOnPremultipledAlpha(PRInt32) { return true; }
+  virtual bool OperatesOnPremultipledAlpha(int32_t) { return true; }
 
   // Called either with aInputIndex >=0 in which case this is
   // testing whether the input 'aInputIndex' should be SRGB, or
   // if aInputIndex is -1 returns true if the output will be SRGB
   virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                                PRInt32 aInputIndex, Image* aImage) {
+                                int32_t aInputIndex, Image* aImage) {
     nsIFrame* frame = GetPrimaryFrame();
     if (!frame) return false;
 
@@ -241,7 +241,7 @@ public:
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
   virtual bool AttributeAffectsRendering(
-          PRInt32 aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
@@ -259,7 +259,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -291,7 +291,7 @@ private:
 
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                                PRInt32, Image*) { return true; }
+                                int32_t, Image*) { return true; }
 
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
@@ -315,7 +315,7 @@ public:
   // returns true if changes to the attribute should cause us to
   // repaint the filter
   virtual bool AttributeAffectsRendering(
-          PRInt32 aNameSpaceID, nsIAtom* aAttribute) const = 0;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const = 0;
 };
 
 #endif

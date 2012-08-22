@@ -72,7 +72,7 @@ private:
   };
 
 private:
-  static PRUint32 sConsumers;
+  static uint32_t sConsumers;
 };
 
 } // a11y namespace

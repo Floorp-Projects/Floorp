@@ -140,7 +140,7 @@ interface nsIWebBrowserPrint : nsISupports
    * @param  aResult - returns array of names
    * @return void
    */
-  void enumerateDocumentNames(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
+  void enumerateDocumentNames(out uint32_t aCount,[retval, array, size_is(aCount)] out wstring aResult);
 
   /**
    * This exists PrintPreview mode and returns browser window to galley mode

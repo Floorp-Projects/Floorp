@@ -227,7 +227,7 @@ IDBTransaction::RemoveObjectStore(const nsAString& aName)
 
   mDatabaseInfo->RemoveObjectStore(aName);
 
-  for (PRUint32 i = 0; i < mCreatedObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < mCreatedObjectStores.Length(); i++) {
     if (mCreatedObjectStores[i]->Name() == aName) {
       nsRefPtr<IDBObjectStore> objectStore = mCreatedObjectStores[i];
       mCreatedObjectStores.RemoveElementAt(i);
@@ -461,7 +461,7 @@ IDBTransaction::GetOrCreateObjectStore(const nsAString& aName,
 
   nsRefPtr<IDBObjectStore> retval;
 
-  for (PRUint32 index = 0; index < mCreatedObjectStores.Length(); index++) {
+  for (uint32_t index = 0; index < mCreatedObjectStores.Length(); index++) {
     nsRefPtr<IDBObjectStore>& objectStore = mCreatedObjectStores[index];
     if (objectStore->Name() == aName) {
       retval = objectStore;
@@ -527,7 +527,7 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
 
     DatabaseInfo* dbInfo = mDatabase->Info();
 
-    for (PRUint32 i = 0; i < mCreatedObjectStores.Length(); i++) {
+    for (uint32_t i = 0; i < mCreatedObjectStores.Length(); i++) {
       nsRefPtr<IDBObjectStore>& objectStore = mCreatedObjectStores[i];
       ObjectStoreInfo* info = dbInfo->GetObjectStore(objectStore->Name());
 
@@ -539,7 +539,7 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
       objectStore->SetInfo(info);
     }
 
-    for (PRUint32 i = 0; i < mDeletedObjectStores.Length(); i++) {
+    for (uint32_t i = 0; i < mDeletedObjectStores.Length(); i++) {
       nsRefPtr<IDBObjectStore>& objectStore = mDeletedObjectStores[i];
       ObjectStoreInfo* info = dbInfo->GetObjectStore(objectStore->Name());
 
@@ -595,12 +595,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(complete)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
 
-  for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
     cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
                       tmp->mCreatedObjectStores[i].get()));
   }
-  for (PRUint32 i = 0; i < tmp->mDeletedObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < tmp->mDeletedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDeletedObjectStores[i]");
     cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
                       tmp->mDeletedObjectStores[i].get()));
@@ -700,8 +700,8 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
     arrayOfNames = &mObjectStoreNames;
   }
 
-  PRUint32 count = arrayOfNames->Length();
-  for (PRUint32 index = 0; index < count; index++) {
+  uint32_t count = arrayOfNames->Length();
+  for (uint32_t index = 0; index < count; index++) {
     NS_ENSURE_TRUE(list->Add(arrayOfNames->ElementAt(index)),
                    NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
@@ -804,7 +804,7 @@ CommitHelper::CommitHelper(
   mConnection.swap(aTransaction->mConnection);
   mUpdateFileRefcountFunction.swap(aTransaction->mUpdateFileRefcountFunction);
 
-  for (PRUint32 i = 0; i < aUpdatedObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < aUpdatedObjectStores.Length(); i++) {
     ObjectStoreInfo* info = aUpdatedObjectStores[i]->Info();
     if (info->comittedAutoIncrementId != info->nextAutoIncrementId) {
       mAutoIncrementObjectStores.AppendElement(aUpdatedObjectStores[i]);
@@ -960,7 +960,7 @@ CommitHelper::WriteAutoIncrementCounts()
 {
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv;
-  for (PRUint32 i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
     ObjectStoreInfo* info = mAutoIncrementObjectStores[i]->Info();
     if (!stmt) {
       rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
@@ -989,7 +989,7 @@ CommitHelper::WriteAutoIncrementCounts()
 void
 CommitHelper::CommitAutoIncrementCounts()
 {
-  for (PRUint32 i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
     ObjectStoreInfo* info = mAutoIncrementObjectStores[i]->Info();
     info->comittedAutoIncrementId = info->nextAutoIncrementId;
   }
@@ -998,7 +998,7 @@ CommitHelper::CommitAutoIncrementCounts()
 void
 CommitHelper::RevertAutoIncrementCounts()
 {
-  for (PRUint32 i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
+  for (uint32_t i = 0; i < mAutoIncrementObjectStores.Length(); i++) {
     ObjectStoreInfo* info = mAutoIncrementObjectStores[i]->Info();
     info->nextAutoIncrementId = info->comittedAutoIncrementId;
   }
@@ -1020,16 +1020,16 @@ UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 {
   *_retval = nullptr;
 
-  PRUint32 numEntries;
+  uint32_t numEntries;
   nsresult rv = aValues->GetNumEntries(&numEntries);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(numEntries == 2, "unexpected number of arguments");
 
 #ifdef DEBUG
-  PRInt32 type1 = mozIStorageValueArray::VALUE_TYPE_NULL;
+  int32_t type1 = mozIStorageValueArray::VALUE_TYPE_NULL;
   aValues->GetTypeOfIndex(0, &type1);
 
-  PRInt32 type2 = mozIStorageValueArray::VALUE_TYPE_NULL;
+  int32_t type2 = mozIStorageValueArray::VALUE_TYPE_NULL;
   aValues->GetTypeOfIndex(1, &type2);
 
   NS_ASSERTION(!(type1 == mozIStorageValueArray::VALUE_TYPE_NULL &&
@@ -1048,10 +1048,10 @@ UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 
 nsresult
 UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
-                                     PRInt32 aIndex,
+                                     int32_t aIndex,
                                      UpdateType aUpdateType)
 {
-  PRInt32 type;
+  int32_t type;
   aValues->GetTypeOfIndex(aIndex, &type);
   if (type == mozIStorageValueArray::VALUE_TYPE_NULL) {
     return NS_OK;
@@ -1060,12 +1060,12 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
   nsString ids;
   aValues->GetString(aIndex, ids);
 
-  nsTArray<PRInt64> fileIds;
+  nsTArray<int64_t> fileIds;
   nsresult rv = IDBObjectStore::ConvertFileIdsToArray(ids, fileIds);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < fileIds.Length(); i++) {
-    PRInt64 id = fileIds.ElementAt(i);
+  for (uint32_t i = 0; i < fileIds.Length(); i++) {
+    int64_t id = fileIds.ElementAt(i);
 
     FileInfoEntry* entry;
     if (!mFileInfoEntries.Get(id, &entry)) {
@@ -1093,7 +1093,7 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
 }
 
 PLDHashOperator
-UpdateRefcountFunction::DatabaseUpdateCallback(const PRUint64& aKey,
+UpdateRefcountFunction::DatabaseUpdateCallback(const uint64_t& aKey,
                                                FileInfoEntry* aValue,
                                                void* aUserArg)
 {
@@ -1112,7 +1112,7 @@ UpdateRefcountFunction::DatabaseUpdateCallback(const PRUint64& aKey,
 }
 
 PLDHashOperator
-UpdateRefcountFunction::FileInfoUpdateCallback(const PRUint64& aKey,
+UpdateRefcountFunction::FileInfoUpdateCallback(const uint64_t& aKey,
                                                FileInfoEntry* aValue,
                                                void* aUserArg)
 {
@@ -1124,8 +1124,8 @@ UpdateRefcountFunction::FileInfoUpdateCallback(const PRUint64& aKey,
 }
 
 bool
-UpdateRefcountFunction::DatabaseUpdateFunction::Update(PRInt64 aId,
-                                                       PRInt32 aDelta)
+UpdateRefcountFunction::DatabaseUpdateFunction::Update(int64_t aId,
+                                                       int32_t aDelta)
 {
   nsresult rv = UpdateInternal(aId, aDelta);
   if (NS_FAILED(rv)) {
@@ -1137,8 +1137,8 @@ UpdateRefcountFunction::DatabaseUpdateFunction::Update(PRInt64 aId,
 }
 
 nsresult
-UpdateRefcountFunction::DatabaseUpdateFunction::UpdateInternal(PRInt64 aId,
-                                                               PRInt32 aDelta)
+UpdateRefcountFunction::DatabaseUpdateFunction::UpdateInternal(int64_t aId,
+                                                               int32_t aDelta)
 {
   nsresult rv;
 
@@ -1160,7 +1160,7 @@ UpdateRefcountFunction::DatabaseUpdateFunction::UpdateInternal(PRInt64 aId,
   rv = mUpdateStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 rows;
+  int32_t rows;
   rv = mConnection->GetAffectedRows(&rows);
   NS_ENSURE_SUCCESS(rv, rv);
 

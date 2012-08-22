@@ -210,8 +210,8 @@ private:
    * @param aEventRule       the event rule to be applied
    *                         (should be eDoNotEmit or eAllowDupes)
    */
-  void ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
-                       PRUint32 aEventType, nsINode* aNode,
+  void ApplyToSiblings(uint32_t aStart, uint32_t aEnd,
+                       uint32_t aEventType, nsINode* aNode,
                        AccEvent::EEventRule aEventRule);
 
   /**
@@ -219,7 +219,7 @@ private:
    */
   void CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
                                AccSelChangeEvent* aThisEvent,
-                               PRInt32 aThisIndex);
+                               int32_t aThisIndex);
 
   /**
    * Coalesce text change events caused by sibling hide events.

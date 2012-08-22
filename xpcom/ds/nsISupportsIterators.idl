@@ -213,7 +213,7 @@ interface nsIRandomAccessIterator : nsISupports
        * @param anOffset a |0|-based offset from the position to which this iterator currently points
        * @result a new reference to the indicated element (if any)
        */
-    nsISupports getElementAt( in PRInt32 anOffset );
+    nsISupports getElementAt( in int32_t anOffset );
 
       /**
        * Put |anElementToPut| into the underlying container or sequence at the position currently pointed to by this iterator.
@@ -239,7 +239,7 @@ interface nsIRandomAccessIterator : nsISupports
        * @param anOffset a |0|-based offset from the position to which this iterator currently points
        * @param anElementToPut the element to place into the underlying container or sequence
        */
-    void putElementAt( in PRInt32 anOffset, in nsISupports anElementToPut );
+    void putElementAt( in int32_t anOffset, in nsISupports anElementToPut );
 
       /**
        * Advance this iterator to the next position in the underlying container or sequence.
@@ -253,7 +253,7 @@ interface nsIRandomAccessIterator : nsISupports
        *
        * @param anOffset a |0|-based offset from the position to which this iterator currently points
        */
-    void stepForwardBy( in PRInt32 anOffset );
+    void stepForwardBy( in int32_t anOffset );
 
       /**
        * Move this iterator to the previous position in the underlying container or sequence.
@@ -267,7 +267,7 @@ interface nsIRandomAccessIterator : nsISupports
        *
        * @param anOffset a |0|-based offset from the position to which this iterator currently points
        */
-    void stepBackwardBy( in PRInt32 anOffset );
+    void stepBackwardBy( in int32_t anOffset );
 
       /**
        * Test if |anotherIterator| points to the same position in the underlying container or sequence.

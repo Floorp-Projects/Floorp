@@ -118,14 +118,14 @@ interface nsIMemoryReporter : nsISupports
    * The kind only matters for reporters in the "explicit" tree;
    * aboutMemory.js uses it to calculate "heap-unclassified".
    */
-  const PRInt32 KIND_NONHEAP = 0;
-  const PRInt32 KIND_HEAP    = 1;
-  const PRInt32 KIND_OTHER   = 2;
+  const int32_t KIND_NONHEAP = 0;
+  const int32_t KIND_HEAP    = 1;
+  const int32_t KIND_OTHER   = 2;
 
   /*
    * The reporter kind.  See KIND_* above.
    */
-  readonly attribute PRInt32 kind;
+  readonly attribute int32_t kind;
 
   /*
    * The amount reported by a memory reporter must have one of the following
@@ -154,21 +154,21 @@ interface nsIMemoryReporter : nsISupports
    *
    *    Values greater than 100% are allowed.
    */
-  const PRInt32 UNITS_BYTES = 0;
-  const PRInt32 UNITS_COUNT = 1;
-  const PRInt32 UNITS_COUNT_CUMULATIVE = 2;
-  const PRInt32 UNITS_PERCENTAGE = 3;
+  const int32_t UNITS_BYTES = 0;
+  const int32_t UNITS_COUNT = 1;
+  const int32_t UNITS_COUNT_CUMULATIVE = 2;
+  const int32_t UNITS_PERCENTAGE = 3;
 
   /*
    * The units on the reporter's amount.  See UNITS_* above.
    */
-  readonly attribute PRInt32 units;
+  readonly attribute int32_t units;
 
   /*
    * The numeric value reported by this memory reporter.  Accesses can fail if
    * something goes wrong when getting the amount.
    */
-  readonly attribute PRInt64 amount;
+  readonly attribute int64_t amount;
 
   /*
    * A human-readable description of this memory usage report.
@@ -179,8 +179,8 @@ interface nsIMemoryReporter : nsISupports
 [scriptable, function, uuid(5b15f3fa-ba15-443c-8337-7770f5f0ce5d)]
 interface nsIMemoryMultiReporterCallback : nsISupports
 {
-  void callback(in ACString process, in AUTF8String path, in PRInt32 kind,
-                in PRInt32 units, in PRInt64 amount,
+  void callback(in ACString process, in AUTF8String path, in int32_t kind,
+                in int32_t units, in int64_t amount,
                 in AUTF8String description, in nsISupports closure);
 };
 
@@ -222,7 +222,7 @@ interface nsIMemoryMultiReporter : nsISupports
    * than getting all the reports, filtering out the unneeded ones, and
    * summing the remainder.
    */
-  readonly attribute PRInt64 explicitNonHeap;
+  readonly attribute int64_t explicitNonHeap;
 };
 
 [scriptable, uuid(4527b1d8-a81f-4af3-9623-80e4120392c7)]
@@ -275,7 +275,7 @@ interface nsIMemoryReporterManager : nsISupports
    * platforms, and returns a meaningful result on all common platforms.
    * Accesses can fail.
    */
-  readonly attribute PRInt64 resident;
+  readonly attribute int64_t resident;
 
   /*
    * Get the total size of explicit memory allocations, both at the OS-level
@@ -285,7 +285,7 @@ interface nsIMemoryReporterManager : nsISupports
    * is special-cased because it's interesting, and is moderately difficult
    * to compute in JS.  Accesses can fail.
    */
-  readonly attribute PRInt64 explicit;
+  readonly attribute int64_t explicit;
 
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
@@ -306,7 +306,7 @@ interface nsIMemoryReporterManager : nsISupports
       NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
-      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }    \
+      NS_IMETHOD GetAmount(int64_t *amount) { *amount = _amountFunction(); return NS_OK; }    \
       NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
     };                                                                                        \
     NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
@@ -323,7 +323,7 @@ interface nsIMemoryReporterManager : nsISupports
       NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
-      NS_IMETHOD GetAmount(PRInt64 *amount) { return _amountFunction(amount); }               \
+      NS_IMETHOD GetAmount(int64_t *amount) { return _amountFunction(amount); }               \
       NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
     };                                                                                        \
     NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)

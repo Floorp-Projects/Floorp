@@ -63,17 +63,17 @@ GrallocPlanarYCbCrImage::SetData(const Data& aData)
     return;
   }
 
-  PRUint8* yChannel = static_cast<PRUint8*>(vaddr);
+  uint8_t* yChannel = static_cast<uint8_t*>(vaddr);
   gfxIntSize ySize = gfxIntSize(aData.mYSize.width,
                                 aData.mYSize.height);
-  PRInt32 yStride = graphicBuffer->getStride();
+  int32_t yStride = graphicBuffer->getStride();
 
-  PRUint8* vChannel = yChannel + (yStride * ySize.height);
+  uint8_t* vChannel = yChannel + (yStride * ySize.height);
   gfxIntSize uvSize = gfxIntSize(ySize.width / 2,
                                  ySize.height / 2);
   // Align to 16 bytes boundary
-  PRInt32 uvStride = ((yStride / 2) + 15) & ~0x0F;
-  PRUint8* uChannel = vChannel + (uvStride * uvSize.height);
+  int32_t uvStride = ((yStride / 2) + 15) & ~0x0F;
+  uint8_t* uChannel = vChannel + (uvStride * uvSize.height);
 
   // Memory outside of the image width may not writable. If the stride
   // equals to the image width then we can use only one copy.

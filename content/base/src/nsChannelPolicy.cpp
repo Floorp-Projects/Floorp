@@ -17,14 +17,14 @@ nsChannelPolicy::~nsChannelPolicy()
 NS_IMPL_ISUPPORTS1(nsChannelPolicy, nsIChannelPolicy)
 
 NS_IMETHODIMP
-nsChannelPolicy::GetLoadType(PRUint32 *aLoadType)
+nsChannelPolicy::GetLoadType(uint32_t *aLoadType)
 {
     *aLoadType = mLoadType;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsChannelPolicy::SetLoadType(PRUint32 aLoadType)
+nsChannelPolicy::SetLoadType(uint32_t aLoadType)
 {
     mLoadType = aLoadType;
     return NS_OK;

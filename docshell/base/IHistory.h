@@ -103,7 +103,7 @@ public:
     NS_IMETHOD VisitURI(
         nsIURI *aURI,
         nsIURI *aLastVisitedURI,
-        PRUint32 aFlags
+        uint32_t aFlags
     ) = 0;
 
     /**
@@ -128,7 +128,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
                                          mozilla::dom::Link *aContent); \
     NS_IMETHOD VisitURI(nsIURI *aURI, \
                         nsIURI *aLastVisitedURI, \
-                        PRUint32 aFlags); \
+                        uint32_t aFlags); \
     NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle);
 
 } // namespace mozilla

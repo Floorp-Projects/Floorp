@@ -26,9 +26,9 @@ public:
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
                                    nsStyleContext* aContext);
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
@@ -60,12 +60,12 @@ public:
 protected:
 
   void IndexChanged();
-  PRInt32 GetSelectedIndex();
+  int32_t GetSelectedIndex();
   void HideBox(nsIFrame* aBox);
 
 private:
 
-  PRInt32 mIndex;
+  int32_t mIndex;
 
 }; // class nsDeckFrame
 

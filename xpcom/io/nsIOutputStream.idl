@@ -31,9 +31,9 @@ interface nsIInputStream;
 typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream *aOutStream,
                                       void *aClosure,
                                       char *aToSegment,
-                                      PRUint32 aFromOffset,
-                                      PRUint32 aCount,
-                                      PRUint32 *aReadCount);
+                                      uint32_t aFromOffset,
+                                      uint32_t aCount,
+                                      uint32_t *aReadCount);
 %}
 
 native nsReadSegmentFun(nsReadSegmentFun);

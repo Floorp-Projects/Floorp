@@ -25,11 +25,11 @@ static char teng1[] =
 //01234567890123456789012345678901234567890123456789012345678901234567890123456789
  "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
 
-static PRUint32 exp1[] = {
+static uint32_t exp1[] = {
   4,7,9,14,17,34,39,40,41,42,49,54,62,64,67,69,73
 };
 
-static PRUint32 wexp1[] = {
+static uint32_t wexp1[] = {
 
   4,5,7,8,9,10,14,15,17,18,22,23,33,34,35,39,43,48,49,50,54,55,56,57,62,63,
   64,65,67,68,69,70,72
@@ -39,10 +39,10 @@ static PRUint32 wexp1[] = {
 static char teng2[] = 
  "()((reasonab(l)e) line  break. .01123=45x48.";
 
-static PRUint32 lexp2[] = {
+static uint32_t lexp2[] = {
   17,22,23,30,44
 };
-static PRUint32 wexp2[] = {
+static uint32_t wexp2[] = {
   4,12,13,14,15,16,17,18,22,24,29,30,31,32,37,38,43
 };
 
@@ -50,10 +50,10 @@ static PRUint32 wexp2[] = {
 //01234567890123456789012345678901234567890123456789012345678901234567890123456789
 static char teng3[] = 
  "It's a test to test(ronae ) line break....";
-static PRUint32 exp3[] = {
+static uint32_t exp3[] = {
   4,6,11,14,25,27,32,42
 };
-static PRUint32 wexp3[] = {
+static uint32_t wexp3[] = {
   2,3,4,5,6,7,11,12,14,15,19,20,25,26,27,28,32,33,38
 };
 
@@ -64,14 +64,14 @@ static char ruler2[] =
 
 
 bool TestASCIILB(nsILineBreaker *lb,
-                 const char* in, const PRUint32 len, 
-                 const PRUint32* out, PRUint32 outlen)
+                 const char* in, const uint32_t len, 
+                 const uint32_t* out, uint32_t outlen)
 {
          NS_ConvertASCIItoUTF16 eng1(in);
-         PRUint32 i,j;
-         PRUint32 res[256];
+         uint32_t i,j;
+         uint32_t res[256];
          bool ok = true;
-         PRInt32 curr;
+         int32_t curr;
          for(i = 0, curr = 0; (curr != NS_LINEBREAKER_NEED_MORE_TEXT) && 
              (i < 256); i++)
          {
@@ -117,15 +117,15 @@ bool TestASCIILB(nsILineBreaker *lb,
 }
 
 bool TestASCIIWB(nsIWordBreaker *lb,
-                 const char* in, const PRUint32 len, 
-                 const PRUint32* out, PRUint32 outlen)
+                 const char* in, const uint32_t len, 
+                 const uint32_t* out, uint32_t outlen)
 {
          NS_ConvertASCIItoUTF16 eng1(in);
 
-         PRUint32 i,j;
-         PRUint32 res[256];
+         uint32_t i,j;
+         uint32_t res[256];
          bool ok = true;
-         PRInt32 curr = 0;
+         int32_t curr = 0;
 
          for(i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
                     (curr != NS_WORDBREAKER_NEED_MORE_TEXT) && (i < 256);
@@ -197,7 +197,7 @@ bool TestLineBreaker()
    } else {
      printf("Test 4 - {First,Next}ForwardBreak():\n");
      if( TestASCIILB(t, teng1, sizeof(teng1)/sizeof(char), 
-              exp1, sizeof(exp1)/sizeof(PRUint32)) )
+              exp1, sizeof(exp1)/sizeof(uint32_t)) )
      {
        printf("Test 4 Passed\n\n");
      } else {
@@ -207,7 +207,7 @@ bool TestLineBreaker()
 
      printf("Test 5 - {First,Next}ForwardBreak():\n");
      if(TestASCIILB(t, teng2, sizeof(teng2)/sizeof(char), 
-               lexp2, sizeof(lexp2)/sizeof(PRUint32)) )
+               lexp2, sizeof(lexp2)/sizeof(uint32_t)) )
      {
        printf("Test 5 Passed\n\n");
      } else {
@@ -217,7 +217,7 @@ bool TestLineBreaker()
 
      printf("Test 6 - {First,Next}ForwardBreak():\n");
      if(TestASCIILB(t, teng3, sizeof(teng3)/sizeof(char), 
-               exp3, sizeof(exp3)/sizeof(PRUint32)) )
+               exp3, sizeof(exp3)/sizeof(uint32_t)) )
      {
        printf("Test 6 Passed\n\n");
      } else {
@@ -264,7 +264,7 @@ bool TestWordBreaker()
 
      printf("Test 4 - {First,Next}ForwardBreak():\n");
      if( TestASCIIWB(t, teng1, sizeof(teng1)/sizeof(char), 
-               wexp1, sizeof(wexp1)/sizeof(PRUint32)) )
+               wexp1, sizeof(wexp1)/sizeof(uint32_t)) )
      {
         printf("Test 4 Passed\n\n");
      } else {
@@ -274,7 +274,7 @@ bool TestWordBreaker()
 
      printf("Test 5 - {First,Next}ForwardBreak():\n");
      if(TestASCIIWB(t, teng2, sizeof(teng2)/sizeof(char), 
-               wexp2, sizeof(wexp2)/sizeof(PRUint32)) )
+               wexp2, sizeof(wexp2)/sizeof(uint32_t)) )
      {
        printf("Test 5 Passed\n\n");
      } else {
@@ -284,7 +284,7 @@ bool TestWordBreaker()
 
      printf("Test 6 - {First,Next}ForwardBreak():\n");
      if(TestASCIIWB(t, teng3, sizeof(teng3)/sizeof(char), 
-               wexp3, sizeof(wexp3)/sizeof(PRUint32)) )
+               wexp3, sizeof(wexp3)/sizeof(uint32_t)) )
      {
        printf("Test 6 Passed\n\n");
      } else {
@@ -304,7 +304,7 @@ bool TestWordBreaker()
 }
 
 void   SamplePrintWordWithBreak();
-void   SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset);
+void   SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset);
 // Sample Code
 
 //                          012345678901234
@@ -333,21 +333,21 @@ void SampleWordBreakUsage()
 
 void SamplePrintWordWithBreak()
 {
-   PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
+   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
    nsIWordBreaker *wbk = NULL;
 
    CallGetService(kWBrkCID, &wbk);
 
    nsAutoString result;
 
-   for(PRUint32 i = 0; i < numOfFragment; i++)
+   for(uint32_t i = 0; i < numOfFragment; i++)
    {
       NS_ConvertASCIItoUTF16 fragText(wb[i]);
 
-      PRInt32 cur = 0;
+      int32_t cur = 0;
       cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
-      PRUint32 start = 0;
-      for(PRUint32 j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT ; j++)
+      uint32_t start = 0;
+      for(uint32_t j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT ; j++)
       {
             result.Append(Substring(fragText, start, cur - start));
             result.Append('^');
@@ -378,9 +378,9 @@ void SamplePrintWordWithBreak()
    NS_IF_RELEASE(wbk);
 }
 
-void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
+void SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset)
 {
-   PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
+   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
    nsIWordBreaker *wbk = NULL;
 
    CallGetService(kWBrkCID, &wbk);
@@ -392,10 +392,10 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    bool canBreak;
    nsAutoString result(Substring(fragText, res.mBegin, res.mEnd-res.mBegin));
 
-   if((PRUint32)fragText.Length() == res.mEnd) // if we hit the end of the fragment
+   if((uint32_t)fragText.Length() == res.mEnd) // if we hit the end of the fragment
    {
      nsAutoString curFragText = fragText;
-     for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
+     for(uint32_t  p = fragN +1; p < numOfFragment ;p++)
      {
         NS_ConvertASCIItoUTF16 nextFragText(wb[p]);
         canBreak = wbk->BreakInBetween(curFragText.get(), 
@@ -410,7 +410,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 
         result.Append(Substring(nextFragText, r.mBegin, r.mEnd - r.mBegin));
 
-        if((PRUint32)nextFragText.Length() != r.mEnd)
+        if((uint32_t)nextFragText.Length() != r.mEnd)
           break;
 
         nextFragText.Assign(curFragText);
@@ -420,7 +420,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    if(0 == res.mBegin) // if we hit the beginning of the fragment
    {
      nsAutoString curFragText = fragText;
-     for(PRUint32  p = fragN ; p > 0 ;p--)
+     for(uint32_t  p = fragN ; p > 0 ;p--)
      {
         NS_ConvertASCIItoUTF16 prevFragText(wb[p-1]); 
         canBreak = wbk->BreakInBetween(prevFragText.get(), 

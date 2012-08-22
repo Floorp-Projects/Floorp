@@ -24,7 +24,7 @@
 interface nsIDOMHTMLAudioElement : nsIDOMHTMLMediaElement
 {
   // Setup the audio stream for writing
-  void mozSetup(in PRUint32 channels, in PRUint32 rate);
+  void mozSetup(in uint32_t channels, in uint32_t rate);
 
   // Write audio to the audio stream
   [implicit_jscontext]
