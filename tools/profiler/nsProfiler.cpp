@@ -59,7 +59,7 @@ nsProfiler::GetProfile(char **aProfile)
 }
 
 static void
-AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
+AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
 {
   aStream << "{";
   aStream << "\"start\":" << aLib.GetStart();

@@ -507,6 +507,10 @@ public:
         return succeeded;
     }
 
+    virtual bool IsCurrent() {
+        return sEGLLibrary.fGetCurrentContext() == mContext;
+    }
+
 #ifdef MOZ_WIDGET_QT
     virtual bool
     RenewSurface() {

@@ -10,6 +10,8 @@
 #include "GLContext.h"
 #include "gfxASurface.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -25,6 +27,7 @@ public:
     , mHasAlpha(true)
   {
       mImplData = static_cast<LayerD3D10*>(this);
+      mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
   }
 
   ~CanvasLayerD3D10();
@@ -52,6 +55,7 @@ private:
   bool mIsD2DTexture;
   bool mUsingSharedTexture;
   bool mHasAlpha;
+  bool mForceReadback;
 
   nsAutoArrayPtr<PRUint8> mCachedTempBlob;
   PRUint32 mCachedTempBlob_Size;
