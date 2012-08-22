@@ -154,6 +154,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fGetUniformLocation, { "GetUniformLocation", "GetUniformLocationARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetVertexAttribfv, { "GetVertexAttribfv", "GetVertexAttribfvARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetVertexAttribiv, { "GetVertexAttribiv", "GetVertexAttribivARB", NULL } },
+        { (PRFuncPtr*) &mSymbols.fGetVertexAttribPointerv, { "GetVertexAttribPointerv", NULL } },
         { (PRFuncPtr*) &mSymbols.fHint, { "Hint", NULL } },
         { (PRFuncPtr*) &mSymbols.fIsBuffer, { "IsBuffer", "IsBufferARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fIsEnabled, { "IsEnabled", NULL } },
@@ -1757,6 +1758,7 @@ GLContext::MarkDestroyed()
 
     if (MakeCurrent()) {
         DeleteOffscreenFBOs();
+        DeleteTexBlitProgram();
 
         fDeleteProgram(mBlitProgram);
         mBlitProgram = 0;
